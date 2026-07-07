@@ -1,0 +1,36 @@
+# Personal / application documents
+*.hwp
+*.hwpx
+*.pdf
+*.pptx
+*.ppt
+*신청서*
+*지원비*
+*자문비*
+*개인정보*
+*과제계획서*
+
+# Office temporary files
+~$*
+*.tmp
+*.bak
+
+# Local runtime / generated scratch
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+tmp/
+tmp_*/
+
+# Environment / secrets
+.env
+.env.*
+*.key
+*.pem
+credentials.json
+service-account*.json
+
+# OS files
+.DS_Store
+Thumbs.db
