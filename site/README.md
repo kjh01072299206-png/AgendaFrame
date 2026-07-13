@@ -2,6 +2,9 @@
 
 주요 언론사의 홈페이지 배치와 보도 빈도를 바탕으로 오늘의 의제를 정리하고, 같은 이슈의 언론사별 프레임 차이를 근거와 함께 비교하는 대시보드 MVP입니다.
 
+- 공개 데모: https://agendaframe-capstone.kjh01072299206.chatgpt.site
+- 상위 문서: [프로젝트 README](../README.md)
+
 ## 현재 배포 범위
 
 - 오늘의 데이터 현황과 수집 상태
@@ -18,9 +21,12 @@
 ## 실행
 
 ```bash
+npm ci
 npm run dev
 npm run build
 npm test
 ```
 
 Sites 배포 산출물은 `npm run build`로 생성하며, 상태 확인 경로는 `/api/health`입니다.
+
+Node.js 22.13 이상이 필요합니다. 환경변수, API 키와 서비스 계정 파일은 저장소에 커밋하지 않습니다.
