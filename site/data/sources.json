@@ -1,0 +1,63 @@
+{
+  "panelVersion": "2026-07-14",
+  "collectionProvider": "bigkinds_export",
+  "activationState": "ready_for_admin_import",
+  "directCrawling": false,
+  "sources": [
+    {
+      "id": "hani",
+      "name": "한겨레",
+      "providerOutletName": "한겨레",
+      "samplePosition": "progressive",
+      "samplePositionLabel": "진보 표본",
+      "sampleOrder": -2,
+      "sourceType": "national_daily",
+      "domains": ["hani.co.kr"],
+      "active": true
+    },
+    {
+      "id": "khan",
+      "name": "경향신문",
+      "providerOutletName": "경향신문",
+      "samplePosition": "progressive",
+      "samplePositionLabel": "진보 표본",
+      "sampleOrder": -1,
+      "sourceType": "national_daily",
+      "domains": ["khan.co.kr"],
+      "active": true
+    },
+    {
+      "id": "hankookilbo",
+      "name": "한국일보",
+      "providerOutletName": "한국일보",
+      "samplePosition": "center",
+      "samplePositionLabel": "중도 표본",
+      "sampleOrder": 0,
+      "sourceType": "national_daily",
+      "domains": ["hankookilbo.com"],
+      "active": true
+    },
+    {
+      "id": "joongang",
+      "name": "중앙일보",
+      "providerOutletName": "중앙일보",
+      "samplePosition": "conservative",
+      "samplePositionLabel": "보수 표본",
+      "sampleOrder": 1,
+      "sourceType": "national_daily",
+      "domains": ["joongang.co.kr"],
+      "active": true
+    },
+    {
+      "id": "chosun",
+      "name": "조선일보",
+      "providerOutletName": "조선일보",
+      "samplePosition": "conservative",
+      "samplePositionLabel": "보수 표본",
+      "sampleOrder": 2,
+      "sourceType": "national_daily",
+      "domains": ["chosun.com"],
+      "active": true
+    }
+  ]
+}

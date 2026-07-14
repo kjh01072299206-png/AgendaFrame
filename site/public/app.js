@@ -204,12 +204,27 @@ const state = {
   tab: "outlets",
   frame: "responsibility",
   articleSort: "latest",
+  liveOffset: 0,
+  liveLimit: 50,
+  liveTotal: 0,
+  liveLoaded: 0,
+  liveLoading: false,
 };
 
 const categories = ["전체", "정치", "경제", "사회", "복지", "산업정책"];
 const $ = (selector, root = document) => root.querySelector(selector);
-const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const escapeHtml = (value) => String(value).replace(/[&<>"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[character]);
+const placementLabels = { top: "TOP", main: "MAIN", section: "SECTION", list: "LIST" };
+
+function formatKoreanDateTime(value) {
+  const date = new Date(Number(value));
+  if (!Number.isFinite(date.getTime())) return "시각 미확인";
+  return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(date);
+}
+
+function renderTodayDate() {
+  $("#hero-date").textContent = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()).replace(/\. /g, ".").replace(/\.$/, "");
+}
 
 function highlight(text, words) {
   let result = escapeHtml(text);
@@ -229,6 +244,109 @@ function showToast(message) {
   toast.classList.add("show");
   window.clearTimeout(showToast.timer);
   showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 2400);
+}
+
+async function refreshCollectionStatus({ announce = false } = {}) {
+  try {
+    const response = await fetch("/api/health", { headers: { accept: "application/json" }, cache: "no-store" });
+    if (!response.ok) throw new Error("status unavailable");
+    const health = await response.json();
+    const collection = health.collection ?? {};
+    $("#source-count").textContent = String(collection.configuredSources ?? 5);
+
+    if (health.mode === "metadata" && Number(collection.articleCount) > 0) {
+      $("#article-count").textContent = Number(collection.articleCount).toLocaleString("ko-KR");
+      $("#article-count-note").textContent = "실제 메타데이터";
+      $("#collection-status").textContent = "업로드 완료";
+      $("#collection-status").style.color = "var(--green)";
+      $("#collection-status-note").textContent = `${collection.latestSourceCount ?? 0}/5 매체 · 중복 제외`;
+      $("#data-badge").innerHTML = `<i aria-hidden="true"></i> 실기사 메타데이터 연결`;
+      $("#data-badge").classList.add("live");
+      if (health.dataAsOf) {
+        const observedAt = new Date(health.dataAsOf);
+        $("#snapshot-time").textContent = `${observedAt.toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })} 확인`;
+      }
+      if (announce) showToast(`실데이터 ${collection.articleCount}건이 저장되어 있습니다.`);
+      return;
+    }
+
+    $("#collection-status").textContent = "CSV 준비";
+    $("#collection-status").style.color = "var(--amber)";
+    $("#collection-status-note").textContent = "관리자 업로드 대기";
+    $("#data-badge").innerHTML = `<i aria-hidden="true"></i> 시연용 합성 데이터`;
+    $("#data-badge").classList.remove("live");
+    if (announce) showToast("아직 업로드된 실데이터가 없습니다.");
+  } catch {
+    if (announce) showToast("수집 상태를 확인하지 못했습니다.");
+  }
+}
+
+function liveArticleMarkup(article) {
+  const placement = placementLabels[article.homepagePlacement] ?? "배치 미확인";
+  const rank = article.homepageRank ? ` · 관측 ${article.homepageRank}위` : "";
+  return `<article class="live-article">
+    <div class="live-article-meta"><span class="live-source">${escapeHtml(article.source)}</span><span>${escapeHtml(article.section ?? "분야 미분류")}</span></div>
+    <h3><a href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(article.title)}</a></h3>
+    <p class="live-article-detail">게시 ${formatKoreanDateTime(article.publishedAt)}<br />홈페이지 ${placement}${rank}</p>
+    <a class="live-original" href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(article.source)} 원문 기사 열기">원문 기사 보기 ↗</a>
+  </article>`;
+}
+
+function liveFilterParameters() {
+  const form = $("#live-filter-form");
+  const values = new FormData(form);
+  const parameters = new URLSearchParams();
+  for (const key of ["q", "source", "section", "date"]) {
+    const value = String(values.get(key) ?? "").trim();
+    if (value) parameters.set(key, value);
+  }
+  return parameters;
+}
+
+async function refreshLiveArticles({ append = false, announce = false } = {}) {
+  const section = $("#live-feed");
+  if (state.liveLoading) return;
+  state.liveLoading = true;
+  const loadMore = $("#live-load-more");
+  loadMore.disabled = true;
+  try {
+    if (!append) {
+      state.liveOffset = 0;
+      state.liveLoaded = 0;
+    }
+    const parameters = liveFilterParameters();
+    const hasActiveFilters = parameters.size > 0;
+    parameters.set("limit", String(state.liveLimit));
+    parameters.set("offset", String(state.liveOffset));
+    const response = await fetch(`/api/articles?${parameters}`, { headers: { accept: "application/json" }, cache: "no-store" });
+    if (!response.ok) throw new Error("articles unavailable");
+    const payload = await response.json();
+    const articles = Array.isArray(payload.articles) ? payload.articles : [];
+    const total = Number(payload.total) || 0;
+    if (!articles.length && !append && !hasActiveFilters) {
+      section.hidden = true;
+      return;
+    }
+
+    section.hidden = false;
+    const list = $("#live-article-list");
+    const markup = articles.map(liveArticleMarkup).join("");
+    if (append) list.insertAdjacentHTML("beforeend", markup);
+    else list.innerHTML = markup;
+    state.liveLoaded = append ? state.liveLoaded + articles.length : articles.length;
+    state.liveOffset = state.liveLoaded;
+    state.liveTotal = total;
+    $("#live-feed-note").textContent = `${state.liveLoaded.toLocaleString("ko-KR")} / ${total.toLocaleString("ko-KR")}건 · 실제 게시순`;
+    $("#live-empty").hidden = state.liveLoaded > 0;
+    loadMore.hidden = !(payload.hasMore && articles.length);
+    $("#data-disclosure").textContent = "위 실제 기사 링크는 운영 DB 메타데이터이며, 아래 의제·프레임 분석은 제품 검증용 합성 데이터입니다.";
+    if (announce) showToast(total ? `조건에 맞는 실제 기사 ${total.toLocaleString("ko-KR")}건입니다.` : "조건에 맞는 기사가 없습니다.");
+  } catch {
+    if (announce) showToast("실제 기사 목록을 불러오지 못했습니다.");
+  } finally {
+    state.liveLoading = false;
+    loadMore.disabled = false;
+  }
 }
 
 function renderFilters() {
@@ -385,16 +503,28 @@ document.addEventListener("change", (event) => {
   }
 });
 
-$("#refresh-button").addEventListener("click", () => {
+$("#refresh-button").addEventListener("click", async () => {
   const button = $("#refresh-button");
   button.disabled = true;
   button.querySelector("span:last-child").textContent = "확인 중";
-  window.setTimeout(() => {
-    button.disabled = false;
-    button.querySelector("span:last-child").textContent = "갱신";
-    $("#snapshot-time").textContent = "18:06 확인";
-    showToast("데모 데이터가 최신 상태입니다. 마지막 성공 수집 18:00");
-  }, 850);
+  await Promise.all([refreshCollectionStatus(), refreshLiveArticles({ announce: true })]);
+  button.disabled = false;
+  button.querySelector("span:last-child").textContent = "갱신";
 });
 
+$("#live-filter-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  refreshLiveArticles({ announce: true });
+});
+
+$("#live-filter-form").addEventListener("reset", () => {
+  window.setTimeout(() => refreshLiveArticles({ announce: true }), 0);
+});
+
+$("#live-load-more").addEventListener("click", () => {
+  refreshLiveArticles({ append: true });
+});
+
+renderTodayDate();
 renderAll();
+Promise.all([refreshCollectionStatus(), refreshLiveArticles()]);
