@@ -208,7 +208,6 @@ const state = {
 
 const categories = ["전체", "정치", "경제", "사회", "복지", "산업정책"];
 const $ = (selector, root = document) => root.querySelector(selector);
-const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const escapeHtml = (value) => String(value).replace(/[&<>"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[character]);
 
 function highlight(text, words) {
@@ -229,6 +228,37 @@ function showToast(message) {
   toast.classList.add("show");
   window.clearTimeout(showToast.timer);
   showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 2400);
+}
+
+async function refreshCollectionStatus({ announce = false } = {}) {
+  try {
+    const response = await fetch("/api/health", { headers: { accept: "application/json" }, cache: "no-store" });
+    if (!response.ok) throw new Error("status unavailable");
+    const health = await response.json();
+    const collection = health.collection ?? {};
+    $("#source-count").textContent = String(collection.configuredSources ?? 5);
+
+    if (health.mode === "metadata" && Number(collection.articleCount) > 0) {
+      $("#article-count").textContent = Number(collection.articleCount).toLocaleString("ko-KR");
+      $("#article-count-note").textContent = "실제 메타데이터";
+      $("#collection-status").textContent = "업로드 완료";
+      $("#collection-status").style.color = "var(--green)";
+      $("#collection-status-note").textContent = `${collection.latestSourceCount ?? 0}/5 매체 · 중복 제외`;
+      if (health.dataAsOf) {
+        const observedAt = new Date(health.dataAsOf);
+        $("#snapshot-time").textContent = `${observedAt.toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })} 확인`;
+      }
+      if (announce) showToast(`실데이터 ${collection.articleCount}건이 저장되어 있습니다.`);
+      return;
+    }
+
+    $("#collection-status").textContent = "CSV 준비";
+    $("#collection-status").style.color = "var(--amber)";
+    $("#collection-status-note").textContent = "관리자 업로드 대기";
+    if (announce) showToast("아직 업로드된 실데이터가 없습니다.");
+  } catch {
+    if (announce) showToast("수집 상태를 확인하지 못했습니다.");
+  }
 }
 
 function renderFilters() {
@@ -385,16 +415,14 @@ document.addEventListener("change", (event) => {
   }
 });
 
-$("#refresh-button").addEventListener("click", () => {
+$("#refresh-button").addEventListener("click", async () => {
   const button = $("#refresh-button");
   button.disabled = true;
   button.querySelector("span:last-child").textContent = "확인 중";
-  window.setTimeout(() => {
-    button.disabled = false;
-    button.querySelector("span:last-child").textContent = "갱신";
-    $("#snapshot-time").textContent = "18:06 확인";
-    showToast("데모 데이터가 최신 상태입니다. 마지막 성공 수집 18:00");
-  }, 850);
+  await refreshCollectionStatus({ announce: true });
+  button.disabled = false;
+  button.querySelector("span:last-child").textContent = "갱신";
 });
 
 renderAll();
+refreshCollectionStatus();
