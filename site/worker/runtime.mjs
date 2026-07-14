@@ -1,6 +1,6 @@
 const assets = globalThis.__AGENDAFRAME_ASSETS__ ?? {};
 const sourcePanel = globalThis.__AGENDAFRAME_SOURCE_PANEL__ ?? {
-  collectionProvider: "manual_csv",
+  collectionProvider: "bigkinds_export",
   activationState: "ready_for_admin_import",
   directCrawling: false,
   sources: [],
@@ -136,9 +136,18 @@ async function secureTokenMatches(provided, expected) {
 
 async function ensureSources(db) {
   const statements = sourcePanel.sources.map((source) => db.prepare(`
-    INSERT OR IGNORE INTO media_sources
+    INSERT INTO media_sources
       (id, name, provider, provider_outlet_name, sample_position, sample_order, source_type, active, activation_state)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      name = excluded.name,
+      provider = excluded.provider,
+      provider_outlet_name = excluded.provider_outlet_name,
+      sample_position = excluded.sample_position,
+      sample_order = excluded.sample_order,
+      source_type = excluded.source_type,
+      active = excluded.active,
+      activation_state = excluded.activation_state
   `).bind(
     source.id,
     source.name,
@@ -182,7 +191,7 @@ async function collectionHealth(db) {
     mode: articleCount > 0 ? "metadata" : "demo",
     dataAsOf: latest?.finished_at ? new Date(Number(latest.finished_at)).toISOString() : null,
     collection: {
-      method: "manual_csv",
+      method: sourcePanel.collectionProvider,
       directCrawling: false,
       configuredSources: Number(summary?.configured_sources ?? sourcePanel.sources.length),
       articleCount,
@@ -241,14 +250,14 @@ async function handleImport(request, env) {
     await db.prepare(`
       INSERT INTO collection_runs
         (id, provider, trigger, status, started_at, article_count, duplicate_count, error_count)
-      VALUES (?, 'manual_csv', 'manual', 'running', ?, 0, 0, 0)
+      VALUES (?, 'bigkinds_export', 'manual', 'running', ?, 0, 0, 0)
     `).bind(runId, startedAt).run();
 
     const articleIds = await Promise.all(rows.map((row) => sha256Hex(row.canonicalUrl)));
     const statements = rows.map((row, index) => db.prepare(`
       INSERT INTO articles
         (id, provider, external_id, source_id, title, canonical_url, section, published_at, collected_at, homepage_placement, homepage_rank)
-      VALUES (?, 'manual_csv', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, 'bigkinds_export', ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(canonical_url) DO NOTHING
     `).bind(
       crypto.randomUUID(),
@@ -365,7 +374,7 @@ const worker = {
           mode: "demo",
           dataAsOf: null,
           collection: {
-            method: "manual_csv",
+            method: sourcePanel.collectionProvider,
             directCrawling: false,
             configuredSources: sourcePanel.sources.length,
             articleCount: 0,
@@ -378,7 +387,7 @@ const worker = {
         return jsonResponse(await collectionHealth(env.DB));
       } catch (error) {
         console.error("AgendaFrame health query failed", error);
-        return jsonResponse({ status: "degraded", mode: "demo", dataAsOf: null, collection: { method: "manual_csv", directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, latestSourceCount: 0, latestStatus: "storage_unavailable" } }, 503);
+        return jsonResponse({ status: "degraded", mode: "demo", dataAsOf: null, collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, latestSourceCount: 0, latestStatus: "storage_unavailable" } }, 503);
       }
     }
 

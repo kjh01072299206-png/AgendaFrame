@@ -9,6 +9,7 @@ const types = {
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".csv": "text/csv; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
   ".png": "image/png",
   ".webp": "image/webp",
 };
@@ -18,7 +19,7 @@ const server = createServer(async (request, response) => {
     const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
     if (pathname === "/api/health") {
       response.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
-      response.end(JSON.stringify({ status: "ok", mode: "demo", dataAsOf: null, collection: { method: "manual_csv", directCrawling: false, configuredSources: 5, articleCount: 0, latestSourceCount: 0, latestStatus: "awaiting_import" } }));
+      response.end(JSON.stringify({ status: "ok", mode: "demo", dataAsOf: null, collection: { method: "bigkinds_export", directCrawling: false, configuredSources: 5, articleCount: 0, latestSourceCount: 0, latestStatus: "awaiting_import" } }));
       return;
     }
     if (pathname === "/api/import") {
@@ -35,6 +36,8 @@ const server = createServer(async (request, response) => {
       "admin.css": new URL("../app/admin.css", import.meta.url),
       "app.js": new URL("../public/app.js", import.meta.url),
       "admin.js": new URL("../public/admin.js", import.meta.url),
+      "vendor/read-excel-file.min.js": new URL("../node_modules/read-excel-file/bundle/read-excel-file.min.js", import.meta.url),
+      "vendor/read-excel-file.LICENSE.txt": new URL("../node_modules/read-excel-file/LICENSE", import.meta.url),
       "templates/agendaframe-import.csv": new URL("../templates/agendaframe-import.csv", import.meta.url),
     };
     const source = files[safePath];

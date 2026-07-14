@@ -209,6 +209,17 @@ const state = {
 const categories = ["전체", "정치", "경제", "사회", "복지", "산업정책"];
 const $ = (selector, root = document) => root.querySelector(selector);
 const escapeHtml = (value) => String(value).replace(/[&<>"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[character]);
+const placementLabels = { top: "TOP", main: "MAIN", section: "SECTION", list: "LIST" };
+
+function formatKoreanDateTime(value) {
+  const date = new Date(Number(value));
+  if (!Number.isFinite(date.getTime())) return "시각 미확인";
+  return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
+}
+
+function renderTodayDate() {
+  $("#hero-date").textContent = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()).replace(/\. /g, ".").replace(/\.$/, "");
+}
 
 function highlight(text, words) {
   let result = escapeHtml(text);
@@ -244,6 +255,8 @@ async function refreshCollectionStatus({ announce = false } = {}) {
       $("#collection-status").textContent = "업로드 완료";
       $("#collection-status").style.color = "var(--green)";
       $("#collection-status-note").textContent = `${collection.latestSourceCount ?? 0}/5 매체 · 중복 제외`;
+      $("#data-badge").innerHTML = `<i aria-hidden="true"></i> 실기사 메타데이터 연결`;
+      $("#data-badge").classList.add("live");
       if (health.dataAsOf) {
         const observedAt = new Date(health.dataAsOf);
         $("#snapshot-time").textContent = `${observedAt.toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })} 확인`;
@@ -255,9 +268,42 @@ async function refreshCollectionStatus({ announce = false } = {}) {
     $("#collection-status").textContent = "CSV 준비";
     $("#collection-status").style.color = "var(--amber)";
     $("#collection-status-note").textContent = "관리자 업로드 대기";
+    $("#data-badge").innerHTML = `<i aria-hidden="true"></i> 시연용 합성 데이터`;
+    $("#data-badge").classList.remove("live");
     if (announce) showToast("아직 업로드된 실데이터가 없습니다.");
   } catch {
     if (announce) showToast("수집 상태를 확인하지 못했습니다.");
+  }
+}
+
+async function refreshLiveArticles({ announce = false } = {}) {
+  const section = $("#live-feed");
+  try {
+    const response = await fetch("/api/articles?limit=100", { headers: { accept: "application/json" }, cache: "no-store" });
+    if (!response.ok) throw new Error("articles unavailable");
+    const payload = await response.json();
+    const articles = Array.isArray(payload.articles) ? payload.articles : [];
+    if (!articles.length) {
+      section.hidden = true;
+      return;
+    }
+
+    section.hidden = false;
+    $("#live-feed-note").textContent = `${articles.length}건 · 최근 게시순`;
+    $("#live-article-list").innerHTML = articles.map((article) => {
+      const placement = placementLabels[article.homepagePlacement] ?? "배치 미확인";
+      const rank = article.homepageRank ? ` · 관측 ${article.homepageRank}위` : "";
+      return `<article class="live-article">
+        <div class="live-article-meta"><span class="live-source">${escapeHtml(article.source)}</span><span>${escapeHtml(article.section ?? "분야 미분류")}</span></div>
+        <h3><a href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(article.title)}</a></h3>
+        <p class="live-article-detail">게시 ${formatKoreanDateTime(article.publishedAt)}<br />홈페이지 ${placement}${rank}</p>
+        <a class="live-original" href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(article.source)} 원문 기사 열기">원문 기사 보기 ↗</a>
+      </article>`;
+    }).join("");
+    $("#data-disclosure").textContent = "위 실제 기사 링크는 운영 DB 메타데이터이며, 아래 의제·프레임 분석은 제품 검증용 합성 데이터입니다.";
+    if (announce) showToast(`실제 기사 ${articles.length}건을 불러왔습니다.`);
+  } catch {
+    if (announce) showToast("실제 기사 목록을 불러오지 못했습니다.");
   }
 }
 
@@ -419,10 +465,11 @@ $("#refresh-button").addEventListener("click", async () => {
   const button = $("#refresh-button");
   button.disabled = true;
   button.querySelector("span:last-child").textContent = "확인 중";
-  await refreshCollectionStatus({ announce: true });
+  await Promise.all([refreshCollectionStatus(), refreshLiveArticles({ announce: true })]);
   button.disabled = false;
   button.querySelector("span:last-child").textContent = "갱신";
 });
 
+renderTodayDate();
 renderAll();
-refreshCollectionStatus();
+Promise.all([refreshCollectionStatus(), refreshLiveArticles()]);

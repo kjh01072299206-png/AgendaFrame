@@ -2,13 +2,15 @@ import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 
 const root = new URL("../", import.meta.url);
 const dist = new URL("../dist/", import.meta.url);
-const [html, adminHtml, css, adminCss, javascript, adminJavascript, importTemplate, sourcePanel, runtime] = await Promise.all([
+const [html, adminHtml, css, adminCss, javascript, adminJavascript, excelReader, excelReaderLicense, importTemplate, sourcePanel, runtime] = await Promise.all([
   readFile(new URL("src/index.html", root), "utf8"),
   readFile(new URL("src/admin.html", root), "utf8"),
   readFile(new URL("app/globals.css", root), "utf8"),
   readFile(new URL("app/admin.css", root), "utf8"),
   readFile(new URL("public/app.js", root), "utf8"),
   readFile(new URL("public/admin.js", root), "utf8"),
+  readFile(new URL("node_modules/read-excel-file/bundle/read-excel-file.min.js", root), "utf8"),
+  readFile(new URL("node_modules/read-excel-file/LICENSE", root), "utf8"),
   readFile(new URL("templates/agendaframe-import.csv", root), "utf8"),
   readFile(new URL("data/sources.json", root), "utf8").then(JSON.parse),
   readFile(new URL("worker/runtime.mjs", root), "utf8"),
@@ -29,6 +31,8 @@ const assets = {
   "/admin.css": { body: adminCss, type: "text/css; charset=utf-8", cache: "public, max-age=3600" },
   "/app.js": { body: javascript, type: "text/javascript; charset=utf-8", cache: "public, max-age=3600" },
   "/admin.js": { body: adminJavascript, type: "text/javascript; charset=utf-8", cache: "public, max-age=3600" },
+  "/vendor/read-excel-file.min.js": { body: excelReader, type: "text/javascript; charset=utf-8", cache: "public, max-age=31536000, immutable" },
+  "/vendor/read-excel-file.LICENSE.txt": { body: excelReaderLicense, type: "text/plain; charset=utf-8", cache: "public, max-age=31536000, immutable" },
   "/templates/agendaframe-import.csv": { body: importTemplate, type: "text/csv; charset=utf-8", cache: "public, max-age=3600" },
 };
 
@@ -44,9 +48,11 @@ await Promise.all([
   writeFile(new URL("client/admin.css", dist), adminCss, "utf8"),
   writeFile(new URL("client/app.js", dist), javascript, "utf8"),
   writeFile(new URL("client/admin.js", dist), adminJavascript, "utf8"),
+  mkdir(new URL("client/vendor/", dist), { recursive: true }).then(() => writeFile(new URL("client/vendor/read-excel-file.min.js", dist), excelReader, "utf8")),
+  mkdir(new URL("client/vendor/", dist), { recursive: true }).then(() => writeFile(new URL("client/vendor/read-excel-file.LICENSE.txt", dist), excelReaderLicense, "utf8")),
   mkdir(new URL("client/templates/", dist), { recursive: true }).then(() => writeFile(new URL("client/templates/agendaframe-import.csv", dist), importTemplate, "utf8")),
   cp(new URL(".openai/hosting.json", root), new URL(".openai/hosting.json", dist)),
   cp(new URL("drizzle/", root), new URL(".openai/drizzle/", dist), { recursive: true }),
 ]);
 
-console.log("AgendaFrame manual import build complete");
+console.log("AgendaFrame BigKinds import build complete");

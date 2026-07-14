@@ -1,6 +1,6 @@
 {
   "panelVersion": "2026-07-14",
-  "collectionProvider": "manual_csv",
+  "collectionProvider": "bigkinds_export",
   "activationState": "ready_for_admin_import",
   "directCrawling": false,
   "sources": [

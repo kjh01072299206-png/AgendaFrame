@@ -12,47 +12,67 @@ test("serves the complete AgendaFrame MVP", async () => {
   const html = await response.text();
   assert.match(html, /AgendaFrame \| 오늘의 의제·프레임 분석/);
   assert.match(html, /오늘, 언론은/);
-  assert.match(html, /시연용 합성 데이터/);
+  assert.match(html, /분석 데모/);
   assert.match(html, /id="agenda-list"/);
   assert.match(html, /id="issue-detail"/);
+  assert.match(html, /id="live-feed"/);
+  assert.match(html, /id="live-article-list"/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
 });
 
 test("serves interactive application assets", async () => {
-  const [scriptResponse, styleResponse, adminResponse, adminScriptResponse, templateResponse] = await Promise.all([
+  const [scriptResponse, styleResponse, adminResponse, adminScriptResponse, excelReaderResponse, excelReaderLicenseResponse, templateResponse] = await Promise.all([
     worker.fetch(new Request("https://example.test/app.js")),
     worker.fetch(new Request("https://example.test/styles.css")),
     worker.fetch(new Request("https://example.test/admin")),
     worker.fetch(new Request("https://example.test/admin.js")),
+    worker.fetch(new Request("https://example.test/vendor/read-excel-file.min.js")),
+    worker.fetch(new Request("https://example.test/vendor/read-excel-file.LICENSE.txt")),
     worker.fetch(new Request("https://example.test/templates/agendaframe-import.csv")),
   ]);
   assert.equal(scriptResponse.status, 200);
   assert.equal(styleResponse.status, 200);
   assert.equal(adminResponse.status, 200);
   assert.equal(adminScriptResponse.status, 200);
+  assert.equal(excelReaderResponse.status, 200);
+  assert.equal(excelReaderLicenseResponse.status, 200);
   assert.equal(templateResponse.status, 200);
-  const [script, styles, admin, adminScript, template] = await Promise.all([scriptResponse.text(), styleResponse.text(), adminResponse.text(), adminScriptResponse.text(), templateResponse.text()]);
+  const [script, styles, admin, adminScript, excelReader, excelReaderLicense, template] = await Promise.all([scriptResponse.text(), styleResponse.text(), adminResponse.text(), adminScriptResponse.text(), excelReaderResponse.text(), excelReaderLicenseResponse.text(), templateResponse.text()]);
   assert.match(script, /const issues = \[/);
   assert.match(script, /renderAll\(\)/);
   assert.match(script, /data-copy-report/);
   assert.match(script, /refreshCollectionStatus/);
+  assert.match(script, /refreshLiveArticles/);
+  assert.match(script, /\/api\/articles\?limit=100/);
+  assert.match(script, /원문 기사 보기/);
   assert.match(styles, /\.workspace/);
   assert.match(styles, /\.source-panel/);
+  assert.match(styles, /\.live-article-grid/);
   assert.match(styles, /prefers-reduced-motion/);
   assert.match(admin, /id="import-form"/);
-  assert.match(admin, /기사 본문 저장 없이/);
+  assert.match(admin, /BigKinds Excel \/ CSV/);
+  assert.match(admin, /최대 20,000행/);
   assert.match(adminScript, /Bearer \$\{token\}/);
+  assert.match(adminScript, /window\.readXlsxFile/);
+  assert.match(adminScript, /IMPORT_BATCH_SIZE = 500/);
+  assert.match(adminScript, /본문 열은 폐기/);
+  assert.match(excelReader, /readXlsxFile/);
+  assert.match(excelReaderLicense, /MIT License/);
   assert.match(template, /^source,title,url,published_at/);
 });
 
-test("reports manual-import health and rejects unknown paths", async () => {
+test("reports BigKinds-import health and rejects unknown paths", async () => {
   const health = await worker.fetch(new Request("https://example.test/api/health"));
   const healthBody = await health.json();
   assert.equal(healthBody.status, "ok");
   assert.equal(healthBody.mode, "demo");
-  assert.equal(healthBody.collection.method, "manual_csv");
+  assert.equal(healthBody.collection.method, "bigkinds_export");
   assert.equal(healthBody.collection.directCrawling, false);
   assert.equal(healthBody.collection.configuredSources, 5);
+
+  const articles = await worker.fetch(new Request("https://example.test/api/articles?limit=100"));
+  const articlesBody = await articles.json();
+  assert.deepEqual(articlesBody, { articles: [], total: 0 });
 
   const sources = await worker.fetch(new Request("https://example.test/api/sources"));
   const sourceBody = await sources.json();

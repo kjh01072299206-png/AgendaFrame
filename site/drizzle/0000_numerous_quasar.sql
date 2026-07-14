@@ -80,8 +80,8 @@ CREATE INDEX `media_sources_sample_order_idx` ON `media_sources` (`sample_order`
 INSERT OR IGNORE INTO `media_sources`
 	(`id`, `name`, `provider`, `provider_outlet_name`, `sample_position`, `sample_order`, `source_type`, `active`, `activation_state`)
 VALUES
-	('hani', '한겨레', 'manual_csv', '한겨레', 'progressive', -2, 'national_daily', 1, 'ready_for_admin_import'),
-	('khan', '경향신문', 'manual_csv', '경향신문', 'progressive', -1, 'national_daily', 1, 'ready_for_admin_import'),
-	('hankookilbo', '한국일보', 'manual_csv', '한국일보', 'center', 0, 'national_daily', 1, 'ready_for_admin_import'),
-	('joongang', '중앙일보', 'manual_csv', '중앙일보', 'conservative', 1, 'national_daily', 1, 'ready_for_admin_import'),
-	('chosun', '조선일보', 'manual_csv', '조선일보', 'conservative', 2, 'national_daily', 1, 'ready_for_admin_import');
+	('hani', '한겨레', 'bigkinds_export', '한겨레', 'progressive', -2, 'national_daily', 1, 'ready_for_admin_import'),
+	('khan', '경향신문', 'bigkinds_export', '경향신문', 'progressive', -1, 'national_daily', 1, 'ready_for_admin_import'),
+	('hankookilbo', '한국일보', 'bigkinds_export', '한국일보', 'center', 0, 'national_daily', 1, 'ready_for_admin_import'),
+	('joongang', '중앙일보', 'bigkinds_export', '중앙일보', 'conservative', 1, 'national_daily', 1, 'ready_for_admin_import'),
+	('chosun', '조선일보', 'bigkinds_export', '조선일보', 'conservative', 2, 'national_daily', 1, 'ready_for_admin_import');

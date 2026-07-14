@@ -3,14 +3,17 @@ const headerAliases = {
   source: ["source", "언론사", "매체"],
   title: ["title", "제목"],
   url: ["url", "원문url", "원문_url", "링크"],
-  published_at: ["published_at", "게시시각", "게시_시각", "발행시각"],
+  published_at: ["published_at", "게시시각", "게시_시각", "발행시각", "일자", "날짜"],
   collected_at: ["collected_at", "수집시각", "수집_시각", "관측시각"],
-  section: ["section", "섹션", "분야"],
+  section: ["section", "섹션", "분야", "통합분류1"],
   homepage_placement: ["homepage_placement", "배치", "홈페이지배치"],
   homepage_rank: ["homepage_rank", "순위", "노출순위"],
 };
 
-const state = { rows: [], errors: [] };
+const MAX_ROWS = 20_000;
+const MAX_FILE_BYTES = 25 * 1024 * 1024;
+const IMPORT_BATCH_SIZE = 500;
+const state = { rows: [], errors: [], ignoredBodyColumn: false };
 const $ = (selector) => document.querySelector(selector);
 
 function showToast(message) {
@@ -59,7 +62,7 @@ function parseCsv(text) {
 }
 
 function normalizedHeader(value) {
-  return value.trim().toLowerCase().replace(/\s+/g, "");
+  return String(value ?? "").trim().toLowerCase().replace(/\s+/g, "");
 }
 
 function resolveHeaders(headers) {
@@ -72,36 +75,66 @@ function resolveHeaders(headers) {
 }
 
 function normalizePlacement(value) {
-  const normalized = value.trim().toLowerCase();
+  const normalized = String(value ?? "").trim().toLowerCase();
   const placements = { top: "top", main: "main", section: "section", list: "list", 최상단: "top", 메인: "main", 섹션: "section", 목록: "list" };
   return placements[normalized] ?? normalized;
 }
 
-function rowsFromCsv(text) {
-  const parsed = parseCsv(text);
+function normalizePublishedAt(value) {
+  if (value instanceof Date && Number.isFinite(value.getTime())) {
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const day = String(value.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}T00:00:00+09:00`;
+  }
+
+  const text = String(value ?? "").trim();
+  const compactDate = text.match(/^(\d{4})[.\/-]?(\d{2})[.\/-]?(\d{2})$/);
+  if (compactDate) return `${compactDate[1]}-${compactDate[2]}-${compactDate[3]}T00:00:00+09:00`;
+  return text;
+}
+
+function normalizeArticleUrl(value) {
+  const text = String(value ?? "").trim();
+  try {
+    const url = new URL(text);
+    if (url.protocol === "http:") url.protocol = "https:";
+    return url.toString();
+  } catch {
+    return text;
+  }
+}
+
+function rowsFromTable(parsed) {
   if (parsed.length < 2) throw new Error("헤더와 기사 행이 필요합니다.");
-  if (parsed.length > 501) throw new Error("한 번에 최대 500행까지 가져올 수 있습니다.");
+  if (parsed.length > MAX_ROWS + 1) throw new Error(`한 번에 최대 ${MAX_ROWS.toLocaleString("ko-KR")}행까지 가져올 수 있습니다.`);
   const [headers, ...dataRows] = parsed;
   const columns = resolveHeaders(headers);
   for (const required of ["source", "title", "url", "published_at"]) {
     if (columns[required] === undefined) throw new Error(`필수 열 ${required}이(가) 없습니다.`);
   }
-  if (headers.some((header) => ["body", "content", "fulltext", "본문", "원문"].includes(normalizedHeader(header)))) {
-    throw new Error("기사 본문 열은 가져올 수 없습니다.");
-  }
+  state.ignoredBodyColumn = headers.some((header) => ["body", "content", "fulltext", "본문", "원문"].includes(normalizedHeader(header)));
 
   const now = new Date().toISOString();
   return dataRows.map((values, index) => ({
     _line: index + 2,
-    source: values[columns.source] ?? "",
-    title: values[columns.title] ?? "",
-    url: values[columns.url] ?? "",
-    published_at: values[columns.published_at] ?? "",
-    collected_at: columns.collected_at === undefined ? now : values[columns.collected_at] || now,
-    section: columns.section === undefined ? "" : values[columns.section] ?? "",
+    source: String(values[columns.source] ?? "").trim(),
+    title: String(values[columns.title] ?? "").trim(),
+    url: normalizeArticleUrl(values[columns.url]),
+    published_at: normalizePublishedAt(values[columns.published_at]),
+    collected_at: columns.collected_at === undefined ? now : normalizePublishedAt(values[columns.collected_at] || now),
+    section: columns.section === undefined ? "" : String(values[columns.section] ?? "").trim(),
     homepage_placement: columns.homepage_placement === undefined ? "" : normalizePlacement(values[columns.homepage_placement] ?? ""),
-    homepage_rank: columns.homepage_rank === undefined ? "" : values[columns.homepage_rank] ?? "",
+    homepage_rank: columns.homepage_rank === undefined ? "" : String(values[columns.homepage_rank] ?? "").trim(),
   }));
+}
+
+async function rowsFromFile(file) {
+  if (file.name.toLowerCase().endsWith(".xlsx")) {
+    if (typeof window.readXlsxFile !== "function") throw new Error("Excel 읽기 모듈을 불러오지 못했습니다.");
+    return rowsFromTable(await window.readXlsxFile(file));
+  }
+  return rowsFromTable(parseCsv(await file.text()));
 }
 
 function validateRows(rows) {
@@ -129,19 +162,21 @@ function renderPreview() {
   state.rows.forEach((row) => { if (counts[row.source] !== undefined) counts[row.source] += 1; });
   const summary = allowedSources.map((source) => `<span>${source} ${counts[source]}건</span>`).join("");
   const errorList = state.errors.slice(0, 8).map((error) => `<li>${error.replace(/[&<>]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[character])}</li>`).join("");
-  root.innerHTML = `<div class="preview-summary"><span>전체 ${state.rows.length}건</span>${summary}</div>${state.errors.length ? `<ul class="preview-errors">${errorList}${state.errors.length > 8 ? `<li>그 외 ${state.errors.length - 8}개 오류</li>` : ""}</ul>` : `<p class="preview-ok">형식 검증을 통과했습니다.</p>`}`;
+  const privacyNotice = state.ignoredBodyColumn ? `<p class="preview-ok">BigKinds의 본문 열은 폐기했으며 서버로 전송하지 않습니다.</p>` : "";
+  root.innerHTML = `<div class="preview-summary"><span>전체 ${state.rows.length.toLocaleString("ko-KR")}건</span>${summary}</div>${privacyNotice}${state.errors.length ? `<ul class="preview-errors">${errorList}${state.errors.length > 8 ? `<li>그 외 ${state.errors.length - 8}개 오류</li>` : ""}</ul>` : `<p class="preview-ok">형식 검증을 통과했습니다. 500건씩 나누어 안전하게 저장합니다.</p>`}`;
   $("#import-submit").disabled = !state.rows.length || Boolean(state.errors.length);
 }
 
 $("#csv-file").addEventListener("change", async (event) => {
   const [file] = event.target.files;
   if (!file) return;
-  if (file.size > 1024 * 1024) {
-    showToast("CSV는 1MB 이하여야 합니다.");
+  if (file.size > MAX_FILE_BYTES) {
+    showToast("파일은 25MB 이하여야 합니다.");
     return;
   }
   try {
-    state.rows = rowsFromCsv(await file.text());
+    state.ignoredBodyColumn = false;
+    state.rows = await rowsFromFile(file);
     state.errors = validateRows(state.rows);
     $(".file-drop span").textContent = file.name;
     $(".file-drop").classList.add("active");
@@ -169,15 +204,24 @@ $("#import-form").addEventListener("submit", async (event) => {
       delete row._line;
       return row;
     });
-    const response = await fetch("/api/import", {
-      method: "POST",
-      headers: { authorization: `Bearer ${token}`, "content-type": "application/json", accept: "application/json" },
-      body: JSON.stringify({ rows }),
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error ?? "가져오기에 실패했습니다.");
-    showToast(`${result.inserted}건 저장 · ${result.duplicates}건 중복 제외`);
-    $("#import-preview").innerHTML = `<p class="preview-ok">가져오기 완료: 신규 ${result.inserted}건, 중복 ${result.duplicates}건</p>`;
+    let inserted = 0;
+    let duplicates = 0;
+    const totalBatches = Math.ceil(rows.length / IMPORT_BATCH_SIZE);
+    for (let offset = 0; offset < rows.length; offset += IMPORT_BATCH_SIZE) {
+      const batchNumber = Math.floor(offset / IMPORT_BATCH_SIZE) + 1;
+      button.textContent = `저장 중… ${batchNumber}/${totalBatches}`;
+      const response = await fetch("/api/import", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({ rows: rows.slice(offset, offset + IMPORT_BATCH_SIZE) }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(`${batchNumber}번째 묶음: ${result.error ?? "가져오기에 실패했습니다."}`);
+      inserted += Number(result.inserted) || 0;
+      duplicates += Number(result.duplicates) || 0;
+    }
+    showToast(`${inserted.toLocaleString("ko-KR")}건 저장 · ${duplicates.toLocaleString("ko-KR")}건 중복 제외`);
+    $("#import-preview").innerHTML = `<p class="preview-ok">가져오기 완료: 신규 ${inserted.toLocaleString("ko-KR")}건, 중복 ${duplicates.toLocaleString("ko-KR")}건</p>`;
     $("#csv-file").value = "";
     $("#import-token").value = "";
     state.rows = [];

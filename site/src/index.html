@@ -14,14 +14,14 @@
     <header class="topbar">
       <a class="brand" href="#top" aria-label="AgendaFrame 홈"><span class="brand-mark" aria-hidden="true">AF</span><span class="brand-copy"><b>AgendaFrame</b><small>의제·프레임 분석</small></span></a>
       <nav class="topnav" aria-label="주요 메뉴"><a href="#agenda-workspace">오늘의 의제</a><a href="#comparison">언론사 비교</a><button type="button" data-open-method>분석 기준</button></nav>
-      <div class="top-actions"><span class="demo-badge"><i aria-hidden="true"></i> 시연용 합성 데이터</span><button class="refresh-button" id="refresh-button" type="button" aria-label="데모 데이터 갱신"><span aria-hidden="true">↻</span><span>갱신</span></button></div>
+      <div class="top-actions"><span class="demo-badge" id="data-badge"><i aria-hidden="true"></i> 실데이터 확인 중</span><button class="refresh-button" id="refresh-button" type="button" aria-label="실데이터 갱신"><span aria-hidden="true">↻</span><span>갱신</span></button></div>
     </header>
 
     <div id="top"></div>
     <main>
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow">2026.07.13 · KST · 오늘의 미디어 의제</p>
+          <p class="eyebrow"><span id="hero-date">2026.07.14</span> · KST · 오늘의 미디어 의제</p>
           <h1 id="hero-title">오늘, 언론은<br /><em>무엇을 크게</em> 다뤘을까?</h1>
           <p class="hero-description">주요 언론사의 홈페이지 배치와 보도 빈도를 읽고, 같은 이슈를 어떤 프레임으로 설명했는지 근거와 함께 비교합니다.</p>
           <button class="text-button" type="button" data-open-method>의제 점수는 어떻게 계산하나요? <span aria-hidden="true">↗</span></button>
@@ -29,10 +29,16 @@
         <div class="snapshot" aria-label="오늘의 데이터 현황">
           <div class="snapshot-heading"><span>DATA SNAPSHOT</span><strong id="snapshot-time">18:00 기준</strong></div>
           <div class="stat-grid">
-            <article><span>분석 언론사</span><strong id="source-count">5</strong><small>2 · 1 · 2 표본</small></article><article><span>관측 기사</span><strong id="article-count">142</strong><small id="article-count-note">합성 데이터</small></article><article><span>오늘 이슈</span><strong>18</strong><small>개 데모 묶음</small></article><article><span>실데이터 연결</span><strong class="status-value" id="collection-status">CSV 준비</strong><small id="collection-status-note">관리자 업로드</small></article>
+            <article><span>분석 언론사</span><strong id="source-count">5</strong><small>2 · 1 · 2 표본</small></article><article><span>관측 기사</span><strong id="article-count">0</strong><small id="article-count-note">확인 중</small></article><article><span>분석 데모</span><strong>4</strong><small>개 합성 이슈</small></article><article><span>실데이터 연결</span><strong class="status-value" id="collection-status">확인 중</strong><small id="collection-status-note">운영 DB 조회</small></article>
           </div>
           <div class="pipeline-strip"><span>수집</span><i></i><span>클러스터링</span><i></i><span>점수화</span><i></i><span>프레임 분석</span></div>
         </div>
+      </section>
+
+      <section class="live-feed" id="live-feed" aria-labelledby="live-feed-title" hidden>
+        <div class="section-heading live-heading"><div><p class="eyebrow">LIVE ARTICLE LINKS</p><h2 id="live-feed-title">실제 연결 기사</h2></div><p id="live-feed-note">운영 DB에 저장된 원문 메타데이터</p></div>
+        <div class="live-article-grid" id="live-article-list" aria-live="polite"></div>
+        <p class="panel-note"><span aria-hidden="true">ⓘ</span> 제목·원문 주소·게시 시각·관측 배치만 저장하며 기사 본문은 저장하지 않습니다.</p>
       </section>
 
       <section class="workspace" id="agenda-workspace" aria-label="오늘의 의제 분석 화면">
@@ -51,12 +57,12 @@
         <div class="source-panel" aria-label="실데이터 분석 매체 표본">
           <div><p class="eyebrow">LIVE DATA PANEL</p><h3>전국 종합일간지 5곳 · 2 : 1 : 2</h3><p>정치성향은 매체 판정이 아니라 비교 표본 구성에만 사용하며, 실제 분석은 매체별·이슈별로 제시합니다.</p></div>
           <ol><li><span>진보 표본</span><b>한겨레 · 경향신문</b></li><li><span>중도 표본</span><b>한국일보</b></li><li><span>보수 표본</span><b>중앙일보 · 조선일보</b></li></ol>
-          <small>무단 크롤링 없이 관리자가 확인한 제목·URL·시각·배치 메타데이터만 CSV로 연결합니다.</small>
+          <small>무단 크롤링 없이 BigKinds 내보내기에서 제목·URL·날짜 메타데이터만 연결합니다.</small>
         </div>
       </section>
     </main>
 
-    <footer><div class="brand footer-brand"><span class="brand-mark" aria-hidden="true">AF</span><span class="brand-copy"><b>AgendaFrame</b><small>Capstone MVP</small></span></div><p>이 화면의 기사·언론사·분석 결과는 제품 검증을 위한 합성 데이터입니다.</p><button type="button" data-open-method>분석 방법론 보기</button></footer>
+    <footer><div class="brand footer-brand"><span class="brand-mark" aria-hidden="true">AF</span><span class="brand-copy"><b>AgendaFrame</b><small>Capstone MVP</small></span></div><p id="data-disclosure">실제 연결 기사와 분석용 합성 데이터를 구분해 표시합니다.</p><button type="button" data-open-method>분석 방법론 보기</button></footer>
 
     <dialog class="modal" id="method-dialog" aria-labelledby="method-dialog-title">
       <form method="dialog"><button class="modal-close" aria-label="닫기">×</button></form><p class="eyebrow">AGENDA SCORE v0.1</p><h2 id="method-dialog-title">의제 점수 산식</h2><p class="modal-lead">네 가지 요소를 0~100으로 정규화한 뒤 가중 합산합니다. 모든 결과에는 산식 버전과 계산 시각을 기록합니다.</p>
