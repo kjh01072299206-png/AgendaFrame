@@ -22,6 +22,8 @@ __pycache__/
 .ruff_cache/
 tmp/
 tmp_*/
+*.tar.gz
+*.zip
 
 # Environment / secrets
 .env
