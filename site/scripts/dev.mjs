@@ -27,6 +27,12 @@ const server = createServer(async (request, response) => {
       response.end(JSON.stringify({ error: "로컬 미리보기에서는 D1 가져오기를 사용할 수 없습니다." }));
       return;
     }
+    if (pathname === "/api/articles") {
+      const searchParams = new URL(request.url ?? "/", "http://localhost").searchParams;
+      response.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
+      response.end(JSON.stringify({ articles: [], total: 0, limit: Number(searchParams.get("limit")) || 50, offset: Number(searchParams.get("offset")) || 0, hasMore: false }));
+      return;
+    }
     const requested = pathname === "/" ? "index.html" : pathname === "/admin" || pathname === "/admin/" ? "admin.html" : pathname.slice(1);
     const safePath = normalize(requested).replace(/^(\.\.[/\\])+/, "");
     const files = {

@@ -37,8 +37,17 @@
 
       <section class="live-feed" id="live-feed" aria-labelledby="live-feed-title" hidden>
         <div class="section-heading live-heading"><div><p class="eyebrow">LIVE ARTICLE LINKS</p><h2 id="live-feed-title">실제 연결 기사</h2></div><p id="live-feed-note">운영 DB에 저장된 원문 메타데이터</p></div>
+        <form class="live-filter-form" id="live-filter-form" role="search">
+          <label><span>제목 검색</span><input id="live-search" name="q" type="search" maxlength="100" autocomplete="off" placeholder="검색어 입력" /></label>
+          <label><span>언론사</span><select id="live-source" name="source"><option value="">전체</option><option>한겨레</option><option>경향신문</option><option>한국일보</option><option>중앙일보</option><option>조선일보</option></select></label>
+          <label><span>분야</span><select id="live-section" name="section"><option value="">전체</option><option>정치</option><option>경제</option><option>사회</option><option>문화</option><option>스포츠</option><option>지역</option><option>국제</option><option>IT_과학</option></select></label>
+          <label><span>날짜</span><input id="live-date" name="date" type="date" /></label>
+          <div class="live-filter-actions"><button type="submit">검색</button><button type="reset">초기화</button></div>
+        </form>
+        <p class="live-empty" id="live-empty" hidden>조건에 맞는 기사가 없습니다.</p>
         <div class="live-article-grid" id="live-article-list" aria-live="polite"></div>
-        <p class="panel-note"><span aria-hidden="true">ⓘ</span> 제목·원문 주소·게시 시각·관측 배치만 저장하며 기사 본문은 저장하지 않습니다.</p>
+        <div class="live-pagination"><button id="live-load-more" type="button" hidden>기사 더 보기</button></div>
+        <p class="panel-note"><span aria-hidden="true">ⓘ</span> 제목·원문 주소·실제 게시 시각·관측 배치만 저장하며 기사 본문은 저장하지 않습니다.</p>
       </section>
 
       <section class="workspace" id="agenda-workspace" aria-label="오늘의 의제 분석 화면">

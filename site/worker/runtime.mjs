@@ -258,7 +258,24 @@ async function handleImport(request, env) {
       INSERT INTO articles
         (id, provider, external_id, source_id, title, canonical_url, section, published_at, collected_at, homepage_placement, homepage_rank)
       VALUES (?, 'bigkinds_export', ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(canonical_url) DO NOTHING
+      ON CONFLICT(canonical_url) DO UPDATE SET
+        provider = excluded.provider,
+        external_id = excluded.external_id,
+        source_id = excluded.source_id,
+        title = excluded.title,
+        section = COALESCE(excluded.section, articles.section),
+        published_at = excluded.published_at,
+        homepage_placement = COALESCE(excluded.homepage_placement, articles.homepage_placement),
+        homepage_rank = COALESCE(excluded.homepage_rank, articles.homepage_rank)
+      WHERE
+        articles.provider != excluded.provider OR
+        articles.external_id != excluded.external_id OR
+        articles.source_id != excluded.source_id OR
+        articles.title != excluded.title OR
+        (excluded.section IS NOT NULL AND COALESCE(articles.section, '') != excluded.section) OR
+        COALESCE(articles.published_at, 0) != COALESCE(excluded.published_at, 0) OR
+        (excluded.homepage_placement IS NOT NULL AND COALESCE(articles.homepage_placement, '') != excluded.homepage_placement) OR
+        (excluded.homepage_rank IS NOT NULL AND COALESCE(articles.homepage_rank, 0) != excluded.homepage_rank)
     `).bind(
       crypto.randomUUID(),
       articleIds[index],
@@ -278,8 +295,8 @@ async function handleImport(request, env) {
       sourceCount.received += 1;
       sourceCount.inserted += Number(articleResults[index]?.meta?.changes ?? 0) > 0 ? 1 : 0;
     });
-    const inserted = [...counts.values()].reduce((total, value) => total + value.inserted, 0);
-    const duplicates = rows.length - inserted;
+    const saved = [...counts.values()].reduce((total, value) => total + value.inserted, 0);
+    const duplicates = rows.length - saved;
     const finishedAt = Date.now();
 
     const resultStatements = sourcePanel.sources.map((source) => {
@@ -303,18 +320,20 @@ async function handleImport(request, env) {
       UPDATE collection_runs
       SET status = 'success', finished_at = ?, article_count = ?, duplicate_count = ?, error_count = 0
       WHERE id = ?
-    `).bind(finishedAt, inserted, duplicates, runId));
+    `).bind(finishedAt, saved, duplicates, runId));
     await db.batch(resultStatements);
 
     return jsonResponse({
       runId,
       received: rows.length,
-      inserted,
+      saved,
+      inserted: saved,
       duplicates,
       sources: sourcePanel.sources.map((source) => ({
         id: source.id,
         name: source.name,
         received: counts.get(source.id).received,
+        saved: counts.get(source.id).inserted,
         inserted: counts.get(source.id).inserted,
       })),
     }, 201);
@@ -342,8 +361,50 @@ async function handleImport(request, env) {
 
 async function handleArticles(request, env) {
   if (!env?.DB) return jsonResponse({ articles: [], total: 0 });
-  const limitValue = Number(new URL(request.url).searchParams.get("limit") ?? 50);
+  const url = new URL(request.url);
+  const limitValue = Number(url.searchParams.get("limit") ?? 50);
   const limit = Number.isInteger(limitValue) ? Math.min(Math.max(limitValue, 1), 100) : 50;
+  const offsetValue = Number(url.searchParams.get("offset") ?? 0);
+  const offset = Number.isInteger(offsetValue) ? Math.min(Math.max(offsetValue, 0), 100_000) : 0;
+  const sourceValue = String(url.searchParams.get("source") ?? "").trim();
+  const sectionValue = String(url.searchParams.get("section") ?? "").trim().slice(0, 40);
+  const queryValue = String(url.searchParams.get("q") ?? "").trim().slice(0, 100);
+  const dateValue = String(url.searchParams.get("date") ?? "").trim();
+  const clauses = [];
+  const parameters = [];
+
+  if (sourceValue) {
+    const source = sourcePanel.sources.find((candidate) => candidate.active && (candidate.id === sourceValue || candidate.name === sourceValue));
+    if (!source) return jsonResponse({ error: "지원하지 않는 언론사 필터입니다." }, 400);
+    clauses.push("a.source_id = ?");
+    parameters.push(source.id);
+  }
+  if (sectionValue) {
+    clauses.push("a.section LIKE ? ESCAPE '\\'");
+    parameters.push(`${sectionValue.replace(/[\\%_]/g, "\\$&")}%`);
+  }
+  if (queryValue) {
+    clauses.push("a.title LIKE ? ESCAPE '\\'");
+    parameters.push(`%${queryValue.replace(/[\\%_]/g, "\\$&")}%`);
+  }
+  if (dateValue) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) return jsonResponse({ error: "날짜 필터 형식을 확인해 주세요." }, 400);
+    const start = Date.parse(`${dateValue}T00:00:00+09:00`);
+    if (!Number.isFinite(start)) return jsonResponse({ error: "날짜 필터를 확인해 주세요." }, 400);
+    clauses.push("a.published_at >= ? AND a.published_at < ?");
+    parameters.push(start, start + 86_400_000);
+  }
+
+  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+  const totalStatement = env.DB.prepare(`
+    SELECT COUNT(*) AS total
+    FROM articles a
+    JOIN media_sources s ON s.id = a.source_id
+    ${where}
+  `);
+  const totalResult = parameters.length
+    ? await totalStatement.bind(...parameters).first()
+    : await totalStatement.first();
   const result = await env.DB.prepare(`
     SELECT
       a.id,
@@ -357,10 +418,13 @@ async function handleArticles(request, env) {
       a.homepage_rank AS homepageRank
     FROM articles a
     JOIN media_sources s ON s.id = a.source_id
-    ORDER BY COALESCE(a.published_at, a.collected_at) DESC
-    LIMIT ?
-  `).bind(limit).all();
-  return jsonResponse({ articles: result.results ?? [], total: (result.results ?? []).length });
+    ${where}
+    ORDER BY COALESCE(a.published_at, a.collected_at) DESC, a.id DESC
+    LIMIT ? OFFSET ?
+  `).bind(...parameters, limit, offset).all();
+  const articles = result.results ?? [];
+  const total = Number(totalResult?.total ?? 0);
+  return jsonResponse({ articles, total, limit, offset, hasMore: offset + articles.length < total });
 }
 
 const worker = {

@@ -1,5 +1,6 @@
 const allowedSources = ["한겨레", "경향신문", "한국일보", "중앙일보", "조선일보"];
 const headerAliases = {
+  news_id: ["news_id", "뉴스식별자", "뉴스id"],
   source: ["source", "언론사", "매체"],
   title: ["title", "제목"],
   url: ["url", "원문url", "원문_url", "링크"],
@@ -13,7 +14,7 @@ const headerAliases = {
 const MAX_ROWS = 20_000;
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const IMPORT_BATCH_SIZE = 500;
-const state = { rows: [], errors: [], ignoredBodyColumn: false };
+const state = { rows: [], errors: [], ignoredBodyColumn: false, restoredPublishedTimes: false };
 const $ = (selector) => document.querySelector(selector);
 
 function showToast(message) {
@@ -80,7 +81,17 @@ function normalizePlacement(value) {
   return placements[normalized] ?? normalized;
 }
 
-function normalizePublishedAt(value) {
+function publishedAtFromNewsId(value) {
+  const match = String(value ?? "").trim().match(/\.(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/);
+  if (!match) return "";
+  const [, year, month, day, hour, minute, second] = match;
+  const timestamp = `${year}-${month}-${day}T${hour}:${minute}:${second}+09:00`;
+  return Number.isFinite(Date.parse(timestamp)) ? timestamp : "";
+}
+
+function normalizePublishedAt(value, newsId = "") {
+  const exactTimestamp = publishedAtFromNewsId(newsId);
+  if (exactTimestamp) return exactTimestamp;
   if (value instanceof Date && Number.isFinite(value.getTime())) {
     const year = value.getFullYear();
     const month = String(value.getMonth() + 1).padStart(2, "0");
@@ -114,6 +125,7 @@ function rowsFromTable(parsed) {
     if (columns[required] === undefined) throw new Error(`필수 열 ${required}이(가) 없습니다.`);
   }
   state.ignoredBodyColumn = headers.some((header) => ["body", "content", "fulltext", "본문", "원문"].includes(normalizedHeader(header)));
+  state.restoredPublishedTimes = columns.news_id !== undefined;
 
   const now = new Date().toISOString();
   return dataRows.map((values, index) => ({
@@ -121,7 +133,7 @@ function rowsFromTable(parsed) {
     source: String(values[columns.source] ?? "").trim(),
     title: String(values[columns.title] ?? "").trim(),
     url: normalizeArticleUrl(values[columns.url]),
-    published_at: normalizePublishedAt(values[columns.published_at]),
+    published_at: normalizePublishedAt(values[columns.published_at], columns.news_id === undefined ? "" : values[columns.news_id]),
     collected_at: columns.collected_at === undefined ? now : normalizePublishedAt(values[columns.collected_at] || now),
     section: columns.section === undefined ? "" : String(values[columns.section] ?? "").trim(),
     homepage_placement: columns.homepage_placement === undefined ? "" : normalizePlacement(values[columns.homepage_placement] ?? ""),
@@ -163,7 +175,8 @@ function renderPreview() {
   const summary = allowedSources.map((source) => `<span>${source} ${counts[source]}건</span>`).join("");
   const errorList = state.errors.slice(0, 8).map((error) => `<li>${error.replace(/[&<>]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[character])}</li>`).join("");
   const privacyNotice = state.ignoredBodyColumn ? `<p class="preview-ok">BigKinds의 본문 열은 폐기했으며 서버로 전송하지 않습니다.</p>` : "";
-  root.innerHTML = `<div class="preview-summary"><span>전체 ${state.rows.length.toLocaleString("ko-KR")}건</span>${summary}</div>${privacyNotice}${state.errors.length ? `<ul class="preview-errors">${errorList}${state.errors.length > 8 ? `<li>그 외 ${state.errors.length - 8}개 오류</li>` : ""}</ul>` : `<p class="preview-ok">형식 검증을 통과했습니다. 500건씩 나누어 안전하게 저장합니다.</p>`}`;
+  const timeNotice = state.restoredPublishedTimes ? `<p class="preview-ok">뉴스 식별자에서 실제 게시 시각(시·분·초, KST)을 복원했습니다.</p>` : "";
+  root.innerHTML = `<div class="preview-summary"><span>전체 ${state.rows.length.toLocaleString("ko-KR")}건</span>${summary}</div>${privacyNotice}${timeNotice}${state.errors.length ? `<ul class="preview-errors">${errorList}${state.errors.length > 8 ? `<li>그 외 ${state.errors.length - 8}개 오류</li>` : ""}</ul>` : `<p class="preview-ok">형식 검증을 통과했습니다. 500건씩 나누어 안전하게 저장·갱신합니다.</p>`}`;
   $("#import-submit").disabled = !state.rows.length || Boolean(state.errors.length);
 }
 
@@ -176,6 +189,7 @@ $("#csv-file").addEventListener("change", async (event) => {
   }
   try {
     state.ignoredBodyColumn = false;
+    state.restoredPublishedTimes = false;
     state.rows = await rowsFromFile(file);
     state.errors = validateRows(state.rows);
     $(".file-drop span").textContent = file.name;
@@ -204,7 +218,7 @@ $("#import-form").addEventListener("submit", async (event) => {
       delete row._line;
       return row;
     });
-    let inserted = 0;
+    let saved = 0;
     let duplicates = 0;
     const totalBatches = Math.ceil(rows.length / IMPORT_BATCH_SIZE);
     for (let offset = 0; offset < rows.length; offset += IMPORT_BATCH_SIZE) {
@@ -217,14 +231,15 @@ $("#import-form").addEventListener("submit", async (event) => {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(`${batchNumber}번째 묶음: ${result.error ?? "가져오기에 실패했습니다."}`);
-      inserted += Number(result.inserted) || 0;
+      saved += Number(result.saved ?? result.inserted) || 0;
       duplicates += Number(result.duplicates) || 0;
     }
-    showToast(`${inserted.toLocaleString("ko-KR")}건 저장 · ${duplicates.toLocaleString("ko-KR")}건 중복 제외`);
-    $("#import-preview").innerHTML = `<p class="preview-ok">가져오기 완료: 신규 ${inserted.toLocaleString("ko-KR")}건, 중복 ${duplicates.toLocaleString("ko-KR")}건</p>`;
+    showToast(`${saved.toLocaleString("ko-KR")}건 저장·갱신 · ${duplicates.toLocaleString("ko-KR")}건 변경 없음`);
+    $("#import-preview").innerHTML = `<p class="preview-ok">가져오기 완료: 저장·갱신 ${saved.toLocaleString("ko-KR")}건, 변경 없음 ${duplicates.toLocaleString("ko-KR")}건</p>`;
     $("#csv-file").value = "";
     $("#import-token").value = "";
     state.rows = [];
+    state.restoredPublishedTimes = false;
   } catch (error) {
     showToast(error.message);
     button.disabled = false;

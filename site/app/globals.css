@@ -201,7 +201,18 @@ main { overflow: clip; }
 .live-heading { margin-bottom: 22px; }
 .live-heading h2 { margin: 0; font-family: var(--font-serif); font-size: clamp(30px, 3.4vw, 48px); letter-spacing: -.055em; }
 .live-heading > p { margin: 0; color: var(--muted); font-size: 10px; }
+.live-filter-form { display: grid; grid-template-columns: minmax(220px, 1.6fr) repeat(3, minmax(130px, .75fr)) auto; gap: 10px; align-items: end; margin-bottom: 18px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.52); }
+.live-filter-form label { display: grid; gap: 6px; color: var(--muted); font-size: 9px; font-weight: 800; }
+.live-filter-form input, .live-filter-form select { width: 100%; height: 38px; padding: 0 10px; border: 1px solid #cbc3b8; border-radius: 8px; background: white; color: var(--ink); font: inherit; font-size: 10px; }
+.live-filter-form input:focus, .live-filter-form select:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+.live-filter-actions { display: flex; gap: 6px; }
+.live-filter-actions button, .live-pagination button { min-height: 38px; padding: 0 14px; border: 1px solid var(--ink); border-radius: 8px; background: var(--ink); color: white; font-size: 10px; font-weight: 800; cursor: pointer; }
+.live-filter-actions button[type="reset"] { border-color: var(--line); background: transparent; color: var(--muted); }
+.live-filter-actions button:hover, .live-pagination button:hover { border-color: var(--accent); background: var(--accent); color: white; }
+.live-filter-actions button:disabled, .live-pagination button:disabled { cursor: wait; opacity: .55; }
+.live-empty { margin: 0; padding: 42px 18px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--muted); font-size: 11px; text-align: center; }
 .live-article-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.live-article-grid:empty { display: none; }
 .live-article { min-height: 250px; display: flex; flex-direction: column; padding: 20px 18px; border-right: 1px solid var(--line); }
 .live-article:nth-child(5n), .live-article:last-child { border-right: 0; }
 .live-article:nth-child(n+6) { border-top: 1px solid var(--line); }
@@ -211,6 +222,7 @@ main { overflow: clip; }
 .live-article h3 a:hover { color: var(--accent); }
 .live-article-detail { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.7; }
 .live-original { width: max-content; margin-top: auto; padding-top: 18px; color: var(--blue); font-size: 10px; font-weight: 800; }
+.live-pagination { display: flex; justify-content: center; padding-top: 18px; }
 
 body > footer { display: flex; align-items: center; gap: 30px; padding: 25px clamp(20px, 4vw, 68px); border-top: 1px solid var(--line); background: var(--ink); color: white; }
 body > footer .brand-mark { background: white; color: var(--ink); }
@@ -253,6 +265,8 @@ body > footer > button { border: 0; border-bottom: 1px solid #778093; background
   .method-preview { grid-template-columns: 1fr; }
   .source-panel { grid-template-columns: 1fr; }
   .source-panel > small { grid-column: auto; }
+  .live-filter-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .live-filter-actions { grid-column: 1 / -1; }
   .live-article-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .live-article { border-bottom: 1px solid var(--line); }
   .live-article:nth-child(n) { border-right: 1px solid var(--line); border-top: 0; }
@@ -283,6 +297,9 @@ body > footer > button { border: 0; border-bottom: 1px solid #778093; background
   .principles article { min-height: 150px; }
   .source-panel { padding: 22px; }
   .live-feed { width: calc(100% - 28px); margin-bottom: 54px; padding: 22px 18px; border-radius: 18px; }
+  .live-filter-form { grid-template-columns: 1fr; padding: 12px; }
+  .live-filter-actions { grid-column: auto; }
+  .live-filter-actions button { flex: 1; }
   .live-article-grid { grid-template-columns: 1fr; }
   .live-article { min-height: 0; padding: 20px 4px; border-right: 0; }
   .live-article:last-child { border-bottom: 0; }

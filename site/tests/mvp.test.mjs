@@ -16,7 +16,9 @@ test("serves the complete AgendaFrame MVP", async () => {
   assert.match(html, /id="agenda-list"/);
   assert.match(html, /id="issue-detail"/);
   assert.match(html, /id="live-feed"/);
+  assert.match(html, /id="live-filter-form"/);
   assert.match(html, /id="live-article-list"/);
+  assert.match(html, /id="live-load-more"/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
 });
 
@@ -43,7 +45,8 @@ test("serves interactive application assets", async () => {
   assert.match(script, /data-copy-report/);
   assert.match(script, /refreshCollectionStatus/);
   assert.match(script, /refreshLiveArticles/);
-  assert.match(script, /\/api\/articles\?limit=100/);
+  assert.match(script, /new URLSearchParams/);
+  assert.match(script, /liveFilterParameters/);
   assert.match(script, /원문 기사 보기/);
   assert.match(styles, /\.workspace/);
   assert.match(styles, /\.source-panel/);
@@ -55,6 +58,8 @@ test("serves interactive application assets", async () => {
   assert.match(adminScript, /Bearer \$\{token\}/);
   assert.match(adminScript, /window\.readXlsxFile/);
   assert.match(adminScript, /IMPORT_BATCH_SIZE = 500/);
+  assert.match(adminScript, /publishedAtFromNewsId/);
+  assert.match(adminScript, /뉴스식별자/);
   assert.match(adminScript, /본문 열은 폐기/);
   assert.match(excelReader, /readXlsxFile/);
   assert.match(excelReaderLicense, /MIT License/);
@@ -84,6 +89,49 @@ test("reports BigKinds-import health and rejects unknown paths", async () => {
 
   const missing = await worker.fetch(new Request("https://example.test/unknown"));
   assert.equal(missing.status, 404);
+});
+
+test("filters and paginates the complete article collection", async () => {
+  const statements = [];
+  const article = {
+    id: "article-1",
+    sourceId: "hani",
+    source: "한겨레",
+    title: "주거 정책 기사",
+    url: "https://www.hani.co.kr/arti/politics/test.html",
+    section: "정치_국회",
+    publishedAt: Date.parse("2026-07-14T17:44:48+09:00"),
+    collectedAt: Date.parse("2026-07-14T18:00:00+09:00"),
+    homepagePlacement: null,
+    homepageRank: null,
+  };
+  const DB = {
+    prepare(sql) {
+      return {
+        bind(...parameters) {
+          statements.push({ sql, parameters });
+          return sql.includes("COUNT(*)")
+            ? { first: async () => ({ total: 123 }) }
+            : { all: async () => ({ results: [article] }) };
+        },
+      };
+    },
+  };
+
+  const response = await worker.fetch(new Request("https://example.test/api/articles?limit=25&offset=50&source=한겨레&section=정치&q=주거&date=2026-07-14"), { DB });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.total, 123);
+  assert.equal(body.limit, 25);
+  assert.equal(body.offset, 50);
+  assert.equal(body.hasMore, true);
+  assert.deepEqual(body.articles, [article]);
+  assert.equal(statements.length, 2);
+  assert.match(statements[0].sql, /a\.source_id = \?/);
+  assert.match(statements[0].sql, /a\.section LIKE \?/);
+  assert.match(statements[0].sql, /a\.title LIKE \?/);
+  assert.match(statements[0].sql, /a\.published_at >= \?/);
+  assert.deepEqual(statements[1].parameters.slice(-2), [25, 50]);
 });
 
 test("validates metadata-only imports and canonicalizes duplicate URLs", () => {

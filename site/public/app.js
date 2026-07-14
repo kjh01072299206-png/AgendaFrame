@@ -204,6 +204,11 @@ const state = {
   tab: "outlets",
   frame: "responsibility",
   articleSort: "latest",
+  liveOffset: 0,
+  liveLimit: 50,
+  liveTotal: 0,
+  liveLoaded: 0,
+  liveLoading: false,
 };
 
 const categories = ["전체", "정치", "경제", "사회", "복지", "산업정책"];
@@ -214,7 +219,7 @@ const placementLabels = { top: "TOP", main: "MAIN", section: "SECTION", list: "L
 function formatKoreanDateTime(value) {
   const date = new Date(Number(value));
   if (!Number.isFinite(date.getTime())) return "시각 미확인";
-  return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
+  return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(date);
 }
 
 function renderTodayDate() {
@@ -276,34 +281,71 @@ async function refreshCollectionStatus({ announce = false } = {}) {
   }
 }
 
-async function refreshLiveArticles({ announce = false } = {}) {
+function liveArticleMarkup(article) {
+  const placement = placementLabels[article.homepagePlacement] ?? "배치 미확인";
+  const rank = article.homepageRank ? ` · 관측 ${article.homepageRank}위` : "";
+  return `<article class="live-article">
+    <div class="live-article-meta"><span class="live-source">${escapeHtml(article.source)}</span><span>${escapeHtml(article.section ?? "분야 미분류")}</span></div>
+    <h3><a href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(article.title)}</a></h3>
+    <p class="live-article-detail">게시 ${formatKoreanDateTime(article.publishedAt)}<br />홈페이지 ${placement}${rank}</p>
+    <a class="live-original" href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(article.source)} 원문 기사 열기">원문 기사 보기 ↗</a>
+  </article>`;
+}
+
+function liveFilterParameters() {
+  const form = $("#live-filter-form");
+  const values = new FormData(form);
+  const parameters = new URLSearchParams();
+  for (const key of ["q", "source", "section", "date"]) {
+    const value = String(values.get(key) ?? "").trim();
+    if (value) parameters.set(key, value);
+  }
+  return parameters;
+}
+
+async function refreshLiveArticles({ append = false, announce = false } = {}) {
   const section = $("#live-feed");
+  if (state.liveLoading) return;
+  state.liveLoading = true;
+  const loadMore = $("#live-load-more");
+  loadMore.disabled = true;
   try {
-    const response = await fetch("/api/articles?limit=100", { headers: { accept: "application/json" }, cache: "no-store" });
+    if (!append) {
+      state.liveOffset = 0;
+      state.liveLoaded = 0;
+    }
+    const parameters = liveFilterParameters();
+    const hasActiveFilters = parameters.size > 0;
+    parameters.set("limit", String(state.liveLimit));
+    parameters.set("offset", String(state.liveOffset));
+    const response = await fetch(`/api/articles?${parameters}`, { headers: { accept: "application/json" }, cache: "no-store" });
     if (!response.ok) throw new Error("articles unavailable");
     const payload = await response.json();
     const articles = Array.isArray(payload.articles) ? payload.articles : [];
-    if (!articles.length) {
+    const total = Number(payload.total) || 0;
+    if (!articles.length && !append && !hasActiveFilters) {
       section.hidden = true;
       return;
     }
 
     section.hidden = false;
-    $("#live-feed-note").textContent = `${articles.length}건 · 최근 게시순`;
-    $("#live-article-list").innerHTML = articles.map((article) => {
-      const placement = placementLabels[article.homepagePlacement] ?? "배치 미확인";
-      const rank = article.homepageRank ? ` · 관측 ${article.homepageRank}위` : "";
-      return `<article class="live-article">
-        <div class="live-article-meta"><span class="live-source">${escapeHtml(article.source)}</span><span>${escapeHtml(article.section ?? "분야 미분류")}</span></div>
-        <h3><a href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(article.title)}</a></h3>
-        <p class="live-article-detail">게시 ${formatKoreanDateTime(article.publishedAt)}<br />홈페이지 ${placement}${rank}</p>
-        <a class="live-original" href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(article.source)} 원문 기사 열기">원문 기사 보기 ↗</a>
-      </article>`;
-    }).join("");
+    const list = $("#live-article-list");
+    const markup = articles.map(liveArticleMarkup).join("");
+    if (append) list.insertAdjacentHTML("beforeend", markup);
+    else list.innerHTML = markup;
+    state.liveLoaded = append ? state.liveLoaded + articles.length : articles.length;
+    state.liveOffset = state.liveLoaded;
+    state.liveTotal = total;
+    $("#live-feed-note").textContent = `${state.liveLoaded.toLocaleString("ko-KR")} / ${total.toLocaleString("ko-KR")}건 · 실제 게시순`;
+    $("#live-empty").hidden = state.liveLoaded > 0;
+    loadMore.hidden = !(payload.hasMore && articles.length);
     $("#data-disclosure").textContent = "위 실제 기사 링크는 운영 DB 메타데이터이며, 아래 의제·프레임 분석은 제품 검증용 합성 데이터입니다.";
-    if (announce) showToast(`실제 기사 ${articles.length}건을 불러왔습니다.`);
+    if (announce) showToast(total ? `조건에 맞는 실제 기사 ${total.toLocaleString("ko-KR")}건입니다.` : "조건에 맞는 기사가 없습니다.");
   } catch {
     if (announce) showToast("실제 기사 목록을 불러오지 못했습니다.");
+  } finally {
+    state.liveLoading = false;
+    loadMore.disabled = false;
   }
 }
 
@@ -468,6 +510,19 @@ $("#refresh-button").addEventListener("click", async () => {
   await Promise.all([refreshCollectionStatus(), refreshLiveArticles({ announce: true })]);
   button.disabled = false;
   button.querySelector("span:last-child").textContent = "갱신";
+});
+
+$("#live-filter-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  refreshLiveArticles({ announce: true });
+});
+
+$("#live-filter-form").addEventListener("reset", () => {
+  window.setTimeout(() => refreshLiveArticles({ announce: true }), 0);
+});
+
+$("#live-load-more").addEventListener("click", () => {
+  refreshLiveArticles({ append: true });
 });
 
 renderTodayDate();
