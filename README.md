@@ -23,6 +23,7 @@
 - 5개 전국 종합일간지의 BigKinds Excel·CSV 메타데이터 가져오기
 - 실제 기사 기반 이슈 클러스터링, 의제 점수, 6종 프레임, 관찰 리포트 생성
 - D1 기반 기사·분석 실행·이슈·근거·리포트 저장과 URL 중복 방지
+- 상위 50개 이슈 사람 검토, 잘못 묶인 기사·누락 기사 기록, 정밀도·재현율 추정
 - 동일한 API 계약을 유지하는 Vertex AI·Gemini 교체 준비 구조
 
 ## 기술 구성
@@ -32,7 +33,7 @@
 | UI | Next.js 16, React 19, TypeScript |
 | 빌드 | Vite, vinext |
 | 배포 | OpenAI Sites, Cloudflare Workers 호환 ESM |
-| 데이터 계층 | Drizzle ORM, D1 확장 구조 |
+| 데이터 계층 | Drizzle ORM, D1 기사·분석·품질 검토 저장 |
 | 현재 분석 | 규칙 기반 분석기 `agenda-rules-v1` (추가 비용 없음) |
 | 향후 Google 연동 | BigQuery, Vertex AI Embeddings, Gemini 어댑터 |
 | 검증 | Node.js test runner, GitHub Actions |
@@ -99,6 +100,7 @@ python tools/render_agendaframe_outputs.py
 - 언론사 홈페이지를 자동 크롤링하지 않고, 관리자가 BigKinds에서 확보한 메타데이터만 가져옵니다.
 - 관리자 가져오기는 배포 환경의 비밀 토큰과 동일 출처 요청 검사를 통과해야 합니다.
 - 규칙 분석 결과를 AI 판정처럼 표시하지 않고 분석 방식과 한계를 함께 공개합니다.
+- 품질 지표는 사람 검토로 확인한 잘못 묶인 기사와 직접 등록한 누락 기사를 바탕으로 한 추정치임을 명시합니다.
 - 런타임 비밀값은 배포 환경에서 관리하고 소스 코드에 저장하지 않습니다.
 
 ## 협업과 이용 조건
