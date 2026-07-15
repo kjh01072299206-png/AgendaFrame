@@ -35,6 +35,30 @@ type ImportRow = {
   homepage_rank: string;
 };
 
+type AnalysisDay = {
+  date: string;
+  articleCount: number;
+  status: "pending" | "running" | "success" | "failed" | "empty";
+  analyzedArticleCount: number;
+  issueCount: number;
+  errorMessage?: string | null;
+};
+
+function moveDate(date: string, offset: number) {
+  const value = Date.parse(`${date}T00:00:00Z`);
+  return new Date(value + offset * 86_400_000).toISOString().slice(0, 10);
+}
+
+function batchDateRange(startDate: string, endDate: string) {
+  const start = Date.parse(`${startDate}T00:00:00Z`);
+  const end = Date.parse(`${endDate}T00:00:00Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate) || !Number.isFinite(start) || !Number.isFinite(end)) throw new Error("분석 기간을 확인하세요.");
+  if (end < start) throw new Error("종료일은 시작일보다 빠를 수 없습니다.");
+  const count = Math.floor((end - start) / 86_400_000) + 1;
+  if (count > 7) throw new Error("기간 분석은 한 번에 최대 7일까지 실행할 수 있습니다.");
+  return Array.from({ length: count }, (_, index) => moveDate(startDate, index));
+}
+
 function normalizedHeader(value: Cell) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, "");
 }
@@ -160,6 +184,7 @@ function validateRows(rows: ImportRow[]) {
 }
 
 export default function AdminClient() {
+  const todayKst = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
   const [token, setToken] = useState("");
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
@@ -168,7 +193,10 @@ export default function AdminClient() {
   const [restoredTimes, setRestoredTimes] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
-  const [analysisDate, setAnalysisDate] = useState(() => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }));
+  const [analysisDate, setAnalysisDate] = useState(todayKst);
+  const [rangeStart, setRangeStart] = useState(() => moveDate(todayKst, -6));
+  const [rangeEnd, setRangeEnd] = useState(todayKst);
+  const [batchDays, setBatchDays] = useState<AnalysisDay[]>([]);
   const counts = useMemo(() => Object.fromEntries(ALLOWED_SOURCES.map((source) => [source, rows.filter((row) => row.source === source).length])), [rows]);
 
   async function chooseFile(event: ChangeEvent<HTMLInputElement>) {
@@ -238,6 +266,84 @@ export default function AdminClient() {
     } finally { setBusy(false); }
   }
 
+  async function fetchBatchStatus() {
+    batchDateRange(rangeStart, rangeEnd);
+    const response = await fetch(`/api/analysis/runs?start=${encodeURIComponent(rangeStart)}&end=${encodeURIComponent(rangeEnd)}`, {
+      headers: { authorization: `Bearer ${token.trim()}` },
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error ?? "기간 분석 상태를 불러오지 못했습니다.");
+    const days = (result.days ?? []) as AnalysisDay[];
+    setBatchDays(days);
+    return days;
+  }
+
+  async function loadBatchStatus() {
+    if (!token.trim()) return setStatus("관리자 토큰을 입력하세요.");
+    setBusy(true);
+    setStatus(`${rangeStart}~${rangeEnd} 분석 상태 확인 중…`);
+    try {
+      const days = await fetchBatchStatus();
+      const complete = days.filter((day) => day.status === "success").length;
+      setStatus(`기간 상태 확인: ${days.length}일 중 ${complete}일 분석 완료`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "기간 분석 상태를 불러오지 못했습니다.");
+    } finally { setBusy(false); }
+  }
+
+  async function runBatchAnalysis() {
+    if (!token.trim()) return setStatus("관리자 토큰을 입력하세요.");
+    let requestedDates: string[];
+    try {
+      requestedDates = batchDateRange(rangeStart, rangeEnd);
+    } catch (error) {
+      return setStatus(error instanceof Error ? error.message : "분석 기간을 확인하세요.");
+    }
+    setBusy(true);
+    let completed = 0;
+    let skipped = 0;
+    let failed = 0;
+    try {
+      const existing = await fetchBatchStatus();
+      for (const [index, date] of requestedDates.entries()) {
+        const current = existing.find((day) => day.date === date);
+        if (current?.status === "success") {
+          skipped += 1;
+          continue;
+        }
+        if (current?.status === "empty" || !current?.articleCount) {
+          skipped += 1;
+          continue;
+        }
+        setStatus(`기간 분석 ${index + 1}/${requestedDates.length}: ${date} 분석 중…`);
+        setBatchDays((days) => days.map((day) => day.date === date ? { ...day, status: "running", errorMessage: null } : day));
+        try {
+          const response = await fetch("/api/analyze", {
+            method: "POST",
+            headers: { authorization: `Bearer ${token.trim()}`, "content-type": "application/json" },
+            body: JSON.stringify({ date }),
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            if (response.status === 401) throw new Error(result.error ?? "관리자 토큰이 올바르지 않습니다.");
+            failed += 1;
+            setBatchDays((days) => days.map((day) => day.date === date ? { ...day, status: "failed", errorMessage: result.error ?? "분석 실패" } : day));
+            continue;
+          }
+          completed += 1;
+          setBatchDays((days) => days.map((day) => day.date === date ? { ...day, status: "success", analyzedArticleCount: result.articleCount, issueCount: result.issueCount, errorMessage: null } : day));
+        } catch (error) {
+          if (error instanceof Error && error.message.includes("토큰")) throw error;
+          failed += 1;
+          setBatchDays((days) => days.map((day) => day.date === date ? { ...day, status: "failed", errorMessage: error instanceof Error ? error.message : "분석 실패" } : day));
+        }
+      }
+      setStatus(`기간 분석 완료: 신규 ${completed}일 · 기존/기사 없음 ${skipped}일 · 실패 ${failed}일${failed ? " · 다시 실행하면 실패 날짜부터 이어집니다." : ""}`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "기간 분석을 완료하지 못했습니다.");
+    } finally { setBusy(false); }
+  }
+
   return <div className="admin-body">
     <a className="skip-link" href="#import-form">가져오기 화면으로 건너뛰기</a>
     <header className="admin-topbar">
@@ -270,11 +376,28 @@ export default function AdminClient() {
       </section>
 
       <section className="import-card analysis-card" aria-labelledby="analysis-title">
-        <header><div><p className="eyebrow">STEP 02</p><h2 id="analysis-title">일일 분석 생성</h2></div><span className="free-badge">무료 규칙 분석</span></header>
-        <label className="field-label" htmlFor="analysis-date">분석할 날짜 (KST)</label>
-        <input id="analysis-date" className="admin-date" type="date" value={analysisDate} onChange={(event) => setAnalysisDate(event.target.value)} />
-        <p className="field-help">해당 날짜의 저장된 기사로 이슈를 묶고 4개 의제 점수, 6개 프레임, 근거 리포트를 다시 생성합니다.</p>
-        <button className="import-submit" type="button" onClick={runAnalysis} disabled={busy || !analysisDate}>{busy ? "처리 중…" : "분석 실행"}</button>
+        <header><div><p className="eyebrow">STEP 02</p><h2 id="analysis-title">분석 생성</h2></div><span className="free-badge">무료 규칙 분석</span></header>
+        <div className="single-analysis">
+          <h3>하루 분석</h3>
+          <label className="field-label" htmlFor="analysis-date">분석할 날짜 (KST)</label>
+          <input id="analysis-date" className="admin-date" type="date" value={analysisDate} onChange={(event) => setAnalysisDate(event.target.value)} />
+          <p className="field-help">해당 날짜의 저장된 기사로 이슈를 묶고 4개 의제 점수, 6개 프레임, 근거 리포트를 다시 생성합니다.</p>
+          <button className="import-submit" type="button" onClick={runAnalysis} disabled={busy || !analysisDate}>{busy ? "처리 중…" : "분석 실행"}</button>
+        </div>
+        <div className="batch-analysis">
+          <div className="batch-heading"><div><h3>기간 일괄 분석</h3><p>완료된 날짜는 건너뛰고 실패·미완료 날짜만 이어서 분석합니다.</p></div><span>최대 7일</span></div>
+          <div className="batch-dates">
+            <label><span>시작일</span><input className="admin-date" type="date" value={rangeStart} onChange={(event) => setRangeStart(event.target.value)} /></label>
+            <label><span>종료일</span><input className="admin-date" type="date" value={rangeEnd} onChange={(event) => setRangeEnd(event.target.value)} /></label>
+          </div>
+          <div className="batch-actions">
+            <button type="button" onClick={loadBatchStatus} disabled={busy}>상태 확인</button>
+            <button type="button" onClick={runBatchAnalysis} disabled={busy}>{busy ? "처리 중…" : "기간 분석 시작"}</button>
+          </div>
+          {!!batchDays.length && <div className="batch-status-list" aria-label="기간 분석 상태">{batchDays.map((day) => <div key={day.date} data-status={day.status}>
+            <time>{day.date}</time><span>{day.articleCount.toLocaleString("ko-KR")}건</span><b>{({ pending: "대기", running: "분석 중", success: "완료", failed: "실패", empty: "기사 없음" } as const)[day.status]}</b><small>{day.status === "success" ? `이슈 ${day.issueCount}개` : day.errorMessage ?? ""}</small>
+          </div>)}</div>}
+        </div>
         {status && <p className="admin-status" role="status">{status}</p>}
       </section>
 
@@ -285,7 +408,7 @@ export default function AdminClient() {
         <dl>
           <div><dt>1. BigKinds</dt><dd><a href="https://www.bigkinds.or.kr/v2/news/search.do" target="_blank" rel="noopener noreferrer">뉴스 검색·분석 열기</a> → 기간과 5개 언론사 선택 → Excel 다운로드</dd></div>
           <div><dt>2. 가져오기</dt><dd>기사 본문을 제외한 언론사·제목·원문 URL·일자·분류만 검증해 저장</dd></div>
-          <div><dt>3. 분석</dt><dd>가져온 날짜를 선택하고 분석 실행. 완료 후 공개 화면 새로고침</dd></div>
+          <div><dt>3. 분석</dt><dd>하루 분석 또는 최대 7일 기간 분석 실행. 다시 실행하면 완료된 날짜를 건너뛰고 이어서 처리</dd></div>
           <div><dt>4. 품질 검증</dt><dd>상위 30~50개 이슈의 잘못 묶인 기사와 누락 기사를 기록하고 정밀도·재현율 추정치를 확인</dd></div>
           <div><dt>5. 향후 전환</dt><dd>동일한 API 계약을 유지한 채 규칙 분석기를 Vertex AI·Gemini 분석기로 교체 가능</dd></div>
         </dl>

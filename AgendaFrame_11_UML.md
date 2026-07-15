@@ -87,6 +87,16 @@ AgendaFrame은 BigKinds에서 확보한 5개 언론사의 기사 메타데이터
 | 대안 흐름 | 다른 이슈의 기사, 중복 누락 URL, 공식 도메인이 아닌 URL, 허용 범위를 벗어난 입력은 저장하지 않는다. |
 | 사후 조건 | 이슈별 검토·오류 기사·누락 기사와 검토 시각이 D1에 저장되고 사람 검토 기반 추정 지표가 갱신된다. |
 
+### UC-07 기간 일괄 분석
+
+| 항목 | 내용 |
+| --- | --- |
+| 주요 액터 | 운영자 |
+| 사전 조건 | 최대 7일의 시작일·종료일과 유효한 `IMPORT_TOKEN`이 있다. |
+| 기본 흐름 | 기간 상태 조회 → 날짜별 기사 유무 확인 → 완료 날짜 건너뛰기 → 미완료·실패 날짜 순차 분석 → 날짜별 완료·실패 상태 표시 |
+| 대안 흐름 | 기사 없는 날짜는 건너뛰며 브라우저가 중단되어도 다시 실행하면 최신 성공 상태를 기준으로 이어서 처리한다. |
+| 사후 조건 | 각 날짜의 `AnalysisRun`과 이슈·프레임·리포트가 독립적으로 저장된다. |
+
 ## 4. 현재 운영 컴포넌트 다이어그램
 
 ```mermaid
@@ -97,6 +107,7 @@ flowchart LR
 
     AdminUI -->|"POST /api/import"| Worker["Sites Worker API"]
     AdminUI -->|"POST /api/analyze"| Worker
+    AdminUI -->|"GET /api/analysis/runs"| Worker
     AdminUI -->|"GET·PUT /api/quality"| Worker
     Dashboard -->|"GET /api/health·articles·issues"| Worker
 

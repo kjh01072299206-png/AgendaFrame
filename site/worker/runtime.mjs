@@ -632,6 +632,78 @@ async function latestAnalysisRun(db, requestedDate = "") {
   `).first();
 }
 
+export function enumerateKstDates(startDate, endDate, maxDays = 31) {
+  const pattern = /^\d{4}-\d{2}-\d{2}$/;
+  if (!pattern.test(startDate) || !pattern.test(endDate)) throw new Error("시작일과 종료일을 YYYY-MM-DD 형식으로 입력해 주세요.");
+  const start = Date.parse(`${startDate}T00:00:00Z`);
+  const end = Date.parse(`${endDate}T00:00:00Z`);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || new Date(start).toISOString().slice(0, 10) !== startDate || new Date(end).toISOString().slice(0, 10) !== endDate) {
+    throw new Error("유효한 분석 기간을 입력해 주세요.");
+  }
+  if (end < start) throw new Error("종료일은 시작일보다 빠를 수 없습니다.");
+  const dayCount = Math.floor((end - start) / 86_400_000) + 1;
+  if (dayCount > maxDays) throw new Error(`한 번에 최대 ${maxDays}일의 상태를 확인할 수 있습니다.`);
+  return Array.from({ length: dayCount }, (_, index) => new Date(start + index * 86_400_000).toISOString().slice(0, 10));
+}
+
+async function handleAnalysisRuns(request, env) {
+  if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
+  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
+  const url = new URL(request.url);
+  const startDate = String(url.searchParams.get("start") ?? "").trim();
+  const endDate = String(url.searchParams.get("end") ?? "").trim();
+  let dates;
+  try {
+    dates = enumerateKstDates(startDate, endDate, 31);
+  } catch (error) {
+    return jsonResponse({ error: error.message }, 400);
+  }
+
+  const start = Date.parse(`${startDate}T00:00:00+09:00`);
+  const endExclusive = Date.parse(`${endDate}T00:00:00+09:00`) + 86_400_000;
+  const [runResult, articleResult] = await Promise.all([
+    env.DB.prepare(`
+      SELECT id, target_date AS targetDate, status, provider, model_version AS modelVersion,
+        started_at AS startedAt, finished_at AS finishedAt, article_count AS analyzedArticleCount,
+        issue_count AS issueCount, error_message AS errorMessage
+      FROM (
+        SELECT *, ROW_NUMBER() OVER (PARTITION BY target_date ORDER BY started_at DESC, created_at DESC) AS rowNumber
+        FROM analysis_runs
+        WHERE target_date >= ? AND target_date <= ?
+      )
+      WHERE rowNumber = 1
+      ORDER BY targetDate
+    `).bind(startDate, endDate).all(),
+    env.DB.prepare(`
+      SELECT date(published_at / 1000, 'unixepoch', '+9 hours') AS targetDate, COUNT(*) AS articleCount
+      FROM articles
+      WHERE published_at >= ? AND published_at < ?
+      GROUP BY targetDate
+      ORDER BY targetDate
+    `).bind(start, endExclusive).all(),
+  ]);
+  const runsByDate = new Map((runResult.results ?? []).map((run) => [run.targetDate, run]));
+  const articleCountByDate = new Map((articleResult.results ?? []).map((entry) => [entry.targetDate, Number(entry.articleCount) || 0]));
+  const days = dates.map((date) => {
+    const run = runsByDate.get(date) ?? null;
+    const articleCount = articleCountByDate.get(date) ?? 0;
+    return {
+      date,
+      articleCount,
+      status: run?.status ?? (articleCount ? "pending" : "empty"),
+      runId: run?.id ?? null,
+      analyzedArticleCount: Number(run?.analyzedArticleCount ?? 0),
+      issueCount: Number(run?.issueCount ?? 0),
+      provider: run?.provider ?? null,
+      modelVersion: run?.modelVersion ?? null,
+      startedAt: run?.startedAt ?? null,
+      finishedAt: run?.finishedAt ?? null,
+      errorMessage: run?.errorMessage ?? null,
+    };
+  });
+  return jsonResponse({ startDate, endDate, days, maxBatchDays: 7, resumable: true });
+}
+
 async function handleIssues(request, env) {
   if (!env?.DB) return jsonResponse({ issues: [], total: 0, run: null });
   const url = new URL(request.url);
@@ -981,6 +1053,7 @@ export async function handleApiRequest(request, env = {}) {
     return jsonResponse({ panelVersion: sourcePanel.panelVersion, method: sourcePanel.collectionProvider, directCrawling: false, sources: publicSources });
   }
   if (url.pathname === "/api/articles" && request.method === "GET") return handleArticles(request, env);
+  if (url.pathname === "/api/analysis/runs" && request.method === "GET") return handleAnalysisRuns(request, env);
   if (url.pathname === "/api/quality" && request.method === "GET") return handleQualityQueue(request, env);
   if (url.pathname.startsWith("/api/quality/reviews/")) return handleQualityReview(request, decodeURIComponent(url.pathname.slice("/api/quality/reviews/".length)), env);
   if (url.pathname === "/api/issues" && request.method === "GET") return handleIssues(request, env);
