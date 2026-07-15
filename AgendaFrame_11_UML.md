@@ -27,7 +27,7 @@ AgendaFrame은 BigKinds에서 확보한 5개 언론사의 기사 메타데이터
 | --- | --- |
 | 일반 사용자 | 오늘의 의제, 점수 근거, 프레임, 실제 원문 링크를 조회한다. |
 | 기자·연구자 | 매체별 보도량과 표현 차이를 비교하고 원문을 검토한다. |
-| 운영자 | 기사 파일을 가져오고 분석 날짜를 선택해 실행한다. |
+| 운영자 | 기사 파일을 가져오고 분석 날짜를 선택해 실행하며 분석 품질을 사람 검토한다. |
 | BigKinds | 운영자가 기사 메타데이터를 확보하는 외부 뉴스 데이터 경로다. |
 | RuleAnalysisProvider | 현재 비용 없이 이슈·점수·프레임·리포트를 생성한다. |
 | VertexAIProvider | 향후 Embeddings·Gemini로 같은 분석 계약을 구현한다. |
@@ -77,6 +77,16 @@ AgendaFrame은 BigKinds에서 확보한 5개 언론사의 기사 메타데이터
 | 주요 액터 | 일반 사용자, 기자·연구자 |
 | 기본 흐름 | 검색어·언론사·분야·날짜 선택 → 서버 필터 → 50건 단위 페이지네이션 → 실제 원문 이동 |
 
+### UC-06 분석 품질 검증
+
+| 항목 | 내용 |
+| --- | --- |
+| 주요 액터 | 운영자 |
+| 사전 조건 | 완료된 일일 분석과 유효한 `IMPORT_TOKEN`이 있다. |
+| 기본 흐름 | 상위 50개 검증 목록 조회 → 이슈 선택 → 잘못 묶인 기사 표시 → 누락 원문 등록 → 기사 묶음·의제 점수·프레임 판정 → 검토 저장 → 품질 지표 재계산 |
+| 대안 흐름 | 다른 이슈의 기사, 중복 누락 URL, 공식 도메인이 아닌 URL, 허용 범위를 벗어난 입력은 저장하지 않는다. |
+| 사후 조건 | 이슈별 검토·오류 기사·누락 기사와 검토 시각이 D1에 저장되고 사람 검토 기반 추정 지표가 갱신된다. |
+
 ## 4. 현재 운영 컴포넌트 다이어그램
 
 ```mermaid
@@ -87,6 +97,7 @@ flowchart LR
 
     AdminUI -->|"POST /api/import"| Worker["Sites Worker API"]
     AdminUI -->|"POST /api/analyze"| Worker
+    AdminUI -->|"GET·PUT /api/quality"| Worker
     Dashboard -->|"GET /api/health·articles·issues"| Worker
 
     Worker --> Importer["가져오기 검증기"]
@@ -99,6 +110,7 @@ flowchart LR
     D1 --> Issues["이슈·기사 연결"]
     D1 --> Frames["프레임·근거"]
     D1 --> Reports["관찰 리포트"]
+    D1 --> Quality["품질 검토·오류·누락 기사"]
 ```
 
 ## 5. 향후 Google Cloud 어댑터 다이어그램
@@ -210,6 +222,24 @@ classDiagram
         +string provider
         +string modelVersion
     }
+    class QualityReview {
+        +string issueId
+        +string clusterVerdict
+        +string agendaVerdict
+        +string frameVerdict
+        +string notes
+        +datetime reviewedAt
+    }
+    class QualityArticleFlag {
+        +string reviewId
+        +string articleId
+    }
+    class QualityMissingArticle {
+        +string reviewId
+        +string sourceId
+        +string title
+        +string canonicalUrl
+    }
     class AnalysisProvider {
         <<interface>>
         +analyzeArticles(articles, options)
@@ -223,6 +253,11 @@ classDiagram
     Article "1" --> "*" IssueArticle
     Issue "1" --> "6" FrameAnalysis
     Issue "1" --> "1" AnalysisReport
+    Issue "1" --> "0..1" QualityReview
+    QualityReview "1" --> "*" QualityArticleFlag
+    Article "1" --> "*" QualityArticleFlag
+    QualityReview "1" --> "*" QualityMissingArticle
+    MediaSource "1" --> "*" QualityMissingArticle
     AnalysisProvider <|.. RuleAnalysisProvider
     AnalysisProvider <|.. VertexAIProvider
 ```
@@ -277,17 +312,40 @@ sequenceDiagram
     User->>News: 원문 기사 열기
 ```
 
+### 8.3 운영자 품질 검증
+
+```mermaid
+sequenceDiagram
+    actor Admin as 운영자
+    participant UI as React 관리자
+    participant API as Sites Worker API
+    participant DB as D1
+
+    Admin->>UI: 날짜·토큰 입력 후 검증 목록 요청
+    UI->>API: GET /api/quality
+    API->>API: Bearer 토큰·동일 출처 검증
+    API->>DB: 최신 분석·상위 50개 이슈·기존 검토 조회
+    DB-->>API: 검증 목록과 저장된 판정
+    API-->>UI: 사람 검토 기반 품질 지표
+    Admin->>UI: 오류 기사·누락 기사·판정 입력
+    UI->>API: PUT /api/quality/reviews/:id
+    API->>DB: 이슈 소속·URL·중복 검증 후 일괄 저장
+    DB-->>API: 저장 완료
+    API-->>UI: 갱신된 검증 진행률·정밀도·재현율
+```
+
 ## 9. 구현 정합성
 
 | UML 요소 | 구현 위치 |
 | --- | --- |
 | React 대시보드 | `site/app/agenda-dashboard.tsx` |
 | 관리자 가져오기·분석 | `site/app/admin/admin-client.tsx` |
+| 관리자 품질 검증 | `site/app/admin/quality-review.tsx` |
 | 공개·관리 API | `site/worker/runtime.mjs` |
 | 분석 공급자 포트 | `site/worker/analysis-provider.mjs` |
 | 무료 분석 구현 | `site/worker/analysis.mjs` |
 | D1 엔터티 | `site/db/schema.ts` |
-| 실제 마이그레이션 | `site/drizzle/0000_*.sql`, `0001_*.sql` |
+| 실제 마이그레이션 | `site/drizzle/0000_*.sql`, `0001_*.sql`, `0002_*.sql` |
 | Sites Worker 진입점 | `site/worker/index.ts` |
 
 현재 UML은 실제 구현과 일치하며, 점선으로 표시한 Google Cloud 구성만 비용 승인 후의 확장 목표다.

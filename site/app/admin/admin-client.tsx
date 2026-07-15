@@ -3,6 +3,7 @@
 import readXlsxFile from "read-excel-file";
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
+import QualityReview from "./quality-review";
 
 const ALLOWED_SOURCES = ["한겨레", "경향신문", "한국일보", "중앙일보", "조선일보"] as const;
 const MAX_ROWS = 20_000;
@@ -277,13 +278,16 @@ export default function AdminClient() {
         {status && <p className="admin-status" role="status">{status}</p>}
       </section>
 
+      <QualityReview token={token} analysisDate={analysisDate} />
+
       <section className="admin-guide" aria-labelledby="guide-title">
         <div><p className="eyebrow">OPERATION GUIDE</p><h2 id="guide-title">운영 순서</h2></div>
         <dl>
           <div><dt>1. BigKinds</dt><dd><a href="https://www.bigkinds.or.kr/v2/news/search.do" target="_blank" rel="noopener noreferrer">뉴스 검색·분석 열기</a> → 기간과 5개 언론사 선택 → Excel 다운로드</dd></div>
           <div><dt>2. 가져오기</dt><dd>기사 본문을 제외한 언론사·제목·원문 URL·일자·분류만 검증해 저장</dd></div>
           <div><dt>3. 분석</dt><dd>가져온 날짜를 선택하고 분석 실행. 완료 후 공개 화면 새로고침</dd></div>
-          <div><dt>4. 향후 전환</dt><dd>동일한 API 계약을 유지한 채 규칙 분석기를 Vertex AI·Gemini 분석기로 교체 가능</dd></div>
+          <div><dt>4. 품질 검증</dt><dd>상위 30~50개 이슈의 잘못 묶인 기사와 누락 기사를 기록하고 정밀도·재현율 추정치를 확인</dd></div>
+          <div><dt>5. 향후 전환</dt><dd>동일한 API 계약을 유지한 채 규칙 분석기를 Vertex AI·Gemini 분석기로 교체 가능</dd></div>
         </dl>
         <p>현재 단계에서는 D1과 규칙 분석만 사용하므로 별도 Google Cloud 사용료가 발생하지 않습니다.</p>
       </section>

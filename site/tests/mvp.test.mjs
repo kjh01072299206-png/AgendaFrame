@@ -5,7 +5,7 @@ import test from "node:test";
 import sourcePanel from "../data/sources.json" with { type: "json" };
 import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, analyzeArticles, titleTokens } from "../worker/analysis.mjs";
 import { getAnalysisProvider } from "../worker/analysis-provider.mjs";
-import { canonicalizeArticleUrl, configureSourcePanel, handleApiRequest, validateImportRows } from "../worker/runtime.mjs";
+import { calculateQualityMetrics, canonicalizeArticleUrl, configureSourcePanel, handleApiRequest, validateImportRows } from "../worker/runtime.mjs";
 
 configureSourcePanel(sourcePanel);
 
@@ -19,6 +19,7 @@ test("builds the real React dashboard and admin application", async () => {
   assert.match(worker, /\/api\/analyze/);
   assert.match(worker, /rules_local/);
   assert.match(worker, /agenda-rules-v1/);
+  assert.match(worker, /\/api\/quality/);
 });
 
 test("packages Sites hosting metadata and both database migrations", async () => {
@@ -30,6 +31,30 @@ test("packages Sites hosting metadata and both database migrations", async () =>
   for (const table of ["analysis_runs", "issues", "issue_articles", "frame_analyses", "ai_reports"]) {
     assert.ok(migration.includes(`CREATE TABLE \`${table}\``));
   }
+  const qualityMigration = await readFile(new URL("../dist/.openai/drizzle/0002_colorful_master_mold.sql", import.meta.url), "utf8");
+  for (const table of ["quality_reviews", "quality_review_article_flags", "quality_review_missing_articles"]) {
+    assert.ok(qualityMigration.includes(`CREATE TABLE \`${table}\``));
+  }
+});
+
+test("calculates transparent human-review quality estimates", () => {
+  const metrics = calculateQualityMetrics([
+    { reviewId: "r1", articleCount: 10, misplacedCount: 2, missingCount: 1, sourceCount: 5, clusterVerdict: "correct", agendaVerdict: "appropriate", frameVerdict: "appropriate" },
+    { reviewId: "r2", articleCount: 5, misplacedCount: 0, missingCount: 4, sourceCount: 3, clusterVerdict: "partial", agendaVerdict: "overstated", frameVerdict: "partial" },
+    { reviewId: null, articleCount: 20, misplacedCount: 0, missingCount: 0, sourceCount: 5 },
+  ]);
+  assert.equal(metrics.reviewedIssueCount, 2);
+  assert.equal(metrics.reviewedArticleCount, 15);
+  assert.equal(metrics.misplacedArticleCount, 2);
+  assert.equal(metrics.missingArticleCount, 5);
+  assert.equal(metrics.estimatedPrecision, 86.7);
+  assert.equal(metrics.estimatedRecall, 72.2);
+  assert.equal(metrics.clusterAgreement, 75);
+  assert.equal(metrics.agendaAgreement, 50);
+  assert.equal(metrics.frameAgreement, 75);
+  assert.equal(metrics.sourceDiversityCoverage, 80);
+  assert.equal(metrics.progressPercent, 4);
+  assert.equal(metrics.sampleStatus, "collecting");
 });
 
 test("clusters real-looking article titles and produces explainable scores", () => {
@@ -100,6 +125,10 @@ test("reports no-cost health and protects write endpoints", async () => {
     body: JSON.stringify({ rows: [] }),
   }), { DB: {}, IMPORT_TOKEN: "correct" });
   assert.equal(unauthorized.status, 401);
+  const qualityUnauthorized = await handleApiRequest(new Request("https://example.test/api/quality?date=2026-07-14", {
+    headers: { authorization: "Bearer wrong", origin: "https://example.test" },
+  }), { DB: {}, IMPORT_TOKEN: "correct" });
+  assert.equal(qualityUnauthorized.status, 401);
 
   const missing = await handleApiRequest(new Request("https://example.test/api/missing"));
   assert.equal(missing.status, 404);

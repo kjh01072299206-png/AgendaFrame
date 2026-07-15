@@ -222,3 +222,70 @@ export const aiReports = sqliteTable(
   },
   (table) => [uniqueIndex("ai_reports_issue_uq").on(table.issueId)],
 );
+
+export const qualityReviews = sqliteTable(
+  "quality_reviews",
+  {
+    id: text("id").primaryKey(),
+    issueId: text("issue_id")
+      .notNull()
+      .references(() => issues.id, { onDelete: "cascade" }),
+    clusterVerdict: text("cluster_verdict", {
+      enum: ["correct", "partial", "incorrect"],
+    }).notNull(),
+    agendaVerdict: text("agenda_verdict", {
+      enum: ["appropriate", "overstated", "understated", "uncertain"],
+    }).notNull(),
+    frameVerdict: text("frame_verdict", {
+      enum: ["appropriate", "partial", "inappropriate", "uncertain"],
+    }).notNull(),
+    notes: text("notes").notNull().default(""),
+    reviewedAt: integer("reviewed_at", { mode: "timestamp_ms" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt,
+  },
+  (table) => [
+    uniqueIndex("quality_reviews_issue_uq").on(table.issueId),
+    index("quality_reviews_reviewed_at_idx").on(table.reviewedAt),
+  ],
+);
+
+export const qualityReviewArticleFlags = sqliteTable(
+  "quality_review_article_flags",
+  {
+    id: text("id").primaryKey(),
+    reviewId: text("review_id")
+      .notNull()
+      .references(() => qualityReviews.id, { onDelete: "cascade" }),
+    articleId: text("article_id")
+      .notNull()
+      .references(() => articles.id, { onDelete: "cascade" }),
+    note: text("note").notNull().default(""),
+    createdAt,
+  },
+  (table) => [
+    uniqueIndex("quality_review_article_flags_review_article_uq").on(table.reviewId, table.articleId),
+    index("quality_review_article_flags_article_idx").on(table.articleId),
+  ],
+);
+
+export const qualityReviewMissingArticles = sqliteTable(
+  "quality_review_missing_articles",
+  {
+    id: text("id").primaryKey(),
+    reviewId: text("review_id")
+      .notNull()
+      .references(() => qualityReviews.id, { onDelete: "cascade" }),
+    sourceId: text("source_id")
+      .notNull()
+      .references(() => mediaSources.id, { onDelete: "restrict" }),
+    title: text("title").notNull(),
+    canonicalUrl: text("canonical_url").notNull(),
+    note: text("note").notNull().default(""),
+    createdAt,
+  },
+  (table) => [
+    uniqueIndex("quality_review_missing_articles_review_url_uq").on(table.reviewId, table.canonicalUrl),
+    index("quality_review_missing_articles_source_idx").on(table.sourceId),
+  ],
+);

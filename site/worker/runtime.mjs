@@ -730,6 +730,220 @@ async function handleIssueDetail(issueId, env) {
   });
 }
 
+function roundedPercent(numerator, denominator) {
+  if (!denominator) return null;
+  return Math.round((Number(numerator) / Number(denominator)) * 1000) / 10;
+}
+
+export function calculateQualityMetrics(rows, { configuredSources = 5, minimumSample = 30, targetSample = 50 } = {}) {
+  const reviewed = (Array.isArray(rows) ? rows : []).filter((row) => row.reviewId);
+  const totals = reviewed.reduce((summary, row) => {
+    const articleCount = Math.max(0, Number(row.articleCount) || 0);
+    const misplacedCount = Math.min(articleCount, Math.max(0, Number(row.misplacedCount) || 0));
+    summary.predictedArticles += articleCount;
+    summary.relatedArticles += articleCount - misplacedCount;
+    summary.missingArticles += Math.max(0, Number(row.missingCount) || 0);
+    summary.clusterAgreement += { correct: 1, partial: 0.5, incorrect: 0 }[row.clusterVerdict] ?? 0;
+    summary.agendaAgreement += row.agendaVerdict === "appropriate" ? 1 : 0;
+    summary.frameAgreement += { appropriate: 1, partial: 0.5, inappropriate: 0, uncertain: 0 }[row.frameVerdict] ?? 0;
+    summary.sourceDiversity += Math.min(Math.max(0, Number(row.sourceCount) || 0) / Math.max(1, configuredSources), 1);
+    return summary;
+  }, { predictedArticles: 0, relatedArticles: 0, missingArticles: 0, clusterAgreement: 0, agendaAgreement: 0, frameAgreement: 0, sourceDiversity: 0 });
+
+  const reviewedIssueCount = reviewed.length;
+  return {
+    reviewedIssueCount,
+    minimumSample,
+    targetSample,
+    progressPercent: roundedPercent(Math.min(reviewedIssueCount, targetSample), targetSample) ?? 0,
+    sampleStatus: reviewedIssueCount >= minimumSample ? "ready" : "collecting",
+    estimatedPrecision: roundedPercent(totals.relatedArticles, totals.predictedArticles),
+    estimatedRecall: roundedPercent(totals.relatedArticles, totals.relatedArticles + totals.missingArticles),
+    clusterAgreement: roundedPercent(totals.clusterAgreement, reviewedIssueCount),
+    agendaAgreement: roundedPercent(totals.agendaAgreement, reviewedIssueCount),
+    frameAgreement: roundedPercent(totals.frameAgreement, reviewedIssueCount),
+    sourceDiversityCoverage: roundedPercent(totals.sourceDiversity, reviewedIssueCount),
+    reviewedArticleCount: totals.predictedArticles,
+    misplacedArticleCount: totals.predictedArticles - totals.relatedArticles,
+    missingArticleCount: totals.missingArticles,
+  };
+}
+
+async function handleQualityQueue(request, env) {
+  if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
+  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
+  const url = new URL(request.url);
+  const date = String(url.searchParams.get("date") ?? "").trim();
+  const limitValue = Number(url.searchParams.get("limit") ?? 50);
+  const limit = Number.isInteger(limitValue) ? Math.min(Math.max(limitValue, 1), 50) : 50;
+  const run = await latestAnalysisRun(env.DB, date);
+  const emptyMetrics = calculateQualityMetrics([], { configuredSources: sourcePanel.sources.filter((source) => source.active).length });
+  if (!run) return jsonResponse({ run: null, issues: [], metrics: emptyMetrics });
+
+  const result = await env.DB.prepare(`
+    SELECT
+      i.id, i.title, i.category, i.article_count AS articleCount, i.source_count AS sourceCount,
+      i.agenda_score AS agendaScore, i.confidence,
+      qr.id AS reviewId, qr.cluster_verdict AS clusterVerdict, qr.agenda_verdict AS agendaVerdict,
+      qr.frame_verdict AS frameVerdict, qr.reviewed_at AS reviewedAt, qr.updated_at AS updatedAt,
+      COALESCE((SELECT COUNT(*) FROM quality_review_article_flags f WHERE f.review_id = qr.id), 0) AS misplacedCount,
+      COALESCE((SELECT COUNT(*) FROM quality_review_missing_articles m WHERE m.review_id = qr.id), 0) AS missingCount
+    FROM issues i
+    LEFT JOIN quality_reviews qr ON qr.issue_id = i.id
+    WHERE i.run_id = ?
+    ORDER BY i.agenda_score DESC, i.article_count DESC
+    LIMIT ?
+  `).bind(run.id, limit).all();
+  const issues = result.results ?? [];
+  return jsonResponse({
+    run,
+    issues,
+    metrics: calculateQualityMetrics(issues, { configuredSources: sourcePanel.sources.filter((source) => source.active).length }),
+    methodology: {
+      label: "사람 검토 기반 추정치",
+      precision: "검토한 묶음 기사 중 관련 있다고 판단한 기사 비율",
+      recall: "관련 기사와 직접 등록한 누락 기사를 합친 값 중 시스템이 묶은 관련 기사 비율",
+    },
+  });
+}
+
+async function loadQualityReview(issueId, env) {
+  const issue = await env.DB.prepare(`
+    SELECT i.id, i.title, i.issue_date AS issueDate, i.article_count AS articleCount, i.source_count AS sourceCount,
+      i.agenda_score AS agendaScore, i.confidence, r.target_date AS targetDate
+    FROM issues i
+    JOIN analysis_runs r ON r.id = i.run_id
+    WHERE i.id = ?
+  `).bind(issueId).first();
+  if (!issue) return null;
+  const review = await env.DB.prepare(`
+    SELECT id, issue_id AS issueId, cluster_verdict AS clusterVerdict, agenda_verdict AS agendaVerdict,
+      frame_verdict AS frameVerdict, notes, reviewed_at AS reviewedAt, updated_at AS updatedAt
+    FROM quality_reviews
+    WHERE issue_id = ?
+  `).bind(issueId).first();
+  if (!review) return { issue, review: null, flaggedArticleIds: [], missingArticles: [] };
+  const [flags, missing] = await Promise.all([
+    env.DB.prepare("SELECT article_id AS articleId FROM quality_review_article_flags WHERE review_id = ? ORDER BY created_at").bind(review.id).all(),
+    env.DB.prepare(`
+      SELECT m.id, m.title, m.canonical_url AS url, m.note, s.name AS source
+      FROM quality_review_missing_articles m
+      JOIN media_sources s ON s.id = m.source_id
+      WHERE m.review_id = ?
+      ORDER BY m.created_at
+    `).bind(review.id).all(),
+  ]);
+  return {
+    issue,
+    review,
+    flaggedArticleIds: (flags.results ?? []).map((entry) => entry.articleId),
+    missingArticles: missing.results ?? [],
+  };
+}
+
+async function saveQualityReview(request, issueId, env) {
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResponse({ error: "검토 요청 형식을 확인해 주세요." }, 400);
+  }
+  const clusterVerdict = String(payload?.clusterVerdict ?? "");
+  const agendaVerdict = String(payload?.agendaVerdict ?? "");
+  const frameVerdict = String(payload?.frameVerdict ?? "");
+  if (!["correct", "partial", "incorrect"].includes(clusterVerdict)) return jsonResponse({ error: "기사 묶음 평가를 선택해 주세요." }, 400);
+  if (!["appropriate", "overstated", "understated", "uncertain"].includes(agendaVerdict)) return jsonResponse({ error: "의제 점수 평가를 선택해 주세요." }, 400);
+  if (!["appropriate", "partial", "inappropriate", "uncertain"].includes(frameVerdict)) return jsonResponse({ error: "프레임 평가를 선택해 주세요." }, 400);
+  const notes = String(payload?.notes ?? "").trim();
+  if (notes.length > 2000) return jsonResponse({ error: "검토 메모는 2,000자 이하여야 합니다." }, 400);
+
+  const issue = await env.DB.prepare("SELECT id, article_count AS articleCount FROM issues WHERE id = ?").bind(issueId).first();
+  if (!issue) return jsonResponse({ error: "검토할 이슈를 찾지 못했습니다." }, 404);
+  const flaggedArticleIds = [...new Set((Array.isArray(payload?.flaggedArticleIds) ? payload.flaggedArticleIds : []).map((value) => String(value).trim()).filter(Boolean))];
+  if (flaggedArticleIds.length > Number(issue.articleCount)) return jsonResponse({ error: "잘못 묶인 기사 수를 확인해 주세요." }, 400);
+  if (flaggedArticleIds.length) {
+    const placeholders = flaggedArticleIds.map(() => "?").join(", ");
+    const allowed = await env.DB.prepare(`SELECT COUNT(*) AS count FROM issue_articles WHERE issue_id = ? AND article_id IN (${placeholders})`).bind(issueId, ...flaggedArticleIds).first();
+    if (Number(allowed?.count ?? 0) !== flaggedArticleIds.length) return jsonResponse({ error: "해당 이슈에 포함되지 않은 기사가 선택되었습니다." }, 400);
+  }
+
+  const missingInput = Array.isArray(payload?.missingArticles) ? payload.missingArticles : [];
+  if (missingInput.length > 20) return jsonResponse({ error: "누락 기사는 이슈당 최대 20건까지 기록할 수 있습니다." }, 400);
+  const sourceByName = new Map(sourcePanel.sources.filter((source) => source.active).map((source) => [source.name, source]));
+  const missingArticles = [];
+  const seenUrls = new Set();
+  for (const [index, entry] of missingInput.entries()) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return jsonResponse({ error: `${index + 1}번째 누락 기사 형식을 확인해 주세요.` }, 400);
+    const source = sourceByName.get(String(entry.source ?? "").trim());
+    const title = String(entry.title ?? "").trim();
+    const note = String(entry.note ?? "").trim();
+    if (!source) return jsonResponse({ error: `${index + 1}번째 누락 기사의 언론사를 확인해 주세요.` }, 400);
+    if (!title || title.length > 500) return jsonResponse({ error: `${index + 1}번째 누락 기사 제목은 1~500자여야 합니다.` }, 400);
+    if (note.length > 500) return jsonResponse({ error: `${index + 1}번째 누락 기사 메모는 500자 이하여야 합니다.` }, 400);
+    let canonicalUrl;
+    try {
+      canonicalUrl = canonicalizeArticleUrl(entry.url);
+    } catch {
+      return jsonResponse({ error: `${index + 1}번째 누락 기사 URL을 확인해 주세요.` }, 400);
+    }
+    if (!matchesSourceDomain(new URL(canonicalUrl).hostname.toLowerCase(), source.domains ?? [])) {
+      return jsonResponse({ error: `${index + 1}번째 누락 기사는 ${source.name} 공식 도메인 URL이어야 합니다.` }, 400);
+    }
+    if (seenUrls.has(canonicalUrl)) return jsonResponse({ error: "같은 누락 기사 URL을 두 번 기록할 수 없습니다." }, 400);
+    seenUrls.add(canonicalUrl);
+    missingArticles.push({ source, title, canonicalUrl, note });
+  }
+
+  const existing = await env.DB.prepare("SELECT id FROM quality_reviews WHERE issue_id = ?").bind(issueId).first();
+  const reviewId = existing?.id ?? crypto.randomUUID();
+  const now = Date.now();
+  const statements = [
+    env.DB.prepare(`
+      INSERT INTO quality_reviews
+        (id, issue_id, cluster_verdict, agenda_verdict, frame_verdict, notes, reviewed_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(issue_id) DO UPDATE SET
+        cluster_verdict = excluded.cluster_verdict,
+        agenda_verdict = excluded.agenda_verdict,
+        frame_verdict = excluded.frame_verdict,
+        notes = excluded.notes,
+        reviewed_at = excluded.reviewed_at,
+        updated_at = excluded.updated_at
+    `).bind(reviewId, issueId, clusterVerdict, agendaVerdict, frameVerdict, notes, now, now),
+    env.DB.prepare("DELETE FROM quality_review_article_flags WHERE review_id = ?").bind(reviewId),
+    env.DB.prepare("DELETE FROM quality_review_missing_articles WHERE review_id = ?").bind(reviewId),
+    ...flaggedArticleIds.map((articleId) => env.DB.prepare(`
+      INSERT INTO quality_review_article_flags (id, review_id, article_id, note)
+      VALUES (?, ?, ?, '')
+    `).bind(crypto.randomUUID(), reviewId, articleId)),
+    ...missingArticles.map((article) => env.DB.prepare(`
+      INSERT INTO quality_review_missing_articles (id, review_id, source_id, title, canonical_url, note)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(crypto.randomUUID(), reviewId, article.source.id, article.title, article.canonicalUrl, article.note)),
+  ];
+  await env.DB.batch(statements);
+  return jsonResponse({
+    saved: true,
+    reviewId,
+    issueId,
+    misplacedCount: flaggedArticleIds.length,
+    missingCount: missingArticles.length,
+    reviewedAt: now,
+  }, existing ? 200 : 201);
+}
+
+async function handleQualityReview(request, issueId, env) {
+  if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
+  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
+  if (!issueId || issueId.length > 128) return jsonResponse({ error: "검토할 이슈를 확인해 주세요." }, 400);
+  if (request.method === "GET") {
+    const result = await loadQualityReview(issueId, env);
+    return result ? jsonResponse(result) : jsonResponse({ error: "검토할 이슈를 찾지 못했습니다." }, 404);
+  }
+  if (request.method === "PUT") return saveQualityReview(request, issueId, env);
+  return jsonResponse({ error: "GET 또는 PUT 요청만 허용됩니다." }, 405);
+}
+
 export async function handleApiRequest(request, env = {}) {
   const url = new URL(request.url);
   if (!url.pathname.startsWith("/api/")) return null;
@@ -767,6 +981,8 @@ export async function handleApiRequest(request, env = {}) {
     return jsonResponse({ panelVersion: sourcePanel.panelVersion, method: sourcePanel.collectionProvider, directCrawling: false, sources: publicSources });
   }
   if (url.pathname === "/api/articles" && request.method === "GET") return handleArticles(request, env);
+  if (url.pathname === "/api/quality" && request.method === "GET") return handleQualityQueue(request, env);
+  if (url.pathname.startsWith("/api/quality/reviews/")) return handleQualityReview(request, decodeURIComponent(url.pathname.slice("/api/quality/reviews/".length)), env);
   if (url.pathname === "/api/issues" && request.method === "GET") return handleIssues(request, env);
   if (url.pathname.startsWith("/api/issues/") && request.method === "GET") return handleIssueDetail(decodeURIComponent(url.pathname.slice("/api/issues/".length)), env);
   if (url.pathname === "/api/import") {
