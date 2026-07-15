@@ -2,72 +2,84 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const workerUrl = new URL(`../dist/server/index.js?test=${Date.now()}`, import.meta.url);
-const { default: worker, validateImportRows, canonicalizeArticleUrl } = await import(workerUrl.href);
+import sourcePanel from "../data/sources.json" with { type: "json" };
+import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, analyzeArticles, titleTokens } from "../worker/analysis.mjs";
+import { getAnalysisProvider } from "../worker/analysis-provider.mjs";
+import { canonicalizeArticleUrl, configureSourcePanel, handleApiRequest, validateImportRows } from "../worker/runtime.mjs";
 
-test("serves the complete AgendaFrame MVP", async () => {
-  const response = await worker.fetch(new Request("https://example.test/"));
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /^text\/html/);
-  const html = await response.text();
-  assert.match(html, /AgendaFrame \| 오늘의 의제·프레임 분석/);
-  assert.match(html, /오늘, 언론은/);
-  assert.match(html, /분석 데모/);
-  assert.match(html, /id="agenda-list"/);
-  assert.match(html, /id="issue-detail"/);
-  assert.match(html, /id="live-feed"/);
-  assert.match(html, /id="live-filter-form"/);
-  assert.match(html, /id="live-article-list"/);
-  assert.match(html, /id="live-load-more"/);
-  assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
+configureSourcePanel(sourcePanel);
+
+test("builds the real React dashboard and admin application", async () => {
+  const manifest = JSON.parse(await readFile(new URL("../dist/client/.vite/manifest.json", import.meta.url), "utf8"));
+  const builtFiles = Object.values(manifest).flatMap((entry) => [entry.file, ...(entry.css ?? [])]).join("\n");
+  assert.match(builtFiles, /agenda-dashboard/);
+  assert.match(builtFiles, /admin-client/);
+
+  const worker = await readFile(new URL("../dist/server/index.js", import.meta.url), "utf8");
+  assert.match(worker, /\/api\/analyze/);
+  assert.match(worker, /rules_local/);
+  assert.match(worker, /agenda-rules-v1/);
 });
 
-test("serves interactive application assets", async () => {
-  const [scriptResponse, styleResponse, adminResponse, adminScriptResponse, excelReaderResponse, excelReaderLicenseResponse, templateResponse] = await Promise.all([
-    worker.fetch(new Request("https://example.test/app.js")),
-    worker.fetch(new Request("https://example.test/styles.css")),
-    worker.fetch(new Request("https://example.test/admin")),
-    worker.fetch(new Request("https://example.test/admin.js")),
-    worker.fetch(new Request("https://example.test/vendor/read-excel-file.min.js")),
-    worker.fetch(new Request("https://example.test/vendor/read-excel-file.LICENSE.txt")),
-    worker.fetch(new Request("https://example.test/templates/agendaframe-import.csv")),
-  ]);
-  assert.equal(scriptResponse.status, 200);
-  assert.equal(styleResponse.status, 200);
-  assert.equal(adminResponse.status, 200);
-  assert.equal(adminScriptResponse.status, 200);
-  assert.equal(excelReaderResponse.status, 200);
-  assert.equal(excelReaderLicenseResponse.status, 200);
-  assert.equal(templateResponse.status, 200);
-  const [script, styles, admin, adminScript, excelReader, excelReaderLicense, template] = await Promise.all([scriptResponse.text(), styleResponse.text(), adminResponse.text(), adminScriptResponse.text(), excelReaderResponse.text(), excelReaderLicenseResponse.text(), templateResponse.text()]);
-  assert.match(script, /const issues = \[/);
-  assert.match(script, /renderAll\(\)/);
-  assert.match(script, /data-copy-report/);
-  assert.match(script, /refreshCollectionStatus/);
-  assert.match(script, /refreshLiveArticles/);
-  assert.match(script, /new URLSearchParams/);
-  assert.match(script, /liveFilterParameters/);
-  assert.match(script, /원문 기사 보기/);
-  assert.match(styles, /\.workspace/);
-  assert.match(styles, /\.source-panel/);
-  assert.match(styles, /\.live-article-grid/);
-  assert.match(styles, /prefers-reduced-motion/);
-  assert.match(admin, /id="import-form"/);
-  assert.match(admin, /BigKinds Excel \/ CSV/);
-  assert.match(admin, /최대 20,000행/);
-  assert.match(adminScript, /Bearer \$\{token\}/);
-  assert.match(adminScript, /window\.readXlsxFile/);
-  assert.match(adminScript, /IMPORT_BATCH_SIZE = 500/);
-  assert.match(adminScript, /publishedAtFromNewsId/);
-  assert.match(adminScript, /뉴스식별자/);
-  assert.match(adminScript, /본문 열은 폐기/);
-  assert.match(excelReader, /readXlsxFile/);
-  assert.match(excelReaderLicense, /MIT License/);
-  assert.match(template, /^source,title,url,published_at/);
+test("packages Sites hosting metadata and both database migrations", async () => {
+  const hosting = JSON.parse(await readFile(new URL("../dist/.openai/hosting.json", import.meta.url), "utf8"));
+  assert.equal(hosting.project_id, "appgprj_6a54eb02c21c819199c3369cc67c6857");
+  assert.equal(hosting.d1, "DB");
+  assert.equal(hosting.r2, null);
+  const migration = await readFile(new URL("../dist/.openai/drizzle/0001_easy_dexter_bennett.sql", import.meta.url), "utf8");
+  for (const table of ["analysis_runs", "issues", "issue_articles", "frame_analyses", "ai_reports"]) {
+    assert.ok(migration.includes(`CREATE TABLE \`${table}\``));
+  }
 });
 
-test("reports BigKinds-import health and rejects unknown paths", async () => {
-  const health = await worker.fetch(new Request("https://example.test/api/health"));
+test("clusters real-looking article titles and produces explainable scores", () => {
+  const articles = [
+    { id: "a1", sourceId: "hani", source: "한겨레", title: "정부 청년 주거 지원 정책 확대 발표", section: "정치>행정", homepagePlacement: "top" },
+    { id: "a2", sourceId: "khan", source: "경향신문", title: "정부, 청년 주거 지원 정책 확대", section: "정치>행정", homepagePlacement: "main" },
+    { id: "a3", sourceId: "chosun", source: "조선일보", title: "청년 주거 지원 확대…정부 정책 효과는", section: "정치>행정", homepagePlacement: "section" },
+    { id: "a4", sourceId: "joongang", source: "중앙일보", title: "한국은행 기준금리 동결 결정", section: "경제>금융", homepagePlacement: "list" },
+  ];
+  const issues = analyzeArticles(articles, { configuredSourceCount: 5 });
+  const housing = issues.find((issue) => issue.articleCount === 3);
+  assert.ok(housing);
+  assert.equal(housing.sourceCount, 3);
+  assert.equal(housing.diversityScore, 60);
+  assert.equal(housing.frames.length, 6);
+  assert.equal(housing.articles.filter((article) => article.representative).length, 1);
+  assert.match(housing.report.summary, /규칙 분석/);
+  assert.match(housing.report.caution, /Vertex AI/);
+  assert.ok(housing.agendaScore > issues.find((issue) => issue.articleCount === 1).agendaScore);
+  assert.deepEqual(titleTokens("[단독] 정부의 청년 주거지원 정책 발표"), ["청년", "주거지원", "정책", "발표"]);
+  assert.equal(ANALYSIS_PROVIDER, "rules_local");
+  assert.equal(ANALYSIS_MODEL_VERSION, "agenda-rules-v1");
+  assert.equal(getAnalysisProvider().analyze, analyzeArticles);
+  assert.throws(() => getAnalysisProvider("vertex_ai"), /지원하지 않는 분석 공급자/);
+});
+
+test("validates metadata-only imports and canonicalizes duplicate URLs", () => {
+  const [row] = validateImportRows([{
+    source: "한겨레",
+    title: "검증용 기사 제목",
+    url: "https://www.hani.co.kr/arti/politics/test.html?utm_source=test&b=2#headline",
+    published_at: "2026-07-14T09:30:00+09:00",
+    collected_at: "2026-07-14T10:00:00+09:00",
+    section: "정치",
+    homepage_placement: "TOP",
+    homepage_rank: "1",
+  }]);
+  assert.equal(row.source.id, "hani");
+  assert.equal(row.canonicalUrl, "https://www.hani.co.kr/arti/politics/test.html?b=2");
+  assert.equal(row.homepagePlacement, "top");
+  assert.equal(row.homepageRank, 1);
+  assert.equal(canonicalizeArticleUrl("https://example.com/a?utm_medium=x&b=2"), "https://example.com/a?b=2");
+
+  assert.throws(() => validateImportRows([{ source: "한겨레", title: "다른 도메인", url: "https://example.com/article", published_at: "2026-07-14" }]), /공식 도메인/);
+  assert.throws(() => validateImportRows([{ source: "한겨레", title: "본문 포함", url: "https://www.hani.co.kr/arti/test.html", published_at: "2026-07-14", content: "저장하면 안 되는 기사 본문" }]), /기사 본문/);
+});
+
+test("reports no-cost health and protects write endpoints", async () => {
+  const health = await handleApiRequest(new Request("https://example.test/api/health"));
+  assert.equal(health.status, 200);
   const healthBody = await health.json();
   assert.equal(healthBody.status, "ok");
   assert.equal(healthBody.mode, "demo");
@@ -75,50 +87,39 @@ test("reports BigKinds-import health and rejects unknown paths", async () => {
   assert.equal(healthBody.collection.directCrawling, false);
   assert.equal(healthBody.collection.configuredSources, 5);
 
-  const articles = await worker.fetch(new Request("https://example.test/api/articles?limit=100"));
-  const articlesBody = await articles.json();
-  assert.deepEqual(articlesBody, { articles: [], total: 0 });
-
-  const sources = await worker.fetch(new Request("https://example.test/api/sources"));
+  const sources = await handleApiRequest(new Request("https://example.test/api/sources"));
   const sourceBody = await sources.json();
   assert.equal(sourceBody.sources.length, 5);
-  assert.deepEqual(
-    sourceBody.sources.reduce((counts, source) => ({ ...counts, [source.samplePosition]: (counts[source.samplePosition] ?? 0) + 1 }), {}),
-    { progressive: 2, center: 1, conservative: 2 },
-  );
+  assert.ok(sourceBody.sources.every((source) => !("domains" in source)));
 
-  const missing = await worker.fetch(new Request("https://example.test/unknown"));
+  const unavailable = await handleApiRequest(new Request("https://example.test/api/analyze", { method: "POST" }));
+  assert.equal(unavailable.status, 503);
+  const unauthorized = await handleApiRequest(new Request("https://example.test/api/import", {
+    method: "POST",
+    headers: { authorization: "Bearer wrong", "content-type": "application/json", origin: "https://example.test" },
+    body: JSON.stringify({ rows: [] }),
+  }), { DB: {}, IMPORT_TOKEN: "correct" });
+  assert.equal(unauthorized.status, 401);
+
+  const missing = await handleApiRequest(new Request("https://example.test/api/missing"));
   assert.equal(missing.status, 404);
 });
 
 test("filters and paginates the complete article collection", async () => {
   const statements = [];
-  const article = {
-    id: "article-1",
-    sourceId: "hani",
-    source: "한겨레",
-    title: "주거 정책 기사",
-    url: "https://www.hani.co.kr/arti/politics/test.html",
-    section: "정치_국회",
-    publishedAt: Date.parse("2026-07-14T17:44:48+09:00"),
-    collectedAt: Date.parse("2026-07-14T18:00:00+09:00"),
-    homepagePlacement: null,
-    homepageRank: null,
-  };
+  const article = { id: "article-1", sourceId: "hani", source: "한겨레", title: "주거 정책 기사", url: "https://www.hani.co.kr/arti/politics/test.html", section: "정치_국회", publishedAt: Date.parse("2026-07-14T17:44:48+09:00"), collectedAt: Date.parse("2026-07-14T18:00:00+09:00"), homepagePlacement: null, homepageRank: null };
   const DB = {
     prepare(sql) {
       return {
         bind(...parameters) {
           statements.push({ sql, parameters });
-          return sql.includes("COUNT(*)")
-            ? { first: async () => ({ total: 123 }) }
-            : { all: async () => ({ results: [article] }) };
+          return sql.includes("COUNT(*)") ? { first: async () => ({ total: 123 }) } : { all: async () => ({ results: [article] }) };
         },
       };
     },
   };
 
-  const response = await worker.fetch(new Request("https://example.test/api/articles?limit=25&offset=50&source=한겨레&section=정치&q=주거&date=2026-07-14"), { DB });
+  const response = await handleApiRequest(new Request("https://example.test/api/articles?limit=25&offset=50&source=%ED%95%9C%EA%B2%A8%EB%A0%88&section=%EC%A0%95%EC%B9%98&q=%EC%A3%BC%EA%B1%B0&date=2026-07-14"), { DB });
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.total, 123);
@@ -132,54 +133,4 @@ test("filters and paginates the complete article collection", async () => {
   assert.match(statements[0].sql, /a\.title LIKE \?/);
   assert.match(statements[0].sql, /a\.published_at >= \?/);
   assert.deepEqual(statements[1].parameters.slice(-2), [25, 50]);
-});
-
-test("validates metadata-only imports and canonicalizes duplicate URLs", () => {
-  const [row] = validateImportRows([{
-    source: "한겨레",
-    title: "검증용 기사 제목",
-    url: "https://www.hani.co.kr/arti/politics/test.html?utm_source=test#headline",
-    published_at: "2026-07-14T09:30:00+09:00",
-    collected_at: "2026-07-14T10:00:00+09:00",
-    section: "정치",
-    homepage_placement: "TOP",
-    homepage_rank: "1",
-  }]);
-  assert.equal(row.source.id, "hani");
-  assert.equal(row.canonicalUrl, "https://www.hani.co.kr/arti/politics/test.html");
-  assert.equal(row.homepagePlacement, "top");
-  assert.equal(row.homepageRank, 1);
-  assert.equal(canonicalizeArticleUrl("https://example.com/a?utm_medium=x&b=2"), "https://example.com/a?b=2");
-
-  assert.throws(() => validateImportRows([{
-    source: "한겨레",
-    title: "다른 도메인",
-    url: "https://example.com/article",
-    published_at: "2026-07-14T09:30:00+09:00",
-  }]), /공식 도메인/);
-  assert.throws(() => validateImportRows([{
-    source: "한겨레",
-    title: "본문 포함",
-    url: "https://www.hani.co.kr/arti/test.html",
-    published_at: "2026-07-14T09:30:00+09:00",
-    content: "저장하면 안 되는 기사 본문",
-  }]), /기사 본문/);
-});
-
-test("protects the import endpoint with storage and a secret token", async () => {
-  const unavailable = await worker.fetch(new Request("https://example.test/api/import", { method: "POST" }));
-  assert.equal(unavailable.status, 503);
-
-  const unauthorized = await worker.fetch(new Request("https://example.test/api/import", {
-    method: "POST",
-    headers: { authorization: "Bearer wrong", "content-type": "application/json", origin: "https://example.test" },
-    body: JSON.stringify({ rows: [] }),
-  }), { DB: {}, IMPORT_TOKEN: "correct" });
-  assert.equal(unauthorized.status, 401);
-});
-
-test("packages Sites hosting metadata", async () => {
-  const hosting = JSON.parse(await readFile(new URL("../dist/.openai/hosting.json", import.meta.url), "utf8"));
-  assert.equal(hosting.d1, "DB");
-  assert.equal(hosting.r2, null);
 });

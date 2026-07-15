@@ -1,0 +1,292 @@
+"use client";
+
+import readXlsxFile from "read-excel-file";
+import { ChangeEvent, FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
+
+const ALLOWED_SOURCES = ["한겨레", "경향신문", "한국일보", "중앙일보", "조선일보"] as const;
+const MAX_ROWS = 20_000;
+const MAX_FILE_BYTES = 25 * 1024 * 1024;
+const IMPORT_BATCH_SIZE = 500;
+
+const HEADER_ALIASES: Record<string, string[]> = {
+  news_id: ["news_id", "뉴스식별자", "뉴스id"],
+  source: ["source", "언론사", "매체"],
+  title: ["title", "제목"],
+  url: ["url", "원문url", "원문_url", "링크"],
+  published_at: ["published_at", "게시시각", "게시_시각", "발행시각", "일자", "날짜"],
+  collected_at: ["collected_at", "수집시각", "수집_시각", "관측시간"],
+  section: ["section", "섹션", "분야", "통합분류1", "통합분류"],
+  homepage_placement: ["homepage_placement", "배치", "홈페이지배치"],
+  homepage_rank: ["homepage_rank", "순위", "노출순위"],
+};
+
+type Cell = string | number | boolean | Date | null;
+type ImportRow = {
+  _line: number;
+  source: string;
+  title: string;
+  url: string;
+  published_at: string;
+  collected_at: string;
+  section: string;
+  homepage_placement: string;
+  homepage_rank: string;
+};
+
+function normalizedHeader(value: Cell) {
+  return String(value ?? "").trim().toLowerCase().replace(/\s+/g, "");
+}
+
+function resolveHeaders(headers: Cell[]) {
+  return Object.fromEntries(Object.entries(HEADER_ALIASES).flatMap(([field, aliases]) => {
+    const index = headers.findIndex((header) => aliases.includes(normalizedHeader(header)));
+    return index >= 0 ? [[field, index]] : [];
+  })) as Record<string, number>;
+}
+
+function parseCsv(text: string): Cell[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let value = "";
+  let quoted = false;
+  const input = text.replace(/^\uFEFF/, "");
+  for (let index = 0; index < input.length; index += 1) {
+    const character = input[index];
+    if (quoted) {
+      if (character === '"' && input[index + 1] === '"') {
+        value += '"';
+        index += 1;
+      } else if (character === '"') quoted = false;
+      else value += character;
+      continue;
+    }
+    if (character === '"') quoted = true;
+    else if (character === ",") {
+      row.push(value.trim());
+      value = "";
+    } else if (character === "\n") {
+      row.push(value.trim());
+      if (row.some(Boolean)) rows.push(row);
+      row = [];
+      value = "";
+    } else if (character !== "\r") value += character;
+  }
+  row.push(value.trim());
+  if (row.some(Boolean)) rows.push(row);
+  if (quoted) throw new Error("닫히지 않은 큰따옴표가 있습니다.");
+  return rows;
+}
+
+function publishedAtFromNewsId(value: Cell) {
+  const match = String(value ?? "").trim().match(/\.(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/);
+  if (!match) return "";
+  const [, year, month, day, hour, minute, second] = match;
+  const timestamp = `${year}-${month}-${day}T${hour}:${minute}:${second}+09:00`;
+  return Number.isFinite(Date.parse(timestamp)) ? timestamp : "";
+}
+
+function normalizeTimestamp(value: Cell, newsId: Cell = "") {
+  const exact = publishedAtFromNewsId(newsId);
+  if (exact) return exact;
+  if (value instanceof Date && Number.isFinite(value.getTime())) {
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const day = String(value.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}T00:00:00+09:00`;
+  }
+  const text = String(value ?? "").trim();
+  const compact = text.match(/^(\d{4})[./-]?(\d{2})[./-]?(\d{2})$/);
+  return compact ? `${compact[1]}-${compact[2]}-${compact[3]}T00:00:00+09:00` : text;
+}
+
+function normalizeUrl(value: Cell) {
+  const text = String(value ?? "").trim();
+  try {
+    const url = new URL(text);
+    if (url.protocol === "http:") url.protocol = "https:";
+    return url.toString();
+  } catch {
+    return text;
+  }
+}
+
+function normalizePlacement(value: Cell) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  const placements: Record<string, string> = { top: "top", main: "main", section: "section", list: "list", 최상단: "top", 메인: "main", 섹션: "section", 목록: "list" };
+  return placements[normalized] ?? normalized;
+}
+
+function rowsFromTable(parsed: Cell[][]) {
+  if (parsed.length < 2) throw new Error("헤더와 기사 행이 필요합니다.");
+  if (parsed.length > MAX_ROWS + 1) throw new Error(`한 번에 최대 ${MAX_ROWS.toLocaleString("ko-KR")}행까지 가져올 수 있습니다.`);
+  const [headers, ...dataRows] = parsed;
+  const columns = resolveHeaders(headers);
+  for (const required of ["source", "title", "url", "published_at"]) {
+    if (columns[required] === undefined) throw new Error(`필수 열 '${required}'이 없습니다.`);
+  }
+  const ignoredBody = headers.some((header) => ["body", "content", "fulltext", "본문", "원문"].includes(normalizedHeader(header)));
+  const now = new Date().toISOString();
+  const rows = dataRows.map((values, index): ImportRow => ({
+    _line: index + 2,
+    source: String(values[columns.source] ?? "").trim(),
+    title: String(values[columns.title] ?? "").trim(),
+    url: normalizeUrl(values[columns.url]),
+    published_at: normalizeTimestamp(values[columns.published_at], columns.news_id === undefined ? "" : values[columns.news_id]),
+    collected_at: columns.collected_at === undefined ? now : normalizeTimestamp(values[columns.collected_at] || now),
+    section: columns.section === undefined ? "" : String(values[columns.section] ?? "").trim(),
+    homepage_placement: columns.homepage_placement === undefined ? "" : normalizePlacement(values[columns.homepage_placement]),
+    homepage_rank: columns.homepage_rank === undefined ? "" : String(values[columns.homepage_rank] ?? "").trim(),
+  }));
+  return { rows, ignoredBody, restoredTimes: columns.news_id !== undefined };
+}
+
+function validateRows(rows: ImportRow[]) {
+  const errors: string[] = [];
+  for (const row of rows) {
+    if (!ALLOWED_SOURCES.includes(row.source as (typeof ALLOWED_SOURCES)[number])) errors.push(`${row._line}행: 지원하지 않는 언론사입니다.`);
+    if (!row.title || row.title.length > 500) errors.push(`${row._line}행: 제목은 1~500자여야 합니다.`);
+    try {
+      const url = new URL(row.url);
+      if (url.protocol !== "https:") throw new Error();
+    } catch { errors.push(`${row._line}행: 올바른 HTTPS 원문 URL이 아닙니다.`); }
+    if (!Number.isFinite(Date.parse(row.published_at))) errors.push(`${row._line}행: 게시 시각을 확인하세요.`);
+    if (!Number.isFinite(Date.parse(row.collected_at))) errors.push(`${row._line}행: 수집 시각을 확인하세요.`);
+    if (row.homepage_placement && !["top", "main", "section", "list"].includes(row.homepage_placement)) errors.push(`${row._line}행: 배치는 TOP, MAIN, SECTION, LIST만 가능합니다.`);
+    if (row.homepage_rank && (!Number.isInteger(Number(row.homepage_rank)) || Number(row.homepage_rank) < 1)) errors.push(`${row._line}행: 노출 순위는 1 이상의 정수여야 합니다.`);
+  }
+  return errors;
+}
+
+export default function AdminClient() {
+  const [token, setToken] = useState("");
+  const [rows, setRows] = useState<ImportRow[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [fileName, setFileName] = useState("");
+  const [ignoredBody, setIgnoredBody] = useState(false);
+  const [restoredTimes, setRestoredTimes] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState("");
+  const [analysisDate, setAnalysisDate] = useState(() => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }));
+  const counts = useMemo(() => Object.fromEntries(ALLOWED_SOURCES.map((source) => [source, rows.filter((row) => row.source === source).length])), [rows]);
+
+  async function chooseFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setStatus("");
+    if (file.size > MAX_FILE_BYTES) {
+      setErrors(["파일은 25MB 이하여야 합니다."]);
+      return;
+    }
+    try {
+      const table = file.name.toLowerCase().endsWith(".xlsx") ? await readXlsxFile(file) as Cell[][] : parseCsv(await file.text());
+      const parsed = rowsFromTable(table);
+      setRows(parsed.rows);
+      setErrors(validateRows(parsed.rows));
+      setIgnoredBody(parsed.ignoredBody);
+      setRestoredTimes(parsed.restoredTimes);
+      setFileName(file.name);
+    } catch (error) {
+      setRows([]);
+      setErrors([error instanceof Error ? error.message : "파일을 읽지 못했습니다."]);
+    }
+  }
+
+  async function importRows(event: FormEvent) {
+    event.preventDefault();
+    if (!token.trim()) return setStatus("관리자 토큰을 입력하세요.");
+    setBusy(true);
+    setStatus("가져오기 준비 중…");
+    try {
+      let saved = 0;
+      let duplicates = 0;
+      for (let offset = 0; offset < rows.length; offset += IMPORT_BATCH_SIZE) {
+        const batch = Math.floor(offset / IMPORT_BATCH_SIZE) + 1;
+        const batches = Math.ceil(rows.length / IMPORT_BATCH_SIZE);
+        setStatus(`기사 저장 중 ${batch}/${batches}`);
+        const payload = rows.slice(offset, offset + IMPORT_BATCH_SIZE).map((row) => {
+          const payloadRow = { ...row };
+          delete (payloadRow as Partial<ImportRow>)._line;
+          return payloadRow;
+        });
+        const response = await fetch("/api/import", { method: "POST", headers: { authorization: `Bearer ${token.trim()}`, "content-type": "application/json" }, body: JSON.stringify({ rows: payload }) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error ?? `${batch}번째 묶음 저장 실패`);
+        saved += Number(result.saved ?? result.inserted) || 0;
+        duplicates += Number(result.duplicates) || 0;
+      }
+      setStatus(`가져오기 완료: 저장 ${saved.toLocaleString("ko-KR")}건 · 중복 ${duplicates.toLocaleString("ko-KR")}건`);
+      setRows([]);
+      setFileName("");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "가져오기에 실패했습니다.");
+    } finally { setBusy(false); }
+  }
+
+  async function runAnalysis() {
+    if (!token.trim()) return setStatus("관리자 토큰을 입력하세요.");
+    setBusy(true);
+    setStatus(`${analysisDate} 기사 분석 중…`);
+    try {
+      const response = await fetch("/api/analyze", { method: "POST", headers: { authorization: `Bearer ${token.trim()}`, "content-type": "application/json" }, body: JSON.stringify({ date: analysisDate }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "분석에 실패했습니다.");
+      setStatus(`분석 완료: 기사 ${result.articleCount.toLocaleString("ko-KR")}건 · 이슈 ${result.issueCount.toLocaleString("ko-KR")}개`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "분석에 실패했습니다.");
+    } finally { setBusy(false); }
+  }
+
+  return <div className="admin-body">
+    <a className="skip-link" href="#import-form">가져오기 화면으로 건너뛰기</a>
+    <header className="admin-topbar">
+      <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">AF</span><span className="brand-copy"><b>AgendaFrame</b><small>DATA ADMIN</small></span></Link>
+      <Link className="admin-back" href="/">공개 화면 보기</Link>
+    </header>
+    <main className="admin-main">
+      <section className="admin-intro">
+        <p className="eyebrow">NO-COST DATA PIPELINE</p>
+        <h1>실데이터를 넣고,<br /><em>분석까지 실행합니다.</em></h1>
+        <p>BigKinds에서 받은 Excel·CSV의 기사 메타데이터를 검증해 저장한 뒤, 비용 없는 규칙 기반 분석기로 이슈·의제 점수·프레임·리포트를 생성합니다.</p>
+      </section>
+
+      <section className="import-card" aria-labelledby="import-title">
+        <header><div><p className="eyebrow">STEP 01</p><h2 id="import-title">기사 가져오기</h2></div><a className="template-link" href="/templates/agendaframe-import.csv" download>빈 양식 받기</a></header>
+        <form id="import-form" onSubmit={importRows}>
+          <label className="field-label" htmlFor="import-token">관리자 토큰</label>
+          <input id="import-token" value={token} onChange={(event) => setToken(event.target.value)} type="password" autoComplete="off" required placeholder="배포 때 설정한 IMPORT_TOKEN" />
+          <p className="field-help">토큰은 브라우저 저장소에 저장하지 않으며 가져오기와 분석 요청에만 사용합니다.</p>
+          <label className={`file-drop ${fileName ? "active" : ""}`} htmlFor="data-file"><span>{fileName || "BigKinds .xlsx 또는 UTF-8 .csv 선택"}</span><small>최대 20,000행 · 25MB · 본문은 전송하지 않음</small></label>
+          <input className="sr-only" id="data-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.csv,text/csv" onChange={chooseFile} />
+          <div className="import-preview" aria-live="polite">
+            {!rows.length && !errors.length && <p>파일을 선택하면 5개 언론사별 건수와 형식 오류를 먼저 확인합니다.</p>}
+            {!!rows.length && <><div className="preview-summary"><span>전체 {rows.length.toLocaleString("ko-KR")}건</span>{ALLOWED_SOURCES.map((source) => <span key={source}>{source} {counts[source]}건</span>)}</div>{ignoredBody && <p className="preview-ok">본문 열은 감지했지만 서버로 전송하지 않습니다.</p>}{restoredTimes && <p className="preview-ok">뉴스 식별자에서 실제 게시 시각(시·분·초, KST)을 복원했습니다.</p>}</>}
+            {!!errors.length && <ul className="preview-errors">{errors.slice(0, 8).map((error) => <li key={error}>{error}</li>)}{errors.length > 8 && <li>그 외 {errors.length - 8}개 오류</li>}</ul>}
+            {!!rows.length && !errors.length && <p className="preview-ok">형식 검증을 통과했습니다. 500건씩 나눠 안전하게 저장합니다.</p>}
+          </div>
+          <button className="import-submit" type="submit" disabled={!rows.length || !!errors.length || busy}>{busy ? "처리 중…" : "검증된 기사 가져오기"}</button>
+        </form>
+      </section>
+
+      <section className="import-card analysis-card" aria-labelledby="analysis-title">
+        <header><div><p className="eyebrow">STEP 02</p><h2 id="analysis-title">일일 분석 생성</h2></div><span className="free-badge">무료 규칙 분석</span></header>
+        <label className="field-label" htmlFor="analysis-date">분석할 날짜 (KST)</label>
+        <input id="analysis-date" className="admin-date" type="date" value={analysisDate} onChange={(event) => setAnalysisDate(event.target.value)} />
+        <p className="field-help">해당 날짜의 저장된 기사로 이슈를 묶고 4개 의제 점수, 6개 프레임, 근거 리포트를 다시 생성합니다.</p>
+        <button className="import-submit" type="button" onClick={runAnalysis} disabled={busy || !analysisDate}>{busy ? "처리 중…" : "분석 실행"}</button>
+        {status && <p className="admin-status" role="status">{status}</p>}
+      </section>
+
+      <section className="admin-guide" aria-labelledby="guide-title">
+        <div><p className="eyebrow">OPERATION GUIDE</p><h2 id="guide-title">운영 순서</h2></div>
+        <dl>
+          <div><dt>1. BigKinds</dt><dd><a href="https://www.bigkinds.or.kr/v2/news/search.do" target="_blank" rel="noopener noreferrer">뉴스 검색·분석 열기</a> → 기간과 5개 언론사 선택 → Excel 다운로드</dd></div>
+          <div><dt>2. 가져오기</dt><dd>기사 본문을 제외한 언론사·제목·원문 URL·일자·분류만 검증해 저장</dd></div>
+          <div><dt>3. 분석</dt><dd>가져온 날짜를 선택하고 분석 실행. 완료 후 공개 화면 새로고침</dd></div>
+          <div><dt>4. 향후 전환</dt><dd>동일한 API 계약을 유지한 채 규칙 분석기를 Vertex AI·Gemini 분석기로 교체 가능</dd></div>
+        </dl>
+        <p>현재 단계에서는 D1과 규칙 분석만 사용하므로 별도 Google Cloud 사용료가 발생하지 않습니다.</p>
+      </section>
+    </main>
+  </div>;
+}

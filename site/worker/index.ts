@@ -1,10 +1,15 @@
 /** Cloudflare Worker entry point for the vinext-starter template. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
+import sourcePanel from "../data/sources.json";
+import { configureSourcePanel, handleApiRequest } from "./runtime.mjs";
+
+configureSourcePanel(sourcePanel);
 
 interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
+  IMPORT_TOKEN?: string;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -28,6 +33,14 @@ interface ExecutionContext {
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    try {
+      const apiResponse = await handleApiRequest(request, env);
+      if (apiResponse) return apiResponse;
+    } catch (error) {
+      console.error("AgendaFrame API request failed", error);
+      return Response.json({ error: "요청을 처리하지 못했습니다." }, { status: 500 });
+    }
 
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];

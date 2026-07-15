@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 const createdAt = integer("created_at", { mode: "timestamp_ms" })
   .notNull()
@@ -110,4 +110,115 @@ export const collectionErrors = sqliteTable(
     createdAt,
   },
   (table) => [index("collection_errors_run_idx").on(table.runId)],
+);
+
+export const analysisRuns = sqliteTable(
+  "analysis_runs",
+  {
+    id: text("id").primaryKey(),
+    targetDate: text("target_date").notNull(),
+    provider: text("provider").notNull(),
+    modelVersion: text("model_version").notNull(),
+    status: text("status", { enum: ["running", "success", "failed"] }).notNull(),
+    startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
+    finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
+    articleCount: integer("article_count").notNull().default(0),
+    issueCount: integer("issue_count").notNull().default(0),
+    errorMessage: text("error_message"),
+    createdAt,
+  },
+  (table) => [
+    index("analysis_runs_target_date_idx").on(table.targetDate, table.finishedAt),
+    index("analysis_runs_status_idx").on(table.status),
+  ],
+);
+
+export const issues = sqliteTable(
+  "issues",
+  {
+    id: text("id").primaryKey(),
+    runId: text("run_id")
+      .notNull()
+      .references(() => analysisRuns.id, { onDelete: "cascade" }),
+    issueDate: text("issue_date").notNull(),
+    title: text("title").notNull(),
+    summary: text("summary").notNull(),
+    category: text("category").notNull(),
+    articleCount: integer("article_count").notNull(),
+    sourceCount: integer("source_count").notNull(),
+    agendaScore: real("agenda_score").notNull(),
+    diversityScore: real("diversity_score").notNull(),
+    placementScore: real("placement_score").notNull(),
+    volumeScore: real("volume_score").notNull(),
+    repetitionScore: real("repetition_score").notNull(),
+    confidence: integer("confidence").notNull(),
+    createdAt,
+  },
+  (table) => [
+    index("issues_run_score_idx").on(table.runId, table.agendaScore),
+    index("issues_date_category_idx").on(table.issueDate, table.category),
+  ],
+);
+
+export const issueArticles = sqliteTable(
+  "issue_articles",
+  {
+    id: text("id").primaryKey(),
+    issueId: text("issue_id")
+      .notNull()
+      .references(() => issues.id, { onDelete: "cascade" }),
+    articleId: text("article_id")
+      .notNull()
+      .references(() => articles.id, { onDelete: "cascade" }),
+    similarity: real("similarity").notNull(),
+    representative: integer("representative", { mode: "boolean" }).notNull().default(false),
+    createdAt,
+  },
+  (table) => [
+    uniqueIndex("issue_articles_issue_article_uq").on(table.issueId, table.articleId),
+    index("issue_articles_article_idx").on(table.articleId),
+  ],
+);
+
+export const frameAnalyses = sqliteTable(
+  "frame_analyses",
+  {
+    id: text("id").primaryKey(),
+    issueId: text("issue_id")
+      .notNull()
+      .references(() => issues.id, { onDelete: "cascade" }),
+    frame: text("frame", {
+      enum: ["conflict", "responsibility", "economy", "law", "policy", "citizen"],
+    }).notNull(),
+    score: real("score").notNull(),
+    confidence: integer("confidence").notNull(),
+    evidenceText: text("evidence_text"),
+    articleId: text("article_id").references(() => articles.id, { onDelete: "set null" }),
+    sourceId: text("source_id").references(() => mediaSources.id, { onDelete: "set null" }),
+    provider: text("provider").notNull(),
+    modelVersion: text("model_version").notNull(),
+    createdAt,
+  },
+  (table) => [
+    uniqueIndex("frame_analyses_issue_frame_uq").on(table.issueId, table.frame),
+    index("frame_analyses_article_idx").on(table.articleId),
+  ],
+);
+
+export const aiReports = sqliteTable(
+  "ai_reports",
+  {
+    id: text("id").primaryKey(),
+    issueId: text("issue_id")
+      .notNull()
+      .references(() => issues.id, { onDelete: "cascade" }),
+    summary: text("summary").notNull(),
+    missingPerspective: text("missing_perspective").notNull(),
+    caution: text("caution").notNull(),
+    provider: text("provider").notNull(),
+    modelVersion: text("model_version").notNull(),
+    generatedAt: integer("generated_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt,
+  },
+  (table) => [uniqueIndex("ai_reports_issue_uq").on(table.issueId)],
 );
