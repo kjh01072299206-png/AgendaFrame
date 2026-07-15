@@ -12,6 +12,8 @@
 - BigKinds Excel·CSV 가져오기와 500건 단위 저장
 - 19,999건 규모의 실제 기사 제목·원문 링크 조회, 검색, 필터, 페이지네이션
 - 제목 토큰 유사도 기반 일일 이슈 클러스터링
+- 최대 7일 기간 일괄 분석과 완료·실패·기사 없음 상태 조회
+- 이미 완료된 날짜를 건너뛰는 중단 후 재개 실행
 - 다양성 35%·배치 30%·기사 수 20%·반복 15% 의제 점수
 - 갈등·책임·경제·법·정책·시민 영향 프레임 및 근거 제목
 - 규칙 기반 관찰 리포트와 분석 한계 공개
@@ -25,7 +27,7 @@
 
 1. BigKinds에서 기간과 한겨레·경향신문·한국일보·중앙일보·조선일보를 선택해 Excel을 내려받습니다.
 2. `/admin`에서 `IMPORT_TOKEN`을 입력하고 파일을 가져옵니다.
-3. 같은 화면에서 분석 날짜를 선택해 일일 분석을 실행합니다.
+3. 같은 화면에서 하루 분석 또는 최대 7일 기간 분석을 실행합니다. 기간 분석은 완료된 날짜를 건너뜁니다.
 4. 품질 검증에서 상위 이슈 30~50개를 검토하고 오류·누락 기사를 기록합니다.
 5. 공개 화면에서 이슈와 원문 링크를 확인합니다.
 
@@ -42,6 +44,7 @@
 | `GET /api/issues/:id` | 이슈·기사·프레임·리포트 상세 | 공개 |
 | `POST /api/import` | 기사 메타데이터 가져오기 | Bearer `IMPORT_TOKEN` |
 | `POST /api/analyze` | 특정 KST 날짜 분석 생성 | Bearer `IMPORT_TOKEN` |
+| `GET /api/analysis/runs` | 기간별 최신 분석·기사 상태 | Bearer `IMPORT_TOKEN` |
 | `GET /api/quality` | 검증 목록·추정 품질 지표 | Bearer `IMPORT_TOKEN` |
 | `GET /api/quality/reviews/:id` | 이슈별 기존 검토 결과 | Bearer `IMPORT_TOKEN` |
 | `PUT /api/quality/reviews/:id` | 평가·오류·누락 기사 저장 | Bearer `IMPORT_TOKEN` |

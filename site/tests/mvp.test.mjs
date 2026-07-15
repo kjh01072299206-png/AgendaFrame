@@ -5,7 +5,7 @@ import test from "node:test";
 import sourcePanel from "../data/sources.json" with { type: "json" };
 import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, analyzeArticles, titleTokens } from "../worker/analysis.mjs";
 import { getAnalysisProvider } from "../worker/analysis-provider.mjs";
-import { calculateQualityMetrics, canonicalizeArticleUrl, configureSourcePanel, handleApiRequest, validateImportRows } from "../worker/runtime.mjs";
+import { calculateQualityMetrics, canonicalizeArticleUrl, configureSourcePanel, enumerateKstDates, handleApiRequest, validateImportRows } from "../worker/runtime.mjs";
 
 configureSourcePanel(sourcePanel);
 
@@ -20,6 +20,7 @@ test("builds the real React dashboard and admin application", async () => {
   assert.match(worker, /rules_local/);
   assert.match(worker, /agenda-rules-v1/);
   assert.match(worker, /\/api\/quality/);
+  assert.match(worker, /\/api\/analysis\/runs/);
 });
 
 test("packages Sites hosting metadata and both database migrations", async () => {
@@ -55,6 +56,15 @@ test("calculates transparent human-review quality estimates", () => {
   assert.equal(metrics.sourceDiversityCoverage, 80);
   assert.equal(metrics.progressPercent, 4);
   assert.equal(metrics.sampleStatus, "collecting");
+});
+
+test("enumerates safe resumable KST analysis ranges", () => {
+  assert.deepEqual(enumerateKstDates("2026-07-08", "2026-07-14", 7), [
+    "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14",
+  ]);
+  assert.throws(() => enumerateKstDates("2026-07-14", "2026-07-08", 7), /종료일/);
+  assert.throws(() => enumerateKstDates("2026-07-01", "2026-07-08", 7), /최대 7일/);
+  assert.throws(() => enumerateKstDates("2026-02-30", "2026-03-01", 7), /유효한 분석 기간/);
 });
 
 test("clusters real-looking article titles and produces explainable scores", () => {
@@ -129,6 +139,10 @@ test("reports no-cost health and protects write endpoints", async () => {
     headers: { authorization: "Bearer wrong", origin: "https://example.test" },
   }), { DB: {}, IMPORT_TOKEN: "correct" });
   assert.equal(qualityUnauthorized.status, 401);
+  const runsUnauthorized = await handleApiRequest(new Request("https://example.test/api/analysis/runs?start=2026-07-08&end=2026-07-14", {
+    headers: { authorization: "Bearer wrong", origin: "https://example.test" },
+  }), { DB: {}, IMPORT_TOKEN: "correct" });
+  assert.equal(runsUnauthorized.status, 401);
 
   const missing = await handleApiRequest(new Request("https://example.test/api/missing"));
   assert.equal(missing.status, 404);
@@ -162,4 +176,30 @@ test("filters and paginates the complete article collection", async () => {
   assert.match(statements[0].sql, /a\.title LIKE \?/);
   assert.match(statements[0].sql, /a\.published_at >= \?/);
   assert.deepEqual(statements[1].parameters.slice(-2), [25, 50]);
+});
+
+test("reports resumable per-day analysis status", async () => {
+  const DB = {
+    prepare(sql) {
+      return {
+        bind() {
+          if (sql.includes("ROW_NUMBER() OVER")) return { all: async () => ({ results: [{ id: "run-14", targetDate: "2026-07-14", status: "success", analyzedArticleCount: 120, issueCount: 20 }] }) };
+          if (sql.includes("date(published_at / 1000")) return { all: async () => ({ results: [{ targetDate: "2026-07-13", articleCount: 100 }, { targetDate: "2026-07-14", articleCount: 120 }] }) };
+          throw new Error(`Unexpected SQL: ${sql}`);
+        },
+      };
+    },
+  };
+  const response = await handleApiRequest(new Request("https://example.test/api/analysis/runs?start=2026-07-12&end=2026-07-14", {
+    headers: { authorization: "Bearer correct", origin: "https://example.test" },
+  }), { DB, IMPORT_TOKEN: "correct" });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.deepEqual(body.days.map((day) => [day.date, day.status, day.articleCount]), [
+    ["2026-07-12", "empty", 0],
+    ["2026-07-13", "pending", 100],
+    ["2026-07-14", "success", 120],
+  ]);
+  assert.equal(body.maxBatchDays, 7);
+  assert.equal(body.resumable, true);
 });
