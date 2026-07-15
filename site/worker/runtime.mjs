@@ -1,10 +1,20 @@
+import { getAnalysisProvider } from "./analysis-provider.mjs";
+
+const analysisProvider = getAnalysisProvider();
+const ANALYSIS_PROVIDER = analysisProvider.provider;
+const ANALYSIS_MODEL_VERSION = analysisProvider.modelVersion;
+
 const assets = globalThis.__AGENDAFRAME_ASSETS__ ?? {};
-const sourcePanel = globalThis.__AGENDAFRAME_SOURCE_PANEL__ ?? {
+let sourcePanel = globalThis.__AGENDAFRAME_SOURCE_PANEL__ ?? {
   collectionProvider: "bigkinds_export",
   activationState: "ready_for_admin_import",
   directCrawling: false,
   sources: [],
 };
+
+export function configureSourcePanel(panel) {
+  if (panel?.sources?.length) sourcePanel = panel;
+}
 
 const securityHeaders = {
   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
@@ -427,55 +437,354 @@ async function handleArticles(request, env) {
   return jsonResponse({ articles, total, limit, offset, hasMore: offset + articles.length < total });
 }
 
+async function adminAuthorized(request, env) {
+  if (!env?.IMPORT_TOKEN) return false;
+  const requestUrl = new URL(request.url);
+  const origin = request.headers.get("origin");
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if ((origin && origin !== requestUrl.origin) || (fetchSite && !["same-origin", "none"].includes(fetchSite))) return false;
+  const authorization = request.headers.get("authorization") ?? "";
+  const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+  return secureTokenMatches(token, env.IMPORT_TOKEN);
+}
+
+async function runBatches(db, statements, size = 100) {
+  for (let offset = 0; offset < statements.length; offset += size) {
+    await db.batch(statements.slice(offset, offset + size));
+  }
+}
+
+function kstDateFromMilliseconds(value) {
+  const date = new Date(Number(value) + 9 * 60 * 60 * 1000);
+  return Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 10) : "";
+}
+
+async function resolveAnalysisDate(db, requestedDate) {
+  if (requestedDate) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(requestedDate) || !Number.isFinite(Date.parse(`${requestedDate}T00:00:00+09:00`))) {
+      throw new Error("분석 날짜를 YYYY-MM-DD 형식으로 입력해 주세요.");
+    }
+    return requestedDate;
+  }
+  const latest = await db.prepare("SELECT MAX(published_at) AS published_at FROM articles").first();
+  const resolved = kstDateFromMilliseconds(latest?.published_at);
+  if (!resolved) throw new Error("분석할 기사가 없습니다.");
+  return resolved;
+}
+
+async function handleAnalyze(request, env) {
+  if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
+  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
+
+  let payload = {};
+  try {
+    const text = await request.text();
+    if (text) payload = JSON.parse(text);
+  } catch {
+    return jsonResponse({ error: "분석 요청 형식을 확인해 주세요." }, 400);
+  }
+
+  const db = env.DB;
+  let targetDate;
+  try {
+    targetDate = await resolveAnalysisDate(db, String(payload.date ?? "").trim());
+  } catch (error) {
+    return jsonResponse({ error: error.message }, 400);
+  }
+  const start = Date.parse(`${targetDate}T00:00:00+09:00`);
+  const articleResult = await db.prepare(`
+    SELECT
+      a.id,
+      a.source_id AS sourceId,
+      s.name AS source,
+      a.title,
+      a.canonical_url AS url,
+      a.section,
+      a.published_at AS publishedAt,
+      a.collected_at AS collectedAt,
+      a.homepage_placement AS homepagePlacement,
+      a.homepage_rank AS homepageRank
+    FROM articles a
+    JOIN media_sources s ON s.id = a.source_id
+    WHERE a.published_at >= ? AND a.published_at < ?
+    ORDER BY a.published_at DESC, a.id DESC
+    LIMIT 2500
+  `).bind(start, start + 86_400_000).all();
+  const articles = articleResult.results ?? [];
+  if (!articles.length) return jsonResponse({ error: `${targetDate}에 분석할 기사가 없습니다.` }, 400);
+
+  const runId = crypto.randomUUID();
+  const startedAt = Date.now();
+  await db.prepare(`
+    INSERT INTO analysis_runs
+      (id, target_date, provider, model_version, status, started_at, article_count, issue_count)
+    VALUES (?, ?, ?, ?, 'running', ?, ?, 0)
+  `).bind(runId, targetDate, ANALYSIS_PROVIDER, ANALYSIS_MODEL_VERSION, startedAt, articles.length).run();
+
+  try {
+    const analyzed = analysisProvider.analyze(articles, { configuredSourceCount: sourcePanel.sources.filter((source) => source.active).length, maxIssues: 80 });
+    const issueIds = await Promise.all(analyzed.map((issue, index) => sha256Hex(`${runId}:${index}:${issue.title}`)));
+    const statements = [];
+    analyzed.forEach((issue, index) => {
+      const issueId = issueIds[index];
+      statements.push(db.prepare(`
+        INSERT INTO issues
+          (id, run_id, issue_date, title, summary, category, article_count, source_count, agenda_score, diversity_score, placement_score, volume_score, repetition_score, confidence)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        issueId,
+        runId,
+        targetDate,
+        issue.title,
+        issue.summary,
+        issue.category,
+        issue.articleCount,
+        issue.sourceCount,
+        issue.agendaScore,
+        issue.diversityScore,
+        issue.placementScore,
+        issue.volumeScore,
+        issue.repetitionScore,
+        issue.confidence,
+      ));
+      issue.articles.forEach((article) => {
+        statements.push(db.prepare(`
+          INSERT INTO issue_articles (id, issue_id, article_id, similarity, representative)
+          VALUES (?, ?, ?, ?, ?)
+        `).bind(crypto.randomUUID(), issueId, article.id, article.similarity, article.representative ? 1 : 0));
+      });
+      issue.frames.forEach((frame) => {
+        statements.push(db.prepare(`
+          INSERT INTO frame_analyses
+            (id, issue_id, frame, score, confidence, evidence_text, article_id, source_id, provider, model_version)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          crypto.randomUUID(),
+          issueId,
+          frame.frame,
+          frame.score,
+          frame.confidence,
+          frame.evidenceText,
+          frame.articleId,
+          frame.sourceId,
+          ANALYSIS_PROVIDER,
+          ANALYSIS_MODEL_VERSION,
+        ));
+      });
+      statements.push(db.prepare(`
+        INSERT INTO ai_reports
+          (id, issue_id, summary, missing_perspective, caution, provider, model_version, generated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        crypto.randomUUID(),
+        issueId,
+        issue.report.summary,
+        issue.report.missingPerspective,
+        issue.report.caution,
+        ANALYSIS_PROVIDER,
+        ANALYSIS_MODEL_VERSION,
+        Date.now(),
+      ));
+    });
+    await runBatches(db, statements);
+    const finishedAt = Date.now();
+    await db.prepare(`
+      UPDATE analysis_runs
+      SET status = 'success', finished_at = ?, issue_count = ?
+      WHERE id = ?
+    `).bind(finishedAt, analyzed.length, runId).run();
+    return jsonResponse({
+      runId,
+      date: targetDate,
+      provider: ANALYSIS_PROVIDER,
+      modelVersion: ANALYSIS_MODEL_VERSION,
+      articleCount: articles.length,
+      issueCount: analyzed.length,
+      paidServicesUsed: false,
+    }, 201);
+  } catch (error) {
+    await db.prepare(`
+      UPDATE analysis_runs
+      SET status = 'failed', finished_at = ?, error_message = ?
+      WHERE id = ?
+    `).bind(Date.now(), String(error?.message ?? "Analysis failed").slice(0, 500), runId).run();
+    console.error("AgendaFrame analysis failed", error);
+    return jsonResponse({ error: "분석을 완료하지 못했습니다." }, 500);
+  }
+}
+
+async function latestAnalysisRun(db, requestedDate = "") {
+  if (requestedDate) {
+    return db.prepare(`
+      SELECT id, target_date AS targetDate, provider, model_version AS modelVersion, finished_at AS finishedAt, article_count AS articleCount, issue_count AS issueCount
+      FROM analysis_runs
+      WHERE status = 'success' AND target_date = ?
+      ORDER BY finished_at DESC
+      LIMIT 1
+    `).bind(requestedDate).first();
+  }
+  return db.prepare(`
+    SELECT id, target_date AS targetDate, provider, model_version AS modelVersion, finished_at AS finishedAt, article_count AS articleCount, issue_count AS issueCount
+    FROM analysis_runs
+    WHERE status = 'success'
+    ORDER BY target_date DESC, finished_at DESC
+    LIMIT 1
+  `).first();
+}
+
+async function handleIssues(request, env) {
+  if (!env?.DB) return jsonResponse({ issues: [], total: 0, run: null });
+  const url = new URL(request.url);
+  const date = String(url.searchParams.get("date") ?? "").trim();
+  const category = String(url.searchParams.get("category") ?? "").trim().slice(0, 40);
+  const limitValue = Number(url.searchParams.get("limit") ?? 30);
+  const limit = Number.isInteger(limitValue) ? Math.min(Math.max(limitValue, 1), 50) : 30;
+  const run = await latestAnalysisRun(env.DB, date);
+  if (!run) return jsonResponse({ issues: [], total: 0, run: null, categories: [] });
+
+  const clauses = ["run_id = ?"];
+  const parameters = [run.id];
+  if (category) {
+    clauses.push("category = ?");
+    parameters.push(category);
+  }
+  const where = clauses.join(" AND ");
+  const [count, result, categoryResult] = await Promise.all([
+    env.DB.prepare(`SELECT COUNT(*) AS total FROM issues WHERE ${where}`).bind(...parameters).first(),
+    env.DB.prepare(`
+      SELECT
+        id, issue_date AS issueDate, title, summary, category, article_count AS articleCount, source_count AS sourceCount,
+        agenda_score AS agendaScore, diversity_score AS diversityScore, placement_score AS placementScore,
+        volume_score AS volumeScore, repetition_score AS repetitionScore, confidence
+      FROM issues
+      WHERE ${where}
+      ORDER BY agenda_score DESC, article_count DESC
+      LIMIT ?
+    `).bind(...parameters, limit).all(),
+    env.DB.prepare(`SELECT category, COUNT(*) AS count FROM issues WHERE run_id = ? GROUP BY category ORDER BY count DESC, category`).bind(run.id).all(),
+  ]);
+  return jsonResponse({
+    run,
+    issues: result.results ?? [],
+    total: Number(count?.total ?? 0),
+    categories: categoryResult.results ?? [],
+    analysisDisclosure: "비용 없는 규칙 기반 1차 분석",
+  });
+}
+
+async function handleIssueDetail(issueId, env) {
+  if (!env?.DB) return jsonResponse({ error: "분석 데이터가 없습니다." }, 404);
+  const issue = await env.DB.prepare(`
+    SELECT
+      i.id, i.issue_date AS issueDate, i.title, i.summary, i.category, i.article_count AS articleCount, i.source_count AS sourceCount,
+      i.agenda_score AS agendaScore, i.diversity_score AS diversityScore, i.placement_score AS placementScore,
+      i.volume_score AS volumeScore, i.repetition_score AS repetitionScore, i.confidence,
+      r.provider, r.model_version AS modelVersion, r.finished_at AS analyzedAt
+    FROM issues i
+    JOIN analysis_runs r ON r.id = i.run_id
+    WHERE i.id = ?
+  `).bind(issueId).first();
+  if (!issue) return jsonResponse({ error: "이슈를 찾지 못했습니다." }, 404);
+  const [articles, frames, report, outlets] = await Promise.all([
+    env.DB.prepare(`
+      SELECT
+        a.id, s.name AS source, a.title, a.canonical_url AS url, a.section, a.published_at AS publishedAt,
+        a.homepage_placement AS homepagePlacement, a.homepage_rank AS homepageRank,
+        ia.similarity, ia.representative
+      FROM issue_articles ia
+      JOIN articles a ON a.id = ia.article_id
+      JOIN media_sources s ON s.id = a.source_id
+      WHERE ia.issue_id = ?
+      ORDER BY ia.representative DESC, a.published_at DESC
+    `).bind(issueId).all(),
+    env.DB.prepare(`
+      SELECT fa.frame, fa.score, fa.confidence, fa.evidence_text AS evidenceText, s.name AS source, fa.article_id AS articleId
+      FROM frame_analyses fa
+      LEFT JOIN media_sources s ON s.id = fa.source_id
+      WHERE fa.issue_id = ?
+      ORDER BY fa.score DESC
+    `).bind(issueId).all(),
+    env.DB.prepare(`
+      SELECT summary, missing_perspective AS missingPerspective, caution, provider, model_version AS modelVersion, generated_at AS generatedAt
+      FROM ai_reports
+      WHERE issue_id = ?
+    `).bind(issueId).first(),
+    env.DB.prepare(`
+      SELECT s.name AS source, COUNT(*) AS articleCount,
+        MAX(CASE a.homepage_placement WHEN 'top' THEN 4 WHEN 'main' THEN 3 WHEN 'section' THEN 2 WHEN 'list' THEN 1 ELSE 0 END) AS placementWeight
+      FROM issue_articles ia
+      JOIN articles a ON a.id = ia.article_id
+      JOIN media_sources s ON s.id = a.source_id
+      WHERE ia.issue_id = ?
+      GROUP BY s.id, s.name
+      ORDER BY articleCount DESC, s.name
+    `).bind(issueId).all(),
+  ]);
+  const placementByWeight = { 4: "TOP", 3: "MAIN", 2: "SECTION", 1: "LIST", 0: "미확인" };
+  return jsonResponse({
+    issue,
+    articles: articles.results ?? [],
+    frames: frames.results ?? [],
+    report,
+    outlets: (outlets.results ?? []).map((outlet) => ({ ...outlet, placement: placementByWeight[outlet.placementWeight] ?? "미확인" })),
+  });
+}
+
+export async function handleApiRequest(request, env = {}) {
+  const url = new URL(request.url);
+  if (!url.pathname.startsWith("/api/")) return null;
+
+  if (url.pathname === "/api/health" && request.method === "GET") {
+    if (!env.DB) {
+      return jsonResponse({
+        status: "ok",
+        mode: "demo",
+        dataAsOf: null,
+        collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, latestSourceCount: 0, latestStatus: "awaiting_import" },
+      });
+    }
+    try {
+      const health = await collectionHealth(env.DB);
+      let analysis = null;
+      try {
+        analysis = await latestAnalysisRun(env.DB);
+      } catch {
+        analysis = null;
+      }
+      return jsonResponse({ ...health, analysis });
+    } catch (error) {
+      console.error("AgendaFrame health query failed", error);
+      return jsonResponse({ status: "degraded", mode: "demo", dataAsOf: null, collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, latestSourceCount: 0, latestStatus: "storage_unavailable" }, analysis: null }, 503);
+    }
+  }
+  if (url.pathname === "/api/sources" && request.method === "GET") {
+    const publicSources = sourcePanel.sources.map((entry) => {
+      const source = { ...entry };
+      delete source.domains;
+      delete source.providerOutletName;
+      return source;
+    });
+    return jsonResponse({ panelVersion: sourcePanel.panelVersion, method: sourcePanel.collectionProvider, directCrawling: false, sources: publicSources });
+  }
+  if (url.pathname === "/api/articles" && request.method === "GET") return handleArticles(request, env);
+  if (url.pathname === "/api/issues" && request.method === "GET") return handleIssues(request, env);
+  if (url.pathname.startsWith("/api/issues/") && request.method === "GET") return handleIssueDetail(decodeURIComponent(url.pathname.slice("/api/issues/".length)), env);
+  if (url.pathname === "/api/import") {
+    if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
+    return handleImport(request, env);
+  }
+  if (url.pathname === "/api/analyze") {
+    if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
+    return handleAnalyze(request, env);
+  }
+  return jsonResponse({ error: "API 경로를 찾지 못했습니다." }, 404);
+}
+
 const worker = {
   async fetch(request, env = {}) {
     const url = new URL(request.url);
-
-    if (url.pathname === "/api/health" && request.method === "GET") {
-      if (!env.DB) {
-        return jsonResponse({
-          status: "ok",
-          mode: "demo",
-          dataAsOf: null,
-          collection: {
-            method: sourcePanel.collectionProvider,
-            directCrawling: false,
-            configuredSources: sourcePanel.sources.length,
-            articleCount: 0,
-            latestSourceCount: 0,
-            latestStatus: "awaiting_import",
-          },
-        });
-      }
-      try {
-        return jsonResponse(await collectionHealth(env.DB));
-      } catch (error) {
-        console.error("AgendaFrame health query failed", error);
-        return jsonResponse({ status: "degraded", mode: "demo", dataAsOf: null, collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, latestSourceCount: 0, latestStatus: "storage_unavailable" } }, 503);
-      }
-    }
-
-    if (url.pathname === "/api/sources" && request.method === "GET") {
-      const publicSources = sourcePanel.sources.map((entry) => {
-        const source = { ...entry };
-        delete source.domains;
-        delete source.providerOutletName;
-        return source;
-      });
-      return jsonResponse({ panelVersion: sourcePanel.panelVersion, method: sourcePanel.collectionProvider, directCrawling: false, sources: publicSources });
-    }
-    if (url.pathname === "/api/articles" && request.method === "GET") {
-      try {
-        return await handleArticles(request, env);
-      } catch (error) {
-        console.error("AgendaFrame article query failed", error);
-        return jsonResponse({ error: "기사 목록을 불러오지 못했습니다." }, 500);
-      }
-    }
-    if (url.pathname === "/api/import") {
-      if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
-      return handleImport(request, env);
-    }
+    const apiResponse = await handleApiRequest(request, env);
+    if (apiResponse) return apiResponse;
 
     if (!["GET", "HEAD"].includes(request.method)) {
       return new Response("Method not allowed", { status: 405, headers: { ...securityHeaders, allow: "GET, HEAD", "content-type": "text/plain; charset=utf-8" } });

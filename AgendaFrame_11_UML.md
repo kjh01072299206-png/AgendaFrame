@@ -1,410 +1,293 @@
 # 11. AgendaFrame UML 산출물
 
 작성일: 2026-07-07  
+최종 구현 반영: 2026-07-15
 작성 담당: 강준혁  
 프로젝트명: AgendaFrame
 
-## 1. 시스템 범위
+## 1. 시스템 범위와 구현 단계
 
-AgendaFrame은 주요 언론사 홈페이지에서 기사 메타데이터를 수집하고, 유사 기사들을 이슈 단위로 묶은 뒤, 의제 중요도와 언론사별 프레임 차이를 분석해 웹 대시보드로 제공하는 시스템이다.
+AgendaFrame은 BigKinds에서 확보한 5개 언론사의 기사 메타데이터를 저장하고, 같은 의제의 기사를 이슈로 묶어 의제 점수와 제목 기반 보도 프레임을 계산한 뒤 React 대시보드로 제공한다. 기사 본문은 저장하거나 재배포하지 않는다.
 
-## 2. 액터 정의
+현재 운영 버전과 비용 발생 후 연결할 Google Cloud 목표 버전을 구분한다.
+
+| 구분 | 현재 운영 버전 | 향후 Google Cloud 확장 |
+| --- | --- | --- |
+| 수집 | 관리자 BigKinds Excel·CSV 가져오기 | Cloud Scheduler·Cloud Run Jobs 수집 자동화 |
+| 저장 | Sites D1 | BigQuery 분석 저장소 추가 |
+| 이슈 묶기 | 제목 토큰 유사도 규칙 | Vertex AI Embeddings 공급자 추가 |
+| 프레임·리포트 | `rules_local` 규칙 분석 | Vertex AI Gemini 공급자 추가 |
+| 웹·API | Next.js·React·TypeScript·Sites Worker | 현재 API 계약 유지 |
+
+향후 서비스는 현재 분석기 인터페이스의 구현체를 교체하는 방식이다. 따라서 사용자 화면, `Issue`·`FrameAnalysis`·`AnalysisReport` 저장 구조, `/api/issues` 계약은 그대로 확장할 수 있다.
+
+## 2. 액터
 
 | 액터 | 설명 |
 | --- | --- |
-| 일반 사용자 | 오늘의 주요 의제, 이슈 상세, 언론사별 보도 차이, AI 리포트를 조회하는 사용자 |
-| 기자/연구자 | 특정 이슈의 보도 경향과 프레임 차이를 분석 자료로 활용하는 사용자 |
-| 운영자 | 분석 대상 언론사, 정책 분야, 프레임 기준, 수집 상태를 관리하는 사용자 |
-| 언론사 홈페이지 | 기사 제목, URL, 섹션, 배치 위치 등의 원천 데이터를 제공하는 외부 웹사이트 |
-| Vertex AI Gemini | 기사 프레임 분석과 AI 리포트 생성을 수행하는 외부 AI 서비스 |
-| BigQuery | 기사 메타데이터, 이슈, 프레임 분석 결과, 의제 점수를 저장하는 분석 DB |
+| 일반 사용자 | 오늘의 의제, 점수 근거, 프레임, 실제 원문 링크를 조회한다. |
+| 기자·연구자 | 매체별 보도량과 표현 차이를 비교하고 원문을 검토한다. |
+| 운영자 | 기사 파일을 가져오고 분석 날짜를 선택해 실행한다. |
+| BigKinds | 운영자가 기사 메타데이터를 확보하는 외부 뉴스 데이터 경로다. |
+| RuleAnalysisProvider | 현재 비용 없이 이슈·점수·프레임·리포트를 생성한다. |
+| VertexAIProvider | 향후 Embeddings·Gemini로 같은 분석 계약을 구현한다. |
 
-## 3. 유스케이스 명세서
+## 3. 주요 유스케이스
 
-### UC-01 오늘의 의제 조회
-
-| 항목 | 내용 |
-| --- | --- |
-| 유스케이스명 | 오늘의 의제 조회 |
-| 주요 액터 | 일반 사용자, 기자/연구자 |
-| 목적 | 사용자가 오늘 주요 언론사에서 중요하게 다룬 공적 의제를 순위로 확인한다. |
-| 사전 조건 | 기사 수집, 이슈 클러스터링, 의제 점수 계산이 완료되어 있다. |
-| 기본 흐름 | 1. 사용자가 대시보드에 접속한다.<br>2. 시스템이 오늘의 의제 목록을 조회한다.<br>3. 시스템이 의제명, 중요도 점수, 관련 언론사 수, 관련 기사 수를 표시한다.<br>4. 사용자는 관심 있는 의제를 선택한다. |
-| 대안 흐름 | 수집된 기사가 없으면 시스템은 "아직 분석된 의제가 없습니다"라는 안내를 표시한다. |
-| 사후 조건 | 사용자는 이슈 상세 화면으로 이동할 수 있다. |
-| 중요도 | 상 |
-
-### UC-02 이슈 상세 조회
+### UC-01 실제 기사 가져오기
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스명 | 이슈 상세 조회 |
-| 주요 액터 | 일반 사용자, 기자/연구자 |
-| 목적 | 사용자가 특정 의제에 포함된 기사 목록과 이슈 요약을 확인한다. |
-| 사전 조건 | 사용자가 오늘의 의제 목록에서 특정 이슈를 선택한다. |
-| 기본 흐름 | 1. 시스템이 선택된 이슈 ID를 기준으로 상세 정보를 조회한다.<br>2. 시스템이 이슈 제목과 요약 설명을 표시한다.<br>3. 시스템이 관련 기사 목록을 제목, 언론사명, 수집 시각, 원문 링크와 함께 표시한다.<br>4. 사용자는 기사 목록을 최신순 또는 언론사순으로 정렬한다. |
-| 대안 흐름 | 관련 기사 URL이 유효하지 않으면 시스템은 원문 이동 불가 상태를 표시한다. |
-| 사후 조건 | 사용자는 원문 기사 페이지로 이동하거나 언론사별 비교 정보를 확인할 수 있다. |
-| 중요도 | 상 |
+| 주요 액터 | 운영자, BigKinds |
+| 사전 조건 | 운영자가 유효한 `IMPORT_TOKEN`과 BigKinds Excel·CSV를 보유한다. |
+| 기본 흐름 | 파일 선택 → 헤더·언론사·HTTPS URL·시각 검증 → 본문 열 제거 → 500건 단위 저장 → URL 중복 결과 표시 |
+| 대안 흐름 | 검증 실패 행이 있으면 서버 전송 전에 행 번호와 이유를 표시한다. |
+| 사후 조건 | 실제 기사 메타데이터와 수집 실행 기록이 D1에 저장된다. |
 
-### UC-03 언론사별 보도 비교
+### UC-02 일일 분석 실행
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스명 | 언론사별 보도 비교 |
-| 주요 액터 | 일반 사용자, 기자/연구자 |
-| 목적 | 같은 이슈를 언론사별로 얼마나, 어떤 제목과 배치로 보도했는지 비교한다. |
-| 사전 조건 | 선택된 이슈에 여러 언론사의 관련 기사가 존재한다. |
-| 기본 흐름 | 1. 사용자가 이슈 상세 화면에서 보도 비교 영역을 확인한다.<br>2. 시스템이 언론사별 기사 수를 집계한다.<br>3. 시스템이 언론사별 홈페이지 배치 위치를 표시한다.<br>4. 시스템이 언론사별 제목을 나란히 보여준다.<br>5. 시스템이 제목 속 강조 단어를 표시한다. |
-| 대안 흐름 | 특정 언론사의 기사가 없으면 "해당 언론사 보도 없음"으로 표시한다. |
-| 사후 조건 | 사용자는 언론사별 보도 빈도와 편집상 중요도 차이를 비교할 수 있다. |
-| 중요도 | 상 |
+| 주요 액터 | 운영자, AnalysisProvider |
+| 사전 조건 | 선택 날짜에 저장된 기사가 있고 운영자가 인증되었다. |
+| 기본 흐름 | KST 날짜 선택 → 분석 실행 생성 → 기사 조회 → 이슈 클러스터링 → 의제 점수 계산 → 6종 프레임·리포트 생성 → 결과 저장 |
+| 대안 흐름 | 기사 없음 또는 처리 오류 시 실패 상태와 오류를 기록한다. |
+| 사후 조건 | 완료된 최신 분석 실행이 공개 API에서 조회된다. |
 
-### UC-04 관점/프레임 비교
+### UC-03 오늘의 의제 조회
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스명 | 관점/프레임 비교 |
-| 주요 액터 | 일반 사용자, 기자/연구자 |
-| 목적 | 사용자가 같은 이슈에 대해 언론사별로 어떤 관점이 강조되었는지 확인한다. |
-| 사전 조건 | Gemini 기반 프레임 분석 결과가 저장되어 있다. |
-| 기본 흐름 | 1. 사용자가 프레임 비교 영역을 확인한다.<br>2. 시스템이 갈등, 책임, 경제, 법·제도, 정책효과, 시민영향 프레임 비중을 계산한다.<br>3. 시스템이 언론사별 프레임 비중 그래프를 표시한다.<br>4. 사용자는 특정 프레임을 선택한다.<br>5. 시스템이 해당 프레임으로 분류된 근거 문장 또는 제목 표현을 표시한다. |
-| 대안 흐름 | AI 분석 신뢰도가 낮으면 시스템은 "검토 필요" 상태를 표시한다. |
-| 사후 조건 | 사용자는 이슈의 관점 차이를 근거와 함께 이해할 수 있다. |
-| 중요도 | 상 |
+| 주요 액터 | 일반 사용자, 기자·연구자 |
+| 기본 흐름 | 대시보드 접속 → 최신 완료 분석 조회 → 의제 점수순 표시 → 분야 필터 선택 |
+| 대안 흐름 | 완료 분석이 없으면 실제 기사 목록은 유지하고 분석 대기 상태를 표시한다. |
 
-### UC-05 AI 리포트 조회
+### UC-04 이슈 상세·원문 조회
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스명 | AI 리포트 조회 |
-| 주요 액터 | 일반 사용자, 기자/연구자 |
-| 목적 | 사용자가 특정 이슈에 대한 AI 요약 리포트를 읽고 관점 차이를 빠르게 파악한다. |
-| 사전 조건 | 이슈별 기사 목록과 프레임 분석 결과가 존재한다. |
-| 기본 흐름 | 1. 사용자가 AI 리포트 영역을 연다.<br>2. 시스템이 주요 관점 요약을 표시한다.<br>3. 시스템이 상대적으로 적게 다뤄진 관점을 안내한다.<br>4. 시스템이 치우침 가능성을 관찰형 문장으로 표시한다.<br>5. 시스템이 리포트 근거가 되는 원문 링크를 함께 제공한다. |
-| 대안 흐름 | 분석 가능한 기사 수가 부족하면 시스템은 리포트 생성을 보류한다. |
-| 사후 조건 | 사용자는 이슈를 다양한 관점에서 이해하고 원문으로 확인할 수 있다. |
-| 중요도 | 상 |
+| 주요 액터 | 일반 사용자, 기자·연구자 |
+| 기본 흐름 | 이슈 선택 → 4개 점수 구성 확인 → 언론사별 기사 수·배치 확인 → 프레임 근거 확인 → 리포트 확인 → 언론사 원문 이동 |
+| 주의 | 규칙 분석은 언론사의 성향이나 보도의 옳고 그름을 판정하지 않는다. |
 
-### UC-06 정책 분야 필터링
+### UC-05 실제 기사 검색
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스명 | 정책 분야 필터링 |
-| 주요 액터 | 일반 사용자, 기자/연구자 |
-| 목적 | 사용자가 정치, 경제, 사회, 외교안보, 노동, 복지, 산업정책 등 특정 분야의 의제만 확인한다. |
-| 사전 조건 | 각 이슈에 정책 분야 태그가 부여되어 있다. |
-| 기본 흐름 | 1. 사용자가 정책 분야 탭을 선택한다.<br>2. 시스템이 선택된 분야에 해당하는 이슈만 필터링한다.<br>3. 시스템이 필터링된 의제 목록을 중요도 순으로 표시한다. |
-| 대안 흐름 | 해당 분야 이슈가 없으면 시스템은 빈 상태 안내 문구를 표시한다. |
-| 사후 조건 | 사용자는 관심 정책 분야의 주요 의제를 확인할 수 있다. |
-| 중요도 | 중 |
+| 주요 액터 | 일반 사용자, 기자·연구자 |
+| 기본 흐름 | 검색어·언론사·분야·날짜 선택 → 서버 필터 → 50건 단위 페이지네이션 → 실제 원문 이동 |
 
-### UC-07 기사 자동 수집 및 분석
-
-| 항목 | 내용 |
-| --- | --- |
-| 유스케이스명 | 기사 자동 수집 및 분석 |
-| 주요 액터 | 운영자, 언론사 홈페이지, BigQuery, Vertex AI Gemini |
-| 목적 | 시스템이 정해진 주기마다 기사 메타데이터를 수집하고 분석 결과를 생성한다. |
-| 사전 조건 | 분석 대상 언론사와 수집 주기가 설정되어 있다. |
-| 기본 흐름 | 1. 스케줄러가 수집 작업을 실행한다.<br>2. 시스템이 언론사 홈페이지에서 기사 메타데이터를 수집한다.<br>3. 시스템이 기사 메타데이터를 BigQuery에 저장한다.<br>4. 시스템이 유사 기사들을 이슈 단위로 묶는다.<br>5. 시스템이 의제 점수를 계산한다.<br>6. 시스템이 Gemini로 프레임 분석과 AI 리포트를 생성한다.<br>7. 시스템이 결과를 대시보드에서 조회 가능한 상태로 저장한다. |
-| 대안 흐름 | 특정 언론사 수집이 실패하면 오류 로그를 저장하고 다음 언론사 수집을 계속한다. |
-| 사후 조건 | 사용자는 최신 의제와 분석 결과를 조회할 수 있다. |
-| 중요도 | 상 |
-
-## 4. 유스케이스 다이어그램
+## 4. 현재 운영 컴포넌트 다이어그램
 
 ```mermaid
 flowchart LR
-    User["일반 사용자"]
-    Researcher["기자/연구자"]
-    Admin["운영자"]
-    News["언론사 홈페이지"]
-    Gemini["Vertex AI Gemini"]
-    DB["BigQuery"]
+    Admin["운영자"] --> AdminUI["React 관리자 /admin"]
+    BigKinds["BigKinds Excel·CSV"] --> AdminUI
+    User["사용자"] --> Dashboard["React 대시보드"]
 
-    UC1(("오늘의 의제 조회"))
-    UC2(("이슈 상세 조회"))
-    UC3(("원문 기사 이동"))
-    UC4(("언론사별 보도 비교"))
-    UC5(("관점/프레임 비교"))
-    UC6(("AI 리포트 조회"))
-    UC7(("정책 분야 필터링"))
-    UC8(("상세 검색"))
-    UC9(("기사 자동 수집"))
-    UC10(("이슈 클러스터링"))
-    UC11(("의제 점수 계산"))
-    UC12(("프레임 분석"))
-    UC13(("AI 리포트 생성"))
-    UC14(("분석 기준 관리"))
+    AdminUI -->|"POST /api/import"| Worker["Sites Worker API"]
+    AdminUI -->|"POST /api/analyze"| Worker
+    Dashboard -->|"GET /api/health·articles·issues"| Worker
 
-    User --> UC1
-    User --> UC2
-    User --> UC3
-    User --> UC4
-    User --> UC5
-    User --> UC6
-    User --> UC7
-    User --> UC8
+    Worker --> Importer["가져오기 검증기"]
+    Worker --> Provider["RuleAnalysisProvider"]
+    Importer --> D1[("D1")]
+    Provider --> D1
+    Worker --> D1
 
-    Researcher --> UC1
-    Researcher --> UC2
-    Researcher --> UC4
-    Researcher --> UC5
-    Researcher --> UC6
-    Researcher --> UC8
-
-    Admin --> UC9
-    Admin --> UC14
-
-    News --> UC9
-    UC9 --> DB
-    UC10 --> DB
-    UC11 --> DB
-    UC12 --> Gemini
-    UC13 --> Gemini
-    Gemini --> DB
-
-    UC1 --> UC2
-    UC2 --> UC3
-    UC2 --> UC4
-    UC2 --> UC5
-    UC5 --> UC6
+    D1 --> Runs["분석 실행"]
+    D1 --> Issues["이슈·기사 연결"]
+    D1 --> Frames["프레임·근거"]
+    D1 --> Reports["관찰 리포트"]
 ```
 
-## 5. 액티비티 다이어그램
+## 5. 향후 Google Cloud 어댑터 다이어그램
+
+```mermaid
+flowchart LR
+    Scheduler["Cloud Scheduler"] --> Job["Cloud Run Jobs"]
+    Job --> BigKindsPath["허용된 데이터 경로"]
+    Job --> BigQuery[("BigQuery")]
+
+    API["기존 Worker API 계약"] --> Port["AnalysisProvider Port"]
+    Port --> Rules["rules_local"]
+    Port -. "비용 승인 후" .-> Vertex["Vertex AI Embeddings"]
+    Port -. "비용 승인 후" .-> Gemini["Vertex AI Gemini"]
+    Vertex --> BigQuery
+    Gemini --> BigQuery
+    BigQuery -. "동기화·조회 어댑터" .-> API
+```
+
+Google 기술은 현재 사용 중이라고 과장하지 않고, 비용 승인 후 연결할 교체 가능한 확장 계층으로 정의한다.
+
+## 6. 분석 액티비티 다이어그램
 
 ```mermaid
 flowchart TD
-    Start([시작])
-    Schedule["정해진 시간에 수집 작업 실행"]
-    Crawl["언론사 홈페이지에서 기사 메타데이터 수집"]
-    SaveRaw["제목, URL, 언론사명, 섹션, 배치 위치, 수집 시각 저장"]
-    Cluster["유사 기사 이슈 클러스터링"]
-    Score["언론사 수, 기사 수, 배치 위치, 반복 노출 기반 의제 점수 계산"]
-    Frame["Gemini로 프레임 분석"]
-    Report["AI 리포트 생성"]
-    Dashboard["대시보드에 분석 결과 제공"]
-    UserOpen["사용자가 오늘의 의제 조회"]
-    SelectIssue["사용자가 특정 이슈 선택"]
-    ShowDetail["이슈 상세, 관련 기사, 언론사별 비교 표시"]
-    ShowFrame["프레임 비중과 근거 문장 표시"]
-    ShowReport["AI 리포트와 원문 링크 표시"]
-    End([종료])
+    Start(["시작"])
+    Auth{"관리자 인증 성공?"}
+    Date["KST 분석 날짜 결정"]
+    Load["해당 날짜 기사 최대 2,500건 조회"]
+    Exists{"기사가 있는가?"}
+    Cluster["제목 정규화·토큰화·유사도 클러스터링"]
+    Score["다양성 35 + 배치 30 + 기사 수 20 + 반복 15"]
+    Frame["6종 프레임 규칙과 근거 제목 계산"]
+    Report["관찰 리포트·한계 생성"]
+    Save["실행·이슈·연결·프레임·리포트 일괄 저장"]
+    Complete["분석 실행 completed"]
+    Fail["분석 실행 failed 및 오류 기록"]
+    End(["종료"])
 
-    Start --> Schedule
-    Schedule --> Crawl
-    Crawl --> SaveRaw
-    SaveRaw --> Cluster
-    Cluster --> Score
-    Score --> Frame
-    Frame --> Report
-    Report --> Dashboard
-    Dashboard --> UserOpen
-    UserOpen --> SelectIssue
-    SelectIssue --> ShowDetail
-    ShowDetail --> ShowFrame
-    ShowFrame --> ShowReport
-    ShowReport --> End
+    Start --> Auth
+    Auth -->|"예"| Date
+    Auth -->|"아니오"| End
+    Date --> Load --> Exists
+    Exists -->|"예"| Cluster --> Score --> Frame --> Report --> Save --> Complete --> End
+    Exists -->|"아니오"| Fail --> End
 ```
 
-## 6. 클래스 다이어그램
+## 7. 데이터 클래스 다이어그램
 
 ```mermaid
 classDiagram
-    class User {
-        +string userId
-        +string role
-        +viewAgenda()
-        +selectIssue()
-        +filterCategory()
-    }
-
-    class MediaOutlet {
-        +string mediaId
+    class MediaSource {
+        +string id
         +string name
-        +string homepageUrl
-        +string politicalType
+        +string samplePosition
+        +boolean active
     }
-
     class Article {
-        +string articleId
+        +string id
+        +string sourceId
         +string title
         +string url
         +string section
-        +string placement
-        +datetime collectedAt
+        +datetime publishedAt
+        +string homepagePlacement
+        +int homepageRank
     }
-
+    class AnalysisRun {
+        +string id
+        +date targetDate
+        +string provider
+        +string modelVersion
+        +string status
+        +int articleCount
+        +int issueCount
+    }
     class Issue {
-        +string issueId
+        +string id
+        +string runId
         +string title
-        +string summary
         +string category
         +float agendaScore
+        +float diversityScore
+        +float placementScore
+        +float volumeScore
+        +float repetitionScore
+        +int confidence
     }
-
-    class AgendaScore {
-        +string scoreId
-        +int articleCount
-        +int mediaCount
-        +float placementWeight
-        +float repetitionWeight
-        +calculateScore()
+    class IssueArticle {
+        +string issueId
+        +string articleId
+        +float similarity
+        +boolean representative
     }
-
     class FrameAnalysis {
-        +string analysisId
-        +float conflict
-        +float responsibility
-        +float economy
-        +float lawSystem
-        +float policyEffect
-        +float citizenImpact
+        +string issueId
+        +string frame
+        +float score
+        +int confidence
         +string evidenceText
+        +string provider
+        +string modelVersion
     }
-
-    class AIReport {
-        +string reportId
+    class AnalysisReport {
+        +string issueId
         +string summary
         +string missingPerspective
-        +string biasPossibility
-        +datetime generatedAt
+        +string caution
+        +string provider
+        +string modelVersion
     }
-
-    class CollectionLog {
-        +string logId
-        +datetime startedAt
-        +datetime finishedAt
-        +string status
-        +string errorMessage
+    class AnalysisProvider {
+        <<interface>>
+        +analyzeArticles(articles, options)
     }
+    class RuleAnalysisProvider
+    class VertexAIProvider
 
-    class Category {
-        +string categoryId
-        +string name
-        +string keywordRule
-    }
-
-    class CollectorService {
-        +collectArticles()
-        +normalizePlacement()
-        +saveLog()
-    }
-
-    class ClusterService {
-        +createEmbedding()
-        +clusterArticles()
-        +createIssueTitle()
-    }
-
-    class ScoringService {
-        +calculateAgendaScore()
-        +rankIssues()
-    }
-
-    class FrameAnalysisService {
-        +analyzeFrame()
-        +extractEvidence()
-    }
-
-    class ReportService {
-        +generateIssueReport()
-        +generateDailyReport()
-    }
-
-    User --> Issue : 조회
-    MediaOutlet "1" --> "*" Article : 발행
-    Issue "1" o-- "*" Article : 포함
-    Issue "1" --> "1" AgendaScore : 보유
-    Article "1" --> "*" FrameAnalysis : 분석됨
-    Issue "1" --> "1" AIReport : 생성
-    Category "1" --> "*" Issue : 분류
-    CollectionLog "1" --> "*" Article : 기록
-
-    CollectorService ..> MediaOutlet
-    CollectorService ..> Article
-    ClusterService ..> Article
-    ClusterService ..> Issue
-    ScoringService ..> Issue
-    ScoringService ..> AgendaScore
-    FrameAnalysisService ..> Article
-    FrameAnalysisService ..> FrameAnalysis
-    ReportService ..> Issue
-    ReportService ..> AIReport
+    MediaSource "1" --> "*" Article
+    AnalysisRun "1" --> "*" Issue
+    Issue "1" --> "*" IssueArticle
+    Article "1" --> "*" IssueArticle
+    Issue "1" --> "6" FrameAnalysis
+    Issue "1" --> "1" AnalysisReport
+    AnalysisProvider <|.. RuleAnalysisProvider
+    AnalysisProvider <|.. VertexAIProvider
 ```
 
-## 7. 시퀀스 다이어그램
+## 8. 시퀀스 다이어그램
 
-### 7.1 이슈 상세 및 AI 리포트 조회 시퀀스
+### 8.1 관리자 분석 실행
+
+```mermaid
+sequenceDiagram
+    actor Admin as 운영자
+    participant UI as React 관리자
+    participant API as Sites Worker API
+    participant DB as D1
+    participant Rules as RuleAnalysisProvider
+
+    Admin->>UI: 날짜·토큰 입력 후 분석 실행
+    UI->>API: POST /api/analyze
+    API->>API: Bearer 토큰·동일 출처 검증
+    API->>DB: analysis_runs running 생성
+    API->>DB: 해당 KST 날짜 기사 조회
+    DB-->>API: 실제 기사 메타데이터
+    API->>Rules: analyzeArticles
+    Rules-->>API: 이슈·점수·프레임·리포트
+    API->>DB: 결과 일괄 저장
+    API->>DB: analysis_runs completed 갱신
+    API-->>UI: 기사 수·이슈 수·공급자 반환
+    UI-->>Admin: 분석 완료 표시
+```
+
+### 8.2 사용자 이슈 조회
 
 ```mermaid
 sequenceDiagram
     actor User as 사용자
     participant UI as React 대시보드
-    participant API as Cloud Run API
-    participant DB as BigQuery
-    participant Gemini as Vertex AI Gemini
+    participant API as Sites Worker API
+    participant DB as D1
+    participant News as 언론사 원문
 
-    User->>UI: 오늘의 의제 목록 조회
-    UI->>API: GET /issues/today
-    API->>DB: 오늘의 의제 랭킹 조회
-    DB-->>API: 의제 목록, 점수, 기사 수 반환
-    API-->>UI: 의제 목록 응답
-    UI-->>User: 오늘의 의제 랭킹 표시
-
-    User->>UI: 특정 이슈 선택
-    UI->>API: GET /issues/{issueId}
-    API->>DB: 이슈 상세, 기사 목록, 프레임 결과 조회
-    DB-->>API: 이슈 상세 데이터 반환
-
-    alt AI 리포트가 이미 존재함
-        API->>DB: 저장된 AI 리포트 조회
-        DB-->>API: AI 리포트 반환
-    else AI 리포트가 없음
-        API->>Gemini: 이슈 요약 및 프레임 차이 리포트 생성 요청
-        Gemini-->>API: AI 리포트 반환
-        API->>DB: 생성된 리포트 저장
-    end
-
-    API-->>UI: 이슈 상세, 기사 목록, 프레임 비교, AI 리포트 응답
-    UI-->>User: 이슈 상세 화면 표시
+    User->>UI: 대시보드 접속
+    UI->>API: GET /api/health
+    UI->>API: GET /api/issues
+    API->>DB: 최신 완료 분석과 이슈 조회
+    DB-->>API: 랭킹·점수
+    API-->>UI: 이슈 목록
+    User->>UI: 이슈 선택
+    UI->>API: GET /api/issues/:id
+    API->>DB: 기사·프레임·리포트 조회
+    DB-->>API: 상세 결과와 원문 URL
+    API-->>UI: 상세 응답
+    User->>News: 원문 기사 열기
 ```
 
-### 7.2 기사 자동 수집 및 분석 시퀀스
+## 9. 구현 정합성
 
-```mermaid
-sequenceDiagram
-    participant Scheduler as Cloud Scheduler
-    participant Job as Cloud Run Jobs
-    participant News as 언론사 홈페이지
-    participant Storage as Cloud Storage
-    participant DB as BigQuery
-    participant Vertex as Vertex AI Embeddings
-    participant Gemini as Vertex AI Gemini
+| UML 요소 | 구현 위치 |
+| --- | --- |
+| React 대시보드 | `site/app/agenda-dashboard.tsx` |
+| 관리자 가져오기·분석 | `site/app/admin/admin-client.tsx` |
+| 공개·관리 API | `site/worker/runtime.mjs` |
+| 분석 공급자 포트 | `site/worker/analysis-provider.mjs` |
+| 무료 분석 구현 | `site/worker/analysis.mjs` |
+| D1 엔터티 | `site/db/schema.ts` |
+| 실제 마이그레이션 | `site/drizzle/0000_*.sql`, `0001_*.sql` |
+| Sites Worker 진입점 | `site/worker/index.ts` |
 
-    Scheduler->>Job: 정기 수집 작업 실행
-    Job->>News: 언론사 홈페이지 요청
-    News-->>Job: HTML 페이지 반환
-    Job->>Job: 제목, URL, 섹션, 배치 위치 추출
-    Job->>Storage: 원본 스냅샷 저장
-    Job->>DB: 기사 메타데이터 및 수집 로그 저장
-    Job->>Vertex: 기사 제목/요약 임베딩 요청
-    Vertex-->>Job: 임베딩 벡터 반환
-    Job->>DB: 유사 기사 클러스터링 결과 저장
-    Job->>DB: 의제 점수 계산 및 저장
-    Job->>Gemini: 프레임 분석 및 AI 리포트 생성 요청
-    Gemini-->>Job: 프레임 분석 결과, 리포트 반환
-    Job->>DB: 분석 결과 저장
-```
-
-## 8. UML 산출물 요약
-
-| 산출물 | 포함 내용 | 활용 목적 |
-| --- | --- | --- |
-| 유스케이스 명세서 | 주요 기능별 액터, 목적, 흐름, 대안 흐름, 사후 조건 | 요구사항 구체화 |
-| 유스케이스 다이어그램 | 사용자, 운영자, 외부 서비스와 주요 기능 관계 | 시스템 범위 설명 |
-| 액티비티 다이어그램 | 기사 수집부터 사용자 조회까지의 전체 활동 흐름 | 처리 절차 설명 |
-| 클래스 다이어그램 | 사용자, 기사, 이슈, 프레임 분석, AI 리포트, 서비스 클래스 관계 | 데이터 구조 및 객체 관계 설명 |
-| 시퀀스 다이어그램 | 이슈 상세 조회 및 자동 수집·분석 시나리오의 메시지 흐름 | 기능 수행 순서 설명 |
-
+현재 UML은 실제 구현과 일치하며, 점선으로 표시한 Google Cloud 구성만 비용 승인 후의 확장 목표다.

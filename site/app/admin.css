@@ -35,10 +35,15 @@
 .admin-guide > p { margin-top: 16px; }
 .admin-toast { position: fixed; left: 50%; bottom: 24px; z-index: 40; max-width: calc(100% - 32px); padding: 11px 16px; border-radius: 999px; background: var(--ink); color: white; font-size: 10px; opacity: 0; transform: translate(-50%, 18px); pointer-events: none; transition: opacity .2s, transform .2s; }
 .admin-toast.show { opacity: 1; transform: translate(-50%, 0); }
+.analysis-card { grid-column: 2; box-shadow: none; }
+.free-badge { padding: 7px 10px; border-radius: 999px; background: #e6f2ec; color: var(--green); font-size: 9px; font-weight: 800; }
+.admin-date { width: 100%; padding: 13px 14px; border: 1px solid var(--line); border-radius: 10px; background: #faf7f1; color: var(--ink); font: inherit; font-size: 12px; }
+.admin-date:focus { outline: 3px solid color-mix(in srgb, var(--accent), white 68%); border-color: var(--accent); }
+.admin-status { margin: 14px 0 0; padding: 12px 14px; border-left: 3px solid var(--blue); background: #eef3f8; color: #33455d; font-size: 10px; line-height: 1.6; }
 @media (max-width: 920px) {
   .admin-main { grid-template-columns: 1fr; }
   .admin-intro { position: static; }
-  .admin-guide { grid-column: auto; }
+  .admin-guide, .analysis-card { grid-column: auto; }
 }
 @media (max-width: 560px) {
   .admin-topbar { min-height: 66px; padding: 10px 16px; }

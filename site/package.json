@@ -6,10 +6,11 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "dev": "node scripts/dev.mjs",
-    "build": "node scripts/build.mjs",
-    "start": "node scripts/dev.mjs",
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite --host 127.0.0.1",
     "test": "npm run build && node --test tests/mvp.test.mjs",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },
