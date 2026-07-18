@@ -96,6 +96,97 @@ export const articles = sqliteTable(
   ],
 );
 
+export const homepageSnapshots = sqliteTable(
+  "homepage_snapshots",
+  {
+    id: text("id").primaryKey(),
+    sourceId: text("source_id")
+      .notNull()
+      .references(() => mediaSources.id, { onDelete: "restrict" }),
+    homepageUrl: text("homepage_url").notNull(),
+    observedAt: integer("observed_at", { mode: "timestamp_ms" }).notNull(),
+    viewportWidth: integer("viewport_width").notNull(),
+    viewportHeight: integer("viewport_height").notNull(),
+    collectorVersion: text("collector_version").notNull(),
+    captureHash: text("capture_hash"),
+    screenshotObjectKey: text("screenshot_object_key"),
+    status: text("status", { enum: ["success", "partial", "failed"] }).notNull(),
+    createdAt,
+  },
+  (table) => [
+    uniqueIndex("homepage_snapshots_source_observed_viewport_uq").on(
+      table.sourceId,
+      table.observedAt,
+      table.viewportWidth,
+      table.viewportHeight,
+    ),
+    index("homepage_snapshots_observed_at_idx").on(table.observedAt),
+  ],
+);
+
+export const placementObservations = sqliteTable(
+  "placement_observations",
+  {
+    id: text("id").primaryKey(),
+    snapshotId: text("snapshot_id")
+      .notNull()
+      .references(() => homepageSnapshots.id, { onDelete: "cascade" }),
+    articleId: text("article_id").references(() => articles.id, { onDelete: "set null" }),
+    canonicalUrl: text("canonical_url").notNull(),
+    observedTitle: text("observed_title").notNull(),
+    zone: text("zone", { enum: ["top", "main", "section", "list"] }).notNull(),
+    pageRank: integer("page_rank").notNull(),
+    x: integer("x").notNull(),
+    y: integer("y").notNull(),
+    width: integer("width").notNull(),
+    height: integer("height").notNull(),
+    aboveFold: integer("above_fold", { mode: "boolean" }).notNull(),
+    moduleName: text("module_name"),
+    matchMethod: text("match_method", { enum: ["canonical_url", "unmatched"] }).notNull(),
+    matchConfidence: real("match_confidence").notNull(),
+    createdAt,
+  },
+  (table) => [
+    uniqueIndex("placement_observations_snapshot_url_position_uq").on(
+      table.snapshotId,
+      table.canonicalUrl,
+      table.x,
+      table.y,
+    ),
+    index("placement_observations_article_idx").on(table.articleId),
+    index("placement_observations_snapshot_rank_idx").on(table.snapshotId, table.pageRank),
+  ],
+);
+
+export const articleContents = sqliteTable(
+  "article_contents",
+  {
+    id: text("id").primaryKey(),
+    articleId: text("article_id")
+      .notNull()
+      .references(() => articles.id, { onDelete: "cascade" }),
+    objectKey: text("object_key").notNull(),
+    bodyHash: text("body_hash").notNull(),
+    bodyCharacters: integer("body_characters").notNull(),
+    acquiredAt: integer("acquired_at", { mode: "timestamp_ms" }).notNull(),
+    acquisitionMethod: text("acquisition_method", {
+      enum: ["licensed_export", "publisher_api", "authorized_crawl", "manual_research"],
+    }).notNull(),
+    usageBasis: text("usage_basis").notNull(),
+    usageExpiresAt: integer("usage_expires_at", { mode: "timestamp_ms" }),
+    analysisAllowed: integer("analysis_allowed", { mode: "boolean" }).notNull().default(false),
+    publicEvidenceAllowed: integer("public_evidence_allowed", { mode: "boolean" }).notNull().default(false),
+    extractorVersion: text("extractor_version").notNull(),
+    status: text("status", { enum: ["active", "revoked", "expired"] }).notNull().default("active"),
+    createdAt,
+  },
+  (table) => [
+    uniqueIndex("article_contents_article_hash_uq").on(table.articleId, table.bodyHash),
+    uniqueIndex("article_contents_object_key_uq").on(table.objectKey),
+    index("article_contents_article_status_idx").on(table.articleId, table.status, table.acquiredAt),
+  ],
+);
+
 export const collectionErrors = sqliteTable(
   "collection_errors",
   {
@@ -192,7 +283,13 @@ export const frameAnalyses = sqliteTable(
     }).notNull(),
     score: real("score").notNull(),
     confidence: integer("confidence").notNull(),
+    evidenceBasis: text("evidence_basis", {
+      enum: ["headline", "body_private", "body_public"],
+    }).notNull().default("headline"),
     evidenceText: text("evidence_text"),
+    evidenceStart: integer("evidence_start"),
+    evidenceEnd: integer("evidence_end"),
+    contentVersionId: text("content_version_id").references(() => articleContents.id, { onDelete: "set null" }),
     articleId: text("article_id").references(() => articles.id, { onDelete: "set null" }),
     sourceId: text("source_id").references(() => mediaSources.id, { onDelete: "set null" }),
     provider: text("provider").notNull(),

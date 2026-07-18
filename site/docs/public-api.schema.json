@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://agendaframe-capstone.kjh01072299206.chatgpt.site/schemas/public-api-v2.json",
+  "$id": "https://agendaframe-capstone.kjh01072299206.chatgpt.site/schemas/public-api-v3.json",
   "title": "AgendaFrame public API",
   "description": "Public read API contract. Demo and live responses share this shape; runtimeMode identifies the source.",
-  "x-api-version": "agendaframe-public-v2",
+  "x-api-version": "agendaframe-public-v3",
   "oneOf": [
     { "$ref": "#/$defs/HealthResponse" },
     { "$ref": "#/$defs/ArticleListResponse" },
@@ -22,7 +22,7 @@
         "modelId", "promptVersion", "evaluationDatasetVersion"
       ],
       "properties": {
-        "schemaVersion": { "const": "agendaframe-public-v2" },
+        "schemaVersion": { "const": "agendaframe-public-v3" },
         "runtimeMode": { "enum": ["demo", "live_metadata", "unavailable"] },
         "snapshotId": { "type": ["string", "null"] },
         "runId": { "type": ["string", "null"] },
@@ -50,6 +50,8 @@
         "collectedAt": { "type": ["integer", "null"] },
         "homepagePlacement": { "type": ["string", "null"] },
         "homepageRank": { "type": ["integer", "null"] },
+        "placementObservationCount": { "type": "integer", "minimum": 0 },
+        "contentAvailable": { "enum": [true, false, 0, 1] },
         "representative": { "type": ["integer", "boolean"] },
         "similarity": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
       },
@@ -61,7 +63,7 @@
         "id", "issueDate", "title", "summary", "category", "articleCount", "sourceCount",
         "agendaScore", "diversityScore", "placementScore", "volumeScore", "followUpVolumeScore",
         "placementObservedCount", "placementTotalCount", "scoreStatus", "calibrationStatus",
-        "clusterQuality", "evidenceBasis"
+        "clusterQuality", "contentAvailableCount", "evidenceBasis"
       ],
       "properties": {
         "id": { "type": "string" },
@@ -81,7 +83,8 @@
         "scoreStatus": { "enum": ["legacy_reanalysis_required", "observed_components", "placement_excluded"] },
         "calibrationStatus": { "const": "not_calibrated" },
         "clusterQuality": { "enum": ["review_required", "not_human_reviewed", "cohesive", "insufficient_evidence"] },
-        "evidenceBasis": { "const": "headline_metadata_only" }
+        "contentAvailableCount": { "type": "integer", "minimum": 0 },
+        "evidenceBasis": { "enum": ["headline_metadata_only", "authorized_body_and_metadata"] }
       },
       "additionalProperties": true
     },
@@ -105,7 +108,7 @@
       ],
       "properties": {
         "status": { "enum": ["withheld_insufficient_evidence", "available"] },
-        "evidenceBasis": { "enum": ["headline_metadata_only", "evidence_spans"] },
+        "evidenceBasis": { "enum": ["headline_metadata_only", "authorized_body_signals_not_structured_comparison", "evidence_spans"] },
         "reason": { "type": "string" },
         "frameElements": {
           "type": "array",

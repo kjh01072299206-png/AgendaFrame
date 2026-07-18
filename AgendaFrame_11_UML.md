@@ -7,16 +7,16 @@
 
 ## 1. 시스템 범위와 구현 단계
 
-AgendaFrame은 BigKinds에서 확보한 5개 언론사의 기사 메타데이터를 저장하고, 같은 의제의 기사를 이슈로 묶어 의제 점수와 제목 기반 보도 프레임을 계산한 뒤 React 대시보드로 제공한다. 기사 본문은 저장하거나 재배포하지 않는다.
+AgendaFrame은 BigKinds에서 확보한 5개 언론사의 기사 메타데이터와 홈페이지 반복 관측을 저장하고, 같은 의제의 기사를 이슈로 묶어 의제 점수와 표현 단서를 계산한 뒤 React 대시보드로 제공한다. 기사 전문은 이용 근거가 확인된 자료만 비공개 객체 저장소에 분리하며 공개 재배포하지 않는다.
 
 현재 운영 버전과 비용 발생 후 연결할 Google Cloud 목표 버전을 구분한다.
 
 | 구분 | 현재 운영 버전 | 향후 Google Cloud 확장 |
 | --- | --- | --- |
-| 수집 | 관리자 BigKinds Excel·CSV 가져오기 | Cloud Scheduler·Cloud Run Jobs 수집 자동화 |
-| 저장 | Sites D1 | BigQuery 분석 저장소 추가 |
+| 수집 | 관리자 BigKinds 가져오기·보호된 홈페이지 관측 API | Cloud Scheduler·Cloud Run Jobs 수집 자동화 |
+| 저장 | Sites D1·R2 승인 본문 | BigQuery·Cloud Storage 분석 저장소 추가 |
 | 이슈 묶기 | 제목 토큰 유사도 규칙 | Vertex AI Embeddings 공급자 추가 |
-| 프레임·리포트 | `rules_local` 규칙 분석 | Vertex AI Gemini 공급자 추가 |
+| 프레임·리포트 | `rules_local` 본문·제목 표현 단서 | Vertex AI Gemini 구조화 프레임 공급자 추가 |
 | 웹·API | Next.js·React·TypeScript·Sites Worker | 현재 API 계약 유지 |
 
 향후 서비스는 현재 분석기 인터페이스의 구현체를 교체하는 방식이다. 따라서 사용자 화면, `Issue`·`FrameAnalysis`·`AnalysisReport` 저장 구조, `/api/issues` 계약은 그대로 확장할 수 있다.
@@ -40,7 +40,7 @@ AgendaFrame은 BigKinds에서 확보한 5개 언론사의 기사 메타데이터
 | --- | --- |
 | 주요 액터 | 운영자, BigKinds |
 | 사전 조건 | 운영자가 유효한 `IMPORT_TOKEN`과 BigKinds Excel·CSV를 보유한다. |
-| 기본 흐름 | 파일 선택 → 헤더·언론사·HTTPS URL·시각 검증 → 본문 열 제거 → 500건 단위 저장 → URL 중복 결과 표시 |
+| 기본 흐름 | 파일 선택 → 헤더·언론사·HTTPS URL·시각 검증 → BigKinds 본문 열 제거 → 500건 단위 메타데이터 저장 → URL 중복 결과 표시 |
 | 대안 흐름 | 검증 실패 행이 있으면 서버 전송 전에 행 번호와 이유를 표시한다. |
 | 사후 조건 | 실제 기사 메타데이터와 수집 실행 기록이 D1에 저장된다. |
 

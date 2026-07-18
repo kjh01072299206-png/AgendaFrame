@@ -18,7 +18,7 @@ test("builds the real React dashboard and admin application", async () => {
   const worker = await readFile(new URL("../dist/server/index.js", import.meta.url), "utf8");
   assert.match(worker, /\/api\/analyze/);
   assert.match(worker, /rules_local/);
-  assert.match(worker, /agenda-rules-v2/);
+  assert.match(worker, /agenda-rules-v3/);
   assert.match(worker, /\/api\/quality/);
   assert.match(worker, /\/api\/analysis\/runs/);
 });
@@ -27,7 +27,7 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
   const dashboard = await readFile(new URL("../app/agenda-dashboard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
 
-  for (const copy of ["같은 사건,", "근거가 부족한 분석은", "기사 본문", "사람 검토", "중요도·사실성·여론을 뜻하지 않습니다"]) {
+  for (const copy of ["같은 사건,", "근거가 부족한 분석은", "승인 본문", "사람 검토", "중요도·사실성·여론을 뜻하지 않습니다"]) {
     assert.match(dashboard, new RegExp(copy));
   }
   assert.match(dashboard, /<details className="score-details">/);
@@ -42,11 +42,11 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
   assert.match(styles, /min-height: 44px/);
 });
 
-test("packages Sites hosting metadata and both database migrations", async () => {
+test("packages Sites hosting metadata and database migrations", async () => {
   const hosting = JSON.parse(await readFile(new URL("../dist/.openai/hosting.json", import.meta.url), "utf8"));
   assert.equal(hosting.project_id, "appgprj_6a54eb02c21c819199c3369cc67c6857");
   assert.equal(hosting.d1, "DB");
-  assert.equal(hosting.r2, null);
+  assert.equal(hosting.r2, "CONTENT");
   const migration = await readFile(new URL("../dist/.openai/drizzle/0001_easy_dexter_bennett.sql", import.meta.url), "utf8");
   for (const table of ["analysis_runs", "issues", "issue_articles", "frame_analyses", "ai_reports"]) {
     assert.ok(migration.includes(`CREATE TABLE \`${table}\``));
@@ -54,6 +54,10 @@ test("packages Sites hosting metadata and both database migrations", async () =>
   const qualityMigration = await readFile(new URL("../dist/.openai/drizzle/0002_colorful_master_mold.sql", import.meta.url), "utf8");
   for (const table of ["quality_reviews", "quality_review_article_flags", "quality_review_missing_articles"]) {
     assert.ok(qualityMigration.includes(`CREATE TABLE \`${table}\``));
+  }
+  const evidenceMigration = await readFile(new URL("../dist/.openai/drizzle/0003_complex_mikhail_rasputin.sql", import.meta.url), "utf8");
+  for (const table of ["homepage_snapshots", "placement_observations", "article_contents"]) {
+    assert.ok(evidenceMigration.includes(`CREATE TABLE \`${table}\``));
   }
 });
 
@@ -109,14 +113,141 @@ test("clusters real-looking article titles and produces explainable scores", () 
   assert.ok(housing.agendaScore > issues.find((issue) => issue.articleCount === 1).agendaScore);
   assert.deepEqual(titleTokens("[단독] 정부의 청년 주거지원 정책 발표"), ["청년", "주거지원", "정책", "발표"]);
   assert.equal(ANALYSIS_PROVIDER, "rules_local");
-  assert.equal(ANALYSIS_MODEL_VERSION, "agenda-rules-v2");
+  assert.equal(ANALYSIS_MODEL_VERSION, "agenda-rules-v3");
   assert.equal(getAnalysisProvider().analyze, analyzeArticles);
   assert.throws(() => getAnalysisProvider("vertex_ai"), /지원하지 않는 분석 공급자/);
 });
 
+test("uses repeated placement observations and keeps authorized body text private", () => {
+  const privateBody = "정부 정책의 책임 소재를 두고 국회와 관계 부처가 서로 다른 설명을 내놓았다. 관계자는 후속 대책을 검토한다고 밝혔다.";
+  const [issue] = analyzeArticles([
+    {
+      id: "body-1",
+      sourceId: "hani",
+      source: "한겨레",
+      title: "정부 청년 주거 정책 확대 발표",
+      section: "정치",
+      bodyText: privateBody,
+      contentVersionId: "content-1",
+      publicEvidenceAllowed: false,
+      placementObservations: [
+        { zone: "top", pageRank: 1, aboveFold: true, observedAt: 1 },
+        { zone: "main", pageRank: 3, aboveFold: true, observedAt: 2 },
+      ],
+    },
+  ]);
+  const responsibility = issue.frames.find((frame) => frame.frame === "responsibility");
+  assert.equal(issue.placementObservedCount, 1);
+  assert.equal(issue.placementObservationCount, 2);
+  assert.equal(issue.placementScore, 91);
+  assert.equal(responsibility.evidenceBasis, "body_private");
+  assert.equal(responsibility.contentVersionId, "content-1");
+  assert.match(responsibility.evidenceText, /공개 검토 전/);
+  assert.equal(issue.articles[0].contentAvailable, true);
+  assert.equal("bodyText" in issue.articles[0], false);
+  assert.equal(JSON.stringify(issue).includes(privateBody), false);
+});
+
+test("stores only attested article bodies in the private object binding", async () => {
+  const statements = [];
+  const objects = [];
+  const DB = {
+    prepare(sql) {
+      return {
+        bind(...parameters) {
+          statements.push({ sql, parameters });
+          if (sql.includes("SELECT a.id, a.title")) return { first: async () => ({ id: "article-1", title: "검증 기사", source: "한겨레" }) };
+          if (sql.includes("FROM article_contents") && sql.includes("body_hash")) return { first: async () => null };
+          if (sql.includes("INSERT INTO article_contents")) return { run: async () => ({ success: true }) };
+          throw new Error(`Unexpected SQL: ${sql}`);
+        },
+      };
+    },
+  };
+  const CONTENT = { put: async (key, value, options) => objects.push({ key, value, options }) };
+  const body = "정부 정책의 문제 정의와 책임 소재, 시민 영향, 제도 개선 대안을 여러 취재원의 발언과 함께 설명한다. ".repeat(8);
+  const request = new Request("https://example.test/api/content", {
+    method: "POST",
+    headers: { authorization: "Bearer correct", origin: "https://example.test", "sec-fetch-site": "same-origin", "content-type": "application/json" },
+    body: JSON.stringify({
+      url: "https://www.hani.co.kr/arti/politics/test.html",
+      body,
+      acquired_at: "2026-07-19T10:00:00+09:00",
+      acquisition_method: "manual_research",
+      usage_basis: "연구 프로젝트에서 분석이 허용된 내부 표본",
+      analysis_allowed: true,
+      public_evidence_allowed: false,
+      rights_attested: true,
+    }),
+  });
+  const response = await handleApiRequest(request, { DB, CONTENT, IMPORT_TOKEN: "correct" });
+  assert.equal(response.status, 201);
+  assert.equal(objects.length, 1);
+  assert.equal(objects[0].value, body.trim());
+  assert.match(objects[0].key, /^article-content\/article-1\/[a-f0-9]{64}\.txt$/);
+  const result = await response.json();
+  assert.equal(result.publicEvidenceAllowed, false);
+  assert.equal("body" in result, false);
+  assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO article_contents")));
+
+  const unattested = await handleApiRequest(new Request("https://example.test/api/content", {
+    method: "POST",
+    headers: { authorization: "Bearer correct", origin: "https://example.test", "sec-fetch-site": "same-origin", "content-type": "application/json" },
+    body: JSON.stringify({ url: "https://www.hani.co.kr/arti/politics/test.html", body, rights_attested: false }),
+  }), { DB, CONTENT, IMPORT_TOKEN: "correct" });
+  assert.equal(unattested.status, 400);
+  assert.match((await unattested.json()).error.message, /권한/);
+  assert.equal(objects.length, 1);
+});
+
+test("accepts authenticated homepage geometry as repeated observations", async () => {
+  const statements = [];
+  const DB = {
+    prepare(sql) {
+      return {
+        bind(...parameters) {
+          const statement = { sql, parameters, run: async () => ({ success: true }), first: async () => ({ count: 1 }) };
+          statements.push(statement);
+          return statement;
+        },
+      };
+    },
+    batch: async (batch) => batch.map(() => ({ success: true, meta: { changes: 1 } })),
+  };
+  const response = await handleApiRequest(new Request("https://example.test/api/observations/homepage", {
+    method: "POST",
+    headers: { authorization: "Bearer correct", origin: "https://example.test", "sec-fetch-site": "same-origin", "content-type": "application/json" },
+    body: JSON.stringify({
+      source: "한겨레",
+      homepage_url: "https://www.hani.co.kr/",
+      observed_at: "2026-07-19T09:00:00+09:00",
+      viewport: { width: 1440, height: 1200 },
+      collector_version: "playwright-layout-v1",
+      placements: [{
+        url: "https://www.hani.co.kr/arti/politics/test.html",
+        title: "홈페이지에 관측된 기사",
+        zone: "top",
+        rank: 1,
+        x: 80,
+        y: 140,
+        width: 720,
+        height: 360,
+        above_fold: true,
+        module_name: "주요뉴스",
+      }],
+    }),
+  }), { DB, IMPORT_TOKEN: "correct" });
+  assert.equal(response.status, 201);
+  const result = await response.json();
+  assert.equal(result.observed, 1);
+  assert.equal(result.matched, 1);
+  assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO homepage_snapshots")));
+  assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO placement_observations")));
+});
+
 test("uses the checked-in JSON Schema as the public lineage contract", async () => {
   const schema = JSON.parse(await readFile(new URL("../docs/public-api.schema.json", import.meta.url), "utf8"));
-  assert.equal(schema["x-api-version"], "agendaframe-public-v2");
+  assert.equal(schema["x-api-version"], "agendaframe-public-v3");
   const required = schema.$defs.LineageMeta.required;
   for (const field of ["snapshotId", "runId", "sourcePolicyVersion", "clusteringVersion", "scoreVersion", "modelId", "promptVersion", "evaluationDatasetVersion", "publishedAt"]) {
     assert.ok(required.includes(field), `missing lineage field: ${field}`);
@@ -207,7 +338,7 @@ test("reports no-cost health and protects write endpoints", async () => {
   assert.equal(healthBody.collection.directCrawling, false);
   assert.equal(healthBody.collection.configuredSources, 5);
   assert.equal(healthBody.meta.clusteringVersion, "event-anchors-complete-link-v2");
-  assert.equal(healthBody.meta.scoreVersion, "observed-agenda-v2");
+  assert.equal(healthBody.meta.scoreVersion, "observed-agenda-v3");
 
   const sources = await handleApiRequest(new Request("https://example.test/api/sources"));
   const sourceBody = await sources.json();
@@ -329,7 +460,7 @@ test("filters and paginates the complete article collection", async () => {
       return {
         bind(...parameters) {
           statements.push({ sql, parameters });
-          return sql.includes("COUNT(*)") ? { first: async () => ({ total: 123 }) } : { all: async () => ({ results: [article] }) };
+          return sql.includes("SELECT COUNT(*) AS total") ? { first: async () => ({ total: 123 }) } : { all: async () => ({ results: [article] }) };
         },
       };
     },
@@ -344,7 +475,7 @@ test("filters and paginates the complete article collection", async () => {
   assert.equal(body.hasMore, true);
   assert.equal(typeof body.nextCursor, "string");
   assert.equal(body.meta.runtimeMode, "live_metadata");
-  assert.equal(body.meta.schemaVersion, "agendaframe-public-v2");
+  assert.equal(body.meta.schemaVersion, "agendaframe-public-v3");
   assert.deepEqual(body.articles, [article]);
   assert.equal(statements.length, 2);
   assert.match(statements[0].sql, /a\.source_id = \?/);

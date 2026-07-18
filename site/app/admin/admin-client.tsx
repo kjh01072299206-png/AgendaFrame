@@ -44,6 +44,14 @@ type AnalysisDay = {
   errorMessage?: string | null;
 };
 
+function apiError(result: unknown, fallback: string) {
+  if (!result || typeof result !== "object") return fallback;
+  const error = (result as { error?: unknown }).error;
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && typeof (error as { message?: unknown }).message === "string") return (error as { message: string }).message;
+  return fallback;
+}
+
 function moveDate(date: string, offset: number) {
   const value = Date.parse(`${date}T00:00:00Z`);
   return new Date(value + offset * 86_400_000).toISOString().slice(0, 10);
@@ -194,6 +202,12 @@ export default function AdminClient() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [analysisDate, setAnalysisDate] = useState(todayKst);
+  const [contentUrl, setContentUrl] = useState("");
+  const [contentBody, setContentBody] = useState("");
+  const [contentMethod, setContentMethod] = useState("manual_research");
+  const [usageBasis, setUsageBasis] = useState("");
+  const [rightsAttested, setRightsAttested] = useState(false);
+  const [publicEvidenceAllowed, setPublicEvidenceAllowed] = useState(false);
   const [rangeStart, setRangeStart] = useState(() => moveDate(todayKst, -6));
   const [rangeEnd, setRangeEnd] = useState(todayKst);
   const [batchDays, setBatchDays] = useState<AnalysisDay[]>([]);
@@ -240,7 +254,7 @@ export default function AdminClient() {
         });
         const response = await fetch("/api/import", { method: "POST", headers: { authorization: `Bearer ${token.trim()}`, "content-type": "application/json" }, body: JSON.stringify({ rows: payload }) });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.error ?? `${batch}번째 묶음 저장 실패`);
+        if (!response.ok) throw new Error(apiError(result, `${batch}번째 묶음 저장 실패`));
         saved += Number(result.saved ?? result.inserted) || 0;
         duplicates += Number(result.duplicates) || 0;
       }
@@ -259,10 +273,45 @@ export default function AdminClient() {
     try {
       const response = await fetch("/api/analyze", { method: "POST", headers: { authorization: `Bearer ${token.trim()}`, "content-type": "application/json" }, body: JSON.stringify({ date: analysisDate }) });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error ?? "분석에 실패했습니다.");
-      setStatus(`분석 완료: 기사 ${result.articleCount.toLocaleString("ko-KR")}건 · 이슈 ${result.issueCount.toLocaleString("ko-KR")}개`);
+      if (!response.ok) throw new Error(apiError(result, "분석에 실패했습니다."));
+      setStatus(`분석 완료: 기사 ${result.articleCount.toLocaleString("ko-KR")}건 · 승인 본문 ${Number(result.authorizedBodyCount ?? 0).toLocaleString("ko-KR")}건 · 이슈 ${result.issueCount.toLocaleString("ko-KR")}개`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "분석에 실패했습니다.");
+    } finally { setBusy(false); }
+  }
+
+  async function registerContent(event: FormEvent) {
+    event.preventDefault();
+    if (!token.trim()) return setStatus("관리자 토큰을 입력하세요.");
+    if (!rightsAttested) return setStatus("본문을 분석할 수 있는 권한을 먼저 확인하세요.");
+    setBusy(true);
+    setStatus("승인된 본문을 비공개 저장소에 등록하는 중…");
+    try {
+      const response = await fetch("/api/content", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token.trim()}`, "content-type": "application/json" },
+        body: JSON.stringify({
+          url: contentUrl,
+          body: contentBody,
+          acquired_at: new Date().toISOString(),
+          acquisition_method: contentMethod,
+          usage_basis: usageBasis,
+          analysis_allowed: true,
+          public_evidence_allowed: publicEvidenceAllowed,
+          rights_attested: rightsAttested,
+          extractor_version: "admin-manual-v1",
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(apiError(result, "본문을 등록하지 못했습니다."));
+      setStatus(`본문 등록 완료: ${result.source} · ${Number(result.bodyCharacters).toLocaleString("ko-KR")}자 · 다음 분석부터 반영`);
+      setContentUrl("");
+      setContentBody("");
+      setUsageBasis("");
+      setRightsAttested(false);
+      setPublicEvidenceAllowed(false);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "본문을 등록하지 못했습니다.");
     } finally { setBusy(false); }
   }
 
@@ -272,7 +321,7 @@ export default function AdminClient() {
       headers: { authorization: `Bearer ${token.trim()}` },
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error ?? "기간 분석 상태를 불러오지 못했습니다.");
+    if (!response.ok) throw new Error(apiError(result, "기간 분석 상태를 불러오지 못했습니다."));
     const days = (result.days ?? []) as AnalysisDay[];
     setBatchDays(days);
     return days;
@@ -325,9 +374,9 @@ export default function AdminClient() {
           });
           const result = await response.json();
           if (!response.ok) {
-            if (response.status === 401) throw new Error(result.error ?? "관리자 토큰이 올바르지 않습니다.");
+            if (response.status === 401) throw new Error(apiError(result, "관리자 토큰이 올바르지 않습니다."));
             failed += 1;
-            setBatchDays((days) => days.map((day) => day.date === date ? { ...day, status: "failed", errorMessage: result.error ?? "분석 실패" } : day));
+            setBatchDays((days) => days.map((day) => day.date === date ? { ...day, status: "failed", errorMessage: apiError(result, "분석 실패") } : day));
             continue;
           }
           completed += 1;
@@ -354,7 +403,7 @@ export default function AdminClient() {
       <section className="admin-intro">
         <p className="eyebrow">NO-COST DATA PIPELINE</p>
         <h1>실데이터를 넣고,<br /><em>분석까지 실행합니다.</em></h1>
-        <p>BigKinds에서 받은 Excel·CSV의 기사 메타데이터를 검증해 저장한 뒤, 비용 없는 규칙 기반 분석기로 이슈·의제 점수·프레임·리포트를 생성합니다.</p>
+        <p>기사 메타데이터와 홈페이지 관측을 먼저 저장하고, 이용 권한이 확인된 본문만 별도 비공개 저장소에서 분석합니다.</p>
       </section>
 
       <section className="import-card" aria-labelledby="import-title">
@@ -375,13 +424,29 @@ export default function AdminClient() {
         </form>
       </section>
 
+      <section className="import-card content-card" aria-labelledby="content-title">
+        <header><div><p className="eyebrow">STEP 02</p><h2 id="content-title">승인된 본문 등록</h2></div><span className="private-badge">비공개 분석 전용</span></header>
+        <form className="content-form" onSubmit={registerContent}>
+          <label><span>이미 가져온 기사 URL</span><input type="url" value={contentUrl} onChange={(event) => setContentUrl(event.target.value)} placeholder="https://언론사.example/article" required /></label>
+          <div className="content-fields">
+            <label><span>확보 방식</span><select value={contentMethod} onChange={(event) => setContentMethod(event.target.value)}><option value="manual_research">승인된 연구 표본</option><option value="licensed_export">라이선스 데이터</option><option value="publisher_api">언론사 API</option><option value="authorized_crawl">허가된 수집</option></select></label>
+            <label><span>이용 근거</span><input value={usageBasis} onChange={(event) => setUsageBasis(event.target.value)} minLength={10} maxLength={500} placeholder="협약·허가·연구 이용 범위를 기록" required /></label>
+          </div>
+          <label><span>기사 본문</span><textarea value={contentBody} onChange={(event) => setContentBody(event.target.value)} minLength={300} maxLength={200000} rows={10} placeholder="분석 권한이 확인된 기사 전문만 입력하세요." required /></label>
+          <p className="field-help">본문은 공개 API로 제공하지 않으며 프레임 근거 탐색에만 사용합니다. BigKinds의 200자 미리보기는 기사 전문으로 등록하지 마세요.</p>
+          <label className="consent-row"><input type="checkbox" checked={rightsAttested} onChange={(event) => setRightsAttested(event.target.checked)} /><span>이 본문을 저장·자동 분석할 권한 또는 명확한 이용 근거를 확인했습니다.</span></label>
+          <label className="consent-row"><input type="checkbox" checked={publicEvidenceAllowed} onChange={(event) => setPublicEvidenceAllowed(event.target.checked)} /><span>짧은 근거 문장의 공개가 허용된 자료입니다. 선택하지 않으면 근거 문장을 숨깁니다.</span></label>
+          <button className="import-submit" type="submit" disabled={busy || !rightsAttested || contentBody.length < 300}>{busy ? "처리 중…" : "승인 본문 등록"}</button>
+        </form>
+      </section>
+
       <section className="import-card analysis-card" aria-labelledby="analysis-title">
-        <header><div><p className="eyebrow">STEP 02</p><h2 id="analysis-title">분석 생성</h2></div><span className="free-badge">무료 규칙 분석</span></header>
+        <header><div><p className="eyebrow">STEP 03</p><h2 id="analysis-title">분석 생성</h2></div><span className="free-badge">근거 범위 자동 구분</span></header>
         <div className="single-analysis">
           <h3>하루 분석</h3>
           <label className="field-label" htmlFor="analysis-date">분석할 날짜 (KST)</label>
           <input id="analysis-date" className="admin-date" type="date" value={analysisDate} onChange={(event) => setAnalysisDate(event.target.value)} />
-          <p className="field-help">해당 날짜의 저장된 기사로 이슈를 묶고 4개 의제 점수, 6개 프레임, 근거 리포트를 다시 생성합니다.</p>
+          <p className="field-help">본문이 승인된 기사는 본문 표현 단서를, 나머지는 제목 단서만 분석합니다. 두 결과는 화면에서 구분합니다.</p>
           <button className="import-submit" type="button" onClick={runAnalysis} disabled={busy || !analysisDate}>{busy ? "처리 중…" : "분석 실행"}</button>
         </div>
         <div className="batch-analysis">
@@ -408,9 +473,9 @@ export default function AdminClient() {
         <dl>
           <div><dt>1. BigKinds</dt><dd><a href="https://www.bigkinds.or.kr/v2/news/search.do" target="_blank" rel="noopener noreferrer">뉴스 검색·분석 열기</a> → 기간과 5개 언론사 선택 → Excel 다운로드</dd></div>
           <div><dt>2. 가져오기</dt><dd>기사 본문을 제외한 언론사·제목·원문 URL·일자·분류만 검증해 저장</dd></div>
-          <div><dt>3. 분석</dt><dd>하루 분석 또는 최대 7일 기간 분석 실행. 다시 실행하면 완료된 날짜를 건너뛰고 이어서 처리</dd></div>
-          <div><dt>4. 품질 검증</dt><dd>상위 30~50개 이슈의 잘못 묶인 기사와 누락 기사를 기록하고 정밀도·재현율 추정치를 확인</dd></div>
-          <div><dt>5. 향후 전환</dt><dd>공개 JSON Schema와 버전 계보를 유지한 채 검증된 분석 공급자로 교체 가능</dd></div>
+          <div><dt>3. 본문 권한</dt><dd>서면 허가·라이선스·연구 범위가 확인된 기사만 별도 등록. 공개 근거 허용 여부도 따로 기록</dd></div>
+          <div><dt>4. 분석</dt><dd>하루 분석 또는 최대 7일 기간 분석 실행. 승인 본문과 제목 단서의 근거 범위를 분리해 저장</dd></div>
+          <div><dt>5. 품질 검증</dt><dd>상위 30~50개 이슈의 잘못 묶인 기사와 누락 기사를 기록하고 정밀도·재현율 추정치를 확인</dd></div>
         </dl>
         <p>현재 단계에서는 D1과 규칙 분석만 사용하므로 별도 Google Cloud 사용료가 발생하지 않습니다.</p>
       </section>
