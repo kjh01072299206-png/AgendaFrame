@@ -2,7 +2,7 @@
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 import sourcePanel from "../data/sources.json";
-import { configureSourcePanel, handleApiRequest } from "./runtime.mjs";
+import { configureSourcePanel, handleApiRequest, withDocumentSecurityHeaders, withSecurityHeaders } from "./runtime.mjs";
 
 configureSourcePanel(sourcePanel);
 
@@ -36,24 +36,24 @@ const worker = {
 
     try {
       const apiResponse = await handleApiRequest(request, env);
-      if (apiResponse) return apiResponse;
+      if (apiResponse) return withSecurityHeaders(apiResponse);
     } catch (error) {
       console.error("AgendaFrame API request failed", error);
-      return Response.json({ error: "요청을 처리하지 못했습니다." }, { status: 500 });
+      return withSecurityHeaders(Response.json({ error: { code: "INTERNAL_ERROR", message: "요청을 처리하지 못했습니다." } }, { status: 500 }));
     }
 
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];
-      return handleImageOptimization(request, {
+      return withSecurityHeaders(await handleImageOptimization(request, {
         fetchAsset: (path) => env.ASSETS.fetch(new Request(new URL(path, request.url))),
         transformImage: async (body, { width, format, quality }) => {
           const result = await env.IMAGES.input(body).transform(width > 0 ? { width } : {}).output({ format, quality });
           return result.response();
         },
-      }, allowedWidths);
+      }, allowedWidths));
     }
 
-    return handler.fetch(request, env, ctx);
+    return withDocumentSecurityHeaders(await handler.fetch(request, env, ctx));
   },
 };
 

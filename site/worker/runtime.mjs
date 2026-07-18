@@ -1,8 +1,13 @@
 import { getAnalysisProvider } from "./analysis-provider.mjs";
+import { CLUSTERING_VERSION, FRAME_TAXONOMY_VERSION, SCORE_VERSION } from "./analysis.mjs";
+import publicApiSchema from "../docs/public-api.schema.json" with { type: "json" };
 
 const analysisProvider = getAnalysisProvider();
 const ANALYSIS_PROVIDER = analysisProvider.provider;
 const ANALYSIS_MODEL_VERSION = analysisProvider.modelVersion;
+const PUBLIC_API_SCHEMA_VERSION = publicApiSchema["x-api-version"];
+const PROMPT_VERSION = "not_applicable_rules";
+const EVALUATION_DATASET_VERSION = "not_configured";
 
 const assets = globalThis.__AGENDAFRAME_ASSETS__ ?? {};
 let sourcePanel = globalThis.__AGENDAFRAME_SOURCE_PANEL__ ?? {
@@ -17,20 +22,148 @@ export function configureSourcePanel(panel) {
 }
 
 const securityHeaders = {
-  "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+  "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
   "cross-origin-opener-policy": "same-origin",
   "cross-origin-resource-policy": "same-origin",
   "permissions-policy": "camera=(), microphone=(), geolocation=()",
   "referrer-policy": "strict-origin-when-cross-origin",
+  "strict-transport-security": "max-age=31536000; includeSubDomains",
   "x-content-type-options": "nosniff",
   "x-frame-options": "DENY",
 };
 
-function jsonResponse(value, status = 200) {
-  return Response.json(value, {
-    status,
-    headers: { ...securityHeaders, "cache-control": "no-store" },
-  });
+export function withSecurityHeaders(response) {
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(securityHeaders)) headers.set(name, value);
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
+async function scriptHash(source) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
+  return `'sha256-${btoa(String.fromCharCode(...new Uint8Array(digest)))}'`;
+}
+
+export async function withDocumentSecurityHeaders(response) {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("text/html") || !response.body) return withSecurityHeaders(response);
+
+  const html = await response.text();
+  const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
+  const hashes = [...new Set(await Promise.all(inlineScripts.map(scriptHash)))];
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(securityHeaders)) headers.set(name, value);
+  headers.set("content-security-policy", securityHeaders["content-security-policy"].replace("script-src 'self'", `script-src 'self' ${hashes.join(" ")}`));
+  headers.delete("content-length");
+  return new Response(html, { status: response.status, statusText: response.statusText, headers });
+}
+
+function errorCode(status) {
+  return ({ 400: "INVALID_REQUEST", 401: "UNAUTHORIZED", 404: "NOT_FOUND", 405: "METHOD_NOT_ALLOWED", 409: "CONFLICT", 413: "PAYLOAD_TOO_LARGE", 429: "RATE_LIMITED", 500: "INTERNAL_ERROR", 503: "UNAVAILABLE" })[status] ?? "REQUEST_FAILED";
+}
+
+function weakEtag(value) {
+  const text = JSON.stringify(value);
+  let hash = 2166136261;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `W/\"${(hash >>> 0).toString(16)}-${text.length}\"`;
+}
+
+function jsonResponse(value, status = 200, { request = null, cacheControl = "no-store", etag = false } = {}) {
+  const requestId = request?.headers.get("cf-ray") ?? request?.headers.get("x-request-id") ?? crypto.randomUUID();
+  const payload = typeof value?.error === "string"
+    ? { ...value, error: { code: errorCode(status), message: value.error }, requestId }
+    : value;
+  const headers = new Headers({ ...securityHeaders, "cache-control": cacheControl, "content-type": "application/json; charset=utf-8", "x-request-id": requestId });
+  if (etag && status === 200) {
+    const tag = weakEtag(payload);
+    headers.set("etag", tag);
+    if (request?.headers.get("if-none-match") === tag) return new Response(null, { status: 304, headers });
+  }
+  return new Response(JSON.stringify(payload), { status, headers });
+}
+
+function kstDateFromNow(now) {
+  return new Date(Number(now) + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+export function classifySnapshotStatus({ targetDate = null, dataAsOf = null, collectionStatus = "awaiting_import", latestSourceCount = 0, configuredSources = 0 } = {}, now = Date.now()) {
+  if (!targetDate) return { status: "analysis_pending", label: "분석 보류", staleDays: null };
+  if (collectionStatus === "partial" || (latestSourceCount > 0 && configuredSources > 0 && latestSourceCount < configuredSources)) {
+    return { status: "partial_collection", label: "부분 수집", staleDays: null };
+  }
+  const today = kstDateFromNow(now);
+  const target = Date.parse(`${targetDate}T00:00:00+09:00`);
+  const current = Date.parse(`${today}T00:00:00+09:00`);
+  const staleDays = Number.isFinite(target) ? Math.max(0, Math.round((current - target) / 86_400_000)) : null;
+  if (staleDays > 0) return { status: "stale_snapshot", label: "오래된 스냅샷", staleDays };
+  const collectedAt = dataAsOf ? Date.parse(dataAsOf) : NaN;
+  if (!Number.isFinite(collectedAt) || Number(now) - collectedAt > 24 * 60 * 60 * 1000) {
+    return { status: "collection_delayed", label: "수집 지연", staleDays: 0 };
+  }
+  return { status: "normal", label: "정상", staleDays: 0 };
+}
+
+function analysisVersions(run) {
+  const current = !run?.modelVersion || run.modelVersion === ANALYSIS_MODEL_VERSION;
+  return {
+    sourcePolicyVersion: sourcePanel.panelVersion ?? "unknown",
+    clusteringVersion: current ? CLUSTERING_VERSION : "legacy-v1-unverified",
+    scoreVersion: current ? SCORE_VERSION : "legacy-v1-unverified",
+    frameTaxonomyVersion: current ? FRAME_TAXONOMY_VERSION : "legacy-v1-unverified",
+    modelId: run?.modelVersion ?? ANALYSIS_MODEL_VERSION,
+    promptVersion: PROMPT_VERSION,
+    evaluationDatasetVersion: EVALUATION_DATASET_VERSION,
+  };
+}
+
+function responseMeta(run = null, runtimeMode = "demo") {
+  return {
+    schemaVersion: PUBLIC_API_SCHEMA_VERSION,
+    runtimeMode,
+    snapshotId: run?.id ?? null,
+    runId: run?.id ?? null,
+    basisDate: run?.targetDate ?? null,
+    publishedAt: run?.finishedAt ?? null,
+    ...analysisVersions(run),
+  };
+}
+
+function publicIssue(row, run) {
+  const placementObservedCount = Number(row.placementObservedCount ?? 0);
+  const legacy = run?.modelVersion !== ANALYSIS_MODEL_VERSION;
+  const issue = { ...row };
+  delete issue.confidence;
+  return {
+    ...issue,
+    agendaScore: legacy ? null : Number(row.agendaScore),
+    placementScore: placementObservedCount ? Number(row.placementScore) : null,
+    placementObservedCount,
+    placementTotalCount: Number(row.placementTotalCount ?? row.articleCount ?? 0),
+    followUpVolumeScore: Number(row.repetitionScore ?? 0),
+    scoreStatus: legacy ? "legacy_reanalysis_required" : (placementObservedCount ? "observed_components" : "placement_excluded"),
+    calibrationStatus: "not_calibrated",
+    clusterQuality: legacy ? "review_required" : "not_human_reviewed",
+    evidenceBasis: "headline_metadata_only",
+  };
+}
+
+function evidenceFirstComparison(issue, articles) {
+  return {
+    status: "withheld_insufficient_evidence",
+    evidenceBasis: "headline_metadata_only",
+    reason: "기사 본문과 독립 출처 관계를 확인할 수 없어 공통 사실·설명 차이·취재원·추천을 생성하지 않았습니다.",
+    frameElements: ["problem_definition", "causal_attribution", "evaluation", "treatment_recommendation"].map((element) => ({ element, status: "not_assessed", evidence: [] })),
+    commonFacts: [],
+    divergenceQuestions: [],
+    sourceVoices: [],
+    recommendedPair: null,
+    availableHeadlineEvidence: articles.map((article) => ({ articleId: article.id, source: article.source, sourceUrl: article.url, text: article.title, evidenceType: "headline" })),
+    articleCount: Number(issue.articleCount ?? articles.length),
+    sourceCount: Number(issue.sourceCount ?? new Set(articles.map((article) => article.source)).size),
+  };
 }
 
 function matchesSourceDomain(hostname, domains) {
@@ -369,13 +502,30 @@ async function handleImport(request, env) {
   }
 }
 
+function encodeCursor(offset) {
+  return btoa(JSON.stringify({ offset }));
+}
+
+function decodeCursor(value) {
+  if (!value) return null;
+  try {
+    const decoded = JSON.parse(atob(value));
+    return Number.isInteger(decoded?.offset) && decoded.offset >= 0 && decoded.offset <= 100_000 ? decoded.offset : null;
+  } catch {
+    return null;
+  }
+}
+
 async function handleArticles(request, env) {
-  if (!env?.DB) return jsonResponse({ articles: [], total: 0 });
+  if (!env?.DB) return jsonResponse({ articles: [], total: 0, nextCursor: null, meta: responseMeta(null, "demo") }, 200, { request, etag: true, cacheControl: "public, max-age=30, must-revalidate" });
   const url = new URL(request.url);
   const limitValue = Number(url.searchParams.get("limit") ?? 50);
   const limit = Number.isInteger(limitValue) ? Math.min(Math.max(limitValue, 1), 100) : 50;
   const offsetValue = Number(url.searchParams.get("offset") ?? 0);
-  const offset = Number.isInteger(offsetValue) ? Math.min(Math.max(offsetValue, 0), 100_000) : 0;
+  const cursorValue = String(url.searchParams.get("cursor") ?? "").trim();
+  const cursorOffset = decodeCursor(cursorValue);
+  if (cursorValue && cursorOffset === null) return jsonResponse({ error: "페이지 커서를 확인해 주세요." }, 400, { request });
+  const offset = cursorOffset ?? (Number.isInteger(offsetValue) ? Math.min(Math.max(offsetValue, 0), 100_000) : 0);
   const sourceValue = String(url.searchParams.get("source") ?? "").trim();
   const sectionValue = String(url.searchParams.get("section") ?? "").trim().slice(0, 40);
   const queryValue = String(url.searchParams.get("q") ?? "").trim().slice(0, 100);
@@ -434,7 +584,16 @@ async function handleArticles(request, env) {
   `).bind(...parameters, limit, offset).all();
   const articles = result.results ?? [];
   const total = Number(totalResult?.total ?? 0);
-  return jsonResponse({ articles, total, limit, offset, hasMore: offset + articles.length < total });
+  const hasMore = offset + articles.length < total;
+  return jsonResponse({
+    articles,
+    total,
+    limit,
+    offset,
+    hasMore,
+    nextCursor: hasMore ? encodeCursor(offset + articles.length) : null,
+    meta: responseMeta(null, "live_metadata"),
+  }, 200, { request, etag: true, cacheControl: "public, max-age=30, must-revalidate" });
 }
 
 async function adminAuthorized(request, env) {
@@ -542,10 +701,10 @@ async function handleAnalyze(request, env) {
         issue.sourceCount,
         issue.agendaScore,
         issue.diversityScore,
-        issue.placementScore,
+        issue.placementScore ?? 0,
         issue.volumeScore,
         issue.repetitionScore,
-        issue.confidence,
+        issue.confidence ?? 0,
       ));
       issue.articles.forEach((article) => {
         statements.push(db.prepare(`
@@ -563,7 +722,7 @@ async function handleAnalyze(request, env) {
           issueId,
           frame.frame,
           frame.score,
-          frame.confidence,
+          frame.confidence ?? 0,
           frame.evidenceText,
           frame.articleId,
           frame.sourceId,
@@ -704,15 +863,46 @@ async function handleAnalysisRuns(request, env) {
   return jsonResponse({ startDate, endDate, days, maxBatchDays: 7, resumable: true });
 }
 
+async function handleAnalysisRollback(request, runId, env) {
+  if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용합니다." }, 405, { request });
+  if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503, { request });
+  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401, { request });
+  if (!runId || runId.length > 128) return jsonResponse({ error: "롤백할 실행 ID를 확인해 주세요." }, 400, { request });
+
+  const run = await env.DB.prepare(`
+    SELECT id, target_date AS targetDate, status
+    FROM analysis_runs
+    WHERE id = ?
+  `).bind(runId).first();
+  if (!run) return jsonResponse({ error: "롤백할 분석 실행을 찾지 못했습니다." }, 404, { request });
+  if (run.status !== "success") return jsonResponse({ error: "성공 상태의 분석 실행만 롤백할 수 있습니다." }, 409, { request });
+
+  const fallback = await env.DB.prepare(`
+    SELECT id, target_date AS targetDate, finished_at AS finishedAt
+    FROM analysis_runs
+    WHERE target_date = ? AND status = 'success' AND id != ?
+    ORDER BY finished_at DESC
+    LIMIT 1
+  `).bind(run.targetDate, runId).first();
+  if (!fallback) return jsonResponse({ error: "같은 기준일의 직전 성공 스냅샷이 없어 롤백하지 않았습니다." }, 409, { request });
+
+  await env.DB.prepare(`
+    UPDATE analysis_runs
+    SET status = 'rolled_back', error_message = ?
+    WHERE id = ? AND status = 'success'
+  `).bind(`Rolled back at ${new Date().toISOString()}`, runId).run();
+  return jsonResponse({ rolledBackRunId: runId, fallbackRunId: fallback.id, targetDate: run.targetDate }, 200, { request });
+}
+
 async function handleIssues(request, env) {
-  if (!env?.DB) return jsonResponse({ issues: [], total: 0, run: null });
+  if (!env?.DB) return jsonResponse({ issues: [], total: 0, run: null, categories: [], meta: responseMeta(null, "demo") }, 200, { request, etag: true, cacheControl: "public, max-age=30, must-revalidate" });
   const url = new URL(request.url);
   const date = String(url.searchParams.get("date") ?? "").trim();
   const category = String(url.searchParams.get("category") ?? "").trim().slice(0, 40);
   const limitValue = Number(url.searchParams.get("limit") ?? 30);
   const limit = Number.isInteger(limitValue) ? Math.min(Math.max(limitValue, 1), 50) : 30;
   const run = await latestAnalysisRun(env.DB, date);
-  if (!run) return jsonResponse({ issues: [], total: 0, run: null, categories: [] });
+  if (!run) return jsonResponse({ issues: [], total: 0, run: null, categories: [], meta: responseMeta(null, "live_metadata") }, 200, { request, etag: true, cacheControl: "public, max-age=30, must-revalidate" });
 
   const clauses = ["run_id = ?"];
   const parameters = [run.id];
@@ -727,7 +917,9 @@ async function handleIssues(request, env) {
       SELECT
         id, issue_date AS issueDate, title, summary, category, article_count AS articleCount, source_count AS sourceCount,
         agenda_score AS agendaScore, diversity_score AS diversityScore, placement_score AS placementScore,
-        volume_score AS volumeScore, repetition_score AS repetitionScore, confidence
+        volume_score AS volumeScore, repetition_score AS repetitionScore, confidence,
+        (SELECT COUNT(*) FROM issue_articles ia JOIN articles a ON a.id = ia.article_id WHERE ia.issue_id = issues.id AND a.homepage_placement IS NOT NULL) AS placementObservedCount,
+        (SELECT COUNT(*) FROM issue_articles ia WHERE ia.issue_id = issues.id) AS placementTotalCount
       FROM issues
       WHERE ${where}
       ORDER BY agenda_score DESC, article_count DESC
@@ -737,26 +929,29 @@ async function handleIssues(request, env) {
   ]);
   return jsonResponse({
     run,
-    issues: result.results ?? [],
+    issues: (result.results ?? []).map((issue) => publicIssue(issue, run)),
     total: Number(count?.total ?? 0),
     categories: categoryResult.results ?? [],
-    analysisDisclosure: "비용 없는 규칙 기반 1차 분석",
-  });
+    analysisDisclosure: "기사 제목·메타데이터 기준 규칙 분석. 확률·사실성·편향 판정이 아닙니다.",
+    meta: responseMeta(run, "live_metadata"),
+  }, 200, { request, etag: true, cacheControl: "public, max-age=60, must-revalidate" });
 }
 
-async function handleIssueDetail(issueId, env) {
-  if (!env?.DB) return jsonResponse({ error: "분석 데이터가 없습니다." }, 404);
+async function handleIssueDetail(request, issueId, env) {
+  if (!env?.DB) return jsonResponse({ error: "분석 데이터가 없습니다." }, 404, { request });
   const issue = await env.DB.prepare(`
     SELECT
       i.id, i.issue_date AS issueDate, i.title, i.summary, i.category, i.article_count AS articleCount, i.source_count AS sourceCount,
       i.agenda_score AS agendaScore, i.diversity_score AS diversityScore, i.placement_score AS placementScore,
       i.volume_score AS volumeScore, i.repetition_score AS repetitionScore, i.confidence,
-      r.provider, r.model_version AS modelVersion, r.finished_at AS analyzedAt
+      r.id AS runId, r.target_date AS targetDate, r.provider, r.model_version AS modelVersion, r.finished_at AS analyzedAt,
+      (SELECT COUNT(*) FROM issue_articles observed_ia JOIN articles observed_a ON observed_a.id = observed_ia.article_id WHERE observed_ia.issue_id = i.id AND observed_a.homepage_placement IS NOT NULL) AS placementObservedCount,
+      (SELECT COUNT(*) FROM issue_articles total_ia WHERE total_ia.issue_id = i.id) AS placementTotalCount
     FROM issues i
     JOIN analysis_runs r ON r.id = i.run_id
-    WHERE i.id = ?
+    WHERE i.id = ? AND r.status = 'success'
   `).bind(issueId).first();
-  if (!issue) return jsonResponse({ error: "이슈를 찾지 못했습니다." }, 404);
+  if (!issue) return jsonResponse({ error: "이슈를 찾지 못했습니다." }, 404, { request });
   const [articles, frames, report, outlets] = await Promise.all([
     env.DB.prepare(`
       SELECT
@@ -770,9 +965,11 @@ async function handleIssueDetail(issueId, env) {
       ORDER BY ia.representative DESC, a.published_at DESC
     `).bind(issueId).all(),
     env.DB.prepare(`
-      SELECT fa.frame, fa.score, fa.confidence, fa.evidence_text AS evidenceText, s.name AS source, fa.article_id AS articleId
+      SELECT fa.frame, fa.score, fa.confidence, fa.evidence_text AS evidenceText, s.name AS source,
+        fa.article_id AS articleId, a.canonical_url AS sourceUrl
       FROM frame_analyses fa
       LEFT JOIN media_sources s ON s.id = fa.source_id
+      LEFT JOIN articles a ON a.id = fa.article_id
       WHERE fa.issue_id = ?
       ORDER BY fa.score DESC
     `).bind(issueId).all(),
@@ -792,14 +989,28 @@ async function handleIssueDetail(issueId, env) {
       ORDER BY articleCount DESC, s.name
     `).bind(issueId).all(),
   ]);
+  const run = { id: issue.runId, targetDate: issue.targetDate, provider: issue.provider, modelVersion: issue.modelVersion, finishedAt: issue.analyzedAt };
+  const publicArticles = articles.results ?? [];
+  const currentAnalysis = issue.modelVersion === ANALYSIS_MODEL_VERSION;
+  const publicFrames = currentAnalysis ? (frames.results ?? []).map((row) => {
+    const frame = { ...row };
+    delete frame.confidence;
+    return { ...frame, calibrationStatus: "not_calibrated", evidenceBasis: "headline" };
+  }) : [];
   const placementByWeight = { 4: "TOP", 3: "MAIN", 2: "SECTION", 1: "LIST", 0: "미확인" };
+  const publicReport = currentAnalysis && report ? {
+    ...report,
+    evidenceRefs: publicArticles.map((article) => ({ articleId: article.id, source: article.source, sourceUrl: article.url })),
+  } : null;
   return jsonResponse({
-    issue,
-    articles: articles.results ?? [],
-    frames: frames.results ?? [],
-    report,
+    issue: publicIssue(issue, run),
+    articles: publicArticles,
+    frames: publicFrames,
+    report: publicReport,
     outlets: (outlets.results ?? []).map((outlet) => ({ ...outlet, placement: placementByWeight[outlet.placementWeight] ?? "미확인" })),
-  });
+    comparison: evidenceFirstComparison(issue, publicArticles),
+    meta: responseMeta(run, "live_metadata"),
+  }, 200, { request, etag: true, cacheControl: "public, max-age=300, immutable" });
 }
 
 function roundedPercent(numerator, denominator) {
@@ -831,6 +1042,10 @@ export function calculateQualityMetrics(rows, { configuredSources = 5, minimumSa
     sampleStatus: reviewedIssueCount >= minimumSample ? "ready" : "collecting",
     estimatedPrecision: roundedPercent(totals.relatedArticles, totals.predictedArticles),
     estimatedRecall: roundedPercent(totals.relatedArticles, totals.relatedArticles + totals.missingArticles),
+    overmergeRate: roundedPercent(totals.predictedArticles - totals.relatedArticles, totals.predictedArticles),
+    undermergeRate: roundedPercent(totals.missingArticles, totals.relatedArticles + totals.missingArticles),
+    pairwiseF1: null,
+    hardNegativeAccuracy: null,
     clusterAgreement: roundedPercent(totals.clusterAgreement, reviewedIssueCount),
     agendaAgreement: roundedPercent(totals.agendaAgreement, reviewedIssueCount),
     frameAgreement: roundedPercent(totals.frameAgreement, reviewedIssueCount),
@@ -875,6 +1090,8 @@ async function handleQualityQueue(request, env) {
       label: "사람 검토 기반 추정치",
       precision: "검토한 묶음 기사 중 관련 있다고 판단한 기사 비율",
       recall: "관련 기사와 직접 등록한 누락 기사를 합친 값 중 시스템이 묶은 관련 기사 비율",
+      pairwiseF1: "라벨된 기사 쌍 데이터셋이 없어 산출 보류",
+      hardNegativeAccuracy: "locked holdout hard-negative 라벨이 없어 산출 보류",
     },
   });
 }
@@ -1022,12 +1239,17 @@ export async function handleApiRequest(request, env = {}) {
 
   if (url.pathname === "/api/health" && request.method === "GET") {
     if (!env.DB) {
+      const freshness = classifySnapshotStatus();
       return jsonResponse({
         status: "ok",
         mode: "demo",
         dataAsOf: null,
-        collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, latestSourceCount: 0, latestStatus: "awaiting_import" },
-      });
+        collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "awaiting_import" },
+        analysis: null,
+        freshness,
+        timestamps: { collectedAt: null, analyzedAt: null, publishedAt: null, nextScheduledAt: null },
+        meta: responseMeta(null, "demo"),
+      }, 200, { request });
     }
     try {
       const health = await collectionHealth(env.DB);
@@ -1037,10 +1259,24 @@ export async function handleApiRequest(request, env = {}) {
       } catch {
         analysis = null;
       }
-      return jsonResponse({ ...health, analysis });
+      const freshness = classifySnapshotStatus({
+        targetDate: analysis?.targetDate,
+        dataAsOf: health.dataAsOf,
+        collectionStatus: health.collection.latestStatus,
+        latestSourceCount: health.collection.latestSourceCount,
+        configuredSources: health.collection.configuredSources,
+      });
+      return jsonResponse({
+        ...health,
+        mode: "live_metadata",
+        analysis,
+        freshness,
+        timestamps: { collectedAt: health.dataAsOf, analyzedAt: analysis?.finishedAt ?? null, publishedAt: analysis?.finishedAt ?? null, nextScheduledAt: null },
+        meta: responseMeta(analysis, "live_metadata"),
+      }, 200, { request });
     } catch (error) {
       console.error("AgendaFrame health query failed", error);
-      return jsonResponse({ status: "degraded", mode: "demo", dataAsOf: null, collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, latestSourceCount: 0, latestStatus: "storage_unavailable" }, analysis: null }, 503);
+      return jsonResponse({ status: "degraded", mode: "unavailable", dataAsOf: null, collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "storage_unavailable" }, analysis: null, freshness: { status: "analysis_pending", label: "분석 보류", staleDays: null }, timestamps: { collectedAt: null, analyzedAt: null, publishedAt: null, nextScheduledAt: null }, meta: responseMeta(null, "unavailable") }, 503, { request });
     }
   }
   if (url.pathname === "/api/sources" && request.method === "GET") {
@@ -1050,14 +1286,16 @@ export async function handleApiRequest(request, env = {}) {
       delete source.providerOutletName;
       return source;
     });
-    return jsonResponse({ panelVersion: sourcePanel.panelVersion, method: sourcePanel.collectionProvider, directCrawling: false, sources: publicSources });
+    return jsonResponse({ panelVersion: sourcePanel.panelVersion, method: sourcePanel.collectionProvider, directCrawling: false, sources: publicSources, meta: responseMeta(null, env?.DB ? "live_metadata" : "demo") }, 200, { request, etag: true, cacheControl: "public, max-age=3600, must-revalidate" });
   }
   if (url.pathname === "/api/articles" && request.method === "GET") return handleArticles(request, env);
+  const rollbackMatch = url.pathname.match(/^\/api\/analysis\/runs\/([^/]+)\/rollback$/);
+  if (rollbackMatch) return handleAnalysisRollback(request, decodeURIComponent(rollbackMatch[1]), env);
   if (url.pathname === "/api/analysis/runs" && request.method === "GET") return handleAnalysisRuns(request, env);
   if (url.pathname === "/api/quality" && request.method === "GET") return handleQualityQueue(request, env);
   if (url.pathname.startsWith("/api/quality/reviews/")) return handleQualityReview(request, decodeURIComponent(url.pathname.slice("/api/quality/reviews/".length)), env);
   if (url.pathname === "/api/issues" && request.method === "GET") return handleIssues(request, env);
-  if (url.pathname.startsWith("/api/issues/") && request.method === "GET") return handleIssueDetail(decodeURIComponent(url.pathname.slice("/api/issues/".length)), env);
+  if (url.pathname.startsWith("/api/issues/") && request.method === "GET") return handleIssueDetail(request, decodeURIComponent(url.pathname.slice("/api/issues/".length)), env);
   if (url.pathname === "/api/import") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
     return handleImport(request, env);

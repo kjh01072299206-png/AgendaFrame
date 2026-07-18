@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agendaframe-capstone.kjh01072299206.chatgpt.site/schemas/public-api-v2.json",
+  "title": "AgendaFrame public API",
+  "description": "Public read API contract. Demo and live responses share this shape; runtimeMode identifies the source.",
+  "x-api-version": "agendaframe-public-v2",
+  "oneOf": [
+    { "$ref": "#/$defs/HealthResponse" },
+    { "$ref": "#/$defs/ArticleListResponse" },
+    { "$ref": "#/$defs/IssueListResponse" },
+    { "$ref": "#/$defs/IssueDetailResponse" },
+    { "$ref": "#/$defs/SourceListResponse" },
+    { "$ref": "#/$defs/ErrorResponse" }
+  ],
+  "$defs": {
+    "LineageMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion", "runtimeMode", "snapshotId", "runId", "basisDate", "publishedAt",
+        "sourcePolicyVersion", "clusteringVersion", "scoreVersion", "frameTaxonomyVersion",
+        "modelId", "promptVersion", "evaluationDatasetVersion"
+      ],
+      "properties": {
+        "schemaVersion": { "const": "agendaframe-public-v2" },
+        "runtimeMode": { "enum": ["demo", "live_metadata", "unavailable"] },
+        "snapshotId": { "type": ["string", "null"] },
+        "runId": { "type": ["string", "null"] },
+        "basisDate": { "type": ["string", "null"], "format": "date" },
+        "publishedAt": { "type": ["integer", "null"] },
+        "sourcePolicyVersion": { "type": "string" },
+        "clusteringVersion": { "type": "string" },
+        "scoreVersion": { "type": "string" },
+        "frameTaxonomyVersion": { "type": "string" },
+        "modelId": { "type": "string" },
+        "promptVersion": { "type": "string" },
+        "evaluationDatasetVersion": { "type": "string" }
+      }
+    },
+    "Article": {
+      "type": "object",
+      "required": ["id", "source", "title", "url", "publishedAt"],
+      "properties": {
+        "id": { "type": "string" },
+        "source": { "type": "string" },
+        "title": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "section": { "type": ["string", "null"] },
+        "publishedAt": { "type": "integer" },
+        "collectedAt": { "type": ["integer", "null"] },
+        "homepagePlacement": { "type": ["string", "null"] },
+        "homepageRank": { "type": ["integer", "null"] },
+        "representative": { "type": ["integer", "boolean"] },
+        "similarity": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": true
+    },
+    "Issue": {
+      "type": "object",
+      "required": [
+        "id", "issueDate", "title", "summary", "category", "articleCount", "sourceCount",
+        "agendaScore", "diversityScore", "placementScore", "volumeScore", "followUpVolumeScore",
+        "placementObservedCount", "placementTotalCount", "scoreStatus", "calibrationStatus",
+        "clusterQuality", "evidenceBasis"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "issueDate": { "type": "string", "format": "date" },
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "category": { "type": "string" },
+        "articleCount": { "type": "integer", "minimum": 1 },
+        "sourceCount": { "type": "integer", "minimum": 1 },
+        "agendaScore": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "diversityScore": { "type": "number", "minimum": 0, "maximum": 100 },
+        "placementScore": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "volumeScore": { "type": "number", "minimum": 0, "maximum": 100 },
+        "followUpVolumeScore": { "type": "number", "minimum": 0, "maximum": 100 },
+        "placementObservedCount": { "type": "integer", "minimum": 0 },
+        "placementTotalCount": { "type": "integer", "minimum": 0 },
+        "scoreStatus": { "enum": ["legacy_reanalysis_required", "observed_components", "placement_excluded"] },
+        "calibrationStatus": { "const": "not_calibrated" },
+        "clusterQuality": { "enum": ["review_required", "not_human_reviewed", "cohesive", "insufficient_evidence"] },
+        "evidenceBasis": { "const": "headline_metadata_only" }
+      },
+      "additionalProperties": true
+    },
+    "Evidence": {
+      "type": "object",
+      "required": ["articleId", "sourceUrl", "text"],
+      "properties": {
+        "articleId": { "type": "string" },
+        "source": { "type": "string" },
+        "sourceUrl": { "type": "string", "format": "uri" },
+        "text": { "type": "string" },
+        "evidenceType": { "enum": ["headline", "body_span"] }
+      },
+      "additionalProperties": false
+    },
+    "Comparison": {
+      "type": "object",
+      "required": [
+        "status", "evidenceBasis", "reason", "frameElements", "commonFacts", "divergenceQuestions",
+        "sourceVoices", "recommendedPair", "availableHeadlineEvidence", "articleCount", "sourceCount"
+      ],
+      "properties": {
+        "status": { "enum": ["withheld_insufficient_evidence", "available"] },
+        "evidenceBasis": { "enum": ["headline_metadata_only", "evidence_spans"] },
+        "reason": { "type": "string" },
+        "frameElements": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": ["element", "status", "evidence"],
+            "properties": {
+              "element": { "enum": ["problem_definition", "causal_attribution", "evaluation", "treatment_recommendation"] },
+              "status": { "enum": ["not_assessed", "not_mentioned", "supported"] },
+              "evidence": { "type": "array", "items": { "$ref": "#/$defs/Evidence" } }
+            },
+            "additionalProperties": false
+          }
+        },
+        "commonFacts": { "type": "array", "items": { "type": "object" } },
+        "divergenceQuestions": { "type": "array", "items": { "type": "object" } },
+        "sourceVoices": { "type": "array", "items": { "type": "object" } },
+        "recommendedPair": { "type": ["object", "null"] },
+        "availableHeadlineEvidence": { "type": "array", "items": { "$ref": "#/$defs/Evidence" } },
+        "articleCount": { "type": "integer", "minimum": 0 },
+        "sourceCount": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "HealthResponse": {
+      "type": "object",
+      "required": ["status", "mode", "dataAsOf", "collection", "freshness", "timestamps", "meta"],
+      "properties": {
+        "status": { "enum": ["ok", "degraded", "error"] },
+        "mode": { "enum": ["demo", "live_metadata", "unavailable"] },
+        "dataAsOf": { "type": ["string", "null"] },
+        "collection": { "type": "object" },
+        "analysis": { "type": ["object", "null"] },
+        "freshness": { "type": "object" },
+        "timestamps": { "type": "object" },
+        "meta": { "$ref": "#/$defs/LineageMeta" }
+      },
+      "additionalProperties": true
+    },
+    "ArticleListResponse": {
+      "type": "object",
+      "required": ["articles", "total", "limit", "offset", "hasMore", "nextCursor", "meta"],
+      "properties": {
+        "articles": { "type": "array", "items": { "$ref": "#/$defs/Article" } },
+        "total": { "type": "integer", "minimum": 0 },
+        "limit": { "type": "integer", "minimum": 1 },
+        "offset": { "type": "integer", "minimum": 0 },
+        "hasMore": { "type": "boolean" },
+        "nextCursor": { "type": ["string", "null"] },
+        "meta": { "$ref": "#/$defs/LineageMeta" }
+      },
+      "additionalProperties": false
+    },
+    "IssueListResponse": {
+      "type": "object",
+      "required": ["issues", "total", "categories", "meta"],
+      "properties": {
+        "issues": { "type": "array", "items": { "$ref": "#/$defs/Issue" } },
+        "total": { "type": "integer", "minimum": 0 },
+        "categories": { "type": "array", "items": { "type": "object" } },
+        "meta": { "$ref": "#/$defs/LineageMeta" }
+      },
+      "additionalProperties": true
+    },
+    "IssueDetailResponse": {
+      "type": "object",
+      "required": ["issue", "articles", "frames", "report", "outlets", "comparison", "meta"],
+      "properties": {
+        "issue": { "$ref": "#/$defs/Issue" },
+        "articles": { "type": "array", "items": { "$ref": "#/$defs/Article" } },
+        "frames": { "type": "array", "items": { "type": "object" } },
+        "report": { "type": ["object", "null"] },
+        "outlets": { "type": "array", "items": { "type": "object" } },
+        "comparison": { "$ref": "#/$defs/Comparison" },
+        "meta": { "$ref": "#/$defs/LineageMeta" }
+      },
+      "additionalProperties": false
+    },
+    "SourceListResponse": {
+      "type": "object",
+      "required": ["sources", "meta"],
+      "properties": {
+        "sources": { "type": "array", "items": { "type": "object" } },
+        "meta": { "$ref": "#/$defs/LineageMeta" }
+      },
+      "additionalProperties": true
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "required": ["error", "requestId"],
+      "properties": {
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": { "code": { "type": "string" }, "message": { "type": "string" } },
+          "additionalProperties": false
+        },
+        "requestId": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

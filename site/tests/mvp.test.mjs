@@ -5,7 +5,7 @@ import test from "node:test";
 import sourcePanel from "../data/sources.json" with { type: "json" };
 import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, analyzeArticles, titleTokens } from "../worker/analysis.mjs";
 import { getAnalysisProvider } from "../worker/analysis-provider.mjs";
-import { calculateQualityMetrics, canonicalizeArticleUrl, configureSourcePanel, enumerateKstDates, handleApiRequest, validateImportRows } from "../worker/runtime.mjs";
+import { calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, configureSourcePanel, enumerateKstDates, handleApiRequest, validateImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
 
 configureSourcePanel(sourcePanel);
 
@@ -18,7 +18,7 @@ test("builds the real React dashboard and admin application", async () => {
   const worker = await readFile(new URL("../dist/server/index.js", import.meta.url), "utf8");
   assert.match(worker, /\/api\/analyze/);
   assert.match(worker, /rules_local/);
-  assert.match(worker, /agenda-rules-v1/);
+  assert.match(worker, /agenda-rules-v2/);
   assert.match(worker, /\/api\/quality/);
   assert.match(worker, /\/api\/analysis\/runs/);
 });
@@ -50,6 +50,10 @@ test("calculates transparent human-review quality estimates", () => {
   assert.equal(metrics.missingArticleCount, 5);
   assert.equal(metrics.estimatedPrecision, 86.7);
   assert.equal(metrics.estimatedRecall, 72.2);
+  assert.equal(metrics.overmergeRate, 13.3);
+  assert.equal(metrics.undermergeRate, 27.8);
+  assert.equal(metrics.pairwiseF1, null);
+  assert.equal(metrics.hardNegativeAccuracy, null);
   assert.equal(metrics.clusterAgreement, 75);
   assert.equal(metrics.agendaAgreement, 50);
   assert.equal(metrics.frameAgreement, 75);
@@ -81,14 +85,76 @@ test("clusters real-looking article titles and produces explainable scores", () 
   assert.equal(housing.diversityScore, 60);
   assert.equal(housing.frames.length, 6);
   assert.equal(housing.articles.filter((article) => article.representative).length, 1);
-  assert.match(housing.report.summary, /규칙 분석/);
-  assert.match(housing.report.caution, /Vertex AI/);
+  assert.match(housing.report.summary, /제목/);
+  assert.match(housing.report.caution, /제목 표현/);
   assert.ok(housing.agendaScore > issues.find((issue) => issue.articleCount === 1).agendaScore);
   assert.deepEqual(titleTokens("[단독] 정부의 청년 주거지원 정책 발표"), ["청년", "주거지원", "정책", "발표"]);
   assert.equal(ANALYSIS_PROVIDER, "rules_local");
-  assert.equal(ANALYSIS_MODEL_VERSION, "agenda-rules-v1");
+  assert.equal(ANALYSIS_MODEL_VERSION, "agenda-rules-v2");
   assert.equal(getAnalysisProvider().analyze, analyzeArticles);
   assert.throws(() => getAnalysisProvider("vertex_ai"), /지원하지 않는 분석 공급자/);
+});
+
+test("uses the checked-in JSON Schema as the public lineage contract", async () => {
+  const schema = JSON.parse(await readFile(new URL("../docs/public-api.schema.json", import.meta.url), "utf8"));
+  assert.equal(schema["x-api-version"], "agendaframe-public-v2");
+  const required = schema.$defs.LineageMeta.required;
+  for (const field of ["snapshotId", "runId", "sourcePolicyVersion", "clusteringVersion", "scoreVersion", "modelId", "promptVersion", "evaluationDatasetVersion", "publishedAt"]) {
+    assert.ok(required.includes(field), `missing lineage field: ${field}`);
+  }
+  assert.ok(schema.$defs.IssueDetailResponse.required.includes("comparison"));
+  assert.ok(schema.$defs.Comparison.required.includes("availableHeadlineEvidence"));
+});
+
+test("keeps release thresholds blocked until a real labeled holdout exists", async () => {
+  const thresholds = await readFile(new URL("../../evals/thresholds.yaml", import.meta.url), "utf8");
+  assert.match(thresholds, /release_status: blocked_until_labeled_holdout/);
+  assert.match(thresholds, /hard_negative_accuracy_min: 0\.95/);
+  assert.match(thresholds, /required_before_numeric_confidence: true/);
+  assert.match(thresholds, /production_release_requires_real_labeled_cases: true/);
+});
+
+test("separates the deployed overmerge hard negatives by actor and event action", () => {
+  const issues = analyzeArticles([
+    { id: "sim-1", sourceId: "hani", source: "한겨레", title: "심우정 검찰총장 사퇴 압박 거세져", section: "정치" },
+    { id: "sim-2", sourceId: "khan", source: "경향신문", title: "심우정 검찰총장 사퇴 요구 확산", section: "정치" },
+    { id: "yoo-1", sourceId: "chosun", source: "조선일보", title: "유병호 감사위원 구속영장 청구", section: "정치" },
+    { id: "yoo-2", sourceId: "joongang", source: "중앙일보", title: "유병호 감사위원 구속영장 청구 논란", section: "정치" },
+    { id: "kang-1", sourceId: "hankook", source: "한국일보", title: "강호필 육군총장 취임 후 첫 지휘관회의", section: "정치" },
+  ]);
+  assert.deepEqual(issues.map((issue) => issue.articles.map((article) => article.id).sort()).sort((a, b) => a[0].localeCompare(b[0])), [
+    ["kang-1"], ["sim-1", "sim-2"], ["yoo-1", "yoo-2"],
+  ]);
+  assert.ok(issues.every((issue) => issue.confidence === null));
+});
+
+test("prevents transitive single-link merges across distinct actions", () => {
+  const issues = analyzeArticles([
+    { id: "a", sourceId: "hani", source: "한겨레", title: "홍길동 의원 구속영장 청구", section: "정치" },
+    { id: "b", sourceId: "khan", source: "경향신문", title: "홍길동 의원 구속영장 청구 수사", section: "정치" },
+    { id: "c", sourceId: "chosun", source: "조선일보", title: "홍길동 의원 수사 결과 무혐의 발표", section: "정치" },
+  ]);
+  assert.equal(issues.length, 2);
+  assert.deepEqual(issues.map((issue) => issue.articles.map((article) => article.id).sort()).sort((a, b) => a.length - b.length), [["c"], ["a", "b"]]);
+});
+
+test("withholds missing frame evidence and excludes unobserved placement", () => {
+  const [issue] = analyzeArticles([
+    { id: "only", sourceId: "hani", source: "한겨레", title: "봄철 벚꽃 개화 소식", section: "문화", homepagePlacement: null },
+  ]);
+  assert.equal(issue.placementScore, null);
+  assert.equal(issue.scoreStatus, "placement_excluded");
+  assert.equal(issue.placementObservedCount, 0);
+  assert.ok(issue.frames.every((frame) => frame.score === 0 && frame.evidenceText === null && frame.articleId === null && frame.confidence === null));
+});
+
+test("classifies freshness states with a deterministic KST clock", () => {
+  const now = Date.parse("2026-07-19T12:00:00+09:00");
+  assert.equal(classifySnapshotStatus({}, now).status, "analysis_pending");
+  assert.equal(classifySnapshotStatus({ targetDate: "2026-07-19", collectionStatus: "partial", latestSourceCount: 3, configuredSources: 5 }, now).status, "partial_collection");
+  assert.deepEqual(classifySnapshotStatus({ targetDate: "2026-07-14", dataAsOf: "2026-07-14T18:00:00+09:00", latestSourceCount: 5, configuredSources: 5 }, now), { status: "stale_snapshot", label: "오래된 스냅샷", staleDays: 5 });
+  assert.equal(classifySnapshotStatus({ targetDate: "2026-07-19", dataAsOf: "2026-07-17T10:00:00+09:00", latestSourceCount: 5, configuredSources: 5 }, now).status, "collection_delayed");
+  assert.equal(classifySnapshotStatus({ targetDate: "2026-07-19", dataAsOf: "2026-07-19T10:00:00+09:00", latestSourceCount: 5, configuredSources: 5 }, now).status, "normal");
 });
 
 test("validates metadata-only imports and canonicalizes duplicate URLs", () => {
@@ -121,6 +187,8 @@ test("reports no-cost health and protects write endpoints", async () => {
   assert.equal(healthBody.collection.method, "bigkinds_export");
   assert.equal(healthBody.collection.directCrawling, false);
   assert.equal(healthBody.collection.configuredSources, 5);
+  assert.equal(healthBody.meta.clusteringVersion, "event-anchors-complete-link-v2");
+  assert.equal(healthBody.meta.scoreVersion, "observed-agenda-v2");
 
   const sources = await handleApiRequest(new Request("https://example.test/api/sources"));
   const sourceBody = await sources.json();
@@ -146,6 +214,92 @@ test("reports no-cost health and protects write endpoints", async () => {
 
   const missing = await handleApiRequest(new Request("https://example.test/api/missing"));
   assert.equal(missing.status, 404);
+  const missingBody = await missing.json();
+  assert.equal(missingBody.error.code, "NOT_FOUND");
+  assert.equal(typeof missingBody.requestId, "string");
+});
+
+test("keeps demo and live health response contracts identical", async () => {
+  const statementFor = (sql) => {
+    const statement = {
+      bind() { return statement; },
+      async first() {
+        if (sql.includes("configured_sources")) return { configured_sources: 5, article_count: 0 };
+        if (sql.includes("FROM collection_runs")) return null;
+        if (sql.includes("FROM analysis_runs")) return null;
+        throw new Error(`Unexpected SQL: ${sql}`);
+      },
+    };
+    return statement;
+  };
+  const DB = { prepare: statementFor, batch: async () => [] };
+  const demo = await (await handleApiRequest(new Request("https://example.test/api/health"))).json();
+  const live = await (await handleApiRequest(new Request("https://example.test/api/health"), { DB })).json();
+  assert.deepEqual(Object.keys(live).sort(), Object.keys(demo).sort());
+  assert.deepEqual(Object.keys(live.collection).sort(), Object.keys(demo.collection).sort());
+  assert.deepEqual(Object.keys(live.timestamps).sort(), Object.keys(demo.timestamps).sort());
+  assert.deepEqual(Object.keys(live.meta).sort(), Object.keys(demo.meta).sort());
+  assert.equal(demo.meta.runtimeMode, "demo");
+  assert.equal(live.meta.runtimeMode, "live_metadata");
+});
+
+test("applies browser security headers to non-API responses", async () => {
+  const response = withSecurityHeaders(new Response("ok", { headers: { "content-type": "text/plain" } }));
+  assert.equal(await response.text(), "ok");
+  assert.equal(response.headers.get("strict-transport-security"), "max-age=31536000; includeSubDomains");
+  assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(response.headers.get("x-frame-options"), "DENY");
+  assert.match(response.headers.get("content-security-policy"), /frame-ancestors 'none'/);
+});
+
+test("adds exact CSP hashes for every server-rendered inline script", async () => {
+  const response = await withDocumentSecurityHeaders(new Response("<html><body><script>self.boot=true</script><script type=\"application/ld+json\">{}</script></body></html>", { headers: { "content-type": "text/html; charset=utf-8" } }));
+  const html = await response.text();
+  const policy = response.headers.get("content-security-policy");
+  assert.equal(html.includes("nonce="), false);
+  assert.equal((policy.match(/'sha256-[^']+'/g) ?? []).length, 2);
+  assert.match(policy, /script-src 'self' 'sha256-/);
+  assert.match(policy, /object-src 'none'/);
+  assert.match(policy, /frame-ancestors 'none'/);
+});
+
+test("hides legacy scores and unsupported comparison claims in issue detail", async () => {
+  const legacyIssue = {
+    id: "legacy-issue", runId: "run-v1", targetDate: "2026-07-14", provider: "rules_local", modelVersion: "agenda-rules-v1", analyzedAt: Date.parse("2026-07-14T19:00:00+09:00"),
+    issueDate: "2026-07-14", title: "legacy title", summary: "legacy summary", category: "정치", articleCount: 2, sourceCount: 2,
+    agendaScore: 92, diversityScore: 40, placementScore: 25, volumeScore: 50, repetitionScore: 0, confidence: 92, placementObservedCount: 0, placementTotalCount: 2,
+  };
+  const article = { id: "article-1", source: "한겨레", title: "확인 가능한 제목", url: "https://www.hani.co.kr/arti/test.html", publishedAt: Date.parse("2026-07-14T10:00:00+09:00"), representative: 1, similarity: 1 };
+  const DB = {
+    prepare(sql) {
+      return {
+        bind() {
+          if (sql.includes("FROM issues i")) return { first: async () => legacyIssue };
+          if (sql.includes("FROM issue_articles ia") && sql.includes("ORDER BY ia.representative")) return { all: async () => ({ results: [article] }) };
+          if (sql.includes("FROM frame_analyses")) return { all: async () => ({ results: [{ frame: "conflict", score: 100, confidence: 92, evidenceText: "placeholder" }] }) };
+          if (sql.includes("FROM ai_reports")) return { first: async () => ({ summary: "legacy report" }) };
+          if (sql.includes("GROUP BY s.id")) return { all: async () => ({ results: [{ source: "한겨레", articleCount: 1, placementWeight: 0 }] }) };
+          throw new Error(`Unexpected SQL: ${sql}`);
+        },
+      };
+    },
+  };
+  const response = await handleApiRequest(new Request("https://example.test/api/issues/legacy-issue"), { DB });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.issue.agendaScore, null);
+  assert.equal(body.issue.placementScore, null);
+  assert.equal(body.issue.scoreStatus, "legacy_reanalysis_required");
+  assert.equal("confidence" in body.issue, false);
+  assert.deepEqual(body.frames, []);
+  assert.equal(body.report, null);
+  assert.equal(body.comparison.status, "withheld_insufficient_evidence");
+  assert.equal(body.comparison.recommendedPair, null);
+  assert.deepEqual(body.comparison.commonFacts, []);
+  assert.equal(body.comparison.availableHeadlineEvidence[0].articleId, "article-1");
+  assert.equal(body.meta.snapshotId, "run-v1");
+  assert.equal(body.meta.clusteringVersion, "legacy-v1-unverified");
+  assert.equal(response.headers.has("etag"), true);
 });
 
 test("filters and paginates the complete article collection", async () => {
@@ -169,6 +323,9 @@ test("filters and paginates the complete article collection", async () => {
   assert.equal(body.limit, 25);
   assert.equal(body.offset, 50);
   assert.equal(body.hasMore, true);
+  assert.equal(typeof body.nextCursor, "string");
+  assert.equal(body.meta.runtimeMode, "live_metadata");
+  assert.equal(body.meta.schemaVersion, "agendaframe-public-v2");
   assert.deepEqual(body.articles, [article]);
   assert.equal(statements.length, 2);
   assert.match(statements[0].sql, /a\.source_id = \?/);
@@ -176,6 +333,10 @@ test("filters and paginates the complete article collection", async () => {
   assert.match(statements[0].sql, /a\.title LIKE \?/);
   assert.match(statements[0].sql, /a\.published_at >= \?/);
   assert.deepEqual(statements[1].parameters.slice(-2), [25, 50]);
+
+  const invalidCursor = await handleApiRequest(new Request("https://example.test/api/articles?cursor=not-base64"), { DB });
+  assert.equal(invalidCursor.status, 400);
+  assert.equal((await invalidCursor.json()).error.code, "INVALID_REQUEST");
 });
 
 test("reports resumable per-day analysis status", async () => {
@@ -202,4 +363,28 @@ test("reports resumable per-day analysis status", async () => {
   ]);
   assert.equal(body.maxBatchDays, 7);
   assert.equal(body.resumable, true);
+});
+
+test("rolls back only to an existing immutable successful snapshot", async () => {
+  const statements = [];
+  const DB = {
+    prepare(sql) {
+      return {
+        bind(...parameters) {
+          statements.push({ sql, parameters });
+          if (sql.includes("WHERE id = ?") && sql.includes("SELECT id")) return { first: async () => ({ id: "run-new", targetDate: "2026-07-14", status: "success" }) };
+          if (sql.includes("id != ?")) return { first: async () => ({ id: "run-old", targetDate: "2026-07-14", finishedAt: 1 }) };
+          if (sql.includes("UPDATE analysis_runs")) return { run: async () => ({ success: true }) };
+          throw new Error(`Unexpected SQL: ${sql}`);
+        },
+      };
+    },
+  };
+  const response = await handleApiRequest(new Request("https://example.test/api/analysis/runs/run-new/rollback", {
+    method: "POST",
+    headers: { authorization: "Bearer correct", origin: "https://example.test" },
+  }), { DB, IMPORT_TOKEN: "correct" });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { rolledBackRunId: "run-new", fallbackRunId: "run-old", targetDate: "2026-07-14" });
+  assert.match(statements.at(-1).sql, /status = 'rolled_back'/);
 });

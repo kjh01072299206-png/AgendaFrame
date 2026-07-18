@@ -28,6 +28,10 @@ type QualityMetrics = {
   sampleStatus: "collecting" | "ready";
   estimatedPrecision: number | null;
   estimatedRecall: number | null;
+  overmergeRate: number | null;
+  undermergeRate: number | null;
+  pairwiseF1: number | null;
+  hardNegativeAccuracy: number | null;
   clusterAgreement: number | null;
   agendaAgreement: number | null;
   frameAgreement: number | null;
@@ -192,6 +196,10 @@ export default function QualityReview({ token, analysisDate }: { token: string; 
   const metricCards = metrics ? [
     ["추정 정밀도", metric(metrics.estimatedPrecision)],
     ["추정 재현율", metric(metrics.estimatedRecall)],
+    ["과병합률", metric(metrics.overmergeRate)],
+    ["과소병합률", metric(metrics.undermergeRate)],
+    ["Pairwise F1", metric(metrics.pairwiseF1)],
+    ["Hard-negative 정확도", metric(metrics.hardNegativeAccuracy)],
     ["기사 묶음 일치", metric(metrics.clusterAgreement)],
     ["의제 점수 동의", metric(metrics.agendaAgreement)],
     ["프레임 동의", metric(metrics.frameAgreement)],

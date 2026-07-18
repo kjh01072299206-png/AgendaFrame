@@ -410,7 +410,7 @@ export default function AdminClient() {
           <div><dt>2. 가져오기</dt><dd>기사 본문을 제외한 언론사·제목·원문 URL·일자·분류만 검증해 저장</dd></div>
           <div><dt>3. 분석</dt><dd>하루 분석 또는 최대 7일 기간 분석 실행. 다시 실행하면 완료된 날짜를 건너뛰고 이어서 처리</dd></div>
           <div><dt>4. 품질 검증</dt><dd>상위 30~50개 이슈의 잘못 묶인 기사와 누락 기사를 기록하고 정밀도·재현율 추정치를 확인</dd></div>
-          <div><dt>5. 향후 전환</dt><dd>동일한 API 계약을 유지한 채 규칙 분석기를 Vertex AI·Gemini 분석기로 교체 가능</dd></div>
+          <div><dt>5. 향후 전환</dt><dd>공개 JSON Schema와 버전 계보를 유지한 채 검증된 분석 공급자로 교체 가능</dd></div>
         </dl>
         <p>현재 단계에서는 D1과 규칙 분석만 사용하므로 별도 Google Cloud 사용료가 발생하지 않습니다.</p>
       </section>
