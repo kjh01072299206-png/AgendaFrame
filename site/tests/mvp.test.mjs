@@ -23,6 +23,25 @@ test("builds the real React dashboard and admin application", async () => {
   assert.match(worker, /\/api\/analysis\/runs/);
 });
 
+test("keeps the public dashboard readable, evidence-first, and explicit about limits", async () => {
+  const dashboard = await readFile(new URL("../app/agenda-dashboard.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+
+  for (const copy of ["같은 사건,", "근거가 부족한 분석은", "기사 본문", "사람 검토", "중요도·사실성·여론을 뜻하지 않습니다"]) {
+    assert.match(dashboard, new RegExp(copy));
+  }
+  assert.match(dashboard, /<details className="score-details">/);
+  assert.match(dashboard, /role="tab"/);
+  assert.match(dashboard, /aria-controls={`analysis-panel-/);
+  assert.doesNotMatch(dashboard, /신뢰도 \{/);
+  assert.doesNotMatch(dashboard, /agenda-list" aria-live/);
+
+  assert.match(styles, /\.hero-copy, \.snapshot \{ min-width: 0; \}/);
+  assert.match(styles, /@media \(max-width: 780px\)/);
+  assert.match(styles, /\.live-filter-form input, \.live-filter-form select \{ font-size: 16px; \}/);
+  assert.match(styles, /min-height: 44px/);
+});
+
 test("packages Sites hosting metadata and both database migrations", async () => {
   const hosting = JSON.parse(await readFile(new URL("../dist/.openai/hosting.json", import.meta.url), "utf8"));
   assert.equal(hosting.project_id, "appgprj_6a54eb02c21c819199c3369cc67c6857");
