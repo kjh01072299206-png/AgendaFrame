@@ -12,6 +12,17 @@ type Health = {
   timestamps: { collectedAt: string | null; analyzedAt: number | null; publishedAt: number | null; nextScheduledAt: number | null };
 };
 
+type Source = {
+  id: string;
+  name: string;
+  sampleOrder: number;
+  sourceType: "general_daily" | "business_media" | "news_agency";
+  sourceTypeLabel: string;
+  mediaGroupId: string;
+  mediaGroupLabel: string;
+  active: boolean;
+};
+
 type Issue = {
   id: string;
   issueDate: string;
@@ -125,6 +136,7 @@ const analysisTabs: Array<[AnalysisTab, string]> = [
 
 export default function AgendaDashboard() {
   const [health, setHealth] = useState<Health | null>(null);
+  const [sources, setSources] = useState<Source[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
   const [issueTotal, setIssueTotal] = useState(0);
   const [categories, setCategories] = useState<Array<{ category: string; count: number }>>([]);
@@ -158,6 +170,17 @@ export default function AgendaDashboard() {
       setHealthError(false);
     } catch {
       setHealthError(true);
+    }
+  }, []);
+
+  const loadSources = useCallback(async () => {
+    try {
+      const response = await fetch("/api/sources", { cache: "force-cache" });
+      if (!response.ok) throw new Error("sources unavailable");
+      const payload = await response.json();
+      setSources(Array.isArray(payload.sources) ? payload.sources.filter((source: Source) => source.active) : []);
+    } catch {
+      setSources([]);
     }
   }, []);
 
@@ -217,7 +240,7 @@ export default function AgendaDashboard() {
     setFilters(initialFilters);
     setAppliedFilters(initialFilters);
     setUrlReady(true);
-    Promise.allSettled([loadHealth(), loadIssues(initialCategory), loadArticles({ nextFilters: initialFilters })]);
+    Promise.allSettled([loadHealth(), loadSources(), loadIssues(initialCategory), loadArticles({ nextFilters: initialFilters })]);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -323,6 +346,11 @@ export default function AgendaDashboard() {
   const detectedFrames = detail?.frames.filter((frame) => frame.score > 0 && frame.evidenceText) ?? [];
   const bodyBackedFrameCount = detail?.frames.filter((frame) => frame.evidenceBasis.startsWith("body_") && frame.score > 0).length ?? 0;
   const authorizedContentCount = health?.collection.authorizedContentCount ?? 0;
+  const configuredSourceCount = health?.collection.configuredSources ?? (sources.length || 22);
+  const sourceGroups = useMemo(() => ["general_daily", "business_media", "news_agency"].map((sourceType) => {
+    const entries = sources.filter((source) => source.sourceType === sourceType).sort((a, b) => a.sampleOrder - b.sampleOrder);
+    return { sourceType, label: entries[0]?.sourceTypeLabel ?? sourceType, entries };
+  }).filter((group) => group.entries.length), [sources]);
 
   return (
     <>
@@ -339,14 +367,14 @@ export default function AgendaDashboard() {
           <div className="overview-copy">
             <p className="context-label">오늘의 보도 비교</p>
             <h1 id="hero-title">같은 사건,<br />매체별 근거로 나란히 봅니다.</h1>
-            <p className="overview-description">5개 종합일간지의 기사 제목과 홈페이지 배치를 사건별로 묶었습니다. 근거가 부족한 분석은 제공하지 않고, 비교할 수 있는 부분과 아직 판단할 수 없는 부분을 구분합니다.</p>
+            <p className="overview-description">22개 주요 종합일간지·경제매체·뉴스통신사의 온라인 기사와 홈페이지 배치를 사건별로 묶었습니다. 근거가 부족한 분석은 제공하지 않고, 비교할 수 있는 부분과 아직 판단할 수 없는 부분을 구분합니다.</p>
             <div className="overview-actions"><a className="primary-action" href="#agenda-workspace">오늘의 이슈 비교하기</a><button className="secondary-action" type="button" onClick={() => setMethodOpen(true)}>분석 범위 확인</button></div>
             {!authorizedContentCount && <p className="evidence-limit"><strong>현재 본문 근거 없음</strong><span>프레임 탭에는 기사 제목에서 확인된 표현 단서만 표시됩니다.</span></p>}
             {!currentSnapshot && <p className="freshness-warning" role="status"><strong>{freshness.label}</strong>{freshness.staleDays ? ` · 기준일로부터 ${freshness.staleDays}일 지났습니다.` : " · 최신 수집 상태를 확인해 주세요."}</p>}
           </div>
           <dl className="overview-status" aria-label="현재 분석 범위">
             <div><dt>자료 기준</dt><dd>{basisDate?.replaceAll("-", ".") ?? "확인 중"}</dd></div>
-            <div><dt>분석 매체</dt><dd>{health?.collection.configuredSources ?? 5}개 언론사</dd></div>
+            <div><dt>분석 매체</dt><dd>{configuredSourceCount}개 언론사</dd></div>
             <div><dt>분석 기사</dt><dd>{(health?.collection.articleCount ?? 0).toLocaleString("ko-KR")}건</dd></div>
             <div><dt>현재 근거</dt><dd>{authorizedContentCount ? `승인 본문 ${authorizedContentCount.toLocaleString("ko-KR")}건 포함` : "제목·배치 메타데이터"}</dd></div>
             <div><dt>사람 검토</dt><dd>진행 전</dd></div>
@@ -364,7 +392,7 @@ export default function AgendaDashboard() {
               {loadingIssues ? <div className="skeleton-stack" role="status" aria-label="오늘의 이슈를 불러오는 중">{[0, 1, 2, 3].map((item) => <i className="skeleton-row" key={item} aria-hidden="true" />)}</div> : issueError ? <div className="empty-state error-state" role="alert"><strong>이슈를 불러오지 못했습니다.</strong><span>{issueError}</span><button type="button" onClick={() => loadIssues(category)}>이슈 다시 불러오기</button></div> : issues.length ? issues.map((issue, index) => (
                 <button key={issue.id} type="button" className={`agenda-card${issue.id === selectedIssueId ? " active" : ""}`} aria-pressed={issue.id === selectedIssueId} aria-current={issue.id === selectedIssueId ? "true" : undefined} aria-controls="issue-analysis-panel" onClick={() => selectIssue(issue.id)}>
                   <span className="agenda-rank">{index + 1}</span>
-                  <span className="agenda-copy"><span className="agenda-meta"><b className="category-tag">{issue.category}</b>{issue.sourceCount}/5개 매체 · 관련 기사 {issue.articleCount}건</span><strong>{issue.title}</strong><small>{issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 대기" : "자동 묶음 · 검토 전"}</small></span>
+                  <span className="agenda-copy"><span className="agenda-meta"><b className="category-tag">{issue.category}</b>{issue.sourceCount}/{configuredSourceCount}개 매체 · 관련 기사 {issue.articleCount}건</span><strong>{issue.title}</strong><small>{issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 대기" : "자동 묶음 · 검토 전"}</small></span>
                   <span className="agenda-score"><strong>{issue.agendaScore === null ? "–" : Math.round(issue.agendaScore)}</strong><small>{issue.agendaScore === null ? "보류" : "집중도"}</small></span>
                 </button>
               )) : <div className="empty-state"><strong>표시할 이슈가 없습니다.</strong><span>선택한 분야에 분석된 기사 제목이 아직 없습니다.</span></div>}
@@ -381,8 +409,8 @@ export default function AgendaDashboard() {
                 }}>← 이슈 목록</button>
                 <div className="detail-kicker"><p>{detail.issue.category} · {detail.issue.issueDate} · {detail.issue.sourceCount}개 언론사</p><span className="confidence review">{detail.issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 필요" : "자동 분석 · 검토 전"}</span></div>
                 <div className="detail-title-row"><div><h2>{detail.issue.title}</h2><p className="detail-summary">{detail.issue.summary}</p></div><div className="big-score"><strong>{detail.issue.agendaScore === null ? "–" : Math.round(detail.issue.agendaScore)}</strong><span>{detail.issue.agendaScore === null ? "산출 보류" : "표본 내 집중도 /100"}</span></div></div>
-                <div className="detail-metrics"><span>관련 제목 <b>{detail.issue.articleCount}건</b></span><span>포함 매체 <b>{detail.issue.sourceCount}/5곳</b></span><span>승인 본문 <b>{detail.issue.contentAvailableCount}/{detail.issue.articleCount}건</b></span><span>사람 검토 <b>미완료</b></span></div>
-                <details className="score-details"><summary>점수 근거와 관측 범위</summary><div className="score-breakdown"><ScorePart label="매체 커버리지" value={detail.issue.diversityScore} /><ScorePart label="홈페이지 배치" value={detail.issue.placementScore} note={`${detail.issue.placementObservedCount}/${detail.issue.placementTotalCount}건 관측`} /><ScorePart label="기사량" value={detail.issue.volumeScore} /><ScorePart label="후속 보도량" value={detail.issue.followUpVolumeScore} /></div><p>관측된 메타데이터만 계산합니다. 이 점수는 중요도·진실성·여론을 뜻하지 않습니다.</p></details>
+                <div className="detail-metrics"><span>관련 제목 <b>{detail.issue.articleCount}건</b></span><span>포함 매체 <b>{detail.issue.sourceCount}/{configuredSourceCount}곳</b></span><span>승인 본문 <b>{detail.issue.contentAvailableCount}/{detail.issue.articleCount}건</b></span><span>사람 검토 <b>미완료</b></span></div>
+                <details className="score-details"><summary>점수 근거와 관측 범위</summary><div className="score-breakdown"><ScorePart label="독립 미디어그룹 커버리지" value={detail.issue.diversityScore} /><ScorePart label="홈페이지 배치" value={detail.issue.placementScore} note={`${detail.issue.placementObservedCount}/${detail.issue.placementTotalCount}건 관측`} /><ScorePart label="기사량" value={detail.issue.volumeScore} /><ScorePart label="후속 보도량" value={detail.issue.followUpVolumeScore} /></div><p>관측된 메타데이터만 계산하며 동일 미디어그룹은 커버리지에서 한 번만 셉니다. 이 점수는 중요도·진실성·여론을 뜻하지 않습니다.</p></details>
                 <div className="analysis-tabs" role="tablist" aria-label="이슈 분석 보기">
                   {analysisTabs.map(([value, label]) => <button key={value} id={`analysis-tab-${value}`} type="button" role="tab" aria-selected={tab === value} aria-controls={`analysis-panel-${value}`} tabIndex={tab === value ? 0 : -1} className={tab === value ? "active" : ""} onKeyDown={(event) => handleTabKeyDown(event, value)} onClick={() => setTab(value)}>{label}</button>)}
                 </div>
@@ -430,7 +458,7 @@ export default function AgendaDashboard() {
           <div className="section-heading live-heading"><div><p className="context-label">기사 아카이브</p><h2 id="live-feed-title">전체 기사 검색</h2><p className="section-description">분석에 사용된 기사를 매체·분야·날짜로 좁혀 원문에서 확인하세요.</p></div><p>{articles.length.toLocaleString("ko-KR")}/{articleTotal.toLocaleString("ko-KR")}건 표시</p></div>
           <form className="live-filter-form" role="search" onSubmit={submitFilters}>
             <label><span>기사 제목</span><input type="search" maxLength={100} value={filters.q} onChange={(event) => setFilters({ ...filters, q: event.target.value })} placeholder="예: 주거 정책" /></label>
-            <label><span>언론사</span><select value={filters.source} onChange={(event) => setFilters({ ...filters, source: event.target.value })}><option value="">전체</option>{["한겨레","경향신문","한국일보","중앙일보","조선일보"].map((source) => <option key={source}>{source}</option>)}</select></label>
+            <label><span>언론사</span><select value={filters.source} onChange={(event) => setFilters({ ...filters, source: event.target.value })}><option value="">전체</option>{sourceGroups.map((group) => <optgroup key={group.sourceType} label={group.label}>{group.entries.map((source) => <option key={source.id} value={source.name}>{source.name}</option>)}</optgroup>)}</select></label>
             <label><span>분야</span><select value={filters.section} onChange={(event) => setFilters({ ...filters, section: event.target.value })}><option value="">전체</option>{["정치","경제","사회","문화","스포츠","지역","국제","IT_과학"].map((section) => <option key={section}>{section}</option>)}</select></label>
             <label><span>게시일</span><input type="date" value={filters.date} onChange={(event) => setFilters({ ...filters, date: event.target.value })} /></label>
             <div className="live-filter-actions"><button type="submit" disabled={articleLoading}>{articleLoading ? "검색 중…" : "검색"}</button><button type="button" onClick={resetFilters}>초기화</button></div>
@@ -443,9 +471,9 @@ export default function AgendaDashboard() {
         <section className="method-preview" id="comparison" aria-labelledby="method-title"><div><p className="context-label">서비스 원칙</p><h2 id="method-title">이 서비스가 판단하지 않는 것</h2><p>AgendaFrame은 언론사의 옳고 그름을 채점하지 않습니다. 사용자가 원문을 비교할 때 필요한 관측값과 근거의 빈칸을 함께 보여줍니다.</p></div><div className="principles"><article><span>근거</span><h3>근거가 없으면 보류</h3><p>본문에 없는 사실·원인·취재원을 추정하지 않고, 확인할 수 없는 이유를 표시합니다.</p></article><article><span>구분</span><h3>사건과 설명을 분리</h3><p>같은 주제 안의 다른 사건은 분리하고, 설명 차이는 인용 가능한 근거가 있을 때만 묶습니다.</p></article><article><span>범위</span><h3>점수의 의미를 제한</h3><p>보도 집중도는 표본의 노출량입니다. 중요도·신뢰도·여론처럼 읽히지 않도록 범위를 붙입니다.</p></article></div></section>
       </main>
 
-      <footer><div className="brand footer-brand"><span className="brand-mark" aria-hidden="true">AF</span><span className="brand-copy"><b>AgendaFrame</b><small>보도 근거 비교</small></span></div><p>5개 전국 종합일간지 표본 · 제목·홈 배치 관측 · 자동 분석 검토 전</p><button type="button" onClick={() => setMethodOpen(true)}>방법론과 한계</button></footer>
+      <footer><div className="brand footer-brand"><span className="brand-mark" aria-hidden="true">AF</span><span className="brand-copy"><b>AgendaFrame</b><small>보도 근거 비교</small></span></div><p>22개 종합일간지·경제매체·뉴스통신사 온라인 표본 · 방송 제외 · 자동 분석 검토 전</p><button type="button" onClick={() => setMethodOpen(true)}>방법론과 한계</button></footer>
 
-      <dialog ref={methodDialogRef} className="modal" aria-labelledby="method-dialog-title" aria-describedby="method-dialog-description" onCancel={() => setMethodOpen(false)} onClose={() => setMethodOpen(false)}><form method="dialog"><button className="modal-close" aria-label="방법론 닫기">×</button></form><p className="context-label">보도 집중도 v3</p><h2 id="method-dialog-title">집중도는 중요도 점수가 아닙니다</h2><p className="modal-lead" id="method-dialog-description">5개 종합일간지 표본에서 한 사건이 얼마나 넓고 반복적으로 노출됐는지 보여주는 0–100 지표입니다. 사회적 중요도·진실성·기사 품질·여론을 평가하지 않습니다.</p><div className="formula" aria-label="보도 집중도 가중치"><span>매체 커버리지 <b>35%</b></span><i>+</i><span>관측된 홈 배치 <b>30%</b></span><i>+</i><span>기사량 <b>20%</b></span><i>+</i><span>후속 보도량 <b>15%</b></span></div><p className="modal-detail">홈페이지 배치는 반복 관측이 있으면 기사별 평균을 사용합니다. 관측이 없는 기사는 중립값으로 추정하지 않고 해당 항목의 가중치를 제외합니다.</p><p className="method-caution"><strong>현재 제공 범위</strong> 이용 권한이 확인된 본문만 비공개로 분석하며, 나머지는 제목 단서로 제한합니다. 본문 표현 단서가 있어도 원인·책임·해법·취재원 비교는 구조화 분석과 사람 검토 전까지 보류합니다.</p></dialog>
+      <dialog ref={methodDialogRef} className="modal" aria-labelledby="method-dialog-title" aria-describedby="method-dialog-description" onCancel={() => setMethodOpen(false)} onClose={() => setMethodOpen(false)}><form method="dialog"><button className="modal-close" aria-label="방법론 닫기">×</button></form><p className="context-label">보도 집중도 v3</p><h2 id="method-dialog-title">집중도는 중요도 점수가 아닙니다</h2><p className="modal-lead" id="method-dialog-description">22개 주요 종합일간지·경제매체·뉴스통신사의 온라인 뉴스 표본에서 한 사건이 얼마나 넓고 반복적으로 노출됐는지 보여주는 0–100 지표입니다. 사회적 중요도·진실성·기사 품질·여론을 평가하지 않습니다.</p><div className="formula" aria-label="보도 집중도 가중치"><span>독립 미디어그룹 커버리지 <b>35%</b></span><i>+</i><span>관측된 홈 배치 <b>30%</b></span><i>+</i><span>기사량 <b>20%</b></span><i>+</i><span>후속 보도량 <b>15%</b></span></div><p className="modal-detail">동일 미디어그룹의 여러 매체는 커버리지에서 한 번만 셉니다. 홈페이지 배치는 반복 관측이 있으면 기사별 평균을 사용하고, 관측이 없는 기사는 중립값으로 추정하지 않습니다. TV 편성·영상 리포트와 온라인 기사 배열을 같은 기준으로 비교할 수 없어 방송사는 표본에서 제외했습니다.</p><p className="method-caution"><strong>현재 제공 범위</strong> 이용 권한이 확인된 본문만 비공개로 분석하며, 나머지는 제목 단서로 제한합니다. 본문 표현 단서가 있어도 원인·책임·해법·취재원 비교는 구조화 분석과 사람 검토 전까지 보류합니다.</p></dialog>
     </>
   );
 }

@@ -29,7 +29,7 @@
 | 경로 | 설명 | 캐시 |
 | --- | --- | --- |
 | `GET /api/health` | 수집·분석·게시 시각과 최신성 상태 | `no-store` |
-| `GET /api/sources` | 활성 매체 표본과 정책 버전 | 5분 |
+| `GET /api/sources` | 방송을 제외한 22개 매체의 유형·미디어그룹과 정책 버전 | 5분 |
 | `GET /api/articles` | 기사 메타데이터 탐색, cursor 페이지네이션 | 1분 |
 | `GET /api/issues` | 최신 성공 스냅샷의 상위 이슈 | 5분, immutable |
 | `GET /api/issues/:id` | 이슈·기사·근거·보류 상태 상세 | 5분, immutable |

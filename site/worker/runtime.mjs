@@ -283,11 +283,22 @@ async function secureTokenMatches(provided, expected) {
   return difference === 0;
 }
 
-function isSameSiteRequest(request) {
+const DEFAULT_TRUSTED_ORIGINS = new Set([
+  "https://agendaframe.com",
+  "https://www.agendaframe.com",
+  "https://agendaframe-capstone.kjh01072299206.chatgpt.site",
+]);
+
+function isSameSiteRequest(request, env = {}) {
   const requestUrl = new URL(request.url);
   const origin = request.headers.get("origin");
   const fetchSite = request.headers.get("sec-fetch-site");
-  return (!origin || origin === requestUrl.origin) && (!fetchSite || ["same-origin", "none"].includes(fetchSite));
+  const configuredOrigins = String(env.PUBLIC_ORIGINS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const trustedOrigins = new Set([requestUrl.origin, ...DEFAULT_TRUSTED_ORIGINS, ...configuredOrigins]);
+  return (!origin || trustedOrigins.has(origin)) && (!fetchSite || ["same-origin", "same-site", "none"].includes(fetchSite));
 }
 
 async function ensureSources(db) {
@@ -386,7 +397,7 @@ async function handleImport(request, env) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
   if (!env?.IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503);
 
-  if (!isSameSiteRequest(request)) {
+  if (!isSameSiteRequest(request, env)) {
     return jsonResponse({ error: "같은 사이트에서 보낸 요청만 허용됩니다." }, 403);
   }
 
@@ -542,7 +553,7 @@ function integerInRange(value, minimum, maximum, label) {
 async function handleHomepageObservation(request, env) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
   if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
-  if (!isSameSiteRequest(request)) return jsonResponse({ error: "같은 사이트에서 보낸 요청만 허용됩니다." }, 403);
+  if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "허용된 AgendaFrame 주소에서 보낸 요청만 처리합니다." }, 403);
 
   let payload;
   try {
@@ -708,7 +719,7 @@ function normalizeArticleBody(value) {
 async function handleContentUpload(request, env) {
   if (!env?.DB || !env?.CONTENT) return jsonResponse({ error: "비공개 본문 저장소가 아직 준비되지 않았습니다." }, 503);
   if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
-  if (!isSameSiteRequest(request)) return jsonResponse({ error: "같은 사이트에서 보낸 요청만 허용됩니다." }, 403);
+  if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "허용된 AgendaFrame 주소에서 보낸 요청만 처리합니다." }, 403);
 
   let payload;
   try {
@@ -1053,11 +1064,17 @@ async function handleAnalyze(request, env) {
     });
     placementByArticle.set(observation.articleId, values);
   }
-  const articles = (articleResult.results ?? []).map((article) => ({
-    ...article,
-    placementObservations: placementByArticle.get(article.id) ?? [],
-    ...(authorizedContents.get(article.id) ?? {}),
-  }));
+  const sourcePolicyById = new Map(sourcePanel.sources.map((source) => [source.id, source]));
+  const articles = (articleResult.results ?? []).map((article) => {
+    const sourcePolicy = sourcePolicyById.get(article.sourceId);
+    return {
+      ...article,
+      mediaGroupId: sourcePolicy?.mediaGroupId ?? article.sourceId,
+      sourceType: sourcePolicy?.sourceType ?? "unclassified",
+      placementObservations: placementByArticle.get(article.id) ?? [],
+      ...(authorizedContents.get(article.id) ?? {}),
+    };
+  });
   if (!articles.length) return jsonResponse({ error: `${targetDate}에 분석할 기사가 없습니다.` }, 400);
 
   const runId = crypto.randomUUID();
@@ -1069,7 +1086,12 @@ async function handleAnalyze(request, env) {
   `).bind(runId, targetDate, ANALYSIS_PROVIDER, ANALYSIS_MODEL_VERSION, startedAt, articles.length).run();
 
   try {
-    const analyzed = analysisProvider.analyze(articles, { configuredSourceCount: sourcePanel.sources.filter((source) => source.active).length, maxIssues: 80 });
+    const activeSources = sourcePanel.sources.filter((source) => source.active);
+    const analyzed = analysisProvider.analyze(articles, {
+      configuredSourceCount: activeSources.length,
+      configuredSourceGroupCount: new Set(activeSources.map((source) => source.mediaGroupId ?? source.id)).size,
+      maxIssues: 80,
+    });
     const issueIds = await Promise.all(analyzed.map((issue, index) => sha256Hex(`${runId}:${index}:${issue.title}`)));
     const statements = [];
     analyzed.forEach((issue, index) => {
@@ -1717,9 +1739,10 @@ export async function handleApiRequest(request, env = {}) {
       const source = { ...entry };
       delete source.domains;
       delete source.providerOutletName;
+      delete source.samplePosition;
       return source;
     });
-    return jsonResponse({ panelVersion: sourcePanel.panelVersion, method: sourcePanel.collectionProvider, directCrawling: false, sources: publicSources, meta: responseMeta(null, env?.DB ? "live_metadata" : "demo") }, 200, { request, etag: true, cacheControl: "public, max-age=3600, must-revalidate" });
+    return jsonResponse({ panelVersion: sourcePanel.panelVersion, panelLabel: sourcePanel.panelLabel, excludedMediaTypes: sourcePanel.excludedMediaTypes, method: sourcePanel.collectionProvider, directCrawling: false, sources: publicSources, meta: responseMeta(null, env?.DB ? "live_metadata" : "demo") }, 200, { request, etag: true, cacheControl: "public, max-age=3600, must-revalidate" });
   }
   if (url.pathname === "/api/articles" && request.method === "GET") return handleArticles(request, env);
   const rollbackMatch = url.pathname.match(/^\/api\/analysis\/runs\/([^/]+)\/rollback$/);

@@ -30,6 +30,9 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
   for (const copy of ["같은 사건,", "근거가 부족한 분석은", "승인 본문", "사람 검토", "중요도·사실성·여론을 뜻하지 않습니다"]) {
     assert.match(dashboard, new RegExp(copy));
   }
+  assert.match(dashboard, /22개 주요 종합일간지·경제매체·뉴스통신사/);
+  assert.match(dashboard, /fetch\("\/api\/sources"/);
+  assert.doesNotMatch(dashboard, /\["한겨레","경향신문","한국일보","중앙일보","조선일보"\]/);
   assert.match(dashboard, /<details className="score-details">/);
   assert.match(dashboard, /role="tab"/);
   assert.match(dashboard, /aria-controls={`analysis-panel-/);
@@ -116,6 +119,15 @@ test("clusters real-looking article titles and produces explainable scores", () 
   assert.equal(ANALYSIS_MODEL_VERSION, "agenda-rules-v3");
   assert.equal(getAnalysisProvider().analyze, analyzeArticles);
   assert.throws(() => getAnalysisProvider("vertex_ai"), /지원하지 않는 분석 공급자/);
+});
+
+test("counts related outlets but deduplicates shared media groups in coverage", () => {
+  const issues = analyzeArticles([
+    { id: "c1", sourceId: "chosun", source: "조선일보", mediaGroupId: "chosun_group", title: "정부 청년 주거 지원 정책 확대 발표", section: "정치" },
+    { id: "c2", sourceId: "chosunbiz", source: "조선비즈", mediaGroupId: "chosun_group", title: "정부 청년 주거 지원 정책 확대", section: "정치" },
+  ], { configuredSourceCount: 2, configuredSourceGroupCount: 2 });
+  assert.equal(issues[0].sourceCount, 2);
+  assert.equal(issues[0].diversityScore, 50);
 });
 
 test("proxies both the Vercel root and nested routes to the validated origin", async () => {
@@ -350,14 +362,25 @@ test("reports no-cost health and protects write endpoints", async () => {
   assert.equal(healthBody.mode, "demo");
   assert.equal(healthBody.collection.method, "bigkinds_export");
   assert.equal(healthBody.collection.directCrawling, false);
-  assert.equal(healthBody.collection.configuredSources, 5);
+  assert.equal(healthBody.collection.configuredSources, 22);
   assert.equal(healthBody.meta.clusteringVersion, "event-anchors-complete-link-v2");
   assert.equal(healthBody.meta.scoreVersion, "observed-agenda-v3");
 
   const sources = await handleApiRequest(new Request("https://example.test/api/sources"));
   const sourceBody = await sources.json();
-  assert.equal(sourceBody.sources.length, 5);
+  assert.equal(sourceBody.panelLabel, "22개 주요 중앙언론 온라인 뉴스 표본");
+  assert.equal(sourceBody.sources.length, 22);
   assert.ok(sourceBody.sources.every((source) => !("domains" in source)));
+  assert.ok(sourceBody.sources.every((source) => !("samplePosition" in source)));
+  assert.deepEqual(Object.fromEntries(["general_daily", "business_media", "news_agency"].map((type) => [type, sourceBody.sources.filter((source) => source.sourceType === type).length])), {
+    general_daily: 10,
+    business_media: 9,
+    news_agency: 3,
+  });
+  for (const broadcaster of ["KBS", "MBC", "SBS", "JTBC", "TV조선", "채널A", "MBN", "YTN", "연합뉴스TV"]) {
+    assert.ok(!sourceBody.sources.some((source) => source.name === broadcaster));
+  }
+  assert.equal(sourceBody.sources.find((source) => source.name === "조선일보").mediaGroupId, sourceBody.sources.find((source) => source.name === "조선비즈").mediaGroupId);
 
   const unavailable = await handleApiRequest(new Request("https://example.test/api/analyze", { method: "POST" }));
   assert.equal(unavailable.status, 503);

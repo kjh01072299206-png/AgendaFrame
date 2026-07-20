@@ -296,7 +296,7 @@ function clusterArticles(articles) {
   return clusters;
 }
 
-export function analyzeArticles(inputArticles, { configuredSourceCount = 5, maxIssues = 80 } = {}) {
+export function analyzeArticles(inputArticles, { configuredSourceCount = 5, configuredSourceGroupCount = configuredSourceCount, maxIssues = 80 } = {}) {
   const articles = inputArticles.map((article, index) => {
     const prepared = { ...article, _index: index, _tokens: titleTokens(article.title) };
     prepared._event = eventFeatures(prepared);
@@ -308,9 +308,13 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, maxI
   return groups
     .map((group) => {
       const sources = new Map();
-      for (const article of group) sources.set(article.sourceId, (sources.get(article.sourceId) ?? 0) + 1);
+      const mediaGroups = new Set();
+      for (const article of group) {
+        sources.set(article.sourceId, (sources.get(article.sourceId) ?? 0) + 1);
+        mediaGroups.add(article.mediaGroupId ?? article.sourceId);
+      }
       const representative = representativeArticle(group);
-      const diversity = Math.min(100, (sources.size / configuredSourceCount) * 100);
+      const diversity = Math.min(100, (mediaGroups.size / Math.max(1, configuredSourceGroupCount)) * 100);
       const placement = placementScore(group);
       const volume = Math.min(100, (Math.log1p(group.length) / Math.log1p(maxArticleCount)) * 100);
       const followUpVolume = group.length > 1 ? ((group.length - sources.size) / (group.length - 1)) * 100 : 0;

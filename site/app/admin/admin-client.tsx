@@ -3,9 +3,10 @@
 import readXlsxFile from "read-excel-file";
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
+import sourcePanel from "../../data/sources.json";
 import QualityReview from "./quality-review";
 
-const ALLOWED_SOURCES = ["한겨레", "경향신문", "한국일보", "중앙일보", "조선일보"] as const;
+const ALLOWED_SOURCES = sourcePanel.sources.filter((source) => source.active).map((source) => source.name);
 const MAX_ROWS = 20_000;
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const IMPORT_BATCH_SIZE = 500;
@@ -177,7 +178,7 @@ function rowsFromTable(parsed: Cell[][]) {
 function validateRows(rows: ImportRow[]) {
   const errors: string[] = [];
   for (const row of rows) {
-    if (!ALLOWED_SOURCES.includes(row.source as (typeof ALLOWED_SOURCES)[number])) errors.push(`${row._line}행: 지원하지 않는 언론사입니다.`);
+    if (!ALLOWED_SOURCES.includes(row.source)) errors.push(`${row._line}행: 지원하지 않는 언론사입니다.`);
     if (!row.title || row.title.length > 500) errors.push(`${row._line}행: 제목은 1~500자여야 합니다.`);
     try {
       const url = new URL(row.url);

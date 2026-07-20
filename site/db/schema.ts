@@ -13,7 +13,7 @@ export const mediaSources = sqliteTable(
     provider: text("provider").notNull(),
     providerOutletName: text("provider_outlet_name").notNull(),
     samplePosition: text("sample_position", {
-      enum: ["progressive", "center", "conservative"],
+      enum: ["progressive", "center", "conservative", "unclassified"],
     }).notNull(),
     sampleOrder: integer("sample_order").notNull(),
     sourceType: text("source_type").notNull(),
