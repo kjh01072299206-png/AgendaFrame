@@ -8,6 +8,7 @@ const ANALYSIS_MODEL_VERSION = analysisProvider.modelVersion;
 const PUBLIC_API_SCHEMA_VERSION = publicApiSchema["x-api-version"];
 const PROMPT_VERSION = "not_applicable_rules";
 const EVALUATION_DATASET_VERSION = "not_configured";
+const COMPATIBLE_ANALYSIS_MODELS = new Set([ANALYSIS_MODEL_VERSION, "agenda-rules-v2"]);
 
 const assets = globalThis.__AGENDAFRAME_ASSETS__ ?? {};
 let sourcePanel = globalThis.__AGENDAFRAME_SOURCE_PANEL__ ?? {
@@ -58,7 +59,7 @@ export async function withDocumentSecurityHeaders(response) {
 }
 
 function errorCode(status) {
-  return ({ 400: "INVALID_REQUEST", 401: "UNAUTHORIZED", 404: "NOT_FOUND", 405: "METHOD_NOT_ALLOWED", 409: "CONFLICT", 413: "PAYLOAD_TOO_LARGE", 429: "RATE_LIMITED", 500: "INTERNAL_ERROR", 503: "UNAVAILABLE" })[status] ?? "REQUEST_FAILED";
+  return ({ 400: "INVALID_REQUEST", 401: "UNAUTHORIZED", 403: "FORBIDDEN", 404: "NOT_FOUND", 405: "METHOD_NOT_ALLOWED", 409: "CONFLICT", 413: "PAYLOAD_TOO_LARGE", 429: "RATE_LIMITED", 500: "INTERNAL_ERROR", 503: "UNAVAILABLE" })[status] ?? "REQUEST_FAILED";
 }
 
 function weakEtag(value) {
@@ -107,7 +108,7 @@ export function classifySnapshotStatus({ targetDate = null, dataAsOf = null, col
 }
 
 function analysisVersions(run) {
-  const current = !run?.modelVersion || run.modelVersion === ANALYSIS_MODEL_VERSION;
+  const current = !run?.modelVersion || COMPATIBLE_ANALYSIS_MODELS.has(run.modelVersion);
   return {
     sourcePolicyVersion: sourcePanel.panelVersion ?? "unknown",
     clusteringVersion: current ? CLUSTERING_VERSION : "legacy-v1-unverified",
@@ -133,7 +134,8 @@ function responseMeta(run = null, runtimeMode = "demo") {
 
 function publicIssue(row, run) {
   const placementObservedCount = Number(row.placementObservedCount ?? 0);
-  const legacy = run?.modelVersion !== ANALYSIS_MODEL_VERSION;
+  const contentAvailableCount = Number(row.contentAvailableCount ?? 0);
+  const legacy = !COMPATIBLE_ANALYSIS_MODELS.has(run?.modelVersion);
   const issue = { ...row };
   delete issue.confidence;
   return {
@@ -146,15 +148,19 @@ function publicIssue(row, run) {
     scoreStatus: legacy ? "legacy_reanalysis_required" : (placementObservedCount ? "observed_components" : "placement_excluded"),
     calibrationStatus: "not_calibrated",
     clusterQuality: legacy ? "review_required" : "not_human_reviewed",
-    evidenceBasis: "headline_metadata_only",
+    contentAvailableCount,
+    evidenceBasis: contentAvailableCount ? "authorized_body_and_metadata" : "headline_metadata_only",
   };
 }
 
 function evidenceFirstComparison(issue, articles) {
+  const contentAvailableCount = Number(issue.contentAvailableCount ?? articles.filter((article) => article.contentAvailable).length);
   return {
     status: "withheld_insufficient_evidence",
-    evidenceBasis: "headline_metadata_only",
-    reason: "기사 본문과 독립 출처 관계를 확인할 수 없어 공통 사실·설명 차이·취재원·추천을 생성하지 않았습니다.",
+    evidenceBasis: contentAvailableCount ? "authorized_body_signals_not_structured_comparison" : "headline_metadata_only",
+    reason: contentAvailableCount
+      ? `승인된 본문 ${contentAvailableCount}건에서 표현 단서를 확인했지만, 원인·책임·해법 비교는 구조화 분석과 사람 검토 전까지 보류합니다.`
+      : "기사 본문과 독립 출처 관계를 확인할 수 없어 공통 사실·설명 차이·취재원·추천을 생성하지 않았습니다.",
     frameElements: ["problem_definition", "causal_attribution", "evaluation", "treatment_recommendation"].map((element) => ({ element, status: "not_assessed", evidence: [] })),
     commonFacts: [],
     divergenceQuestions: [],
@@ -277,6 +283,24 @@ async function secureTokenMatches(provided, expected) {
   return difference === 0;
 }
 
+const DEFAULT_TRUSTED_ORIGINS = new Set([
+  "https://agendaframe.com",
+  "https://www.agendaframe.com",
+  "https://agendaframe-capstone.kjh01072299206.chatgpt.site",
+]);
+
+function isSameSiteRequest(request, env = {}) {
+  const requestUrl = new URL(request.url);
+  const origin = request.headers.get("origin");
+  const fetchSite = request.headers.get("sec-fetch-site");
+  const configuredOrigins = String(env.PUBLIC_ORIGINS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const trustedOrigins = new Set([requestUrl.origin, ...DEFAULT_TRUSTED_ORIGINS, ...configuredOrigins]);
+  return (!origin || trustedOrigins.has(origin)) && (!fetchSite || ["same-origin", "same-site", "none"].includes(fetchSite));
+}
+
 async function ensureSources(db) {
   const statements = sourcePanel.sources.map((source) => db.prepare(`
     INSERT INTO media_sources
@@ -310,7 +334,11 @@ async function collectionHealth(db) {
   const summary = await db.prepare(`
     SELECT
       (SELECT COUNT(*) FROM media_sources WHERE active = 1) AS configured_sources,
-      (SELECT COUNT(*) FROM articles) AS article_count
+      (SELECT COUNT(*) FROM articles) AS article_count,
+      (SELECT COUNT(DISTINCT article_id) FROM article_contents
+        WHERE status = 'active'
+          AND analysis_allowed = 1
+          AND (usage_expires_at IS NULL OR usage_expires_at > (unixepoch() * 1000))) AS authorized_content_count
   `).first();
   const latest = await db.prepare(`
     SELECT id, status, finished_at, article_count, duplicate_count
@@ -338,6 +366,7 @@ async function collectionHealth(db) {
       directCrawling: false,
       configuredSources: Number(summary?.configured_sources ?? sourcePanel.sources.length),
       articleCount,
+      authorizedContentCount: Number(summary?.authorized_content_count ?? 0),
       latestSourceCount,
       latestInserted: Number(latest?.article_count ?? 0),
       latestDuplicates: Number(latest?.duplicate_count ?? 0),
@@ -346,11 +375,11 @@ async function collectionHealth(db) {
   };
 }
 
-async function readImportPayload(request) {
+async function readJsonPayload(request, maximumBytes = 1024 * 1024) {
   const contentLength = Number(request.headers.get("content-length") ?? 0);
-  if (contentLength > 1024 * 1024) throw new Error("요청 크기는 1MB 이하여야 합니다.");
+  if (contentLength > maximumBytes) throw new Error(`요청 크기는 ${Math.round(maximumBytes / 1024)}KB 이하여야 합니다.`);
   const text = await request.text();
-  if (new TextEncoder().encode(text).byteLength > 1024 * 1024) throw new Error("요청 크기는 1MB 이하여야 합니다.");
+  if (new TextEncoder().encode(text).byteLength > maximumBytes) throw new Error(`요청 크기는 ${Math.round(maximumBytes / 1024)}KB 이하여야 합니다.`);
   let payload;
   try {
     payload = JSON.parse(text);
@@ -360,14 +389,15 @@ async function readImportPayload(request) {
   return payload;
 }
 
+async function readImportPayload(request) {
+  return readJsonPayload(request);
+}
+
 async function handleImport(request, env) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
   if (!env?.IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503);
 
-  const requestUrl = new URL(request.url);
-  const origin = request.headers.get("origin");
-  const fetchSite = request.headers.get("sec-fetch-site");
-  if ((origin && origin !== requestUrl.origin) || (fetchSite && !["same-origin", "none"].includes(fetchSite))) {
+  if (!isSameSiteRequest(request, env)) {
     return jsonResponse({ error: "같은 사이트에서 보낸 요청만 허용됩니다." }, 403);
   }
 
@@ -432,6 +462,15 @@ async function handleImport(request, env) {
       row.homepageRank,
     ));
     const articleResults = await db.batch(statements);
+    const observationLinkStatements = rows.map((row) => db.prepare(`
+      UPDATE placement_observations
+      SET
+        article_id = (SELECT id FROM articles WHERE canonical_url = ?),
+        match_method = 'canonical_url',
+        match_confidence = 1
+      WHERE canonical_url = ? AND article_id IS NULL
+    `).bind(row.canonicalUrl, row.canonicalUrl));
+    await runBatches(db, observationLinkStatements);
     const counts = new Map(sourcePanel.sources.map((source) => [source.id, { received: 0, inserted: 0 }]));
     rows.forEach((row, index) => {
       const sourceCount = counts.get(row.source.id);
@@ -499,6 +538,272 @@ async function handleImport(request, env) {
       console.error("AgendaFrame import error could not be recorded", recordError);
     }
     return jsonResponse({ error: "데이터를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요." }, 500);
+  }
+}
+
+const PLACEMENT_ZONES = new Set(["top", "main", "section", "list"]);
+const CONTENT_ACQUISITION_METHODS = new Set(["licensed_export", "publisher_api", "authorized_crawl", "manual_research"]);
+
+function integerInRange(value, minimum, maximum, label) {
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < minimum || number > maximum) throw new Error(`${label} 값을 확인해 주세요.`);
+  return number;
+}
+
+async function handleHomepageObservation(request, env) {
+  if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
+  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
+  if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "허용된 AgendaFrame 주소에서 보낸 요청만 처리합니다." }, 403);
+
+  let payload;
+  try {
+    payload = await readJsonPayload(request);
+  } catch (error) {
+    return jsonResponse({ error: error instanceof Error ? error.message : "관측 데이터 형식을 확인해 주세요." }, 400);
+  }
+
+  try {
+    await ensureSources(env.DB);
+    const source = sourcePanel.sources.find((entry) => [entry.id, entry.name].includes(String(payload.source ?? "").trim()));
+    if (!source?.active) throw new Error("지원하지 않는 언론사입니다.");
+
+    const homepageUrl = canonicalizeArticleUrl(payload.homepage_url);
+    if (!matchesSourceDomain(new URL(homepageUrl).hostname.toLowerCase(), source.domains ?? [])) {
+      throw new Error(`${source.name} 공식 도메인의 홈페이지 URL이 아닙니다.`);
+    }
+    const observedAt = parseTimestamp(payload.observed_at, "관측 시각");
+    const viewportWidth = integerInRange(payload.viewport?.width, 320, 3840, "화면 너비");
+    const viewportHeight = integerInRange(payload.viewport?.height, 480, 8000, "화면 높이");
+    const collectorVersion = String(payload.collector_version ?? "").trim();
+    if (!collectorVersion || collectorVersion.length > 80) throw new Error("수집기 버전을 확인해 주세요.");
+    const captureHash = String(payload.capture_hash ?? "").trim().toLowerCase() || null;
+    if (captureHash && !/^[a-f0-9]{64}$/.test(captureHash)) throw new Error("화면 해시는 SHA-256 형식이어야 합니다.");
+    const status = ["success", "partial", "failed"].includes(payload.status) ? payload.status : "success";
+    if (!Array.isArray(payload.placements) || payload.placements.length === 0 || payload.placements.length > 500) {
+      throw new Error("배치 관측은 1~500건이어야 합니다.");
+    }
+
+    const placements = payload.placements.map((input, index) => {
+      const canonicalUrl = canonicalizeArticleUrl(input.url);
+      if (!matchesSourceDomain(new URL(canonicalUrl).hostname.toLowerCase(), source.domains ?? [])) {
+        throw new Error(`${index + 1}번 배치: ${source.name} 공식 도메인의 기사 URL이 아닙니다.`);
+      }
+      const observedTitle = String(input.title ?? "").trim();
+      if (!observedTitle || observedTitle.length > 500) throw new Error(`${index + 1}번 배치: 제목을 확인해 주세요.`);
+      const zone = normalizePlacement(input.zone);
+      if (!zone || !PLACEMENT_ZONES.has(zone)) throw new Error(`${index + 1}번 배치: 영역을 확인해 주세요.`);
+      const x = integerInRange(input.x, 0, 10000, `${index + 1}번 배치 x 좌표`);
+      const y = integerInRange(input.y, 0, 100000, `${index + 1}번 배치 y 좌표`);
+      const width = integerInRange(input.width, 1, 10000, `${index + 1}번 배치 너비`);
+      const height = integerInRange(input.height, 1, 10000, `${index + 1}번 배치 높이`);
+      return {
+        canonicalUrl,
+        observedTitle,
+        zone,
+        pageRank: integerInRange(input.rank, 1, 1000, `${index + 1}번 배치 순위`),
+        x,
+        y,
+        width,
+        height,
+        aboveFold: input.above_fold === true || y < viewportHeight,
+        moduleName: String(input.module_name ?? "").trim().slice(0, 120) || null,
+      };
+    });
+
+    const snapshotId = await sha256Hex(`${source.id}:${observedAt}:${viewportWidth}x${viewportHeight}`);
+    await env.DB.prepare(`
+      INSERT INTO homepage_snapshots
+        (id, source_id, homepage_url, observed_at, viewport_width, viewport_height, collector_version, capture_hash, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(source_id, observed_at, viewport_width, viewport_height) DO UPDATE SET
+        homepage_url = excluded.homepage_url,
+        collector_version = excluded.collector_version,
+        capture_hash = COALESCE(excluded.capture_hash, homepage_snapshots.capture_hash),
+        status = excluded.status
+    `).bind(snapshotId, source.id, homepageUrl, observedAt, viewportWidth, viewportHeight, collectorVersion, captureHash, status).run();
+
+    const observationStatements = placements.map((placement) => env.DB.prepare(`
+      INSERT INTO placement_observations
+        (id, snapshot_id, article_id, canonical_url, observed_title, zone, page_rank, x, y, width, height, above_fold, module_name, match_method, match_confidence)
+      VALUES (
+        ?, ?, (SELECT id FROM articles WHERE canonical_url = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        CASE WHEN EXISTS(SELECT 1 FROM articles WHERE canonical_url = ?) THEN 'canonical_url' ELSE 'unmatched' END,
+        CASE WHEN EXISTS(SELECT 1 FROM articles WHERE canonical_url = ?) THEN 1 ELSE 0 END
+      )
+      ON CONFLICT(snapshot_id, canonical_url, x, y) DO UPDATE SET
+        article_id = excluded.article_id,
+        observed_title = excluded.observed_title,
+        zone = excluded.zone,
+        page_rank = excluded.page_rank,
+        width = excluded.width,
+        height = excluded.height,
+        above_fold = excluded.above_fold,
+        module_name = excluded.module_name,
+        match_method = excluded.match_method,
+        match_confidence = excluded.match_confidence
+    `).bind(
+      crypto.randomUUID(),
+      snapshotId,
+      placement.canonicalUrl,
+      placement.canonicalUrl,
+      placement.observedTitle,
+      placement.zone,
+      placement.pageRank,
+      placement.x,
+      placement.y,
+      placement.width,
+      placement.height,
+      placement.aboveFold ? 1 : 0,
+      placement.moduleName,
+      placement.canonicalUrl,
+      placement.canonicalUrl,
+    ));
+    await runBatches(env.DB, observationStatements);
+
+    const uniqueUrls = [...new Set(placements.map((placement) => placement.canonicalUrl))];
+    const updateStatements = uniqueUrls.map((canonicalUrl) => env.DB.prepare(`
+      UPDATE articles
+      SET
+        homepage_placement = (
+          SELECT po.zone
+          FROM placement_observations po
+          JOIN homepage_snapshots hs ON hs.id = po.snapshot_id
+          WHERE po.article_id = articles.id
+          ORDER BY hs.observed_at DESC,
+            CASE po.zone WHEN 'top' THEN 4 WHEN 'main' THEN 3 WHEN 'section' THEN 2 ELSE 1 END DESC,
+            po.page_rank ASC
+          LIMIT 1
+        ),
+        homepage_rank = (
+          SELECT po.page_rank
+          FROM placement_observations po
+          JOIN homepage_snapshots hs ON hs.id = po.snapshot_id
+          WHERE po.article_id = articles.id
+          ORDER BY hs.observed_at DESC,
+            CASE po.zone WHEN 'top' THEN 4 WHEN 'main' THEN 3 WHEN 'section' THEN 2 ELSE 1 END DESC,
+            po.page_rank ASC
+          LIMIT 1
+        )
+      WHERE canonical_url = ?
+    `).bind(canonicalUrl));
+    await runBatches(env.DB, updateStatements);
+
+    const matched = await env.DB.prepare(`
+      SELECT COUNT(*) AS count
+      FROM placement_observations
+      WHERE snapshot_id = ? AND article_id IS NOT NULL
+    `).bind(snapshotId).first();
+    return jsonResponse({
+      snapshotId,
+      source: source.name,
+      observedAt: new Date(observedAt).toISOString(),
+      observed: placements.length,
+      matched: Number(matched?.count ?? 0),
+      unmatched: placements.length - Number(matched?.count ?? 0),
+    }, 201);
+  } catch (error) {
+    return jsonResponse({ error: error instanceof Error ? error.message : "홈페이지 관측을 저장하지 못했습니다." }, 400);
+  }
+}
+
+function normalizeArticleBody(value) {
+  return String(value ?? "")
+    .normalize("NFC")
+    .replace(/\u0000/g, "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+async function handleContentUpload(request, env) {
+  if (!env?.DB || !env?.CONTENT) return jsonResponse({ error: "비공개 본문 저장소가 아직 준비되지 않았습니다." }, 503);
+  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
+  if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "허용된 AgendaFrame 주소에서 보낸 요청만 처리합니다." }, 403);
+
+  let payload;
+  try {
+    payload = await readJsonPayload(request, 768 * 1024);
+  } catch (error) {
+    return jsonResponse({ error: error instanceof Error ? error.message : "본문 등록 형식을 확인해 주세요." }, 400);
+  }
+
+  try {
+    if (payload.rights_attested !== true) throw new Error("본문 분석 권한을 확인해야 합니다.");
+    const canonicalUrl = canonicalizeArticleUrl(payload.url);
+    const article = await env.DB.prepare(`
+      SELECT a.id, a.title, s.name AS source
+      FROM articles a
+      JOIN media_sources s ON s.id = a.source_id
+      WHERE a.canonical_url = ?
+    `).bind(canonicalUrl).first();
+    if (!article) throw new Error("먼저 동일한 원문 URL의 기사 메타데이터를 가져오세요.");
+
+    const acquisitionMethod = String(payload.acquisition_method ?? "").trim();
+    if (!CONTENT_ACQUISITION_METHODS.has(acquisitionMethod)) throw new Error("본문 확보 방식을 확인해 주세요.");
+    const usageBasis = String(payload.usage_basis ?? "").trim();
+    if (usageBasis.length < 10 || usageBasis.length > 500) throw new Error("이용 근거를 10~500자로 기록하세요.");
+    if (payload.analysis_allowed !== true) throw new Error("분석 허용 여부를 확인해야 합니다.");
+
+    const body = normalizeArticleBody(payload.body);
+    if (body.length < 300 || body.length > 200_000) throw new Error("본문은 300~200,000자 범위의 승인된 전문이어야 합니다.");
+    const acquiredAt = parseTimestamp(payload.acquired_at, "본문 확보 시각", new Date().toISOString());
+    const usageExpiresAt = payload.usage_expires_at ? parseTimestamp(payload.usage_expires_at, "이용 만료 시각") : null;
+    if (usageExpiresAt !== null && usageExpiresAt <= acquiredAt) throw new Error("이용 만료 시각은 확보 시각 이후여야 합니다.");
+    const extractorVersion = String(payload.extractor_version ?? "manual-upload-v1").trim().slice(0, 80) || "manual-upload-v1";
+    const publicEvidenceAllowed = payload.public_evidence_allowed === true;
+    const bodyHash = await sha256Hex(body);
+    const existing = await env.DB.prepare(`
+      SELECT id, object_key AS objectKey
+      FROM article_contents
+      WHERE article_id = ? AND body_hash = ?
+    `).bind(article.id, bodyHash).first();
+    const contentId = existing?.id ?? crypto.randomUUID();
+    const objectKey = existing?.objectKey ?? `article-content/${article.id}/${bodyHash}.txt`;
+
+    await env.CONTENT.put(objectKey, body, {
+      httpMetadata: { contentType: "text/plain; charset=utf-8" },
+      customMetadata: { articleId: article.id, acquisitionMethod },
+    });
+    await env.DB.prepare(`
+      INSERT INTO article_contents
+        (id, article_id, object_key, body_hash, body_characters, acquired_at, acquisition_method, usage_basis, usage_expires_at, analysis_allowed, public_evidence_allowed, extractor_version, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'active')
+      ON CONFLICT(article_id, body_hash) DO UPDATE SET
+        acquired_at = excluded.acquired_at,
+        acquisition_method = excluded.acquisition_method,
+        usage_basis = excluded.usage_basis,
+        usage_expires_at = excluded.usage_expires_at,
+        analysis_allowed = 1,
+        public_evidence_allowed = excluded.public_evidence_allowed,
+        extractor_version = excluded.extractor_version,
+        status = 'active'
+    `).bind(
+      contentId,
+      article.id,
+      objectKey,
+      bodyHash,
+      body.length,
+      acquiredAt,
+      acquisitionMethod,
+      usageBasis,
+      usageExpiresAt,
+      publicEvidenceAllowed ? 1 : 0,
+      extractorVersion,
+    ).run();
+
+    return jsonResponse({
+      contentId,
+      articleId: article.id,
+      source: article.source,
+      title: article.title,
+      bodyCharacters: body.length,
+      analysisAllowed: true,
+      publicEvidenceAllowed,
+      status: "active",
+    }, existing ? 200 : 201);
+  } catch (error) {
+    return jsonResponse({ error: error instanceof Error ? error.message : "본문을 등록하지 못했습니다." }, 400);
   }
 }
 
@@ -575,7 +880,15 @@ async function handleArticles(request, env) {
       a.published_at AS publishedAt,
       a.collected_at AS collectedAt,
       a.homepage_placement AS homepagePlacement,
-      a.homepage_rank AS homepageRank
+      a.homepage_rank AS homepageRank,
+      (SELECT COUNT(*) FROM placement_observations po WHERE po.article_id = a.id) AS placementObservationCount,
+      CASE WHEN EXISTS(
+        SELECT 1 FROM article_contents ac
+        WHERE ac.article_id = a.id
+          AND ac.status = 'active'
+          AND ac.analysis_allowed = 1
+          AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+      ) THEN 1 ELSE 0 END AS contentAvailable
     FROM articles a
     JOIN media_sources s ON s.id = a.source_id
     ${where}
@@ -611,6 +924,61 @@ async function runBatches(db, statements, size = 100) {
   for (let offset = 0; offset < statements.length; offset += size) {
     await db.batch(statements.slice(offset, offset + size));
   }
+}
+
+async function mapWithConcurrency(values, concurrency, task) {
+  const results = new Array(values.length);
+  let nextIndex = 0;
+  async function worker() {
+    while (nextIndex < values.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await task(values[index], index);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, values.length) }, () => worker()));
+  return results;
+}
+
+async function loadAuthorizedArticleContents(db, bucket, start, end, now = Date.now()) {
+  if (!bucket) return new Map();
+  const metadata = await db.prepare(`
+    SELECT
+      ac.id,
+      ac.article_id AS articleId,
+      ac.object_key AS objectKey,
+      ac.public_evidence_allowed AS publicEvidenceAllowed
+    FROM article_contents ac
+    JOIN articles a ON a.id = ac.article_id
+    WHERE
+      a.published_at >= ? AND a.published_at < ?
+      AND ac.status = 'active'
+      AND ac.analysis_allowed = 1
+      AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > ?)
+      AND ac.acquired_at = (
+        SELECT MAX(latest.acquired_at)
+        FROM article_contents latest
+        WHERE latest.article_id = ac.article_id
+          AND latest.status = 'active'
+          AND latest.analysis_allowed = 1
+          AND (latest.usage_expires_at IS NULL OR latest.usage_expires_at > ?)
+      )
+  `).bind(start, end, now, now).all();
+  const loaded = await mapWithConcurrency(metadata.results ?? [], 8, async (entry) => {
+    try {
+      const object = await bucket.get(entry.objectKey);
+      if (!object) return null;
+      return [entry.articleId, {
+        bodyText: await object.text(),
+        contentVersionId: entry.id,
+        publicEvidenceAllowed: Number(entry.publicEvidenceAllowed) === 1,
+      }];
+    } catch (error) {
+      console.error("AgendaFrame authorized content could not be loaded", { contentId: entry.id, error });
+      return null;
+    }
+  });
+  return new Map(loaded.filter(Boolean));
 }
 
 function kstDateFromMilliseconds(value) {
@@ -651,25 +1019,62 @@ async function handleAnalyze(request, env) {
     return jsonResponse({ error: error.message }, 400);
   }
   const start = Date.parse(`${targetDate}T00:00:00+09:00`);
-  const articleResult = await db.prepare(`
-    SELECT
-      a.id,
-      a.source_id AS sourceId,
-      s.name AS source,
-      a.title,
-      a.canonical_url AS url,
-      a.section,
-      a.published_at AS publishedAt,
-      a.collected_at AS collectedAt,
-      a.homepage_placement AS homepagePlacement,
-      a.homepage_rank AS homepageRank
-    FROM articles a
-    JOIN media_sources s ON s.id = a.source_id
-    WHERE a.published_at >= ? AND a.published_at < ?
-    ORDER BY a.published_at DESC, a.id DESC
-    LIMIT 2500
-  `).bind(start, start + 86_400_000).all();
-  const articles = articleResult.results ?? [];
+  const end = start + 86_400_000;
+  const [articleResult, placementResult, authorizedContents] = await Promise.all([
+    db.prepare(`
+      SELECT
+        a.id,
+        a.source_id AS sourceId,
+        s.name AS source,
+        a.title,
+        a.canonical_url AS url,
+        a.section,
+        a.published_at AS publishedAt,
+        a.collected_at AS collectedAt,
+        a.homepage_placement AS homepagePlacement,
+        a.homepage_rank AS homepageRank
+      FROM articles a
+      JOIN media_sources s ON s.id = a.source_id
+      WHERE a.published_at >= ? AND a.published_at < ?
+      ORDER BY a.published_at DESC, a.id DESC
+      LIMIT 2500
+    `).bind(start, end).all(),
+    db.prepare(`
+      SELECT
+        po.article_id AS articleId,
+        po.zone,
+        po.page_rank AS pageRank,
+        po.above_fold AS aboveFold,
+        hs.observed_at AS observedAt
+      FROM placement_observations po
+      JOIN homepage_snapshots hs ON hs.id = po.snapshot_id
+      WHERE po.article_id IS NOT NULL AND hs.observed_at >= ? AND hs.observed_at < ?
+      ORDER BY hs.observed_at ASC, po.page_rank ASC
+    `).bind(start, end).all(),
+    loadAuthorizedArticleContents(db, env.CONTENT, start, end),
+  ]);
+  const placementByArticle = new Map();
+  for (const observation of placementResult.results ?? []) {
+    const values = placementByArticle.get(observation.articleId) ?? [];
+    values.push({
+      zone: observation.zone,
+      pageRank: Number(observation.pageRank),
+      aboveFold: Number(observation.aboveFold) === 1,
+      observedAt: Number(observation.observedAt),
+    });
+    placementByArticle.set(observation.articleId, values);
+  }
+  const sourcePolicyById = new Map(sourcePanel.sources.map((source) => [source.id, source]));
+  const articles = (articleResult.results ?? []).map((article) => {
+    const sourcePolicy = sourcePolicyById.get(article.sourceId);
+    return {
+      ...article,
+      mediaGroupId: sourcePolicy?.mediaGroupId ?? article.sourceId,
+      sourceType: sourcePolicy?.sourceType ?? "unclassified",
+      placementObservations: placementByArticle.get(article.id) ?? [],
+      ...(authorizedContents.get(article.id) ?? {}),
+    };
+  });
   if (!articles.length) return jsonResponse({ error: `${targetDate}에 분석할 기사가 없습니다.` }, 400);
 
   const runId = crypto.randomUUID();
@@ -681,7 +1086,12 @@ async function handleAnalyze(request, env) {
   `).bind(runId, targetDate, ANALYSIS_PROVIDER, ANALYSIS_MODEL_VERSION, startedAt, articles.length).run();
 
   try {
-    const analyzed = analysisProvider.analyze(articles, { configuredSourceCount: sourcePanel.sources.filter((source) => source.active).length, maxIssues: 80 });
+    const activeSources = sourcePanel.sources.filter((source) => source.active);
+    const analyzed = analysisProvider.analyze(articles, {
+      configuredSourceCount: activeSources.length,
+      configuredSourceGroupCount: new Set(activeSources.map((source) => source.mediaGroupId ?? source.id)).size,
+      maxIssues: 80,
+    });
     const issueIds = await Promise.all(analyzed.map((issue, index) => sha256Hex(`${runId}:${index}:${issue.title}`)));
     const statements = [];
     analyzed.forEach((issue, index) => {
@@ -715,15 +1125,19 @@ async function handleAnalyze(request, env) {
       issue.frames.forEach((frame) => {
         statements.push(db.prepare(`
           INSERT INTO frame_analyses
-            (id, issue_id, frame, score, confidence, evidence_text, article_id, source_id, provider, model_version)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (id, issue_id, frame, score, confidence, evidence_basis, evidence_text, evidence_start, evidence_end, content_version_id, article_id, source_id, provider, model_version)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).bind(
           crypto.randomUUID(),
           issueId,
           frame.frame,
           frame.score,
           frame.confidence ?? 0,
+          frame.evidenceBasis ?? "headline",
           frame.evidenceText,
+          frame.evidenceStart ?? null,
+          frame.evidenceEnd ?? null,
+          frame.contentVersionId ?? null,
           frame.articleId,
           frame.sourceId,
           ANALYSIS_PROVIDER,
@@ -758,6 +1172,7 @@ async function handleAnalyze(request, env) {
       provider: ANALYSIS_PROVIDER,
       modelVersion: ANALYSIS_MODEL_VERSION,
       articleCount: articles.length,
+      authorizedBodyCount: authorizedContents.size,
       issueCount: analyzed.length,
       paidServicesUsed: false,
     }, 201);
@@ -918,8 +1333,15 @@ async function handleIssues(request, env) {
         id, issue_date AS issueDate, title, summary, category, article_count AS articleCount, source_count AS sourceCount,
         agenda_score AS agendaScore, diversity_score AS diversityScore, placement_score AS placementScore,
         volume_score AS volumeScore, repetition_score AS repetitionScore, confidence,
-        (SELECT COUNT(*) FROM issue_articles ia JOIN articles a ON a.id = ia.article_id WHERE ia.issue_id = issues.id AND a.homepage_placement IS NOT NULL) AS placementObservedCount,
-        (SELECT COUNT(*) FROM issue_articles ia WHERE ia.issue_id = issues.id) AS placementTotalCount
+        (SELECT COUNT(*) FROM issue_articles ia JOIN articles a ON a.id = ia.article_id WHERE ia.issue_id = issues.id AND (a.homepage_placement IS NOT NULL OR EXISTS(SELECT 1 FROM placement_observations po WHERE po.article_id = a.id))) AS placementObservedCount,
+        (SELECT COUNT(*) FROM issue_articles ia WHERE ia.issue_id = issues.id) AS placementTotalCount,
+         (SELECT COUNT(*) FROM issue_articles ia WHERE ia.issue_id = issues.id AND EXISTS(
+           SELECT 1 FROM article_contents ac
+           WHERE ac.article_id = ia.article_id
+             AND ac.status = 'active'
+             AND ac.analysis_allowed = 1
+             AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+         )) AS contentAvailableCount
       FROM issues
       WHERE ${where}
       ORDER BY agenda_score DESC, article_count DESC
@@ -945,8 +1367,15 @@ async function handleIssueDetail(request, issueId, env) {
       i.agenda_score AS agendaScore, i.diversity_score AS diversityScore, i.placement_score AS placementScore,
       i.volume_score AS volumeScore, i.repetition_score AS repetitionScore, i.confidence,
       r.id AS runId, r.target_date AS targetDate, r.provider, r.model_version AS modelVersion, r.finished_at AS analyzedAt,
-      (SELECT COUNT(*) FROM issue_articles observed_ia JOIN articles observed_a ON observed_a.id = observed_ia.article_id WHERE observed_ia.issue_id = i.id AND observed_a.homepage_placement IS NOT NULL) AS placementObservedCount,
-      (SELECT COUNT(*) FROM issue_articles total_ia WHERE total_ia.issue_id = i.id) AS placementTotalCount
+      (SELECT COUNT(*) FROM issue_articles observed_ia JOIN articles observed_a ON observed_a.id = observed_ia.article_id WHERE observed_ia.issue_id = i.id AND (observed_a.homepage_placement IS NOT NULL OR EXISTS(SELECT 1 FROM placement_observations po WHERE po.article_id = observed_a.id))) AS placementObservedCount,
+      (SELECT COUNT(*) FROM issue_articles total_ia WHERE total_ia.issue_id = i.id) AS placementTotalCount,
+      (SELECT COUNT(*) FROM issue_articles content_ia WHERE content_ia.issue_id = i.id AND EXISTS(
+        SELECT 1 FROM article_contents ac
+        WHERE ac.article_id = content_ia.article_id
+          AND ac.status = 'active'
+          AND ac.analysis_allowed = 1
+          AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+      )) AS contentAvailableCount
     FROM issues i
     JOIN analysis_runs r ON r.id = i.run_id
     WHERE i.id = ? AND r.status = 'success'
@@ -957,7 +1386,14 @@ async function handleIssueDetail(request, issueId, env) {
       SELECT
         a.id, s.name AS source, a.title, a.canonical_url AS url, a.section, a.published_at AS publishedAt,
         a.homepage_placement AS homepagePlacement, a.homepage_rank AS homepageRank,
-        ia.similarity, ia.representative
+        ia.similarity, ia.representative,
+        CASE WHEN EXISTS(
+          SELECT 1 FROM article_contents ac
+          WHERE ac.article_id = a.id
+            AND ac.status = 'active'
+            AND ac.analysis_allowed = 1
+            AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+        ) THEN 1 ELSE 0 END AS contentAvailable
       FROM issue_articles ia
       JOIN articles a ON a.id = ia.article_id
       JOIN media_sources s ON s.id = a.source_id
@@ -965,11 +1401,15 @@ async function handleIssueDetail(request, issueId, env) {
       ORDER BY ia.representative DESC, a.published_at DESC
     `).bind(issueId).all(),
     env.DB.prepare(`
-      SELECT fa.frame, fa.score, fa.confidence, fa.evidence_text AS evidenceText, s.name AS source,
-        fa.article_id AS articleId, a.canonical_url AS sourceUrl
+      SELECT fa.frame, fa.score, fa.confidence, fa.evidence_basis AS evidenceBasis,
+        fa.evidence_text AS evidenceText, fa.evidence_start AS evidenceStart, fa.evidence_end AS evidenceEnd,
+        s.name AS source, fa.article_id AS articleId, a.canonical_url AS sourceUrl,
+        ac.status AS contentStatus, ac.analysis_allowed AS contentAnalysisAllowed,
+        ac.public_evidence_allowed AS publicEvidenceAllowed, ac.usage_expires_at AS usageExpiresAt
       FROM frame_analyses fa
       LEFT JOIN media_sources s ON s.id = fa.source_id
       LEFT JOIN articles a ON a.id = fa.article_id
+      LEFT JOIN article_contents ac ON ac.id = fa.content_version_id
       WHERE fa.issue_id = ?
       ORDER BY fa.score DESC
     `).bind(issueId).all(),
@@ -991,11 +1431,26 @@ async function handleIssueDetail(request, issueId, env) {
   ]);
   const run = { id: issue.runId, targetDate: issue.targetDate, provider: issue.provider, modelVersion: issue.modelVersion, finishedAt: issue.analyzedAt };
   const publicArticles = articles.results ?? [];
-  const currentAnalysis = issue.modelVersion === ANALYSIS_MODEL_VERSION;
+  const currentAnalysis = COMPATIBLE_ANALYSIS_MODELS.has(issue.modelVersion);
   const publicFrames = currentAnalysis ? (frames.results ?? []).map((row) => {
     const frame = { ...row };
+    const publicBodyEvidenceIsActive = frame.evidenceBasis === "body_public"
+      && frame.contentStatus === "active"
+      && Number(frame.contentAnalysisAllowed) === 1
+      && Number(frame.publicEvidenceAllowed) === 1
+      && (frame.usageExpiresAt == null || Number(frame.usageExpiresAt) > Date.now());
+    if (frame.evidenceBasis === "body_private" || (frame.evidenceBasis === "body_public" && !publicBodyEvidenceIsActive)) {
+      frame.evidenceBasis = "body_private";
+      frame.evidenceText = "승인된 본문에서 감지한 신호입니다. 원문은 공개하지 않습니다.";
+      frame.evidenceStart = null;
+      frame.evidenceEnd = null;
+    }
     delete frame.confidence;
-    return { ...frame, calibrationStatus: "not_calibrated", evidenceBasis: "headline" };
+    delete frame.contentStatus;
+    delete frame.contentAnalysisAllowed;
+    delete frame.publicEvidenceAllowed;
+    delete frame.usageExpiresAt;
+    return { ...frame, calibrationStatus: "not_calibrated" };
   }) : [];
   const placementByWeight = { 4: "TOP", 3: "MAIN", 2: "SECTION", 1: "LIST", 0: "미확인" };
   const publicReport = currentAnalysis && report ? {
@@ -1244,7 +1699,7 @@ export async function handleApiRequest(request, env = {}) {
         status: "ok",
         mode: "demo",
         dataAsOf: null,
-        collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "awaiting_import" },
+        collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, authorizedContentCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "awaiting_import" },
         analysis: null,
         freshness,
         timestamps: { collectedAt: null, analyzedAt: null, publishedAt: null, nextScheduledAt: null },
@@ -1276,7 +1731,7 @@ export async function handleApiRequest(request, env = {}) {
       }, 200, { request });
     } catch (error) {
       console.error("AgendaFrame health query failed", error);
-      return jsonResponse({ status: "degraded", mode: "unavailable", dataAsOf: null, collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "storage_unavailable" }, analysis: null, freshness: { status: "analysis_pending", label: "분석 보류", staleDays: null }, timestamps: { collectedAt: null, analyzedAt: null, publishedAt: null, nextScheduledAt: null }, meta: responseMeta(null, "unavailable") }, 503, { request });
+      return jsonResponse({ status: "degraded", mode: "unavailable", dataAsOf: null, collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, authorizedContentCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "storage_unavailable" }, analysis: null, freshness: { status: "analysis_pending", label: "분석 보류", staleDays: null }, timestamps: { collectedAt: null, analyzedAt: null, publishedAt: null, nextScheduledAt: null }, meta: responseMeta(null, "unavailable") }, 503, { request });
     }
   }
   if (url.pathname === "/api/sources" && request.method === "GET") {
@@ -1284,9 +1739,10 @@ export async function handleApiRequest(request, env = {}) {
       const source = { ...entry };
       delete source.domains;
       delete source.providerOutletName;
+      delete source.samplePosition;
       return source;
     });
-    return jsonResponse({ panelVersion: sourcePanel.panelVersion, method: sourcePanel.collectionProvider, directCrawling: false, sources: publicSources, meta: responseMeta(null, env?.DB ? "live_metadata" : "demo") }, 200, { request, etag: true, cacheControl: "public, max-age=3600, must-revalidate" });
+    return jsonResponse({ panelVersion: sourcePanel.panelVersion, panelLabel: sourcePanel.panelLabel, excludedMediaTypes: sourcePanel.excludedMediaTypes, method: sourcePanel.collectionProvider, directCrawling: false, sources: publicSources, meta: responseMeta(null, env?.DB ? "live_metadata" : "demo") }, 200, { request, etag: true, cacheControl: "public, max-age=3600, must-revalidate" });
   }
   if (url.pathname === "/api/articles" && request.method === "GET") return handleArticles(request, env);
   const rollbackMatch = url.pathname.match(/^\/api\/analysis\/runs\/([^/]+)\/rollback$/);
@@ -1296,6 +1752,14 @@ export async function handleApiRequest(request, env = {}) {
   if (url.pathname.startsWith("/api/quality/reviews/")) return handleQualityReview(request, decodeURIComponent(url.pathname.slice("/api/quality/reviews/".length)), env);
   if (url.pathname === "/api/issues" && request.method === "GET") return handleIssues(request, env);
   if (url.pathname.startsWith("/api/issues/") && request.method === "GET") return handleIssueDetail(request, decodeURIComponent(url.pathname.slice("/api/issues/".length)), env);
+  if (url.pathname === "/api/observations/homepage") {
+    if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
+    return handleHomepageObservation(request, env);
+  }
+  if (url.pathname === "/api/content") {
+    if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
+    return handleContentUpload(request, env);
+  }
   if (url.pathname === "/api/import") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
     return handleImport(request, env);

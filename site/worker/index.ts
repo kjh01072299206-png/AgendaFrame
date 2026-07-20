@@ -6,9 +6,15 @@ import { configureSourcePanel, handleApiRequest, withDocumentSecurityHeaders, wi
 
 configureSourcePanel(sourcePanel);
 
+interface ContentBucket {
+  get(key: string): Promise<{ text(): Promise<string> } | null>;
+  put(key: string, value: string, options?: Record<string, unknown>): Promise<unknown>;
+}
+
 interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
+  CONTENT: ContentBucket;
   IMPORT_TOKEN?: string;
   IMAGES: {
     input(stream: ReadableStream): {

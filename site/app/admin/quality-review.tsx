@@ -4,6 +4,14 @@ import { useState } from "react";
 
 const SOURCES = ["한겨레", "경향신문", "한국일보", "중앙일보", "조선일보"] as const;
 
+function apiError(result: unknown, fallback: string) {
+  if (!result || typeof result !== "object") return fallback;
+  const error = (result as { error?: unknown }).error;
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && typeof (error as { message?: unknown }).message === "string") return (error as { message: string }).message;
+  return fallback;
+}
+
 type QueueIssue = {
   id: string;
   title: string;
@@ -150,7 +158,7 @@ export default function QualityReview({ token, analysisDate }: { token: string; 
     try {
       const response = await fetch(`/api/quality?date=${encodeURIComponent(analysisDate)}&limit=50`, { headers: authHeaders() });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error ?? "검증 목록을 불러오지 못했습니다.");
+      if (!response.ok) throw new Error(apiError(result, "검증 목록을 불러오지 못했습니다."));
       setIssues(result.issues ?? []);
       setMetrics(result.metrics ?? null);
       if (!result.issues?.length) {
@@ -184,7 +192,7 @@ export default function QualityReview({ token, analysisDate }: { token: string; 
         body: JSON.stringify({ ...form, flaggedArticleIds, missingArticles: completeMissing }),
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error ?? "검토 결과를 저장하지 못했습니다.");
+      if (!response.ok) throw new Error(apiError(result, "검토 결과를 저장하지 못했습니다."));
       setStatus(`저장 완료: 잘못 묶인 기사 ${result.misplacedCount}건 · 누락 기사 ${result.missingCount}건`);
       await loadQueue(detail.issue.id);
     } catch (error) {

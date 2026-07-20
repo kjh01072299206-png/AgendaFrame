@@ -1,8 +1,8 @@
 export const ANALYSIS_PROVIDER = "rules_local";
-export const ANALYSIS_MODEL_VERSION = "agenda-rules-v2";
+export const ANALYSIS_MODEL_VERSION = "agenda-rules-v3";
 export const CLUSTERING_VERSION = "event-anchors-complete-link-v2";
-export const SCORE_VERSION = "observed-agenda-v2";
-export const FRAME_TAXONOMY_VERSION = "headline-signals-v2";
+export const SCORE_VERSION = "observed-agenda-v3";
+export const FRAME_TAXONOMY_VERSION = "frame-signals-v3";
 
 const frameDefinitions = {
   conflict: { label: "갈등·대립", words: ["갈등", "충돌", "논란", "반발", "대립", "공방", "비판", "파문", "강대강", "규탄"] },
@@ -149,10 +149,20 @@ function representativeArticle(articles) {
 
 function placementScore(articles) {
   const values = { top: 100, main: 82, section: 58, list: 35 };
-  const observed = articles.map((article) => values[article.homepagePlacement]).filter(Number.isFinite);
+  const observedArticles = articles.flatMap((article) => {
+    const observations = Array.isArray(article.placementObservations) ? article.placementObservations : [];
+    if (observations.length) {
+      const scores = observations.map((observation) => values[observation.zone]).filter(Number.isFinite);
+      return scores.length ? [scores.reduce((sum, value) => sum + value, 0) / scores.length] : [];
+    }
+    const legacyValue = values[article.homepagePlacement];
+    return Number.isFinite(legacyValue) ? [legacyValue] : [];
+  });
+  const observationCount = articles.reduce((count, article) => count + (article.placementObservations?.length ?? (values[article.homepagePlacement] ? 1 : 0)), 0);
   return {
-    value: observed.length ? observed.reduce((sum, value) => sum + value, 0) / observed.length : null,
-    observedCount: observed.length,
+    value: observedArticles.length ? observedArticles.reduce((sum, value) => sum + value, 0) / observedArticles.length : null,
+    observedCount: observedArticles.length,
+    observationCount,
     totalCount: articles.length,
   };
 }
@@ -173,33 +183,73 @@ function weightedAgendaScore({ diversity, placement, volume, followUpVolume }) {
   };
 }
 
+function bodyEvidence(article, words) {
+  const body = String(article.bodyText ?? "");
+  if (!body) return null;
+  const matchedWord = words.find((word) => body.includes(word));
+  if (!matchedWord) return null;
+  const matchStart = body.indexOf(matchedWord);
+  const previousBoundary = Math.max(body.lastIndexOf("\n", matchStart), body.lastIndexOf(".", matchStart), body.lastIndexOf("다.", matchStart));
+  const nextCandidates = [body.indexOf("\n", matchStart), body.indexOf("다.", matchStart), body.indexOf(".", matchStart)]
+    .filter((value) => value >= matchStart);
+  const start = Math.max(0, previousBoundary + 1);
+  const rawEnd = nextCandidates.length ? Math.min(...nextCandidates) + 2 : Math.min(body.length, start + 280);
+  const end = Math.min(body.length, Math.max(start + matchedWord.length, rawEnd));
+  const excerpt = body.slice(start, end).trim().slice(0, 280);
+  return {
+    start,
+    end,
+    text: article.publicEvidenceAllowed
+      ? excerpt
+      : "승인된 본문에서 관련 표현을 확인했습니다. 근거 문장은 공개 검토 전입니다.",
+    basis: article.publicEvidenceAllowed ? "body_public" : "body_private",
+  };
+}
+
 function analyzeFrames(articles) {
   return Object.entries(frameDefinitions).map(([frame, definition]) => {
-    const evidence = articles.find((article) => definition.words.some((word) => article.title.includes(word))) ?? null;
-    const matchedArticles = articles.filter((article) => definition.words.some((word) => article.title.includes(word))).length;
+    const matches = articles.map((article) => {
+      const body = bodyEvidence(article, definition.words);
+      if (body) return { article, body, basis: body.basis };
+      if (definition.words.some((word) => article.title.includes(word))) return { article, body: null, basis: "headline" };
+      return null;
+    }).filter(Boolean);
+    const evidence = matches.find((match) => match.body) ?? matches[0] ?? null;
+    const bodyObservedCount = articles.filter((article) => Boolean(article.bodyText)).length;
     return {
       frame,
       label: definition.label,
-      score: Math.round((matchedArticles / Math.max(1, articles.length)) * 1000) / 10,
+      score: Math.round((matches.length / Math.max(1, articles.length)) * 1000) / 10,
       confidence: null,
       calibrationStatus: "not_calibrated",
-      evidenceBasis: "headline",
-      evidenceText: evidence?.title ?? null,
-      articleId: evidence?.id ?? null,
-      sourceId: evidence?.sourceId ?? null,
-      status: matchedArticles ? "headline_signal_detected" : "not_detected",
+      evidenceBasis: evidence?.basis ?? "headline",
+      evidenceText: evidence?.body?.text ?? evidence?.article?.title ?? null,
+      evidenceStart: evidence?.body?.start ?? null,
+      evidenceEnd: evidence?.body?.end ?? null,
+      contentVersionId: evidence?.body ? evidence.article.contentVersionId ?? null : null,
+      articleId: evidence?.article?.id ?? null,
+      sourceId: evidence?.article?.sourceId ?? null,
+      bodyObservedCount,
+      status: evidence?.body ? "body_signal_detected" : evidence ? "headline_signal_detected" : "not_detected",
     };
   });
 }
 
 function reportFor(issue, frames) {
-  const detected = frames.filter((frame) => frame.status === "headline_signal_detected").sort((a, b) => b.score - a.score);
+  const detected = frames.filter((frame) => frame.status !== "not_detected").sort((a, b) => b.score - a.score);
+  const bodyObservedCount = Math.max(0, ...frames.map((frame) => frame.bodyObservedCount ?? 0));
   return {
-    summary: detected.length
+    summary: detected.length && bodyObservedCount
+      ? `${issue.articleCount}건 중 승인된 본문 ${bodyObservedCount}건과 제목에서 ${detected[0].label} 관련 표현 단서를 확인했습니다. 구조화 프레임 판정 전 단계입니다.`
+      : detected.length
       ? `${issue.sourceCount}개 언론사의 ${issue.articleCount}건 제목에서 ${detected[0].label} 관련 표현이 상대적으로 자주 관측됐습니다. 기사 본문에 대한 판단이 아닙니다.`
       : "기사 제목에서 공개할 수 있는 프레임 신호가 확인되지 않았습니다.",
-    missingPerspective: "기사 본문을 저장·분석하지 않으므로 관점이나 취재원의 부재는 판단할 수 없습니다.",
-    caution: "제목 표현 기준 규칙 분석입니다. 언론사의 성향, 사실성, 보도의 옳고 그름을 판정하지 않습니다.",
+    missingPerspective: bodyObservedCount
+      ? "승인 본문이 없는 기사와 구조화되지 않은 취재원·책임·해법 요소는 판단하지 않습니다."
+      : "기사 본문을 저장·분석하지 않으므로 관점이나 취재원의 부재는 판단할 수 없습니다.",
+    caution: bodyObservedCount
+      ? "본문·제목 표현 기준 규칙 탐색입니다. Gemini 프레임 판정이나 사람 검토 결과가 아닙니다."
+      : "제목 표현 기준 규칙 분석입니다. 언론사의 성향, 사실성, 보도의 옳고 그름을 판정하지 않습니다.",
   };
 }
 
@@ -246,7 +296,7 @@ function clusterArticles(articles) {
   return clusters;
 }
 
-export function analyzeArticles(inputArticles, { configuredSourceCount = 5, maxIssues = 80 } = {}) {
+export function analyzeArticles(inputArticles, { configuredSourceCount = 5, configuredSourceGroupCount = configuredSourceCount, maxIssues = 80 } = {}) {
   const articles = inputArticles.map((article, index) => {
     const prepared = { ...article, _index: index, _tokens: titleTokens(article.title) };
     prepared._event = eventFeatures(prepared);
@@ -258,9 +308,13 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, maxI
   return groups
     .map((group) => {
       const sources = new Map();
-      for (const article of group) sources.set(article.sourceId, (sources.get(article.sourceId) ?? 0) + 1);
+      const mediaGroups = new Set();
+      for (const article of group) {
+        sources.set(article.sourceId, (sources.get(article.sourceId) ?? 0) + 1);
+        mediaGroups.add(article.mediaGroupId ?? article.sourceId);
+      }
       const representative = representativeArticle(group);
-      const diversity = Math.min(100, (sources.size / configuredSourceCount) * 100);
+      const diversity = Math.min(100, (mediaGroups.size / Math.max(1, configuredSourceGroupCount)) * 100);
       const placement = placementScore(group);
       const volume = Math.min(100, (Math.log1p(group.length) / Math.log1p(maxArticleCount)) * 100);
       const followUpVolume = group.length > 1 ? ((group.length - sources.size) / (group.length - 1)) * 100 : 0;
@@ -279,6 +333,7 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, maxI
         diversityScore: Math.round(diversity * 10) / 10,
         placementScore: placement.value === null ? null : Math.round(placement.value * 10) / 10,
         placementObservedCount: placement.observedCount,
+        placementObservationCount: placement.observationCount,
         placementTotalCount: placement.totalCount,
         volumeScore: Math.round(volume * 10) / 10,
         repetitionScore: Math.round(followUpVolume * 10) / 10,
@@ -292,8 +347,12 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, maxI
           delete cleanArticle._index;
           delete cleanArticle._tokens;
           delete cleanArticle._event;
+          delete cleanArticle.bodyText;
+          delete cleanArticle.publicEvidenceAllowed;
+          delete cleanArticle.contentVersionId;
           return {
             ...cleanArticle,
+            contentAvailable: Boolean(article.bodyText),
             similarity: article.id === representative.id ? 1 : Math.round(similarity(representative._tokens, article._tokens).jaccard * 1000) / 1000,
             membershipStatus: "included",
             representative: article.id === representative.id,

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": null,
+  "installCommand": null,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "https://agendaframe-capstone.kjh01072299206.chatgpt.site/"
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://agendaframe-capstone.kjh01072299206.chatgpt.site/:path*"
+    }
+  ]
+}
