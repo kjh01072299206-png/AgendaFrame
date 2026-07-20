@@ -118,6 +118,20 @@ test("clusters real-looking article titles and produces explainable scores", () 
   assert.throws(() => getAnalysisProvider("vertex_ai"), /지원하지 않는 분석 공급자/);
 });
 
+test("proxies both the Vercel root and nested routes to the validated origin", async () => {
+  const config = JSON.parse(await readFile(new URL("../vercel-proxy/vercel.json", import.meta.url), "utf8"));
+  assert.deepEqual(config.rewrites, [
+    {
+      source: "/",
+      destination: "https://agendaframe-capstone.kjh01072299206.chatgpt.site/",
+    },
+    {
+      source: "/:path*",
+      destination: "https://agendaframe-capstone.kjh01072299206.chatgpt.site/:path*",
+    },
+  ]);
+});
+
 test("uses repeated placement observations and keeps authorized body text private", () => {
   const privateBody = "정부 정책의 책임 소재를 두고 국회와 관계 부처가 서로 다른 설명을 내놓았다. 관계자는 후속 대책을 검토한다고 밝혔다.";
   const [issue] = analyzeArticles([
