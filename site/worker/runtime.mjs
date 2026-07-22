@@ -149,7 +149,7 @@ function publicIssue(row, run) {
     calibrationStatus: "not_calibrated",
     clusterQuality: legacy ? "review_required" : "not_human_reviewed",
     contentAvailableCount,
-    evidenceBasis: contentAvailableCount ? "authorized_body_and_metadata" : "headline_metadata_only",
+    evidenceBasis: contentAvailableCount ? "body_signals_and_metadata" : "headline_metadata_only",
   };
 }
 
@@ -157,9 +157,9 @@ function evidenceFirstComparison(issue, articles) {
   const contentAvailableCount = Number(issue.contentAvailableCount ?? articles.filter((article) => article.contentAvailable).length);
   return {
     status: "withheld_insufficient_evidence",
-    evidenceBasis: contentAvailableCount ? "authorized_body_signals_not_structured_comparison" : "headline_metadata_only",
+    evidenceBasis: contentAvailableCount ? "body_signals_not_structured_comparison" : "headline_metadata_only",
     reason: contentAvailableCount
-      ? `승인된 본문 ${contentAvailableCount}건에서 표현 단서를 확인했지만, 원인·책임·해법 비교는 구조화 분석과 사람 검토 전까지 보류합니다.`
+      ? `본문 분석 ${contentAvailableCount}건에서 표현 단서를 확인했지만, 원인·책임·해법 비교는 구조화 분석과 사람 검토 전까지 보류합니다.`
       : "기사 본문과 독립 출처 관계를 확인할 수 없어 공통 사실·설명 차이·취재원·추천을 생성하지 않았습니다.",
     frameElements: ["problem_definition", "causal_attribution", "evaluation", "treatment_recommendation"].map((element) => ({ element, status: "not_assessed", evidence: [] })),
     commonFacts: [],
@@ -338,7 +338,35 @@ async function collectionHealth(db) {
       (SELECT COUNT(DISTINCT article_id) FROM article_contents
         WHERE status = 'active'
           AND analysis_allowed = 1
-          AND (usage_expires_at IS NULL OR usage_expires_at > (unixepoch() * 1000))) AS authorized_content_count
+          AND (usage_expires_at IS NULL OR usage_expires_at > (unixepoch() * 1000))) AS authorized_content_count,
+      (SELECT COUNT(DISTINCT fa.article_id)
+        FROM frame_analyses fa
+        JOIN issues i ON i.id = fa.issue_id
+        WHERE fa.evidence_basis = 'body_transient'
+          AND i.run_id = (
+            SELECT id FROM analysis_runs
+            WHERE status = 'success'
+            ORDER BY target_date DESC, finished_at DESC
+            LIMIT 1
+          )) AS transient_evidence_count,
+      (SELECT COUNT(DISTINCT article_id) FROM (
+        SELECT ac.article_id AS article_id
+        FROM article_contents ac
+        WHERE ac.status = 'active'
+          AND ac.analysis_allowed = 1
+          AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+        UNION
+        SELECT fa.article_id AS article_id
+        FROM frame_analyses fa
+        JOIN issues i ON i.id = fa.issue_id
+        WHERE fa.evidence_basis = 'body_transient'
+          AND i.run_id = (
+            SELECT id FROM analysis_runs
+            WHERE status = 'success'
+            ORDER BY target_date DESC, finished_at DESC
+            LIMIT 1
+          )
+      )) AS body_evidence_count
   `).first();
   const latest = await db.prepare(`
     SELECT id, status, finished_at, article_count, duplicate_count
@@ -367,6 +395,8 @@ async function collectionHealth(db) {
       configuredSources: Number(summary?.configured_sources ?? sourcePanel.sources.length),
       articleCount,
       authorizedContentCount: Number(summary?.authorized_content_count ?? 0),
+      transientEvidenceCount: Number(summary?.transient_evidence_count ?? 0),
+      bodyEvidenceCount: Number(summary?.body_evidence_count ?? 0),
       latestSourceCount,
       latestInserted: Number(latest?.article_count ?? 0),
       latestDuplicates: Number(latest?.duplicate_count ?? 0),
@@ -942,8 +972,8 @@ async function handleContentUpload(request, env) {
   }
 }
 
-async function handleContentFetch(request, env) {
-  if (!env?.DB || !env?.CONTENT) return jsonResponse({ error: "비공개 본문 저장소가 아직 준비되지 않았습니다." }, 503);
+async function handleTransientAnalyze(request, env) {
+  if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503, { request });
   if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
   if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "허용된 AgendaFrame 주소에서 보낸 요청만 처리합니다." }, 403);
 
@@ -955,15 +985,9 @@ async function handleContentFetch(request, env) {
   }
 
   try {
-    if (payload.rights_attested !== true) throw new Error("본문 수집·분석 권한을 확인해야 합니다.");
+    if (payload.transient_analysis_acknowledged !== true) throw new Error("공개 기사만 임시 분석하고 접근 제한을 우회하지 않는 조건을 확인해야 합니다.");
     const targetDate = await resolveAnalysisDate(env.DB, String(payload.date ?? "").trim());
-    const limit = integerInRange(payload.limit ?? 10, 1, ARTICLE_FETCH_LIMIT, "본문 수집 건수");
-    const usageBasis = String(payload.usage_basis ?? "").trim();
-    if (usageBasis.length < 10 || usageBasis.length > 500) throw new Error("이용 근거를 10~500자로 기록하세요.");
-    const publicEvidenceAllowed = payload.public_evidence_allowed === true;
-    const usageExpiresAt = payload.usage_expires_at ? parseTimestamp(payload.usage_expires_at, "이용 만료 시각") : null;
-    const acquiredAt = Date.now();
-    if (usageExpiresAt !== null && usageExpiresAt <= acquiredAt) throw new Error("이용 만료 시각은 현재 이후여야 합니다.");
+    const limit = integerInRange(payload.limit ?? 10, 1, ARTICLE_FETCH_LIMIT, "임시 분석 건수");
     const start = Date.parse(`${targetDate}T00:00:00+09:00`);
     const end = start + 86_400_000;
     const selected = await env.DB.prepare(`
@@ -975,42 +999,30 @@ async function handleContentFetch(request, env) {
         s.name AS source
       FROM articles a
       JOIN media_sources s ON s.id = a.source_id
-      WHERE
-        a.published_at >= ? AND a.published_at < ?
-        AND NOT EXISTS (
-          SELECT 1
-          FROM article_contents ac
-          WHERE ac.article_id = a.id
-            AND ac.status = 'active'
-            AND ac.analysis_allowed = 1
-            AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > ?)
-        )
+      WHERE a.published_at >= ? AND a.published_at < ?
       ORDER BY
         CASE a.homepage_placement WHEN 'top' THEN 4 WHEN 'main' THEN 3 WHEN 'section' THEN 2 ELSE 1 END DESC,
         a.homepage_rank ASC,
         a.published_at DESC
       LIMIT ?
-    `).bind(start, end, acquiredAt, limit).all();
+    `).bind(start, end, limit).all();
     const articles = selected.results ?? [];
     const results = await mapWithConcurrency(articles, ARTICLE_FETCH_CONCURRENCY, async (article) => {
       try {
         const source = sourceForArticle(article);
         const { html } = await fetchArticleHtml(article.canonicalUrl, source, env);
         const body = extractArticleBodyFromHtml(html);
-        const stored = await storeAuthorizedArticleContent(env, article, body, {
-          acquiredAt,
-          acquisitionMethod: "authorized_crawl",
-          usageBasis,
-          usageExpiresAt,
-          publicEvidenceAllowed,
-          extractorVersion: ARTICLE_EXTRACTOR_VERSION,
-        });
         return {
           articleId: article.id,
           source: article.source,
           title: article.title,
-          status: stored.existing ? "unchanged" : "stored",
-          bodyCharacters: stored.bodyCharacters,
+          status: "ready",
+          content: {
+            bodyText: body,
+            contentVersionId: null,
+            publicEvidenceAllowed: false,
+            transientContent: true,
+          },
         };
       } catch (error) {
         return {
@@ -1022,17 +1034,46 @@ async function handleContentFetch(request, env) {
         };
       }
     });
+    const ready = results.filter((result) => result.status === "ready");
+    const publicResults = results.map((result) => {
+      const publicResult = { ...result };
+      delete publicResult.content;
+      return publicResult;
+    });
+    if (!ready.length) {
+      return jsonResponse({
+        error: "임시 분석할 수 있는 공개 기사 본문을 가져오지 못했습니다.",
+        date: targetDate,
+        requested: articles.length,
+        failed: results.filter((result) => result.status === "failed").length,
+        results: publicResults,
+      }, 422, { request });
+    }
+    const contentOverrides = new Map(ready.map((result) => [result.articleId, result.content]));
+    const analysisHeaders = new Headers({ "content-type": "application/json" });
+    for (const name of ["authorization", "origin", "sec-fetch-site"]) {
+      const value = request.headers.get(name);
+      if (value) analysisHeaders.set(name, value);
+    }
+    const analysisResponse = await handleAnalyze(new Request(new URL("/api/analyze", request.url), {
+      method: "POST",
+      headers: analysisHeaders,
+      body: JSON.stringify({ date: targetDate }),
+    }), env, { contentOverrides, includeStoredContents: false });
+    const analysis = await analysisResponse.json();
+    if (!analysisResponse.ok) return jsonResponse(analysis, analysisResponse.status, { request });
     return jsonResponse({
       date: targetDate,
       requested: articles.length,
-      stored: results.filter((result) => result.status === "stored").length,
-      unchanged: results.filter((result) => result.status === "unchanged").length,
+      analyzedBodies: ready.length,
+      bodyStorageCount: 0,
       failed: results.filter((result) => result.status === "failed").length,
       extractorVersion: ARTICLE_EXTRACTOR_VERSION,
-      results,
-    }, 200, { request });
+      results: publicResults,
+      analysis,
+    }, 201, { request });
   } catch (error) {
-    return jsonResponse({ error: error instanceof Error ? error.message : "본문을 가져오지 못했습니다." }, 400, { request });
+    return jsonResponse({ error: error instanceof Error ? error.message : "본문 임시 분석을 완료하지 못했습니다." }, 400, { request });
   }
 }
 
@@ -1228,7 +1269,7 @@ async function resolveAnalysisDate(db, requestedDate) {
   return resolved;
 }
 
-async function handleAnalyze(request, env) {
+async function handleAnalyze(request, env, { contentOverrides = new Map(), includeStoredContents = true } = {}) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
   if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
 
@@ -1280,8 +1321,9 @@ async function handleAnalyze(request, env) {
       WHERE po.article_id IS NOT NULL AND hs.observed_at >= ? AND hs.observed_at < ?
       ORDER BY hs.observed_at ASC, po.page_rank ASC
     `).bind(start, end).all(),
-    loadAuthorizedArticleContents(db, env.CONTENT, start, end),
+    includeStoredContents ? loadAuthorizedArticleContents(db, env.CONTENT, start, end) : Promise.resolve(new Map()),
   ]);
+  const analysisContents = new Map([...authorizedContents, ...contentOverrides]);
   const placementByArticle = new Map();
   for (const observation of placementResult.results ?? []) {
     const values = placementByArticle.get(observation.articleId) ?? [];
@@ -1301,7 +1343,7 @@ async function handleAnalyze(request, env) {
       mediaGroupId: sourcePolicy?.mediaGroupId ?? article.sourceId,
       sourceType: sourcePolicy?.sourceType ?? "unclassified",
       placementObservations: placementByArticle.get(article.id) ?? [],
-      ...(authorizedContents.get(article.id) ?? {}),
+      ...(analysisContents.get(article.id) ?? {}),
     };
   });
   if (!articles.length) return jsonResponse({ error: `${targetDate}에 분석할 기사가 없습니다.` }, 400);
@@ -1402,6 +1444,8 @@ async function handleAnalyze(request, env) {
       modelVersion: ANALYSIS_MODEL_VERSION,
       articleCount: articles.length,
       authorizedBodyCount: authorizedContents.size,
+      transientBodyCount: contentOverrides.size,
+      bodyEvidenceCount: analysisContents.size,
       issueCount: analyzed.length,
       paidServicesUsed: false,
     }, 201);
@@ -1564,12 +1608,19 @@ async function handleIssues(request, env) {
         volume_score AS volumeScore, repetition_score AS repetitionScore, confidence,
         (SELECT COUNT(*) FROM issue_articles ia JOIN articles a ON a.id = ia.article_id WHERE ia.issue_id = issues.id AND (a.homepage_placement IS NOT NULL OR EXISTS(SELECT 1 FROM placement_observations po WHERE po.article_id = a.id))) AS placementObservedCount,
         (SELECT COUNT(*) FROM issue_articles ia WHERE ia.issue_id = issues.id) AS placementTotalCount,
-         (SELECT COUNT(*) FROM issue_articles ia WHERE ia.issue_id = issues.id AND EXISTS(
-           SELECT 1 FROM article_contents ac
-           WHERE ac.article_id = ia.article_id
-             AND ac.status = 'active'
-             AND ac.analysis_allowed = 1
-             AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+         (SELECT COUNT(*) FROM issue_articles ia WHERE ia.issue_id = issues.id AND (
+           EXISTS(
+             SELECT 1 FROM article_contents ac
+             WHERE ac.article_id = ia.article_id
+               AND ac.status = 'active'
+               AND ac.analysis_allowed = 1
+               AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+           ) OR EXISTS(
+             SELECT 1 FROM frame_analyses fa
+             WHERE fa.issue_id = issues.id
+               AND fa.article_id = ia.article_id
+               AND fa.evidence_basis = 'body_transient'
+           )
          )) AS contentAvailableCount
       FROM issues
       WHERE ${where}
@@ -1598,12 +1649,19 @@ async function handleIssueDetail(request, issueId, env) {
       r.id AS runId, r.target_date AS targetDate, r.provider, r.model_version AS modelVersion, r.finished_at AS analyzedAt,
       (SELECT COUNT(*) FROM issue_articles observed_ia JOIN articles observed_a ON observed_a.id = observed_ia.article_id WHERE observed_ia.issue_id = i.id AND (observed_a.homepage_placement IS NOT NULL OR EXISTS(SELECT 1 FROM placement_observations po WHERE po.article_id = observed_a.id))) AS placementObservedCount,
       (SELECT COUNT(*) FROM issue_articles total_ia WHERE total_ia.issue_id = i.id) AS placementTotalCount,
-      (SELECT COUNT(*) FROM issue_articles content_ia WHERE content_ia.issue_id = i.id AND EXISTS(
-        SELECT 1 FROM article_contents ac
-        WHERE ac.article_id = content_ia.article_id
-          AND ac.status = 'active'
-          AND ac.analysis_allowed = 1
-          AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+      (SELECT COUNT(*) FROM issue_articles content_ia WHERE content_ia.issue_id = i.id AND (
+        EXISTS(
+          SELECT 1 FROM article_contents ac
+          WHERE ac.article_id = content_ia.article_id
+            AND ac.status = 'active'
+            AND ac.analysis_allowed = 1
+            AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+        ) OR EXISTS(
+          SELECT 1 FROM frame_analyses fa
+          WHERE fa.issue_id = i.id
+            AND fa.article_id = content_ia.article_id
+            AND fa.evidence_basis = 'body_transient'
+        )
       )) AS contentAvailableCount
     FROM issues i
     JOIN analysis_runs r ON r.id = i.run_id
@@ -1622,6 +1680,11 @@ async function handleIssueDetail(request, issueId, env) {
             AND ac.status = 'active'
             AND ac.analysis_allowed = 1
             AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+        ) OR EXISTS(
+          SELECT 1 FROM frame_analyses fa
+          WHERE fa.issue_id = ia.issue_id
+            AND fa.article_id = a.id
+            AND fa.evidence_basis = 'body_transient'
         ) THEN 1 ELSE 0 END AS contentAvailable
       FROM issue_articles ia
       JOIN articles a ON a.id = ia.article_id
@@ -1668,6 +1731,11 @@ async function handleIssueDetail(request, issueId, env) {
       && Number(frame.contentAnalysisAllowed) === 1
       && Number(frame.publicEvidenceAllowed) === 1
       && (frame.usageExpiresAt == null || Number(frame.usageExpiresAt) > Date.now());
+    if (frame.evidenceBasis === "body_transient") {
+      frame.evidenceText = "기사 본문을 메모리에서 임시 분석해 감지한 표현 단서입니다. 전문과 원문 문장은 저장하지 않았습니다.";
+      frame.evidenceStart = null;
+      frame.evidenceEnd = null;
+    }
     if (frame.evidenceBasis === "body_private" || (frame.evidenceBasis === "body_public" && !publicBodyEvidenceIsActive)) {
       frame.evidenceBasis = "body_private";
       frame.evidenceText = "승인된 본문에서 감지한 신호입니다. 원문은 공개하지 않습니다.";
@@ -1928,7 +1996,7 @@ export async function handleApiRequest(request, env = {}) {
         status: "ok",
         mode: "demo",
         dataAsOf: null,
-        collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, authorizedContentCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "awaiting_import" },
+        collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, authorizedContentCount: 0, transientEvidenceCount: 0, bodyEvidenceCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "awaiting_import" },
         analysis: null,
         freshness,
         timestamps: { collectedAt: null, analyzedAt: null, publishedAt: null, nextScheduledAt: null },
@@ -1960,7 +2028,7 @@ export async function handleApiRequest(request, env = {}) {
       }, 200, { request });
     } catch (error) {
       console.error("AgendaFrame health query failed", error);
-      return jsonResponse({ status: "degraded", mode: "unavailable", dataAsOf: null, collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, authorizedContentCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "storage_unavailable" }, analysis: null, freshness: { status: "analysis_pending", label: "분석 보류", staleDays: null }, timestamps: { collectedAt: null, analyzedAt: null, publishedAt: null, nextScheduledAt: null }, meta: responseMeta(null, "unavailable") }, 503, { request });
+      return jsonResponse({ status: "degraded", mode: "unavailable", dataAsOf: null, collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, authorizedContentCount: 0, transientEvidenceCount: 0, bodyEvidenceCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "storage_unavailable" }, analysis: null, freshness: { status: "analysis_pending", label: "분석 보류", staleDays: null }, timestamps: { collectedAt: null, analyzedAt: null, publishedAt: null, nextScheduledAt: null }, meta: responseMeta(null, "unavailable") }, 503, { request });
     }
   }
   if (url.pathname === "/api/sources" && request.method === "GET") {
@@ -1989,9 +2057,9 @@ export async function handleApiRequest(request, env = {}) {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
     return handleContentUpload(request, env);
   }
-  if (url.pathname === "/api/content/fetch") {
+  if (url.pathname === "/api/analyze/transient") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
-    return handleContentFetch(request, env);
+    return handleTransientAnalyze(request, env);
   }
   if (url.pathname === "/api/import") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
