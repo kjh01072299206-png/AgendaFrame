@@ -5,7 +5,7 @@ import test from "node:test";
 import sourcePanel from "../data/sources.json" with { type: "json" };
 import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, analyzeArticles, titleTokens } from "../worker/analysis.mjs";
 import { getAnalysisProvider } from "../worker/analysis-provider.mjs";
-import { calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, configureSourcePanel, enumerateKstDates, handleApiRequest, validateImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
+import { calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, configureSourcePanel, enumerateKstDates, extractArticleBodyFromHtml, handleApiRequest, validateImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
 
 configureSourcePanel(sourcePanel);
 
@@ -21,6 +21,7 @@ test("builds the real React dashboard and admin application", async () => {
   assert.match(worker, /agenda-rules-v3/);
   assert.match(worker, /\/api\/quality/);
   assert.match(worker, /\/api\/analysis\/runs/);
+  assert.match(worker, /\/api\/content\/fetch/);
 });
 
 test("keeps the public dashboard readable, evidence-first, and explicit about limits", async () => {
@@ -224,6 +225,78 @@ test("stores only attested article bodies in the private object binding", async 
   assert.equal(unattested.status, 400);
   assert.match((await unattested.json()).error.message, /권한/);
   assert.equal(objects.length, 1);
+});
+
+test("extracts a full article body from publisher JSON-LD and rejects explicit paywalls", () => {
+  const body = "정부는 정책 변경의 배경과 시행 일정을 설명했고 국회와 시민단체는 책임 소재와 보완 대책을 각각 제시했다. ".repeat(12).trim();
+  const html = `<html><head><script type="application/ld+json">${JSON.stringify({ "@type": "NewsArticle", isAccessibleForFree: true, articleBody: body })}</script></head><body><article>짧은 화면 요약</article></body></html>`;
+  assert.equal(extractArticleBodyFromHtml(html), body);
+  const paid = `<script type="application/ld+json">${JSON.stringify({ "@type": "NewsArticle", isAccessibleForFree: false, articleBody: body })}</script>`;
+  assert.throws(() => extractArticleBodyFromHtml(paid), /유료|구독/);
+});
+
+test("fetches attested article bodies from official URLs into private storage", async () => {
+  const statements = [];
+  const objects = [];
+  const requested = [];
+  const article = {
+    id: "article-fetch-1",
+    sourceId: "hani",
+    source: "한겨레",
+    title: "정부 정책 변경 배경과 후속 대책",
+    canonicalUrl: "https://www.hani.co.kr/arti/politics/fetch-test.html",
+  };
+  const DB = {
+    prepare(sql) {
+      return {
+        bind(...parameters) {
+          statements.push({ sql, parameters });
+          if (sql.includes("FROM articles a") && sql.includes("NOT EXISTS")) return { all: async () => ({ results: [article] }) };
+          if (sql.includes("FROM article_contents") && sql.includes("body_hash")) return { first: async () => null };
+          if (sql.includes("INSERT INTO article_contents")) return { run: async () => ({ success: true }) };
+          throw new Error(`Unexpected SQL: ${sql}`);
+        },
+      };
+    },
+  };
+  const CONTENT = { put: async (key, value, options) => objects.push({ key, value, options }) };
+  const body = "정부는 정책 변경의 배경과 시행 일정을 설명했다. 국회와 시민단체는 책임 소재와 보완 대책을 각각 제시했다. ".repeat(12).trim();
+  const ARTICLE_FETCHER = {
+    fetch: async (url, options) => {
+      requested.push({ url, options });
+      return new Response(`<script type="application/ld+json">${JSON.stringify({ "@type": "NewsArticle", isAccessibleForFree: true, articleBody: body })}</script>`, { headers: { "content-type": "text/html; charset=utf-8" } });
+    },
+  };
+  const request = new Request("https://example.test/api/content/fetch", {
+    method: "POST",
+    headers: { authorization: "Bearer correct", origin: "https://example.test", "sec-fetch-site": "same-origin", "content-type": "application/json" },
+    body: JSON.stringify({
+      date: "2026-07-19",
+      limit: 5,
+      usage_basis: "언론사와 합의한 연구용 자동 분석 범위",
+      public_evidence_allowed: false,
+      rights_attested: true,
+    }),
+  });
+  const response = await handleApiRequest(request, { DB, CONTENT, ARTICLE_FETCHER, IMPORT_TOKEN: "correct" });
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.equal(result.stored, 1);
+  assert.equal(result.failed, 0);
+  assert.equal(objects.length, 1);
+  assert.equal(objects[0].value, body);
+  assert.equal(requested[0].url, article.canonicalUrl);
+  assert.equal(requested[0].options.redirect, "manual");
+  assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO article_contents")));
+
+  const unattested = await handleApiRequest(new Request("https://example.test/api/content/fetch", {
+    method: "POST",
+    headers: { authorization: "Bearer correct", origin: "https://example.test", "sec-fetch-site": "same-origin", "content-type": "application/json" },
+    body: JSON.stringify({ date: "2026-07-19", limit: 5, usage_basis: "승인되지 않은 테스트 요청", rights_attested: false }),
+  }), { DB, CONTENT, ARTICLE_FETCHER, IMPORT_TOKEN: "correct" });
+  assert.equal(unattested.status, 400);
+  assert.match((await unattested.json()).error.message, /권한/);
+  assert.equal(requested.length, 1);
 });
 
 test("accepts authenticated homepage geometry as repeated observations", async () => {
