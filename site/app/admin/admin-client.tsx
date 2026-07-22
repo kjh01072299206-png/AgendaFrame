@@ -209,6 +209,10 @@ export default function AdminClient() {
   const [usageBasis, setUsageBasis] = useState("");
   const [rightsAttested, setRightsAttested] = useState(false);
   const [publicEvidenceAllowed, setPublicEvidenceAllowed] = useState(false);
+  const [fetchUsageBasis, setFetchUsageBasis] = useState("");
+  const [fetchRightsAttested, setFetchRightsAttested] = useState(false);
+  const [fetchPublicEvidenceAllowed, setFetchPublicEvidenceAllowed] = useState(false);
+  const [fetchLimit, setFetchLimit] = useState("10");
   const [rangeStart, setRangeStart] = useState(() => moveDate(todayKst, -6));
   const [rangeEnd, setRangeEnd] = useState(todayKst);
   const [batchDays, setBatchDays] = useState<AnalysisDay[]>([]);
@@ -313,6 +317,52 @@ export default function AdminClient() {
       setPublicEvidenceAllowed(false);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "본문을 등록하지 못했습니다.");
+    } finally { setBusy(false); }
+  }
+
+  async function fetchAuthorizedContent(event: FormEvent) {
+    event.preventDefault();
+    if (!token.trim()) return setStatus("관리자 토큰을 입력하세요.");
+    if (!fetchRightsAttested) return setStatus("본문을 수집·분석할 수 있는 권한을 먼저 확인하세요.");
+    setBusy(true);
+    setStatus(`${analysisDate} 기사 URL에서 승인된 본문을 가져오는 중…`);
+    try {
+      const response = await fetch("/api/content/fetch", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token.trim()}`, "content-type": "application/json" },
+        body: JSON.stringify({
+          date: analysisDate,
+          limit: Number(fetchLimit),
+          usage_basis: fetchUsageBasis,
+          public_evidence_allowed: fetchPublicEvidenceAllowed,
+          rights_attested: fetchRightsAttested,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(apiError(result, "본문을 가져오지 못했습니다."));
+      let analysisNote = "";
+      if (Number(result.stored ?? 0) > 0) {
+        setStatus(`본문 ${Number(result.stored).toLocaleString("ko-KR")}건 저장 완료 · 분석 결과 갱신 중…`);
+        const analysisResponse = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { authorization: `Bearer ${token.trim()}`, "content-type": "application/json" },
+          body: JSON.stringify({ date: analysisDate }),
+        });
+        const analysisResult = await analysisResponse.json();
+        if (!analysisResponse.ok) throw new Error(`본문은 저장됐지만 분석 갱신에 실패했습니다. ${apiError(analysisResult, "분석을 다시 실행해 주세요.")}`);
+        analysisNote = ` · 갱신 이슈 ${Number(analysisResult.issueCount ?? 0).toLocaleString("ko-KR")}개`;
+      }
+      const firstFailure = Array.isArray(result.results)
+        ? result.results.find((entry: { status?: string; reason?: string }) => entry.status === "failed")
+        : null;
+      const failureNote = firstFailure?.reason ? ` · 첫 실패: ${firstFailure.reason}` : "";
+      setStatus(`본문 가져오기 완료: 등록 ${Number(result.stored ?? 0).toLocaleString("ko-KR")}건 · 기존 ${Number(result.unchanged ?? 0).toLocaleString("ko-KR")}건 · 실패 ${Number(result.failed ?? 0).toLocaleString("ko-KR")}건${analysisNote}${failureNote}`);
+      if (Number(result.failed ?? 0) === 0) {
+        setFetchRightsAttested(false);
+        setFetchPublicEvidenceAllowed(false);
+      }
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "본문을 가져오지 못했습니다.");
     } finally { setBusy(false); }
   }
 
@@ -426,7 +476,20 @@ export default function AdminClient() {
       </section>
 
       <section className="import-card content-card" aria-labelledby="content-title">
-        <header><div><p className="eyebrow">STEP 02</p><h2 id="content-title">승인된 본문 등록</h2></div><span className="private-badge">비공개 분석 전용</span></header>
+        <header><div><p className="eyebrow">STEP 02</p><h2 id="content-title">승인된 본문 확보</h2></div><span className="private-badge">비공개 분석 전용</span></header>
+        <form className="content-form content-fetch-form" onSubmit={fetchAuthorizedContent}>
+          <div className="content-subheading"><div><h3>기사 URL에서 자동 가져오기</h3><p>선택한 날짜의 기사 중 아직 본문이 없는 기사부터 가져옵니다.</p></div><span>최대 20건</span></div>
+          <div className="content-fields">
+            <label><span>대상 날짜 (KST)</span><input type="date" value={analysisDate} onChange={(event) => setAnalysisDate(event.target.value)} required /></label>
+            <label><span>이번 실행 건수</span><select value={fetchLimit} onChange={(event) => setFetchLimit(event.target.value)}><option value="5">5건</option><option value="10">10건</option><option value="20">20건</option></select></label>
+          </div>
+          <label><span>수집·분석 이용 근거</span><input value={fetchUsageBasis} onChange={(event) => setFetchUsageBasis(event.target.value)} minLength={10} maxLength={500} placeholder="언론사 허가·라이선스·승인된 연구 범위를 기록" required /></label>
+          <p className="field-help">공식 언론사 HTTPS 주소의 공개 HTML만 요청합니다. 로그인·유료벽·다른 도메인 리디렉션은 우회하지 않으며, 추출한 전문은 공개 API에 제공하지 않습니다.</p>
+          <label className="consent-row"><input type="checkbox" checked={fetchRightsAttested} onChange={(event) => setFetchRightsAttested(event.target.checked)} /><span>선택한 기사 본문을 자동 수집·저장·분석할 권한 또는 명확한 이용 근거를 확인했습니다.</span></label>
+          <label className="consent-row"><input type="checkbox" checked={fetchPublicEvidenceAllowed} onChange={(event) => setFetchPublicEvidenceAllowed(event.target.checked)} /><span>짧은 근거 문장의 공개가 허용된 자료입니다. 선택하지 않으면 근거 문장을 숨깁니다.</span></label>
+          <button className="import-submit" type="submit" disabled={busy || !fetchRightsAttested || fetchUsageBasis.trim().length < 10}>{busy ? "처리 중…" : "승인 본문 자동 가져오기"}</button>
+        </form>
+        <div className="content-divider"><span>또는 본문 직접 등록</span></div>
         <form className="content-form" onSubmit={registerContent}>
           <label><span>이미 가져온 기사 URL</span><input type="url" value={contentUrl} onChange={(event) => setContentUrl(event.target.value)} placeholder="https://언론사.example/article" required /></label>
           <div className="content-fields">
