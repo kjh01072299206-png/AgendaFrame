@@ -29,7 +29,7 @@
 
 1. BigKinds 또는 이용 조건이 확인된 제공처에서 기간과 등록된 22개 매체를 선택해 Excel·CSV를 내려받습니다.
 2. `/admin`에서 `IMPORT_TOKEN`을 입력하고 파일을 가져옵니다.
-3. 이용 권한이 확인된 기사만 승인 본문으로 별도 등록합니다.
+3. 이용 권한이 확인된 기사만 관리자 화면에서 공식 원문 URL로 제한 수집하거나 승인 본문을 직접 등록합니다.
 4. 같은 화면에서 하루 분석 또는 최대 7일 기간 분석을 실행합니다. 기간 분석은 완료된 날짜를 건너뜁니다.
 5. 품질 검증에서 상위 이슈 30~50개를 검토하고 오류·누락 기사를 기록합니다.
 6. 공개 화면에서 이슈와 원문 링크를 확인합니다.
@@ -50,6 +50,7 @@
 | `POST /api/import` | 기사 메타데이터 가져오기 | Bearer `IMPORT_TOKEN` |
 | `POST /api/observations/homepage` | 홈페이지 배치 관측 저장 | Bearer `IMPORT_TOKEN` |
 | `POST /api/content` | 승인된 기사 전문 비공개 등록 | Bearer `IMPORT_TOKEN` |
+| `POST /api/content/fetch` | 승인된 공식 기사 URL의 본문 제한 수집 | Bearer `IMPORT_TOKEN` |
 | `POST /api/analyze` | 특정 KST 날짜 분석 생성 | Bearer `IMPORT_TOKEN` |
 | `GET /api/analysis/runs` | 기간별 최신 분석·기사 상태 | Bearer `IMPORT_TOKEN` |
 | `GET /api/quality` | 검증 목록·추정 품질 지표 | Bearer `IMPORT_TOKEN` |
