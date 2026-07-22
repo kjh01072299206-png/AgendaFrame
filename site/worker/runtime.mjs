@@ -543,6 +543,11 @@ async function handleImport(request, env) {
 
 const PLACEMENT_ZONES = new Set(["top", "main", "section", "list"]);
 const CONTENT_ACQUISITION_METHODS = new Set(["licensed_export", "publisher_api", "authorized_crawl", "manual_research"]);
+const ARTICLE_FETCH_LIMIT = 20;
+const ARTICLE_FETCH_CONCURRENCY = 2;
+const ARTICLE_HTML_MAX_BYTES = 2 * 1024 * 1024;
+const ARTICLE_REDIRECT_LIMIT = 3;
+const ARTICLE_EXTRACTOR_VERSION = "authorized-jsonld-v1";
 
 function integerInRange(value, minimum, maximum, label) {
   const number = Number(value);
@@ -716,6 +721,167 @@ function normalizeArticleBody(value) {
     .trim();
 }
 
+function decodeHtmlEntities(value) {
+  const named = { amp: "&", apos: "'", gt: ">", lt: "<", nbsp: " ", quot: '"' };
+  return String(value ?? "").replace(/&(#x[0-9a-f]+|#\d+|amp|apos|gt|lt|nbsp|quot);/gi, (match, entity) => {
+    const normalized = entity.toLowerCase();
+    if (normalized.startsWith("#x")) {
+      const codePoint = Number.parseInt(normalized.slice(2), 16);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+    }
+    if (normalized.startsWith("#")) {
+      const codePoint = Number.parseInt(normalized.slice(1), 10);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+    }
+    return named[normalized] ?? match;
+  });
+}
+
+function htmlFragmentToText(value) {
+  const withoutNonArticleContent = String(value ?? "")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<(script|style|noscript|template|svg|form|nav|aside|footer|header)\b[^>]*>[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<(br|hr)\b[^>]*\/?\s*>/gi, "\n")
+    .replace(/<\/(p|div|li|section|blockquote|h[1-6])\s*>/gi, "\n")
+    .replace(/<[^>]+>/g, " ");
+  return normalizeArticleBody(decodeHtmlEntities(withoutNonArticleContent).replace(/[ \t]{2,}/g, " "));
+}
+
+function articleBodyCandidates(value, candidates, accessibility) {
+  if (Array.isArray(value)) {
+    for (const item of value) articleBodyCandidates(item, candidates, accessibility);
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  const accessible = value.isAccessibleForFree;
+  if (accessible === false || String(accessible).toLowerCase() === "false") accessibility.blocked = true;
+  if (typeof value.articleBody === "string") candidates.push(normalizeArticleBody(decodeHtmlEntities(value.articleBody)));
+  if (Array.isArray(value["@graph"])) articleBodyCandidates(value["@graph"], candidates, accessibility);
+  for (const [key, child] of Object.entries(value)) {
+    if (key !== "@graph" && child && typeof child === "object") articleBodyCandidates(child, candidates, accessibility);
+  }
+}
+
+export function extractArticleBodyFromHtml(html) {
+  const source = String(html ?? "");
+  const candidates = [];
+  const accessibility = { blocked: false };
+  for (const match of source.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    const jsonText = match[1].replace(/^\s*<!--|-->\s*$/g, "").trim();
+    if (!jsonText) continue;
+    try {
+      articleBodyCandidates(JSON.parse(jsonText), candidates, accessibility);
+    } catch {
+      // Invalid publisher JSON-LD is ignored; the narrow HTML fallback remains available.
+    }
+  }
+  if (accessibility.blocked) throw new Error("유료 또는 구독 전용으로 표시된 기사입니다.");
+
+  for (const match of source.matchAll(/<article\b[^>]*>([\s\S]*?)<\/article>/gi)) {
+    candidates.push(htmlFragmentToText(match[1]));
+  }
+  const bodyContainerPattern = /<([a-z0-9]+)\b[^>]*(?:id|class)=["'][^"']*(?:article[-_ ]?body|article[-_ ]?content|news[-_ ]?(?:body|content)|view[-_ ]?content)[^"']*["'][^>]*>([\s\S]*?)<\/\1>/gi;
+  for (const match of source.matchAll(bodyContainerPattern)) candidates.push(htmlFragmentToText(match[2]));
+
+  const body = candidates
+    .filter((candidate) => candidate.length >= 300 && candidate.length <= 200_000)
+    .sort((left, right) => right.length - left.length)[0];
+  if (!body) throw new Error("페이지에서 300자 이상의 기사 본문을 확인하지 못했습니다.");
+  return body;
+}
+
+function sourceForArticle(article) {
+  return sourcePanel.sources.find((source) => source.id === article.sourceId || source.name === article.source);
+}
+
+function validateArticleFetchUrl(value, source) {
+  const canonicalUrl = canonicalizeArticleUrl(value);
+  const hostname = new URL(canonicalUrl).hostname.toLowerCase();
+  if (!source?.active || !matchesSourceDomain(hostname, source.domains ?? [])) {
+    throw new Error("등록된 언론사 공식 도메인의 HTTPS 기사만 가져올 수 있습니다.");
+  }
+  return canonicalUrl;
+}
+
+async function fetchArticleHtml(initialUrl, source, env) {
+  const fetcher = env?.ARTICLE_FETCHER?.fetch
+    ? env.ARTICLE_FETCHER.fetch.bind(env.ARTICLE_FETCHER)
+    : fetch;
+  let currentUrl = validateArticleFetchUrl(initialUrl, source);
+  for (let redirectCount = 0; redirectCount <= ARTICLE_REDIRECT_LIMIT; redirectCount += 1) {
+    const response = await fetcher(currentUrl, {
+      method: "GET",
+      redirect: "manual",
+      headers: {
+        accept: "text/html,application/xhtml+xml;q=0.9",
+        "user-agent": "AgendaFrame-Research/1.0 (+https://agendaframe.com)",
+      },
+    });
+    if ([301, 302, 303, 307, 308].includes(response.status)) {
+      const location = response.headers.get("location");
+      if (!location || redirectCount === ARTICLE_REDIRECT_LIMIT) throw new Error("기사 주소의 리디렉션을 확인하지 못했습니다.");
+      currentUrl = validateArticleFetchUrl(new URL(location, currentUrl).toString(), source);
+      continue;
+    }
+    if (!response.ok) throw new Error(`기사 페이지가 HTTP ${response.status}로 응답했습니다.`);
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!contentType.toLowerCase().includes("text/html") && !contentType.toLowerCase().includes("application/xhtml+xml")) {
+      throw new Error("HTML 기사 페이지가 아닙니다.");
+    }
+    const contentLength = Number(response.headers.get("content-length"));
+    if (Number.isFinite(contentLength) && contentLength > ARTICLE_HTML_MAX_BYTES) throw new Error("기사 페이지가 허용 크기를 초과했습니다.");
+    const html = await response.text();
+    if (new TextEncoder().encode(html).byteLength > ARTICLE_HTML_MAX_BYTES) throw new Error("기사 페이지가 허용 크기를 초과했습니다.");
+    return { html, finalUrl: currentUrl };
+  }
+  throw new Error("기사 주소의 리디렉션을 확인하지 못했습니다.");
+}
+
+async function storeAuthorizedArticleContent(env, article, body, options) {
+  const normalizedBody = normalizeArticleBody(body);
+  if (normalizedBody.length < 300 || normalizedBody.length > 200_000) throw new Error("본문은 300~200,000자 범위의 승인된 전문이어야 합니다.");
+  const bodyHash = await sha256Hex(normalizedBody);
+  const existing = await env.DB.prepare(`
+    SELECT id, object_key AS objectKey
+    FROM article_contents
+    WHERE article_id = ? AND body_hash = ?
+  `).bind(article.id, bodyHash).first();
+  const contentId = existing?.id ?? crypto.randomUUID();
+  const objectKey = existing?.objectKey ?? `article-content/${article.id}/${bodyHash}.txt`;
+
+  await env.CONTENT.put(objectKey, normalizedBody, {
+    httpMetadata: { contentType: "text/plain; charset=utf-8" },
+    customMetadata: { articleId: article.id, acquisitionMethod: options.acquisitionMethod },
+  });
+  await env.DB.prepare(`
+    INSERT INTO article_contents
+      (id, article_id, object_key, body_hash, body_characters, acquired_at, acquisition_method, usage_basis, usage_expires_at, analysis_allowed, public_evidence_allowed, extractor_version, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'active')
+    ON CONFLICT(article_id, body_hash) DO UPDATE SET
+      acquired_at = excluded.acquired_at,
+      acquisition_method = excluded.acquisition_method,
+      usage_basis = excluded.usage_basis,
+      usage_expires_at = excluded.usage_expires_at,
+      analysis_allowed = 1,
+      public_evidence_allowed = excluded.public_evidence_allowed,
+      extractor_version = excluded.extractor_version,
+      status = 'active'
+  `).bind(
+    contentId,
+    article.id,
+    objectKey,
+    bodyHash,
+    normalizedBody.length,
+    options.acquiredAt,
+    options.acquisitionMethod,
+    options.usageBasis,
+    options.usageExpiresAt,
+    options.publicEvidenceAllowed ? 1 : 0,
+    options.extractorVersion,
+  ).run();
+  return { contentId, bodyCharacters: normalizedBody.length, existing: Boolean(existing) };
+}
+
 async function handleContentUpload(request, env) {
   if (!env?.DB || !env?.CONTENT) return jsonResponse({ error: "비공개 본문 저장소가 아직 준비되지 않았습니다." }, 503);
   if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
@@ -752,58 +918,121 @@ async function handleContentUpload(request, env) {
     if (usageExpiresAt !== null && usageExpiresAt <= acquiredAt) throw new Error("이용 만료 시각은 확보 시각 이후여야 합니다.");
     const extractorVersion = String(payload.extractor_version ?? "manual-upload-v1").trim().slice(0, 80) || "manual-upload-v1";
     const publicEvidenceAllowed = payload.public_evidence_allowed === true;
-    const bodyHash = await sha256Hex(body);
-    const existing = await env.DB.prepare(`
-      SELECT id, object_key AS objectKey
-      FROM article_contents
-      WHERE article_id = ? AND body_hash = ?
-    `).bind(article.id, bodyHash).first();
-    const contentId = existing?.id ?? crypto.randomUUID();
-    const objectKey = existing?.objectKey ?? `article-content/${article.id}/${bodyHash}.txt`;
-
-    await env.CONTENT.put(objectKey, body, {
-      httpMetadata: { contentType: "text/plain; charset=utf-8" },
-      customMetadata: { articleId: article.id, acquisitionMethod },
-    });
-    await env.DB.prepare(`
-      INSERT INTO article_contents
-        (id, article_id, object_key, body_hash, body_characters, acquired_at, acquisition_method, usage_basis, usage_expires_at, analysis_allowed, public_evidence_allowed, extractor_version, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'active')
-      ON CONFLICT(article_id, body_hash) DO UPDATE SET
-        acquired_at = excluded.acquired_at,
-        acquisition_method = excluded.acquisition_method,
-        usage_basis = excluded.usage_basis,
-        usage_expires_at = excluded.usage_expires_at,
-        analysis_allowed = 1,
-        public_evidence_allowed = excluded.public_evidence_allowed,
-        extractor_version = excluded.extractor_version,
-        status = 'active'
-    `).bind(
-      contentId,
-      article.id,
-      objectKey,
-      bodyHash,
-      body.length,
+    const stored = await storeAuthorizedArticleContent(env, article, body, {
       acquiredAt,
       acquisitionMethod,
       usageBasis,
       usageExpiresAt,
-      publicEvidenceAllowed ? 1 : 0,
+      publicEvidenceAllowed,
       extractorVersion,
-    ).run();
+    });
 
     return jsonResponse({
-      contentId,
+      contentId: stored.contentId,
       articleId: article.id,
       source: article.source,
       title: article.title,
-      bodyCharacters: body.length,
+      bodyCharacters: stored.bodyCharacters,
       analysisAllowed: true,
       publicEvidenceAllowed,
       status: "active",
-    }, existing ? 200 : 201);
+    }, stored.existing ? 200 : 201);
   } catch (error) {
     return jsonResponse({ error: error instanceof Error ? error.message : "본문을 등록하지 못했습니다." }, 400);
+  }
+}
+
+async function handleContentFetch(request, env) {
+  if (!env?.DB || !env?.CONTENT) return jsonResponse({ error: "비공개 본문 저장소가 아직 준비되지 않았습니다." }, 503);
+  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
+  if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "허용된 AgendaFrame 주소에서 보낸 요청만 처리합니다." }, 403);
+
+  let payload;
+  try {
+    payload = await readJsonPayload(request);
+  } catch (error) {
+    return jsonResponse({ error: error instanceof Error ? error.message : "본문 수집 형식을 확인해 주세요." }, 400);
+  }
+
+  try {
+    if (payload.rights_attested !== true) throw new Error("본문 수집·분석 권한을 확인해야 합니다.");
+    const targetDate = await resolveAnalysisDate(env.DB, String(payload.date ?? "").trim());
+    const limit = integerInRange(payload.limit ?? 10, 1, ARTICLE_FETCH_LIMIT, "본문 수집 건수");
+    const usageBasis = String(payload.usage_basis ?? "").trim();
+    if (usageBasis.length < 10 || usageBasis.length > 500) throw new Error("이용 근거를 10~500자로 기록하세요.");
+    const publicEvidenceAllowed = payload.public_evidence_allowed === true;
+    const usageExpiresAt = payload.usage_expires_at ? parseTimestamp(payload.usage_expires_at, "이용 만료 시각") : null;
+    const acquiredAt = Date.now();
+    if (usageExpiresAt !== null && usageExpiresAt <= acquiredAt) throw new Error("이용 만료 시각은 현재 이후여야 합니다.");
+    const start = Date.parse(`${targetDate}T00:00:00+09:00`);
+    const end = start + 86_400_000;
+    const selected = await env.DB.prepare(`
+      SELECT
+        a.id,
+        a.title,
+        a.canonical_url AS canonicalUrl,
+        a.source_id AS sourceId,
+        s.name AS source
+      FROM articles a
+      JOIN media_sources s ON s.id = a.source_id
+      WHERE
+        a.published_at >= ? AND a.published_at < ?
+        AND NOT EXISTS (
+          SELECT 1
+          FROM article_contents ac
+          WHERE ac.article_id = a.id
+            AND ac.status = 'active'
+            AND ac.analysis_allowed = 1
+            AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > ?)
+        )
+      ORDER BY
+        CASE a.homepage_placement WHEN 'top' THEN 4 WHEN 'main' THEN 3 WHEN 'section' THEN 2 ELSE 1 END DESC,
+        a.homepage_rank ASC,
+        a.published_at DESC
+      LIMIT ?
+    `).bind(start, end, acquiredAt, limit).all();
+    const articles = selected.results ?? [];
+    const results = await mapWithConcurrency(articles, ARTICLE_FETCH_CONCURRENCY, async (article) => {
+      try {
+        const source = sourceForArticle(article);
+        const { html } = await fetchArticleHtml(article.canonicalUrl, source, env);
+        const body = extractArticleBodyFromHtml(html);
+        const stored = await storeAuthorizedArticleContent(env, article, body, {
+          acquiredAt,
+          acquisitionMethod: "authorized_crawl",
+          usageBasis,
+          usageExpiresAt,
+          publicEvidenceAllowed,
+          extractorVersion: ARTICLE_EXTRACTOR_VERSION,
+        });
+        return {
+          articleId: article.id,
+          source: article.source,
+          title: article.title,
+          status: stored.existing ? "unchanged" : "stored",
+          bodyCharacters: stored.bodyCharacters,
+        };
+      } catch (error) {
+        return {
+          articleId: article.id,
+          source: article.source,
+          title: article.title,
+          status: "failed",
+          reason: String(error instanceof Error ? error.message : "본문을 가져오지 못했습니다.").slice(0, 240),
+        };
+      }
+    });
+    return jsonResponse({
+      date: targetDate,
+      requested: articles.length,
+      stored: results.filter((result) => result.status === "stored").length,
+      unchanged: results.filter((result) => result.status === "unchanged").length,
+      failed: results.filter((result) => result.status === "failed").length,
+      extractorVersion: ARTICLE_EXTRACTOR_VERSION,
+      results,
+    }, 200, { request });
+  } catch (error) {
+    return jsonResponse({ error: error instanceof Error ? error.message : "본문을 가져오지 못했습니다." }, 400, { request });
   }
 }
 
@@ -1759,6 +1988,10 @@ export async function handleApiRequest(request, env = {}) {
   if (url.pathname === "/api/content") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
     return handleContentUpload(request, env);
+  }
+  if (url.pathname === "/api/content/fetch") {
+    if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
+    return handleContentFetch(request, env);
   }
   if (url.pathname === "/api/import") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);

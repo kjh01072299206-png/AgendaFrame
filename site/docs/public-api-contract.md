@@ -38,6 +38,7 @@
 
 - `POST /api/observations/homepage`: 고정 뷰포트의 홈페이지 배치 관측과 좌표·순위 저장
 - `POST /api/content`: 이용 근거가 확인된 기사 전문을 비공개 객체 저장소에 등록
+- `POST /api/content/fetch`: 이용 근거를 관리자가 확인한 등록 기사만 공식 도메인에서 제한 수집해 비공개 객체 저장소에 등록
 
 운영 롤백은 `POST /api/analysis/runs/:id/rollback`으로 수행한다. 관리자 토큰과 같은 출처 요청이 필요하고, 같은 기준일의 직전 성공 스냅샷이 있을 때만 대상 실행을 `rolled_back`으로 바꾼다. 행을 삭제하지 않으며 이미 롤백되거나 실패한 실행은 다시 롤백할 수 없다.
 
