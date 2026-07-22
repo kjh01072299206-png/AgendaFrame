@@ -196,6 +196,14 @@ function bodyEvidence(article, words) {
   const rawEnd = nextCandidates.length ? Math.min(...nextCandidates) + 2 : Math.min(body.length, start + 280);
   const end = Math.min(body.length, Math.max(start + matchedWord.length, rawEnd));
   const excerpt = body.slice(start, end).trim().slice(0, 280);
+  if (article.transientContent) {
+    return {
+      start: null,
+      end: null,
+      text: "기사 본문을 메모리에서 임시 분석해 관련 표현 단서를 확인했습니다. 전문과 원문 문장은 저장하지 않았습니다.",
+      basis: "body_transient",
+    };
+  }
   return {
     start,
     end,
@@ -240,13 +248,13 @@ function reportFor(issue, frames) {
   const bodyObservedCount = Math.max(0, ...frames.map((frame) => frame.bodyObservedCount ?? 0));
   return {
     summary: detected.length && bodyObservedCount
-      ? `${issue.articleCount}건 중 승인된 본문 ${bodyObservedCount}건과 제목에서 ${detected[0].label} 관련 표현 단서를 확인했습니다. 구조화 프레임 판정 전 단계입니다.`
+      ? `${issue.articleCount}건 중 본문 분석 ${bodyObservedCount}건과 제목에서 ${detected[0].label} 관련 표현 단서를 확인했습니다. 구조화 프레임 판정 전 단계입니다.`
       : detected.length
       ? `${issue.sourceCount}개 언론사의 ${issue.articleCount}건 제목에서 ${detected[0].label} 관련 표현이 상대적으로 자주 관측됐습니다. 기사 본문에 대한 판단이 아닙니다.`
       : "기사 제목에서 공개할 수 있는 프레임 신호가 확인되지 않았습니다.",
     missingPerspective: bodyObservedCount
-      ? "승인 본문이 없는 기사와 구조화되지 않은 취재원·책임·해법 요소는 판단하지 않습니다."
-      : "기사 본문을 저장·분석하지 않으므로 관점이나 취재원의 부재는 판단할 수 없습니다.",
+      ? "본문 분석 근거가 없는 기사와 구조화되지 않은 취재원·책임·해법 요소는 판단하지 않습니다."
+      : "기사 본문을 분석하지 않았으므로 관점이나 취재원의 부재는 판단할 수 없습니다.",
     caution: bodyObservedCount
       ? "본문·제목 표현 기준 규칙 탐색입니다. Gemini 프레임 판정이나 사람 검토 결과가 아닙니다."
       : "제목 표현 기준 규칙 분석입니다. 언론사의 성향, 사실성, 보도의 옳고 그름을 판정하지 않습니다.",
@@ -350,6 +358,7 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
           delete cleanArticle.bodyText;
           delete cleanArticle.publicEvidenceAllowed;
           delete cleanArticle.contentVersionId;
+          delete cleanArticle.transientContent;
           return {
             ...cleanArticle,
             contentAvailable: Boolean(article.bodyText),

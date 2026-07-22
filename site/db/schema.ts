@@ -284,7 +284,7 @@ export const frameAnalyses = sqliteTable(
     score: real("score").notNull(),
     confidence: integer("confidence").notNull(),
     evidenceBasis: text("evidence_basis", {
-      enum: ["headline", "body_private", "body_public"],
+      enum: ["headline", "body_private", "body_public", "body_transient"],
     }).notNull().default("headline"),
     evidenceText: text("evidence_text"),
     evidenceStart: integer("evidence_start"),
