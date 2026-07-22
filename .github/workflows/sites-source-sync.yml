@@ -1,0 +1,25 @@
+name: Temporary Sites source sync
+
+on:
+  push:
+    branches:
+      - codex/authorized-body-fetch
+    paths:
+      - .github/workflows/sites-source-sync.yml
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Push validated source to Sites
+        env:
+          SITES_SOURCE_TOKEN: ${{ secrets.SITES_SOURCE_TOKEN_TEMP }}
+        run: |
+          git -c http.extraHeader="Authorization: Bearer ${SITES_SOURCE_TOKEN}" push --force-with-lease=refs/heads/main:831635089eea5f615b34698569d84b921ff7e0c6 "https://git.chatgpt-team.site/bc85965a-3219-4f0a-a791-b1497d5e8b9f/appgprj_6a54eb02c21c819199c3369cc67c6857.git" "6ef42c93c0dd207e85dc822cdb6a87ddfd5dc396:refs/heads/main"
