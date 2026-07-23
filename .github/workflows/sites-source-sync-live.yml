@@ -1,0 +1,35 @@
+name: Temporary Sites source sync
+
+on:
+  push:
+    branches:
+      - codex/authorized-body-fetch
+    paths:
+      - .github/workflows/sites-source-sync-live.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out validated PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/authorized-body-fetch
+          fetch-depth: 0
+      - name: Remove temporary workflow from source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/sites-source-sync-live.yml
+          git commit -m "Remove temporary Sites source sync"
+          git push origin HEAD:codex/authorized-body-fetch
+      - name: Push exact source state to Sites
+        env:
+          SITES_SOURCE_TOKEN: ${{ secrets.SITES_SOURCE_TOKEN }}
+          SITES_SOURCE_REMOTE: https://git.chatgpt-team.site/bc85965a-3219-4f0a-a791-b1497d5e8b9f/appgprj_6a54eb02c21c819199c3369cc67c6857.git
+        run: |
+          git -c http.extraHeader="Authorization: Bearer ${SITES_SOURCE_TOKEN}" push "${SITES_SOURCE_REMOTE}" "HEAD:refs/heads/main" --force
