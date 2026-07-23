@@ -204,7 +204,7 @@ export default function AdminClient() {
   const [status, setStatus] = useState("");
   const [analysisDate, setAnalysisDate] = useState(todayKst);
   const [transientAnalysisAcknowledged, setTransientAnalysisAcknowledged] = useState(false);
-  const [transientLimit, setTransientLimit] = useState("10");
+  const [transientLimit, setTransientLimit] = useState("20");
   const [rangeStart, setRangeStart] = useState(() => moveDate(todayKst, -6));
   const [rangeEnd, setRangeEnd] = useState(todayKst);
   const [batchDays, setBatchDays] = useState<AnalysisDay[]>([]);
@@ -282,29 +282,42 @@ export default function AdminClient() {
     if (!token.trim()) return setStatus("관리자 토큰을 입력하세요.");
     if (!transientAnalysisAcknowledged) return setStatus("공개 기사만 분석하고 접근 제한을 우회하지 않는 조건을 확인하세요.");
     setBusy(true);
-    setStatus(`${analysisDate} 기사 본문을 메모리에서 임시 분석하는 중…`);
+    setStatus(`${analysisDate} 전체 기사의 본문 분석을 시작합니다…`);
     try {
-      const response = await fetch("/api/analyze/transient", {
-        method: "POST",
-        headers: { authorization: `Bearer ${token.trim()}`, "content-type": "application/json" },
-        body: JSON.stringify({
-          date: analysisDate,
-          limit: Number(transientLimit),
-          transient_analysis_acknowledged: transientAnalysisAcknowledged,
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(apiError(result, "본문 임시 분석을 완료하지 못했습니다."));
-      const firstFailure = Array.isArray(result.results)
-        ? result.results.find((entry: { status?: string; reason?: string }) => entry.status === "failed")
-        : null;
-      const failureNote = firstFailure?.reason ? ` · 첫 실패: ${firstFailure.reason}` : "";
-      setStatus(`임시 분석 완료: 본문 ${Number(result.analyzedBodies ?? 0).toLocaleString("ko-KR")}건 · 저장 0건 · 이슈 ${Number(result.analysis?.issueCount ?? 0).toLocaleString("ko-KR")}개 · 실패 ${Number(result.failed ?? 0).toLocaleString("ko-KR")}건${failureNote}`);
-      if (Number(result.failed ?? 0) === 0) {
-        setTransientAnalysisAcknowledged(false);
+      let finalResult: Record<string, unknown> | null = null;
+      let issueCount = 0;
+      let firstFailure = "";
+      for (let batch = 1; batch <= 125; batch += 1) {
+        const response = await fetch("/api/analyze/transient", {
+          method: "POST",
+          headers: { authorization: `Bearer ${token.trim()}`, "content-type": "application/json" },
+          body: JSON.stringify({
+            date: analysisDate,
+            limit: Number(transientLimit),
+            refresh_analysis: true,
+            transient_analysis_acknowledged: transientAnalysisAcknowledged,
+          }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(apiError(result, "본문 분석을 완료하지 못했습니다."));
+        finalResult = result as Record<string, unknown>;
+        issueCount = Number(result.analysis?.issueCount ?? issueCount);
+        const failedEntry = Array.isArray(result.results)
+          ? result.results.find((entry: { status?: string; reason?: string }) => entry.status === "failed" && entry.reason)
+          : null;
+        if (!firstFailure && failedEntry?.reason) firstFailure = failedEntry.reason;
+        const progress = result.progress ?? {};
+        setStatus(`본문 분석 ${Number(progress.processed ?? 0).toLocaleString("ko-KR")}/${Number(progress.total ?? 0).toLocaleString("ko-KR")}건 · 성공 ${Number(progress.analyzed ?? 0).toLocaleString("ko-KR")} · 실패 ${Number(progress.failed ?? 0).toLocaleString("ko-KR")} · 배치 ${batch}`);
+        if (result.complete === true) break;
+        if (!Number(result.requested ?? 0)) throw new Error("분석할 기사가 남아 있지만 다음 배치를 선택하지 못했습니다.");
       }
+      const progress = (finalResult?.progress ?? {}) as Record<string, unknown>;
+      if (Number(progress.remaining ?? 0) > 0) throw new Error(`안전 실행 한도에 도달했습니다. 남은 ${Number(progress.remaining).toLocaleString("ko-KR")}건은 다시 실행하면 이어집니다.`);
+      const failureNote = firstFailure ? ` · 첫 실패: ${firstFailure}` : "";
+      setStatus(`전체 본문 분석 완료: 성공 ${Number(progress.analyzed ?? 0).toLocaleString("ko-KR")}/${Number(progress.total ?? 0).toLocaleString("ko-KR")}건 · 원문 저장 0건 · 이슈 ${issueCount.toLocaleString("ko-KR")}개 · 실패 ${Number(progress.failed ?? 0).toLocaleString("ko-KR")}건${failureNote}`);
+      setTransientAnalysisAcknowledged(false);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "본문 임시 분석을 완료하지 못했습니다.");
+      setStatus(error instanceof Error ? error.message : "본문 분석을 완료하지 못했습니다.");
     } finally { setBusy(false); }
   }
 
@@ -408,7 +421,7 @@ export default function AdminClient() {
           <label className={`file-drop ${fileName ? "active" : ""}`} htmlFor="data-file"><span>{fileName || "BigKinds .xlsx 또는 UTF-8 .csv 선택"}</span><small>최대 20,000행 · 25MB · 본문은 전송하지 않음</small></label>
           <input className="sr-only" id="data-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.csv,text/csv" onChange={chooseFile} />
           <div className="import-preview" aria-live="polite">
-            {!rows.length && !errors.length && <p>파일을 선택하면 5개 언론사별 건수와 형식 오류를 먼저 확인합니다.</p>}
+            {!rows.length && !errors.length && <p>파일을 선택하면 등록 매체별 건수와 형식 오류를 먼저 확인합니다.</p>}
             {!!rows.length && <><div className="preview-summary"><span>전체 {rows.length.toLocaleString("ko-KR")}건</span>{ALLOWED_SOURCES.map((source) => <span key={source}>{source} {counts[source]}건</span>)}</div>{ignoredBody && <p className="preview-ok">본문 열은 감지했지만 서버로 전송하지 않습니다.</p>}{restoredTimes && <p className="preview-ok">뉴스 식별자에서 실제 게시 시각(시·분·초, KST)을 복원했습니다.</p>}</>}
             {!!errors.length && <ul className="preview-errors">{errors.slice(0, 8).map((error) => <li key={error}>{error}</li>)}{errors.length > 8 && <li>그 외 {errors.length - 8}개 오류</li>}</ul>}
             {!!rows.length && !errors.length && <p className="preview-ok">형식 검증을 통과했습니다. 500건씩 나눠 안전하게 저장합니다.</p>}
@@ -420,14 +433,14 @@ export default function AdminClient() {
       <section className="import-card content-card" aria-labelledby="content-title">
         <header><div><p className="eyebrow">STEP 02</p><h2 id="content-title">원문 임시 분석</h2></div><span className="private-badge">전문 미저장</span></header>
         <form className="content-form content-fetch-form" onSubmit={runTransientAnalysis}>
-          <div className="content-subheading"><div><h3>기사 URL에서 읽고 바로 폐기</h3><p>선택한 날짜의 공개 기사 본문을 메모리에서만 처리하고 프레임 단서만 남깁니다.</p></div><span>최대 20건</span></div>
+          <div className="content-subheading"><div><h3>기사 URL에서 읽고 바로 폐기</h3><p>선택한 날짜의 미처리 기사를 안전 배치로 끝까지 이어서 분석하고 프레임 단서만 남깁니다.</p></div><span>전체 기사</span></div>
           <div className="content-fields">
             <label><span>대상 날짜 (KST)</span><input type="date" value={analysisDate} onChange={(event) => setAnalysisDate(event.target.value)} required /></label>
-            <label><span>이번 실행 건수</span><select value={transientLimit} onChange={(event) => setTransientLimit(event.target.value)}><option value="5">5건</option><option value="10">10건</option><option value="20">20건</option></select></label>
+            <label><span>배치당 요청 수</span><select value={transientLimit} onChange={(event) => setTransientLimit(event.target.value)}><option value="5">5건</option><option value="10">10건</option><option value="20">20건</option></select></label>
           </div>
           <p className="field-help">공식 언론사 HTTPS 주소의 공개 HTML만 요청합니다. 로그인·유료벽·다른 도메인 리디렉션은 우회하지 않습니다. 기사 전문·원문 문장·HTML은 D1, R2, 로그, 공개 API 어디에도 저장하지 않습니다.</p>
           <label className="consent-row"><input type="checkbox" checked={transientAnalysisAcknowledged} onChange={(event) => setTransientAnalysisAcknowledged(event.target.checked)} /><span>공개 기사 페이지만 대상으로 하며 로그인·유료벽·접근 차단을 우회하지 않는 조건을 확인했습니다.</span></label>
-          <button className="import-submit" type="submit" disabled={busy || !transientAnalysisAcknowledged}>{busy ? "처리 중…" : "본문 임시 분석 실행"}</button>
+          <button className="import-submit" type="submit" disabled={busy || !transientAnalysisAcknowledged}>{busy ? "전체 기사 처리 중…" : "전체 기사 본문 분석"}</button>
         </form>
       </section>
 
@@ -464,7 +477,7 @@ export default function AdminClient() {
         <dl>
           <div><dt>1. BigKinds</dt><dd><a href="https://www.bigkinds.or.kr/v2/news/search.do" target="_blank" rel="noopener noreferrer">뉴스 검색·분석 열기</a> → 기간과 대상 언론사 선택 → Excel 다운로드</dd></div>
           <div><dt>2. 가져오기</dt><dd>기사 본문을 제외한 언론사·제목·원문 URL·일자·분류만 검증해 저장</dd></div>
-          <div><dt>3. 원문 임시 분석</dt><dd>공개 기사 본문을 메모리에서만 읽고 폐기. 구조화된 단서와 기사 ID만 저장</dd></div>
+          <div><dt>3. 원문 임시 분석</dt><dd>미처리 공개 기사를 완료할 때까지 이어서 읽고 폐기. 구조화된 단서와 기사 ID만 저장</dd></div>
           <div><dt>4. 재분석</dt><dd>제목·배치 메타데이터만 다시 계산할 때 하루 또는 최대 7일 기간 분석 실행</dd></div>
           <div><dt>5. 품질 검증</dt><dd>상위 30~50개 이슈의 잘못 묶인 기사와 누락 기사를 기록하고 정밀도·재현율 추정치를 확인</dd></div>
         </dl>

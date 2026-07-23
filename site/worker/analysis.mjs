@@ -1,8 +1,8 @@
 export const ANALYSIS_PROVIDER = "rules_local";
-export const ANALYSIS_MODEL_VERSION = "agenda-rules-v3";
+export const ANALYSIS_MODEL_VERSION = "agenda-rules-v4";
 export const CLUSTERING_VERSION = "event-anchors-complete-link-v2";
 export const SCORE_VERSION = "observed-agenda-v3";
-export const FRAME_TAXONOMY_VERSION = "frame-signals-v3";
+export const FRAME_TAXONOMY_VERSION = "frame-signals-v4";
 
 const frameDefinitions = {
   conflict: { label: "갈등·대립", words: ["갈등", "충돌", "논란", "반발", "대립", "공방", "비판", "파문", "강대강", "규탄"] },
@@ -12,6 +12,16 @@ const frameDefinitions = {
   policy: { label: "정책 효과", words: ["정책", "대책", "지원", "개편", "추진", "확대", "축소", "시행", "도입", "계획", "공급"] },
   citizen: { label: "시민 영향", words: ["시민", "청년", "노인", "학생", "노동자", "환자", "소비자", "가구", "주민", "피해자"] },
 };
+
+export function extractBodyFrameSignals(value) {
+  const body = String(value ?? "").normalize("NFC");
+  return {
+    detectedFrames: Object.entries(frameDefinitions)
+      .filter(([, definition]) => definition.words.some((word) => body.includes(word)))
+      .map(([frame]) => frame),
+    bodyCharacters: body.length,
+  };
+}
 
 const stopwords = new Set([
   "관련", "대한", "위한", "통해", "올해", "오늘", "내일", "지난", "이번", "정부", "대통령", "국민",
@@ -214,16 +224,28 @@ function bodyEvidence(article, words) {
   };
 }
 
+function cachedBodyEvidence(article, frame) {
+  if (!article.bodyAnalysisAvailable || !Array.isArray(article.bodyFrameSignals) || !article.bodyFrameSignals.includes(frame)) return null;
+  return {
+    start: null,
+    end: null,
+    text: "기사 본문을 메모리에서 분석해 관련 표현 단서를 확인했습니다. 전문과 원문 문장은 저장하지 않았습니다.",
+    basis: "body_transient",
+  };
+}
+
 function analyzeFrames(articles) {
   return Object.entries(frameDefinitions).map(([frame, definition]) => {
     const matches = articles.map((article) => {
       const body = bodyEvidence(article, definition.words);
       if (body) return { article, body, basis: body.basis };
+      const cachedBody = cachedBodyEvidence(article, frame);
+      if (cachedBody) return { article, body: cachedBody, basis: cachedBody.basis };
       if (definition.words.some((word) => article.title.includes(word))) return { article, body: null, basis: "headline" };
       return null;
     }).filter(Boolean);
     const evidence = matches.find((match) => match.body) ?? matches[0] ?? null;
-    const bodyObservedCount = articles.filter((article) => Boolean(article.bodyText)).length;
+    const bodyObservedCount = articles.filter((article) => Boolean(article.bodyText) || article.bodyAnalysisAvailable === true).length;
     return {
       frame,
       label: definition.label,
@@ -359,9 +381,11 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
           delete cleanArticle.publicEvidenceAllowed;
           delete cleanArticle.contentVersionId;
           delete cleanArticle.transientContent;
+          delete cleanArticle.bodyAnalysisAvailable;
+          delete cleanArticle.bodyFrameSignals;
           return {
             ...cleanArticle,
-            contentAvailable: Boolean(article.bodyText),
+            contentAvailable: Boolean(article.bodyText) || article.bodyAnalysisAvailable === true,
             similarity: article.id === representative.id ? 1 : Math.round(similarity(representative._tokens, article._tokens).jaccard * 1000) / 1000,
             membershipStatus: "included",
             representative: article.id === representative.id,
