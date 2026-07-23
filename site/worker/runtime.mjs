@@ -1,5 +1,5 @@
 import { getAnalysisProvider } from "./analysis-provider.mjs";
-import { CLUSTERING_VERSION, FRAME_TAXONOMY_VERSION, SCORE_VERSION } from "./analysis.mjs";
+import { CLUSTERING_VERSION, FRAME_TAXONOMY_VERSION, SCORE_VERSION, extractBodyFrameSignals } from "./analysis.mjs";
 import publicApiSchema from "../docs/public-api.schema.json" with { type: "json" };
 
 const analysisProvider = getAnalysisProvider();
@@ -8,7 +8,7 @@ const ANALYSIS_MODEL_VERSION = analysisProvider.modelVersion;
 const PUBLIC_API_SCHEMA_VERSION = publicApiSchema["x-api-version"];
 const PROMPT_VERSION = "not_applicable_rules";
 const EVALUATION_DATASET_VERSION = "not_configured";
-const COMPATIBLE_ANALYSIS_MODELS = new Set([ANALYSIS_MODEL_VERSION, "agenda-rules-v2"]);
+const COMPATIBLE_ANALYSIS_MODELS = new Set([ANALYSIS_MODEL_VERSION, "agenda-rules-v3", "agenda-rules-v2"]);
 
 const assets = globalThis.__AGENDAFRAME_ASSETS__ ?? {};
 let sourcePanel = globalThis.__AGENDAFRAME_SOURCE_PANEL__ ?? {
@@ -149,7 +149,7 @@ function publicIssue(row, run) {
     calibrationStatus: "not_calibrated",
     clusterQuality: legacy ? "review_required" : "not_human_reviewed",
     contentAvailableCount,
-    evidenceBasis: contentAvailableCount ? "authorized_body_and_metadata" : "headline_metadata_only",
+    evidenceBasis: contentAvailableCount ? "body_signals_and_metadata" : "headline_metadata_only",
   };
 }
 
@@ -157,9 +157,9 @@ function evidenceFirstComparison(issue, articles) {
   const contentAvailableCount = Number(issue.contentAvailableCount ?? articles.filter((article) => article.contentAvailable).length);
   return {
     status: "withheld_insufficient_evidence",
-    evidenceBasis: contentAvailableCount ? "authorized_body_signals_not_structured_comparison" : "headline_metadata_only",
+    evidenceBasis: contentAvailableCount ? "body_signals_not_structured_comparison" : "headline_metadata_only",
     reason: contentAvailableCount
-      ? `승인된 본문 ${contentAvailableCount}건에서 표현 단서를 확인했지만, 원인·책임·해법 비교는 구조화 분석과 사람 검토 전까지 보류합니다.`
+      ? `본문 분석 ${contentAvailableCount}건에서 표현 단서를 확인했지만, 원인·책임·해법 비교는 구조화 분석과 사람 검토 전까지 보류합니다.`
       : "기사 본문과 독립 출처 관계를 확인할 수 없어 공통 사실·설명 차이·취재원·추천을 생성하지 않았습니다.",
     frameElements: ["problem_definition", "causal_attribution", "evaluation", "treatment_recommendation"].map((element) => ({ element, status: "not_assessed", evidence: [] })),
     commonFacts: [],
@@ -338,8 +338,31 @@ async function collectionHealth(db) {
       (SELECT COUNT(DISTINCT article_id) FROM article_contents
         WHERE status = 'active'
           AND analysis_allowed = 1
-          AND (usage_expires_at IS NULL OR usage_expires_at > (unixepoch() * 1000))) AS authorized_content_count
-  `).first();
+          AND (usage_expires_at IS NULL OR usage_expires_at > (unixepoch() * 1000))) AS authorized_content_count,
+      (SELECT COUNT(DISTINCT article_id)
+        FROM article_body_signals
+        WHERE status = 'analyzed'
+          AND extractor_version = ?
+          AND taxonomy_version = ?) AS transient_evidence_count,
+      (SELECT COUNT(DISTINCT article_id) FROM (
+        SELECT ac.article_id AS article_id
+        FROM article_contents ac
+        WHERE ac.status = 'active'
+          AND ac.analysis_allowed = 1
+          AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+        UNION
+        SELECT article_id
+        FROM article_body_signals
+        WHERE status = 'analyzed'
+          AND extractor_version = ?
+          AND taxonomy_version = ?
+      )) AS body_evidence_count
+  `).bind(
+    ARTICLE_EXTRACTOR_VERSION,
+    FRAME_TAXONOMY_VERSION,
+    ARTICLE_EXTRACTOR_VERSION,
+    FRAME_TAXONOMY_VERSION,
+  ).first();
   const latest = await db.prepare(`
     SELECT id, status, finished_at, article_count, duplicate_count
     FROM collection_runs
@@ -367,6 +390,8 @@ async function collectionHealth(db) {
       configuredSources: Number(summary?.configured_sources ?? sourcePanel.sources.length),
       articleCount,
       authorizedContentCount: Number(summary?.authorized_content_count ?? 0),
+      transientEvidenceCount: Number(summary?.transient_evidence_count ?? 0),
+      bodyEvidenceCount: Number(summary?.body_evidence_count ?? 0),
       latestSourceCount,
       latestInserted: Number(latest?.article_count ?? 0),
       latestDuplicates: Number(latest?.duplicate_count ?? 0),
@@ -543,6 +568,11 @@ async function handleImport(request, env) {
 
 const PLACEMENT_ZONES = new Set(["top", "main", "section", "list"]);
 const CONTENT_ACQUISITION_METHODS = new Set(["licensed_export", "publisher_api", "authorized_crawl", "manual_research"]);
+const ARTICLE_FETCH_BATCH_LIMIT = 20;
+const ARTICLE_FETCH_CONCURRENCY = 2;
+const ARTICLE_HTML_MAX_BYTES = 2 * 1024 * 1024;
+const ARTICLE_REDIRECT_LIMIT = 3;
+const ARTICLE_EXTRACTOR_VERSION = "authorized-jsonld-v1";
 
 function integerInRange(value, minimum, maximum, label) {
   const number = Number(value);
@@ -716,6 +746,167 @@ function normalizeArticleBody(value) {
     .trim();
 }
 
+function decodeHtmlEntities(value) {
+  const named = { amp: "&", apos: "'", gt: ">", lt: "<", nbsp: " ", quot: '"' };
+  return String(value ?? "").replace(/&(#x[0-9a-f]+|#\d+|amp|apos|gt|lt|nbsp|quot);/gi, (match, entity) => {
+    const normalized = entity.toLowerCase();
+    if (normalized.startsWith("#x")) {
+      const codePoint = Number.parseInt(normalized.slice(2), 16);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+    }
+    if (normalized.startsWith("#")) {
+      const codePoint = Number.parseInt(normalized.slice(1), 10);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+    }
+    return named[normalized] ?? match;
+  });
+}
+
+function htmlFragmentToText(value) {
+  const withoutNonArticleContent = String(value ?? "")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<(script|style|noscript|template|svg|form|nav|aside|footer|header)\b[^>]*>[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<(br|hr)\b[^>]*\/?\s*>/gi, "\n")
+    .replace(/<\/(p|div|li|section|blockquote|h[1-6])\s*>/gi, "\n")
+    .replace(/<[^>]+>/g, " ");
+  return normalizeArticleBody(decodeHtmlEntities(withoutNonArticleContent).replace(/[ \t]{2,}/g, " "));
+}
+
+function articleBodyCandidates(value, candidates, accessibility) {
+  if (Array.isArray(value)) {
+    for (const item of value) articleBodyCandidates(item, candidates, accessibility);
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  const accessible = value.isAccessibleForFree;
+  if (accessible === false || String(accessible).toLowerCase() === "false") accessibility.blocked = true;
+  if (typeof value.articleBody === "string") candidates.push(normalizeArticleBody(decodeHtmlEntities(value.articleBody)));
+  if (Array.isArray(value["@graph"])) articleBodyCandidates(value["@graph"], candidates, accessibility);
+  for (const [key, child] of Object.entries(value)) {
+    if (key !== "@graph" && child && typeof child === "object") articleBodyCandidates(child, candidates, accessibility);
+  }
+}
+
+export function extractArticleBodyFromHtml(html) {
+  const source = String(html ?? "");
+  const candidates = [];
+  const accessibility = { blocked: false };
+  for (const match of source.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    const jsonText = match[1].replace(/^\s*<!--|-->\s*$/g, "").trim();
+    if (!jsonText) continue;
+    try {
+      articleBodyCandidates(JSON.parse(jsonText), candidates, accessibility);
+    } catch {
+      // Invalid publisher JSON-LD is ignored; the narrow HTML fallback remains available.
+    }
+  }
+  if (accessibility.blocked) throw new Error("유료 또는 구독 전용으로 표시된 기사입니다.");
+
+  for (const match of source.matchAll(/<article\b[^>]*>([\s\S]*?)<\/article>/gi)) {
+    candidates.push(htmlFragmentToText(match[1]));
+  }
+  const bodyContainerPattern = /<([a-z0-9]+)\b[^>]*(?:id|class)=["'][^"']*(?:article[-_ ]?body|article[-_ ]?content|news[-_ ]?(?:body|content)|view[-_ ]?content)[^"']*["'][^>]*>([\s\S]*?)<\/\1>/gi;
+  for (const match of source.matchAll(bodyContainerPattern)) candidates.push(htmlFragmentToText(match[2]));
+
+  const body = candidates
+    .filter((candidate) => candidate.length >= 300 && candidate.length <= 200_000)
+    .sort((left, right) => right.length - left.length)[0];
+  if (!body) throw new Error("페이지에서 300자 이상의 기사 본문을 확인하지 못했습니다.");
+  return body;
+}
+
+function sourceForArticle(article) {
+  return sourcePanel.sources.find((source) => source.id === article.sourceId || source.name === article.source);
+}
+
+function validateArticleFetchUrl(value, source) {
+  const canonicalUrl = canonicalizeArticleUrl(value);
+  const hostname = new URL(canonicalUrl).hostname.toLowerCase();
+  if (!source?.active || !matchesSourceDomain(hostname, source.domains ?? [])) {
+    throw new Error("등록된 언론사 공식 도메인의 HTTPS 기사만 가져올 수 있습니다.");
+  }
+  return canonicalUrl;
+}
+
+async function fetchArticleHtml(initialUrl, source, env) {
+  const fetcher = env?.ARTICLE_FETCHER?.fetch
+    ? env.ARTICLE_FETCHER.fetch.bind(env.ARTICLE_FETCHER)
+    : fetch;
+  let currentUrl = validateArticleFetchUrl(initialUrl, source);
+  for (let redirectCount = 0; redirectCount <= ARTICLE_REDIRECT_LIMIT; redirectCount += 1) {
+    const response = await fetcher(currentUrl, {
+      method: "GET",
+      redirect: "manual",
+      headers: {
+        accept: "text/html,application/xhtml+xml;q=0.9",
+        "user-agent": "AgendaFrame-Research/1.0 (+https://agendaframe.com)",
+      },
+    });
+    if ([301, 302, 303, 307, 308].includes(response.status)) {
+      const location = response.headers.get("location");
+      if (!location || redirectCount === ARTICLE_REDIRECT_LIMIT) throw new Error("기사 주소의 리디렉션을 확인하지 못했습니다.");
+      currentUrl = validateArticleFetchUrl(new URL(location, currentUrl).toString(), source);
+      continue;
+    }
+    if (!response.ok) throw new Error(`기사 페이지가 HTTP ${response.status}로 응답했습니다.`);
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!contentType.toLowerCase().includes("text/html") && !contentType.toLowerCase().includes("application/xhtml+xml")) {
+      throw new Error("HTML 기사 페이지가 아닙니다.");
+    }
+    const contentLength = Number(response.headers.get("content-length"));
+    if (Number.isFinite(contentLength) && contentLength > ARTICLE_HTML_MAX_BYTES) throw new Error("기사 페이지가 허용 크기를 초과했습니다.");
+    const html = await response.text();
+    if (new TextEncoder().encode(html).byteLength > ARTICLE_HTML_MAX_BYTES) throw new Error("기사 페이지가 허용 크기를 초과했습니다.");
+    return { html, finalUrl: currentUrl };
+  }
+  throw new Error("기사 주소의 리디렉션을 확인하지 못했습니다.");
+}
+
+async function storeAuthorizedArticleContent(env, article, body, options) {
+  const normalizedBody = normalizeArticleBody(body);
+  if (normalizedBody.length < 300 || normalizedBody.length > 200_000) throw new Error("본문은 300~200,000자 범위의 승인된 전문이어야 합니다.");
+  const bodyHash = await sha256Hex(normalizedBody);
+  const existing = await env.DB.prepare(`
+    SELECT id, object_key AS objectKey
+    FROM article_contents
+    WHERE article_id = ? AND body_hash = ?
+  `).bind(article.id, bodyHash).first();
+  const contentId = existing?.id ?? crypto.randomUUID();
+  const objectKey = existing?.objectKey ?? `article-content/${article.id}/${bodyHash}.txt`;
+
+  await env.CONTENT.put(objectKey, normalizedBody, {
+    httpMetadata: { contentType: "text/plain; charset=utf-8" },
+    customMetadata: { articleId: article.id, acquisitionMethod: options.acquisitionMethod },
+  });
+  await env.DB.prepare(`
+    INSERT INTO article_contents
+      (id, article_id, object_key, body_hash, body_characters, acquired_at, acquisition_method, usage_basis, usage_expires_at, analysis_allowed, public_evidence_allowed, extractor_version, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'active')
+    ON CONFLICT(article_id, body_hash) DO UPDATE SET
+      acquired_at = excluded.acquired_at,
+      acquisition_method = excluded.acquisition_method,
+      usage_basis = excluded.usage_basis,
+      usage_expires_at = excluded.usage_expires_at,
+      analysis_allowed = 1,
+      public_evidence_allowed = excluded.public_evidence_allowed,
+      extractor_version = excluded.extractor_version,
+      status = 'active'
+  `).bind(
+    contentId,
+    article.id,
+    objectKey,
+    bodyHash,
+    normalizedBody.length,
+    options.acquiredAt,
+    options.acquisitionMethod,
+    options.usageBasis,
+    options.usageExpiresAt,
+    options.publicEvidenceAllowed ? 1 : 0,
+    options.extractorVersion,
+  ).run();
+  return { contentId, bodyCharacters: normalizedBody.length, existing: Boolean(existing) };
+}
+
 async function handleContentUpload(request, env) {
   if (!env?.DB || !env?.CONTENT) return jsonResponse({ error: "비공개 본문 저장소가 아직 준비되지 않았습니다." }, 503);
   if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
@@ -752,58 +943,255 @@ async function handleContentUpload(request, env) {
     if (usageExpiresAt !== null && usageExpiresAt <= acquiredAt) throw new Error("이용 만료 시각은 확보 시각 이후여야 합니다.");
     const extractorVersion = String(payload.extractor_version ?? "manual-upload-v1").trim().slice(0, 80) || "manual-upload-v1";
     const publicEvidenceAllowed = payload.public_evidence_allowed === true;
-    const bodyHash = await sha256Hex(body);
-    const existing = await env.DB.prepare(`
-      SELECT id, object_key AS objectKey
-      FROM article_contents
-      WHERE article_id = ? AND body_hash = ?
-    `).bind(article.id, bodyHash).first();
-    const contentId = existing?.id ?? crypto.randomUUID();
-    const objectKey = existing?.objectKey ?? `article-content/${article.id}/${bodyHash}.txt`;
-
-    await env.CONTENT.put(objectKey, body, {
-      httpMetadata: { contentType: "text/plain; charset=utf-8" },
-      customMetadata: { articleId: article.id, acquisitionMethod },
-    });
-    await env.DB.prepare(`
-      INSERT INTO article_contents
-        (id, article_id, object_key, body_hash, body_characters, acquired_at, acquisition_method, usage_basis, usage_expires_at, analysis_allowed, public_evidence_allowed, extractor_version, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'active')
-      ON CONFLICT(article_id, body_hash) DO UPDATE SET
-        acquired_at = excluded.acquired_at,
-        acquisition_method = excluded.acquisition_method,
-        usage_basis = excluded.usage_basis,
-        usage_expires_at = excluded.usage_expires_at,
-        analysis_allowed = 1,
-        public_evidence_allowed = excluded.public_evidence_allowed,
-        extractor_version = excluded.extractor_version,
-        status = 'active'
-    `).bind(
-      contentId,
-      article.id,
-      objectKey,
-      bodyHash,
-      body.length,
+    const stored = await storeAuthorizedArticleContent(env, article, body, {
       acquiredAt,
       acquisitionMethod,
       usageBasis,
       usageExpiresAt,
-      publicEvidenceAllowed ? 1 : 0,
+      publicEvidenceAllowed,
       extractorVersion,
-    ).run();
+    });
 
     return jsonResponse({
-      contentId,
+      contentId: stored.contentId,
       articleId: article.id,
       source: article.source,
       title: article.title,
-      bodyCharacters: body.length,
+      bodyCharacters: stored.bodyCharacters,
       analysisAllowed: true,
       publicEvidenceAllowed,
       status: "active",
-    }, existing ? 200 : 201);
+    }, stored.existing ? 200 : 201);
   } catch (error) {
     return jsonResponse({ error: error instanceof Error ? error.message : "본문을 등록하지 못했습니다." }, 400);
+  }
+}
+
+function transientFailureCode(error) {
+  const message = String(error instanceof Error ? error.message : error ?? "");
+  if (/유료|구독|로그인|접근 제한|차단/.test(message)) return "ACCESS_RESTRICTED";
+  if (/리디렉션|도메인/.test(message)) return "REDIRECT_REJECTED";
+  if (/본문|articleBody|추출/.test(message)) return "BODY_UNAVAILABLE";
+  return "FETCH_FAILED";
+}
+
+function parseDetectedFrames(value) {
+  try {
+    const parsed = JSON.parse(String(value ?? "[]"));
+    return Array.isArray(parsed)
+      ? [...new Set(parsed.filter((frame) => typeof frame === "string" && frame.length <= 40))]
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+async function loadTransientBodySignals(db, start, end) {
+  const result = await db.prepare(`
+    SELECT signals.article_id AS articleId, signals.detected_frames AS detectedFrames
+    FROM article_body_signals signals
+    JOIN articles a ON a.id = signals.article_id
+    WHERE a.published_at >= ? AND a.published_at < ?
+      AND signals.status = 'analyzed'
+      AND signals.extractor_version = ?
+      AND signals.taxonomy_version = ?
+  `).bind(start, end, ARTICLE_EXTRACTOR_VERSION, FRAME_TAXONOMY_VERSION).all();
+  return new Map((result.results ?? []).map((row) => [row.articleId, {
+    bodyAnalysisAvailable: true,
+    bodyFrameSignals: parseDetectedFrames(row.detectedFrames),
+    contentVersionId: null,
+    publicEvidenceAllowed: false,
+    transientContent: true,
+  }]));
+}
+
+async function transientAnalysisProgress(db, start, end) {
+  const row = await db.prepare(`
+    SELECT
+      COUNT(*) AS total,
+      COALESCE(SUM(CASE WHEN signals.status = 'analyzed' THEN 1 ELSE 0 END), 0) AS analyzed,
+      COALESCE(SUM(CASE WHEN signals.status = 'failed' THEN 1 ELSE 0 END), 0) AS failed
+    FROM articles a
+    LEFT JOIN article_body_signals signals
+      ON signals.article_id = a.id
+      AND signals.extractor_version = ?
+      AND signals.taxonomy_version = ?
+    WHERE a.published_at >= ? AND a.published_at < ?
+  `).bind(ARTICLE_EXTRACTOR_VERSION, FRAME_TAXONOMY_VERSION, start, end).first();
+  const total = Number(row?.total ?? 0);
+  const analyzed = Number(row?.analyzed ?? 0);
+  const failed = Number(row?.failed ?? 0);
+  return {
+    total,
+    processed: analyzed + failed,
+    analyzed,
+    failed,
+    remaining: Math.max(0, total - analyzed - failed),
+  };
+}
+
+async function handleTransientAnalysisStatus(request, env) {
+  if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503, { request });
+  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401, { request });
+  if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "허용된 AgendaFrame 주소에서 보낸 요청만 처리합니다." }, 403, { request });
+  try {
+    const targetDate = await resolveAnalysisDate(env.DB, String(new URL(request.url).searchParams.get("date") ?? "").trim());
+    const start = Date.parse(`${targetDate}T00:00:00+09:00`);
+    const end = start + 86_400_000;
+    const progress = await transientAnalysisProgress(env.DB, start, end);
+    return jsonResponse({
+      date: targetDate,
+      extractorVersion: ARTICLE_EXTRACTOR_VERSION,
+      taxonomyVersion: FRAME_TAXONOMY_VERSION,
+      bodyStorageCount: 0,
+      complete: progress.remaining === 0,
+      progress,
+    }, 200, { request });
+  } catch (error) {
+    return jsonResponse({ error: error instanceof Error ? error.message : "본문 분석 상태를 확인하지 못했습니다." }, 400, { request });
+  }
+}
+
+async function handleTransientAnalyze(request, env) {
+  if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503, { request });
+  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401, { request });
+  if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "허용된 AgendaFrame 주소에서 보낸 요청만 처리합니다." }, 403, { request });
+
+  let payload;
+  try {
+    payload = await readJsonPayload(request);
+  } catch (error) {
+    return jsonResponse({ error: error instanceof Error ? error.message : "본문 수집 형식을 확인해 주세요." }, 400, { request });
+  }
+
+  try {
+    if (payload.transient_analysis_acknowledged !== true) throw new Error("공개 기사만 임시 분석하고 접근 제한을 우회하지 않는 조건을 확인해야 합니다.");
+    const targetDate = await resolveAnalysisDate(env.DB, String(payload.date ?? "").trim());
+    const limit = integerInRange(payload.limit ?? ARTICLE_FETCH_BATCH_LIMIT, 1, ARTICLE_FETCH_BATCH_LIMIT, "배치당 임시 분석 건수");
+    const retryFailed = payload.retry_failed === true;
+    const start = Date.parse(`${targetDate}T00:00:00+09:00`);
+    const end = start + 86_400_000;
+    const selected = await env.DB.prepare(`
+      SELECT
+        a.id,
+        a.title,
+        a.canonical_url AS canonicalUrl,
+        a.source_id AS sourceId,
+        s.name AS source
+      FROM articles a
+      JOIN media_sources s ON s.id = a.source_id
+      LEFT JOIN article_body_signals signals
+        ON signals.article_id = a.id
+        AND signals.extractor_version = ?
+        AND signals.taxonomy_version = ?
+      WHERE a.published_at >= ? AND a.published_at < ?
+        AND (signals.article_id IS NULL OR (? = 1 AND signals.status = 'failed'))
+      ORDER BY
+        CASE a.homepage_placement WHEN 'top' THEN 4 WHEN 'main' THEN 3 WHEN 'section' THEN 2 ELSE 1 END DESC,
+        a.homepage_rank ASC,
+        a.published_at DESC
+      LIMIT ?
+    `).bind(ARTICLE_EXTRACTOR_VERSION, FRAME_TAXONOMY_VERSION, start, end, retryFailed ? 1 : 0, limit).all();
+    const articles = selected.results ?? [];
+    const results = await mapWithConcurrency(articles, ARTICLE_FETCH_CONCURRENCY, async (article) => {
+      try {
+        const source = sourceForArticle(article);
+        const { html } = await fetchArticleHtml(article.canonicalUrl, source, env);
+        const body = extractArticleBodyFromHtml(html);
+        const signals = extractBodyFrameSignals(body);
+        return {
+          articleId: article.id,
+          source: article.source,
+          title: article.title,
+          status: "analyzed",
+          bodyHash: await sha256Hex(body),
+          bodyCharacters: signals.bodyCharacters,
+          detectedFrames: signals.detectedFrames,
+        };
+      } catch (error) {
+        return {
+          articleId: article.id,
+          source: article.source,
+          title: article.title,
+          status: "failed",
+          failureCode: transientFailureCode(error),
+          reason: String(error instanceof Error ? error.message : "본문을 가져오지 못했습니다.").slice(0, 240),
+        };
+      }
+    });
+    if (results.length) {
+      const analyzedAt = Date.now();
+      await runBatches(env.DB, results.map((result) => env.DB.prepare(`
+        INSERT INTO article_body_signals
+          (id, article_id, body_hash, body_characters, detected_frames, status, failure_code, extractor_version, taxonomy_version, analyzed_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(article_id, extractor_version, taxonomy_version) DO UPDATE SET
+          body_hash = excluded.body_hash,
+          body_characters = excluded.body_characters,
+          detected_frames = excluded.detected_frames,
+          status = excluded.status,
+          failure_code = excluded.failure_code,
+          analyzed_at = excluded.analyzed_at
+      `).bind(
+        crypto.randomUUID(),
+        result.articleId,
+        result.status === "analyzed" ? result.bodyHash : null,
+        result.status === "analyzed" ? result.bodyCharacters : null,
+        JSON.stringify(result.status === "analyzed" ? result.detectedFrames : []),
+        result.status,
+        result.status === "failed" ? result.failureCode : null,
+        ARTICLE_EXTRACTOR_VERSION,
+        FRAME_TAXONOMY_VERSION,
+        analyzedAt,
+      )));
+    }
+
+    const progress = await transientAnalysisProgress(env.DB, start, end);
+    const ready = results.filter((result) => result.status === "analyzed");
+    let analysis = null;
+    if (ready.length || (payload.refresh_analysis === true && progress.remaining === 0)) {
+      const analysisHeaders = new Headers({ "content-type": "application/json" });
+      for (const name of ["authorization", "origin", "sec-fetch-site"]) {
+        const value = request.headers.get(name);
+        if (value) analysisHeaders.set(name, value);
+      }
+      const analysisResponse = await handleAnalyze(new Request(new URL("/api/analyze", request.url), {
+        method: "POST",
+        headers: analysisHeaders,
+        body: JSON.stringify({ date: targetDate }),
+      }), env);
+      analysis = await analysisResponse.json();
+      if (!analysisResponse.ok) return jsonResponse(analysis, analysisResponse.status, { request });
+    }
+    const publicResults = results.map((result) => result.status === "analyzed" ? {
+      articleId: result.articleId,
+      source: result.source,
+      title: result.title,
+      status: result.status,
+      signalCount: result.detectedFrames.length,
+    } : {
+      articleId: result.articleId,
+      source: result.source,
+      title: result.title,
+      status: result.status,
+      failureCode: result.failureCode,
+      reason: result.reason,
+    });
+    return jsonResponse({
+      date: targetDate,
+      requested: articles.length,
+      analyzedBodies: ready.length,
+      bodyStorageCount: 0,
+      failed: results.filter((result) => result.status === "failed").length,
+      extractorVersion: ARTICLE_EXTRACTOR_VERSION,
+      taxonomyVersion: FRAME_TAXONOMY_VERSION,
+      complete: progress.remaining === 0,
+      progress,
+      results: publicResults,
+      analysis,
+    }, results.length ? 201 : 200, { request });
+  } catch (error) {
+    return jsonResponse({ error: error instanceof Error ? error.message : "본문 임시 분석을 완료하지 못했습니다." }, 400, { request });
   }
 }
 
@@ -999,7 +1387,7 @@ async function resolveAnalysisDate(db, requestedDate) {
   return resolved;
 }
 
-async function handleAnalyze(request, env) {
+async function handleAnalyze(request, env, { contentOverrides = new Map(), includeStoredContents = true, includeDerivedSignals = true } = {}) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
   if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
 
@@ -1020,7 +1408,7 @@ async function handleAnalyze(request, env) {
   }
   const start = Date.parse(`${targetDate}T00:00:00+09:00`);
   const end = start + 86_400_000;
-  const [articleResult, placementResult, authorizedContents] = await Promise.all([
+  const [articleResult, placementResult, authorizedContents, transientSignals] = await Promise.all([
     db.prepare(`
       SELECT
         a.id,
@@ -1051,8 +1439,15 @@ async function handleAnalyze(request, env) {
       WHERE po.article_id IS NOT NULL AND hs.observed_at >= ? AND hs.observed_at < ?
       ORDER BY hs.observed_at ASC, po.page_rank ASC
     `).bind(start, end).all(),
-    loadAuthorizedArticleContents(db, env.CONTENT, start, end),
+    includeStoredContents ? loadAuthorizedArticleContents(db, env.CONTENT, start, end) : Promise.resolve(new Map()),
+    includeDerivedSignals ? loadTransientBodySignals(db, start, end) : Promise.resolve(new Map()),
   ]);
+  const analysisContents = new Map();
+  for (const contents of [transientSignals, authorizedContents, contentOverrides]) {
+    for (const [articleId, content] of contents) {
+      analysisContents.set(articleId, { ...(analysisContents.get(articleId) ?? {}), ...content });
+    }
+  }
   const placementByArticle = new Map();
   for (const observation of placementResult.results ?? []) {
     const values = placementByArticle.get(observation.articleId) ?? [];
@@ -1072,7 +1467,7 @@ async function handleAnalyze(request, env) {
       mediaGroupId: sourcePolicy?.mediaGroupId ?? article.sourceId,
       sourceType: sourcePolicy?.sourceType ?? "unclassified",
       placementObservations: placementByArticle.get(article.id) ?? [],
-      ...(authorizedContents.get(article.id) ?? {}),
+      ...(analysisContents.get(article.id) ?? {}),
     };
   });
   if (!articles.length) return jsonResponse({ error: `${targetDate}에 분석할 기사가 없습니다.` }, 400);
@@ -1173,6 +1568,11 @@ async function handleAnalyze(request, env) {
       modelVersion: ANALYSIS_MODEL_VERSION,
       articleCount: articles.length,
       authorizedBodyCount: authorizedContents.size,
+      transientBodyCount: new Set([
+        ...transientSignals.keys(),
+        ...[...contentOverrides].filter(([, content]) => content?.transientContent).map(([articleId]) => articleId),
+      ]).size,
+      bodyEvidenceCount: [...analysisContents.values()].filter((content) => Boolean(content?.bodyText) || content?.bodyAnalysisAvailable === true).length,
       issueCount: analyzed.length,
       paidServicesUsed: false,
     }, 201);
@@ -1335,12 +1735,19 @@ async function handleIssues(request, env) {
         volume_score AS volumeScore, repetition_score AS repetitionScore, confidence,
         (SELECT COUNT(*) FROM issue_articles ia JOIN articles a ON a.id = ia.article_id WHERE ia.issue_id = issues.id AND (a.homepage_placement IS NOT NULL OR EXISTS(SELECT 1 FROM placement_observations po WHERE po.article_id = a.id))) AS placementObservedCount,
         (SELECT COUNT(*) FROM issue_articles ia WHERE ia.issue_id = issues.id) AS placementTotalCount,
-         (SELECT COUNT(*) FROM issue_articles ia WHERE ia.issue_id = issues.id AND EXISTS(
-           SELECT 1 FROM article_contents ac
-           WHERE ac.article_id = ia.article_id
-             AND ac.status = 'active'
-             AND ac.analysis_allowed = 1
-             AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+         (SELECT COUNT(*) FROM issue_articles ia WHERE ia.issue_id = issues.id AND (
+           EXISTS(
+             SELECT 1 FROM article_contents ac
+             WHERE ac.article_id = ia.article_id
+               AND ac.status = 'active'
+               AND ac.analysis_allowed = 1
+               AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+           ) OR EXISTS(
+             SELECT 1 FROM frame_analyses fa
+             WHERE fa.issue_id = issues.id
+               AND fa.article_id = ia.article_id
+               AND fa.evidence_basis = 'body_transient'
+           )
          )) AS contentAvailableCount
       FROM issues
       WHERE ${where}
@@ -1369,12 +1776,19 @@ async function handleIssueDetail(request, issueId, env) {
       r.id AS runId, r.target_date AS targetDate, r.provider, r.model_version AS modelVersion, r.finished_at AS analyzedAt,
       (SELECT COUNT(*) FROM issue_articles observed_ia JOIN articles observed_a ON observed_a.id = observed_ia.article_id WHERE observed_ia.issue_id = i.id AND (observed_a.homepage_placement IS NOT NULL OR EXISTS(SELECT 1 FROM placement_observations po WHERE po.article_id = observed_a.id))) AS placementObservedCount,
       (SELECT COUNT(*) FROM issue_articles total_ia WHERE total_ia.issue_id = i.id) AS placementTotalCount,
-      (SELECT COUNT(*) FROM issue_articles content_ia WHERE content_ia.issue_id = i.id AND EXISTS(
-        SELECT 1 FROM article_contents ac
-        WHERE ac.article_id = content_ia.article_id
-          AND ac.status = 'active'
-          AND ac.analysis_allowed = 1
-          AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+      (SELECT COUNT(*) FROM issue_articles content_ia WHERE content_ia.issue_id = i.id AND (
+        EXISTS(
+          SELECT 1 FROM article_contents ac
+          WHERE ac.article_id = content_ia.article_id
+            AND ac.status = 'active'
+            AND ac.analysis_allowed = 1
+            AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+        ) OR EXISTS(
+          SELECT 1 FROM frame_analyses fa
+          WHERE fa.issue_id = i.id
+            AND fa.article_id = content_ia.article_id
+            AND fa.evidence_basis = 'body_transient'
+        )
       )) AS contentAvailableCount
     FROM issues i
     JOIN analysis_runs r ON r.id = i.run_id
@@ -1393,6 +1807,11 @@ async function handleIssueDetail(request, issueId, env) {
             AND ac.status = 'active'
             AND ac.analysis_allowed = 1
             AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+        ) OR EXISTS(
+          SELECT 1 FROM frame_analyses fa
+          WHERE fa.issue_id = ia.issue_id
+            AND fa.article_id = a.id
+            AND fa.evidence_basis = 'body_transient'
         ) THEN 1 ELSE 0 END AS contentAvailable
       FROM issue_articles ia
       JOIN articles a ON a.id = ia.article_id
@@ -1439,6 +1858,11 @@ async function handleIssueDetail(request, issueId, env) {
       && Number(frame.contentAnalysisAllowed) === 1
       && Number(frame.publicEvidenceAllowed) === 1
       && (frame.usageExpiresAt == null || Number(frame.usageExpiresAt) > Date.now());
+    if (frame.evidenceBasis === "body_transient") {
+      frame.evidenceText = "기사 본문을 메모리에서 임시 분석해 감지한 표현 단서입니다. 전문과 원문 문장은 저장하지 않았습니다.";
+      frame.evidenceStart = null;
+      frame.evidenceEnd = null;
+    }
     if (frame.evidenceBasis === "body_private" || (frame.evidenceBasis === "body_public" && !publicBodyEvidenceIsActive)) {
       frame.evidenceBasis = "body_private";
       frame.evidenceText = "승인된 본문에서 감지한 신호입니다. 원문은 공개하지 않습니다.";
@@ -1699,7 +2123,7 @@ export async function handleApiRequest(request, env = {}) {
         status: "ok",
         mode: "demo",
         dataAsOf: null,
-        collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, authorizedContentCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "awaiting_import" },
+        collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, authorizedContentCount: 0, transientEvidenceCount: 0, bodyEvidenceCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "awaiting_import" },
         analysis: null,
         freshness,
         timestamps: { collectedAt: null, analyzedAt: null, publishedAt: null, nextScheduledAt: null },
@@ -1731,7 +2155,7 @@ export async function handleApiRequest(request, env = {}) {
       }, 200, { request });
     } catch (error) {
       console.error("AgendaFrame health query failed", error);
-      return jsonResponse({ status: "degraded", mode: "unavailable", dataAsOf: null, collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, authorizedContentCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "storage_unavailable" }, analysis: null, freshness: { status: "analysis_pending", label: "분석 보류", staleDays: null }, timestamps: { collectedAt: null, analyzedAt: null, publishedAt: null, nextScheduledAt: null }, meta: responseMeta(null, "unavailable") }, 503, { request });
+      return jsonResponse({ status: "degraded", mode: "unavailable", dataAsOf: null, collection: { method: sourcePanel.collectionProvider, directCrawling: false, configuredSources: sourcePanel.sources.length, articleCount: 0, authorizedContentCount: 0, transientEvidenceCount: 0, bodyEvidenceCount: 0, latestSourceCount: 0, latestInserted: 0, latestDuplicates: 0, latestStatus: "storage_unavailable" }, analysis: null, freshness: { status: "analysis_pending", label: "분석 보류", staleDays: null }, timestamps: { collectedAt: null, analyzedAt: null, publishedAt: null, nextScheduledAt: null }, meta: responseMeta(null, "unavailable") }, 503, { request });
     }
   }
   if (url.pathname === "/api/sources" && request.method === "GET") {
@@ -1759,6 +2183,11 @@ export async function handleApiRequest(request, env = {}) {
   if (url.pathname === "/api/content") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
     return handleContentUpload(request, env);
+  }
+  if (url.pathname === "/api/analyze/transient") {
+    if (request.method === "GET") return handleTransientAnalysisStatus(request, env);
+    if (request.method !== "POST") return jsonResponse({ error: "GET 또는 POST 요청만 허용됩니다." }, 405);
+    return handleTransientAnalyze(request, env);
   }
   if (url.pathname === "/api/import") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);

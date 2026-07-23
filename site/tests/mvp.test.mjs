@@ -5,7 +5,7 @@ import test from "node:test";
 import sourcePanel from "../data/sources.json" with { type: "json" };
 import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, analyzeArticles, titleTokens } from "../worker/analysis.mjs";
 import { getAnalysisProvider } from "../worker/analysis-provider.mjs";
-import { calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, configureSourcePanel, enumerateKstDates, handleApiRequest, validateImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
+import { calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, configureSourcePanel, enumerateKstDates, extractArticleBodyFromHtml, handleApiRequest, validateImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
 
 configureSourcePanel(sourcePanel);
 
@@ -18,16 +18,17 @@ test("builds the real React dashboard and admin application", async () => {
   const worker = await readFile(new URL("../dist/server/index.js", import.meta.url), "utf8");
   assert.match(worker, /\/api\/analyze/);
   assert.match(worker, /rules_local/);
-  assert.match(worker, /agenda-rules-v3/);
+  assert.match(worker, /agenda-rules-v4/);
   assert.match(worker, /\/api\/quality/);
   assert.match(worker, /\/api\/analysis\/runs/);
+  assert.match(worker, /\/api\/analyze\/transient/);
 });
 
 test("keeps the public dashboard readable, evidence-first, and explicit about limits", async () => {
   const dashboard = await readFile(new URL("../app/agenda-dashboard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
 
-  for (const copy of ["같은 사건,", "근거가 부족한 분석은", "승인 본문", "사람 검토", "중요도·사실성·여론을 뜻하지 않습니다"]) {
+  for (const copy of ["같은 사건,", "근거가 부족한 분석은", "본문 기반 단서", "임시 본문 분석", "사람 검토", "중요도·사실성·여론을 뜻하지 않습니다"]) {
     assert.match(dashboard, new RegExp(copy));
   }
   assert.match(dashboard, /22개 주요 종합일간지·경제매체·뉴스통신사/);
@@ -62,6 +63,8 @@ test("packages Sites hosting metadata and database migrations", async () => {
   for (const table of ["homepage_snapshots", "placement_observations", "article_contents"]) {
     assert.ok(evidenceMigration.includes(`CREATE TABLE \`${table}\``));
   }
+  const bodySignalMigration = await readFile(new URL("../dist/.openai/drizzle/0004_colossal_kylun.sql", import.meta.url), "utf8");
+  assert.ok(bodySignalMigration.includes("CREATE TABLE `article_body_signals`"));
 });
 
 test("calculates transparent human-review quality estimates", () => {
@@ -116,7 +119,7 @@ test("clusters real-looking article titles and produces explainable scores", () 
   assert.ok(housing.agendaScore > issues.find((issue) => issue.articleCount === 1).agendaScore);
   assert.deepEqual(titleTokens("[단독] 정부의 청년 주거지원 정책 발표"), ["청년", "주거지원", "정책", "발표"]);
   assert.equal(ANALYSIS_PROVIDER, "rules_local");
-  assert.equal(ANALYSIS_MODEL_VERSION, "agenda-rules-v3");
+  assert.equal(ANALYSIS_MODEL_VERSION, "agenda-rules-v4");
   assert.equal(getAnalysisProvider().analyze, analyzeArticles);
   assert.throws(() => getAnalysisProvider("vertex_ai"), /지원하지 않는 분석 공급자/);
 });
@@ -172,6 +175,23 @@ test("uses repeated placement observations and keeps authorized body text privat
   assert.equal(issue.articles[0].contentAvailable, true);
   assert.equal("bodyText" in issue.articles[0], false);
   assert.equal(JSON.stringify(issue).includes(privateBody), false);
+
+  const [transientIssue] = analyzeArticles([{
+    id: "body-transient-1",
+    sourceId: "hani",
+    source: "한겨레",
+    title: "정부 청년 주거 정책 확대 발표",
+    section: "정치",
+    bodyText: privateBody,
+    transientContent: true,
+  }]);
+  const transientResponsibility = transientIssue.frames.find((frame) => frame.frame === "responsibility");
+  assert.equal(transientResponsibility.evidenceBasis, "body_transient");
+  assert.equal(transientResponsibility.contentVersionId, null);
+  assert.equal(transientResponsibility.evidenceStart, null);
+  assert.equal(transientResponsibility.evidenceEnd, null);
+  assert.match(transientResponsibility.evidenceText, /전문과 원문 문장은 저장하지 않았습니다/);
+  assert.equal(JSON.stringify(transientIssue).includes(privateBody), false);
 });
 
 test("stores only attested article bodies in the private object binding", async () => {
@@ -224,6 +244,151 @@ test("stores only attested article bodies in the private object binding", async 
   assert.equal(unattested.status, 400);
   assert.match((await unattested.json()).error.message, /권한/);
   assert.equal(objects.length, 1);
+});
+
+test("extracts a full article body from publisher JSON-LD and rejects explicit paywalls", () => {
+  const body = "정부는 정책 변경의 배경과 시행 일정을 설명했고 국회와 시민단체는 책임 소재와 보완 대책을 각각 제시했다. ".repeat(12).trim();
+  const html = `<html><head><script type="application/ld+json">${JSON.stringify({ "@type": "NewsArticle", isAccessibleForFree: true, articleBody: body })}</script></head><body><article>짧은 화면 요약</article></body></html>`;
+  assert.equal(extractArticleBodyFromHtml(html), body);
+  const paid = `<script type="application/ld+json">${JSON.stringify({ "@type": "NewsArticle", isAccessibleForFree: false, articleBody: body })}</script>`;
+  assert.throws(() => extractArticleBodyFromHtml(paid), /유료|구독/);
+});
+
+test("resumes public body analysis across batches and stores only derived signals", async () => {
+  const statements = [];
+  const requested = [];
+  const signalRows = new Map();
+  const articles = [
+    {
+      id: "article-fetch-1",
+      sourceId: "hani",
+      source: "한겨레",
+      title: "정부 정책 변경 배경과 후속 대책",
+      canonicalUrl: "https://www.hani.co.kr/arti/politics/fetch-test-1.html",
+      url: "https://www.hani.co.kr/arti/politics/fetch-test-1.html",
+      section: "정치",
+      publishedAt: Date.parse("2026-07-19T10:00:00+09:00"),
+      collectedAt: Date.parse("2026-07-19T10:05:00+09:00"),
+      homepagePlacement: "main",
+      homepageRank: 2,
+    },
+    {
+      id: "article-fetch-2",
+      sourceId: "khan",
+      source: "경향신문",
+      title: "정부 정책 변경 책임과 후속 대책",
+      canonicalUrl: "https://www.khan.co.kr/politics/fetch-test-2.html",
+      url: "https://www.khan.co.kr/politics/fetch-test-2.html",
+      section: "정치",
+      publishedAt: Date.parse("2026-07-19T09:30:00+09:00"),
+      collectedAt: Date.parse("2026-07-19T10:06:00+09:00"),
+      homepagePlacement: "main",
+      homepageRank: 3,
+    },
+  ];
+  const DB = {
+    prepare(sql) {
+      return {
+        bind(...parameters) {
+          const statement = {
+            sql,
+            parameters,
+            all: async () => {
+              if (sql.includes("a.canonical_url AS canonicalUrl")) {
+                const limit = Number(parameters.at(-1));
+                return { results: articles.filter((article) => !signalRows.has(article.id)).slice(0, limit) };
+              }
+              if (sql.includes("a.canonical_url AS url")) return { results: articles };
+              if (sql.includes("FROM placement_observations")) return { results: [] };
+              if (sql.includes("FROM article_body_signals signals")) {
+                return { results: [...signalRows].filter(([, row]) => row.status === "analyzed").map(([articleId, row]) => ({ articleId, detectedFrames: row.detectedFrames })) };
+              }
+              throw new Error(`Unexpected all SQL: ${sql}`);
+            },
+            first: async () => {
+              if (sql.includes("COUNT(*) AS total") && sql.includes("article_body_signals signals")) {
+                const analyzed = [...signalRows.values()].filter((row) => row.status === "analyzed").length;
+                const failed = [...signalRows.values()].filter((row) => row.status === "failed").length;
+                return { total: articles.length, analyzed, failed };
+              }
+              throw new Error(`Unexpected first SQL: ${sql}`);
+            },
+            run: async () => ({ success: true }),
+          };
+          statements.push(statement);
+          return statement;
+        },
+      };
+    },
+    batch: async (batch) => {
+      for (const statement of batch) {
+        if (statement.sql.includes("INSERT INTO article_body_signals")) {
+          signalRows.set(statement.parameters[1], {
+            detectedFrames: statement.parameters[4],
+            status: statement.parameters[5],
+          });
+        }
+      }
+      return batch.map(() => ({ success: true, meta: { changes: 1 } }));
+    },
+  };
+  const body = "정부는 정책 변경의 배경과 시행 일정을 설명했다. 국회와 시민단체는 책임 소재와 보완 대책을 각각 제시했다. ".repeat(12).trim();
+  const ARTICLE_FETCHER = {
+    fetch: async (url, options) => {
+      requested.push({ url, options });
+      return new Response(`<script type="application/ld+json">${JSON.stringify({ "@type": "NewsArticle", isAccessibleForFree: true, articleBody: body })}</script>`, { headers: { "content-type": "text/html; charset=utf-8" } });
+    },
+  };
+  const requestForBatch = () => new Request("https://example.test/api/analyze/transient", {
+    method: "POST",
+    headers: { authorization: "Bearer correct", origin: "https://example.test", "sec-fetch-site": "same-origin", "content-type": "application/json" },
+    body: JSON.stringify({
+      date: "2026-07-19",
+      limit: 1,
+      transient_analysis_acknowledged: true,
+    }),
+  });
+
+  const firstResponse = await handleApiRequest(requestForBatch(), { DB, ARTICLE_FETCHER, IMPORT_TOKEN: "correct" });
+  assert.equal(firstResponse.status, 201);
+  const first = await firstResponse.json();
+  assert.deepEqual(first.progress, { total: 2, processed: 1, analyzed: 1, failed: 0, remaining: 1 });
+  assert.equal(first.complete, false);
+  assert.equal(first.analysis.transientBodyCount, 1);
+  assert.equal(first.analysis.bodyEvidenceCount, 1);
+
+  const secondResponse = await handleApiRequest(requestForBatch(), { DB, ARTICLE_FETCHER, IMPORT_TOKEN: "correct" });
+  assert.equal(secondResponse.status, 201);
+  const second = await secondResponse.json();
+  assert.deepEqual(second.progress, { total: 2, processed: 2, analyzed: 2, failed: 0, remaining: 0 });
+  assert.equal(second.complete, true);
+  assert.equal(second.bodyStorageCount, 0);
+  assert.equal(second.analysis.transientBodyCount, 2);
+  assert.equal(second.analysis.authorizedBodyCount, 0);
+  assert.equal(second.analysis.bodyEvidenceCount, 2);
+  assert.equal("content" in second.results[0], false);
+  assert.equal(JSON.stringify(second).includes(body), false);
+  assert.deepEqual(requested.map((entry) => entry.url), articles.map((article) => article.canonicalUrl));
+  assert.ok(requested.every((entry) => entry.options.redirect === "manual"));
+  assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO article_body_signals")));
+  assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO frame_analyses") && statement.parameters.includes("body_transient")));
+  assert.ok(!statements.some((statement) => statement.sql.includes("INSERT INTO article_contents")));
+  assert.equal(JSON.stringify(statements).includes(body), false);
+
+  const statusResponse = await handleApiRequest(new Request("https://example.test/api/analyze/transient?date=2026-07-19", {
+    headers: { authorization: "Bearer correct", origin: "https://example.test", "sec-fetch-site": "same-origin" },
+  }), { DB, IMPORT_TOKEN: "correct" });
+  assert.equal(statusResponse.status, 200);
+  assert.equal((await statusResponse.json()).complete, true);
+
+  const unacknowledged = await handleApiRequest(new Request("https://example.test/api/analyze/transient", {
+    method: "POST",
+    headers: { authorization: "Bearer correct", origin: "https://example.test", "sec-fetch-site": "same-origin", "content-type": "application/json" },
+    body: JSON.stringify({ date: "2026-07-19", limit: 5, transient_analysis_acknowledged: false }),
+  }), { DB, ARTICLE_FETCHER, IMPORT_TOKEN: "correct" });
+  assert.equal(unacknowledged.status, 400);
+  assert.match((await unacknowledged.json()).error.message, /조건/);
+  assert.equal(requested.length, 2);
 });
 
 test("accepts authenticated homepage geometry as repeated observations", async () => {
