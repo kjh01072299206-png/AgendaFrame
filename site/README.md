@@ -23,13 +23,13 @@
 - 상위 50개 이슈의 사람 검토와 잘못 묶인 기사·누락 기사 영속화
 - 검토 결과 기반 추정 정밀도·재현율·의제·프레임 동의율 산출
 
-현재 분석 공급자는 `rules_local`, 모델 버전은 `agenda-rules-v3`입니다. 별도 유료 API를 호출하지 않습니다. 임시 본문을 읽을 수 있으면 본문 표현 단서를 우선하고, 없으면 제목 단서로 제한합니다. 분석 공급자를 바꾸더라도 [`docs/public-api.schema.json`](docs/public-api.schema.json)의 공개 계약과 결과 계보를 유지하도록 설계했습니다. 구조화 분석과 사람 검토가 끝나지 않은 비교·취재원·기사 추천은 생성하지 않습니다.
+현재 분석 공급자는 `rules_local`, 모델 버전은 `agenda-rules-v4`입니다. 별도 유료 API를 호출하지 않습니다. 공개 본문을 읽을 수 있으면 기사별 구조화 표현 단서만 누적하고, 읽을 수 없으면 제목 단서로 제한합니다. 분석 공급자를 바꾸더라도 [`docs/public-api.schema.json`](docs/public-api.schema.json)의 공개 계약과 결과 계보를 유지하도록 설계했습니다. 구조화 분석과 사람 검토가 끝나지 않은 비교·취재원·기사 추천은 생성하지 않습니다.
 
 ## 운영 순서
 
 1. BigKinds 또는 이용 조건이 확인된 제공처에서 기간과 등록된 22개 매체를 선택해 Excel·CSV를 내려받습니다.
 2. `/admin`에서 `IMPORT_TOKEN`을 입력하고 파일을 가져옵니다.
-3. 관리자 화면의 원문 임시 분석을 실행합니다. 공개 기사 HTML은 메모리에서 본문 단서를 추출한 직후 폐기됩니다.
+3. 관리자 화면의 전체 기사 본문 분석을 실행합니다. 미처리 기사를 최대 20건의 안전 배치로 끝까지 이어서 처리하며, 공개 기사 HTML은 메모리에서 본문 단서를 추출한 직후 폐기됩니다.
 4. 제목·배치 메타데이터만 다시 계산할 때는 하루 분석 또는 최대 7일 기간 분석을 실행합니다. 기간 분석은 완료된 날짜를 건너뜁니다.
 5. 품질 검증에서 상위 이슈 30~50개를 검토하고 오류·누락 기사를 기록합니다.
 6. 공개 화면에서 이슈와 원문 링크를 확인합니다.
@@ -50,7 +50,8 @@
 | `POST /api/import` | 기사 메타데이터 가져오기 | Bearer `IMPORT_TOKEN` |
 | `POST /api/observations/homepage` | 홈페이지 배치 관측 저장 | Bearer `IMPORT_TOKEN` |
 | `POST /api/content` | 정식 라이선스 자료의 예외적 비공개 등록 | Bearer `IMPORT_TOKEN` |
-| `POST /api/analyze/transient` | 공개 기사 본문을 메모리에서만 읽고 결과만 저장 | Bearer `IMPORT_TOKEN` |
+| `GET /api/analyze/transient` | 날짜별 본문 분석 성공·실패·남은 기사 상태 | Bearer `IMPORT_TOKEN` |
+| `POST /api/analyze/transient` | 미처리 공개 기사 본문을 재개 가능한 배치로 읽고 구조화 결과만 저장 | Bearer `IMPORT_TOKEN` |
 | `POST /api/analyze` | 특정 KST 날짜 분석 생성 | Bearer `IMPORT_TOKEN` |
 | `GET /api/analysis/runs` | 기간별 최신 분석·기사 상태 | Bearer `IMPORT_TOKEN` |
 | `GET /api/quality` | 검증 목록·추정 품질 지표 | Bearer `IMPORT_TOKEN` |

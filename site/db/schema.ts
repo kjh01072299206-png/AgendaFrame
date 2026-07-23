@@ -187,6 +187,33 @@ export const articleContents = sqliteTable(
   ],
 );
 
+export const articleBodySignals = sqliteTable(
+  "article_body_signals",
+  {
+    id: text("id").primaryKey(),
+    articleId: text("article_id")
+      .notNull()
+      .references(() => articles.id, { onDelete: "cascade" }),
+    bodyHash: text("body_hash"),
+    bodyCharacters: integer("body_characters"),
+    detectedFrames: text("detected_frames").notNull().default("[]"),
+    status: text("status", { enum: ["analyzed", "failed"] }).notNull(),
+    failureCode: text("failure_code"),
+    extractorVersion: text("extractor_version").notNull(),
+    taxonomyVersion: text("taxonomy_version").notNull(),
+    analyzedAt: integer("analyzed_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt,
+  },
+  (table) => [
+    uniqueIndex("article_body_signals_article_versions_uq").on(
+      table.articleId,
+      table.extractorVersion,
+      table.taxonomyVersion,
+    ),
+    index("article_body_signals_status_idx").on(table.status, table.analyzedAt),
+  ],
+);
+
 export const collectionErrors = sqliteTable(
   "collection_errors",
   {

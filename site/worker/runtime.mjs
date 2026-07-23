@@ -1,5 +1,5 @@
 import { getAnalysisProvider } from "./analysis-provider.mjs";
-import { CLUSTERING_VERSION, FRAME_TAXONOMY_VERSION, SCORE_VERSION } from "./analysis.mjs";
+import { CLUSTERING_VERSION, FRAME_TAXONOMY_VERSION, SCORE_VERSION, extractBodyFrameSignals } from "./analysis.mjs";
 import publicApiSchema from "../docs/public-api.schema.json" with { type: "json" };
 
 const analysisProvider = getAnalysisProvider();
@@ -8,7 +8,7 @@ const ANALYSIS_MODEL_VERSION = analysisProvider.modelVersion;
 const PUBLIC_API_SCHEMA_VERSION = publicApiSchema["x-api-version"];
 const PROMPT_VERSION = "not_applicable_rules";
 const EVALUATION_DATASET_VERSION = "not_configured";
-const COMPATIBLE_ANALYSIS_MODELS = new Set([ANALYSIS_MODEL_VERSION, "agenda-rules-v2"]);
+const COMPATIBLE_ANALYSIS_MODELS = new Set([ANALYSIS_MODEL_VERSION, "agenda-rules-v3", "agenda-rules-v2"]);
 
 const assets = globalThis.__AGENDAFRAME_ASSETS__ ?? {};
 let sourcePanel = globalThis.__AGENDAFRAME_SOURCE_PANEL__ ?? {
@@ -339,16 +339,11 @@ async function collectionHealth(db) {
         WHERE status = 'active'
           AND analysis_allowed = 1
           AND (usage_expires_at IS NULL OR usage_expires_at > (unixepoch() * 1000))) AS authorized_content_count,
-      (SELECT COUNT(DISTINCT fa.article_id)
-        FROM frame_analyses fa
-        JOIN issues i ON i.id = fa.issue_id
-        WHERE fa.evidence_basis = 'body_transient'
-          AND i.run_id = (
-            SELECT id FROM analysis_runs
-            WHERE status = 'success'
-            ORDER BY target_date DESC, finished_at DESC
-            LIMIT 1
-          )) AS transient_evidence_count,
+      (SELECT COUNT(DISTINCT article_id)
+        FROM article_body_signals
+        WHERE status = 'analyzed'
+          AND extractor_version = ?
+          AND taxonomy_version = ?) AS transient_evidence_count,
       (SELECT COUNT(DISTINCT article_id) FROM (
         SELECT ac.article_id AS article_id
         FROM article_contents ac
@@ -356,18 +351,18 @@ async function collectionHealth(db) {
           AND ac.analysis_allowed = 1
           AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
         UNION
-        SELECT fa.article_id AS article_id
-        FROM frame_analyses fa
-        JOIN issues i ON i.id = fa.issue_id
-        WHERE fa.evidence_basis = 'body_transient'
-          AND i.run_id = (
-            SELECT id FROM analysis_runs
-            WHERE status = 'success'
-            ORDER BY target_date DESC, finished_at DESC
-            LIMIT 1
-          )
+        SELECT article_id
+        FROM article_body_signals
+        WHERE status = 'analyzed'
+          AND extractor_version = ?
+          AND taxonomy_version = ?
       )) AS body_evidence_count
-  `).first();
+  `).bind(
+    ARTICLE_EXTRACTOR_VERSION,
+    FRAME_TAXONOMY_VERSION,
+    ARTICLE_EXTRACTOR_VERSION,
+    FRAME_TAXONOMY_VERSION,
+  ).first();
   const latest = await db.prepare(`
     SELECT id, status, finished_at, article_count, duplicate_count
     FROM collection_runs
@@ -573,7 +568,7 @@ async function handleImport(request, env) {
 
 const PLACEMENT_ZONES = new Set(["top", "main", "section", "list"]);
 const CONTENT_ACQUISITION_METHODS = new Set(["licensed_export", "publisher_api", "authorized_crawl", "manual_research"]);
-const ARTICLE_FETCH_LIMIT = 20;
+const ARTICLE_FETCH_BATCH_LIMIT = 20;
 const ARTICLE_FETCH_CONCURRENCY = 2;
 const ARTICLE_HTML_MAX_BYTES = 2 * 1024 * 1024;
 const ARTICLE_REDIRECT_LIMIT = 3;
@@ -972,22 +967,108 @@ async function handleContentUpload(request, env) {
   }
 }
 
+function transientFailureCode(error) {
+  const message = String(error instanceof Error ? error.message : error ?? "");
+  if (/유료|구독|로그인|접근 제한|차단/.test(message)) return "ACCESS_RESTRICTED";
+  if (/리디렉션|도메인/.test(message)) return "REDIRECT_REJECTED";
+  if (/본문|articleBody|추출/.test(message)) return "BODY_UNAVAILABLE";
+  return "FETCH_FAILED";
+}
+
+function parseDetectedFrames(value) {
+  try {
+    const parsed = JSON.parse(String(value ?? "[]"));
+    return Array.isArray(parsed)
+      ? [...new Set(parsed.filter((frame) => typeof frame === "string" && frame.length <= 40))]
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+async function loadTransientBodySignals(db, start, end) {
+  const result = await db.prepare(`
+    SELECT signals.article_id AS articleId, signals.detected_frames AS detectedFrames
+    FROM article_body_signals signals
+    JOIN articles a ON a.id = signals.article_id
+    WHERE a.published_at >= ? AND a.published_at < ?
+      AND signals.status = 'analyzed'
+      AND signals.extractor_version = ?
+      AND signals.taxonomy_version = ?
+  `).bind(start, end, ARTICLE_EXTRACTOR_VERSION, FRAME_TAXONOMY_VERSION).all();
+  return new Map((result.results ?? []).map((row) => [row.articleId, {
+    bodyAnalysisAvailable: true,
+    bodyFrameSignals: parseDetectedFrames(row.detectedFrames),
+    contentVersionId: null,
+    publicEvidenceAllowed: false,
+    transientContent: true,
+  }]));
+}
+
+async function transientAnalysisProgress(db, start, end) {
+  const row = await db.prepare(`
+    SELECT
+      COUNT(*) AS total,
+      COALESCE(SUM(CASE WHEN signals.status = 'analyzed' THEN 1 ELSE 0 END), 0) AS analyzed,
+      COALESCE(SUM(CASE WHEN signals.status = 'failed' THEN 1 ELSE 0 END), 0) AS failed
+    FROM articles a
+    LEFT JOIN article_body_signals signals
+      ON signals.article_id = a.id
+      AND signals.extractor_version = ?
+      AND signals.taxonomy_version = ?
+    WHERE a.published_at >= ? AND a.published_at < ?
+  `).bind(ARTICLE_EXTRACTOR_VERSION, FRAME_TAXONOMY_VERSION, start, end).first();
+  const total = Number(row?.total ?? 0);
+  const analyzed = Number(row?.analyzed ?? 0);
+  const failed = Number(row?.failed ?? 0);
+  return {
+    total,
+    processed: analyzed + failed,
+    analyzed,
+    failed,
+    remaining: Math.max(0, total - analyzed - failed),
+  };
+}
+
+async function handleTransientAnalysisStatus(request, env) {
+  if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503, { request });
+  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401, { request });
+  if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "허용된 AgendaFrame 주소에서 보낸 요청만 처리합니다." }, 403, { request });
+  try {
+    const targetDate = await resolveAnalysisDate(env.DB, String(new URL(request.url).searchParams.get("date") ?? "").trim());
+    const start = Date.parse(`${targetDate}T00:00:00+09:00`);
+    const end = start + 86_400_000;
+    const progress = await transientAnalysisProgress(env.DB, start, end);
+    return jsonResponse({
+      date: targetDate,
+      extractorVersion: ARTICLE_EXTRACTOR_VERSION,
+      taxonomyVersion: FRAME_TAXONOMY_VERSION,
+      bodyStorageCount: 0,
+      complete: progress.remaining === 0,
+      progress,
+    }, 200, { request });
+  } catch (error) {
+    return jsonResponse({ error: error instanceof Error ? error.message : "본문 분석 상태를 확인하지 못했습니다." }, 400, { request });
+  }
+}
+
 async function handleTransientAnalyze(request, env) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503, { request });
-  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
-  if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "허용된 AgendaFrame 주소에서 보낸 요청만 처리합니다." }, 403);
+  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401, { request });
+  if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "허용된 AgendaFrame 주소에서 보낸 요청만 처리합니다." }, 403, { request });
 
   let payload;
   try {
     payload = await readJsonPayload(request);
   } catch (error) {
-    return jsonResponse({ error: error instanceof Error ? error.message : "본문 수집 형식을 확인해 주세요." }, 400);
+    return jsonResponse({ error: error instanceof Error ? error.message : "본문 수집 형식을 확인해 주세요." }, 400, { request });
   }
 
   try {
     if (payload.transient_analysis_acknowledged !== true) throw new Error("공개 기사만 임시 분석하고 접근 제한을 우회하지 않는 조건을 확인해야 합니다.");
     const targetDate = await resolveAnalysisDate(env.DB, String(payload.date ?? "").trim());
-    const limit = integerInRange(payload.limit ?? 10, 1, ARTICLE_FETCH_LIMIT, "임시 분석 건수");
+    const limit = integerInRange(payload.limit ?? ARTICLE_FETCH_BATCH_LIMIT, 1, ARTICLE_FETCH_BATCH_LIMIT, "배치당 임시 분석 건수");
+    const retryFailed = payload.retry_failed === true;
     const start = Date.parse(`${targetDate}T00:00:00+09:00`);
     const end = start + 86_400_000;
     const selected = await env.DB.prepare(`
@@ -999,30 +1080,33 @@ async function handleTransientAnalyze(request, env) {
         s.name AS source
       FROM articles a
       JOIN media_sources s ON s.id = a.source_id
+      LEFT JOIN article_body_signals signals
+        ON signals.article_id = a.id
+        AND signals.extractor_version = ?
+        AND signals.taxonomy_version = ?
       WHERE a.published_at >= ? AND a.published_at < ?
+        AND (signals.article_id IS NULL OR (? = 1 AND signals.status = 'failed'))
       ORDER BY
         CASE a.homepage_placement WHEN 'top' THEN 4 WHEN 'main' THEN 3 WHEN 'section' THEN 2 ELSE 1 END DESC,
         a.homepage_rank ASC,
         a.published_at DESC
       LIMIT ?
-    `).bind(start, end, limit).all();
+    `).bind(ARTICLE_EXTRACTOR_VERSION, FRAME_TAXONOMY_VERSION, start, end, retryFailed ? 1 : 0, limit).all();
     const articles = selected.results ?? [];
     const results = await mapWithConcurrency(articles, ARTICLE_FETCH_CONCURRENCY, async (article) => {
       try {
         const source = sourceForArticle(article);
         const { html } = await fetchArticleHtml(article.canonicalUrl, source, env);
         const body = extractArticleBodyFromHtml(html);
+        const signals = extractBodyFrameSignals(body);
         return {
           articleId: article.id,
           source: article.source,
           title: article.title,
-          status: "ready",
-          content: {
-            bodyText: body,
-            contentVersionId: null,
-            publicEvidenceAllowed: false,
-            transientContent: true,
-          },
+          status: "analyzed",
+          bodyHash: await sha256Hex(body),
+          bodyCharacters: signals.bodyCharacters,
+          detectedFrames: signals.detectedFrames,
         };
       } catch (error) {
         return {
@@ -1030,38 +1114,69 @@ async function handleTransientAnalyze(request, env) {
           source: article.source,
           title: article.title,
           status: "failed",
+          failureCode: transientFailureCode(error),
           reason: String(error instanceof Error ? error.message : "본문을 가져오지 못했습니다.").slice(0, 240),
         };
       }
     });
-    const ready = results.filter((result) => result.status === "ready");
-    const publicResults = results.map((result) => {
-      const publicResult = { ...result };
-      delete publicResult.content;
-      return publicResult;
+    if (results.length) {
+      const analyzedAt = Date.now();
+      await runBatches(env.DB, results.map((result) => env.DB.prepare(`
+        INSERT INTO article_body_signals
+          (id, article_id, body_hash, body_characters, detected_frames, status, failure_code, extractor_version, taxonomy_version, analyzed_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(article_id, extractor_version, taxonomy_version) DO UPDATE SET
+          body_hash = excluded.body_hash,
+          body_characters = excluded.body_characters,
+          detected_frames = excluded.detected_frames,
+          status = excluded.status,
+          failure_code = excluded.failure_code,
+          analyzed_at = excluded.analyzed_at
+      `).bind(
+        crypto.randomUUID(),
+        result.articleId,
+        result.status === "analyzed" ? result.bodyHash : null,
+        result.status === "analyzed" ? result.bodyCharacters : null,
+        JSON.stringify(result.status === "analyzed" ? result.detectedFrames : []),
+        result.status,
+        result.status === "failed" ? result.failureCode : null,
+        ARTICLE_EXTRACTOR_VERSION,
+        FRAME_TAXONOMY_VERSION,
+        analyzedAt,
+      )));
+    }
+
+    const progress = await transientAnalysisProgress(env.DB, start, end);
+    const ready = results.filter((result) => result.status === "analyzed");
+    let analysis = null;
+    if (ready.length || (payload.refresh_analysis === true && progress.remaining === 0)) {
+      const analysisHeaders = new Headers({ "content-type": "application/json" });
+      for (const name of ["authorization", "origin", "sec-fetch-site"]) {
+        const value = request.headers.get(name);
+        if (value) analysisHeaders.set(name, value);
+      }
+      const analysisResponse = await handleAnalyze(new Request(new URL("/api/analyze", request.url), {
+        method: "POST",
+        headers: analysisHeaders,
+        body: JSON.stringify({ date: targetDate }),
+      }), env);
+      analysis = await analysisResponse.json();
+      if (!analysisResponse.ok) return jsonResponse(analysis, analysisResponse.status, { request });
+    }
+    const publicResults = results.map((result) => result.status === "analyzed" ? {
+      articleId: result.articleId,
+      source: result.source,
+      title: result.title,
+      status: result.status,
+      signalCount: result.detectedFrames.length,
+    } : {
+      articleId: result.articleId,
+      source: result.source,
+      title: result.title,
+      status: result.status,
+      failureCode: result.failureCode,
+      reason: result.reason,
     });
-    if (!ready.length) {
-      return jsonResponse({
-        error: "임시 분석할 수 있는 공개 기사 본문을 가져오지 못했습니다.",
-        date: targetDate,
-        requested: articles.length,
-        failed: results.filter((result) => result.status === "failed").length,
-        results: publicResults,
-      }, 422, { request });
-    }
-    const contentOverrides = new Map(ready.map((result) => [result.articleId, result.content]));
-    const analysisHeaders = new Headers({ "content-type": "application/json" });
-    for (const name of ["authorization", "origin", "sec-fetch-site"]) {
-      const value = request.headers.get(name);
-      if (value) analysisHeaders.set(name, value);
-    }
-    const analysisResponse = await handleAnalyze(new Request(new URL("/api/analyze", request.url), {
-      method: "POST",
-      headers: analysisHeaders,
-      body: JSON.stringify({ date: targetDate }),
-    }), env, { contentOverrides, includeStoredContents: false });
-    const analysis = await analysisResponse.json();
-    if (!analysisResponse.ok) return jsonResponse(analysis, analysisResponse.status, { request });
     return jsonResponse({
       date: targetDate,
       requested: articles.length,
@@ -1069,9 +1184,12 @@ async function handleTransientAnalyze(request, env) {
       bodyStorageCount: 0,
       failed: results.filter((result) => result.status === "failed").length,
       extractorVersion: ARTICLE_EXTRACTOR_VERSION,
+      taxonomyVersion: FRAME_TAXONOMY_VERSION,
+      complete: progress.remaining === 0,
+      progress,
       results: publicResults,
       analysis,
-    }, 201, { request });
+    }, results.length ? 201 : 200, { request });
   } catch (error) {
     return jsonResponse({ error: error instanceof Error ? error.message : "본문 임시 분석을 완료하지 못했습니다." }, 400, { request });
   }
@@ -1269,7 +1387,7 @@ async function resolveAnalysisDate(db, requestedDate) {
   return resolved;
 }
 
-async function handleAnalyze(request, env, { contentOverrides = new Map(), includeStoredContents = true } = {}) {
+async function handleAnalyze(request, env, { contentOverrides = new Map(), includeStoredContents = true, includeDerivedSignals = true } = {}) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
   if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
 
@@ -1290,7 +1408,7 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
   }
   const start = Date.parse(`${targetDate}T00:00:00+09:00`);
   const end = start + 86_400_000;
-  const [articleResult, placementResult, authorizedContents] = await Promise.all([
+  const [articleResult, placementResult, authorizedContents, transientSignals] = await Promise.all([
     db.prepare(`
       SELECT
         a.id,
@@ -1322,8 +1440,14 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
       ORDER BY hs.observed_at ASC, po.page_rank ASC
     `).bind(start, end).all(),
     includeStoredContents ? loadAuthorizedArticleContents(db, env.CONTENT, start, end) : Promise.resolve(new Map()),
+    includeDerivedSignals ? loadTransientBodySignals(db, start, end) : Promise.resolve(new Map()),
   ]);
-  const analysisContents = new Map([...authorizedContents, ...contentOverrides]);
+  const analysisContents = new Map();
+  for (const contents of [transientSignals, authorizedContents, contentOverrides]) {
+    for (const [articleId, content] of contents) {
+      analysisContents.set(articleId, { ...(analysisContents.get(articleId) ?? {}), ...content });
+    }
+  }
   const placementByArticle = new Map();
   for (const observation of placementResult.results ?? []) {
     const values = placementByArticle.get(observation.articleId) ?? [];
@@ -1444,8 +1568,11 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
       modelVersion: ANALYSIS_MODEL_VERSION,
       articleCount: articles.length,
       authorizedBodyCount: authorizedContents.size,
-      transientBodyCount: contentOverrides.size,
-      bodyEvidenceCount: analysisContents.size,
+      transientBodyCount: new Set([
+        ...transientSignals.keys(),
+        ...[...contentOverrides].filter(([, content]) => content?.transientContent).map(([articleId]) => articleId),
+      ]).size,
+      bodyEvidenceCount: [...analysisContents.values()].filter((content) => Boolean(content?.bodyText) || content?.bodyAnalysisAvailable === true).length,
       issueCount: analyzed.length,
       paidServicesUsed: false,
     }, 201);
@@ -2058,7 +2185,8 @@ export async function handleApiRequest(request, env = {}) {
     return handleContentUpload(request, env);
   }
   if (url.pathname === "/api/analyze/transient") {
-    if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
+    if (request.method === "GET") return handleTransientAnalysisStatus(request, env);
+    if (request.method !== "POST") return jsonResponse({ error: "GET 또는 POST 요청만 허용됩니다." }, 405);
     return handleTransientAnalyze(request, env);
   }
   if (url.pathname === "/api/import") {
