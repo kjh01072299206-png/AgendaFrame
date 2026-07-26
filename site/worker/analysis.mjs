@@ -1,8 +1,8 @@
-export const ANALYSIS_PROVIDER = "rules_local";
-export const ANALYSIS_MODEL_VERSION = "agenda-rules-v4";
+export const ANALYSIS_PROVIDER = "structured_extractive";
+export const ANALYSIS_MODEL_VERSION = "agenda-structure-v5";
 export const CLUSTERING_VERSION = "event-anchors-complete-link-v2";
 export const SCORE_VERSION = "observed-agenda-v3";
-export const FRAME_TAXONOMY_VERSION = "frame-signals-v4";
+export const FRAME_TAXONOMY_VERSION = "frame-elements-v5";
 
 const frameDefinitions = {
   conflict: { label: "갈등·대립", words: ["갈등", "충돌", "논란", "반발", "대립", "공방", "비판", "파문", "강대강", "규탄"] },

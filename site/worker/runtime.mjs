@@ -1,14 +1,23 @@
 import { getAnalysisProvider } from "./analysis-provider.mjs";
 import { CLUSTERING_VERSION, FRAME_TAXONOMY_VERSION, SCORE_VERSION, extractBodyFrameSignals } from "./analysis.mjs";
+import { ArticleExtractionError, extractArticleBody } from "./article-extractor.mjs";
+import {
+  ARTICLE_FRAME_PROFILE_SCHEMA,
+  FRAMING_ENGINE_VERSION,
+  ISSUE_FRAME_COMPARISON_SCHEMA,
+  analyzeArticleFraming,
+  buildIssueFrameComparison,
+  validateArticleFrameProfile,
+} from "./framing-engine.mjs";
 import publicApiSchema from "../docs/public-api.schema.json" with { type: "json" };
 
 const analysisProvider = getAnalysisProvider();
 const ANALYSIS_PROVIDER = analysisProvider.provider;
 const ANALYSIS_MODEL_VERSION = analysisProvider.modelVersion;
 const PUBLIC_API_SCHEMA_VERSION = publicApiSchema["x-api-version"];
-const PROMPT_VERSION = "not_applicable_rules";
+const PROMPT_VERSION = "framing-codebook-v5";
 const EVALUATION_DATASET_VERSION = "not_configured";
-const COMPATIBLE_ANALYSIS_MODELS = new Set([ANALYSIS_MODEL_VERSION, "agenda-rules-v3", "agenda-rules-v2"]);
+const COMPATIBLE_ANALYSIS_MODELS = new Set([ANALYSIS_MODEL_VERSION, "agenda-rules-v4"]);
 
 const assets = globalThis.__AGENDAFRAME_ASSETS__ ?? {};
 let sourcePanel = globalThis.__AGENDAFRAME_SOURCE_PANEL__ ?? {
@@ -108,14 +117,16 @@ export function classifySnapshotStatus({ targetDate = null, dataAsOf = null, col
 }
 
 function analysisVersions(run) {
-  const current = !run?.modelVersion || COMPATIBLE_ANALYSIS_MODELS.has(run.modelVersion);
+  const modelVersion = run?.modelVersion ?? ANALYSIS_MODEL_VERSION;
+  const current = modelVersion === ANALYSIS_MODEL_VERSION;
+  const versionFour = modelVersion === "agenda-rules-v4";
   return {
     sourcePolicyVersion: sourcePanel.panelVersion ?? "unknown",
-    clusteringVersion: current ? CLUSTERING_VERSION : "legacy-v1-unverified",
-    scoreVersion: current ? SCORE_VERSION : "legacy-v1-unverified",
-    frameTaxonomyVersion: current ? FRAME_TAXONOMY_VERSION : "legacy-v1-unverified",
-    modelId: run?.modelVersion ?? ANALYSIS_MODEL_VERSION,
-    promptVersion: PROMPT_VERSION,
+    clusteringVersion: current ? CLUSTERING_VERSION : versionFour ? "event-anchors-complete-link-v2" : "legacy-v1-unverified",
+    scoreVersion: current ? SCORE_VERSION : versionFour ? "observed-agenda-v3" : "legacy-v1-unverified",
+    frameTaxonomyVersion: current ? FRAME_TAXONOMY_VERSION : versionFour ? "frame-signals-v4" : "legacy-v1-unverified",
+    modelId: modelVersion,
+    promptVersion: current ? PROMPT_VERSION : versionFour ? "not_applicable_rules" : "legacy-unverified",
     evaluationDatasetVersion: EVALUATION_DATASET_VERSION,
   };
 }
@@ -135,6 +146,7 @@ function responseMeta(run = null, runtimeMode = "demo") {
 function publicIssue(row, run) {
   const placementObservedCount = Number(row.placementObservedCount ?? 0);
   const contentAvailableCount = Number(row.contentAvailableCount ?? 0);
+  const structuredProfileCount = Number(row.structuredProfileCount ?? 0);
   const legacy = !COMPATIBLE_ANALYSIS_MODELS.has(run?.modelVersion);
   const issue = { ...row };
   delete issue.confidence;
@@ -149,7 +161,12 @@ function publicIssue(row, run) {
     calibrationStatus: "not_calibrated",
     clusterQuality: legacy ? "review_required" : "not_human_reviewed",
     contentAvailableCount,
-    evidenceBasis: contentAvailableCount ? "body_signals_and_metadata" : "headline_metadata_only",
+    structuredProfileCount,
+    evidenceBasis: structuredProfileCount
+      ? "structured_body_profiles_and_metadata"
+      : contentAvailableCount
+        ? "body_signals_and_metadata"
+        : "headline_metadata_only",
   };
 }
 
@@ -342,7 +359,6 @@ async function collectionHealth(db) {
       (SELECT COUNT(DISTINCT article_id)
         FROM article_body_signals
         WHERE status = 'analyzed'
-          AND extractor_version = ?
           AND taxonomy_version = ?) AS transient_evidence_count,
       (SELECT COUNT(DISTINCT article_id) FROM (
         SELECT ac.article_id AS article_id
@@ -354,14 +370,19 @@ async function collectionHealth(db) {
         SELECT article_id
         FROM article_body_signals
         WHERE status = 'analyzed'
-          AND extractor_version = ?
           AND taxonomy_version = ?
+        UNION
+        SELECT article_id
+        FROM article_frame_profiles
+        WHERE status IN ('analyzed', 'partial')
+          AND model_version = ?
+          AND schema_version = ?
       )) AS body_evidence_count
   `).bind(
-    ARTICLE_EXTRACTOR_VERSION,
     FRAME_TAXONOMY_VERSION,
-    ARTICLE_EXTRACTOR_VERSION,
     FRAME_TAXONOMY_VERSION,
+    FRAMING_ENGINE_VERSION,
+    ARTICLE_FRAME_PROFILE_SCHEMA,
   ).first();
   const latest = await db.prepare(`
     SELECT id, status, finished_at, article_count, duplicate_count
@@ -572,7 +593,9 @@ const ARTICLE_FETCH_BATCH_LIMIT = 20;
 const ARTICLE_FETCH_CONCURRENCY = 2;
 const ARTICLE_HTML_MAX_BYTES = 2 * 1024 * 1024;
 const ARTICLE_REDIRECT_LIMIT = 3;
-const ARTICLE_EXTRACTOR_VERSION = "authorized-jsonld-v1";
+const ARTICLE_EXTRACTOR_VERSION = "public-news-body-v2";
+const BIGKINDS_EXCERPT_EXTRACTOR_VERSION = "bigkinds-export-excerpt-v1";
+const STRUCTURED_IMPORT_BATCH_LIMIT = 100;
 
 function integerInRange(value, minimum, maximum, label) {
   const number = Number(value);
@@ -746,73 +769,173 @@ function normalizeArticleBody(value) {
     .trim();
 }
 
-function decodeHtmlEntities(value) {
-  const named = { amp: "&", apos: "'", gt: ">", lt: "<", nbsp: " ", quot: '"' };
-  return String(value ?? "").replace(/&(#x[0-9a-f]+|#\d+|amp|apos|gt|lt|nbsp|quot);/gi, (match, entity) => {
-    const normalized = entity.toLowerCase();
-    if (normalized.startsWith("#x")) {
-      const codePoint = Number.parseInt(normalized.slice(2), 16);
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+export function validateStructuredImportRows(inputRows, panel = sourcePanel, now = new Date().toISOString()) {
+  if (!Array.isArray(inputRows) || inputRows.length === 0) throw new Error("가져올 기사 행이 없습니다.");
+  if (inputRows.length > STRUCTURED_IMPORT_BATCH_LIMIT) {
+    throw new Error(`본문 발췌 분석은 한 번에 최대 ${STRUCTURED_IMPORT_BATCH_LIMIT}행까지 처리할 수 있습니다.`);
+  }
+  const metadataRows = inputRows.map((row) => {
+    if (!row || typeof row !== "object" || Array.isArray(row)) return row;
+    const metadata = { ...row };
+    delete metadata.excerpt;
+    delete metadata.body_excerpt;
+    delete metadata.text_scope;
+    return metadata;
+  });
+  const validatedMetadata = validateImportRows(metadataRows, panel, now);
+  return validatedMetadata.map((metadata, index) => {
+    const input = inputRows[index];
+    const excerpt = normalizeArticleBody(input.excerpt ?? input.body_excerpt);
+    if (excerpt.length < 40 || excerpt.length > 5_000) {
+      throw new Error(`${index + 1}행: 분석용 본문 발췌는 40~5,000자여야 합니다.`);
     }
-    if (normalized.startsWith("#")) {
-      const codePoint = Number.parseInt(normalized.slice(1), 10);
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
-    }
-    return named[normalized] ?? match;
+    return {
+      ...metadata,
+      excerpt,
+      textScope: "provider_excerpt",
+    };
   });
 }
 
-function htmlFragmentToText(value) {
-  const withoutNonArticleContent = String(value ?? "")
-    .replace(/<!--[\s\S]*?-->/g, " ")
-    .replace(/<(script|style|noscript|template|svg|form|nav|aside|footer|header)\b[^>]*>[\s\S]*?<\/\1>/gi, " ")
-    .replace(/<(br|hr)\b[^>]*\/?\s*>/gi, "\n")
-    .replace(/<\/(p|div|li|section|blockquote|h[1-6])\s*>/gi, "\n")
-    .replace(/<[^>]+>/g, " ");
-  return normalizeArticleBody(decodeHtmlEntities(withoutNonArticleContent).replace(/[ \t]{2,}/g, " "));
-}
+async function handleStructuredImport(request, env) {
+  if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503, { request });
+  if (!env?.IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503, { request });
+  if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "같은 사이트에서 보낸 요청만 허용됩니다." }, 403, { request });
+  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401, { request });
 
-function articleBodyCandidates(value, candidates, accessibility) {
-  if (Array.isArray(value)) {
-    for (const item of value) articleBodyCandidates(item, candidates, accessibility);
-    return;
+  let rows;
+  try {
+    const payload = await readJsonPayload(request, 4 * 1024 * 1024);
+    rows = validateStructuredImportRows(payload.rows);
+  } catch (error) {
+    return jsonResponse({ error: error instanceof Error ? error.message : "본문 발췌 가져오기 형식을 확인해 주세요." }, 400, { request });
   }
-  if (!value || typeof value !== "object") return;
-  const accessible = value.isAccessibleForFree;
-  if (accessible === false || String(accessible).toLowerCase() === "false") accessibility.blocked = true;
-  if (typeof value.articleBody === "string") candidates.push(normalizeArticleBody(decodeHtmlEntities(value.articleBody)));
-  if (Array.isArray(value["@graph"])) articleBodyCandidates(value["@graph"], candidates, accessibility);
-  for (const [key, child] of Object.entries(value)) {
-    if (key !== "@graph" && child && typeof child === "object") articleBodyCandidates(child, candidates, accessibility);
+
+  const forwardedHeaders = new Headers({ "content-type": "application/json" });
+  for (const name of ["authorization", "origin", "sec-fetch-site"]) {
+    const value = request.headers.get(name);
+    if (value) forwardedHeaders.set(name, value);
+  }
+  const metadataRequest = new Request(new URL("/api/import", request.url), {
+    method: "POST",
+    headers: forwardedHeaders,
+    body: JSON.stringify({
+      rows: rows.map((row) => ({
+        source: row.source.name,
+        title: row.title,
+        url: row.canonicalUrl,
+        published_at: new Date(row.publishedAt).toISOString(),
+        collected_at: new Date(row.collectedAt).toISOString(),
+        section: row.section,
+        homepage_placement: row.homepagePlacement,
+        homepage_rank: row.homepageRank,
+      })),
+    }),
+  });
+  const metadataResponse = await handleImport(metadataRequest, env);
+  const metadataResult = await metadataResponse.json();
+  if (!metadataResponse.ok) return jsonResponse(metadataResult, metadataResponse.status, { request });
+
+  try {
+    const lookups = await env.DB.batch(rows.map((row) => env.DB.prepare(`
+      SELECT id FROM articles WHERE canonical_url = ? LIMIT 1
+    `).bind(row.canonicalUrl)));
+    const analyzedAt = Date.now();
+    const results = await mapWithConcurrency(rows, 6, async (row, index) => {
+      const articleId = lookups[index]?.results?.[0]?.id;
+      if (!articleId) throw new Error("저장한 기사 식별자를 찾지 못했습니다.");
+      const signals = extractBodyFrameSignals(row.excerpt);
+      const profile = await analyzeArticleFraming({
+        articleId,
+        title: row.title,
+        bodyText: row.excerpt,
+        publishedAt: new Date(row.publishedAt).toISOString(),
+      });
+      profile.extraction = {
+        strategy: "bigkinds-export",
+        quality: 1,
+        text_scope: row.textScope,
+        source_characters: row.excerpt.length,
+        extractor_version: BIGKINDS_EXCERPT_EXTRACTOR_VERSION,
+      };
+      const validation = validateArticleFrameProfile(profile);
+      if (!validation.valid) throw new Error(`구조화 분석 검증 실패: ${validation.errors.join("; ")}`);
+      return {
+        articleId,
+        bodyHash: await sha256Hex(row.excerpt),
+        bodyCharacters: signals.bodyCharacters,
+        detectedFrames: signals.detectedFrames,
+        profile,
+      };
+    });
+
+    const statements = [];
+    for (const result of results) {
+      statements.push(env.DB.prepare(`
+        INSERT INTO article_body_signals
+          (id, article_id, body_hash, body_characters, detected_frames, status, failure_code, extractor_version, taxonomy_version, analyzed_at)
+        VALUES (?, ?, ?, ?, ?, 'analyzed', NULL, ?, ?, ?)
+        ON CONFLICT(article_id, extractor_version, taxonomy_version) DO UPDATE SET
+          body_hash = excluded.body_hash,
+          body_characters = excluded.body_characters,
+          detected_frames = excluded.detected_frames,
+          status = 'analyzed',
+          failure_code = NULL,
+          analyzed_at = excluded.analyzed_at
+      `).bind(
+        crypto.randomUUID(),
+        result.articleId,
+        result.bodyHash,
+        result.bodyCharacters,
+        JSON.stringify(result.detectedFrames),
+        BIGKINDS_EXCERPT_EXTRACTOR_VERSION,
+        FRAME_TAXONOMY_VERSION,
+        analyzedAt,
+      ));
+      statements.push(env.DB.prepare(`
+        INSERT INTO article_frame_profiles
+          (id, article_id, body_hash, body_characters, profile_json, status, failure_code, extractor_version, provider, model_version, prompt_version, schema_version, review_status, analyzed_at)
+        VALUES (?, ?, ?, ?, ?, 'analyzed', NULL, ?, 'structured_extractive', ?, ?, ?, 'automatic_draft', ?)
+        ON CONFLICT(article_id, extractor_version, model_version, schema_version) DO UPDATE SET
+          body_hash = excluded.body_hash,
+          body_characters = excluded.body_characters,
+          profile_json = excluded.profile_json,
+          status = 'analyzed',
+          failure_code = NULL,
+          provider = excluded.provider,
+          prompt_version = excluded.prompt_version,
+          review_status = 'automatic_draft',
+          analyzed_at = excluded.analyzed_at
+      `).bind(
+        crypto.randomUUID(),
+        result.articleId,
+        result.bodyHash,
+        result.bodyCharacters,
+        JSON.stringify(result.profile),
+        BIGKINDS_EXCERPT_EXTRACTOR_VERSION,
+        FRAMING_ENGINE_VERSION,
+        PROMPT_VERSION,
+        ARTICLE_FRAME_PROFILE_SCHEMA,
+        analyzedAt,
+      ));
+    }
+    await runBatches(env.DB, statements);
+    return jsonResponse({
+      ...metadataResult,
+      analyzedExcerpts: results.length,
+      textScope: "provider_excerpt",
+      rawTextStored: false,
+      extractorVersion: BIGKINDS_EXCERPT_EXTRACTOR_VERSION,
+      framingEngineVersion: FRAMING_ENGINE_VERSION,
+    }, 201, { request });
+  } catch (error) {
+    console.error("AgendaFrame structured import failed", error);
+    return jsonResponse({ error: "기사 메타데이터는 저장했지만 본문 발췌 구조화 분석을 완료하지 못했습니다." }, 500, { request });
   }
 }
 
 export function extractArticleBodyFromHtml(html) {
-  const source = String(html ?? "");
-  const candidates = [];
-  const accessibility = { blocked: false };
-  for (const match of source.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
-    const jsonText = match[1].replace(/^\s*<!--|-->\s*$/g, "").trim();
-    if (!jsonText) continue;
-    try {
-      articleBodyCandidates(JSON.parse(jsonText), candidates, accessibility);
-    } catch {
-      // Invalid publisher JSON-LD is ignored; the narrow HTML fallback remains available.
-    }
-  }
-  if (accessibility.blocked) throw new Error("유료 또는 구독 전용으로 표시된 기사입니다.");
-
-  for (const match of source.matchAll(/<article\b[^>]*>([\s\S]*?)<\/article>/gi)) {
-    candidates.push(htmlFragmentToText(match[1]));
-  }
-  const bodyContainerPattern = /<([a-z0-9]+)\b[^>]*(?:id|class)=["'][^"']*(?:article[-_ ]?body|article[-_ ]?content|news[-_ ]?(?:body|content)|view[-_ ]?content)[^"']*["'][^>]*>([\s\S]*?)<\/\1>/gi;
-  for (const match of source.matchAll(bodyContainerPattern)) candidates.push(htmlFragmentToText(match[2]));
-
-  const body = candidates
-    .filter((candidate) => candidate.length >= 300 && candidate.length <= 200_000)
-    .sort((left, right) => right.length - left.length)[0];
-  if (!body) throw new Error("페이지에서 300자 이상의 기사 본문을 확인하지 못했습니다.");
-  return body;
+  return extractArticleBody(html).bodyText;
 }
 
 function sourceForArticle(article) {
@@ -968,6 +1091,7 @@ async function handleContentUpload(request, env) {
 }
 
 function transientFailureCode(error) {
+  if (error instanceof ArticleExtractionError) return error.code;
   const message = String(error instanceof Error ? error.message : error ?? "");
   if (/유료|구독|로그인|접근 제한|차단/.test(message)) return "ACCESS_RESTRICTED";
   if (/리디렉션|도메인/.test(message)) return "REDIRECT_REJECTED";
@@ -986,6 +1110,220 @@ function parseDetectedFrames(value) {
   }
 }
 
+function parseFrameProfile(value) {
+  try {
+    const profile = JSON.parse(String(value ?? "{}"));
+    return validateArticleFrameProfile(profile).valid ? profile : null;
+  } catch {
+    return null;
+  }
+}
+
+async function loadArticleFrameProfiles(db, start, end) {
+  const result = await db.prepare(`
+    SELECT profiles.article_id AS articleId, profiles.profile_json AS profileJson
+    FROM article_frame_profiles profiles
+    JOIN articles a ON a.id = profiles.article_id
+    WHERE a.published_at >= ? AND a.published_at < ?
+      AND profiles.status IN ('analyzed', 'partial')
+      AND profiles.model_version = ?
+      AND profiles.schema_version = ?
+      AND profiles.analyzed_at = (
+        SELECT MAX(latest.analyzed_at)
+        FROM article_frame_profiles latest
+        WHERE latest.article_id = profiles.article_id
+          AND latest.status IN ('analyzed', 'partial')
+          AND latest.model_version = profiles.model_version
+          AND latest.schema_version = profiles.schema_version
+      )
+  `).bind(
+    start,
+    end,
+    FRAMING_ENGINE_VERSION,
+    ARTICLE_FRAME_PROFILE_SCHEMA,
+  ).all();
+  return new Map((result.results ?? [])
+    .map((row) => [row.articleId, parseFrameProfile(row.profileJson)])
+    .filter(([, profile]) => profile));
+}
+
+function uniqueStrings(values) {
+  return [...new Set(values.filter((value) => typeof value === "string" && value.trim()).map((value) => value.trim()))];
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isStructuredComparisonPayload(value) {
+  if (!isPlainObject(value)) return false;
+  if (!["available", "partial", "withheld_insufficient_evidence"].includes(value.status)) return false;
+  if (typeof value.divergenceDetected !== "boolean" || !isPlainObject(value.summary) || !isPlainObject(value.sample)) return false;
+  if (!["provider_excerpt", "article_body"].includes(value.sample.textScope)) return false;
+  if (!Array.isArray(value.axes) || !isPlainObject(value.sourceLens) || !Array.isArray(value.contextGaps) || !Array.isArray(value.limitations)) return false;
+  if (!Array.isArray(value.sourceLens.sharedVoices) || !Array.isArray(value.sourceLens.voicesPresentInSomeOutlets) || !Array.isArray(value.sourceLens.byOutlet)) return false;
+  if (!value.axes.every((axis) => isPlainObject(axis) && typeof axis.dimension === "string" && typeof axis.label === "string"
+    && Array.isArray(axis.variants) && axis.variants.every((variant) => isPlainObject(variant)
+      && typeof variant.summary === "string"
+      && Array.isArray(variant.outlets)
+      && variant.outlets.every((outlet) => isPlainObject(outlet)
+        && typeof outlet.source === "string"
+        && typeof outlet.articleId === "string"
+        && typeof outlet.sourceUrl === "string")))) return false;
+  if (!value.sourceLens.byOutlet.every((entry) => isPlainObject(entry)
+    && typeof entry.source === "string"
+    && Array.isArray(entry.voices))) return false;
+  if (!value.contextGaps.every((gap) => isPlainObject(gap)
+    && typeof gap.feature === "string"
+    && Array.isArray(gap.presentInOutlets)
+    && Array.isArray(gap.notObservedInOutlets)
+    && typeof gap.displayText === "string")) return false;
+  if (!value.limitations.every((item) => typeof item === "string")) return false;
+  return !/"(?:raw_body|rawBody|body_text|bodyText|sentence_text|sentenceText|quote|quotation|excerpt|html|content)"\s*:/i.test(JSON.stringify(value));
+}
+
+function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { issueArticleCount = issueArticles.length } = {}) {
+  const articleById = new Map(issueArticles.map((article) => [String(article.id), article]));
+  const profileById = new Map(profiles.map((profile) => [String(profile.article.article_id), profile]));
+  const rawAxes = rawComparison.comparison_axes ?? [];
+  const divergenceDetected = rawComparison.summary_30_seconds?.divergence_detected === true;
+  const axes = rawAxes
+    .map((axis) => ({
+      dimension: axis.dimension,
+      label: axis.label,
+      variants: (axis.patterns ?? []).slice(0, 6).map((pattern) => {
+        const outlets = [];
+        const seen = new Set();
+        for (const articleId of pattern.article_ids ?? []) {
+          const article = articleById.get(String(articleId));
+          if (!article) continue;
+          const key = `${article.source}:${article.id}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const articleEvidence = (pattern.evidence ?? []).find((entry) => String(entry.article_id) === String(articleId));
+          const locator = articleEvidence?.locator;
+          outlets.push({
+            source: article.source,
+            articleId: article.id,
+            sourceUrl: article.url,
+            evidenceLocator: locator ? `${locator.paragraph}문단 ${locator.sentence}문장` : null,
+            evidenceHash: articleEvidence?.sentence_sha256 ?? null,
+          });
+        }
+        return {
+          summary: pattern.public_paraphrase,
+          outlets,
+          commitment: pattern.voice_scope === "outlet_narration" ? "explicit" : "source_attributed",
+          status: pattern.voice_scope === "outlet_narration" ? "supported" : "attributed_source",
+          evidenceLocator: null,
+          basis: "기사별 본문 위치·해시 확인 · 원문 문장 미저장",
+        };
+      }),
+    }))
+    .filter((axis) => axis.variants.length);
+
+  const sample = rawComparison.sample ?? {};
+  const analyzedOutletCount = Number(sample.outlet_count ?? 0);
+  const sourceRoles = rawComparison.source_lens?.roles ?? [];
+  const sharedVoices = sourceRoles
+    .filter((role) => analyzedOutletCount >= 2 && Number(role.outlet_count) >= analyzedOutletCount)
+    .map((role) => role.role_label);
+  const voicesPresentInSomeOutlets = sourceRoles
+    .filter((role) => Number(role.outlet_count) > 0 && Number(role.outlet_count) < Math.max(2, analyzedOutletCount))
+    .map((role) => role.role_label);
+  const rawByOutlet = new Map((rawComparison.source_lens?.by_outlet ?? []).map((entry) => [entry.outlet, entry]));
+  const profileOutlets = uniqueStrings(profiles.map((profile) => {
+    const article = articleById.get(String(profile.article.article_id));
+    return article?.source;
+  }));
+  const byOutlet = profileOutlets.map((outlet) => {
+    const entry = rawByOutlet.get(outlet) ?? { outlet, roles: [] };
+    const counts = entry.roles ?? [];
+    const total = counts.reduce((sum, role) => sum + Number(role.count ?? 0), 0);
+    const official = counts
+      .filter((role) => ["government_official", "political_actor", "judiciary_law_enforcement", "anonymous_official"].includes(role.role))
+      .reduce((sum, role) => sum + Number(role.count ?? 0), 0);
+    return {
+      source: entry.outlet,
+      voices: uniqueStrings(counts.map((role) => role.role_label)),
+      officialShare: total ? Math.round((official / total) * 1000) / 1000 : null,
+      affectedGroupVoice: counts.some((role) => role.role === "affected_person"),
+    };
+  });
+
+  const contextGaps = rawAxes.flatMap((axis) => {
+    const presentInOutlets = [];
+    const notObservedInOutlets = [];
+    for (const article of issueArticles) {
+      const result = profileById.get(String(article.id))?.dimensions?.[axis.dimension];
+      if (!result) continue;
+      const bucket = result.status === "not_observed" ? notObservedInOutlets : presentInOutlets;
+      bucket.push(article.source);
+    }
+    const present = uniqueStrings(presentInOutlets);
+    const absent = uniqueStrings(notObservedInOutlets);
+    if (!present.length || !absent.length) return [];
+    return [{
+      feature: axis.label,
+      presentInOutlets: present,
+      notObservedInOutlets: absent,
+      displayText: `${absent.join("·")}의 분석 대상 본문에서는 ${axis.label} 요소가 확인되지 않았습니다. 이는 의도적 누락을 뜻하지 않습니다.`,
+    }];
+  });
+
+  const independentGroups = Number(sample.independent_media_group_count ?? 0);
+  const usableProfiles = profiles.length;
+  const hasComparableSample = usableProfiles >= 2 && independentGroups >= 2 && axes.some((axis) => axis.variants.length);
+  const hasComparison = hasComparableSample && divergenceDetected;
+  const status = hasComparison ? "available" : usableProfiles ? "partial" : "withheld_insufficient_evidence";
+  const limitations = [
+    "자동 구조화 분석이며 사람 검토 전입니다.",
+    "규칙으로 명시적으로 관측된 설명만 표시하며, 문맥상 암시는 보수적으로 유보합니다.",
+    "취재원 발언은 매체 자체의 주장과 분리해 표시합니다.",
+    "표본 본문에서 확인되지 않은 요소는 실제 부재나 의도적 누락을 뜻하지 않습니다.",
+  ];
+  const providerExcerptCount = profiles.filter((profile) => profile.extraction?.text_scope === "provider_excerpt").length;
+  if (providerExcerptCount) {
+    limitations.unshift(`BigKinds가 제공한 본문 발췌 ${providerExcerptCount}건을 분석했습니다. 기사 전문 전체를 분석한 결과가 아닙니다.`);
+  }
+  const excluded = Math.max(0, Number(issueArticleCount) - usableProfiles);
+  if (excluded) limitations.push(`본문을 확보·검증하지 못한 기사 ${excluded}건은 구조화 비교에서 제외했습니다.`);
+
+  return {
+    status,
+    divergenceDetected,
+    evidenceBasis: usableProfiles ? "evidence_spans" : "headline_metadata_only",
+    reason: hasComparison
+      ? "기사별 근거 위치를 먼저 확인한 뒤 같은 사건 안에서 서로 다른 미디어그룹의 설명 구조를 비교했습니다."
+      : hasComparableSample
+        ? "본문 구조는 비교했지만 서로 다른 미디어그룹의 설명이 갈렸다고 확정할 배타적 근거는 확인되지 않았습니다."
+        : "서로 독립적인 매체의 본문 근거가 충분하지 않아 가능한 항목만 표시합니다.",
+    methodologyLabel: "문제·원인·책임·평가·해법",
+    reviewStatus: "automatic_draft",
+    summary: {
+      commonGround: rawComparison.summary_30_seconds?.common_ground ?? null,
+      mainDifference: rawComparison.summary_30_seconds?.main_difference ?? null,
+      whyItMatters: "문제 정의와 취재원 구성이 달라지면 같은 사건에서 주목하는 원인·책임·해법도 달라질 수 있습니다.",
+      sourceContext: rawComparison.summary_30_seconds?.source_context ?? null,
+    },
+    sample: {
+      analyzedArticles: Number(sample.body_evidence_article_count ?? usableProfiles),
+      textScope: providerExcerptCount ? "provider_excerpt" : "article_body",
+      outlets: Number(sample.outlet_count ?? new Set(issueArticles.map((article) => article.source)).size),
+      independentMediaGroups: independentGroups,
+      excludedArticles: excluded,
+    },
+    axes,
+    sourceLens: {
+      sharedVoices: uniqueStrings(sharedVoices),
+      voicesPresentInSomeOutlets: uniqueStrings(voicesPresentInSomeOutlets),
+      byOutlet,
+    },
+    contextGaps,
+    limitations,
+  };
+}
+
 async function loadTransientBodySignals(db, start, end) {
   const result = await db.prepare(`
     SELECT signals.article_id AS articleId, signals.detected_frames AS detectedFrames
@@ -993,9 +1331,15 @@ async function loadTransientBodySignals(db, start, end) {
     JOIN articles a ON a.id = signals.article_id
     WHERE a.published_at >= ? AND a.published_at < ?
       AND signals.status = 'analyzed'
-      AND signals.extractor_version = ?
       AND signals.taxonomy_version = ?
-  `).bind(start, end, ARTICLE_EXTRACTOR_VERSION, FRAME_TAXONOMY_VERSION).all();
+      AND signals.analyzed_at = (
+        SELECT MAX(latest.analyzed_at)
+        FROM article_body_signals latest
+        WHERE latest.article_id = signals.article_id
+          AND latest.status = 'analyzed'
+          AND latest.taxonomy_version = signals.taxonomy_version
+      )
+  `).bind(start, end, FRAME_TAXONOMY_VERSION).all();
   return new Map((result.results ?? []).map((row) => [row.articleId, {
     bodyAnalysisAvailable: true,
     bodyFrameSignals: parseDetectedFrames(row.detectedFrames),
@@ -1009,15 +1353,16 @@ async function transientAnalysisProgress(db, start, end) {
   const row = await db.prepare(`
     SELECT
       COUNT(*) AS total,
-      COALESCE(SUM(CASE WHEN signals.status = 'analyzed' THEN 1 ELSE 0 END), 0) AS analyzed,
-      COALESCE(SUM(CASE WHEN signals.status = 'failed' THEN 1 ELSE 0 END), 0) AS failed
+      COALESCE(SUM(CASE WHEN profiles.status IN ('analyzed', 'partial') THEN 1 ELSE 0 END), 0) AS analyzed,
+      COALESCE(SUM(CASE WHEN profiles.status = 'failed' THEN 1 ELSE 0 END), 0) AS failed
     FROM articles a
-    LEFT JOIN article_body_signals signals
-      ON signals.article_id = a.id
-      AND signals.extractor_version = ?
-      AND signals.taxonomy_version = ?
+    LEFT JOIN article_frame_profiles profiles
+      ON profiles.article_id = a.id
+      AND profiles.extractor_version = ?
+      AND profiles.model_version = ?
+      AND profiles.schema_version = ?
     WHERE a.published_at >= ? AND a.published_at < ?
-  `).bind(ARTICLE_EXTRACTOR_VERSION, FRAME_TAXONOMY_VERSION, start, end).first();
+  `).bind(ARTICLE_EXTRACTOR_VERSION, FRAMING_ENGINE_VERSION, ARTICLE_FRAME_PROFILE_SCHEMA, start, end).first();
   const total = Number(row?.total ?? 0);
   const analyzed = Number(row?.analyzed ?? 0);
   const failed = Number(row?.failed ?? 0);
@@ -1044,6 +1389,8 @@ async function handleTransientAnalysisStatus(request, env) {
       extractorVersion: ARTICLE_EXTRACTOR_VERSION,
       taxonomyVersion: FRAME_TAXONOMY_VERSION,
       bodyStorageCount: 0,
+      profileSchemaVersion: ARTICLE_FRAME_PROFILE_SCHEMA,
+      framingEngineVersion: FRAMING_ENGINE_VERSION,
       complete: progress.remaining === 0,
       progress,
     }, 200, { request });
@@ -1077,28 +1424,55 @@ async function handleTransientAnalyze(request, env) {
         a.title,
         a.canonical_url AS canonicalUrl,
         a.source_id AS sourceId,
+        a.published_at AS publishedAt,
         s.name AS source
       FROM articles a
       JOIN media_sources s ON s.id = a.source_id
-      LEFT JOIN article_body_signals signals
-        ON signals.article_id = a.id
-        AND signals.extractor_version = ?
-        AND signals.taxonomy_version = ?
+      LEFT JOIN article_frame_profiles profiles
+        ON profiles.article_id = a.id
+        AND profiles.extractor_version = ?
+        AND profiles.model_version = ?
+        AND profiles.schema_version = ?
       WHERE a.published_at >= ? AND a.published_at < ?
-        AND (signals.article_id IS NULL OR (? = 1 AND signals.status = 'failed'))
+        AND (profiles.article_id IS NULL OR (? = 1 AND profiles.status = 'failed'))
       ORDER BY
         CASE a.homepage_placement WHEN 'top' THEN 4 WHEN 'main' THEN 3 WHEN 'section' THEN 2 ELSE 1 END DESC,
         a.homepage_rank ASC,
         a.published_at DESC
       LIMIT ?
-    `).bind(ARTICLE_EXTRACTOR_VERSION, FRAME_TAXONOMY_VERSION, start, end, retryFailed ? 1 : 0, limit).all();
+    `).bind(
+      ARTICLE_EXTRACTOR_VERSION,
+      FRAMING_ENGINE_VERSION,
+      ARTICLE_FRAME_PROFILE_SCHEMA,
+      start,
+      end,
+      retryFailed ? 1 : 0,
+      limit,
+    ).all();
     const articles = selected.results ?? [];
     const results = await mapWithConcurrency(articles, ARTICLE_FETCH_CONCURRENCY, async (article) => {
       try {
         const source = sourceForArticle(article);
         const { html } = await fetchArticleHtml(article.canonicalUrl, source, env);
-        const body = extractArticleBodyFromHtml(html);
+        const extraction = extractArticleBody(html, {
+          hostname: new URL(article.canonicalUrl).hostname,
+          sourceId: article.sourceId,
+        });
+        const body = extraction.bodyText;
         const signals = extractBodyFrameSignals(body);
+        const profile = await analyzeArticleFraming({
+          articleId: article.id,
+          title: article.title,
+          bodyText: body,
+          publishedAt: article.publishedAt ? new Date(Number(article.publishedAt)).toISOString() : null,
+        });
+        profile.extraction = {
+          strategy: extraction.strategy,
+          quality: extraction.quality,
+          extractor_version: ARTICLE_EXTRACTOR_VERSION,
+        };
+        const validation = validateArticleFrameProfile(profile);
+        if (!validation.valid) throw new Error(`구조화 분석 검증 실패: ${validation.errors.join("; ")}`);
         return {
           articleId: article.id,
           source: article.source,
@@ -1107,6 +1481,9 @@ async function handleTransientAnalyze(request, env) {
           bodyHash: await sha256Hex(body),
           bodyCharacters: signals.bodyCharacters,
           detectedFrames: signals.detectedFrames,
+          profile,
+          observedDimensionCount: Object.values(profile.dimensions)
+            .filter((dimension) => dimension.status !== "not_observed").length,
         };
       } catch (error) {
         return {
@@ -1121,35 +1498,68 @@ async function handleTransientAnalyze(request, env) {
     });
     if (results.length) {
       const analyzedAt = Date.now();
-      await runBatches(env.DB, results.map((result) => env.DB.prepare(`
-        INSERT INTO article_body_signals
-          (id, article_id, body_hash, body_characters, detected_frames, status, failure_code, extractor_version, taxonomy_version, analyzed_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(article_id, extractor_version, taxonomy_version) DO UPDATE SET
-          body_hash = excluded.body_hash,
-          body_characters = excluded.body_characters,
-          detected_frames = excluded.detected_frames,
-          status = excluded.status,
-          failure_code = excluded.failure_code,
-          analyzed_at = excluded.analyzed_at
-      `).bind(
-        crypto.randomUUID(),
-        result.articleId,
-        result.status === "analyzed" ? result.bodyHash : null,
-        result.status === "analyzed" ? result.bodyCharacters : null,
-        JSON.stringify(result.status === "analyzed" ? result.detectedFrames : []),
-        result.status,
-        result.status === "failed" ? result.failureCode : null,
-        ARTICLE_EXTRACTOR_VERSION,
-        FRAME_TAXONOMY_VERSION,
-        analyzedAt,
-      )));
+      const statements = [];
+      for (const result of results) {
+        statements.push(env.DB.prepare(`
+          INSERT INTO article_body_signals
+            (id, article_id, body_hash, body_characters, detected_frames, status, failure_code, extractor_version, taxonomy_version, analyzed_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(article_id, extractor_version, taxonomy_version) DO UPDATE SET
+            body_hash = excluded.body_hash,
+            body_characters = excluded.body_characters,
+            detected_frames = excluded.detected_frames,
+            status = excluded.status,
+            failure_code = excluded.failure_code,
+            analyzed_at = excluded.analyzed_at
+        `).bind(
+          crypto.randomUUID(),
+          result.articleId,
+          result.status === "analyzed" ? result.bodyHash : null,
+          result.status === "analyzed" ? result.bodyCharacters : null,
+          JSON.stringify(result.status === "analyzed" ? result.detectedFrames : []),
+          result.status,
+          result.status === "failed" ? result.failureCode : null,
+          ARTICLE_EXTRACTOR_VERSION,
+          FRAME_TAXONOMY_VERSION,
+          analyzedAt,
+        ));
+        statements.push(env.DB.prepare(`
+          INSERT INTO article_frame_profiles
+            (id, article_id, body_hash, body_characters, profile_json, status, failure_code, extractor_version, provider, model_version, prompt_version, schema_version, review_status, analyzed_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'automatic_draft', ?)
+          ON CONFLICT(article_id, extractor_version, model_version, schema_version) DO UPDATE SET
+            body_hash = excluded.body_hash,
+            body_characters = excluded.body_characters,
+            profile_json = excluded.profile_json,
+            status = excluded.status,
+            failure_code = excluded.failure_code,
+            provider = excluded.provider,
+            prompt_version = excluded.prompt_version,
+            review_status = 'automatic_draft',
+            analyzed_at = excluded.analyzed_at
+        `).bind(
+          crypto.randomUUID(),
+          result.articleId,
+          result.status === "analyzed" ? result.bodyHash : null,
+          result.status === "analyzed" ? result.bodyCharacters : null,
+          JSON.stringify(result.status === "analyzed" ? result.profile : {}),
+          result.status,
+          result.status === "failed" ? result.failureCode : null,
+          ARTICLE_EXTRACTOR_VERSION,
+          "structured_extractive",
+          FRAMING_ENGINE_VERSION,
+          PROMPT_VERSION,
+          ARTICLE_FRAME_PROFILE_SCHEMA,
+          analyzedAt,
+        ));
+      }
+      await runBatches(env.DB, statements);
     }
 
     const progress = await transientAnalysisProgress(env.DB, start, end);
     const ready = results.filter((result) => result.status === "analyzed");
     let analysis = null;
-    if (ready.length || (payload.refresh_analysis === true && progress.remaining === 0)) {
+    if (progress.remaining === 0 && (ready.length || payload.refresh_analysis === true)) {
       const analysisHeaders = new Headers({ "content-type": "application/json" });
       for (const name of ["authorization", "origin", "sec-fetch-site"]) {
         const value = request.headers.get(name);
@@ -1169,6 +1579,7 @@ async function handleTransientAnalyze(request, env) {
       title: result.title,
       status: result.status,
       signalCount: result.detectedFrames.length,
+      structuredDimensionCount: result.observedDimensionCount,
     } : {
       articleId: result.articleId,
       source: result.source,
@@ -1408,7 +1819,7 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
   }
   const start = Date.parse(`${targetDate}T00:00:00+09:00`);
   const end = start + 86_400_000;
-  const [articleResult, placementResult, authorizedContents, transientSignals] = await Promise.all([
+  const [articleResult, placementResult, authorizedContents, transientSignals, frameProfiles] = await Promise.all([
     db.prepare(`
       SELECT
         a.id,
@@ -1441,6 +1852,7 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
     `).bind(start, end).all(),
     includeStoredContents ? loadAuthorizedArticleContents(db, env.CONTENT, start, end) : Promise.resolve(new Map()),
     includeDerivedSignals ? loadTransientBodySignals(db, start, end) : Promise.resolve(new Map()),
+    includeDerivedSignals ? loadArticleFrameProfiles(db, start, end) : Promise.resolve(new Map()),
   ]);
   const analysisContents = new Map();
   for (const contents of [transientSignals, authorizedContents, contentOverrides]) {
@@ -1488,6 +1900,22 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
       maxIssues: 80,
     });
     const issueIds = await Promise.all(analyzed.map((issue, index) => sha256Hex(`${runId}:${index}:${issue.title}`)));
+    analyzed.forEach((issue, index) => {
+      const profiles = issue.articles
+        .map((article) => frameProfiles.get(article.id))
+        .filter(Boolean);
+      if (!profiles.length) return;
+      const rawComparison = buildIssueFrameComparison(profiles, issue.articles, {
+        issueId: issueIds[index],
+        issueTitle: issue.title,
+      });
+      issue.structuredComparison = publicComparisonFromEngine(rawComparison, profiles, issue.articles, {
+        issueArticleCount: issue.articleCount,
+      });
+      if (!isStructuredComparisonPayload(issue.structuredComparison)) {
+        throw new Error("공개 구조화 비교 계약 검증에 실패했습니다.");
+      }
+    });
     const statements = [];
     analyzed.forEach((issue, index) => {
       const issueId = issueIds[index];
@@ -1553,6 +1981,23 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
         ANALYSIS_MODEL_VERSION,
         Date.now(),
       ));
+      if (issue.structuredComparison) {
+        statements.push(db.prepare(`
+          INSERT INTO issue_frame_comparisons
+            (id, issue_id, comparison_json, profile_count, analyzed_article_count, provider, model_version, schema_version, generated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          crypto.randomUUID(),
+          issueId,
+          JSON.stringify(issue.structuredComparison),
+          issue.structuredComparison.sample?.analyzedArticles ?? 0,
+          issue.structuredComparison.sample?.analyzedArticles ?? 0,
+          "structured_extractive",
+          FRAMING_ENGINE_VERSION,
+          ISSUE_FRAME_COMPARISON_SCHEMA,
+          Date.now(),
+        ));
+      }
     });
     await runBatches(db, statements);
     const finishedAt = Date.now();
@@ -1748,7 +2193,14 @@ async function handleIssues(request, env) {
                AND fa.article_id = ia.article_id
                AND fa.evidence_basis = 'body_transient'
            )
-         )) AS contentAvailableCount
+         )) AS contentAvailableCount,
+         (SELECT COUNT(*) FROM issue_articles ia WHERE ia.issue_id = issues.id AND EXISTS(
+           SELECT 1 FROM article_frame_profiles profiles
+           WHERE profiles.article_id = ia.article_id
+             AND profiles.status IN ('analyzed', 'partial')
+             AND profiles.model_version = '${FRAMING_ENGINE_VERSION}'
+             AND profiles.schema_version = '${ARTICLE_FRAME_PROFILE_SCHEMA}'
+         )) AS structuredProfileCount
       FROM issues
       WHERE ${where}
       ORDER BY agenda_score DESC, article_count DESC
@@ -1761,7 +2213,7 @@ async function handleIssues(request, env) {
     issues: (result.results ?? []).map((issue) => publicIssue(issue, run)),
     total: Number(count?.total ?? 0),
     categories: categoryResult.results ?? [],
-    analysisDisclosure: "기사 제목·메타데이터 기준 규칙 분석. 확률·사실성·편향 판정이 아닙니다.",
+    analysisDisclosure: "공개 본문을 저장하지 않고 근거 위치·해시와 구조화 프레임 요소를 추출한 자동 초안입니다. 사람 검토·사실성·편향 판정이 아닙니다.",
     meta: responseMeta(run, "live_metadata"),
   }, 200, { request, etag: true, cacheControl: "public, max-age=60, must-revalidate" });
 }
@@ -1789,13 +2241,20 @@ async function handleIssueDetail(request, issueId, env) {
             AND fa.article_id = content_ia.article_id
             AND fa.evidence_basis = 'body_transient'
         )
-      )) AS contentAvailableCount
+      )) AS contentAvailableCount,
+      (SELECT COUNT(*) FROM issue_articles profile_ia WHERE profile_ia.issue_id = i.id AND EXISTS(
+        SELECT 1 FROM article_frame_profiles profiles
+        WHERE profiles.article_id = profile_ia.article_id
+          AND profiles.status IN ('analyzed', 'partial')
+          AND profiles.model_version = '${FRAMING_ENGINE_VERSION}'
+          AND profiles.schema_version = '${ARTICLE_FRAME_PROFILE_SCHEMA}'
+      )) AS structuredProfileCount
     FROM issues i
     JOIN analysis_runs r ON r.id = i.run_id
     WHERE i.id = ? AND r.status = 'success'
   `).bind(issueId).first();
   if (!issue) return jsonResponse({ error: "이슈를 찾지 못했습니다." }, 404, { request });
-  const [articles, frames, report, outlets] = await Promise.all([
+  const [articles, frames, report, outlets, comparisonRow] = await Promise.all([
     env.DB.prepare(`
       SELECT
         a.id, s.name AS source, a.title, a.canonical_url AS url, a.section, a.published_at AS publishedAt,
@@ -1847,6 +2306,11 @@ async function handleIssueDetail(request, issueId, env) {
       GROUP BY s.id, s.name
       ORDER BY articleCount DESC, s.name
     `).bind(issueId).all(),
+    env.DB.prepare(`
+      SELECT comparison_json AS comparisonJson
+      FROM issue_frame_comparisons
+      WHERE issue_id = ?
+    `).bind(issueId).first(),
   ]);
   const run = { id: issue.runId, targetDate: issue.targetDate, provider: issue.provider, modelVersion: issue.modelVersion, finishedAt: issue.analyzedAt };
   const publicArticles = articles.results ?? [];
@@ -1881,13 +2345,22 @@ async function handleIssueDetail(request, issueId, env) {
     ...report,
     evidenceRefs: publicArticles.map((article) => ({ articleId: article.id, source: article.source, sourceUrl: article.url })),
   } : null;
+  let structuredComparison = null;
+  if (currentAnalysis && comparisonRow?.comparisonJson) {
+    try {
+      const parsed = JSON.parse(String(comparisonRow.comparisonJson));
+      if (isStructuredComparisonPayload(parsed)) structuredComparison = parsed;
+    } catch {
+      structuredComparison = null;
+    }
+  }
   return jsonResponse({
     issue: publicIssue(issue, run),
     articles: publicArticles,
     frames: publicFrames,
     report: publicReport,
     outlets: (outlets.results ?? []).map((outlet) => ({ ...outlet, placement: placementByWeight[outlet.placementWeight] ?? "미확인" })),
-    comparison: evidenceFirstComparison(issue, publicArticles),
+    comparison: structuredComparison ?? evidenceFirstComparison(issue, publicArticles),
     meta: responseMeta(run, "live_metadata"),
   }, 200, { request, etag: true, cacheControl: "public, max-age=300, immutable" });
 }
@@ -2192,6 +2665,10 @@ export async function handleApiRequest(request, env = {}) {
   if (url.pathname === "/api/import") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
     return handleImport(request, env);
+  }
+  if (url.pathname === "/api/import/structured") {
+    if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
+    return handleStructuredImport(request, env);
   }
   if (url.pathname === "/api/analyze") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);

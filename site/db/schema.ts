@@ -214,6 +214,41 @@ export const articleBodySignals = sqliteTable(
   ],
 );
 
+export const articleFrameProfiles = sqliteTable(
+  "article_frame_profiles",
+  {
+    id: text("id").primaryKey(),
+    articleId: text("article_id")
+      .notNull()
+      .references(() => articles.id, { onDelete: "cascade" }),
+    bodyHash: text("body_hash"),
+    bodyCharacters: integer("body_characters"),
+    profileJson: text("profile_json").notNull().default("{}"),
+    status: text("status", { enum: ["analyzed", "partial", "failed"] }).notNull(),
+    failureCode: text("failure_code"),
+    extractorVersion: text("extractor_version").notNull(),
+    provider: text("provider").notNull(),
+    modelVersion: text("model_version").notNull(),
+    promptVersion: text("prompt_version").notNull(),
+    schemaVersion: text("schema_version").notNull(),
+    reviewStatus: text("review_status", {
+      enum: ["automatic_draft", "human_reviewed", "rejected"],
+    }).notNull().default("automatic_draft"),
+    analyzedAt: integer("analyzed_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt,
+  },
+  (table) => [
+    uniqueIndex("article_frame_profiles_article_versions_uq").on(
+      table.articleId,
+      table.extractorVersion,
+      table.modelVersion,
+      table.schemaVersion,
+    ),
+    index("article_frame_profiles_status_idx").on(table.status, table.analyzedAt),
+    index("article_frame_profiles_article_idx").on(table.articleId, table.analyzedAt),
+  ],
+);
+
 export const collectionErrors = sqliteTable(
   "collection_errors",
   {
@@ -345,6 +380,28 @@ export const aiReports = sqliteTable(
     createdAt,
   },
   (table) => [uniqueIndex("ai_reports_issue_uq").on(table.issueId)],
+);
+
+export const issueFrameComparisons = sqliteTable(
+  "issue_frame_comparisons",
+  {
+    id: text("id").primaryKey(),
+    issueId: text("issue_id")
+      .notNull()
+      .references(() => issues.id, { onDelete: "cascade" }),
+    comparisonJson: text("comparison_json").notNull(),
+    profileCount: integer("profile_count").notNull().default(0),
+    analyzedArticleCount: integer("analyzed_article_count").notNull().default(0),
+    provider: text("provider").notNull(),
+    modelVersion: text("model_version").notNull(),
+    schemaVersion: text("schema_version").notNull(),
+    generatedAt: integer("generated_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt,
+  },
+  (table) => [
+    uniqueIndex("issue_frame_comparisons_issue_uq").on(table.issueId),
+    index("issue_frame_comparisons_generated_at_idx").on(table.generatedAt),
+  ],
 );
 
 export const qualityReviews = sqliteTable(
