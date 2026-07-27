@@ -82,6 +82,8 @@ type IssueDetail = {
 };
 
 type AnalysisTab = "compare" | "outlets" | "frames" | "articles";
+type IssueDateOption = { date: string; analyzedAt: number | null; articleCount: number; issueCount: number };
+type ArticleFilters = { q: string; source: string; section: string; articleDate: string };
 
 const frameLabels: Record<string, string> = {
   conflict: "갈등·대립",
@@ -91,6 +93,7 @@ const frameLabels: Record<string, string> = {
   policy: "정책 효과",
   citizen: "시민 영향",
 };
+
 const frameColors: Record<string, string> = {
   conflict: "#d64b70",
   responsibility: "#7058a3",
@@ -117,6 +120,12 @@ function formatDateTime(value?: number | string | null) {
   }).format(date);
 }
 
+function formatAgendaDate(value?: string | null) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return "분석일";
+  const [, month, day] = value.split("-");
+  return `${Number(month)}월 ${Number(day)}일`;
+}
+
 function ScorePart({ label, value, note }: { label: string; value: number | null; note?: string }) {
   return (
     <div className="score-part">
@@ -133,6 +142,7 @@ const analysisTabs: Array<[AnalysisTab, string]> = [
   ["frames", "프레임 단서"],
   ["articles", "관련 기사"],
 ];
+const agendaCategoryOrder = ["정치", "경제", "사회", "국제", "스포츠", "생활·IT"];
 
 export default function AgendaDashboard() {
   const [health, setHealth] = useState<Health | null>(null);
@@ -140,6 +150,8 @@ export default function AgendaDashboard() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [issueTotal, setIssueTotal] = useState(0);
   const [categories, setCategories] = useState<Array<{ category: string; count: number }>>([]);
+  const [availableDates, setAvailableDates] = useState<IssueDateOption[]>([]);
+  const [issueDate, setIssueDate] = useState("");
   const [category, setCategory] = useState("전체");
   const [selectedIssueId, setSelectedIssueId] = useState("");
   const [detail, setDetail] = useState<IssueDetail | null>(null);
@@ -153,14 +165,17 @@ export default function AgendaDashboard() {
   const [articleOffset, setArticleOffset] = useState(0);
   const [articleLoading, setArticleLoading] = useState(false);
   const [articleError, setArticleError] = useState("");
-  const [filters, setFilters] = useState({ q: "", source: "", section: "", date: "" });
-  const [appliedFilters, setAppliedFilters] = useState({ q: "", source: "", section: "", date: "" });
+  const [filters, setFilters] = useState<ArticleFilters>({ q: "", source: "", section: "", articleDate: "" });
+  const [appliedFilters, setAppliedFilters] = useState<ArticleFilters>({ q: "", source: "", section: "", articleDate: "" });
   const [methodOpen, setMethodOpen] = useState(false);
   const [urlReady, setUrlReady] = useState(false);
   const [healthError, setHealthError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshMessage, setRefreshMessage] = useState("");
   const methodDialogRef = useRef<HTMLDialogElement>(null);
+  const detailTitleRef = useRef<HTMLHeadingElement>(null);
+  const pendingDetailFocusRef = useRef(false);
+  const archiveRequestedRef = useRef(false);
 
   const loadHealth = useCallback(async () => {
     try {
@@ -184,12 +199,32 @@ export default function AgendaDashboard() {
     }
   }, []);
 
-  const loadIssues = useCallback(async (nextCategory = category) => {
+  const loadIssueDates = useCallback(async (preferredDate = "") => {
+    try {
+      const response = await fetch("/api/issues/dates?limit=31", { cache: "no-store" });
+      if (!response.ok) throw new Error("issue dates unavailable");
+      const payload = await response.json();
+      const nextDates = Array.isArray(payload.dates) ? payload.dates : [];
+      setAvailableDates(nextDates);
+      const resolvedDate = nextDates.some((entry: IssueDateOption) => entry.date === preferredDate)
+        ? preferredDate
+        : (nextDates[0]?.date ?? preferredDate);
+      setIssueDate(resolvedDate);
+      return resolvedDate;
+    } catch {
+      setAvailableDates([]);
+      setIssueDate(preferredDate);
+      return preferredDate;
+    }
+  }, []);
+
+  const loadIssues = useCallback(async (nextCategory = category, nextDate = issueDate) => {
     setLoadingIssues(true);
     setIssueError("");
     try {
       const parameters = new URLSearchParams({ limit: "5" });
       if (nextCategory !== "전체") parameters.set("category", nextCategory);
+      if (nextDate) parameters.set("date", nextDate);
       const response = await fetch(`/api/issues?${parameters}`, { cache: "no-store" });
       if (!response.ok) throw new Error("issues unavailable");
       const payload = await response.json();
@@ -204,7 +239,7 @@ export default function AgendaDashboard() {
     } finally {
       setLoadingIssues(false);
     }
-  }, [category]);
+  }, [category, issueDate]);
 
   const loadArticles = useCallback(async ({ append = false, nextFilters = appliedFilters } = {}) => {
     if (articleLoading) return;
@@ -213,7 +248,10 @@ export default function AgendaDashboard() {
     try {
       const offset = append ? articleOffset : 0;
       const parameters = new URLSearchParams({ limit: "12", offset: String(offset) });
-      Object.entries(nextFilters).forEach(([key, value]) => { if (value.trim()) parameters.set(key, value.trim()); });
+      if (nextFilters.q.trim()) parameters.set("q", nextFilters.q.trim());
+      if (nextFilters.source.trim()) parameters.set("source", nextFilters.source.trim());
+      if (nextFilters.section.trim()) parameters.set("section", nextFilters.section.trim());
+      if (nextFilters.articleDate.trim()) parameters.set("date", nextFilters.articleDate.trim());
       const response = await fetch(`/api/articles?${parameters}`, { cache: "no-store" });
       if (!response.ok) throw new Error("articles unavailable");
       const payload = await response.json();
@@ -230,17 +268,22 @@ export default function AgendaDashboard() {
 
   useEffect(() => {
     const parameters = typeof window === "undefined" ? new URLSearchParams() : new URLSearchParams(window.location.search);
-    const initialCategory = parameters.get("category") || "전체";
+    const requestedCategory = parameters.get("category") || "전체";
+    const initialCategory = ["전체", ...agendaCategoryOrder].includes(requestedCategory) ? requestedCategory : "전체";
+    const initialIssueDate = parameters.get("date") ?? "";
     const requestedTab = parameters.get("tab") as AnalysisTab | null;
     const initialTab = analysisTabs.some(([value]) => value === requestedTab) ? requestedTab as AnalysisTab : "compare";
-    const initialFilters = { q: parameters.get("q") ?? "", source: parameters.get("source") ?? "", section: parameters.get("section") ?? "", date: parameters.get("date") ?? "" };
+    const initialFilters = { q: parameters.get("q") ?? "", source: parameters.get("source") ?? "", section: parameters.get("section") ?? "", articleDate: parameters.get("article_date") ?? "" };
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCategory(initialCategory);
     setTab(initialTab);
     setFilters(initialFilters);
     setAppliedFilters(initialFilters);
     setUrlReady(true);
-    Promise.allSettled([loadHealth(), loadSources(), loadIssues(initialCategory), loadArticles({ nextFilters: initialFilters })]);
+    void (async () => {
+      const resolvedDate = await loadIssueDates(initialIssueDate);
+      await Promise.allSettled([loadHealth(), loadSources(), loadIssues(initialCategory, resolvedDate)]);
+    })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -254,16 +297,26 @@ export default function AgendaDashboard() {
   }, [detailRequestNonce, selectedIssueId]);
 
   useEffect(() => {
+    if (!pendingDetailFocusRef.current || detail?.issue.id !== selectedIssueId) return;
+    pendingDetailFocusRef.current = false;
+    requestAnimationFrame(() => detailTitleRef.current?.focus({ preventScroll: true }));
+  }, [detail, selectedIssueId]);
+
+  useEffect(() => {
     if (!urlReady || typeof window === "undefined") return;
     const parameters = new URLSearchParams(window.location.search);
     if (selectedIssueId) parameters.set("issue", selectedIssueId); else parameters.delete("issue");
     if (category !== "전체") parameters.set("category", category); else parameters.delete("category");
+    if (issueDate) parameters.set("date", issueDate); else parameters.delete("date");
     parameters.set("tab", tab);
-    Object.entries(appliedFilters).forEach(([key, value]) => { if (value) parameters.set(key, value); else parameters.delete(key); });
+    for (const key of ["q", "source", "section"] as const) {
+      if (appliedFilters[key]) parameters.set(key, appliedFilters[key]); else parameters.delete(key);
+    }
+    if (appliedFilters.articleDate) parameters.set("article_date", appliedFilters.articleDate); else parameters.delete("article_date");
     const query = parameters.toString();
     const hash = window.location.hash || "#agenda-workspace";
     window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}${hash}`);
-  }, [appliedFilters, category, selectedIssueId, tab, urlReady]);
+  }, [appliedFilters, category, issueDate, selectedIssueId, tab, urlReady]);
 
   useEffect(() => {
     const dialog = methodDialogRef.current;
@@ -286,7 +339,17 @@ export default function AgendaDashboard() {
     setDetail(null);
     setDetailError("");
     setTab("compare");
-    loadIssues(value);
+    loadIssues(value, issueDate);
+  };
+
+  const handleIssueDate = (value: string) => {
+    setIssueDate(value);
+    setCategory("전체");
+    setDetail(null);
+    setDetailError("");
+    setSelectedIssueId("");
+    setTab("compare");
+    loadIssues("전체", value);
   };
 
   const selectIssue = (issueId: string) => {
@@ -294,7 +357,8 @@ export default function AgendaDashboard() {
     setDetailError("");
     setSelectedIssueId(issueId);
     setTab("compare");
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 780px)").matches) {
+    pendingDetailFocusRef.current = true;
+    if (typeof window !== "undefined") {
       const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
       requestAnimationFrame(() => document.getElementById("issue-analysis-panel")?.scrollIntoView({ behavior, block: "start" }));
     }
@@ -323,7 +387,7 @@ export default function AgendaDashboard() {
   };
 
   const resetFilters = () => {
-    const empty = { q: "", source: "", section: "", date: "" };
+    const empty = { q: "", source: "", section: "", articleDate: "" };
     setFilters(empty);
     setAppliedFilters(empty);
     loadArticles({ append: false, nextFilters: empty });
@@ -333,16 +397,16 @@ export default function AgendaDashboard() {
     if (refreshing) return;
     setRefreshing(true);
     setRefreshMessage("");
-    await Promise.allSettled([loadHealth(), loadIssues(category), loadArticles({ nextFilters: appliedFilters })]);
+    await Promise.allSettled([loadHealth(), loadIssueDates(issueDate), loadIssues(category, issueDate), archiveRequestedRef.current ? loadArticles({ nextFilters: appliedFilters }) : Promise.resolve()]);
     setRefreshMessage(`${formatDateTime(Date.now())}에 화면 데이터를 확인했습니다.`);
     setRefreshing(false);
   };
 
   const selectedIssue = useMemo(() => issues.find((issue) => issue.id === selectedIssueId) ?? (detail?.issue.id === selectedIssueId ? detail.issue : null), [detail, issues, selectedIssueId]);
-  const categoryOptions = ["전체", ...categories.map((entry) => entry.category)];
+  const categoryOptions = ["전체", ...agendaCategoryOrder.filter((value) => categories.some((entry) => entry.category === value))];
   const freshness = health?.freshness ?? { status: "analysis_pending", label: healthError ? "상태 확인 불가" : "상태 확인 중", staleDays: null };
   const currentSnapshot = freshness.status === "normal";
-  const basisDate = health?.analysis?.targetDate ?? null;
+  const basisDate = issueDate || health?.analysis?.targetDate || null;
   const detectedFrames = detail?.frames.filter((frame) => frame.score > 0 && frame.evidenceText) ?? [];
   const bodyBackedFrameCount = detail?.frames.filter((frame) => frame.evidenceBasis.startsWith("body_") && frame.score > 0).length ?? 0;
   const authorizedContentCount = health?.collection.authorizedContentCount ?? 0;
@@ -357,7 +421,7 @@ export default function AgendaDashboard() {
       <a className="skip-link" href="#main-content">본문으로 건너뛰기</a>
       <header className="topbar">
         <a className="brand" href="#top" aria-label="AgendaFrame 홈"><span className="brand-mark" aria-hidden="true">AF</span><span className="brand-copy"><b>AgendaFrame</b><small>보도 근거 비교</small></span></a>
-        <nav className="topnav" aria-label="주요 메뉴"><a href="#agenda-workspace">오늘의 이슈</a><a href="#live-feed">기사 검색</a><button type="button" onClick={() => setMethodOpen(true)}>방법론</button></nav>
+        <nav className="topnav" aria-label="주요 메뉴"><a href="#agenda-workspace">날짜별 의제</a><button type="button" onClick={() => setMethodOpen(true)}>방법론</button></nav>
         <div className="top-actions"><span className={`demo-badge live freshness-${freshness.status}`}><i aria-hidden="true" /> {freshness.label}</span><button className="refresh-button" type="button" onClick={refreshAll} disabled={refreshing} aria-label={refreshing ? "업데이트 확인 중" : "데이터 업데이트 확인"} aria-describedby="refresh-status"><span aria-hidden="true">↻</span><span>{refreshing ? "확인 중" : "업데이트 확인"}</span></button><span className="sr-only" id="refresh-status" role="status" aria-live="polite">{refreshMessage}</span></div>
       </header>
 
@@ -365,10 +429,10 @@ export default function AgendaDashboard() {
       <main id="main-content" tabIndex={-1}>
         <section className="overview" aria-labelledby="hero-title">
           <div className="overview-copy">
-            <p className="context-label">오늘의 보도 비교</p>
+            <p className="context-label">날짜별 보도 비교</p>
             <h1 id="hero-title">같은 사건,<br />매체별 근거로 나란히 봅니다.</h1>
             <p className="overview-description">22개 주요 종합일간지·경제매체·뉴스통신사의 온라인 기사와 홈페이지 배치를 사건별로 묶었습니다. 근거가 부족한 분석은 제공하지 않고, 비교할 수 있는 부분과 아직 판단할 수 없는 부분을 구분합니다.</p>
-            <div className="overview-actions"><a className="primary-action" href="#agenda-workspace">오늘의 이슈 비교하기</a><button className="secondary-action" type="button" onClick={() => setMethodOpen(true)}>분석 범위 확인</button></div>
+            <div className="overview-actions"><a className="primary-action" href="#agenda-workspace">날짜별 의제 비교하기</a><button className="secondary-action" type="button" onClick={() => setMethodOpen(true)}>분석 범위 확인</button></div>
             {!authorizedContentCount && <p className="evidence-limit"><strong>현재 본문 근거 없음</strong><span>프레임 탭에는 기사 제목에서 확인된 표현 단서만 표시됩니다.</span></p>}
             {!currentSnapshot && <p className="freshness-warning" role="status"><strong>{freshness.label}</strong>{freshness.staleDays ? ` · 기준일로부터 ${freshness.staleDays}일 지났습니다.` : " · 최신 수집 상태를 확인해 주세요."}</p>}
           </div>
@@ -384,15 +448,25 @@ export default function AgendaDashboard() {
 
         <section className="workspace" id="agenda-workspace" aria-label="뉴스 이슈 비교">
           <aside className="ranking-panel" aria-labelledby="ranking-title">
-            <div className="section-heading"><div><p className="context-label">보도 집중도 상위</p><h2 id="ranking-title">오늘의 주요 이슈</h2><p className="section-description">비교할 사건을 선택하세요.</p></div><span className="issue-count">{issues.length}/{issueTotal}개</span></div>
+            <div className="section-heading agenda-heading">
+              <div><p className="context-label">보도 집중도 상위</p><h2 id="ranking-title">{formatAgendaDate(basisDate)} 주요 의제</h2><p className="section-description">날짜를 고른 뒤 비교할 의제를 선택하세요.</p></div>
+              <label className="issue-date-control" htmlFor="issue-date">
+                <span>분석 기준일</span>
+                <select id="issue-date" value={issueDate} disabled={!availableDates.length} onChange={(event) => handleIssueDate(event.target.value)}>
+                  {!availableDates.length && <option value={issueDate}>{issueDate || "분석일 없음"}</option>}
+                  {availableDates.map((entry) => <option key={entry.date} value={entry.date}>{entry.date.replaceAll("-", ".")} · {entry.issueCount}개</option>)}
+                </select>
+              </label>
+            </div>
+            <div className="issue-count-row"><span>핵심 의제 우선 · 스포츠·생활·IT 후순위</span><span className="issue-count">{issues.length}/{issueTotal}개</span></div>
             <div className="filter-row" aria-label="분야별 이슈 보기">
               {categoryOptions.map((value) => <button key={value} type="button" className={`filter-pill${category === value ? " active" : ""}`} aria-pressed={category === value} onClick={() => handleCategory(value)}>{value}</button>)}
             </div>
             <div className="agenda-list" aria-busy={loadingIssues}>
-              {loadingIssues ? <div className="skeleton-stack" role="status" aria-label="오늘의 이슈를 불러오는 중">{[0, 1, 2, 3].map((item) => <i className="skeleton-row" key={item} aria-hidden="true" />)}</div> : issueError ? <div className="empty-state error-state" role="alert"><strong>이슈를 불러오지 못했습니다.</strong><span>{issueError}</span><button type="button" onClick={() => loadIssues(category)}>이슈 다시 불러오기</button></div> : issues.length ? issues.map((issue, index) => (
+              {loadingIssues ? <div className="skeleton-stack" role="status" aria-label="선택한 날짜의 의제를 불러오는 중">{[0, 1, 2, 3].map((item) => <i className="skeleton-row" key={item} aria-hidden="true" />)}</div> : issueError ? <div className="empty-state error-state" role="alert"><strong>의제를 불러오지 못했습니다.</strong><span>{issueError}</span><button type="button" onClick={() => loadIssues(category, issueDate)}>의제 다시 불러오기</button></div> : issues.length ? issues.map((issue, index) => (
                 <button key={issue.id} type="button" className={`agenda-card${issue.id === selectedIssueId ? " active" : ""}`} aria-pressed={issue.id === selectedIssueId} aria-current={issue.id === selectedIssueId ? "true" : undefined} aria-controls="issue-analysis-panel" onClick={() => selectIssue(issue.id)}>
                   <span className="agenda-rank">{index + 1}</span>
-                  <span className="agenda-copy"><span className="agenda-meta"><b className="category-tag">{issue.category}</b>{issue.sourceCount}/{configuredSourceCount}개 매체 · 관련 기사 {issue.articleCount}건</span><strong>{issue.title}</strong><small>{issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 대기" : "자동 묶음 · 검토 전"}</small></span>
+                  <span className="agenda-copy"><span className="agenda-meta"><b className="category-tag">{issue.category}</b>{issue.sourceCount}/{configuredSourceCount}개 매체 · 관련 기사 {issue.articleCount}건</span><strong>{issue.title}</strong><small>{issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 대기" : "의제 자동 묶음 · 검토 전"}</small></span>
                   <span className="agenda-score"><strong>{issue.agendaScore === null ? "–" : Math.round(issue.agendaScore)}</strong><small>{issue.agendaScore === null ? "보류" : "집중도"}</small></span>
                 </button>
               )) : <div className="empty-state"><strong>표시할 이슈가 없습니다.</strong><span>선택한 분야에 분석된 기사 제목이 아직 없습니다.</span></div>}
@@ -400,7 +474,7 @@ export default function AgendaDashboard() {
             <p className="panel-note"><span aria-hidden="true">ⓘ</span> 순위는 표본 안의 노출량입니다. 중요도·사실성·여론을 뜻하지 않습니다.</p>
           </aside>
 
-          <article className="detail-panel" id="issue-analysis-panel">
+          <article className="detail-panel" id="issue-analysis-panel" aria-live="polite">
             {!selectedIssue ? <div className="empty-state detail-empty"><strong>비교할 이슈를 선택해 주세요.</strong><span>이슈를 선택하면 매체별 제목과 현재 확인 가능한 근거가 여기에 나타납니다.</span></div> : detailError ? <div className="empty-state error-state" role="alert"><strong>이슈 근거를 불러오지 못했습니다.</strong><span>{detailError}</span><button type="button" onClick={retryDetail}>근거 다시 불러오기</button></div> : !detail || detail.issue.id !== selectedIssueId ? <div className="skeleton-detail" role="status" aria-label="선택한 이슈의 근거를 불러오는 중"><i className="skeleton-line" aria-hidden="true" /><i className="skeleton-line" aria-hidden="true" /><i className="skeleton-line" aria-hidden="true" /><i className="skeleton-line" aria-hidden="true" /></div> : (
               <>
                 <button className="mobile-back" type="button" onClick={() => {
@@ -408,7 +482,7 @@ export default function AgendaDashboard() {
                   document.getElementById("ranking-title")?.scrollIntoView({ behavior, block: "start" });
                 }}>← 이슈 목록</button>
                 <div className="detail-kicker"><p>{detail.issue.category} · {detail.issue.issueDate} · {detail.issue.sourceCount}개 언론사</p><span className="confidence review">{detail.issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 필요" : "자동 분석 · 검토 전"}</span></div>
-                <div className="detail-title-row"><div><h2>{detail.issue.title}</h2><p className="detail-summary">{detail.issue.summary}</p></div><div className="big-score"><strong>{detail.issue.agendaScore === null ? "–" : Math.round(detail.issue.agendaScore)}</strong><span>{detail.issue.agendaScore === null ? "산출 보류" : "표본 내 집중도 /100"}</span></div></div>
+                <div className="detail-title-row"><div><h2 ref={detailTitleRef} tabIndex={-1}>{detail.issue.title}</h2><p className="detail-summary">{detail.issue.summary}</p></div><div className="big-score"><strong>{detail.issue.agendaScore === null ? "–" : Math.round(detail.issue.agendaScore)}</strong><span>{detail.issue.agendaScore === null ? "산출 보류" : "표본 내 집중도 /100"}</span></div></div>
                 <div className="detail-metrics"><span>관련 제목 <b>{detail.issue.articleCount}건</b></span><span>포함 매체 <b>{detail.issue.sourceCount}/{configuredSourceCount}곳</b></span><span>승인 본문 <b>{detail.issue.contentAvailableCount}/{detail.issue.articleCount}건</b></span><span>사람 검토 <b>미완료</b></span></div>
                 <details className="score-details"><summary>점수 근거와 관측 범위</summary><div className="score-breakdown"><ScorePart label="독립 미디어그룹 커버리지" value={detail.issue.diversityScore} /><ScorePart label="홈페이지 배치" value={detail.issue.placementScore} note={`${detail.issue.placementObservedCount}/${detail.issue.placementTotalCount}건 관측`} /><ScorePart label="기사량" value={detail.issue.volumeScore} /><ScorePart label="후속 보도량" value={detail.issue.followUpVolumeScore} /></div><p>관측된 메타데이터만 계산하며 동일 미디어그룹은 커버리지에서 한 번만 셉니다. 이 점수는 중요도·진실성·여론을 뜻하지 않습니다.</p></details>
                 <div className="analysis-tabs" role="tablist" aria-label="이슈 분석 보기">
@@ -454,18 +528,27 @@ export default function AgendaDashboard() {
           </article>
         </section>
 
-        <section className="live-feed" id="live-feed" aria-labelledby="live-feed-title">
-          <div className="section-heading live-heading"><div><p className="context-label">기사 아카이브</p><h2 id="live-feed-title">전체 기사 검색</h2><p className="section-description">분석에 사용된 기사를 매체·분야·날짜로 좁혀 원문에서 확인하세요.</p></div><p>{articles.length.toLocaleString("ko-KR")}/{articleTotal.toLocaleString("ko-KR")}건 표시</p></div>
-          <form className="live-filter-form" role="search" onSubmit={submitFilters}>
-            <label><span>기사 제목</span><input type="search" maxLength={100} value={filters.q} onChange={(event) => setFilters({ ...filters, q: event.target.value })} placeholder="예: 주거 정책" /></label>
-            <label><span>언론사</span><select value={filters.source} onChange={(event) => setFilters({ ...filters, source: event.target.value })}><option value="">전체</option>{sourceGroups.map((group) => <optgroup key={group.sourceType} label={group.label}>{group.entries.map((source) => <option key={source.id} value={source.name}>{source.name}</option>)}</optgroup>)}</select></label>
-            <label><span>분야</span><select value={filters.section} onChange={(event) => setFilters({ ...filters, section: event.target.value })}><option value="">전체</option>{["정치","경제","사회","문화","스포츠","지역","국제","IT_과학"].map((section) => <option key={section}>{section}</option>)}</select></label>
-            <label><span>게시일</span><input type="date" value={filters.date} onChange={(event) => setFilters({ ...filters, date: event.target.value })} /></label>
-            <div className="live-filter-actions"><button type="submit" disabled={articleLoading}>{articleLoading ? "검색 중…" : "검색"}</button><button type="button" onClick={resetFilters}>초기화</button></div>
-          </form>
-          {articleError ? <p className="live-empty error-state" role="alert"><strong>기사 목록을 갱신하지 못했습니다.</strong><span>{articleError}</span><button type="button" onClick={() => loadArticles()}>기사 다시 불러오기</button></p> : articleLoading && !articles.length ? <p className="live-empty" role="status">조건에 맞는 기사를 찾고 있습니다…</p> : !articles.length ? <p className="live-empty"><strong>조건에 맞는 기사가 없습니다.</strong><span>검색어를 줄이거나 날짜·분야 필터를 지워 보세요.</span></p> : <div className="live-article-grid" aria-busy={articleLoading}>{articles.map((article) => <article className="live-article" key={article.id}><div className="live-article-meta"><span className="live-source">{article.source}</span><span>{article.section ?? "분야 미분류"}</span>{article.contentAvailable ? <span className="content-evidence-badge">승인 본문</span> : null}</div><h3><a href={article.url} target="_blank" rel="noopener noreferrer">{article.title}</a></h3><p className="live-article-detail">게시 {formatDateTime(article.publishedAt)}<br />홈페이지 {article.homepagePlacement ? placementLabels[article.homepagePlacement] : "배치 관측 없음"}{article.homepageRank ? ` · ${article.homepageRank}위` : ""}{article.placementObservationCount ? ` · ${article.placementObservationCount}회 관측` : ""}</p><a className="live-original" href={article.url} target="_blank" rel="noopener noreferrer">원문 열기 <span aria-hidden="true">→</span></a></article>)}</div>}
-          <div className="live-pagination">{articleOffset < articleTotal && <button type="button" disabled={articleLoading} onClick={() => loadArticles({ append: true })}>{articleLoading ? "기사 불러오는 중…" : "기사 12건 더 보기"}</button>}</div>
-          <p className="panel-note"><span aria-hidden="true">ⓘ</span> 기사 전문은 명시적인 이용 근거가 확인된 자료만 비공개 분석 저장소에 보관합니다. 공개 화면에는 전문을 제공하지 않습니다.</p>
+        <section className="live-feed archive-section" id="live-feed" aria-labelledby="live-feed-title">
+          <details className="archive-disclosure" onToggle={(event) => {
+            if (!event.currentTarget.open || archiveRequestedRef.current) return;
+            archiveRequestedRef.current = true;
+            loadArticles({ nextFilters: appliedFilters });
+          }}>
+            <summary><span><b id="live-feed-title">기사 자료 아카이브</b><small>의제 상세의 관련 기사만으로 부족할 때 제목·매체·게시일로 찾아봅니다.</small></span><span className="archive-action">기사 찾기</span></summary>
+            <div className="archive-body">
+              <div className="section-heading live-heading"><div><p className="context-label">보조 자료</p><h2>전체 기사 검색</h2><p className="section-description">수집된 기사 메타데이터를 원문 링크와 함께 확인하고, 필요하면 네 개 의제 분야로 좁혀 보세요.</p></div><p>{articles.length.toLocaleString("ko-KR")}/{articleTotal.toLocaleString("ko-KR")}건 표시</p></div>
+              <form className="live-filter-form" role="search" onSubmit={submitFilters}>
+                <label><span>기사 제목</span><input type="search" maxLength={100} value={filters.q} onChange={(event) => setFilters({ ...filters, q: event.target.value })} placeholder="예: 보완수사권" /></label>
+                <label><span>언론사</span><select value={filters.source} onChange={(event) => setFilters({ ...filters, source: event.target.value })}><option value="">전체</option>{sourceGroups.map((group) => <optgroup key={group.sourceType} label={group.label}>{group.entries.map((source) => <option key={source.id} value={source.name}>{source.name}</option>)}</optgroup>)}</select></label>
+                <label><span>분야</span><select value={filters.section} onChange={(event) => setFilters({ ...filters, section: event.target.value })}><option value="">전체</option>{["정치","경제","사회","국제"].map((section) => <option key={section}>{section}</option>)}</select></label>
+                <label><span>게시일</span><input type="date" value={filters.articleDate} onChange={(event) => setFilters({ ...filters, articleDate: event.target.value })} /></label>
+                <div className="live-filter-actions"><button type="submit" disabled={articleLoading}>{articleLoading ? "검색 중…" : "검색"}</button><button type="button" onClick={resetFilters}>초기화</button></div>
+              </form>
+              {articleError ? <p className="live-empty error-state" role="alert"><strong>기사 목록을 갱신하지 못했습니다.</strong><span>{articleError}</span><button type="button" onClick={() => loadArticles()}>기사 다시 불러오기</button></p> : articleLoading && !articles.length ? <p className="live-empty" role="status">조건에 맞는 기사를 찾고 있습니다…</p> : !articles.length ? <p className="live-empty"><strong>조건에 맞는 기사가 없습니다.</strong><span>검색어를 줄이거나 날짜·분야 필터를 지워 보세요.</span></p> : <div className="live-article-grid" aria-busy={articleLoading}>{articles.map((article) => <article className="live-article" key={article.id}><div className="live-article-meta"><span className="live-source">{article.source}</span><span>{article.section ?? "분야 미분류"}</span>{article.contentAvailable ? <span className="content-evidence-badge">승인 본문</span> : null}</div><h3><a href={article.url} target="_blank" rel="noopener noreferrer">{article.title}</a></h3><p className="live-article-detail">게시 {formatDateTime(article.publishedAt)}<br />홈페이지 {article.homepagePlacement ? placementLabels[article.homepagePlacement] : "배치 관측 없음"}{article.homepageRank ? ` · ${article.homepageRank}위` : ""}{article.placementObservationCount ? ` · ${article.placementObservationCount}회 관측` : ""}</p><a className="live-original" href={article.url} target="_blank" rel="noopener noreferrer">원문 열기 <span aria-hidden="true">→</span></a></article>)}</div>}
+              <div className="live-pagination">{articleOffset < articleTotal && <button type="button" disabled={articleLoading} onClick={() => loadArticles({ append: true })}>{articleLoading ? "기사 불러오는 중…" : "기사 12건 더 보기"}</button>}</div>
+              <p className="panel-note"><span aria-hidden="true">ⓘ</span> 기사 전문은 명시적인 이용 근거가 확인된 자료만 비공개 분석 저장소에 보관합니다. 공개 화면에는 전문을 제공하지 않습니다.</p>
+            </div>
+          </details>
         </section>
 
         <section className="method-preview" id="comparison" aria-labelledby="method-title"><div><p className="context-label">서비스 원칙</p><h2 id="method-title">이 서비스가 판단하지 않는 것</h2><p>AgendaFrame은 언론사의 옳고 그름을 채점하지 않습니다. 사용자가 원문을 비교할 때 필요한 관측값과 근거의 빈칸을 함께 보여줍니다.</p></div><div className="principles"><article><span>근거</span><h3>근거가 없으면 보류</h3><p>본문에 없는 사실·원인·취재원을 추정하지 않고, 확인할 수 없는 이유를 표시합니다.</p></article><article><span>구분</span><h3>사건과 설명을 분리</h3><p>같은 주제 안의 다른 사건은 분리하고, 설명 차이는 인용 가능한 근거가 있을 때만 묶습니다.</p></article><article><span>범위</span><h3>점수의 의미를 제한</h3><p>보도 집중도는 표본의 노출량입니다. 중요도·신뢰도·여론처럼 읽히지 않도록 범위를 붙입니다.</p></article></div></section>

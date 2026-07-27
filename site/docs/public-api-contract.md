@@ -1,4 +1,4 @@
-# AgendaFrame 공개 API 계약 v3
+# AgendaFrame 공개 API 계약 v4
 
 기계 판독 가능한 단일 계약 원본은 [`public-api.schema.json`](public-api.schema.json)이다. 런타임은 이 파일의 `x-api-version` 값을 읽어 모든 공개 응답의 `meta.schemaVersion`으로 사용한다.
 
@@ -31,7 +31,8 @@
 | `GET /api/health` | 수집·분석·게시 시각과 최신성 상태 | `no-store` |
 | `GET /api/sources` | 방송을 제외한 22개 매체의 유형·미디어그룹과 정책 버전 | 5분 |
 | `GET /api/articles` | 기사 메타데이터 탐색, cursor 페이지네이션 | 1분 |
-| `GET /api/issues` | 최신 성공 스냅샷의 상위 이슈 | 5분, immutable |
+| `GET /api/issues/dates` | 공개 가능한 성공 분석 날짜 목록 | 5분 |
+| `GET /api/issues` | 최신 또는 `date=YYYY-MM-DD` 성공 스냅샷의 상위 의제 | 1분 |
 | `GET /api/issues/:id` | 이슈·기사·근거·보류 상태 상세 | 5분, immutable |
 
 쓰기·품질 검수 API는 관리자 토큰이 필요하며 공개 스키마의 범위가 아니다.
@@ -45,5 +46,6 @@
 
 - 필드 삭제·의미 변경은 새 `schemaVersion`에서만 한다.
 - 필드를 추가할 때도 클라이언트가 모르는 필드를 무시할 수 있어야 한다.
+- 의제 대분류는 정치·경제·사회·국제를 우선하고 스포츠·생활·IT를 뒤에 둔다. 정책·규제 성격의 기술 기사는 내용에 따라 핵심 대분류로 재분류하며, 연예·문화·여행·레저 기사는 원본 메타데이터를 삭제하지 않되 의제 분석에서는 제외한다.
 - 과거 `agenda-rules-v1` 스냅샷은 잘못 보정된 신뢰도와 배치 점수를 공개하지 않는다. `agendaScore: null`, `legacy_reanalysis_required`로 반환한다.
 - 새 분석이 실패하면 `running` 또는 `failed` 실행은 공개 선택 대상이 아니다. 마지막 `success` 스냅샷만 유지된다.
