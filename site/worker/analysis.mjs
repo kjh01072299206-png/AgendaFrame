@@ -1,6 +1,6 @@
 export const ANALYSIS_PROVIDER = "rules_local";
 export const ANALYSIS_MODEL_VERSION = "agenda-rules-v3";
-export const CLUSTERING_VERSION = "event-anchors-complete-link-v2";
+export const CLUSTERING_VERSION = "event-anchors-complete-link-v3";
 export const SCORE_VERSION = "observed-agenda-v3";
 export const FRAME_TAXONOMY_VERSION = "frame-signals-v3";
 
@@ -120,12 +120,12 @@ function compatibleEvent(left, right) {
   const leftActions = left._event.actions;
   const rightActions = right._event.actions;
 
-  if (leftActors.length && rightActors.length && overlapCount(leftActors, rightActors) === 0) return false;
+  if (leftActors.length >= 2 && rightActors.length >= 2 && overlapCount(leftActors, rightActors) === 0) return false;
   if (leftActions.length && rightActions.length && overlapCount(leftActions, rightActions) === 0) return false;
-  if ((leftActors.length || rightActors.length) && sharedDiscriminators < 1) return false;
-  if (leftActors.length !== rightActors.length && compared.jaccard < 0.42) return false;
+  if (leftActors.length >= 2 && rightActors.length >= 2 && sharedDiscriminators < 1) return false;
+  if (leftActors.length !== rightActors.length && compared.jaccard < 0.35) return false;
 
-  return compared.overlap >= 2 && sharedDiscriminators >= 1 && compared.jaccard >= 0.32;
+  return compared.overlap >= 2 && sharedDiscriminators >= 1 && compared.jaccard >= 0.25;
 }
 
 function representativeArticle(articles) {
@@ -145,6 +145,61 @@ function representativeArticle(articles) {
     }
   }
   return articles[bestIndex];
+}
+
+function synthesizeIssueTitle(articles, representative) {
+  if (articles.length === 1) return representative.title;
+
+  const freq = new Map();
+  for (const article of articles) {
+    for (const token of article._tokens) {
+      freq.set(token, (freq.get(token) ?? 0) + 1);
+    }
+  }
+
+  const threshold = Math.max(2, Math.ceil(articles.length * 0.4));
+  const common = [...freq.entries()]
+    .filter(([, count]) => count >= threshold)
+    .sort((a, b) => b[1] - a[1])
+    .map(([token]) => token)
+    .slice(0, 5);
+
+  if (common.length < 2) return representative.title;
+
+  const repTokenOrder = representative._tokens;
+  const ordered = common.slice().sort(
+    (a, b) => {
+      const ai = repTokenOrder.indexOf(a);
+      const bi = repTokenOrder.indexOf(b);
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    }
+  );
+
+  const suffix = detectIssueSuffix(articles);
+  return ordered.join(" ") + (suffix ? " " + suffix : "");
+}
+
+function detectIssueSuffix(articles) {
+  const allTitles = articles.map((a) => String(a.title ?? "")).join(" ");
+  const suffixCandidates = [
+    { pattern: /갈등|충돌|대립|공방/g, label: "갈등" },
+    { pattern: /논란|파문|의혹/g, label: "논란" },
+    { pattern: /사고|참사|재난/g, label: "사고" },
+    { pattern: /협상|합의|타결/g, label: "협상" },
+    { pattern: /수사|조사|기소|체포/g, label: "수사" },
+    { pattern: /정책|대책|방안|추진/g, label: "동향" },
+  ];
+  let best = null;
+  let bestCount = 0;
+  for (const { pattern, label } of suffixCandidates) {
+    const matches = allTitles.match(pattern);
+    const count = matches ? matches.length : 0;
+    if (count > bestCount) {
+      bestCount = count;
+      best = label;
+    }
+  }
+  return bestCount >= Math.max(2, Math.ceil(articles.length * 0.3)) ? best : null;
 }
 
 function placementScore(articles) {
@@ -322,7 +377,7 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
       const similarities = group.map((article) => article.id === representative.id ? 1 : similarity(representative._tokens, article._tokens).jaccard);
       const minimumSimilarity = Math.min(...similarities);
       const issue = {
-        title: representative.title,
+        title: synthesizeIssueTitle(group, representative),
         summary: `${sources.size}개 언론사의 관련 제목 ${group.length}건을 사건 인물·행위와 제목 유사도를 함께 확인해 묶었습니다.`,
         category: topCategory(representative),
         articleCount: group.length,
@@ -340,7 +395,7 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
         followUpVolumeScore: Math.round(followUpVolume * 10) / 10,
         confidence: null,
         calibrationStatus: "not_calibrated",
-        clusterQuality: group.length < 2 ? "insufficient_evidence" : minimumSimilarity >= 0.42 ? "cohesive" : "review_required",
+        clusterQuality: group.length < 2 ? "insufficient_evidence" : minimumSimilarity >= 0.35 ? "cohesive" : "review_required",
         representativeArticleId: representative.id,
         articles: group.map((article) => {
           const cleanArticle = { ...article };
