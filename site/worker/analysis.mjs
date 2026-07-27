@@ -161,7 +161,7 @@ function representativeArticle(articles) {
   return articles[bestIndex];
 }
 
-function cleanHeadlineToIssueTitle(rawTitle) {
+export function cleanHeadlineToIssueTitle(rawTitle) {
   if (!rawTitle) return "주요 이슈";
   let title = String(rawTitle)
     .replace(/\[[^\]]*\]|\([^)]*\)|<[^>]*>/g, " ")

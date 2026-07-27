@@ -1,5 +1,5 @@
 import { getAnalysisProvider } from "./analysis-provider.mjs";
-import { CLUSTERING_VERSION, FRAME_TAXONOMY_VERSION, SCORE_VERSION } from "./analysis.mjs";
+import { CLUSTERING_VERSION, FRAME_TAXONOMY_VERSION, SCORE_VERSION, cleanHeadlineToIssueTitle } from "./analysis.mjs";
 import publicApiSchema from "../docs/public-api.schema.json" with { type: "json" };
 
 const analysisProvider = getAnalysisProvider();
@@ -138,9 +138,17 @@ function publicIssue(row, run) {
   const legacy = !COMPATIBLE_ANALYSIS_MODELS.has(run?.modelVersion);
   const issue = { ...row };
   delete issue.confidence;
+
+  const cleanedTitle = cleanHeadlineToIssueTitle(row.title);
+  const sourceCount = Number(row.sourceCount ?? 1);
+  const coverageRatio = sourceCount / 22;
+  const coverageFactor = Math.min(1.0, 0.45 + coverageRatio * 0.8);
+  const adjustedAgendaScore = Math.round(Number(row.agendaScore ?? 0) * coverageFactor * 10) / 10;
+
   return {
     ...issue,
-    agendaScore: legacy ? null : Number(row.agendaScore),
+    title: cleanedTitle,
+    agendaScore: legacy ? null : adjustedAgendaScore,
     placementScore: placementObservedCount ? Number(row.placementScore) : null,
     placementObservedCount,
     placementTotalCount: Number(row.placementTotalCount ?? row.articleCount ?? 0),
