@@ -1,7 +1,7 @@
 export const ANALYSIS_PROVIDER = "rules_local";
 export const ANALYSIS_MODEL_VERSION = "agenda-rules-v3";
 export const CLUSTERING_VERSION = "event-anchors-complete-link-v4";
-export const SCORE_VERSION = "observed-agenda-v3";
+export const SCORE_VERSION = "observed-agenda-v4";
 export const FRAME_TAXONOMY_VERSION = "frame-signals-v3";
 
 const frameDefinitions = {
@@ -100,13 +100,27 @@ function eventFeatures(article) {
 function topCategory(article) {
   const section = String(article.section ?? "").trim();
   const first = section.split(/[>/_]/)[0]?.trim();
-  if (first) return first;
-  const title = article.title;
-  if (/(국회|대통령|정당|여당|야당|선거)/.test(title)) return "정치";
-  if (/(경제|금리|물가|증시|부동산|수출|기업)/.test(title)) return "경제";
-  if (/(외교|북한|미국|중국|일본|전쟁)/.test(title)) return "국제";
-  if (/(과학|기술|인공지능|반도체|우주)/.test(title)) return "IT·과학";
-  return "사회";
+  if (first && !["종합", "속보", "사회"].includes(first)) return first;
+
+  const title = String(article.title ?? "");
+  const categoryScores = {
+    "정치": (title.match(/국회|대통령|여당|야당|정당|원내대표|지도부|의원|선거|정쟁|거취/g) ?? []).length,
+    "사법·검찰": (title.match(/검찰|경찰|수사|법원|헌재|기소|재판|영장|송치|판결|의혹|입건/g) ?? []).length,
+    "경제": (title.match(/금리|물가|주가|부동산|환율|고용|일자리|기업|금융|무역|세금|예산|증시|재정/g) ?? []).length,
+    "사회·노동": (title.match(/노동|파업|사고|참사|재난|보건|복지|교육|환경|교통|안전|시위/g) ?? []).length,
+    "국제·외교": (title.match(/외교|안보|국방|북한|미사일|미국|중국|일본|정상회담|전쟁|트럼프/g) ?? []).length,
+    "IT·과학": (title.match(/인공지능|AI|반도체|IT|통신|우주|플랫폼|기술/g) ?? []).length,
+  };
+
+  let maxCategory = "사회";
+  let maxScore = 0;
+  for (const [cat, score] of Object.entries(categoryScores)) {
+    if (score > maxScore) {
+      maxScore = score;
+      maxCategory = cat;
+    }
+  }
+  return maxCategory;
 }
 
 function compatibleEvent(left, right) {
@@ -154,6 +168,7 @@ function cleanHeadlineToIssueTitle(rawTitle) {
     .replace(/^[0-9가-힣A-Za-z]+\s*기자\s*=/g, "")
     .replace(/["'“”‘’]/g, "")
     .replace(/[\.\?!…\:]+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 
   const tokens = titleTokens(title);
@@ -176,7 +191,7 @@ function synthesizeIssueTitle(articles, representative) {
     }
   }
 
-  const threshold = Math.max(2, Math.ceil(articles.length * 0.35));
+  const threshold = Math.max(2, Math.ceil(articles.length * 0.3));
   const common = [...freq.entries()]
     .filter(([, count]) => count >= threshold)
     .sort((a, b) => b[1] - a[1])
@@ -218,7 +233,7 @@ function detectIssueSuffix(articles) {
       best = label;
     }
   }
-  return bestCount >= Math.max(2, Math.ceil(articles.length * 0.3)) ? best : null;
+  return bestCount >= Math.max(2, Math.ceil(articles.length * 0.25)) ? best : null;
 }
 
 function placementScore(articles) {
@@ -241,17 +256,22 @@ function placementScore(articles) {
   };
 }
 
-function weightedAgendaScore({ diversity, placement, volume, followUpVolume }) {
+function weightedAgendaScore({ diversity, placement, volume, followUpVolume, sourceCount = 1, configuredSourceCount = 5 }) {
   const components = [
-    { value: diversity, weight: 0.35 },
-    { value: placement.value, weight: 0.30 },
-    { value: volume, weight: 0.20 },
-    { value: followUpVolume, weight: 0.15 },
+    { value: diversity, weight: 0.45 },
+    { value: volume, weight: 0.30 },
+    { value: placement.value, weight: 0.15 },
+    { value: followUpVolume, weight: 0.10 },
   ].filter((component) => Number.isFinite(component.value));
   const observedWeight = components.reduce((sum, component) => sum + component.weight, 0);
-  const score = components.reduce((sum, component) => sum + component.value * component.weight, 0) / observedWeight;
+  let baseScore = components.reduce((sum, component) => sum + component.value * component.weight, 0) / observedWeight;
+
+  const coverageRatio = sourceCount / Math.max(1, configuredSourceCount);
+  const coverageFactor = Math.min(1.0, 0.45 + coverageRatio * 0.8);
+  const finalScore = baseScore * coverageFactor;
+
   return {
-    score: Math.round(score * 10) / 10,
+    score: Math.round(finalScore * 10) / 10,
     status: placement.observedCount ? "observed_components" : "placement_excluded",
     observedWeight: Math.round(observedWeight * 100),
   };
@@ -392,7 +412,7 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
       const placement = placementScore(group);
       const volume = Math.min(100, (Math.log1p(group.length) / Math.log1p(maxArticleCount)) * 100);
       const followUpVolume = group.length > 1 ? ((group.length - sources.size) / (group.length - 1)) * 100 : 0;
-      const scoreResult = weightedAgendaScore({ diversity, placement, volume, followUpVolume });
+      const scoreResult = weightedAgendaScore({ diversity, placement, volume, followUpVolume, sourceCount: sources.size, configuredSourceCount });
       const similarities = group.map((article) => article.id === representative.id ? 1 : similarity(representative._tokens, article._tokens).jaccard);
       const minimumSimilarity = Math.min(...similarities);
       const issue = {
