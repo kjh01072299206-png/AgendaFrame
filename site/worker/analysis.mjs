@@ -1,6 +1,6 @@
 export const ANALYSIS_PROVIDER = "rules_local";
 export const ANALYSIS_MODEL_VERSION = "agenda-rules-v3";
-export const CLUSTERING_VERSION = "event-anchors-complete-link-v3";
+export const CLUSTERING_VERSION = "event-anchors-complete-link-v4";
 export const SCORE_VERSION = "observed-agenda-v3";
 export const FRAME_TAXONOMY_VERSION = "frame-signals-v3";
 
@@ -147,8 +147,27 @@ function representativeArticle(articles) {
   return articles[bestIndex];
 }
 
+function cleanHeadlineToIssueTitle(rawTitle) {
+  if (!rawTitle) return "주요 이슈";
+  let title = String(rawTitle)
+    .replace(/\[[^\]]*\]|\([^)]*\)|<[^>]*>/g, " ")
+    .replace(/^[0-9가-힣A-Za-z]+\s*기자\s*=/g, "")
+    .replace(/["'“”‘’]/g, "")
+    .replace(/[\.\?!…\:]+/g, " ")
+    .trim();
+
+  const tokens = titleTokens(title);
+  if (tokens.length >= 2) {
+    const selected = tokens.slice(0, 4);
+    const suffix = detectIssueSuffix([{ title: rawTitle }]);
+    return selected.join(" ") + (suffix ? " " + suffix : "");
+  }
+  return title || "주요 이슈";
+}
+
 function synthesizeIssueTitle(articles, representative) {
-  if (articles.length === 1) return representative.title;
+  if (!articles || articles.length === 0) return "주요 이슈";
+  if (articles.length === 1) return cleanHeadlineToIssueTitle(representative.title);
 
   const freq = new Map();
   for (const article of articles) {
@@ -157,14 +176,14 @@ function synthesizeIssueTitle(articles, representative) {
     }
   }
 
-  const threshold = Math.max(2, Math.ceil(articles.length * 0.4));
+  const threshold = Math.max(2, Math.ceil(articles.length * 0.35));
   const common = [...freq.entries()]
     .filter(([, count]) => count >= threshold)
     .sort((a, b) => b[1] - a[1])
     .map(([token]) => token)
     .slice(0, 5);
 
-  if (common.length < 2) return representative.title;
+  if (common.length < 2) return cleanHeadlineToIssueTitle(representative.title);
 
   const repTokenOrder = representative._tokens;
   const ordered = common.slice().sort(
