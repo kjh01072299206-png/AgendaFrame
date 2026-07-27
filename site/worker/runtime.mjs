@@ -1128,23 +1128,20 @@ async function loadArticleFrameProfiles(db, start, end) {
       AND profiles.status IN ('analyzed', 'partial')
       AND profiles.model_version = ?
       AND profiles.schema_version = ?
-      AND profiles.analyzed_at = (
-        SELECT MAX(latest.analyzed_at)
-        FROM article_frame_profiles latest
-        WHERE latest.article_id = profiles.article_id
-          AND latest.status IN ('analyzed', 'partial')
-          AND latest.model_version = profiles.model_version
-          AND latest.schema_version = profiles.schema_version
-      )
+    ORDER BY profiles.article_id ASC, profiles.analyzed_at DESC
   `).bind(
     start,
     end,
     FRAMING_ENGINE_VERSION,
     ARTICLE_FRAME_PROFILE_SCHEMA,
   ).all();
-  return new Map((result.results ?? [])
-    .map((row) => [row.articleId, parseFrameProfile(row.profileJson)])
-    .filter(([, profile]) => profile));
+  const profiles = new Map();
+  for (const row of result.results ?? []) {
+    if (profiles.has(row.articleId)) continue;
+    const profile = parseFrameProfile(row.profileJson);
+    if (profile) profiles.set(row.articleId, profile);
+  }
+  return profiles;
 }
 
 function uniqueStrings(values) {
@@ -1332,21 +1329,20 @@ async function loadTransientBodySignals(db, start, end) {
     WHERE a.published_at >= ? AND a.published_at < ?
       AND signals.status = 'analyzed'
       AND signals.taxonomy_version = ?
-      AND signals.analyzed_at = (
-        SELECT MAX(latest.analyzed_at)
-        FROM article_body_signals latest
-        WHERE latest.article_id = signals.article_id
-          AND latest.status = 'analyzed'
-          AND latest.taxonomy_version = signals.taxonomy_version
-      )
+    ORDER BY signals.article_id ASC, signals.analyzed_at DESC
   `).bind(start, end, FRAME_TAXONOMY_VERSION).all();
-  return new Map((result.results ?? []).map((row) => [row.articleId, {
-    bodyAnalysisAvailable: true,
-    bodyFrameSignals: parseDetectedFrames(row.detectedFrames),
-    contentVersionId: null,
-    publicEvidenceAllowed: false,
-    transientContent: true,
-  }]));
+  const signals = new Map();
+  for (const row of result.results ?? []) {
+    if (signals.has(row.articleId)) continue;
+    signals.set(row.articleId, {
+      bodyAnalysisAvailable: true,
+      bodyFrameSignals: parseDetectedFrames(row.detectedFrames),
+      contentVersionId: null,
+      publicEvidenceAllowed: false,
+      transientContent: true,
+    });
+  }
+  return signals;
 }
 
 async function transientAnalysisProgress(db, start, end) {
@@ -1819,8 +1815,7 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
   }
   const start = Date.parse(`${targetDate}T00:00:00+09:00`);
   const end = start + 86_400_000;
-  const [articleResult, placementResult, authorizedContents, transientSignals, frameProfiles] = await Promise.all([
-    db.prepare(`
+  const articleResult = await db.prepare(`
       SELECT
         a.id,
         a.source_id AS sourceId,
@@ -1837,8 +1832,8 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
       WHERE a.published_at >= ? AND a.published_at < ?
       ORDER BY a.published_at DESC, a.id DESC
       LIMIT 2500
-    `).bind(start, end).all(),
-    db.prepare(`
+    `).bind(start, end).all();
+  const placementResult = await db.prepare(`
       SELECT
         po.article_id AS articleId,
         po.zone,
@@ -1849,11 +1844,16 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
       JOIN homepage_snapshots hs ON hs.id = po.snapshot_id
       WHERE po.article_id IS NOT NULL AND hs.observed_at >= ? AND hs.observed_at < ?
       ORDER BY hs.observed_at ASC, po.page_rank ASC
-    `).bind(start, end).all(),
-    includeStoredContents ? loadAuthorizedArticleContents(db, env.CONTENT, start, end) : Promise.resolve(new Map()),
-    includeDerivedSignals ? loadTransientBodySignals(db, start, end) : Promise.resolve(new Map()),
-    includeDerivedSignals ? loadArticleFrameProfiles(db, start, end) : Promise.resolve(new Map()),
-  ]);
+    `).bind(start, end).all();
+  const authorizedContents = includeStoredContents
+    ? await loadAuthorizedArticleContents(db, env.CONTENT, start, end)
+    : new Map();
+  const transientSignals = includeDerivedSignals
+    ? await loadTransientBodySignals(db, start, end)
+    : new Map();
+  const frameProfiles = includeDerivedSignals
+    ? await loadArticleFrameProfiles(db, start, end)
+    : new Map();
   const analysisContents = new Map();
   for (const contents of [transientSignals, authorizedContents, contentOverrides]) {
     for (const [articleId, content] of contents) {
