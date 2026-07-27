@@ -35,6 +35,7 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
   assert.match(dashboard, /fetch\("\/api\/issues\/dates\?limit=31"/);
   assert.match(dashboard, /날짜별 의제/);
   assert.match(dashboard, /archive-disclosure/);
+  assert.doesNotMatch(dashboard, /핵심 의제 우선 · 스포츠·생활·IT 후순위/);
   const topNavigation = dashboard.match(/<nav className="topnav"[\s\S]*?<\/nav>/)?.[0] ?? "";
   assert.doesNotMatch(topNavigation, /기사 검색/);
   assert.doesNotMatch(dashboard, /\["한겨레","경향신문","한국일보","중앙일보","조선일보"\]/);

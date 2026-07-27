@@ -458,7 +458,7 @@ export default function AgendaDashboard() {
                 </select>
               </label>
             </div>
-            <div className="issue-count-row"><span>핵심 의제 우선 · 스포츠·생활·IT 후순위</span><span className="issue-count">{issues.length}/{issueTotal}개</span></div>
+            <div className="issue-count-row"><span className="issue-count">{issues.length}/{issueTotal}개</span></div>
             <div className="filter-row" aria-label="분야별 이슈 보기">
               {categoryOptions.map((value) => <button key={value} type="button" className={`filter-pill${category === value ? " active" : ""}`} aria-pressed={category === value} onClick={() => handleCategory(value)}>{value}</button>)}
             </div>

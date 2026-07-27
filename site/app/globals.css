@@ -412,7 +412,7 @@ body { background: var(--paper); font-size: 14px; line-height: 1.55; }
 .issue-date-control { flex: none; display: grid; gap: 5px; color: var(--muted); font-size: 11px; font-weight: 700; }
 .issue-date-control select { min-width: 164px; height: 38px; padding: 0 32px 0 10px; border: 1px solid var(--line-strong); border-radius: 8px; background: white; color: var(--ink); font-size: 12px; font-weight: 700; }
 .issue-date-control select:disabled { cursor: not-allowed; opacity: .65; }
-.issue-count-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; color: var(--muted); font-size: 11px; }
+.issue-count-row { display: flex; align-items: center; justify-content: flex-end; margin-top: 14px; color: var(--muted); font-size: 11px; }
 .filter-row { gap: 6px; margin: 18px 0 14px; }
 .filter-pill { min-height: 36px; padding: 6px 11px; font-size: 12px; }
 .agenda-list { gap: 5px; }
