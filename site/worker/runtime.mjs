@@ -1831,7 +1831,7 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
       JOIN media_sources s ON s.id = a.source_id
       WHERE a.published_at >= ? AND a.published_at < ?
       ORDER BY a.published_at DESC, a.id DESC
-      LIMIT 2500
+      LIMIT 5000
     `).bind(start, end).all();
   const placementResult = await db.prepare(`
       SELECT
@@ -1884,6 +1884,7 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
   });
   if (!articles.length) return jsonResponse({ error: `${targetDate}에 분석할 기사가 없습니다.` }, 400);
 
+  const analyzedArticleIds = new Set(articles.map((article) => article.id));
   const runId = crypto.randomUUID();
   const startedAt = Date.now();
   await db.prepare(`
@@ -2016,8 +2017,11 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
       transientBodyCount: new Set([
         ...transientSignals.keys(),
         ...[...contentOverrides].filter(([, content]) => content?.transientContent).map(([articleId]) => articleId),
-      ]).size,
-      bodyEvidenceCount: [...analysisContents.values()].filter((content) => Boolean(content?.bodyText) || content?.bodyAnalysisAvailable === true).length,
+      ].filter((articleId) => analyzedArticleIds.has(articleId))).size,
+      bodyEvidenceCount: [...analysisContents.entries()]
+        .filter(([articleId, content]) => analyzedArticleIds.has(articleId)
+          && (Boolean(content?.bodyText) || content?.bodyAnalysisAvailable === true))
+        .length,
       issueCount: analyzed.length,
       paidServicesUsed: false,
     }, 201);
