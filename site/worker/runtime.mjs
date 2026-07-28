@@ -1,5 +1,5 @@
 import { getAnalysisProvider } from "./analysis-provider.mjs";
-import { CLUSTERING_VERSION, FRAME_TAXONOMY_VERSION, SCORE_VERSION, cleanHeadlineToIssueTitle, extractBodyFrameSignals } from "./analysis.mjs";
+import { CLUSTERING_VERSION, FRAME_TAXONOMY_VERSION, PUBLIC_AGENDA_CATEGORIES, SCORE_VERSION, cleanHeadlineToIssueTitle, extractBodyFrameSignals } from "./analysis.mjs";
 import { ArticleExtractionError, extractArticleBody } from "./article-extractor.mjs";
 import {
   ARTICLE_FRAME_PROFILE_SCHEMA,
@@ -17,7 +17,8 @@ const ANALYSIS_MODEL_VERSION = analysisProvider.modelVersion;
 const PUBLIC_API_SCHEMA_VERSION = publicApiSchema["x-api-version"];
 const PROMPT_VERSION = "framing-codebook-v5";
 const EVALUATION_DATASET_VERSION = "not_configured";
-const COMPATIBLE_ANALYSIS_MODELS = new Set([ANALYSIS_MODEL_VERSION, "agenda-rules-v4"]);
+const COMPATIBLE_ANALYSIS_MODELS = new Set([ANALYSIS_MODEL_VERSION, "agenda-rules-v4", "agenda-rules-v3", "agenda-rules-v2"]);
+const PUBLIC_AGENDA_CATEGORY_SET = new Set(PUBLIC_AGENDA_CATEGORIES);
 
 const assets = globalThis.__AGENDAFRAME_ASSETS__ ?? {};
 let sourcePanel = globalThis.__AGENDAFRAME_SOURCE_PANEL__ ?? {
@@ -2067,6 +2068,55 @@ async function latestAnalysisRun(db, requestedDate = "") {
   `).first();
 }
 
+function validKstDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const timestamp = Date.parse(`${value}T00:00:00Z`);
+  return Number.isFinite(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === value;
+}
+
+async function handleIssueDates(request, env) {
+  if (!env?.DB) return jsonResponse({ dates: [], meta: responseMeta(null, "demo") }, 200, { request, etag: true, cacheControl: "public, max-age=30, must-revalidate" });
+  const url = new URL(request.url);
+  const limitValue = Number(url.searchParams.get("limit") ?? 31);
+  const limit = Number.isInteger(limitValue) ? Math.min(Math.max(limitValue, 1), 90) : 31;
+  const categoryPlaceholders = PUBLIC_AGENDA_CATEGORIES.map(() => "?").join(", ");
+  const result = await env.DB.prepare(`
+    SELECT id, targetDate, analyzedAt, articleCount, issueCount
+    FROM (
+      SELECT
+        ranked.id,
+        ranked.targetDate,
+        ranked.analyzedAt,
+        ranked.articleCount,
+        (SELECT COUNT(*) FROM issues public_issues WHERE public_issues.run_id = ranked.id AND public_issues.category IN (${categoryPlaceholders})) AS issueCount
+      FROM (
+        SELECT
+          id,
+          target_date AS targetDate,
+          finished_at AS analyzedAt,
+          article_count AS articleCount,
+          ROW_NUMBER() OVER (PARTITION BY target_date ORDER BY finished_at DESC) AS dateRank
+        FROM analysis_runs
+        WHERE status = 'success'
+      ) ranked
+      WHERE ranked.dateRank = 1
+    ) public_runs
+    WHERE issueCount > 0
+    ORDER BY targetDate DESC
+    LIMIT ?
+  `).bind(...PUBLIC_AGENDA_CATEGORIES, limit).all();
+  const dates = (result.results ?? []).map((entry) => ({
+    date: entry.targetDate,
+    analyzedAt: Number(entry.analyzedAt ?? 0) || null,
+    articleCount: Number(entry.articleCount ?? 0),
+    issueCount: Number(entry.issueCount ?? 0),
+  }));
+  return jsonResponse({
+    dates,
+    meta: responseMeta(null, "live_metadata"),
+  }, 200, { request, etag: true, cacheControl: "public, max-age=300, must-revalidate" });
+}
+
 export function enumerateKstDates(startDate, endDate, maxDays = 31) {
   const pattern = /^\d{4}-\d{2}-\d{2}$/;
   if (!pattern.test(startDate) || !pattern.test(endDate)) throw new Error("시작일과 종료일을 YYYY-MM-DD 형식으로 입력해 주세요.");
@@ -2174,14 +2224,17 @@ async function handleIssues(request, env) {
   if (!env?.DB) return jsonResponse({ issues: [], total: 0, run: null, categories: [], meta: responseMeta(null, "demo") }, 200, { request, etag: true, cacheControl: "public, max-age=30, must-revalidate" });
   const url = new URL(request.url);
   const date = String(url.searchParams.get("date") ?? "").trim();
+  if (date && !validKstDate(date)) return jsonResponse({ error: "의제 날짜를 YYYY-MM-DD 형식으로 입력해 주세요." }, 400, { request });
   const category = String(url.searchParams.get("category") ?? "").trim().slice(0, 40);
+  if (category && !PUBLIC_AGENDA_CATEGORY_SET.has(category)) return jsonResponse({ error: `의제 분야는 ${PUBLIC_AGENDA_CATEGORIES.join("·")} 중에서 선택해 주세요.` }, 400, { request });
   const limitValue = Number(url.searchParams.get("limit") ?? 30);
   const limit = Number.isInteger(limitValue) ? Math.min(Math.max(limitValue, 1), 50) : 30;
   const run = await latestAnalysisRun(env.DB, date);
   if (!run) return jsonResponse({ issues: [], total: 0, run: null, categories: [], meta: responseMeta(null, "live_metadata") }, 200, { request, etag: true, cacheControl: "public, max-age=30, must-revalidate" });
 
-  const clauses = ["run_id = ?"];
-  const parameters = [run.id];
+  const categoryPlaceholders = PUBLIC_AGENDA_CATEGORIES.map(() => "?").join(", ");
+  const clauses = ["run_id = ?", `category IN (${categoryPlaceholders})`];
+  const parameters = [run.id, ...PUBLIC_AGENDA_CATEGORIES];
   if (category) {
     clauses.push("category = ?");
     parameters.push(category);
@@ -2219,10 +2272,13 @@ async function handleIssues(request, env) {
          )) AS structuredProfileCount
       FROM issues
       WHERE ${where}
-      ORDER BY agenda_score DESC, article_count DESC
+      ORDER BY
+        CASE WHEN category IN ('스포츠', '생활·IT') THEN 1 ELSE 0 END,
+        agenda_score DESC,
+        article_count DESC
       LIMIT ?
     `).bind(...parameters, limit).all(),
-    env.DB.prepare(`SELECT category, COUNT(*) AS count FROM issues WHERE run_id = ? GROUP BY category ORDER BY count DESC, category`).bind(run.id).all(),
+    env.DB.prepare(`SELECT category, COUNT(*) AS count FROM issues WHERE run_id = ? AND category IN (${categoryPlaceholders}) GROUP BY category ORDER BY count DESC, category`).bind(run.id, ...PUBLIC_AGENDA_CATEGORIES).all(),
   ]);
   return jsonResponse({
     run,
@@ -2270,6 +2326,7 @@ async function handleIssueDetail(request, issueId, env) {
     WHERE i.id = ? AND r.status = 'success'
   `).bind(issueId).first();
   if (!issue) return jsonResponse({ error: "이슈를 찾지 못했습니다." }, 404, { request });
+  if (!PUBLIC_AGENDA_CATEGORY_SET.has(issue.category)) return jsonResponse({ error: "제공 범위에 포함되지 않는 의제입니다." }, 404, { request });
   const [articles, frames, report, outlets, comparisonRow] = await Promise.all([
     env.DB.prepare(`
       SELECT
@@ -2663,6 +2720,7 @@ export async function handleApiRequest(request, env = {}) {
   if (url.pathname === "/api/analysis/runs" && request.method === "GET") return handleAnalysisRuns(request, env);
   if (url.pathname === "/api/quality" && request.method === "GET") return handleQualityQueue(request, env);
   if (url.pathname.startsWith("/api/quality/reviews/")) return handleQualityReview(request, decodeURIComponent(url.pathname.slice("/api/quality/reviews/".length)), env);
+  if (url.pathname === "/api/issues/dates" && request.method === "GET") return handleIssueDates(request, env);
   if (url.pathname === "/api/issues" && request.method === "GET") return handleIssues(request, env);
   if (url.pathname.startsWith("/api/issues/") && request.method === "GET") return handleIssueDetail(request, decodeURIComponent(url.pathname.slice("/api/issues/".length)), env);
   if (url.pathname === "/api/observations/homepage") {

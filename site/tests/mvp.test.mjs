@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import sourcePanel from "../data/sources.json" with { type: "json" };
-import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, analyzeArticles, titleTokens } from "../worker/analysis.mjs";
+import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, PUBLIC_AGENDA_CATEGORIES, analyzeArticles, classifyAgendaCategory, titleTokens } from "../worker/analysis.mjs";
 import { getAnalysisProvider } from "../worker/analysis-provider.mjs";
 import { calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, configureSourcePanel, enumerateKstDates, extractArticleBodyFromHtml, handleApiRequest, validateImportRows, validateStructuredImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
 
@@ -36,6 +36,12 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
   }
   assert.match(dashboard, /22개 주요 종합일간지·경제매체·뉴스통신사/);
   assert.match(dashboard, /fetch\("\/api\/sources"/);
+  assert.match(dashboard, /fetch\("\/api\/issues\/dates\?limit=31"/);
+  assert.match(dashboard, /날짜별 의제/);
+  assert.match(dashboard, /archive-disclosure/);
+  assert.doesNotMatch(dashboard, /핵심 의제 우선 · 스포츠·생활·IT 후순위/);
+  const topNavigation = dashboard.match(/<nav className="topnav"[\s\S]*?<\/nav>/)?.[0] ?? "";
+  assert.doesNotMatch(topNavigation, /기사 검색/);
   assert.doesNotMatch(dashboard, /\["한겨레","경향신문","한국일보","중앙일보","조선일보"\]/);
   assert.match(dashboard, /<details className="score-details">/);
   assert.match(dashboard, /role="tab"/);
@@ -138,6 +144,28 @@ test("counts related outlets but deduplicates shared media groups in coverage", 
   ], { configuredSourceCount: 2, configuredSourceGroupCount: 2 });
   assert.equal(issues[0].sourceCount, 2);
   assert.equal(issues[0].diversityScore, 50);
+});
+
+test("merges shared agenda concepts and keeps sports or lifestyle technology after core categories", () => {
+  const issues = analyzeArticles([
+    { id: "authority-1", sourceId: "hani", source: "한겨레", title: "검찰개혁 쟁점 보완수사권 유지 범위 논의", section: "정치" },
+    { id: "authority-2", sourceId: "khan", source: "경향신문", title: "보완수사권 행사 범위 두고 여야 공방", section: "정치" },
+    { id: "sports-1", sourceId: "chosun", source: "조선일보", title: "프로야구 감독 선임 발표", section: "스포츠" },
+    { id: "tech-1", sourceId: "joongang", source: "중앙일보", title: "새 스마트폰 카메라 기술 공개", section: "IT_과학" },
+    { id: "platform-1", sourceId: "hankook", source: "한국일보", title: "온라인 플랫폼 수수료 규제 법안 추진", section: "IT_과학" },
+  ], { configuredSourceCount: 5 });
+
+  const authority = issues.find((issue) => issue.title === "보완수사권 행사 범위");
+  assert.ok(authority);
+  assert.equal(authority.articleCount, 2);
+  assert.deepEqual(authority.articles.map((article) => article.id).sort(), ["authority-1", "authority-2"]);
+  assert.ok(issues.every((issue) => PUBLIC_AGENDA_CATEGORIES.includes(issue.category)));
+  assert.equal(issues.find((issue) => issue.articles.some((article) => article.id === "sports-1"))?.category, "스포츠");
+  assert.equal(issues.find((issue) => issue.articles.some((article) => article.id === "tech-1"))?.category, "생활·IT");
+  assert.ok(issues.findIndex((issue) => issue.category === "스포츠") > issues.findIndex((issue) => issue.category === "경제"));
+  assert.ok(issues.findIndex((issue) => issue.category === "생활·IT") > issues.findIndex((issue) => issue.category === "경제"));
+  assert.equal(classifyAgendaCategory({ title: "온라인 플랫폼 수수료 규제 법안 추진", section: "IT_과학" }), "경제");
+  assert.equal(classifyAgendaCategory({ title: "새 스마트폰 카메라 기술 공개", section: "IT_과학" }), "생활·IT");
 });
 
 test("proxies both the Vercel root and nested routes to the validated origin", async () => {
@@ -502,7 +530,7 @@ test("prevents transitive single-link merges across distinct actions", () => {
 
 test("withholds missing frame evidence and excludes unobserved placement", () => {
   const [issue] = analyzeArticles([
-    { id: "only", sourceId: "hani", source: "한겨레", title: "봄철 벚꽃 개화 소식", section: "문화", homepagePlacement: null },
+    { id: "only", sourceId: "hani", source: "한겨레", title: "도심 벚꽃 개화 소식", section: "사회", homepagePlacement: null },
   ]);
   assert.equal(issue.placementScore, null);
   assert.equal(issue.scoreStatus, "placement_excluded");
@@ -571,7 +599,7 @@ test("reports no-cost health and protects write endpoints", async () => {
   assert.equal(healthBody.collection.method, "bigkinds_export");
   assert.equal(healthBody.collection.directCrawling, false);
   assert.equal(healthBody.collection.configuredSources, 22);
-  assert.equal(healthBody.meta.clusteringVersion, "event-anchors-complete-link-v4");
+  assert.equal(healthBody.meta.clusteringVersion, "agenda-concepts-complete-link-v5");
   assert.equal(healthBody.meta.scoreVersion, "observed-agenda-v4");
 
   const sources = await handleApiRequest(new Request("https://example.test/api/sources"));
@@ -733,6 +761,44 @@ test("filters and paginates the complete article collection", async () => {
   const invalidCursor = await handleApiRequest(new Request("https://example.test/api/articles?cursor=not-base64"), { DB });
   assert.equal(invalidCursor.status, 400);
   assert.equal((await invalidCursor.json()).error.code, "INVALID_REQUEST");
+});
+
+test("lists successful public agenda dates and rejects invalid issue dates", async () => {
+  const DB = {
+    prepare(sql) {
+      assert.match(sql, /ROW_NUMBER\(\) OVER \(PARTITION BY target_date/);
+      return {
+        bind(...parameters) {
+          assert.deepEqual(parameters, ["정치", "경제", "사회", "국제", "스포츠", "생활·IT", 2]);
+          return {
+            all: async () => ({
+              results: [
+                { id: "run-14", targetDate: "2026-07-14", analyzedAt: 200, articleCount: 120, issueCount: 20 },
+                { id: "run-13", targetDate: "2026-07-13", analyzedAt: 100, articleCount: 90, issueCount: 16 },
+              ],
+            }),
+          };
+        },
+      };
+    },
+  };
+
+  const response = await handleApiRequest(new Request("https://example.test/api/issues/dates?limit=2"), { DB });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.deepEqual(body.dates.map((entry) => [entry.date, entry.articleCount, entry.issueCount]), [
+    ["2026-07-14", 120, 20],
+    ["2026-07-13", 90, 16],
+  ]);
+  assert.equal(body.meta.schemaVersion, "agendaframe-public-v4");
+
+  const invalidDate = await handleApiRequest(new Request("https://example.test/api/issues?date=2026-02-30"), { DB });
+  assert.equal(invalidDate.status, 400);
+  assert.equal((await invalidDate.json()).error.code, "INVALID_REQUEST");
+
+  const excludedCategory = await handleApiRequest(new Request("https://example.test/api/issues?category=%EC%97%B0%EC%98%88"), { DB });
+  assert.equal(excludedCategory.status, 400);
+  assert.equal((await excludedCategory.json()).error.code, "INVALID_REQUEST");
 });
 
 test("reports resumable per-day analysis status", async () => {
