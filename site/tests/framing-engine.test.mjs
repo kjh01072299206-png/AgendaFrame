@@ -59,6 +59,62 @@ test("keeps a quoted source claim separate from outlet narration", async () => {
   assert.ok(responsibility.items.some((item) => item.voice.speaker_role === "anonymous_official"));
 });
 
+test("captures political incentives, legitimacy criticism, and institutional checks without adopting a quoted position", async () => {
+  const profile = await analyzeArticleFraming({
+    articleId: "political-incentive-1",
+    title: "보완수사권 폐지 논쟁",
+    bodyText: [
+      '야당 원내대표는 "강성 당원 눈치를 보며 보완수사권 폐지 속도전을 벌이고 있다"고 주장했다.',
+      '"여론의 역풍이 두렵고 강경파와의 뒷거래가 깨질까 걱정하는 것"이라고 말했다.',
+      '"대통령은 침묵을 깨고 입장을 밝혀야 하며 재의요구권을 행사해야 한다"고 촉구했다.',
+      '"법치주의의 근간을 뒤흔드는 추악한 만행"이라고 비판했다.',
+    ].join("\n\n"),
+  });
+
+  assert.ok(profile.dimensions.causal_interpretation.items.some(
+    (item) => item.code === "political_incentive_cause",
+  ));
+  assert.ok(profile.dimensions.moral_evaluation.items.some(
+    (item) => item.code === "negative_legitimacy_evaluation",
+  ));
+  assert.ok(profile.dimensions.treatment_recommendation.items.some(
+    (item) => item.code === "institutional_check",
+  ));
+  assert.equal(profile.dimensions.causal_interpretation.outlet_narration_observed, false);
+  assert.equal(profile.dimensions.treatment_recommendation.outlet_narration_observed, false);
+  assert.doesNotMatch(JSON.stringify(profile), /강성 당원 눈치를 보며/);
+});
+
+test("does not label a source-dominated straight-news bundle as an outlet framing divergence", async () => {
+  const left = await analyzeArticleFraming({
+    articleId: "source-dominated-left",
+    title: "정책 폐지 비판",
+    bodyText: [
+      '야당 원내대표는 "여론의 역풍이 두려워 침묵하고 있다"고 주장했다.',
+      '"법치주의를 뒤흔드는 추악한 결정이며 거부권을 행사해야 한다"고 말했다.',
+    ].join("\n\n"),
+  });
+  const right = await analyzeArticleFraming({
+    articleId: "source-dominated-right",
+    title: "대통령 침묵 비판",
+    bodyText: [
+      '야당 원내대표는 "강성 당원 눈치를 보며 속도전을 벌이고 있다"고 비판했다.',
+      '"국민 안전을 위협하는 결정이므로 입장을 밝혀야 한다"고 촉구했다.',
+    ].join("\n\n"),
+  });
+  const comparison = buildIssueFrameComparison(
+    [left, right],
+    [
+      { articleId: "source-dominated-left", sourceId: "alpha", sourceName: "알파", mediaGroupId: "alpha" },
+      { articleId: "source-dominated-right", sourceId: "beta", sourceName: "베타", mediaGroupId: "beta" },
+    ],
+  );
+
+  assert.equal(comparison.method.source_dominance_check.detected, true);
+  assert.equal(comparison.summary_30_seconds.divergence_detected, false);
+  assert.match(comparison.summary_30_seconds.main_difference, /매체 자체의 프레임 차이로 확정하지 않았습니다/);
+});
+
 test("explicitly abstains from unsupported Entman dimensions", async () => {
   const profile = await analyzeArticleFraming({
     articleId: "abstain-1",

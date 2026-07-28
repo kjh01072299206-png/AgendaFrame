@@ -437,6 +437,97 @@ test("resumes public body analysis across batches and stores only derived signal
   assert.equal(requested.length, 2);
 });
 
+test("targets transient analysis to explicit canonical URLs and accepts the one-time operations token", async () => {
+  const articles = [
+    {
+      id: "target-1",
+      sourceId: "chosun",
+      source: "조선일보",
+      title: "첫 기사",
+      canonicalUrl: "https://www.chosun.com/politics/target-1/",
+      publishedAt: Date.parse("2026-07-26T10:00:00+09:00"),
+    },
+    {
+      id: "target-2",
+      sourceId: "donga",
+      source: "동아일보",
+      title: "둘째 기사",
+      canonicalUrl: "https://www.donga.com/news/Politics/article/all/20260726/1/1",
+      publishedAt: Date.parse("2026-07-26T11:00:00+09:00"),
+    },
+  ];
+  const profileRows = new Map();
+  const requested = [];
+  const DB = {
+    prepare(sql) {
+      return {
+        bind(...parameters) {
+          return {
+            sql,
+            parameters,
+            all: async () => {
+              if (!sql.includes("a.canonical_url AS canonicalUrl")) throw new Error(`Unexpected all SQL: ${sql}`);
+              assert.match(sql, /a\.canonical_url IN \(\?\)/);
+              assert.ok(parameters.includes(articles[1].canonicalUrl));
+              return { results: [articles[1]] };
+            },
+            first: async () => {
+              if (!sql.includes("COUNT(*) AS total")) throw new Error(`Unexpected first SQL: ${sql}`);
+              assert.match(sql, /a\.canonical_url IN \(\?\)/);
+              assert.ok(parameters.includes(articles[1].canonicalUrl));
+              const row = profileRows.get(articles[1].id);
+              return {
+                total: 1,
+                analyzed: row?.status === "analyzed" ? 1 : 0,
+                failed: row?.status === "failed" ? 1 : 0,
+              };
+            },
+            run: async () => ({ success: true }),
+          };
+        },
+      };
+    },
+    batch: async (batch) => {
+      for (const statement of batch) {
+        if (statement.sql.includes("INSERT INTO article_frame_profiles")) {
+          profileRows.set(statement.parameters[1], { status: statement.parameters[5] });
+        }
+      }
+      return batch.map(() => ({ success: true, meta: { changes: 1 } }));
+    },
+  };
+  const ARTICLE_FETCHER = {
+    fetch: async (url) => {
+      requested.push(url);
+      return new Response("blocked", { status: 403 });
+    },
+  };
+  const response = await handleApiRequest(new Request("https://example.test/api/analyze/transient", {
+    method: "POST",
+    headers: {
+      authorization: "Bearer one-time",
+      origin: "https://example.test",
+      "sec-fetch-site": "same-origin",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      date: "2026-07-26",
+      limit: 10,
+      transient_analysis_acknowledged: true,
+      canonical_urls: [articles[1].canonicalUrl],
+    }),
+  }), { DB, ARTICLE_FETCHER, CODEX_IMPORT_TOKEN: "one-time" });
+
+  assert.equal(response.status, 201);
+  const body = await response.json();
+  assert.equal(body.targeted, true);
+  assert.equal(body.targetCount, 1);
+  assert.equal(body.requested, 1);
+  assert.equal(body.failed, 1);
+  assert.deepEqual(body.progress, { total: 1, processed: 1, analyzed: 0, failed: 1, remaining: 0 });
+  assert.deepEqual(requested, [articles[1].canonicalUrl]);
+});
+
 test("accepts authenticated homepage geometry as repeated observations", async () => {
   const statements = [];
   const DB = {

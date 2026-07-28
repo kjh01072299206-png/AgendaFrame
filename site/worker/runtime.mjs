@@ -1358,7 +1358,10 @@ async function loadTransientBodySignals(db, start, end) {
   return signals;
 }
 
-async function transientAnalysisProgress(db, start, end) {
+async function transientAnalysisProgress(db, start, end, canonicalUrls = []) {
+  const targetClause = canonicalUrls.length
+    ? ` AND a.canonical_url IN (${canonicalUrls.map(() => "?").join(", ")})`
+    : "";
   const row = await db.prepare(`
     SELECT
       COUNT(*) AS total,
@@ -1371,7 +1374,15 @@ async function transientAnalysisProgress(db, start, end) {
       AND profiles.model_version = ?
       AND profiles.schema_version = ?
     WHERE a.published_at >= ? AND a.published_at < ?
-  `).bind(ARTICLE_EXTRACTOR_VERSION, FRAMING_ENGINE_VERSION, ARTICLE_FRAME_PROFILE_SCHEMA, start, end).first();
+      ${targetClause}
+  `).bind(
+    ARTICLE_EXTRACTOR_VERSION,
+    FRAMING_ENGINE_VERSION,
+    ARTICLE_FRAME_PROFILE_SCHEMA,
+    start,
+    end,
+    ...canonicalUrls,
+  ).first();
   const total = Number(row?.total ?? 0);
   const analyzed = Number(row?.analyzed ?? 0);
   const failed = Number(row?.failed ?? 0);
@@ -1425,8 +1436,18 @@ async function handleTransientAnalyze(request, env) {
     const targetDate = await resolveAnalysisDate(env.DB, String(payload.date ?? "").trim());
     const limit = integerInRange(payload.limit ?? ARTICLE_FETCH_BATCH_LIMIT, 1, ARTICLE_FETCH_BATCH_LIMIT, "배치당 임시 분석 건수");
     const retryFailed = payload.retry_failed === true;
+    if (payload.canonical_urls !== undefined && !Array.isArray(payload.canonical_urls)) {
+      throw new Error("canonical_urls는 원문 URL 배열이어야 합니다.");
+    }
+    const canonicalUrls = uniqueStrings(
+      (payload.canonical_urls ?? []).map((value) => canonicalizeArticleUrl(value)),
+    );
+    if (canonicalUrls.length > 50) throw new Error("한 번에 지정할 수 있는 원문 URL은 최대 50개입니다.");
     const start = Date.parse(`${targetDate}T00:00:00+09:00`);
     const end = start + 86_400_000;
+    const targetClause = canonicalUrls.length
+      ? ` AND a.canonical_url IN (${canonicalUrls.map(() => "?").join(", ")})`
+      : "";
     const selected = await env.DB.prepare(`
       SELECT
         a.id,
@@ -1443,6 +1464,7 @@ async function handleTransientAnalyze(request, env) {
         AND profiles.model_version = ?
         AND profiles.schema_version = ?
       WHERE a.published_at >= ? AND a.published_at < ?
+        ${targetClause}
         AND (profiles.article_id IS NULL OR (? = 1 AND profiles.status = 'failed'))
       ORDER BY
         CASE a.homepage_placement WHEN 'top' THEN 4 WHEN 'main' THEN 3 WHEN 'section' THEN 2 ELSE 1 END DESC,
@@ -1455,6 +1477,7 @@ async function handleTransientAnalyze(request, env) {
       ARTICLE_FRAME_PROFILE_SCHEMA,
       start,
       end,
+      ...canonicalUrls,
       retryFailed ? 1 : 0,
       limit,
     ).all();
@@ -1565,7 +1588,7 @@ async function handleTransientAnalyze(request, env) {
       await runBatches(env.DB, statements);
     }
 
-    const progress = await transientAnalysisProgress(env.DB, start, end);
+    const progress = await transientAnalysisProgress(env.DB, start, end, canonicalUrls);
     const ready = results.filter((result) => result.status === "analyzed");
     let analysis = null;
     if (progress.remaining === 0 && (ready.length || payload.refresh_analysis === true)) {
@@ -1599,6 +1622,8 @@ async function handleTransientAnalyze(request, env) {
     });
     return jsonResponse({
       date: targetDate,
+      targeted: canonicalUrls.length > 0,
+      targetCount: canonicalUrls.length,
       requested: articles.length,
       analyzedBodies: ready.length,
       bodyStorageCount: 0,
@@ -1718,14 +1743,16 @@ async function handleArticles(request, env) {
 }
 
 async function adminAuthorized(request, env) {
-  if (!env?.IMPORT_TOKEN) return false;
+  const configuredTokens = [env?.IMPORT_TOKEN, env?.CODEX_IMPORT_TOKEN].filter(Boolean);
+  if (!configuredTokens.length) return false;
   const requestUrl = new URL(request.url);
   const origin = request.headers.get("origin");
   const fetchSite = request.headers.get("sec-fetch-site");
   if ((origin && origin !== requestUrl.origin) || (fetchSite && !["same-origin", "none"].includes(fetchSite))) return false;
   const authorization = request.headers.get("authorization") ?? "";
   const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
-  return secureTokenMatches(token, env.IMPORT_TOKEN);
+  const matches = await Promise.all(configuredTokens.map((configuredToken) => secureTokenMatches(token, configuredToken)));
+  return matches.some(Boolean);
 }
 
 async function runBatches(db, statements, size = 100) {

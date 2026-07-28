@@ -9,7 +9,7 @@
 
 export const ARTICLE_FRAME_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v1";
 export const ISSUE_FRAME_COMPARISON_SCHEMA = "agendaframe.issue-frame-comparison.v1";
-export const FRAMING_ENGINE_VERSION = "korean-evidence-rules-v1";
+export const FRAMING_ENGINE_VERSION = "korean-evidence-rules-v2";
 
 const DIMENSION_ORDER = Object.freeze([
   "problem_definition",
@@ -50,12 +50,12 @@ const DIMENSION_RULES = Object.freeze({
     },
     {
       code: "safety_harm_problem",
-      pattern: /(?:피해|사망|부상|안전|사고|재난|위험|범죄|폭력|질병).{0,24}(?:증가|확산|우려|문제|위기|논란|발생|노출)|(?:인명 피해|안전 문제)/,
+      pattern: /(?:피해|사망|부상|안전|사고|재난|위험|범죄|폭력|질병).{0,24}(?:증가|확산|우려|문제|위기|논란|발생|노출|대란|위협)|(?:인명 피해|안전 문제|범죄 대란)/,
       paraphrase: "사람의 안전과 구체적 피해를 사건의 핵심 문제로 다룹니다.",
     },
     {
       code: "legal_institutional_problem",
-      pattern: /(?:법|헌법|규정|절차|수사|재판|판결|권한|제도).{0,24}(?:위반|위법|논란|충돌|공백|문제|혼선|위헌)|(?:절차적 정당성|법적 논란)/,
+      pattern: /(?:법|헌법|법치주의|규정|절차|수사|재판|판결|권한|제도).{0,24}(?:위반|위법|논란|충돌|공백|문제|혼선|위헌|훼손|뒤흔들)|(?:절차적 정당성|법적 논란)/,
       paraphrase: "법적 기준이나 제도·절차의 정당성을 핵심 쟁점으로 다룹니다.",
     },
     {
@@ -91,6 +91,11 @@ const DIMENSION_RULES = Object.freeze({
       paraphrase: "특정 행위자의 선택이나 행동을 사건 전개의 원인으로 연결합니다.",
     },
     {
+      code: "political_incentive_cause",
+      pattern: /(?:선거|득표|지지층|강성 당원|당원|강경파|여론의 역풍|정치적 거래|뒷거래|정치공학).{0,36}(?:때문|탓|우려|두려|눈치|활용|유지|깨질|걱정|목적)|(?:때문|탓|우려|두려|눈치|목적).{0,36}(?:선거|득표|지지층|강성 당원|당원|강경파|여론|거래|정치공학)/,
+      paraphrase: "선거·당내 경쟁·지지층·정치적 거래와 같은 유인을 사건 전개의 배경으로 제시합니다.",
+    },
+    {
       code: "external_event_cause",
       pattern: /(?:전쟁|재난|감염|기후|국제|해외|세계|공급망).{0,30}(?:때문|탓|원인|배경|영향으로|비롯|초래|낳았)|(?:때문|탓|원인|배경).{0,30}(?:전쟁|재난|감염|기후|국제|해외|세계|공급망)/,
       paraphrase: "외부 사건이나 국제·환경 조건을 주요 원인·배경으로 제시합니다.",
@@ -99,12 +104,12 @@ const DIMENSION_RULES = Object.freeze({
   responsibility_attribution: [
     {
       code: "government_responsibility",
-      pattern: /(?:정부|대통령실|당국|부처|지자체|공공기관).{0,32}(?:책임|책임져|책임론|의무|잘못|방치|대응 실패|관리 부실|사과해야|해명해야)/,
+      pattern: /(?:정부|대통령실|대통령|당국|부처|지자체|공공기관).{0,32}(?:책임|책임져|책임론|의무|잘못|방치|침묵|회피|대응 실패|관리 부실|사과해야|해명해야|입장을 밝혀)/,
       paraphrase: "정부·공공기관의 대응 책임이 기사 안에서 제기됩니다.",
     },
     {
       code: "political_responsibility",
-      pattern: /(?:여당|야당|국회|정당|정치권|의원|지도부).{0,32}(?:책임|책임져|책임론|의무|잘못|방치|사과해야|해명해야)/,
+      pattern: /(?:여당|야당|국회|정당|정치권|의원|지도부|민주당|국민의힘).{0,32}(?:책임|책임져|책임론|의무|잘못|방치|침묵|회피|사과해야|해명해야|눈치를 보|속도전을 벌)/,
       paraphrase: "정당·국회 등 정치 행위자의 책임이 기사 안에서 제기됩니다.",
     },
     {
@@ -126,7 +131,7 @@ const DIMENSION_RULES = Object.freeze({
   moral_evaluation: [
     {
       code: "negative_legitimacy_evaluation",
-      pattern: /(?:부당|부적절|무책임|불공정|비상식|비윤리|위법|위헌|졸속|과도|퇴행|후퇴|기만|특혜|무능|잘못된|바람직하지)/,
+      pattern: /(?:부당|부적절|무책임|불공정|비상식|비윤리|위법|위헌|졸속|과도|퇴행|후퇴|기만|특혜|무능|비겁|추악|만행|매국|잘못된|바람직하지)/,
       paraphrase: "행위나 결정의 정당성·적절성에 부정적인 평가가 기사 안에서 제시됩니다.",
     },
     {
@@ -153,8 +158,13 @@ const DIMENSION_RULES = Object.freeze({
     },
     {
       code: "accountability_action",
-      pattern: /(?:사과해야|사퇴해야|문책해야|수사해야|조사해야|감사해야|해명해야|책임져야|처벌해야|진상 규명|책임자 처벌)/,
+      pattern: /(?:사과해야|사퇴해야|문책해야|수사해야|조사해야|감사해야|해명해야|책임져야|처벌해야|입장을 밝혀야|침묵을 깨|진상 규명|책임자 처벌)/,
       paraphrase: "사과·조사·문책·책임 규명과 같은 조치를 해법으로 제시합니다.",
+    },
+    {
+      code: "institutional_check",
+      pattern: /(?:재의요구권|거부권).{0,24}(?:행사|촉구|요구|필요|해야)|(?:보완수사권).{0,24}(?:존치|유지|보장|남겨|폐지 반대)/,
+      paraphrase: "거부권 행사나 권한 존치처럼 제도적 견제 장치를 대응책으로 제시합니다.",
     },
     {
       code: "material_support",
@@ -962,6 +972,22 @@ function describeCommon(axes, profileCount) {
   return "분석 표본의 60% 이상에서 공통으로 확인되는 단일한 매체 서술 패턴은 관측되지 않았습니다.";
 }
 
+function sourceDominance(profiles) {
+  const items = profiles.flatMap((profile) =>
+    DIMENSION_ORDER.flatMap((dimension) => profile.dimensions?.[dimension]?.items ?? []),
+  );
+  const attributedItems = items.filter((item) => item.voice?.kind !== "journalist_narration");
+  const share = items.length ? attributedItems.length / items.length : 0;
+  return {
+    detected: profiles.length >= 2
+      && profiles.every((profile) => profile.genre?.code === "straight_news")
+      && share >= 0.7,
+    attributed_item_count: attributedItems.length,
+    total_item_count: items.length,
+    attributed_share: Math.round(share * 1000) / 1000,
+  };
+}
+
 /**
  * Compare article-level profiles belonging to the same event.
  *
@@ -987,10 +1013,21 @@ export function buildIssueFrameComparison(profiles, articleMetadata = [], option
   const contextCounts = countBy(profiles, (profile) => profile.context_depth.level);
   const notObservedStatements = axes.map((axis) => axis.not_observed_statement).filter(Boolean);
   const titleOnlyOrShort = profiles.filter((profile) => profile.article.body_character_count < 300).length;
-  const common = describeCommon(axes, profiles.length);
-  const divergence = describeDivergence(axes, metadataById);
+  const sourceDominated = sourceDominance(profiles);
+  const common = sourceDominated.detected
+    ? "비교 표본에서 관측된 핵심 문제·원인·평가 표현의 대부분은 취재원 발언에 귀속됩니다."
+    : describeCommon(axes, profiles.length);
+  const observedDivergence = describeDivergence(axes, metadataById);
+  const divergence = sourceDominated.detected
+    ? {
+        detected: false,
+        text: "취재원 발언이 설명을 지배해, 표현 차이를 매체 자체의 프레임 차이로 확정하지 않았습니다.",
+      }
+    : observedDivergence;
   const dominantRole = sourceLens.roles[0];
-  const sourceSummary = dominantRole
+  const sourceSummary = sourceDominated.detected
+    ? `분석 항목의 ${Math.round(sourceDominated.attributed_share * 100)}%가 직접·간접인용 또는 인용 경계의 표현으로 분류됐습니다. 같은 발언을 어느 위치에 배치했는지는 비교할 수 있지만, 이를 매체의 동의로 해석하면 안 됩니다.`
+    : dominantRole
     ? `가장 자주 가시화된 취재원 범주는 ${dominantRole.role_label}이며 ${dominantRole.article_count}건에서 관측됐습니다. 이는 매체의 동의나 취재원 신뢰도 판정이 아닙니다.`
     : "명시적으로 귀속된 취재원 범주를 안정적으로 확인하지 못했습니다.";
 
@@ -1004,6 +1041,7 @@ export function buildIssueFrameComparison(profiles, articleMetadata = [], option
       article_first: true,
       comparison_unit: "same_event_articles",
       outlet_voice_separated_from_sources: true,
+      source_dominance_check: sourceDominated,
       secondary_taxonomies_are_descriptive_only: true,
       semantic_ai: false,
       caution: "동일 사건으로 검증된 기사끼리만 비교해야 하며, 관측되지 않은 요소를 의도적 누락으로 해석하지 않습니다.",
