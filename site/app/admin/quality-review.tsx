@@ -216,7 +216,7 @@ export default function QualityReview({ token, analysisDate }: { token: string; 
 
   return <section className="import-card quality-card" aria-labelledby="quality-title">
     <header>
-      <div><p className="eyebrow">STEP 03</p><h2 id="quality-title">분석 품질 검증</h2></div>
+      <div><p className="eyebrow">STEP 04</p><h2 id="quality-title">분석 품질 검증</h2></div>
       <span className="free-badge">사람 검토 기반</span>
     </header>
 

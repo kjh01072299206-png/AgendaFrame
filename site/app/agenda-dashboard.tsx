@@ -6,7 +6,7 @@ type Health = {
   status: string;
   mode: "demo" | "live_metadata" | "unavailable";
   dataAsOf: string | null;
-  collection: { articleCount: number; authorizedContentCount: number; configuredSources: number; latestSourceCount: number; latestStatus: string };
+  collection: { articleCount: number; authorizedContentCount: number; transientEvidenceCount: number; bodyEvidenceCount: number; configuredSources: number; latestSourceCount: number; latestStatus: string };
   analysis?: { id: string; targetDate: string; provider: string; modelVersion: string; finishedAt: number; articleCount: number; issueCount: number } | null;
   freshness: { status: "normal" | "collection_delayed" | "partial_collection" | "analysis_pending" | "stale_snapshot"; label: string; staleDays: number | null };
   timestamps: { collectedAt: string | null; analyzedAt: number | null; publishedAt: number | null; nextScheduledAt: number | null };
@@ -43,7 +43,7 @@ type Issue = {
   calibrationStatus: "not_calibrated";
   clusterQuality: "review_required" | "not_human_reviewed" | "cohesive" | "insufficient_evidence";
   contentAvailableCount: number;
-  evidenceBasis: "headline_metadata_only" | "authorized_body_and_metadata";
+  evidenceBasis: "headline_metadata_only" | "body_signals_and_metadata" | "structured_body_profiles_and_metadata";
 };
 
 type Article = {
@@ -61,16 +61,69 @@ type Article = {
   similarity?: number;
 };
 
-type Frame = { frame: string; score: number; calibrationStatus: string; evidenceBasis: "headline" | "body_private" | "body_public"; evidenceText?: string | null; source?: string | null; articleId?: string | null; sourceUrl?: string | null };
+type Frame = { frame: string; score: number; calibrationStatus: string; evidenceBasis: "headline" | "body_private" | "body_public" | "body_transient"; evidenceText?: string | null; source?: string | null; articleId?: string | null; sourceUrl?: string | null };
+type ComparisonSource = {
+  source: string;
+  articleId: string;
+  sourceUrl: string;
+  evidenceLocator?: string | null;
+  evidenceHash?: string | null;
+};
+type ComparisonAxis = {
+  dimension: string;
+  label: string;
+  variants: Array<{
+    summary: string;
+    outlets: ComparisonSource[];
+    commitment: string;
+    status: string;
+    evidenceLocator?: string | null;
+    basis?: string | null;
+  }>;
+};
 type Comparison = {
-  status: "withheld_insufficient_evidence" | "available";
-  evidenceBasis: "headline_metadata_only" | "authorized_body_signals_not_structured_comparison" | "evidence_spans";
-  reason: string;
-  commonFacts: Array<{ id: string; text: string; articleCount: number; sourceCount: number; evidence: Array<{ articleId: string; source: string; sourceUrl: string; text: string }> }>;
-  divergenceQuestions: Array<{ id: string; question: string; status: string; answerGroups: Array<{ id: string; label: string; sources: string[]; evidence: Array<{ articleId: string; source: string; sourceUrl: string; text: string }> }> }>;
-  sourceVoices: Array<{ sourceType: string; people: string[]; supports: string; evidence: Array<{ articleId: string; sourceUrl: string; text: string }> }>;
-  recommendedPair: null | { primary: Article; complement: Article; reason: string };
+  status: string;
+  divergenceDetected?: boolean;
+  evidenceBasis?: "headline_metadata_only" | "body_signals_not_structured_comparison" | "evidence_spans" | string;
+  reason?: string;
+  commonFacts?: Array<{ id: string; text: string; articleCount: number; sourceCount: number; evidence: Array<{ articleId: string; source: string; sourceUrl: string; text: string }> }>;
+  divergenceQuestions?: Array<{ id: string; question: string; status: string; answerGroups: Array<{ id: string; label: string; sources: string[]; evidence: Array<{ articleId: string; source: string; sourceUrl: string; text: string }> }> }>;
+  sourceVoices?: Array<{ sourceType: string; people: string[]; supports: string; evidence: Array<{ articleId: string; sourceUrl: string; text: string }> }>;
+  recommendedPair?: null | { primary: Article; complement: Article; reason: string };
   availableHeadlineEvidence?: Array<{ articleId: string; source: string; sourceUrl: string; text: string }>;
+  methodologyLabel?: string;
+  reviewStatus?: string;
+  summary?: {
+    commonGround?: string | null;
+    mainDifference?: string | null;
+    whyItMatters?: string | null;
+    sourceContext?: string | null;
+  };
+  sample?: {
+    analyzedArticles: number;
+    textScope?: "provider_excerpt" | "article_body" | string;
+    outlets: number;
+    independentMediaGroups: number;
+    excludedArticles: number;
+  };
+  axes?: ComparisonAxis[];
+  sourceLens?: {
+    sharedVoices: string[];
+    voicesPresentInSomeOutlets: string[];
+    byOutlet: Array<{
+      source: string;
+      voices: string[];
+      officialShare?: number | null;
+      affectedGroupVoice?: boolean | number | string | null;
+    }>;
+  };
+  contextGaps?: Array<{
+    feature: string;
+    presentInOutlets: string[];
+    notObservedInOutlets: string[];
+    displayText: string;
+  }>;
+  limitations?: string[];
 };
 type IssueDetail = {
   issue: Issue & { provider: string; modelVersion: string; analyzedAt: number };
@@ -130,9 +183,353 @@ function ScorePart({ label, value, note }: { label: string; value: number | null
 const analysisTabs: Array<[AnalysisTab, string]> = [
   ["compare", "비교 요약"],
   ["outlets", "매체 비교"],
-  ["frames", "프레임 단서"],
+  ["frames", "보조 프레임 태그"],
   ["articles", "관련 기사"],
 ];
+
+const statusLabels: Record<string, string> = {
+  available: "구조화 비교 가능",
+  partial: "일부 비교 가능",
+  withheld_insufficient_evidence: "근거 부족으로 보류",
+  supported: "근거 확인",
+  abstained: "판단 보류",
+  conflicting: "근거가 엇갈림",
+  not_observed: "본문에서 미관측",
+  attributed_source: "취재원 발언에서 확인",
+};
+
+const reviewLabels: Record<string, string> = {
+  human_reviewed: "사람 검토 완료",
+  reviewed: "사람 검토 완료",
+  ai_draft: "AI 분석 초안",
+  automatic_draft: "자동 구조화 초안",
+  review_required: "사람 검토 필요",
+  not_human_reviewed: "사람 검토 전",
+  pending: "검토 대기",
+};
+
+const commitmentLabels: Record<string, string> = {
+  explicit: "명시적 서술",
+  source_attributed: "취재원 귀속 발언",
+  implicit: "간접적 서술",
+  mixed: "명시·간접 혼합",
+  uncertain: "판정 유보",
+  not_observed: "본문에서 미관측",
+};
+
+function readableCode(value?: string | null, labels: Record<string, string> = {}) {
+  if (!value) return null;
+  return labels[value] ?? value.replaceAll("_", " ");
+}
+
+function formatShare(value?: number | null) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  const percentage = value <= 1 ? value * 100 : value;
+  return `${Math.round(Math.max(0, Math.min(100, percentage)))}%`;
+}
+
+function affectedVoiceLabel(value?: boolean | number | string | null) {
+  if (typeof value === "boolean") return value ? "당사자 목소리 있음" : "당사자 목소리 미관측";
+  if (typeof value === "number") {
+    const share = formatShare(value);
+    return share ? `당사자 발화 비중 ${share}` : null;
+  }
+  return value || null;
+}
+
+function hasStructuredComparison(comparison: Comparison) {
+  return Boolean(
+    comparison.methodologyLabel
+    || comparison.summary
+    || comparison.axes?.length
+    || comparison.sourceLens
+    || comparison.contextGaps?.length
+    || comparison.limitations?.length
+  );
+}
+
+function ComparisonSourceLinks({ outlets }: { outlets: ComparisonSource[] }) {
+  return (
+    <ul className="comparison-source-links" aria-label="이 설명을 뒷받침하는 기사">
+      {outlets.map((outlet, index) => (
+        <li key={`${outlet.articleId}-${index}`}>
+          <a href={outlet.sourceUrl} target="_blank" rel="noopener noreferrer">
+            {outlet.source}<span className="sr-only"> 원문 새 창에서 열기</span>
+          </a>
+          {outlet.evidenceLocator && <small>{outlet.evidenceLocator}{outlet.evidenceHash ? ` · ${outlet.evidenceHash.slice(0, 12)}` : ""}</small>}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function issueSpectrum(comparison: Comparison) {
+  const axis = comparison.axes?.find((entry) => entry.dimension === "problem_definition") ?? comparison.axes?.[0];
+  if (!axis) return null;
+  const variants = [...axis.variants]
+    .filter((variant) => variant.outlets.length)
+    .sort((left, right) => new Set(right.outlets.map((outlet) => outlet.source)).size - new Set(left.outlets.map((outlet) => outlet.source)).size)
+    .slice(0, 2);
+  if (variants.length < 2) return null;
+  const outletSides = new Map<string, Set<number>>();
+  variants.forEach((variant, variantIndex) => {
+    variant.outlets.forEach((outlet) => {
+      const sides = outletSides.get(outlet.source) ?? new Set<number>();
+      sides.add(variantIndex);
+      outletSides.set(outlet.source, sides);
+    });
+  });
+  const outletEntries = [...outletSides].map(([source, sides]) => ({
+    source,
+    side: sides.size > 1 ? "center" : sides.has(0) ? "left" : "right",
+    overlap: sides.size > 1,
+  }));
+  const sideCounts = outletEntries.reduce<Record<string, number>>((counts, outlet) => {
+    counts[outlet.side] = (counts[outlet.side] ?? 0) + 1;
+    return counts;
+  }, {});
+  const sideIndexes: Record<string, number> = {};
+  const outlets = outletEntries.map((outlet) => {
+    const index = sideIndexes[outlet.side] ?? 0;
+    sideIndexes[outlet.side] = index + 1;
+    const count = sideCounts[outlet.side] ?? 1;
+    const spread = count === 1 ? 0.5 : index / (count - 1);
+    const position = outlet.side === "left"
+      ? 8 + spread * 27
+      : outlet.side === "right"
+        ? 65 + spread * 27
+        : 46 + spread * 8;
+
+    return {
+      source: outlet.source,
+      position,
+      top: index % 2 ? 42 : 2,
+      overlap: outlet.overlap,
+    };
+  });
+  return {
+    label: axis.label,
+    left: variants[0],
+    right: variants[1],
+    outlets,
+  };
+}
+
+function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
+  const summaryItems = [
+    ["여러 매체가 함께 설명한 것", comparison.summary?.commonGround],
+    ["설명이 가장 크게 갈린 지점", comparison.summary?.mainDifference],
+    ["이 차이를 살펴볼 이유", comparison.summary?.whyItMatters],
+    ["취재원 구성에서 확인된 것", comparison.summary?.sourceContext],
+  ].filter((entry): entry is [string, string] => Boolean(entry[1]));
+  const axes = comparison.axes ?? [];
+  const sourceLens = comparison.sourceLens;
+  const contextGaps = comparison.contextGaps ?? [];
+  const limitations = comparison.limitations ?? [];
+  const spectrum = issueSpectrum(comparison);
+  const isProviderExcerpt = comparison.sample?.textScope === "provider_excerpt";
+
+  return (
+    <div className="structured-comparison">
+      <header className="comparison-brief">
+        <div className="comparison-brief-heading">
+          <div>
+            <p className="context-label">30초 비교 요약</p>
+            <h3>{comparison.divergenceDetected ? "같은 사건을 설명하는 방식이 여기서 갈렸습니다" : "공통점과 관측 가능한 설명 요소를 비교했습니다"}</h3>
+          </div>
+          <div className="comparison-badges" aria-label="분석 상태">
+            <span>{readableCode(comparison.status, statusLabels)}</span>
+            {comparison.reviewStatus && <span className="review-badge">{readableCode(comparison.reviewStatus, reviewLabels)}</span>}
+            {comparison.methodologyLabel && <span className="method-badge">{comparison.methodologyLabel}</span>}
+          </div>
+        </div>
+        {summaryItems.length ? (
+          <div className="comparison-summary-strip">
+            {summaryItems.map(([label, text]) => <article key={label}><h4>{label}</h4><p>{text}</p></article>)}
+          </div>
+        ) : <p className="withheld">비교 요약을 만들 수 있을 만큼 서로 독립적인 본문 근거가 확인되지 않았습니다.</p>}
+        {comparison.status !== "available" && comparison.reason && <p className="comparison-reason">{comparison.reason}</p>}
+        {comparison.sample && (
+          <dl className="comparison-sample" aria-label="이번 비교에 사용한 표본">
+            <div><dt>{isProviderExcerpt ? "본문 발췌 분석" : "본문 분석"}</dt><dd>{comparison.sample.analyzedArticles}건</dd></div>
+            <div><dt>언론사</dt><dd>{comparison.sample.outlets}곳</dd></div>
+            <div><dt>독립 미디어그룹</dt><dd>{comparison.sample.independentMediaGroups}개</dd></div>
+            <div><dt>제외·유보</dt><dd>{comparison.sample.excludedArticles}건</dd></div>
+          </dl>
+        )}
+      </header>
+
+      {spectrum && (
+        <section className="issue-spectrum-card" aria-labelledby="issue-spectrum-title">
+          <header>
+            <div><p className="context-label">어디서 갈렸나</p><h3 id="issue-spectrum-title">{spectrum.label}의 쟁점 지형</h3></div>
+            <span>{isProviderExcerpt ? "본문 발췌 기반" : "본문 근거 기반"}</span>
+          </header>
+          <p className="spectrum-intro">같은 사건에서 어떤 문제 정의가 전면에 놓였는지 보여줍니다. 좌우 위치는 정치 성향 점수가 아니라, 아래 두 설명 그룹과의 상대적 연결입니다.</p>
+          <div className="spectrum-labels" aria-hidden="true"><strong>{spectrum.left.summary}</strong><strong>{spectrum.right.summary}</strong></div>
+          <div className="spectrum-track" aria-label={`${spectrum.left.summary}와 ${spectrum.right.summary} 사이 매체별 위치`}>
+            <i aria-hidden="true" />
+            {spectrum.outlets.map((outlet) => (
+              <span
+                className={outlet.overlap ? "overlap" : ""}
+                key={outlet.source}
+                style={{ left: `${outlet.position}%`, top: `${outlet.top}px` }}
+                title={outlet.overlap ? "두 설명이 모두 관측됨" : undefined}
+              >{outlet.source.replace(/일보|신문|뉴스$/u, "")}</span>
+            ))}
+          </div>
+          <div className="spectrum-accessible">
+            <h4>{spectrum.left.summary}</h4><p>{spectrum.left.outlets.map((outlet) => outlet.source).join(" · ")}</p>
+            <h4>{spectrum.right.summary}</h4><p>{spectrum.right.outlets.map((outlet) => outlet.source).join(" · ")}</p>
+          </div>
+        </section>
+      )}
+
+      <section className="comparison-section" aria-labelledby="comparison-axes-title">
+        <div className="comparison-section-heading">
+          <div><h3 id="comparison-axes-title">무엇을 다르게 설명했나</h3><p>기사별 판정을 먼저 만든 뒤, 같은 분석축에서 실제로 확인된 설명만 묶었습니다.</p></div>
+          <span>{axes.length}개 분석축</span>
+        </div>
+        {axes.length ? (
+          <div className="comparison-axes">
+            {axes.map((axis) => (
+              <section className="comparison-axis" key={axis.dimension}>
+                <header><span>분석축</span><h4>{axis.label}</h4></header>
+                <div className="comparison-variants">
+                  {axis.variants.map((variant, index) => (
+                    <article key={`${axis.dimension}-${variant.summary}-${index}`}>
+                      <div className="variant-heading">
+                        <p>{variant.summary}</p>
+                        <div className="variant-status">
+                          <span>{readableCode(variant.commitment, commitmentLabels)}</span>
+                          <span>{readableCode(variant.status, statusLabels)}</span>
+                        </div>
+                      </div>
+                      {variant.outlets.length ? <ComparisonSourceLinks outlets={variant.outlets} /> : <small className="variant-empty">연결된 공개 원문 없음</small>}
+                      {(variant.evidenceLocator || variant.basis) && <p className="variant-evidence">{variant.evidenceLocator && <span>근거 위치 {variant.evidenceLocator}</span>}{variant.basis && <span>{variant.basis}</span>}</p>}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : <p className="withheld">문제 정의·원인·책임·평가·해법을 매체 간에 비교할 만큼 본문 근거가 모이지 않았습니다.</p>}
+      </section>
+
+      {sourceLens && (
+        <section className="comparison-section source-lens" aria-labelledby="source-lens-title">
+          <div className="comparison-section-heading">
+            <div><h3 id="source-lens-title">누구의 목소리로 설명했나</h3><p>인용·간접인용으로 확인된 발화자 범주입니다. 등장하지 않았다는 사실만 보여주며 의도적 배제를 뜻하지 않습니다.</p></div>
+          </div>
+          <div className="voice-overview">
+            <div><h4>여러 매체에 공통 등장</h4>{sourceLens.sharedVoices.length ? <ul>{sourceLens.sharedVoices.map((voice) => <li key={voice}>{voice}</li>)}</ul> : <p>공통 발화자 범주가 확인되지 않았습니다.</p>}</div>
+            <div><h4>일부 매체에서만 등장</h4>{sourceLens.voicesPresentInSomeOutlets.length ? <ul>{sourceLens.voicesPresentInSomeOutlets.map((voice) => <li key={voice}>{voice}</li>)}</ul> : <p>매체별 차이가 확인되지 않았습니다.</p>}</div>
+          </div>
+          {sourceLens.byOutlet.length > 0 && (
+            <div className="voice-by-outlet" role="table" aria-label="언론사별 발화자 구성">
+              <div className="voice-table-head" role="row"><span role="columnheader">언론사</span><span role="columnheader">확인된 목소리</span><span role="columnheader">구성 단서</span></div>
+              {sourceLens.byOutlet.map((entry) => {
+                const officialShare = formatShare(entry.officialShare);
+                const affectedVoice = affectedVoiceLabel(entry.affectedGroupVoice);
+                return (
+                  <div className="voice-table-row" role="row" key={entry.source}>
+                    <strong role="cell">{entry.source}</strong>
+                    <p role="cell">{entry.voices.length ? entry.voices.join(" · ") : "본문에서 발화자 미관측"}</p>
+                    <p role="cell">{[officialShare ? `기관·정치권 발언 단서 ${officialShare}` : null, affectedVoice].filter(Boolean).join(" · ") || "추가 단서 없음"}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {contextGaps.length > 0 && (
+        <section className="comparison-section context-gap-section" aria-labelledby="context-gap-title">
+          <div className="comparison-section-heading">
+            <div><h3 id="context-gap-title">본문에서 관측 여부가 달랐던 요소</h3><p>‘누락’이나 ‘편향’ 판정이 아니라, 이번에 분석한 본문에서 관측됐는지를 비교한 결과입니다.</p></div>
+          </div>
+          <div className="context-gap-list">
+            {contextGaps.map((gap) => (
+              <article key={`${gap.feature}-${gap.displayText}`}>
+                <h4>{gap.feature}</h4>
+                <p>{gap.displayText}</p>
+                <dl>
+                  <div><dt>관측됨</dt><dd>{gap.presentInOutlets.length ? gap.presentInOutlets.join(" · ") : "없음"}</dd></div>
+                  <div><dt>본문에서 미관측</dt><dd>{gap.notObservedInOutlets.length ? gap.notObservedInOutlets.join(" · ") : "없음"}</dd></div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="reading-brief" aria-labelledby="reading-brief-title">
+        <header><p className="context-label">리포트로 읽기</p><h3 id="reading-brief-title">이 비교에서 확인할 세 가지</h3></header>
+        <div>
+          <article><span>01</span><h4>쟁점 구도</h4><p>{comparison.summary?.mainDifference ?? "서로 다른 문제 정의가 확인되는지 기사별 근거를 비교해 보세요."}</p></article>
+          <article><span>02</span><h4>설명의 구조</h4><p>{axes.length ? `${axes.map((axis) => axis.label).join("·")} 가운데 어떤 요소가 명시됐고 무엇이 관측되지 않았는지 확인하세요.` : "문제 정의에서 원인·책임·해법으로 설명이 어떻게 이어지는지 확인하세요."}</p></article>
+          <article><span>03</span><h4>누구의 목소리인가</h4><p>{comparison.summary?.sourceContext ?? "기관·정치권·전문가·시민·당사자 가운데 누구의 발언이 설명의 중심인지 확인하세요."}</p></article>
+        </div>
+        <aside>
+          <h4>이렇게 읽어보세요</h4>
+          <ul>
+            <li>내가 먼저 읽은 기사는 이 사건을 어떤 ‘문제’로 정의했나?</li>
+            <li>기사의 원인 설명은 기자 서술인가, 인용된 취재원의 주장인가?</li>
+            <li>다른 매체에서만 등장한 맥락이나 당사자 목소리가 있는가?</li>
+          </ul>
+        </aside>
+      </section>
+
+      {limitations.length > 0 && (
+        <details className="comparison-limitations">
+          <summary>이 분석을 해석할 때 확인할 한계 <span>{limitations.length}개</span></summary>
+          <ul>{limitations.map((limitation, index) => <li key={`${limitation}-${index}`}>{limitation}</li>)}</ul>
+        </details>
+      )}
+    </div>
+  );
+}
+
+function LegacyComparisonView({ comparison, articles, openArticles }: { comparison: Comparison; articles: Article[]; openArticles: () => void }) {
+  const commonFacts = comparison.commonFacts ?? [];
+  const divergenceQuestions = comparison.divergenceQuestions ?? [];
+  const sourceVoices = comparison.sourceVoices ?? [];
+  const recommendedPair = comparison.recommendedPair ?? null;
+
+  return (
+    <div className="legacy-comparison">
+      <header>
+        <p className="context-label">비교 가능성</p>
+        <h3>{comparison.status === "available" ? "근거가 확인된 설명 차이" : "현재는 구조화 비교를 제공하지 않습니다"}</h3>
+        <p>{comparison.reason ?? "서로 비교할 수 있는 본문 근거가 충분하지 않습니다."}</p>
+      </header>
+      <div className="evidence-grid">
+        <section>
+          <div className="evidence-step"><span className="step-number">01</span><span className="step-status">{commonFacts.length ? "확인됨" : "근거 부족"}</span></div>
+          <h4>공통으로 확인된 사실</h4>
+          {commonFacts.length ? commonFacts.map((fact) => <article key={fact.id}><strong>{fact.text}</strong><small>{fact.sourceCount}개 매체 · {fact.articleCount}건 근거</small></article>) : <p className="withheld">검증된 공통 사실 추출과 독립 출처 대조가 완료되지 않아 만들지 않았습니다.</p>}
+        </section>
+        <section>
+          <div className="evidence-step"><span className="step-number">02</span><span className="step-status">{divergenceQuestions.length ? "확인됨" : "판단 보류"}</span></div>
+          <h4>보도가 갈린 질문</h4>
+          {divergenceQuestions.length ? divergenceQuestions.map((question) => <article key={question.id}><strong>{question.question}</strong><small>{question.answerGroups.length}개 설명 그룹</small></article>) : <p className="withheld">제목만으로 원인·책임·해법의 차이를 단정하지 않습니다.</p>}
+        </section>
+        <section>
+          <div className="evidence-step"><span className="step-number">03</span><span className="step-status">{sourceVoices.length ? "확인됨" : "본문 필요"}</span></div>
+          <h4>누구의 목소리가 실렸나</h4>
+          {sourceVoices.length ? sourceVoices.map((voice) => <article key={`${voice.sourceType}-${voice.supports}`}><strong>{voice.sourceType}</strong><p>{voice.supports}</p></article>) : <p className="withheld">본문 근거가 없거나 취재원 추출이 검토되지 않아 발언 주체와 맥락을 판정하지 않습니다.</p>}
+        </section>
+        <section>
+          <div className="evidence-step"><span className="step-number">04</span><span className="step-status">{recommendedPair ? "추천 가능" : "추천 보류"}</span></div>
+          <h4>기사 두 개만 읽는다면</h4>
+          {recommendedPair ? <><p>{recommendedPair.reason}</p><div className="pair-links"><a href={recommendedPair.primary.url} target="_blank" rel="noopener noreferrer">첫 번째 기사 열기</a><a href={recommendedPair.complement.url} target="_blank" rel="noopener noreferrer">보완 기사 열기</a></div></> : <><p className="withheld">두 기사의 상호보완성을 근거로 확인할 수 없어 추천하지 않습니다.</p><button className="inline-action" type="button" onClick={openArticles}>관련 제목을 직접 비교하기</button></>}
+        </section>
+      </div>
+      {articles.length > 0 && <section className="headline-evidence" aria-labelledby="headline-evidence-title"><div><p className="context-label">지금 확인 가능한 근거</p><h4 id="headline-evidence-title">매체별 기사 제목</h4></div><div>{articles.slice(0, 5).map((article) => <a key={article.id} href={article.url} target="_blank" rel="noopener noreferrer"><span>{article.source}</span><strong>{article.title}</strong><small>원문 열기 →</small></a>)}</div></section>}
+    </div>
+  );
+}
 
 export default function AgendaDashboard() {
   const [health, setHealth] = useState<Health | null>(null);
@@ -345,7 +742,7 @@ export default function AgendaDashboard() {
   const basisDate = health?.analysis?.targetDate ?? null;
   const detectedFrames = detail?.frames.filter((frame) => frame.score > 0 && frame.evidenceText) ?? [];
   const bodyBackedFrameCount = detail?.frames.filter((frame) => frame.evidenceBasis.startsWith("body_") && frame.score > 0).length ?? 0;
-  const authorizedContentCount = health?.collection.authorizedContentCount ?? 0;
+  const bodyEvidenceCount = health?.collection.bodyEvidenceCount ?? 0;
   const configuredSourceCount = health?.collection.configuredSources ?? (sources.length || 22);
   const sourceGroups = useMemo(() => ["general_daily", "business_media", "news_agency"].map((sourceType) => {
     const entries = sources.filter((source) => source.sourceType === sourceType).sort((a, b) => a.sampleOrder - b.sampleOrder);
@@ -369,14 +766,14 @@ export default function AgendaDashboard() {
             <h1 id="hero-title">같은 사건,<br />매체별 근거로 나란히 봅니다.</h1>
             <p className="overview-description">22개 주요 종합일간지·경제매체·뉴스통신사의 온라인 기사와 홈페이지 배치를 사건별로 묶었습니다. 근거가 부족한 분석은 제공하지 않고, 비교할 수 있는 부분과 아직 판단할 수 없는 부분을 구분합니다.</p>
             <div className="overview-actions"><a className="primary-action" href="#agenda-workspace">오늘의 이슈 비교하기</a><button className="secondary-action" type="button" onClick={() => setMethodOpen(true)}>분석 범위 확인</button></div>
-            {!authorizedContentCount && <p className="evidence-limit"><strong>현재 본문 근거 없음</strong><span>프레임 탭에는 기사 제목에서 확인된 표현 단서만 표시됩니다.</span></p>}
+            {!bodyEvidenceCount && <p className="evidence-limit"><strong>현재 본문 근거 없음</strong><span>프레임 탭에는 기사 제목에서 확인된 표현 단서만 표시됩니다.</span></p>}
             {!currentSnapshot && <p className="freshness-warning" role="status"><strong>{freshness.label}</strong>{freshness.staleDays ? ` · 기준일로부터 ${freshness.staleDays}일 지났습니다.` : " · 최신 수집 상태를 확인해 주세요."}</p>}
           </div>
           <dl className="overview-status" aria-label="현재 분석 범위">
             <div><dt>자료 기준</dt><dd>{basisDate?.replaceAll("-", ".") ?? "확인 중"}</dd></div>
             <div><dt>분석 매체</dt><dd>{configuredSourceCount}개 언론사</dd></div>
             <div><dt>분석 기사</dt><dd>{(health?.collection.articleCount ?? 0).toLocaleString("ko-KR")}건</dd></div>
-            <div><dt>현재 근거</dt><dd>{authorizedContentCount ? `승인 본문 ${authorizedContentCount.toLocaleString("ko-KR")}건 포함` : "제목·배치 메타데이터"}</dd></div>
+            <div><dt>현재 근거</dt><dd>{bodyEvidenceCount ? `본문 구조화 초안 ${bodyEvidenceCount.toLocaleString("ko-KR")}건` : "제목·배치 메타데이터"}</dd></div>
             <div><dt>사람 검토</dt><dd>진행 전</dd></div>
             <div><dt>최근 분석</dt><dd>{formatDateTime(health?.timestamps?.analyzedAt)}</dd></div>
           </dl>
@@ -409,46 +806,21 @@ export default function AgendaDashboard() {
                 }}>← 이슈 목록</button>
                 <div className="detail-kicker"><p>{detail.issue.category} · {detail.issue.issueDate} · {detail.issue.sourceCount}개 언론사</p><span className="confidence review">{detail.issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 필요" : "자동 분석 · 검토 전"}</span></div>
                 <div className="detail-title-row"><div><h2>{detail.issue.title}</h2><p className="detail-summary">{detail.issue.summary}</p></div><div className="big-score"><strong>{detail.issue.agendaScore === null ? "–" : Math.round(detail.issue.agendaScore)}</strong><span>{detail.issue.agendaScore === null ? "산출 보류" : "표본 내 집중도 /100"}</span></div></div>
-                <div className="detail-metrics"><span>관련 제목 <b>{detail.issue.articleCount}건</b></span><span>포함 매체 <b>{detail.issue.sourceCount}/{configuredSourceCount}곳</b></span><span>승인 본문 <b>{detail.issue.contentAvailableCount}/{detail.issue.articleCount}건</b></span><span>사람 검토 <b>미완료</b></span></div>
+                <div className="detail-metrics"><span>관련 제목 <b>{detail.issue.articleCount}건</b></span><span>포함 매체 <b>{detail.issue.sourceCount}/{configuredSourceCount}곳</b></span><span>본문 단서 <b>{detail.issue.contentAvailableCount}/{detail.issue.articleCount}건</b></span><span>사람 검토 <b>미완료</b></span></div>
                 <details className="score-details"><summary>점수 근거와 관측 범위</summary><div className="score-breakdown"><ScorePart label="독립 미디어그룹 커버리지" value={detail.issue.diversityScore} /><ScorePart label="홈페이지 배치" value={detail.issue.placementScore} note={`${detail.issue.placementObservedCount}/${detail.issue.placementTotalCount}건 관측`} /><ScorePart label="기사량" value={detail.issue.volumeScore} /><ScorePart label="후속 보도량" value={detail.issue.followUpVolumeScore} /></div><p>관측된 메타데이터만 계산하며 동일 미디어그룹은 커버리지에서 한 번만 셉니다. 이 점수는 중요도·진실성·여론을 뜻하지 않습니다.</p></details>
                 <div className="analysis-tabs" role="tablist" aria-label="이슈 분석 보기">
                   {analysisTabs.map(([value, label]) => <button key={value} id={`analysis-tab-${value}`} type="button" role="tab" aria-selected={tab === value} aria-controls={`analysis-panel-${value}`} tabIndex={tab === value ? 0 : -1} className={tab === value ? "active" : ""} onKeyDown={(event) => handleTabKeyDown(event, value)} onClick={() => setTab(value)}>{label}</button>)}
                 </div>
                 {tab === "compare" && (
                   <div id="analysis-panel-compare" role="tabpanel" aria-labelledby="analysis-tab-compare" className="evidence-first">
-                    <header>
-                      <p className="context-label">비교 가능성</p>
-                      <h3>{detail.comparison.status === "available" ? "근거가 확인된 설명 차이" : "현재는 구조화 비교를 제공하지 않습니다"}</h3>
-                      <p>{detail.comparison.reason}</p>
-                    </header>
-                    <div className="evidence-grid">
-                      <section>
-                        <div className="evidence-step"><span className="step-number">01</span><span className="step-status">{detail.comparison.commonFacts.length ? "확인됨" : "근거 부족"}</span></div>
-                        <h4>공통으로 확인된 사실</h4>
-                        {detail.comparison.commonFacts.length ? detail.comparison.commonFacts.map((fact) => <article key={fact.id}><strong>{fact.text}</strong><small>{fact.sourceCount}개 매체 · {fact.articleCount}건 근거</small></article>) : <p className="withheld">검증된 공통 사실 추출과 독립 출처 대조가 완료되지 않아 만들지 않았습니다.</p>}
-                      </section>
-                      <section>
-                        <div className="evidence-step"><span className="step-number">02</span><span className="step-status">{detail.comparison.divergenceQuestions.length ? "확인됨" : "판단 보류"}</span></div>
-                        <h4>보도가 갈린 질문</h4>
-                        {detail.comparison.divergenceQuestions.length ? detail.comparison.divergenceQuestions.map((question) => <article key={question.id}><strong>{question.question}</strong><small>{question.answerGroups.length}개 설명 그룹</small></article>) : <p className="withheld">제목만으로 원인·책임·해법의 차이를 단정하지 않습니다.</p>}
-                      </section>
-                      <section>
-                        <div className="evidence-step"><span className="step-number">03</span><span className="step-status">{detail.comparison.sourceVoices.length ? "확인됨" : "본문 필요"}</span></div>
-                        <h4>누구의 목소리가 실렸나</h4>
-                        {detail.comparison.sourceVoices.length ? detail.comparison.sourceVoices.map((voice) => <article key={`${voice.sourceType}-${voice.supports}`}><strong>{voice.sourceType}</strong><p>{voice.supports}</p></article>) : <p className="withheld">승인 본문이 없거나 취재원 추출이 검토되지 않아 발언 주체와 맥락을 판정하지 않습니다.</p>}
-                      </section>
-                      <section>
-                        <div className="evidence-step"><span className="step-number">04</span><span className="step-status">{detail.comparison.recommendedPair ? "추천 가능" : "추천 보류"}</span></div>
-                        <h4>기사 두 개만 읽는다면</h4>
-                        {detail.comparison.recommendedPair ? <><p>{detail.comparison.recommendedPair.reason}</p><div className="pair-links"><a href={detail.comparison.recommendedPair.primary.url} target="_blank" rel="noopener noreferrer">첫 번째 기사 열기</a><a href={detail.comparison.recommendedPair.complement.url} target="_blank" rel="noopener noreferrer">보완 기사 열기</a></div></> : <><p className="withheld">두 기사의 상호보완성을 근거로 확인할 수 없어 추천하지 않습니다.</p><button className="inline-action" type="button" onClick={() => setTab("articles")}>관련 제목을 직접 비교하기</button></>}
-                      </section>
-                    </div>
-                    {detail.articles.length > 0 && <section className="headline-evidence" aria-labelledby="headline-evidence-title"><div><p className="context-label">지금 확인 가능한 근거</p><h4 id="headline-evidence-title">매체별 기사 제목</h4></div><div>{detail.articles.slice(0, 5).map((article) => <a key={article.id} href={article.url} target="_blank" rel="noopener noreferrer"><span>{article.source}</span><strong>{article.title}</strong><small>원문 열기 →</small></a>)}</div></section>}
+                    {hasStructuredComparison(detail.comparison)
+                      ? <StructuredComparisonView comparison={detail.comparison} />
+                      : <LegacyComparisonView comparison={detail.comparison} articles={detail.articles} openArticles={() => setTab("articles")} />}
                   </div>
                 )}
                 {tab === "outlets" && <div id="analysis-panel-outlets" role="tabpanel" aria-labelledby="analysis-tab-outlets" className="outlet-list"><p className="expert-note"><strong>읽는 법</strong> 기사 수와 홈페이지 배치는 편향·사실성·논조를 판정하는 값이 아닙니다.</p><div className="outlet-head"><span>언론사</span><span>기사</span><span>홈 배치</span><span>대표 제목</span></div>{detail.outlets.map((outlet) => { const article = detail.articles.find((entry) => entry.source === outlet.source); const placement = outletPlacementLabels[outlet.placement] ?? outlet.placement; return <div className="outlet-row" key={outlet.source}><strong>{outlet.source}</strong><b>{outlet.articleCount}건</b><span className={`placement-badge${placement === "관측 없음" ? " unknown" : ""}`}>{placement}</span><p>{article ? <a href={article.url} target="_blank" rel="noopener noreferrer">{article.title}</a> : "대표 제목 미확인"}</p></div>; })}</div>}
-                {tab === "frames" && <div id="analysis-panel-frames" role="tabpanel" aria-labelledby="analysis-tab-frames" className="frame-layout">{detail.frames.length ? <><p className="expert-note frame-note"><strong>근거 범위</strong> {bodyBackedFrameCount ? `승인 본문 근거가 있는 단서 ${bodyBackedFrameCount}개와 제목 단서를 구분해 표시합니다.` : "현재는 제목에 포함된 표현 단서만 표시합니다."} 항목 합계는 100%가 아니며 독자의 인식 효과를 뜻하지 않습니다.</p><div className="frame-chart">{detail.frames.map((frame) => <div className="frame-row" key={frame.frame}><span>{frameLabels[frame.frame] ?? frame.frame}</span><div aria-hidden="true"><i style={{ width: `${frame.score}%`, background: frameColors[frame.frame] }} /></div><b>{frame.score > 0 ? `${frame.score.toFixed(1)}%` : "검출 없음"}</b></div>)}</div><div className="evidence-panel"><h3>검출된 표현 근거</h3>{detectedFrames.length ? detectedFrames.map((frame) => <article key={frame.frame}><span style={{ color: frameColors[frame.frame] }}>{frameLabels[frame.frame]}</span><p>{frame.evidenceText}</p><small><b>{frame.evidenceBasis === "headline" ? "제목 단서" : frame.evidenceBasis === "body_public" ? "승인 본문" : "비공개 본문·문장 검토 전"}</b>{frame.sourceUrl ? <> · <a href={frame.sourceUrl} target="_blank" rel="noopener noreferrer">{frame.source ?? "원문"}에서 확인 →</a></> : ` · ${frame.source ?? "출처 미확인"}`}</small></article>) : <p className="withheld">현재 근거 범위에서는 사전에 정의된 프레임 표현 단서를 검출하지 못했습니다.</p>}</div></> : <p className="withheld">기존 분석은 근거 오류 가능성이 있어 숨겼습니다. 재분석 뒤 실제로 검출된 단서만 표시합니다.</p>}</div>}
-                {tab === "articles" && <div id="analysis-panel-articles" role="tabpanel" aria-labelledby="analysis-tab-articles" className="article-table"><div className="article-tools"><div><strong>관련 원문 {detail.articles.length}건</strong><p>제목 유사도는 같은 사건을 묶기 위한 참고값이며 기사 신뢰도 점수가 아닙니다.</p></div></div><div>{detail.articles.map((article) => <article className="article-item" key={article.id}><span className="article-outlet">{article.source}</span><div><strong>{article.title}</strong><small>{formatDateTime(article.publishedAt)} · 대표 제목과 단어 유사도 {Math.round((article.similarity ?? 0) * 100)}% · {article.contentAvailable ? "승인 본문 분석 가능" : "제목 근거만 있음"}</small></div><a className="article-link" href={article.url} target="_blank" rel="noopener noreferrer">원문 열기</a></article>)}</div></div>}
+                {tab === "frames" && <div id="analysis-panel-frames" role="tabpanel" aria-labelledby="analysis-tab-frames" className="frame-layout">{detail.frames.length ? <><p className="expert-note frame-note"><strong>보조 지표</strong> {bodyBackedFrameCount ? `본문에서 관측한 일반 프레임 태그 ${bodyBackedFrameCount}개와 제목 단서를 구분해 표시합니다.` : "현재는 제목에 포함된 보조 표현 태그만 표시합니다."} 이 탭은 문제 정의·원인·책임·평가·해법 비교를 대체하지 않으며, 합계도 100%가 아닙니다.</p><div className="frame-chart">{detail.frames.map((frame) => <div className="frame-row" key={frame.frame}><span>{frameLabels[frame.frame] ?? frame.frame}</span><div aria-hidden="true"><i style={{ width: `${frame.score}%`, background: frameColors[frame.frame] }} /></div><b>{frame.score > 0 ? `${frame.score.toFixed(1)}%` : "검출 없음"}</b></div>)}</div><div className="evidence-panel"><h3>관측된 보조 표현 태그</h3>{detectedFrames.length ? detectedFrames.map((frame) => <article key={frame.frame}><span style={{ color: frameColors[frame.frame] }}>{frameLabels[frame.frame]}</span><p>{frame.evidenceText}</p><small><b>{frame.evidenceBasis === "headline" ? "제목 단서" : frame.evidenceBasis === "body_transient" ? "임시 본문 분석 · 전문 미저장" : frame.evidenceBasis === "body_public" ? "이용 허가 본문" : "비공개 본문·문장 검토 전"}</b>{frame.sourceUrl ? <> · <a href={frame.sourceUrl} target="_blank" rel="noopener noreferrer">{frame.source ?? "원문"}에서 확인 →</a></> : ` · ${frame.source ?? "출처 미확인"}`}</small></article>) : <p className="withheld">현재 근거 범위에서는 사전에 정의된 보조 표현 태그를 검출하지 못했습니다.</p>}</div></> : <p className="withheld">기존 분석은 근거 오류 가능성이 있어 숨겼습니다. 재분석 뒤 실제로 검출된 보조 태그만 표시합니다.</p>}</div>}
+                {tab === "articles" && <div id="analysis-panel-articles" role="tabpanel" aria-labelledby="analysis-tab-articles" className="article-table"><div className="article-tools"><div><strong>관련 원문 {detail.articles.length}건</strong><p>제목 유사도는 같은 사건을 묶기 위한 참고값이며 기사 신뢰도 점수가 아닙니다.</p></div></div><div>{detail.articles.map((article) => <article className="article-item" key={article.id}><span className="article-outlet">{article.source}</span><div><strong>{article.title}</strong><small>{formatDateTime(article.publishedAt)} · 대표 제목과 단어 유사도 {Math.round((article.similarity ?? 0) * 100)}% · {article.contentAvailable ? "본문 구조화 초안 있음" : "제목 근거만 있음"}</small></div><a className="article-link" href={article.url} target="_blank" rel="noopener noreferrer">원문 열기</a></article>)}</div></div>}
               </>
             )}
           </article>
@@ -463,7 +835,7 @@ export default function AgendaDashboard() {
             <label><span>게시일</span><input type="date" value={filters.date} onChange={(event) => setFilters({ ...filters, date: event.target.value })} /></label>
             <div className="live-filter-actions"><button type="submit" disabled={articleLoading}>{articleLoading ? "검색 중…" : "검색"}</button><button type="button" onClick={resetFilters}>초기화</button></div>
           </form>
-          {articleError ? <p className="live-empty error-state" role="alert"><strong>기사 목록을 갱신하지 못했습니다.</strong><span>{articleError}</span><button type="button" onClick={() => loadArticles()}>기사 다시 불러오기</button></p> : articleLoading && !articles.length ? <p className="live-empty" role="status">조건에 맞는 기사를 찾고 있습니다…</p> : !articles.length ? <p className="live-empty"><strong>조건에 맞는 기사가 없습니다.</strong><span>검색어를 줄이거나 날짜·분야 필터를 지워 보세요.</span></p> : <div className="live-article-grid" aria-busy={articleLoading}>{articles.map((article) => <article className="live-article" key={article.id}><div className="live-article-meta"><span className="live-source">{article.source}</span><span>{article.section ?? "분야 미분류"}</span>{article.contentAvailable ? <span className="content-evidence-badge">승인 본문</span> : null}</div><h3><a href={article.url} target="_blank" rel="noopener noreferrer">{article.title}</a></h3><p className="live-article-detail">게시 {formatDateTime(article.publishedAt)}<br />홈페이지 {article.homepagePlacement ? placementLabels[article.homepagePlacement] : "배치 관측 없음"}{article.homepageRank ? ` · ${article.homepageRank}위` : ""}{article.placementObservationCount ? ` · ${article.placementObservationCount}회 관측` : ""}</p><a className="live-original" href={article.url} target="_blank" rel="noopener noreferrer">원문 열기 <span aria-hidden="true">→</span></a></article>)}</div>}
+          {articleError ? <p className="live-empty error-state" role="alert"><strong>기사 목록을 갱신하지 못했습니다.</strong><span>{articleError}</span><button type="button" onClick={() => loadArticles()}>기사 다시 불러오기</button></p> : articleLoading && !articles.length ? <p className="live-empty" role="status">조건에 맞는 기사를 찾고 있습니다…</p> : !articles.length ? <p className="live-empty"><strong>조건에 맞는 기사가 없습니다.</strong><span>검색어를 줄이거나 날짜·분야 필터를 지워 보세요.</span></p> : <div className="live-article-grid" aria-busy={articleLoading}>{articles.map((article) => <article className="live-article" key={article.id}><div className="live-article-meta"><span className="live-source">{article.source}</span><span>{article.section ?? "분야 미분류"}</span>{article.contentAvailable ? <span className="content-evidence-badge">이용 허가 본문</span> : null}</div><h3><a href={article.url} target="_blank" rel="noopener noreferrer">{article.title}</a></h3><p className="live-article-detail">게시 {formatDateTime(article.publishedAt)}<br />홈페이지 {article.homepagePlacement ? placementLabels[article.homepagePlacement] : "배치 관측 없음"}{article.homepageRank ? ` · ${article.homepageRank}위` : ""}{article.placementObservationCount ? ` · ${article.placementObservationCount}회 관측` : ""}</p><a className="live-original" href={article.url} target="_blank" rel="noopener noreferrer">원문 열기 <span aria-hidden="true">→</span></a></article>)}</div>}
           <div className="live-pagination">{articleOffset < articleTotal && <button type="button" disabled={articleLoading} onClick={() => loadArticles({ append: true })}>{articleLoading ? "기사 불러오는 중…" : "기사 12건 더 보기"}</button>}</div>
           <p className="panel-note"><span aria-hidden="true">ⓘ</span> 기사 전문은 명시적인 이용 근거가 확인된 자료만 비공개 분석 저장소에 보관합니다. 공개 화면에는 전문을 제공하지 않습니다.</p>
         </section>
@@ -473,7 +845,7 @@ export default function AgendaDashboard() {
 
       <footer><div className="brand footer-brand"><span className="brand-mark" aria-hidden="true">AF</span><span className="brand-copy"><b>AgendaFrame</b><small>보도 근거 비교</small></span></div><p>22개 종합일간지·경제매체·뉴스통신사 온라인 표본 · 방송 제외 · 자동 분석 검토 전</p><button type="button" onClick={() => setMethodOpen(true)}>방법론과 한계</button></footer>
 
-      <dialog ref={methodDialogRef} className="modal" aria-labelledby="method-dialog-title" aria-describedby="method-dialog-description" onCancel={() => setMethodOpen(false)} onClose={() => setMethodOpen(false)}><form method="dialog"><button className="modal-close" aria-label="방법론 닫기">×</button></form><p className="context-label">보도 집중도 v4</p><h2 id="method-dialog-title">집중도는 중요도 점수가 아닙니다</h2><p className="modal-lead" id="method-dialog-description">22개 주요 종합일간지·경제매체·뉴스통신사의 온라인 뉴스 표본에서 한 사건이 얼마나 넓고 반복적으로 노출됐는지 보여주는 0–100 지표입니다. 사회적 중요도·진실성·기사 품질·여론을 평가하지 않습니다.</p><div className="formula" aria-label="보도 집중도 가중치"><span>독립 미디어그룹 커버리지 <b>45%</b></span><i>+</i><span>기사량 <b>30%</b></span><i>+</i><span>관측된 홈 배치 <b>15%</b></span><i>+</i><span>후속 보도량 <b>10%</b></span></div><p className="modal-detail">동일 미디어그룹의 여러 매체는 커버리지에서 한 번만 셉니다. 홈페이지 배치는 반복 관측이 있으면 기사별 평균을 사용하고, 관측이 없는 기사는 중립값으로 추정하지 않습니다. TV 편성·영상 리포트와 온라인 기사 배열을 같은 기준으로 비교할 수 없어 방송사는 표본에서 제외했습니다.</p><p className="method-caution"><strong>현재 제공 범위</strong> 이용 권한이 확인된 본문만 비공개로 분석하며, 나머지는 제목 단서로 제한합니다. 본문 표현 단서가 있어도 원인·책임·해법·취재원 비교는 구조화 분석과 사람 검토 전까지 보류합니다.</p></dialog>
+      <dialog ref={methodDialogRef} className="modal" aria-labelledby="method-dialog-title" aria-describedby="method-dialog-description" onCancel={() => setMethodOpen(false)} onClose={() => setMethodOpen(false)}><form method="dialog"><button className="modal-close" aria-label="방법론 닫기">×</button></form><p className="context-label">보도 집중도 v4</p><h2 id="method-dialog-title">집중도는 중요도 점수가 아닙니다</h2><p className="modal-lead" id="method-dialog-description">22개 주요 종합일간지·경제매체·뉴스통신사의 온라인 뉴스 표본에서 한 사건이 얼마나 넓고 반복적으로 노출됐는지 보여주는 0–100 지표입니다. 사회적 중요도·진실성·기사 품질·여론을 평가하지 않습니다.</p><div className="formula" aria-label="보도 집중도 가중치"><span>독립 미디어그룹 커버리지 <b>45%</b></span><i>+</i><span>기사량 <b>30%</b></span><i>+</i><span>관측된 홈 배치 <b>15%</b></span><i>+</i><span>후속 보도량 <b>10%</b></span></div><p className="modal-detail">동일 미디어그룹의 여러 매체는 커버리지에서 한 번만 셉니다. 홈페이지 배치는 반복 관측이 있으면 기사별 평균을 사용하고, 관측이 없는 기사는 중립값으로 추정하지 않습니다. TV 편성·영상 리포트와 온라인 기사 배열을 같은 기준으로 비교할 수 없어 방송사는 표본에서 제외했습니다.</p><p className="method-caution"><strong>현재 제공 범위</strong> 이슈 묶음과 집중도는 제목·배치 메타데이터를 사용합니다. 이용 권한이 확인된 본문은 비공개로 분석하고, 공개 기사 본문은 메모리에서 임시 분석한 뒤 폐기합니다. 문제·원인·책임·평가·해법과 취재원 구성은 근거 위치에 연결한 자동 구조화 초안으로 제공하며, 사람 검토 전 결과이므로 사실성·편향·의도 판정이 아닙니다.</p></dialog>
     </>
   );
 }

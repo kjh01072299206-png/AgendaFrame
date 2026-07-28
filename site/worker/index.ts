@@ -15,6 +15,7 @@ interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
   CONTENT: ContentBucket;
+  ARTICLE_FETCHER?: Fetcher;
   IMPORT_TOKEN?: string;
   IMAGES: {
     input(stream: ReadableStream): {
