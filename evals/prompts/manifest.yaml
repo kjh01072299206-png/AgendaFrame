@@ -1,0 +1,11 @@
+schema_version: 1
+prompts:
+  - id: frame-analysis
+    version: 1.0.0
+    path: frame-analysis-v1.0.0.md
+    output_schema: schemas/frame-output.schema.json
+    taxonomy_version: frames-ko-v1.0.0
+  - id: report-generation
+    version: 1.0.0
+    path: report-generation-v1.0.0.md
+    output_schema: schemas/report-output.schema.json
