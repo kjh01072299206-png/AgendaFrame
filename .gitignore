@@ -14,6 +14,9 @@ service-account*.json
 *.pptx
 *.ppt
 *.zip
+*.docx
+!docs/submission/final-report.docx
+문서_행정보고/
 *신청서*
 *지원비*
 *자문비*
@@ -49,6 +52,10 @@ coverage/
 # Local runtime / generated scratch
 tmp/
 tmp_*/
+.codex-tmp-*/
+.codex-worktrees/
+.agents/
+새 폴더/
 *.tar.gz
 *.zip
 

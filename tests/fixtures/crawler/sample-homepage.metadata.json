@@ -1,0 +1,8 @@
+{
+  "fixture_version": 1,
+  "source_url": "https://news.example.invalid/",
+  "captured_at": "2026-07-01T00:00:00Z",
+  "selector_version": "sample-v1",
+  "content_kind": "synthetic",
+  "sanitized": true
+}
