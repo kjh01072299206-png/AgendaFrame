@@ -7,6 +7,7 @@
   "oneOf": [
     { "$ref": "#/$defs/HealthResponse" },
     { "$ref": "#/$defs/ArticleListResponse" },
+    { "$ref": "#/$defs/IssueDateListResponse" },
     { "$ref": "#/$defs/IssueListResponse" },
     { "$ref": "#/$defs/IssueDetailResponse" },
     { "$ref": "#/$defs/SourceListResponse" },
@@ -70,7 +71,7 @@
         "issueDate": { "type": "string", "format": "date" },
         "title": { "type": "string" },
         "summary": { "type": "string" },
-        "category": { "type": "string" },
+        "category": { "enum": ["정치", "경제", "사회", "국제", "스포츠", "생활·IT"] },
         "articleCount": { "type": "integer", "minimum": 1 },
         "sourceCount": { "type": "integer", "minimum": 1 },
         "agendaScore": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
@@ -302,6 +303,28 @@
         "meta": { "$ref": "#/$defs/LineageMeta" }
       },
       "additionalProperties": true
+    },
+    "IssueDateListResponse": {
+      "type": "object",
+      "required": ["dates", "meta"],
+      "properties": {
+        "dates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["date", "analyzedAt", "articleCount", "issueCount"],
+            "properties": {
+              "date": { "type": "string", "format": "date" },
+              "analyzedAt": { "type": ["integer", "null"] },
+              "articleCount": { "type": "integer", "minimum": 0 },
+              "issueCount": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "meta": { "$ref": "#/$defs/LineageMeta" }
+      },
+      "additionalProperties": false
     },
     "IssueDetailResponse": {
       "type": "object",

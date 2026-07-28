@@ -1,8 +1,21 @@
 export const ANALYSIS_PROVIDER = "structured_extractive";
 export const ANALYSIS_MODEL_VERSION = "agenda-structure-v5";
-export const CLUSTERING_VERSION = "event-anchors-complete-link-v4";
+export const CLUSTERING_VERSION = "agenda-concepts-complete-link-v5";
 export const SCORE_VERSION = "observed-agenda-v4";
 export const FRAME_TAXONOMY_VERSION = "frame-elements-v5";
+export const PUBLIC_AGENDA_CATEGORIES = Object.freeze(["정치", "경제", "사회", "국제", "스포츠", "생활·IT"]);
+const SECONDARY_AGENDA_CATEGORIES = new Set(["스포츠", "생활·IT"]);
+
+const agendaConceptDefinitions = [
+  { key: "supplementary-investigation-authority", label: "보완수사권 행사 범위", patterns: [/보완\s*수사권/u] },
+  { key: "platform-terms-fees", label: "플랫폼 약관·수수료 정책", patterns: [/쿠팡|배달앱|온라인\s*플랫폼/u, /약관|수수료|멤버십|해지|가격/u] },
+];
+
+const excludedSectionPattern = /연예|문화|생활|여행|레저/iu;
+const sportsSectionPattern = /스포츠|골프|야구|축구|농구|배구|e스포츠/iu;
+const sportsTitlePattern = /프로야구|프로축구|프로농구|올림픽|월드컵|선수\s*(영입|이적)|감독\s*(선임|경질)/u;
+const technologySectionPattern = /IT|과학|테크|디지털|모바일|게임/iu;
+const publicTechnologyPattern = /정부|국회|정책|규제|법안|공정위|조사|제재|소비자|노동|수수료|약관|독과점|플랫폼|반도체\s*(지원|투자|수출)|AI\s*(법|규제|정책)/iu;
 
 const frameDefinitions = {
   conflict: { label: "갈등·대립", words: ["갈등", "충돌", "논란", "반발", "대립", "공방", "비판", "파문", "강대강", "규탄"] },
@@ -91,6 +104,13 @@ function normalizedTitle(title) {
   return String(title ?? "").normalize("NFKC").toLowerCase().replace(/[^0-9a-z가-힣]+/g, "");
 }
 
+function agendaConcepts(title) {
+  const normalized = String(title ?? "").normalize("NFKC");
+  return agendaConceptDefinitions
+    .filter((definition) => definition.patterns.every((pattern) => pattern.test(normalized)))
+    .map((definition) => definition.key);
+}
+
 function eventFeatures(article) {
   const title = String(article.title ?? "").normalize("NFKC");
   const actors = [];
@@ -102,27 +122,32 @@ function eventFeatures(article) {
   return {
     actors: [...new Set(actors)],
     actions,
+    concepts: agendaConcepts(title),
     discriminators,
     normalized: normalizedTitle(title),
   };
 }
 
-function topCategory(article) {
+export function classifyAgendaCategory(article) {
   const section = String(article.section ?? "").trim();
-  const first = section.split(/[>/_]/)[0]?.trim();
-  if (first && !["종합", "속보", "사회"].includes(first)) return first;
-
   const title = String(article.title ?? "");
+  if (sportsSectionPattern.test(section) || sportsTitlePattern.test(title)) return "스포츠";
+  if (excludedSectionPattern.test(section)) return null;
+  if (technologySectionPattern.test(section) && !publicTechnologyPattern.test(title)) return "생활·IT";
+
+  if (/국제|세계|외교|북한/u.test(section)) return "국제";
+  if (/정치|국회|대통령|정당/u.test(section)) return "정치";
+  if (/경제|금융|산업|부동산|증권|기업/u.test(section)) return "경제";
+  if (/사회|전국|지역|교육|복지|노동|환경|법조|사법|검찰/u.test(section)) return "사회";
+
   const categoryScores = {
-    "정치": (title.match(/국회|대통령|여당|야당|정당|원내대표|지도부|의원|선거|정쟁|거취/g) ?? []).length,
-    "사법·검찰": (title.match(/검찰|경찰|수사|법원|헌재|기소|재판|영장|송치|판결|의혹|입건/g) ?? []).length,
-    "경제": (title.match(/금리|물가|주가|부동산|환율|고용|일자리|기업|금융|무역|세금|예산|증시|재정/g) ?? []).length,
-    "사회·노동": (title.match(/노동|파업|사고|참사|재난|보건|복지|교육|환경|교통|안전|시위/g) ?? []).length,
-    "국제·외교": (title.match(/외교|안보|국방|북한|미사일|미국|중국|일본|정상회담|전쟁|트럼프/g) ?? []).length,
-    "IT·과학": (title.match(/인공지능|AI|반도체|IT|통신|우주|플랫폼|기술/g) ?? []).length,
+    "정치": (title.match(/국회|대통령|여당|야당|정당|원내대표|지도부|의원|선거|정쟁|거취|검찰개혁|수사권/g) ?? []).length,
+    "경제": (title.match(/금리|물가|주가|부동산|환율|고용|일자리|기업|금융|무역|세금|예산|증시|재정|수수료|약관|공정위|쿠팡|플랫폼/g) ?? []).length,
+    "사회": (title.match(/검찰|경찰|수사|법원|헌재|기소|재판|영장|송치|판결|의혹|입건|노동|파업|사고|참사|재난|보건|복지|교육|환경|교통|안전|시위/g) ?? []).length,
+    "국제": (title.match(/외교|안보|국방|북한|미사일|미국|중국|일본|정상회담|전쟁|트럼프/g) ?? []).length,
   };
 
-  let maxCategory = "사회";
+  let maxCategory = null;
   let maxScore = 0;
   for (const [cat, score] of Object.entries(categoryScores)) {
     if (score > maxScore) {
@@ -133,17 +158,23 @@ function topCategory(article) {
   return maxCategory;
 }
 
+function topCategory(article) {
+  return article._category ?? classifyAgendaCategory(article);
+}
+
 function compatibleEvent(left, right) {
   if (left._event.normalized === right._event.normalized) return true;
   if (topCategory(left) !== topCategory(right)) return false;
 
   const compared = similarity(left._tokens, right._tokens);
+  const sharedConcepts = overlapCount(left._event.concepts, right._event.concepts);
   const sharedDiscriminators = overlapCount(left._event.discriminators, right._event.discriminators);
   const leftActors = left._event.actors;
   const rightActors = right._event.actors;
   const leftActions = left._event.actions;
   const rightActions = right._event.actions;
 
+  if (sharedConcepts > 0) return true;
   if (leftActors.length >= 2 && rightActors.length >= 2 && overlapCount(leftActors, rightActors) === 0) return false;
   if (leftActions.length && rightActions.length && overlapCount(leftActions, rightActions) === 0) return false;
   if (leftActors.length >= 2 && rightActors.length >= 2 && sharedDiscriminators < 1) return false;
@@ -171,28 +202,68 @@ function representativeArticle(articles) {
   return articles[bestIndex];
 }
 
-export function cleanHeadlineToIssueTitle(rawTitle) {
+export function cleanHeadlineToIssueTitle(rawTitle, articles = []) {
   if (!rawTitle) return "주요 이슈";
-  let title = String(rawTitle)
+
+  const clean = String(rawTitle)
     .replace(/\[[^\]]*\]|\([^)]*\)|<[^>]*>/g, " ")
     .replace(/^[0-9가-힣A-Za-z]+\s*기자\s*=/g, "")
-    .replace(/["'“”‘’]/g, "")
-    .replace(/[\.\?!…\:]+/g, " ")
+    .replace(/['"“”‘’'`\(\)\[\]]/gu, " ")
+    .replace(/[\.\?!…\:\-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
-  const tokens = titleTokens(title);
-  if (tokens.length >= 2) {
-    const selected = tokens.slice(0, 4);
-    const suffix = detectIssueSuffix([{ title: rawTitle }]);
-    return selected.join(" ") + (suffix ? " " + suffix : "");
+  const conceptCounts = new Map();
+  for (const article of articles.length ? articles : [{ title: rawTitle }]) {
+    for (const concept of agendaConcepts(article.title)) {
+      conceptCounts.set(concept, (conceptCounts.get(concept) ?? 0) + 1);
+    }
   }
-  return title || "주요 이슈";
+  const leadingConcept = [...conceptCounts.entries()].sort((left, right) => right[1] - left[1])[0]?.[0];
+  const conceptDefinition = agendaConceptDefinitions.find((definition) => definition.key === leadingConcept);
+  if (conceptDefinition) return conceptDefinition.label;
+
+  const actors = [];
+  if (/국힘|국민의힘|원내지도부/.test(clean)) actors.push("국민의힘 지도부");
+  else if (/민주당|더불어민주당/.test(clean)) actors.push("민주당");
+  else if (/정부|대통령실|대통령/.test(clean)) actors.push("정부");
+  else if (/검찰|경찰|수사본부/.test(clean)) actors.push("검경 수사팀");
+  else if (/쿠팡/.test(clean)) actors.push("쿠팡");
+
+  if (clean.includes("권영진")) actors.push("권영진 의원");
+  if (clean.includes("정점식")) actors.push("정점식 의원");
+  if (clean.includes("한동훈")) actors.push("한동훈 대표");
+  if (clean.includes("이재명")) actors.push("이재명 대표");
+  if (clean.includes("윤석열")) actors.push("윤석열 대통령");
+
+  const actions = [];
+  if (/멱살|충돌|공방|대립|내홍|소동|파문/.test(clean)) actions.push("내부 갈등 및 충돌");
+  if (/거취|사퇴|퇴진/.test(clean)) actions.push("거취 표명 요구");
+  if (/수사|조사|기소|영장|체포/.test(clean)) actions.push("수사 진행");
+  if (/수수료|가격|인상|해지|위반|제재|조사/.test(clean)) actions.push("운영 정책 논란");
+  if (/정책|지원|대책|개편|추진/.test(clean)) actions.push("정책 동향");
+
+  if (actors.length > 0 && actions.length > 0) {
+    const actorStr = [...new Set(actors)].join("·");
+    const actionStr = [...new Set(actions)].join(" ");
+    return `${actorStr} ${actionStr}`;
+  }
+
+  const tokens = titleTokens(clean).filter((t) => !["멱살", "소동", "파문", "속보"].includes(t));
+  if (tokens.length >= 2) {
+    const selected = tokens.slice(0, 3);
+    const suffix = detectIssueSuffix(articles.length ? articles : [{ title: rawTitle }]) || "이슈";
+    return selected.join(" ") + " " + suffix;
+  }
+
+  return clean || "주요 이슈";
 }
 
 function synthesizeIssueTitle(articles, representative) {
   if (!articles || articles.length === 0) return "주요 이슈";
-  if (articles.length === 1) return cleanHeadlineToIssueTitle(representative.title);
+
+  const eventTitle = cleanHeadlineToIssueTitle(representative.title, articles);
+  if (eventTitle && eventTitle !== "주요 이슈") return eventTitle;
 
   const freq = new Map();
   for (const article of articles) {
@@ -208,7 +279,7 @@ function synthesizeIssueTitle(articles, representative) {
     .map(([token]) => token)
     .slice(0, 5);
 
-  if (common.length < 2) return cleanHeadlineToIssueTitle(representative.title);
+  if (common.length < 2) return cleanHeadlineToIssueTitle(representative.title, articles);
 
   const repTokenOrder = representative._tokens;
   const ordered = common.slice().sort(
@@ -422,10 +493,12 @@ function clusterArticles(articles) {
 
 export function analyzeArticles(inputArticles, { configuredSourceCount = 5, configuredSourceGroupCount = configuredSourceCount, maxIssues = 80 } = {}) {
   const articles = inputArticles.map((article, index) => {
-    const prepared = { ...article, _index: index, _tokens: titleTokens(article.title) };
+    const category = classifyAgendaCategory(article);
+    if (!category) return null;
+    const prepared = { ...article, _index: index, _tokens: titleTokens(article.title), _category: category };
     prepared._event = eventFeatures(prepared);
     return prepared;
-  });
+  }).filter(Boolean);
   const groups = clusterArticles(articles);
   const maxArticleCount = Math.max(1, ...groups.map((group) => group.length));
 
@@ -471,6 +544,7 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
           delete cleanArticle._index;
           delete cleanArticle._tokens;
           delete cleanArticle._event;
+          delete cleanArticle._category;
           delete cleanArticle.bodyText;
           delete cleanArticle.publicEvidenceAllowed;
           delete cleanArticle.contentVersionId;
@@ -490,7 +564,10 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
       issue.report = reportFor(issue, issue.frames);
       return issue;
     })
-    .sort((left, right) => right.agendaScore - left.agendaScore || right.articleCount - left.articleCount)
+    .sort((left, right) =>
+      Number(SECONDARY_AGENDA_CATEGORIES.has(left.category)) - Number(SECONDARY_AGENDA_CATEGORIES.has(right.category))
+      || right.agendaScore - left.agendaScore
+      || right.articleCount - left.articleCount)
     .slice(0, maxIssues);
 }
 

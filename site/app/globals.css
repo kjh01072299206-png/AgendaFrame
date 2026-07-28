@@ -408,6 +408,11 @@ body { background: var(--paper); font-size: 14px; line-height: 1.55; }
 .section-heading h2 { font-family: var(--font-sans); font-size: 25px; line-height: 1.22; letter-spacing: -.025em; }
 .section-description { max-width: 650px; margin: 6px 0 0; color: var(--muted); font-size: 12px; }
 .issue-count { padding-top: 3px; padding-bottom: 0; }
+.agenda-heading { gap: 16px; }
+.issue-date-control { flex: none; display: grid; gap: 5px; color: var(--muted); font-size: 11px; font-weight: 700; }
+.issue-date-control select { min-width: 164px; height: 38px; padding: 0 32px 0 10px; border: 1px solid var(--line-strong); border-radius: 8px; background: white; color: var(--ink); font-size: 12px; font-weight: 700; }
+.issue-date-control select:disabled { cursor: not-allowed; opacity: .65; }
+.issue-count-row { display: flex; align-items: center; justify-content: flex-end; margin-top: 14px; color: var(--muted); font-size: 11px; }
 .filter-row { gap: 6px; margin: 18px 0 14px; }
 .filter-pill { min-height: 36px; padding: 6px 11px; font-size: 12px; }
 .agenda-list { gap: 5px; }
@@ -424,7 +429,7 @@ body { background: var(--paper); font-size: 14px; line-height: 1.55; }
 .agenda-score small { font-size: 11px; }
 .panel-note { margin-top: 14px; font-size: 11px; line-height: 1.6; }
 
-.detail-panel { min-height: 720px; padding: 30px clamp(24px, 3vw, 44px) 42px; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--panel); }
+.detail-panel { min-height: 720px; padding: 30px clamp(24px, 3vw, 44px) 42px; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--panel); scroll-margin-top: 84px; }
 .mobile-back { display: none; }
 .detail-kicker p { font-size: 11px; }
 .confidence { padding: 5px 8px; font-size: 11px; }
@@ -565,6 +570,16 @@ body { background: var(--paper); font-size: 14px; line-height: 1.55; }
 .article-link, .inline-action, .pair-links a { border-color: var(--line-strong); background: white; }
 
 .live-feed { width: min(1440px, calc(100% - 48px)); margin: 0 auto 64px; padding: 30px 34px; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--panel); box-shadow: none; }
+.archive-section { padding: 0; }
+.archive-disclosure > summary { min-height: 92px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px 28px; cursor: pointer; list-style: none; }
+.archive-disclosure > summary::-webkit-details-marker { display: none; }
+.archive-disclosure > summary > span:first-child { min-width: 0; display: grid; gap: 5px; }
+.archive-disclosure > summary b { font-size: 17px; letter-spacing: -.015em; }
+.archive-disclosure > summary small { max-width: 70ch; color: var(--muted); font-size: 12px; line-height: 1.55; text-wrap: pretty; }
+.archive-action { flex: none; min-height: 38px; display: inline-flex; align-items: center; padding: 7px 11px; border: 1px solid var(--line-strong); border-radius: 8px; background: white; color: var(--accent); font-size: 12px; font-weight: 750; }
+.archive-disclosure[open] .archive-action::after { content: " 닫기"; }
+.archive-disclosure:not([open]) .archive-action::after { content: " 열기"; }
+.archive-body { padding: 26px 34px 30px; border-top: 1px solid var(--line); }
 .live-heading { margin-bottom: 18px; }
 .live-heading h2 { font-family: var(--font-sans); font-size: 28px; letter-spacing: -.025em; }
 .live-filter-form { grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(120px, .7fr)) auto; gap: 8px; margin-bottom: 12px; padding: 12px; border: 0; border-radius: 10px; background: var(--paper); }
@@ -662,6 +677,9 @@ body > footer { gap: 24px; padding: 22px max(24px, calc((100vw - 1440px) / 2)); 
   .overview-status dd { text-align: right; }
   .workspace, .live-feed { margin-bottom: 42px; }
   .ranking-panel { padding: 20px 14px; border-radius: 11px; }
+  .agenda-heading { display: grid; grid-template-columns: 1fr; }
+  .issue-date-control { width: 100%; }
+  .issue-date-control select { width: 100%; }
   .detail-panel { padding: 24px 16px 30px; border-radius: 11px; }
   .detail-title-row { grid-template-columns: 1fr; gap: 10px; }
   .detail-title-row h2 { font-size: 27px; }
@@ -693,6 +711,10 @@ body > footer { gap: 24px; padding: 22px max(24px, calc((100vw - 1440px) / 2)); 
   .context-gap-list dl div { grid-template-columns: 96px minmax(0, 1fr); }
   .headline-evidence { grid-template-columns: 1fr; }
   .live-feed { padding: 24px 14px; }
+  .archive-section { padding: 0; }
+  .archive-disclosure > summary { align-items: flex-start; flex-direction: column; gap: 14px; padding: 20px 16px; }
+  .archive-action { width: 100%; justify-content: center; }
+  .archive-body { padding: 22px 14px 24px; }
   .live-filter-form { grid-template-columns: 1fr; }
   .live-filter-actions { grid-column: auto; }
   .live-article { display: block; padding: 18px 2px; }
