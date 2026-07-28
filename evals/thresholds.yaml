@@ -1,6 +1,11 @@
 schema_version: 2
 evaluation_dataset_version: not_configured
+dataset_status: synthetic_schema_only
+release_eligible: false
 release_status: blocked_until_labeled_holdout
+
+release_policy:
+  allow_synthetic_only: false
 
 human_review:
   minimum_independent_annotators: 2
@@ -9,21 +14,36 @@ human_review:
   locked_holdout_required: true
 
 clustering:
-  pairwise_f1_min: 0.90
-  overmerge_rate_max: 0.05
-  undermerge_rate_max: 0.10
+  pairwise_f1:
+    operator: gte
+    value: 0.90
+  overmerge_rate:
+    operator: lte
+    value: 0.05
+  undermerge_rate:
+    operator: lte
+    value: 0.10
   hard_negative_accuracy_min: 0.95
 
-frames:
-  macro_f1_min: 0.80
+framing:
+  macro_f1:
+    operator: gte
+    value: 0.80
+  evidence_exact_substring_rate:
+    operator: gte
+    value: 0.90
   per_frame_recall_min: 0.70
   evidence_precision_min: 0.90
   evidence_recall_min: 0.75
 
-reporting:
-  citation_coverage_min: 0.95
+report:
+  citation_coverage:
+    operator: gte
+    value: 0.95
+  unsupported_claim_rate:
+    operator: lte
+    value: 0.02
   citation_support_precision_min: 0.95
-  unsupported_claim_rate_max: 0.02
 
 calibration:
   required_before_numeric_confidence: true

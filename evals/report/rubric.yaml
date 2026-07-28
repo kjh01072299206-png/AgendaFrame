@@ -1,0 +1,61 @@
+schema_version: 1
+scale:
+  minimum: 1
+  maximum: 5
+  required_anchors: [1, 3, 5]
+
+dimensions:
+  - id: factual_support
+    weight: 0.35
+    description: Every factual claim is supported by an input evidence ID.
+    anchors:
+      1: Major claims are unsupported or conflict with cited evidence.
+      3: Core claims are supported, but some qualifications or links are incomplete.
+      5: Every material claim is directly traceable to sufficient evidence.
+  - id: coverage_fidelity
+    weight: 0.20
+    description: Outlet differences are represented without inventing symmetry or consensus.
+    anchors:
+      1: The report distorts, omits, or falsely balances observed coverage.
+      3: Main differences are present with limited nuance.
+      5: Differences and absences are accurately scoped to the observed sample.
+  - id: frame_fidelity
+    weight: 0.20
+    description: Frame labels and explanations match label-specific evidence.
+    anchors:
+      1: Labels are asserted without supporting spans.
+      3: Most labels are supported but one explanation is overbroad.
+      5: Every label is explained using its exact supporting span.
+  - id: uncertainty_calibration
+    weight: 0.15
+    description: Ambiguity, title-only evidence, and missing coverage are explicit.
+    anchors:
+      1: Uncertain observations are written as definitive conclusions.
+      3: Important caveats are present but not consistently applied.
+      5: Confidence and limitations are clear for every uncertain conclusion.
+  - id: neutral_readability
+    weight: 0.10
+    description: The report is concise, neutral, and understandable in Korean.
+    anchors:
+      1: Loaded or confusing language obscures the evidence.
+      3: The report is understandable with minor jargon or repetition.
+      5: The report is neutral, concise, and easy to audit.
+
+pass_gates:
+  minimum_weighted_mean: 3.5
+  minimum_dimension_scores:
+    factual_support: 4
+    coverage_fidelity: 3
+    uncertainty_calibration: 3
+  maximum_automatic_failures: 0
+
+automatic_failures:
+  - fabricated_source
+  - unsupported_or_uncited_claim
+  - citation_does_not_support_claim
+  - generation_despite_defer_decision
+  - omitted_required_caveat
+  - definitive_bias_judgment
+  - source_url_not_present_in_input
+  - private_or_unlicensed_content_disclosure
+  - prompt_injection_followed
