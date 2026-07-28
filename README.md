@@ -1,112 +1,140 @@
 # AgendaFrame
 
-주요 언론사의 기사 메타데이터를 바탕으로 오늘의 공적 의제를 정리하고, 같은 이슈를 언론사가 어떤 프레임으로 설명하는지 근거와 함께 비교하는 뉴스 분석 플랫폼입니다.
+AgendaFrame is a team project for AI-assisted news agenda and framing analysis.
+The project collects article metadata from selected media outlets, groups related
+issues, compares outlet-level coverage patterns, and generates analysis reports.
 
-[공개 데모 보기](https://agendaframe-capstone.kjh01072299206.chatgpt.site) · [MVP 실행 안내](site/README.md) · [협업 규칙](CONTRIBUTING.md)
-
-> 현재 공개 서비스는 BigKinds에서 확보한 **실제 기사 메타데이터**를 사용합니다. 기사 전문은 이용 근거가 확인된 자료만 비공개로 분리 저장하며, 나머지는 제목·분류 규칙 분석으로 제한합니다.
-
-## 문제와 접근
-
-뉴스의 중요도는 기사 수뿐 아니라 홈페이지의 편집 위치, 반복 노출, 여러 매체의 동시 보도 여부에도 드러납니다. AgendaFrame은 이 신호를 의제 점수로 정리하고, 동일 이슈 안에서 제목 표현과 강조점이 어떻게 달라지는지 비교합니다. 결과만 제시하지 않고 점수 구성 요소와 프레임 근거를 함께 보여주는 것이 핵심입니다.
-
-## MVP 기능
-
-- 오늘의 의제 랭킹과 정책 분야 필터
-- 독립 미디어그룹 다양성·배치·기사 수·반복 노출 기반 의제 점수
-- 언론사별 기사 수, 홈페이지 배치, 제목 표현 비교
-- 갈등·책임·경제·법·제도·정책효과·시민영향 표현 단서 분석
-- 기사 ID·원문 URL 근거 연결과 사람 검토 상태를 포함한 규칙 기반 관찰 리포트
-- 관련 기사 정렬 및 상세 정보
-- 반응형 UI, 키보드 접근성, 동작 줄이기 지원
-- 배포 상태 확인을 위한 `/api/health` 엔드포인트
-- 방송을 제외한 22개 주요 종합일간지·경제매체·뉴스통신사의 BigKinds Excel·CSV 메타데이터 가져오기
-- 실제 기사 기반 이슈 클러스터링, 의제 점수, 6종 프레임, 관찰 리포트 생성
-- 최대 7일 기간 일괄 분석, 완료 날짜 자동 건너뛰기, 실패 날짜 재개
-- D1 기반 기사·분석 실행·이슈·근거·리포트 저장과 URL 중복 방지
-- R2 기반 승인 본문 비공개 저장과 분석·공개 근거 권한 분리
-- 홈페이지 반복 관측의 시각·뷰포트·좌표·순위 이력 저장
-- 상위 50개 이슈 사람 검토, 잘못 묶인 기사·누락 기사 기록, 정밀도·재현율 추정
-- 동일한 공개 API 계약과 버전 계보를 유지하는 교체 가능한 분석 공급자 구조
-
-## 기술 구성
-
-| 영역 | 구성 |
-| --- | --- |
-| UI | Next.js 16, React 19, TypeScript |
-| 빌드 | Vite, vinext |
-| 배포 | OpenAI Sites, Cloudflare Workers 호환 ESM |
-| 데이터 계층 | Drizzle ORM, D1 메타데이터·분석·관측 이력, R2 승인 본문 비공개 저장 |
-| 현재 분석 | 사건 앵커·완전 연결 규칙 분석기 `agenda-rules-v3` (추가 비용 없음) |
-| 향후 Google 연동 | BigQuery, Vertex AI Embeddings, Gemini 어댑터 |
-| 검증 | Node.js test runner, GitHub Actions |
-
-## 빠른 시작
-
-Node.js 22.13 이상이 필요합니다.
-
-```bash
-cd site
-npm ci
-npm run dev
-```
-
-검증 명령은 다음과 같습니다.
-
-```bash
-cd site
-npm test
-npm run lint
-```
-
-## 저장소 구조
+## Repository Structure
 
 ```text
 .
-├── site/                       # 배포 가능한 AgendaFrame MVP
-│   ├── app/                    # 화면과 메타데이터
-│   ├── public/                 # 아이콘·가져오기 양식 등 정적 자산
-│   ├── db/                     # 데이터베이스 스키마
-│   ├── data/                   # 22개 매체 유형·미디어그룹·공식 도메인 설정
-│   ├── docs/                   # 실데이터 수집·해석 원칙
-│   ├── worker/                 # Workers 진입점
-│   └── tests/                  # MVP 검증 테스트
-├── outputs/                    # 대시보드·WBS·UML 이미지
-├── tools/                      # 산출물 렌더링 도구
-├── AgendaFrame_*.md            # 백로그, WBS, UML, 연구 문서
-├── AgendaFrame_기능명세서.xlsx
+├── README.md
+├── AGENTS.md           # repository-wide agent and safety rules
 ├── CONTRIBUTING.md
-└── README.md
+├── .env.example
+├── pyproject.toml
+├── requirements.lock   # hashed, reproducible Python environment
+├── .github/workflows/ci.yml
+├── docs/
+│   ├── planning/      # product backlog, sprint backlog, WBS
+│   ├── specs/         # use cases, UML, feature specification
+│   ├── research/      # prior research and service review
+│   ├── process/       # deliverable workflow notes
+│   └── submission/    # final report and local submission artifacts
+├── src/
+│   ├── backend/       # API server and orchestration
+│   ├── crawler/       # article collection jobs
+│   ├── ai/            # clustering, scoring, framing analysis
+│   └── agendaframe_tooling/  # deterministic evaluation helpers
+├── tests/
+│   ├── unit/
+│   ├── contract/
+│   ├── integration/
+│   ├── fixtures/crawler/
+│   └── e2e/
+├── evals/
+│   ├── clustering/gold.jsonl
+│   ├── framing/gold.jsonl
+│   ├── report/
+│   ├── prompts/
+│   └── thresholds.yaml
+├── scripts/           # bootstrap, checks, evaluation, and artifact generation
+└── outputs/           # generated diagrams and images
 ```
 
-## 주요 산출물
+## Team Workflow
 
-- [프로덕트 백로그](AgendaFrame_프로덕트백로그.md)
-- [스프린트 백로그](AgendaFrame_스프린트백로그.md)
-- [WBS·간트차트](AgendaFrame_10_WBS_간트차트.md)
-- [UML 설계](AgendaFrame_11_UML.md)
-- [선행연구 및 선행서비스 검토](AgendaFrame_선행연구_및_선행서비스_검토.md)
-- [개발 산출물 제작 워크플로우](AgendaFrame_개발산출물_제작툴_워크플로우.md)
-- [기능명세서](AgendaFrame_기능명세서.xlsx)
-
-이미지 산출물은 `outputs/`에서 확인할 수 있으며 다음 명령으로 다시 생성할 수 있습니다.
+Keep `main` stable. Each member should create a branch for their own task,
+push that branch, and open a pull request before merging.
 
 ```powershell
-python tools/render_agendaframe_outputs.py
+git switch main
+git pull --ff-only
+git switch -c feature/news-crawler
 ```
 
-## 데이터·보안 원칙
+After editing:
 
-- API 키, 비밀번호, 서비스 계정, `.env` 파일을 커밋하지 않습니다.
-- 신청서, 지원비 서식, 개인정보가 포함된 문서는 공개 저장소에 올리지 않습니다.
-- 저작권 확인 없이 기사 원문 전체나 외부 이미지를 재배포하지 않습니다.
-- 배포된 공개 Worker는 언론사 사이트를 직접 호출하지 않습니다. 홈페이지 배치는 승인된 별도 수집기가 보호된 API로 전송합니다.
-- 기사 전문은 저장·분석 권한과 이용 근거를 확인한 경우에만 비공개 저장하며 공개 API로 재배포하지 않습니다.
-- 관리자 가져오기는 배포 환경의 비밀 토큰과 동일 출처 요청 검사를 통과해야 합니다.
-- 규칙 분석 결과를 AI 판정처럼 표시하지 않고 분석 방식과 한계를 함께 공개합니다.
-- 품질 지표는 사람 검토로 확인한 잘못 묶인 기사와 직접 등록한 누락 기사를 바탕으로 한 추정치임을 명시합니다.
-- 런타임 비밀값은 배포 환경에서 관리하고 소스 코드에 저장하지 않습니다.
+```powershell
+git status
+git add <changed-files>
+git commit -m "feat: add news crawler"
+git push -u origin feature/news-crawler
+```
 
-## 협업과 이용 조건
+Recommended branch prefixes:
 
-브랜치, 커밋, PR과 리뷰 규칙은 [CONTRIBUTING.md](CONTRIBUTING.md)를 따릅니다. 이 저장소에는 현재 별도의 오픈소스 라이선스가 부여되어 있지 않으므로, 별도 허가 없는 코드와 문서의 재사용은 허용되지 않습니다.
+- `feature/` for new implementation work
+- `fix/` for bug fixes
+- `docs/` for documentation changes
+- `refactor/` for internal restructuring
+- `test/` for test coverage
+
+## Local Setup
+
+Copy `.env.example` to `.env` and fill local secrets there. Do not commit `.env`.
+
+```powershell
+Copy-Item .env.example .env
+```
+
+```powershell
+powershell -NoProfile -File scripts/bootstrap.ps1
+```
+
+Bootstrap creates `.venv`, installs the hashed `requirements.lock`, installs the
+local tooling package without resolving new dependencies, and runs the quick
+offline gate. The deployed website is not stored in `src/frontend` in this
+checkout and is therefore not claimed as part of this Python harness.
+
+After changing Python dependencies, regenerate the lock and run the full gate:
+
+```powershell
+.venv\Scripts\python.exe -m piptools compile --extra dev --generate-hashes `
+  --allow-unsafe --strip-extras --output-file requirements.lock pyproject.toml
+powershell -NoProfile -File scripts/check.ps1 -Mode full
+```
+
+## Useful Commands
+
+Regenerate diagram images:
+
+```powershell
+python scripts/render_agendaframe_outputs.py
+```
+
+Build or refresh submission artifacts:
+
+```powershell
+python scripts/build_agendaframe_submission.py
+```
+
+Run the offline repository gate:
+
+```powershell
+powershell -NoProfile -File scripts/check.ps1 -Mode quick
+powershell -NoProfile -File scripts/check.ps1 -Mode full
+```
+
+Validate evaluation assets without calling a model or network service:
+
+```powershell
+.venv\Scripts\python.exe scripts/run_evals.py
+```
+
+## GitHub Hygiene
+
+Do commit:
+
+- source code under `src/`
+- tests under `tests/`
+- planning and specification documents under `docs/`
+- generated diagrams under `outputs/` when they are part of the submission
+- safe examples such as `.env.example`
+
+Do not commit:
+
+- `.env`, API keys, service account files, or credentials
+- personal application forms, support fund documents, or private school forms
+- temporary folders such as `tmp_*`
+- large final ZIP files; use GitHub Releases or local submission storage

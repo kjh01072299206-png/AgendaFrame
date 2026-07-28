@@ -1,37 +1,56 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json
+service-account*.json
+
 # Personal / application documents
 *.hwp
 *.hwpx
 *.pdf
 *.pptx
 *.ppt
+*.zip
 *신청서*
 *지원비*
 *자문비*
 *개인정보*
 *과제계획서*
+private/
 
 # Office temporary files
 ~$*
 *.tmp
 *.bak
 
-# Local runtime / generated scratch
+# Python
+.venv/
+venv/
 __pycache__/
+*.py[cod]
+*.egg-info/
 .pytest_cache/
+.coverage
+htmlcov/
 .mypy_cache/
 .ruff_cache/
+
+# Node / frontend
+node_modules/
+dist/
+build/
+coverage/
+.next/
+.vite/
+
+# Local runtime / generated scratch
 tmp/
 tmp_*/
 *.tar.gz
 *.zip
-
-# Environment / secrets
-.env
-.env.*
-*.key
-*.pem
-credentials.json
-service-account*.json
 
 # OS files
 .DS_Store

@@ -571,8 +571,8 @@ test("reports no-cost health and protects write endpoints", async () => {
   assert.equal(healthBody.collection.method, "bigkinds_export");
   assert.equal(healthBody.collection.directCrawling, false);
   assert.equal(healthBody.collection.configuredSources, 22);
-  assert.equal(healthBody.meta.clusteringVersion, "event-anchors-complete-link-v2");
-  assert.equal(healthBody.meta.scoreVersion, "observed-agenda-v3");
+  assert.equal(healthBody.meta.clusteringVersion, "event-anchors-complete-link-v4");
+  assert.equal(healthBody.meta.scoreVersion, "observed-agenda-v4");
 
   const sources = await handleApiRequest(new Request("https://example.test/api/sources"));
   const sourceBody = await sources.json();

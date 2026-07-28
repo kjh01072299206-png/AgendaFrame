@@ -1,7 +1,7 @@
 export const ANALYSIS_PROVIDER = "structured_extractive";
 export const ANALYSIS_MODEL_VERSION = "agenda-structure-v5";
-export const CLUSTERING_VERSION = "event-anchors-complete-link-v2";
-export const SCORE_VERSION = "observed-agenda-v3";
+export const CLUSTERING_VERSION = "event-anchors-complete-link-v4";
+export const SCORE_VERSION = "observed-agenda-v4";
 export const FRAME_TAXONOMY_VERSION = "frame-elements-v5";
 
 const frameDefinitions = {
@@ -110,13 +110,27 @@ function eventFeatures(article) {
 function topCategory(article) {
   const section = String(article.section ?? "").trim();
   const first = section.split(/[>/_]/)[0]?.trim();
-  if (first) return first;
-  const title = article.title;
-  if (/(국회|대통령|정당|여당|야당|선거)/.test(title)) return "정치";
-  if (/(경제|금리|물가|증시|부동산|수출|기업)/.test(title)) return "경제";
-  if (/(외교|북한|미국|중국|일본|전쟁)/.test(title)) return "국제";
-  if (/(과학|기술|인공지능|반도체|우주)/.test(title)) return "IT·과학";
-  return "사회";
+  if (first && !["종합", "속보", "사회"].includes(first)) return first;
+
+  const title = String(article.title ?? "");
+  const categoryScores = {
+    "정치": (title.match(/국회|대통령|여당|야당|정당|원내대표|지도부|의원|선거|정쟁|거취/g) ?? []).length,
+    "사법·검찰": (title.match(/검찰|경찰|수사|법원|헌재|기소|재판|영장|송치|판결|의혹|입건/g) ?? []).length,
+    "경제": (title.match(/금리|물가|주가|부동산|환율|고용|일자리|기업|금융|무역|세금|예산|증시|재정/g) ?? []).length,
+    "사회·노동": (title.match(/노동|파업|사고|참사|재난|보건|복지|교육|환경|교통|안전|시위/g) ?? []).length,
+    "국제·외교": (title.match(/외교|안보|국방|북한|미사일|미국|중국|일본|정상회담|전쟁|트럼프/g) ?? []).length,
+    "IT·과학": (title.match(/인공지능|AI|반도체|IT|통신|우주|플랫폼|기술/g) ?? []).length,
+  };
+
+  let maxCategory = "사회";
+  let maxScore = 0;
+  for (const [cat, score] of Object.entries(categoryScores)) {
+    if (score > maxScore) {
+      maxScore = score;
+      maxCategory = cat;
+    }
+  }
+  return maxCategory;
 }
 
 function compatibleEvent(left, right) {
@@ -130,12 +144,12 @@ function compatibleEvent(left, right) {
   const leftActions = left._event.actions;
   const rightActions = right._event.actions;
 
-  if (leftActors.length && rightActors.length && overlapCount(leftActors, rightActors) === 0) return false;
+  if (leftActors.length >= 2 && rightActors.length >= 2 && overlapCount(leftActors, rightActors) === 0) return false;
   if (leftActions.length && rightActions.length && overlapCount(leftActions, rightActions) === 0) return false;
-  if ((leftActors.length || rightActors.length) && sharedDiscriminators < 1) return false;
-  if (leftActors.length !== rightActors.length && compared.jaccard < 0.42) return false;
+  if (leftActors.length >= 2 && rightActors.length >= 2 && sharedDiscriminators < 1) return false;
+  if (leftActors.length !== rightActors.length && compared.jaccard < 0.35) return false;
 
-  return compared.overlap >= 2 && sharedDiscriminators >= 1 && compared.jaccard >= 0.32;
+  return compared.overlap >= 2 && sharedDiscriminators >= 1 && compared.jaccard >= 0.25;
 }
 
 function representativeArticle(articles) {
@@ -155,6 +169,81 @@ function representativeArticle(articles) {
     }
   }
   return articles[bestIndex];
+}
+
+export function cleanHeadlineToIssueTitle(rawTitle) {
+  if (!rawTitle) return "주요 이슈";
+  let title = String(rawTitle)
+    .replace(/\[[^\]]*\]|\([^)]*\)|<[^>]*>/g, " ")
+    .replace(/^[0-9가-힣A-Za-z]+\s*기자\s*=/g, "")
+    .replace(/["'“”‘’]/g, "")
+    .replace(/[\.\?!…\:]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const tokens = titleTokens(title);
+  if (tokens.length >= 2) {
+    const selected = tokens.slice(0, 4);
+    const suffix = detectIssueSuffix([{ title: rawTitle }]);
+    return selected.join(" ") + (suffix ? " " + suffix : "");
+  }
+  return title || "주요 이슈";
+}
+
+function synthesizeIssueTitle(articles, representative) {
+  if (!articles || articles.length === 0) return "주요 이슈";
+  if (articles.length === 1) return cleanHeadlineToIssueTitle(representative.title);
+
+  const freq = new Map();
+  for (const article of articles) {
+    for (const token of article._tokens) {
+      freq.set(token, (freq.get(token) ?? 0) + 1);
+    }
+  }
+
+  const threshold = Math.max(2, Math.ceil(articles.length * 0.3));
+  const common = [...freq.entries()]
+    .filter(([, count]) => count >= threshold)
+    .sort((a, b) => b[1] - a[1])
+    .map(([token]) => token)
+    .slice(0, 5);
+
+  if (common.length < 2) return cleanHeadlineToIssueTitle(representative.title);
+
+  const repTokenOrder = representative._tokens;
+  const ordered = common.slice().sort(
+    (a, b) => {
+      const ai = repTokenOrder.indexOf(a);
+      const bi = repTokenOrder.indexOf(b);
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    }
+  );
+
+  const suffix = detectIssueSuffix(articles);
+  return ordered.join(" ") + (suffix ? " " + suffix : "");
+}
+
+function detectIssueSuffix(articles) {
+  const allTitles = articles.map((a) => String(a.title ?? "")).join(" ");
+  const suffixCandidates = [
+    { pattern: /갈등|충돌|대립|공방/g, label: "갈등" },
+    { pattern: /논란|파문|의혹/g, label: "논란" },
+    { pattern: /사고|참사|재난/g, label: "사고" },
+    { pattern: /협상|합의|타결/g, label: "협상" },
+    { pattern: /수사|조사|기소|체포/g, label: "수사" },
+    { pattern: /정책|대책|방안|추진/g, label: "동향" },
+  ];
+  let best = null;
+  let bestCount = 0;
+  for (const { pattern, label } of suffixCandidates) {
+    const matches = allTitles.match(pattern);
+    const count = matches ? matches.length : 0;
+    if (count > bestCount) {
+      bestCount = count;
+      best = label;
+    }
+  }
+  return bestCount >= Math.max(2, Math.ceil(articles.length * 0.25)) ? best : null;
 }
 
 function placementScore(articles) {
@@ -177,17 +266,22 @@ function placementScore(articles) {
   };
 }
 
-function weightedAgendaScore({ diversity, placement, volume, followUpVolume }) {
+function weightedAgendaScore({ diversity, placement, volume, followUpVolume, sourceCount = 1, configuredSourceCount = 5 }) {
   const components = [
-    { value: diversity, weight: 0.35 },
-    { value: placement.value, weight: 0.30 },
-    { value: volume, weight: 0.20 },
-    { value: followUpVolume, weight: 0.15 },
+    { value: diversity, weight: 0.45 },
+    { value: volume, weight: 0.30 },
+    { value: placement.value, weight: 0.15 },
+    { value: followUpVolume, weight: 0.10 },
   ].filter((component) => Number.isFinite(component.value));
   const observedWeight = components.reduce((sum, component) => sum + component.weight, 0);
-  const score = components.reduce((sum, component) => sum + component.value * component.weight, 0) / observedWeight;
+  let baseScore = components.reduce((sum, component) => sum + component.value * component.weight, 0) / observedWeight;
+
+  const coverageRatio = sourceCount / Math.max(1, configuredSourceCount);
+  const coverageFactor = Math.min(1.0, 0.45 + coverageRatio * 0.8);
+  const finalScore = baseScore * coverageFactor;
+
   return {
-    score: Math.round(score * 10) / 10,
+    score: Math.round(finalScore * 10) / 10,
     status: placement.observedCount ? "observed_components" : "placement_excluded",
     observedWeight: Math.round(observedWeight * 100),
   };
@@ -348,11 +442,11 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
       const placement = placementScore(group);
       const volume = Math.min(100, (Math.log1p(group.length) / Math.log1p(maxArticleCount)) * 100);
       const followUpVolume = group.length > 1 ? ((group.length - sources.size) / (group.length - 1)) * 100 : 0;
-      const scoreResult = weightedAgendaScore({ diversity, placement, volume, followUpVolume });
+      const scoreResult = weightedAgendaScore({ diversity, placement, volume, followUpVolume, sourceCount: sources.size, configuredSourceCount });
       const similarities = group.map((article) => article.id === representative.id ? 1 : similarity(representative._tokens, article._tokens).jaccard);
       const minimumSimilarity = Math.min(...similarities);
       const issue = {
-        title: representative.title,
+        title: synthesizeIssueTitle(group, representative),
         summary: `${sources.size}개 언론사의 관련 제목 ${group.length}건을 사건 인물·행위와 제목 유사도를 함께 확인해 묶었습니다.`,
         category: topCategory(representative),
         articleCount: group.length,
@@ -370,7 +464,7 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
         followUpVolumeScore: Math.round(followUpVolume * 10) / 10,
         confidence: null,
         calibrationStatus: "not_calibrated",
-        clusterQuality: group.length < 2 ? "insufficient_evidence" : minimumSimilarity >= 0.42 ? "cohesive" : "review_required",
+        clusterQuality: group.length < 2 ? "insufficient_evidence" : minimumSimilarity >= 0.35 ? "cohesive" : "review_required",
         representativeArticleId: representative.id,
         articles: group.map((article) => {
           const cleanArticle = { ...article };
