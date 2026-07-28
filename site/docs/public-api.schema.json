@@ -85,7 +85,7 @@
         "calibrationStatus": { "const": "not_calibrated" },
         "clusterQuality": { "enum": ["review_required", "not_human_reviewed", "cohesive", "insufficient_evidence"] },
         "contentAvailableCount": { "type": "integer", "minimum": 0 },
-        "evidenceBasis": { "enum": ["headline_metadata_only", "authorized_body_and_metadata"] }
+        "evidenceBasis": { "enum": ["headline_metadata_only", "body_signals_and_metadata", "structured_body_profiles_and_metadata", "authorized_body_and_metadata"] }
       },
       "additionalProperties": true
     },
@@ -101,7 +101,7 @@
       },
       "additionalProperties": false
     },
-    "Comparison": {
+    "LegacyComparison": {
       "type": "object",
       "required": [
         "status", "evidenceBasis", "reason", "frameElements", "commonFacts", "divergenceQuestions",
@@ -109,7 +109,7 @@
       ],
       "properties": {
         "status": { "enum": ["withheld_insufficient_evidence", "available"] },
-        "evidenceBasis": { "enum": ["headline_metadata_only", "authorized_body_signals_not_structured_comparison", "evidence_spans"] },
+        "evidenceBasis": { "enum": ["headline_metadata_only", "body_signals_not_structured_comparison", "evidence_spans"] },
         "reason": { "type": "string" },
         "frameElements": {
           "type": "array",
@@ -135,6 +135,134 @@
         "sourceCount": { "type": "integer", "minimum": 0 }
       },
       "additionalProperties": false
+    },
+    "StructuredComparison": {
+      "type": "object",
+      "required": [
+        "status", "divergenceDetected", "evidenceBasis", "reason", "methodologyLabel", "reviewStatus",
+        "summary", "sample", "axes", "sourceLens", "contextGaps", "limitations"
+      ],
+      "properties": {
+        "status": { "enum": ["available", "partial", "withheld_insufficient_evidence"] },
+        "divergenceDetected": { "type": "boolean" },
+        "evidenceBasis": { "enum": ["headline_metadata_only", "evidence_spans"] },
+        "reason": { "type": "string" },
+        "methodologyLabel": { "type": "string" },
+        "reviewStatus": { "enum": ["automatic_draft", "human_reviewed", "rejected"] },
+        "summary": {
+          "type": "object",
+          "required": ["commonGround", "mainDifference", "whyItMatters", "sourceContext"],
+          "properties": {
+            "commonGround": { "type": ["string", "null"] },
+            "mainDifference": { "type": ["string", "null"] },
+            "whyItMatters": { "type": ["string", "null"] },
+            "sourceContext": { "type": ["string", "null"] }
+          },
+          "additionalProperties": false
+        },
+        "sample": {
+          "type": "object",
+          "required": ["analyzedArticles", "textScope", "outlets", "independentMediaGroups", "excludedArticles"],
+          "properties": {
+            "analyzedArticles": { "type": "integer", "minimum": 0 },
+            "textScope": { "enum": ["provider_excerpt", "article_body"] },
+            "outlets": { "type": "integer", "minimum": 0 },
+            "independentMediaGroups": { "type": "integer", "minimum": 0 },
+            "excludedArticles": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "axes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["dimension", "label", "variants"],
+            "properties": {
+              "dimension": { "enum": ["problem_definition", "causal_interpretation", "responsibility_attribution", "moral_evaluation", "treatment_recommendation"] },
+              "label": { "type": "string" },
+              "variants": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["summary", "outlets", "commitment", "status"],
+                  "properties": {
+                    "summary": { "type": "string" },
+                    "outlets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["source", "articleId", "sourceUrl"],
+                        "properties": {
+                          "source": { "type": "string" },
+                          "articleId": { "type": "string" },
+                          "sourceUrl": { "type": "string", "format": "uri" },
+                          "evidenceLocator": { "type": ["string", "null"] },
+                          "evidenceHash": {
+                            "type": ["string", "null"],
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "commitment": { "enum": ["explicit", "source_attributed"] },
+                    "status": { "enum": ["supported", "attributed_source"] },
+                    "evidenceLocator": { "type": ["string", "null"] },
+                    "basis": { "type": ["string", "null"] }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "sourceLens": {
+          "type": "object",
+          "required": ["sharedVoices", "voicesPresentInSomeOutlets", "byOutlet"],
+          "properties": {
+            "sharedVoices": { "type": "array", "items": { "type": "string" } },
+            "voicesPresentInSomeOutlets": { "type": "array", "items": { "type": "string" } },
+            "byOutlet": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["source", "voices", "officialShare", "affectedGroupVoice"],
+                "properties": {
+                  "source": { "type": "string" },
+                  "voices": { "type": "array", "items": { "type": "string" } },
+                  "officialShare": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+                  "affectedGroupVoice": { "type": "boolean" }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "contextGaps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["feature", "presentInOutlets", "notObservedInOutlets", "displayText"],
+            "properties": {
+              "feature": { "type": "string" },
+              "presentInOutlets": { "type": "array", "items": { "type": "string" } },
+              "notObservedInOutlets": { "type": "array", "items": { "type": "string" } },
+              "displayText": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "limitations": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "Comparison": {
+      "oneOf": [
+        { "$ref": "#/$defs/LegacyComparison" },
+        { "$ref": "#/$defs/StructuredComparison" }
+      ]
     },
     "HealthResponse": {
       "type": "object",

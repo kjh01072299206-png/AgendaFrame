@@ -9,17 +9,18 @@
     "dev": "vite",
     "build": "vite build",
     "start": "vite --host 127.0.0.1",
-    "test": "npm run build && node --test tests/mvp.test.mjs",
+    "test": "npm run build && node --test --test-isolation=none tests/mvp.test.mjs tests/article-extractor.test.mjs tests/framing-engine.test.mjs tests/bigkinds-xlsx.test.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "data:import:bigkinds": "node scripts/import-bigkinds.mjs"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
+    "fflate": "0.7.4",
     "next": "16.2.6",
     "react": "19.2.6",
-    "react-dom": "19.2.6",
-    "read-excel-file": "5.8.0"
+    "react-dom": "19.2.6"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",
