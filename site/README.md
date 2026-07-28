@@ -24,7 +24,7 @@
 - 상위 50개 이슈의 사람 검토와 잘못 묶인 기사·누락 기사 영속화
 - 검토 결과 기반 추정 정밀도·재현율·의제·프레임 동의율 산출
 
-현재 분석 공급자는 `structured_extractive`, 분석 모델 버전은 `agenda-structure-v5`, 구조화 엔진은 `korean-evidence-rules-v1`입니다. 별도 유료 API를 호출하지 않습니다. BigKinds 파일에 본문 발췌가 있으면 가져오기 요청 안에서 분석하고 전문·발췌 원문을 저장하지 않으며, 발췌가 없으면 제목 단서로 제한합니다. 분석 공급자를 바꾸더라도 [`docs/public-api.schema.json`](docs/public-api.schema.json)의 공개 계약과 결과 계보를 유지하도록 설계했습니다. 자동 결과는 사람 검토 전 초안으로 표시합니다.
+현재 분석 공급자는 `structured_extractive`, 분석 모델 버전은 `agenda-structure-v5`, 구조화 엔진은 `korean-evidence-rules-v1`입니다. 공개 의제는 정치·경제·사회·국제를 우선하고 스포츠·생활·IT를 뒤에 배치하며, 공통 정책 개념이 확인된 기사 제목은 하나의 건조한 의제명 아래 묶습니다. 별도 유료 API를 호출하지 않습니다. BigKinds 파일에 본문 발췌가 있으면 가져오기 요청 안에서 분석하고 전문·발췌 원문을 저장하지 않으며, 발췌가 없으면 제목 단서로 제한합니다. 분석 공급자를 바꾸더라도 [`docs/public-api.schema.json`](docs/public-api.schema.json)의 공개 계약과 결과 계보를 유지하도록 설계했습니다. 자동 결과는 사람 검토 전 초안으로 표시합니다.
 
 ## 운영 순서
 
@@ -46,6 +46,7 @@
 | `GET /api/health` | 데이터·최근 분석 상태 | 공개 |
 | `GET /api/sources` | 분석 대상 매체 | 공개 |
 | `GET /api/articles` | 실제 기사 검색·필터 | 공개 |
+| `GET /api/issues/dates` | 성공한 날짜별 의제 분석 목록 | 공개 |
 | `GET /api/issues` | 최신 이슈 랭킹 | 공개 |
 | `GET /api/issues/:id` | 이슈·기사·프레임·리포트 상세 | 공개 |
 | `POST /api/import` | 기사 메타데이터 가져오기 | Bearer `IMPORT_TOKEN` |
