@@ -113,6 +113,7 @@ type Comparison = {
     byOutlet: Array<{
       source: string;
       voices: string[];
+      roleCounts?: Array<{ role: string; roleLabel: string; count: number }>;
       officialShare?: number | null;
       affectedGroupVoice?: boolean | number | string | null;
     }>;
@@ -154,6 +155,17 @@ const frameColors: Record<string, string> = {
   law: "#315da8",
   policy: "#11745b",
   citizen: "#248b9e",
+};
+const sourceRoleColors: Record<string, string> = {
+  government_official: "#3f5c96",
+  political_actor: "#a84052",
+  judiciary_law_enforcement: "#5b4a8f",
+  expert_research: "#7a5aa8",
+  civil_society: "#3d7d4f",
+  business: "#b0812c",
+  affected_person: "#2b7f8e",
+  anonymous_official: "#6b7280",
+  other: "#9099a6",
 };
 const placementLabels: Record<string, string> = { top: "최상단", main: "주요 영역", section: "섹션", list: "목록" };
 const outletPlacementLabels: Record<string, string> = { TOP: "최상단", MAIN: "주요 영역", SECTION: "섹션", LIST: "목록", 미확인: "관측 없음" };
@@ -270,6 +282,130 @@ function ComparisonSourceLinks({ outlets }: { outlets: ComparisonSource[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+function SourcingBars({ byOutlet }: { byOutlet: NonNullable<Comparison["sourceLens"]>["byOutlet"] }) {
+  const rows = byOutlet
+    .map((entry) => ({ source: entry.source, roleCounts: entry.roleCounts ?? [] }))
+    .filter((entry) => entry.roleCounts.length > 0);
+  if (rows.length < 2) return null;
+  const legend = new Map<string, string>();
+  rows.forEach((row) => row.roleCounts.forEach((role) => legend.set(role.role, role.roleLabel)));
+  return (
+    <div className="sourcing-bars">
+      <h4>누구의 목소리로 말하는가 <small>인용원(sourcing) 관측치</small></h4>
+      <p className="viz-caption">직접 인용·간접 인용으로 확인된 발화 횟수입니다. 막대 길이는 목소리의 가시성 관측치이며 매체의 지지·취재원 신뢰도 판정이 아닙니다.</p>
+      {rows.map((row) => {
+        const total = row.roleCounts.reduce((sum, role) => sum + role.count, 0);
+        return (
+          <div className="viz-bar-row" key={row.source}>
+            <span className="viz-bar-label">{row.source}</span>
+            <div className="viz-bar-track" role="img" aria-label={`${row.source}: ${row.roleCounts.map((role) => `${role.roleLabel} ${role.count}회`).join(", ")}`}>
+              {row.roleCounts.map((role) => (
+                <i key={role.role} style={{ flexGrow: role.count, background: sourceRoleColors[role.role] ?? sourceRoleColors.other }} title={`${role.roleLabel} ${role.count}회`}>{role.count}</i>
+              ))}
+            </div>
+            <b className="viz-bar-total">{total}회</b>
+          </div>
+        );
+      })}
+      <div className="viz-legend">{[...legend].map(([role, label]) => <span key={role}><i style={{ background: sourceRoleColors[role] ?? sourceRoleColors.other }} aria-hidden="true" />{label}</span>)}</div>
+    </div>
+  );
+}
+
+function EntmanMatrix({ axes }: { axes: ComparisonAxis[] }) {
+  const outlets = [...new Set(axes.flatMap((axis) => axis.variants.flatMap((variant) => variant.outlets.map((outlet) => outlet.source))))];
+  if (axes.length < 2 || outlets.length < 2) return null;
+  return (
+    <section className="comparison-section entman-section" aria-labelledby="entman-matrix-title">
+      <div className="comparison-section-heading">
+        <div><h3 id="entman-matrix-title">문제 정의·원인·평가·해결책</h3><p>같은 분석축을 언론사 기준으로 재배열한 표입니다. 본문에서 실제 관측된 설명만 요약합니다.</p></div>
+        <span>Entman (1993) 4기능</span>
+      </div>
+      <div className="entman-matrix-wrap">
+        <table className="entman-matrix">
+          <thead><tr><th scope="col">언론사</th>{axes.map((axis) => <th scope="col" key={axis.dimension}>{axis.label}</th>)}</tr></thead>
+          <tbody>
+            {outlets.map((source) => (
+              <tr key={source}>
+                <th scope="row">{source}</th>
+                {axes.map((axis) => {
+                  const summaries = axis.variants
+                    .filter((variant) => variant.outlets.some((outlet) => outlet.source === source))
+                    .map((variant) => variant.summary);
+                  return <td key={axis.dimension}>{summaries.length ? summaries.join(" · ") : <span className="not-observed">미관측</span>}</td>;
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="viz-caption">‘미관측’은 분석 대상 본문에서 확인되지 않았다는 뜻이며, 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다.</p>
+    </section>
+  );
+}
+
+function FrameCompositionByOutlet({ frames }: { frames: Frame[] }) {
+  const [selected, setSelected] = useState<{ source: string; frame: string } | null>(null);
+  const bySource = new Map<string, Map<string, Frame[]>>();
+  for (const frame of frames) {
+    if (!frame.source) continue;
+    const frameMap = bySource.get(frame.source) ?? new Map<string, Frame[]>();
+    const list = frameMap.get(frame.frame) ?? [];
+    list.push(frame);
+    frameMap.set(frame.frame, list);
+    bySource.set(frame.source, frameMap);
+  }
+  const rows = [...bySource.entries()].map(([source, frameMap]) => ({
+    source,
+    segments: [...frameMap.entries()].map(([code, list]) => ({ code, count: list.length, evidence: list })).sort((a, b) => b.count - a.count),
+  }));
+  if (rows.length < 2) return null;
+  const legendCodes = [...new Set(rows.flatMap((row) => row.segments.map((segment) => segment.code)))];
+  const selectedEvidence = selected
+    ? rows.find((row) => row.source === selected.source)?.segments.find((segment) => segment.code === selected.frame)?.evidence ?? []
+    : [];
+  return (
+    <div className="frame-composition">
+      <h4>프레임 구성 <small>매체별 표현 단서 · 다중 라벨</small></h4>
+      <p className="viz-caption">막대의 구간을 누르면 해당 프레임 판단의 근거 문장이 표시됩니다. 구간 크기는 검출된 표현 단서 수이며 기사 논조 점수가 아닙니다.</p>
+      {rows.map((row) => {
+        const total = row.segments.reduce((sum, segment) => sum + segment.count, 0);
+        return (
+          <div className="viz-bar-row" key={row.source}>
+            <span className="viz-bar-label">{row.source}</span>
+            <div className="viz-bar-track">
+              {row.segments.map((segment) => (
+                <button
+                  type="button"
+                  key={segment.code}
+                  className={selected?.source === row.source && selected?.frame === segment.code ? "active" : ""}
+                  style={{ flexGrow: segment.count, background: frameColors[segment.code] ?? "#9099a6" }}
+                  title={`${frameLabels[segment.code] ?? segment.code} 단서 ${segment.count}건`}
+                  aria-label={`${row.source}의 ${frameLabels[segment.code] ?? segment.code} 프레임 근거 ${segment.count}건 보기`}
+                  onClick={() => setSelected(selected?.source === row.source && selected?.frame === segment.code ? null : { source: row.source, frame: segment.code })}
+                >{segment.count}</button>
+              ))}
+            </div>
+            <b className="viz-bar-total">{total}건</b>
+          </div>
+        );
+      })}
+      <div className="viz-legend">{legendCodes.map((code) => <span key={code}><i style={{ background: frameColors[code] ?? "#9099a6" }} aria-hidden="true" />{frameLabels[code] ?? code}</span>)}</div>
+      {selected && (
+        <div className="frame-evidence-detail" role="status">
+          <h5>{selected.source} · {frameLabels[selected.frame] ?? selected.frame} 근거</h5>
+          {selectedEvidence.length ? selectedEvidence.map((frame, index) => (
+            <p key={`${frame.articleId}-${index}`}>
+              {frame.evidenceText ?? "근거 문장이 저장되지 않았습니다."}
+              {frame.sourceUrl && <> · <a href={frame.sourceUrl} target="_blank" rel="noopener noreferrer">원문 확인 →</a></>}
+            </p>
+          )) : <p>표시할 근거 문장이 없습니다.</p>}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -426,11 +562,14 @@ function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
         ) : <p className="withheld">문제 정의·원인·책임·평가·해법을 매체 간에 비교할 만큼 본문 근거가 모이지 않았습니다.</p>}
       </section>
 
+      <EntmanMatrix axes={axes} />
+
       {sourceLens && (
         <section className="comparison-section source-lens" aria-labelledby="source-lens-title">
           <div className="comparison-section-heading">
             <div><h3 id="source-lens-title">누구의 목소리로 설명했나</h3><p>인용·간접인용으로 확인된 발화자 범주입니다. 등장하지 않았다는 사실만 보여주며 의도적 배제를 뜻하지 않습니다.</p></div>
           </div>
+          <SourcingBars byOutlet={sourceLens.byOutlet} />
           <div className="voice-overview">
             <div><h4>여러 매체에 공통 등장</h4>{sourceLens.sharedVoices.length ? <ul>{sourceLens.sharedVoices.map((voice) => <li key={voice}>{voice}</li>)}</ul> : <p>공통 발화자 범주가 확인되지 않았습니다.</p>}</div>
             <div><h4>일부 매체에서만 등장</h4>{sourceLens.voicesPresentInSomeOutlets.length ? <ul>{sourceLens.voicesPresentInSomeOutlets.map((voice) => <li key={voice}>{voice}</li>)}</ul> : <p>매체별 차이가 확인되지 않았습니다.</p>}</div>
@@ -893,7 +1032,7 @@ export default function AgendaDashboard() {
                   </div>
                 )}
                 {tab === "outlets" && <div id="analysis-panel-outlets" role="tabpanel" aria-labelledby="analysis-tab-outlets" className="outlet-list"><p className="expert-note"><strong>읽는 법</strong> 기사 수와 홈페이지 배치는 편향·사실성·논조를 판정하는 값이 아닙니다.</p><div className="outlet-head"><span>언론사</span><span>기사</span><span>홈 배치</span><span>대표 제목</span></div>{detail.outlets.map((outlet) => { const article = detail.articles.find((entry) => entry.source === outlet.source); const placement = outletPlacementLabels[outlet.placement] ?? outlet.placement; return <div className="outlet-row" key={outlet.source}><strong>{outlet.source}</strong><b>{outlet.articleCount}건</b><span className={`placement-badge${placement === "관측 없음" ? " unknown" : ""}`}>{placement}</span><p>{article ? <a href={article.url} target="_blank" rel="noopener noreferrer">{article.title}</a> : "대표 제목 미확인"}</p></div>; })}</div>}
-                {tab === "frames" && <div id="analysis-panel-frames" role="tabpanel" aria-labelledby="analysis-tab-frames" className="frame-layout">{detail.frames.length ? <><p className="expert-note frame-note"><strong>보조 지표</strong> {bodyBackedFrameCount ? `본문에서 관측한 일반 프레임 태그 ${bodyBackedFrameCount}개와 제목 단서를 구분해 표시합니다.` : "현재는 제목에 포함된 보조 표현 태그만 표시합니다."} 이 탭은 문제 정의·원인·책임·평가·해법 비교를 대체하지 않으며, 합계도 100%가 아닙니다.</p><div className="frame-chart">{detail.frames.map((frame) => <div className="frame-row" key={frame.frame}><span>{frameLabels[frame.frame] ?? frame.frame}</span><div aria-hidden="true"><i style={{ width: `${frame.score}%`, background: frameColors[frame.frame] }} /></div><b>{frame.score > 0 ? `${frame.score.toFixed(1)}%` : "검출 없음"}</b></div>)}</div><div className="evidence-panel"><h3>관측된 보조 표현 태그</h3>{detectedFrames.length ? detectedFrames.map((frame) => <article key={frame.frame}><span style={{ color: frameColors[frame.frame] }}>{frameLabels[frame.frame]}</span><p>{frame.evidenceText}</p><small><b>{frame.evidenceBasis === "headline" ? "제목 단서" : frame.evidenceBasis === "body_transient" ? "임시 본문 분석 · 전문 미저장" : frame.evidenceBasis === "body_public" ? "이용 허가 본문" : "비공개 본문·문장 검토 전"}</b>{frame.sourceUrl ? <> · <a href={frame.sourceUrl} target="_blank" rel="noopener noreferrer">{frame.source ?? "원문"}에서 확인 →</a></> : ` · ${frame.source ?? "출처 미확인"}`}</small></article>) : <p className="withheld">현재 근거 범위에서는 사전에 정의된 보조 표현 태그를 검출하지 못했습니다.</p>}</div></> : <p className="withheld">기존 분석은 근거 오류 가능성이 있어 숨겼습니다. 재분석 뒤 실제로 검출된 보조 태그만 표시합니다.</p>}</div>}
+                {tab === "frames" && <div id="analysis-panel-frames" role="tabpanel" aria-labelledby="analysis-tab-frames" className="frame-layout">{detail.frames.length ? <><p className="expert-note frame-note"><strong>보조 지표</strong> {bodyBackedFrameCount ? `본문에서 관측한 일반 프레임 태그 ${bodyBackedFrameCount}개와 제목 단서를 구분해 표시합니다.` : "현재는 제목에 포함된 보조 표현 태그만 표시합니다."} 이 탭은 문제 정의·원인·책임·평가·해법 비교를 대체하지 않으며, 합계도 100%가 아닙니다.</p><FrameCompositionByOutlet frames={detail.frames} /><div className="frame-chart">{detail.frames.map((frame) => <div className="frame-row" key={frame.frame}><span>{frameLabels[frame.frame] ?? frame.frame}</span><div aria-hidden="true"><i style={{ width: `${frame.score}%`, background: frameColors[frame.frame] }} /></div><b>{frame.score > 0 ? `${frame.score.toFixed(1)}%` : "검출 없음"}</b></div>)}</div><div className="evidence-panel"><h3>관측된 보조 표현 태그</h3>{detectedFrames.length ? detectedFrames.map((frame) => <article key={frame.frame}><span style={{ color: frameColors[frame.frame] }}>{frameLabels[frame.frame]}</span><p>{frame.evidenceText}</p><small><b>{frame.evidenceBasis === "headline" ? "제목 단서" : frame.evidenceBasis === "body_transient" ? "임시 본문 분석 · 전문 미저장" : frame.evidenceBasis === "body_public" ? "이용 허가 본문" : "비공개 본문·문장 검토 전"}</b>{frame.sourceUrl ? <> · <a href={frame.sourceUrl} target="_blank" rel="noopener noreferrer">{frame.source ?? "원문"}에서 확인 →</a></> : ` · ${frame.source ?? "출처 미확인"}`}</small></article>) : <p className="withheld">현재 근거 범위에서는 사전에 정의된 보조 표현 태그를 검출하지 못했습니다.</p>}</div></> : <p className="withheld">기존 분석은 근거 오류 가능성이 있어 숨겼습니다. 재분석 뒤 실제로 검출된 보조 태그만 표시합니다.</p>}</div>}
                 {tab === "articles" && <div id="analysis-panel-articles" role="tabpanel" aria-labelledby="analysis-tab-articles" className="article-table"><div className="article-tools"><div><strong>관련 원문 {detail.articles.length}건</strong><p>제목 유사도는 같은 사건을 묶기 위한 참고값이며 기사 신뢰도 점수가 아닙니다.</p></div></div><div>{detail.articles.map((article) => <article className="article-item" key={article.id}><span className="article-outlet">{article.source}</span><div><strong>{article.title}</strong><small>{formatDateTime(article.publishedAt)} · 대표 제목과 단어 유사도 {Math.round((article.similarity ?? 0) * 100)}% · {article.contentAvailable ? "본문 구조화 초안 있음" : "제목 근거만 있음"}</small></div><a className="article-link" href={article.url} target="_blank" rel="noopener noreferrer">원문 열기</a></article>)}</div></div>}
               </>
             )}

@@ -231,6 +231,19 @@
                 "properties": {
                   "source": { "type": "string" },
                   "voices": { "type": "array", "items": { "type": "string" } },
+                  "roleCounts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["role", "roleLabel", "count"],
+                      "properties": {
+                        "role": { "type": "string" },
+                        "roleLabel": { "type": "string" },
+                        "count": { "type": "integer", "minimum": 1 }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
                   "officialShare": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
                   "affectedGroupVoice": { "type": "boolean" }
                 },

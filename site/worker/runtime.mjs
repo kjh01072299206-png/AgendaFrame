@@ -1252,6 +1252,10 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
     return {
       source: entry.outlet,
       voices: uniqueStrings(counts.map((role) => role.role_label)),
+      roleCounts: counts
+        .map((role) => ({ role: String(role.role), roleLabel: String(role.role_label ?? role.role), count: Number(role.count ?? 0) }))
+        .filter((role) => role.count > 0)
+        .sort((a, b) => b.count - a.count),
       officialShare: total ? Math.round((official / total) * 1000) / 1000 : null,
       affectedGroupVoice: counts.some((role) => role.role === "affected_person"),
     };
