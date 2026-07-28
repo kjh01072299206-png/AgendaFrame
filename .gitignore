@@ -15,6 +15,7 @@ service-account*.json
 *.ppt
 *.zip
 *.docx
+!docs/submission/final-report.docx
 문서_행정보고/
 *신청서*
 *지원비*
