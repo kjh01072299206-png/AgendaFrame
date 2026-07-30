@@ -38,6 +38,8 @@ class CloudDeploymentContractTests(unittest.TestCase):
         self.assertIn("Apply is blocked until", script)
         self.assertIn("function Test-GcloudResource", script)
         self.assertIn("SilentlyContinue", script)
+        self.assertIn("$CloudSdkBin", script)
+        self.assertIn("Failed to apply the private body retention policy", script)
 
     def test_bigquery_schema_requires_partition_filters(self) -> None:
         schema = (ROOT / "src" / "backend" / "sql" / "schema.sql").read_text(encoding="utf-8")

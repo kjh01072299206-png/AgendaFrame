@@ -55,6 +55,10 @@ if (-not $SpendCapsConfirmed) {
 
 $Gcloud = Resolve-CloudSdkCommand -Name "gcloud"
 $Bq = Resolve-CloudSdkCommand -Name "bq"
+$CloudSdkBin = Split-Path -Parent $Gcloud.Source
+if (($env:PATH -split [IO.Path]::PathSeparator) -notcontains $CloudSdkBin) {
+    $env:PATH = "$CloudSdkBin$([IO.Path]::PathSeparator)$env:PATH"
+}
 
 function Test-GcloudResource {
     param([Parameter(Mandatory)][string[]]$Arguments)
@@ -110,6 +114,7 @@ if (-not (Test-GcloudResource -Arguments @(
     if ($LASTEXITCODE -ne 0) { throw "Failed to create private body bucket." }
 }
 & $Gcloud.Source storage buckets update "gs://$Bucket" --lifecycle-file $LifecyclePath
+if ($LASTEXITCODE -ne 0) { throw "Failed to apply the private body retention policy." }
 
 Get-Content -LiteralPath $SchemaPath -Raw | & $Bq.Source query `
     --project_id=$ProjectId --location=$Region --use_legacy_sql=false `
