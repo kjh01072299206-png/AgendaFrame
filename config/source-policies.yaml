@@ -1,0 +1,123 @@
+schema_version: 1
+policy_version: source-rights-2026-07-30
+default_rights_level: metadata_only
+collection:
+  schedule_kst: ["00:00", "06:00", "12:00", "18:00"]
+  max_articles_per_run: 50
+  max_articles_per_day: 200
+  minimum_request_interval_seconds: 3
+  concurrency: 1
+  stop_status_codes: [403, 429]
+  stop_on_captcha: true
+sources:
+  - id: hani
+    display_name: "\uD55C\uACA8\uB808"
+    domains: [hani.co.kr]
+    rights_level: metadata_only
+    permission_status: written_permission_pending
+    body_retention_until: null
+  - id: khan
+    display_name: "\uACBD\uD5A5\uC2E0\uBB38"
+    domains: [khan.co.kr]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: kmib
+    display_name: "\uAD6D\uBBFC\uC77C\uBCF4"
+    domains: [kmib.co.kr]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: donga
+    display_name: "\uB3D9\uC544\uC77C\uBCF4"
+    domains: [donga.com]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: munhwa
+    display_name: "\uBB38\uD654\uC77C\uBCF4"
+    domains: [munhwa.com]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: seoul
+    display_name: "\uC11C\uC6B8\uC2E0\uBB38"
+    domains: [seoul.co.kr]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: segye
+    display_name: "\uC138\uACC4\uC77C\uBCF4"
+    domains: [segye.com]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: chosun
+    display_name: "\uC870\uC120\uC77C\uBCF4"
+    domains: [chosun.com]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: joongang
+    display_name: "\uC911\uC559\uC77C\uBCF4"
+    domains: [joongang.co.kr]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: hankookilbo
+    display_name: "\uD55C\uAD6D\uC77C\uBCF4"
+    domains: [hankookilbo.com]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: mk
+    display_name: "\uB9E4\uC77C\uACBD\uC81C"
+    domains: [mk.co.kr]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: hankyung
+    display_name: "\uD55C\uAD6D\uACBD\uC81C"
+    domains: [hankyung.com]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: moneytoday
+    display_name: "\uBA38\uB2C8\uD22C\uB370\uC774"
+    domains: [mt.co.kr]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: sedaily
+    display_name: "\uC11C\uC6B8\uACBD\uC81C"
+    domains: [sedaily.com]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: asiae
+    display_name: "\uC544\uC2DC\uC544\uACBD\uC81C"
+    domains: [asiae.co.kr]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: edaily
+    display_name: "\uC774\uB370\uC77C\uB9AC"
+    domains: [edaily.co.kr]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: fnnews
+    display_name: "\uD30C\uC774\uB0B8\uC15C\uB274\uC2A4"
+    domains: [fnnews.com]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: herald
+    display_name: "\uD5E4\uB7F4\uB4DC\uACBD\uC81C"
+    domains: [heraldcorp.com]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: chosunbiz
+    display_name: "\uC870\uC120\uBE44\uC988"
+    domains: [biz.chosun.com]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: yonhap
+    display_name: "\uC5F0\uD569\uB274\uC2A4"
+    domains: [yna.co.kr]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: newsis
+    display_name: "\uB274\uC2DC\uC2A4"
+    domains: [newsis.com]
+    rights_level: metadata_only
+    permission_status: unconfirmed
+  - id: news1
+    display_name: "\uB274\uC2A41"
+    domains: [news1.kr]
+    rights_level: metadata_only
+    permission_status: unconfirmed

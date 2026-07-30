@@ -2,6 +2,7 @@ import { getAnalysisProvider } from "./analysis-provider.mjs";
 import { CLUSTERING_VERSION, FRAME_TAXONOMY_VERSION, PUBLIC_AGENDA_CATEGORIES, SCORE_VERSION, cleanHeadlineToIssueTitle, extractBodyFrameSignals } from "./analysis.mjs";
 import { ArticleExtractionError, extractArticleBody } from "./article-extractor.mjs";
 import {
+  AI_ARTICLE_FRAME_PROFILE_SCHEMA,
   ARTICLE_FRAME_PROFILE_SCHEMA,
   FRAMING_ENGINE_VERSION,
   ISSUE_FRAME_COMPARISON_SCHEMA,
@@ -384,14 +385,10 @@ async function collectionHealth(db) {
         SELECT article_id
         FROM article_frame_profiles
         WHERE status IN ('analyzed', 'partial')
-          AND model_version = ?
-          AND schema_version = ?
       )) AS body_evidence_count
   `).bind(
     FRAME_TAXONOMY_VERSION,
     FRAME_TAXONOMY_VERSION,
-    FRAMING_ENGINE_VERSION,
-    ARTICLE_FRAME_PROFILE_SCHEMA,
   ).first();
   const latest = await db.prepare(`
     SELECT id, status, finished_at, article_count, duplicate_count
@@ -448,7 +445,11 @@ async function readImportPayload(request) {
   return readJsonPayload(request);
 }
 
-async function handleImport(request, env) {
+async function handleImport(
+  request,
+  env,
+  { provider = "bigkinds_export", trigger = "manual" } = {},
+) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
   if (!env?.IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503);
 
@@ -478,14 +479,14 @@ async function handleImport(request, env) {
     await db.prepare(`
       INSERT INTO collection_runs
         (id, provider, trigger, status, started_at, article_count, duplicate_count, error_count)
-      VALUES (?, 'bigkinds_export', 'manual', 'running', ?, 0, 0, 0)
-    `).bind(runId, startedAt).run();
+      VALUES (?, ?, ?, 'running', ?, 0, 0, 0)
+    `).bind(runId, provider, trigger, startedAt).run();
 
     const articleIds = await Promise.all(rows.map((row) => sha256Hex(row.canonicalUrl)));
     const statements = rows.map((row, index) => db.prepare(`
       INSERT INTO articles
         (id, provider, external_id, source_id, title, canonical_url, section, published_at, collected_at, homepage_placement, homepage_rank)
-      VALUES (?, 'bigkinds_export', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(canonical_url) DO UPDATE SET
         provider = excluded.provider,
         external_id = excluded.external_id,
@@ -506,6 +507,7 @@ async function handleImport(request, env) {
         (excluded.homepage_rank IS NOT NULL AND COALESCE(articles.homepage_rank, 0) != excluded.homepage_rank)
     `).bind(
       crypto.randomUUID(),
+      provider,
       articleIds[index],
       row.source.id,
       row.title,
@@ -605,6 +607,8 @@ const ARTICLE_REDIRECT_LIMIT = 3;
 const ARTICLE_EXTRACTOR_VERSION = "public-news-body-v2";
 const BIGKINDS_EXCERPT_EXTRACTOR_VERSION = "bigkinds-export-excerpt-v1";
 const STRUCTURED_IMPORT_BATCH_LIMIT = 100;
+const ANALYZED_IMPORT_BATCH_LIMIT = 50;
+const GCP_ANALYZED_EXTRACTOR_VERSION = "gcp-authorized-body-v1";
 
 function integerInRange(value, minimum, maximum, label) {
   const number = Number(value);
@@ -804,6 +808,146 @@ export function validateStructuredImportRows(inputRows, panel = sourcePanel, now
       textScope: "provider_excerpt",
     };
   });
+}
+
+export function validateAnalyzedImportRows(inputRows, panel = sourcePanel, now = new Date().toISOString()) {
+  if (!Array.isArray(inputRows) || inputRows.length === 0) throw new Error("가져올 분석 결과가 없습니다.");
+  if (inputRows.length > ANALYZED_IMPORT_BATCH_LIMIT) {
+    throw new Error(`GCP 분석 결과는 한 번에 최대 ${ANALYZED_IMPORT_BATCH_LIMIT}행까지 처리할 수 있습니다.`);
+  }
+  const metadata = validateImportRows(inputRows.map((row) => ({
+    source: row?.article?.source_id,
+    title: row?.article?.title,
+    url: row?.article?.canonical_url,
+    published_at: row?.article?.published_at,
+    collected_at: row?.article?.collected_at,
+    section: row?.article?.section,
+  })), panel, now);
+  return inputRows.map((row, index) => {
+    if (!row || typeof row !== "object" || Array.isArray(row)) throw new Error(`${index + 1}행 형식이 올바르지 않습니다.`);
+    const profile = structuredClone(row.profile);
+    const bodyHash = String(row.article?.body_hash ?? "").toLowerCase();
+    const bodyCharacters = Number(row.article?.body_characters);
+    if (!/^[a-f0-9]{64}$/.test(bodyHash)) throw new Error(`${index + 1}행: 본문 해시를 확인해 주세요.`);
+    if (!Number.isInteger(bodyCharacters) || bodyCharacters < 1 || bodyCharacters > 200_000) {
+      throw new Error(`${index + 1}행: 본문 문자 수를 확인해 주세요.`);
+    }
+    if (profile?.schema_version !== AI_ARTICLE_FRAME_PROFILE_SCHEMA) {
+      throw new Error(`${index + 1}행: 지원하지 않는 AI 분석 스키마입니다.`);
+    }
+    if (profile?.article?.body_sha256 !== bodyHash || Number(profile?.article?.body_character_count) !== bodyCharacters) {
+      throw new Error(`${index + 1}행: 기사 정보와 분석 프로필의 본문 식별값이 다릅니다.`);
+    }
+    const validation = validateArticleFrameProfile(profile);
+    if (!validation.valid) throw new Error(`${index + 1}행: 분석 프로필 검증 실패: ${validation.errors.join("; ")}`);
+    return {
+      metadata: metadata[index],
+      bodyHash,
+      bodyCharacters,
+      profile,
+    };
+  });
+}
+
+async function handleAnalyzedImport(request, env) {
+  if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503, { request });
+  if (!env?.IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503, { request });
+  if (request.headers.get("x-agendaframe-source") !== "gcp-batch-v1") {
+    return jsonResponse({ error: "허용된 배치 게시자 요청이 아닙니다." }, 403, { request });
+  }
+  if (!(await adminAuthorized(request, env))) {
+    return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401, { request });
+  }
+
+  let rows;
+  try {
+    const payload = await readJsonPayload(request, 4 * 1024 * 1024);
+    rows = validateAnalyzedImportRows(payload.rows);
+  } catch (error) {
+    return jsonResponse({ error: error instanceof Error ? error.message : "GCP 분석 결과 형식을 확인해 주세요." }, 400, { request });
+  }
+
+  const origin = new URL(request.url).origin;
+  const metadataRequest = new Request(new URL("/api/import", request.url), {
+    method: "POST",
+    headers: {
+      authorization: request.headers.get("authorization") ?? "",
+      "content-type": "application/json",
+      origin,
+      "sec-fetch-site": "same-origin",
+    },
+    body: JSON.stringify({
+      rows: rows.map(({ metadata }) => ({
+        source: metadata.source.name,
+        title: metadata.title,
+        url: metadata.canonicalUrl,
+        published_at: new Date(metadata.publishedAt).toISOString(),
+        collected_at: new Date(metadata.collectedAt).toISOString(),
+        section: metadata.section,
+      })),
+    }),
+  });
+  const metadataResponse = await handleImport(metadataRequest, env, {
+    provider: "gcp_batch",
+    trigger: "gcp_publish",
+  });
+  const metadataResult = await metadataResponse.json();
+  if (!metadataResponse.ok) return jsonResponse(metadataResult, metadataResponse.status, { request });
+
+  try {
+    const lookups = await env.DB.batch(rows.map(({ metadata }) => env.DB.prepare(`
+      SELECT id FROM articles WHERE canonical_url = ? LIMIT 1
+    `).bind(metadata.canonicalUrl)));
+    const analyzedAt = Date.now();
+    const statements = rows.map((row, index) => {
+      const articleId = lookups[index]?.results?.[0]?.id;
+      if (!articleId) throw new Error("저장한 기사 식별자를 찾지 못했습니다.");
+      row.profile.article.article_id = articleId;
+      const validation = validateArticleFrameProfile(row.profile);
+      if (!validation.valid) throw new Error(`게시 직전 분석 프로필 검증 실패: ${validation.errors.join("; ")}`);
+      const modelVersion = String(row.profile.engine?.version ?? "").slice(0, 120);
+      const promptVersion = String(row.profile.engine?.prompt_version ?? "").slice(0, 120);
+      if (!modelVersion || !promptVersion) throw new Error("모델과 프롬프트 버전이 필요합니다.");
+      return env.DB.prepare(`
+        INSERT INTO article_frame_profiles
+          (id, article_id, body_hash, body_characters, profile_json, status, failure_code, extractor_version, provider, model_version, prompt_version, schema_version, review_status, analyzed_at)
+        VALUES (?, ?, ?, ?, ?, 'analyzed', NULL, ?, 'vertex_ai', ?, ?, ?, 'ai_draft', ?)
+        ON CONFLICT(article_id, extractor_version, model_version, schema_version) DO UPDATE SET
+          body_hash = excluded.body_hash,
+          body_characters = excluded.body_characters,
+          profile_json = excluded.profile_json,
+          status = 'analyzed',
+          failure_code = NULL,
+          provider = excluded.provider,
+          prompt_version = excluded.prompt_version,
+          review_status = 'ai_draft',
+          analyzed_at = excluded.analyzed_at
+      `).bind(
+        crypto.randomUUID(),
+        articleId,
+        row.bodyHash,
+        row.bodyCharacters,
+        JSON.stringify(row.profile),
+        GCP_ANALYZED_EXTRACTOR_VERSION,
+        modelVersion,
+        promptVersion,
+        AI_ARTICLE_FRAME_PROFILE_SCHEMA,
+        analyzedAt,
+      );
+    });
+    await runBatches(env.DB, statements);
+    return jsonResponse({
+      received: rows.length,
+      saved: statements.length,
+      metadata: metadataResult,
+      bodyStorageCount: 0,
+      schemaVersion: AI_ARTICLE_FRAME_PROFILE_SCHEMA,
+      reviewStatus: "ai_draft",
+    }, 201, { request });
+  } catch (error) {
+    console.error("AgendaFrame analyzed import failed", error);
+    return jsonResponse({ error: "분석 결과를 저장하지 못했습니다." }, 500, { request });
+  }
 }
 
 async function handleStructuredImport(request, env) {
@@ -1135,15 +1279,11 @@ async function loadArticleFrameProfiles(db, start, end) {
     JOIN articles a ON a.id = profiles.article_id
     WHERE a.published_at >= ? AND a.published_at < ?
       AND profiles.status IN ('analyzed', 'partial')
-      AND profiles.model_version = ?
-      AND profiles.schema_version = ?
-    ORDER BY profiles.article_id ASC, profiles.analyzed_at DESC
-  `).bind(
-    start,
-    end,
-    FRAMING_ENGINE_VERSION,
-    ARTICLE_FRAME_PROFILE_SCHEMA,
-  ).all();
+    ORDER BY
+      profiles.article_id ASC,
+      CASE profiles.provider WHEN 'vertex_ai' THEN 0 ELSE 1 END,
+      profiles.analyzed_at DESC
+  `).bind(start, end).all();
   const profiles = new Map();
   for (const row of result.results ?? []) {
     if (profiles.has(row.articleId)) continue;
@@ -2294,8 +2434,6 @@ async function handleIssues(request, env) {
            SELECT 1 FROM article_frame_profiles profiles
            WHERE profiles.article_id = ia.article_id
              AND profiles.status IN ('analyzed', 'partial')
-             AND profiles.model_version = '${FRAMING_ENGINE_VERSION}'
-             AND profiles.schema_version = '${ARTICLE_FRAME_PROFILE_SCHEMA}'
          )) AS structuredProfileCount
       FROM issues
       WHERE ${where}
@@ -2345,8 +2483,6 @@ async function handleIssueDetail(request, issueId, env) {
         SELECT 1 FROM article_frame_profiles profiles
         WHERE profiles.article_id = profile_ia.article_id
           AND profiles.status IN ('analyzed', 'partial')
-          AND profiles.model_version = '${FRAMING_ENGINE_VERSION}'
-          AND profiles.schema_version = '${ARTICLE_FRAME_PROFILE_SCHEMA}'
       )) AS structuredProfileCount
     FROM issues i
     JOIN analysis_runs r ON r.id = i.run_id
@@ -2770,6 +2906,10 @@ export async function handleApiRequest(request, env = {}) {
   if (url.pathname === "/api/import/structured") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
     return handleStructuredImport(request, env);
+  }
+  if (url.pathname === "/api/import/analyzed") {
+    if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
+    return handleAnalyzedImport(request, env);
   }
   if (url.pathname === "/api/analyze") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);

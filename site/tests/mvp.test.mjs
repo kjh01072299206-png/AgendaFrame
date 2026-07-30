@@ -5,7 +5,7 @@ import test from "node:test";
 import sourcePanel from "../data/sources.json" with { type: "json" };
 import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, PUBLIC_AGENDA_CATEGORIES, analyzeArticles, classifyAgendaCategory, titleTokens } from "../worker/analysis.mjs";
 import { getAnalysisProvider } from "../worker/analysis-provider.mjs";
-import { calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, configureSourcePanel, enumerateKstDates, extractArticleBodyFromHtml, handleApiRequest, validateImportRows, validateStructuredImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
+import { calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, configureSourcePanel, enumerateKstDates, extractArticleBodyFromHtml, handleApiRequest, validateAnalyzedImportRows, validateImportRows, validateStructuredImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
 
 configureSourcePanel(sourcePanel);
 
@@ -679,6 +679,52 @@ test("validates BigKinds excerpts for transient structured analysis without reta
     published_at: "2026-07-26T12:30:00+09:00",
     excerpt: "너무 짧음",
   }]), /40~5,000자/);
+});
+
+test("validates body-free GCP semantic analysis imports", () => {
+  const hash = "a".repeat(64);
+  const profile = {
+    schema_version: "agendaframe.article-frame-profile.v2",
+    engine: {
+      semantic_ai: true,
+      version: "gemini-fixture",
+      prompt_version: "2.0.0",
+    },
+    article: {
+      article_id: "gcp-article-1",
+      body_sha256: hash,
+      body_character_count: 120,
+      sentence_count: 1,
+      raw_body_retained: false,
+    },
+    genre: { code: "unknown" },
+    dimensions: Object.fromEntries(
+      ["problem_definition", "causal_interpretation", "responsibility_attribution", "moral_evaluation", "treatment_recommendation"]
+        .map((dimension) => [dimension, { status: "not_observed", outlet_narration_observed: false, items: [] }]),
+    ),
+    actors_and_sources: [],
+    context_depth: { level: "unknown" },
+    scope: { code: "unknown" },
+    secondary_descriptors: { generic_frames: [], policy_frames: [], controlled_associations: [] },
+    framing_devices: [],
+    review: { status: "ai_draft", requires_human_review: true },
+  };
+  const [row] = validateAnalyzedImportRows([{
+    article: {
+      source_id: "hani",
+      title: "검증용 GCP 분석 기사",
+      canonical_url: "https://www.hani.co.kr/arti/politics/gcp-test.html",
+      published_at: "2026-07-30T09:00:00+09:00",
+      collected_at: "2026-07-30T09:10:00+09:00",
+      section: "정치",
+      body_hash: hash,
+      body_characters: 120,
+    },
+    profile,
+  }]);
+  assert.equal(row.profile.engine.semantic_ai, true);
+  assert.equal(row.bodyHash, hash);
+  assert.doesNotMatch(JSON.stringify(row), /"body_text"|"raw_body"|"excerpt"/);
 });
 
 test("reports no-cost health and protects write endpoints", async () => {

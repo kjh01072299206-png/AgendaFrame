@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  AI_ARTICLE_FRAME_PROFILE_SCHEMA,
   ARTICLE_FRAME_PROFILE_SCHEMA,
   analyzeArticleFraming,
   buildIssueFrameComparison,
@@ -217,4 +218,25 @@ test("validator rejects conventional raw-text carrier fields", async () => {
   const result = validateArticleFrameProfile(unsafe);
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => error.includes("raw_body")));
+});
+
+test("accepts semantic v2 profiles and discloses AI use in comparisons", async () => {
+  const profile = await analyzeArticleFraming({
+    articleId: "semantic-v2-1",
+    title: "안전 대책",
+    bodyText: "안전 사고 피해가 커지고 있어 예방 대책을 강화해야 한다.",
+  });
+  profile.schema_version = AI_ARTICLE_FRAME_PROFILE_SCHEMA;
+  profile.engine = {
+    ...profile.engine,
+    semantic_ai: true,
+    approach: "semantic_evidence_bounded",
+    prompt_version: "2.0.0",
+  };
+  assert.equal(validateArticleFrameProfile(profile).valid, true);
+  const comparison = buildIssueFrameComparison(
+    [profile],
+    [{ articleId: "semantic-v2-1", sourceId: "fixture", sourceName: "검증매체" }],
+  );
+  assert.equal(comparison.method.semantic_ai, true);
 });

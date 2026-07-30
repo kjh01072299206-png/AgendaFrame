@@ -5,6 +5,11 @@ prompts:
     path: frame-analysis-v1.0.0.md
     output_schema: schemas/frame-output.schema.json
     taxonomy_version: frames-ko-v1.0.0
+  - id: semantic-frame-analysis
+    version: 2.0.0
+    path: semantic-frame-analysis-v2.0.0.md
+    output_schema: schemas/semantic-frame-output.schema.json
+    taxonomy_version: entman-article-frame-v2
   - id: report-generation
     version: 1.0.0
     path: report-generation-v1.0.0.md

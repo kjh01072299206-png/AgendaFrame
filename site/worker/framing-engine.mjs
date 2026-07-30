@@ -8,6 +8,7 @@
  */
 
 export const ARTICLE_FRAME_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v1";
+export const AI_ARTICLE_FRAME_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v2";
 export const ISSUE_FRAME_COMPARISON_SCHEMA = "agendaframe.issue-frame-comparison.v1";
 export const FRAMING_ENGINE_VERSION = "korean-evidence-rules-v2";
 
@@ -748,8 +749,15 @@ function findForbiddenKeys(value, path = "$", errors = []) {
 export function validateArticleFrameProfile(profile) {
   const errors = [];
   if (!profile || typeof profile !== "object") return { valid: false, errors: ["profile must be an object"] };
-  if (profile.schema_version !== ARTICLE_FRAME_PROFILE_SCHEMA) errors.push("unsupported schema_version");
-  if (profile.engine?.semantic_ai !== false) errors.push("semantic_ai must be false for this engine");
+  const deterministicProfile = profile.schema_version === ARTICLE_FRAME_PROFILE_SCHEMA;
+  const semanticProfile = profile.schema_version === AI_ARTICLE_FRAME_PROFILE_SCHEMA;
+  if (!deterministicProfile && !semanticProfile) errors.push("unsupported schema_version");
+  if (deterministicProfile && profile.engine?.semantic_ai !== false) {
+    errors.push("semantic_ai must be false for the deterministic schema");
+  }
+  if (semanticProfile && profile.engine?.semantic_ai !== true) {
+    errors.push("semantic_ai must be true for the semantic schema");
+  }
   if (profile.article?.raw_body_retained !== false) errors.push("raw_body_retained must be false");
   if (!/^[a-f0-9]{64}$/.test(String(profile.article?.body_sha256 ?? ""))) errors.push("body_sha256 must be SHA-256 hex");
   for (const dimension of DIMENSION_ORDER) {
@@ -1043,7 +1051,7 @@ export function buildIssueFrameComparison(profiles, articleMetadata = [], option
       outlet_voice_separated_from_sources: true,
       source_dominance_check: sourceDominated,
       secondary_taxonomies_are_descriptive_only: true,
-      semantic_ai: false,
+      semantic_ai: profiles.some((profile) => profile.engine?.semantic_ai === true),
       caution: "동일 사건으로 검증된 기사끼리만 비교해야 하며, 관측되지 않은 요소를 의도적 누락으로 해석하지 않습니다.",
     },
     sample: {

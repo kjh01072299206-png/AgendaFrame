@@ -1,0 +1,11 @@
+# Upload only the immutable runtime build context. Local outputs, the frontend,
+# credentials, tests, and untracked experiments must never enter Cloud Build.
+*
+!.gcloudignore
+!README.md
+!pyproject.toml
+!requirements.lock
+!config/
+!config/**
+!src/
+!src/**
