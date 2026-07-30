@@ -4,7 +4,8 @@ param(
     [string]$Region = "asia-northeast3",
     [switch]$Apply,
     [switch]$SpendCapsConfirmed,
-    [switch]$DeferStorageLifecycle
+    [switch]$DeferStorageLifecycle,
+    [switch]$DeferBigQuerySchema
 )
 
 Set-StrictMode -Version Latest
@@ -125,10 +126,18 @@ else {
     if ($LASTEXITCODE -ne 0) { throw "Failed to apply the private body retention policy." }
 }
 
-Get-Content -LiteralPath $SchemaPath -Raw | & $Bq.Source query `
-    --project_id=$ProjectId --location=$Region --use_legacy_sql=false `
-    --maximum_bytes_billed=1073741824
-if ($LASTEXITCODE -ne 0) { throw "BigQuery schema creation failed." }
+if ($DeferBigQuerySchema) {
+    Write-Warning (
+        "BigQuery schema creation deferred. Do not deploy collection, analysis, " +
+        "or publication jobs until the schema is applied and verified."
+    )
+}
+else {
+    Get-Content -LiteralPath $SchemaPath -Raw | & $Bq.Source query `
+        --project_id=$ProjectId --location=$Region --use_legacy_sql=false `
+        --maximum_bytes_billed=1073741824
+    if ($LASTEXITCODE -ne 0) { throw "BigQuery schema creation failed." }
+}
 
 foreach ($Name in @("collector", "analyzer", "publisher")) {
     if (-not (Test-GcloudResource -Arguments @(
