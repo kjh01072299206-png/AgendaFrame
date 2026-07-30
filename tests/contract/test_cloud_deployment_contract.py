@@ -55,6 +55,7 @@ class CloudDeploymentContractTests(unittest.TestCase):
         script = (ROOT / "scripts" / "gcp" / "deploy.ps1").read_text(encoding="utf-8")
         self.assertIn("[switch]$FullGatePassed", script)
         self.assertIn("status --porcelain --untracked-files=no", script)
+        self.assertIn("$TrackedChanges = @(", script)
         self.assertIn("CommitSha must match", script)
         self.assertIn("runtime:$CommitSha", script)
         self.assertIn("agendaframe-config-check", script)

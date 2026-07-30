@@ -51,7 +51,8 @@ if (-not $Apply) {
 if (-not $FullGatePassed) {
     throw "Deployment is blocked until the full offline gate has passed."
 }
-if ((& git -C $RepoRoot status --porcelain --untracked-files=no).Count -gt 0) {
+$TrackedChanges = @(& git -C $RepoRoot status --porcelain --untracked-files=no)
+if ($TrackedChanges.Count -gt 0) {
     throw "Deployment requires no tracked changes so the image matches the reviewed commit."
 }
 if ((& git -C $RepoRoot rev-parse HEAD).Trim() -ne $CommitSha) {
