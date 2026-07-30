@@ -40,6 +40,8 @@ class CloudDeploymentContractTests(unittest.TestCase):
         self.assertIn("SilentlyContinue", script)
         self.assertIn("$CloudSdkBin", script)
         self.assertIn("Failed to apply the private body retention policy", script)
+        self.assertIn("[switch]$DeferStorageLifecycle", script)
+        self.assertIn("Do not enable body collection or analysis", script)
 
     def test_bigquery_schema_requires_partition_filters(self) -> None:
         schema = (ROOT / "src" / "backend" / "sql" / "schema.sql").read_text(encoding="utf-8")

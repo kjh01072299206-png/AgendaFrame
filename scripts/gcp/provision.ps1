@@ -3,7 +3,8 @@ param(
     [string]$ProjectId = "project-40bc06fc-fb4b-46b6-a10",
     [string]$Region = "asia-northeast3",
     [switch]$Apply,
-    [switch]$SpendCapsConfirmed
+    [switch]$SpendCapsConfirmed,
+    [switch]$DeferStorageLifecycle
 )
 
 Set-StrictMode -Version Latest
@@ -113,8 +114,16 @@ if (-not (Test-GcloudResource -Arguments @(
         --uniform-bucket-level-access --public-access-prevention
     if ($LASTEXITCODE -ne 0) { throw "Failed to create private body bucket." }
 }
-& $Gcloud.Source storage buckets update "gs://$Bucket" --lifecycle-file $LifecyclePath
-if ($LASTEXITCODE -ne 0) { throw "Failed to apply the private body retention policy." }
+if ($DeferStorageLifecycle) {
+    Write-Warning (
+        "Storage lifecycle update deferred. Do not enable body collection or analysis " +
+        "until the lifecycle rule is applied and verified."
+    )
+}
+else {
+    & $Gcloud.Source storage buckets update "gs://$Bucket" --lifecycle-file $LifecyclePath
+    if ($LASTEXITCODE -ne 0) { throw "Failed to apply the private body retention policy." }
+}
 
 Get-Content -LiteralPath $SchemaPath -Raw | & $Bq.Source query `
     --project_id=$ProjectId --location=$Region --use_legacy_sql=false `
