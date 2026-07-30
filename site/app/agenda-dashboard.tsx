@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { FormEvent, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Health = {
   status: string;
@@ -285,7 +285,7 @@ function ComparisonSourceLinks({ outlets }: { outlets: ComparisonSource[] }) {
   );
 }
 
-function SourcingBars({ byOutlet }: { byOutlet: NonNullable<Comparison["sourceLens"]>["byOutlet"] }) {
+function SourcingBars({ byOutlet, embedded = false }: { byOutlet: NonNullable<Comparison["sourceLens"]>["byOutlet"]; embedded?: boolean }) {
   const rows = byOutlet
     .map((entry) => ({ source: entry.source, roleCounts: entry.roleCounts ?? [] }))
     .filter((entry) => entry.roleCounts.length > 0);
@@ -293,9 +293,9 @@ function SourcingBars({ byOutlet }: { byOutlet: NonNullable<Comparison["sourceLe
   const legend = new Map<string, string>();
   rows.forEach((row) => row.roleCounts.forEach((role) => legend.set(role.role, role.roleLabel)));
   return (
-    <div className="sourcing-bars">
-      <h4>누구의 목소리로 말하는가 <small>인용원(sourcing) 관측치</small></h4>
-      <p className="viz-caption">직접 인용·간접 인용으로 확인된 발화 횟수입니다. 막대 길이는 목소리의 가시성 관측치이며 매체의 지지·취재원 신뢰도 판정이 아닙니다.</p>
+    <div className={`sourcing-bars${embedded ? " embedded" : ""}`}>
+      {!embedded && <h4>누구의 목소리로 말하는가 <small>인용원(sourcing) 관측치</small></h4>}
+      <p className="viz-caption">직접·간접 인용으로 확인된 발화 횟수입니다. 막대 길이는 목소리의 가시성 관측치이며 매체의 지지나 취재원 신뢰도 판정이 아닙니다.</p>
       {rows.map((row) => {
         const total = row.roleCounts.reduce((sum, role) => sum + role.count, 0);
         return (
@@ -315,15 +315,11 @@ function SourcingBars({ byOutlet }: { byOutlet: NonNullable<Comparison["sourceLe
   );
 }
 
-function EntmanMatrix({ axes }: { axes: ComparisonAxis[] }) {
+function EntmanMatrix({ axes, embedded = false }: { axes: ComparisonAxis[]; embedded?: boolean }) {
   const outlets = [...new Set(axes.flatMap((axis) => axis.variants.flatMap((variant) => variant.outlets.map((outlet) => outlet.source))))];
   if (axes.length < 2 || outlets.length < 2) return null;
-  return (
-    <section className="comparison-section entman-section" aria-labelledby="entman-matrix-title">
-      <div className="comparison-section-heading">
-        <div><h3 id="entman-matrix-title">문제 정의·원인·평가·해결책</h3><p>같은 분석축을 언론사 기준으로 재배열한 표입니다. 본문에서 실제 관측된 설명만 요약합니다.</p></div>
-        <span>Entman (1993) 4기능</span>
-      </div>
+  const matrix = (
+    <>
       <div className="entman-matrix-wrap">
         <table className="entman-matrix">
           <thead><tr><th scope="col">언론사</th>{axes.map((axis) => <th scope="col" key={axis.dimension}>{axis.label}</th>)}</tr></thead>
@@ -343,11 +339,21 @@ function EntmanMatrix({ axes }: { axes: ComparisonAxis[] }) {
         </table>
       </div>
       <p className="viz-caption">‘미관측’은 분석 대상 본문에서 확인되지 않았다는 뜻이며, 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다.</p>
+    </>
+  );
+  if (embedded) return matrix;
+  return (
+    <section className="comparison-section entman-section" aria-labelledby="entman-matrix-title">
+      <div className="comparison-section-heading">
+        <div><h3 id="entman-matrix-title">문제 정의·원인·평가·해결책</h3><p>같은 분석축을 언론사 기준으로 재배열한 표입니다. 본문에서 실제 관측된 설명만 요약합니다.</p></div>
+        <span>Entman (1993) 4기능</span>
+      </div>
+      {matrix}
     </section>
   );
 }
 
-function FrameCompositionByOutlet({ frames }: { frames: Frame[] }) {
+function FrameCompositionByOutlet({ frames, embedded = false }: { frames: Frame[]; embedded?: boolean }) {
   const [selected, setSelected] = useState<{ source: string; frame: string } | null>(null);
   const bySource = new Map<string, Map<string, Frame[]>>();
   for (const frame of frames) {
@@ -368,8 +374,8 @@ function FrameCompositionByOutlet({ frames }: { frames: Frame[] }) {
     ? rows.find((row) => row.source === selected.source)?.segments.find((segment) => segment.code === selected.frame)?.evidence ?? []
     : [];
   return (
-    <div className="frame-composition">
-      <h4>프레임 구성 <small>매체별 표현 단서 · 다중 라벨</small></h4>
+    <div className={`frame-composition${embedded ? " embedded" : ""}`}>
+      {!embedded && <h4>프레임 구성 <small>매체별 표현 단서 · 다중 라벨</small></h4>}
       <p className="viz-caption">막대의 구간을 누르면 해당 프레임 판단의 근거 문장이 표시됩니다. 구간 크기는 검출된 표현 단서 수이며 기사 논조 점수가 아닙니다.</p>
       {rows.map((row) => {
         const total = row.segments.reduce((sum, segment) => sum + segment.count, 0);
@@ -406,6 +412,116 @@ function FrameCompositionByOutlet({ frames }: { frames: Frame[] }) {
         </div>
       )}
     </div>
+  );
+}
+
+function AnalysisCard({ title, method, children }: { title: string; method: string; children: ReactNode }) {
+  return (
+    <details className="analysis-visual-card" open>
+      <summary><span><strong>{title}</strong><small>{method}</small></span></summary>
+      <div className="analysis-visual-body">{children}</div>
+    </details>
+  );
+}
+
+const criticalStancePattern = /비판|부정|우려|문제|실패|부적절|위법|책임|논란|갈등|침해|부담/u;
+const supportiveStancePattern = /긍정|지지|성과|효과|개선|적절|환영|찬성|강화|보완/u;
+const thematicPattern = /구조|제도|정책|법|맥락|원인|역사|사회|시스템|규제|정부|공공기관/u;
+const episodicPattern = /개인|사건|현장|피해|사고|당사자|발언|인물|충돌/u;
+
+function clampLandscapeValue(value: number) {
+  return Math.max(8, Math.min(92, value));
+}
+
+function outletJitter(source: string, salt: number) {
+  const hash = [...source].reduce((sum, character, index) => sum + character.charCodeAt(0) * (index + salt + 1), 0);
+  return (hash % 9) - 4;
+}
+
+function buildStanceLandscape(axes: ComparisonAxis[]) {
+  const outlets = [...new Set(axes.flatMap((axis) => axis.variants.flatMap((variant) => variant.outlets.map((outlet) => outlet.source))))];
+  return outlets.map((source) => {
+    const summaries = axes.flatMap((axis) => axis.variants
+      .filter((variant) => variant.outlets.some((outlet) => outlet.source === source))
+      .map((variant) => ({ dimension: axis.dimension, text: variant.summary })));
+    const evaluationText = summaries.filter((entry) => entry.dimension === "moral_evaluation").map((entry) => entry.text).join(" ");
+    const critical = criticalStancePattern.test(evaluationText) ? 1 : 0;
+    const supportive = supportiveStancePattern.test(evaluationText) ? 1 : 0;
+    const thematic = summaries.filter((entry) => thematicPattern.test(entry.text)).length;
+    const episodic = summaries.filter((entry) => episodicPattern.test(entry.text)).length;
+    const stanceDelta = supportive - critical;
+    const coverage = axes.length ? summaries.length / axes.length : 0;
+    const modeDelta = thematic + episodic > 0 ? (thematic - episodic) / (thematic + episodic) : coverage - 0.5;
+    return {
+      source,
+      x: clampLandscapeValue(50 + stanceDelta * 27 + outletJitter(source, 1)),
+      y: clampLandscapeValue(50 - modeDelta * 34 + outletJitter(source, 3)),
+      stanceLabel: critical > supportive ? "비판적 평가 단서" : supportive > critical ? "유보·긍정 평가 단서" : "평가 방향 미관측",
+      modeLabel: thematic > episodic ? "주제적 맥락 단서 우세" : episodic > thematic ? "일화적 사건 단서 우세" : "보도 방식 단서 혼합",
+      evidenceCount: summaries.length,
+    };
+  });
+}
+
+function StanceLandscape({ axes }: { axes: ComparisonAxis[] }) {
+  const points = buildStanceLandscape(axes);
+  if (points.length < 2) return null;
+  return (
+    <div className="stance-landscape">
+      <div className="stance-plot" role="img" aria-label="매체별 평가 표현과 일화적·주제적 보도 단서의 상대적 위치">
+        <span className="axis-label axis-top">주제적 단서 (구조·맥락)</span>
+        <span className="axis-label axis-bottom">일화적 단서 (사건·인물)</span>
+        <span className="axis-label axis-left">비판적 표현</span>
+        <span className="axis-label axis-right">유보·긍정 표현</span>
+        {points.map((point) => (
+          <span
+            className="stance-point"
+            key={point.source}
+            style={{ left: `${point.x}%`, top: `${point.y}%` }}
+            title={`${point.source}: ${point.stanceLabel}, ${point.modeLabel}, 관측 단서 ${point.evidenceCount}개`}
+          >{point.source.replace(/일보|신문|뉴스$/u, "")}</span>
+        ))}
+      </div>
+      <div className="stance-explainer">
+        <p><strong>가로축</strong>은 규범적 평가에서 확인된 비판·우려와 긍정·지지 표현의 상대적 위치입니다.</p>
+        <p><strong>세로축</strong>은 사건·인물 중심의 일화적 단서와 구조·제도·맥락 중심의 주제적 단서를 비교합니다.</p>
+        <p className="stance-caution">자동 구조화 문구를 규칙으로 배치한 탐색용 시각화입니다. 정치 성향·논조·매체 입장을 확정하는 점수가 아닙니다.</p>
+        <ul className="stance-accessible">
+          {points.map((point) => <li key={point.source}><strong>{point.source}</strong> · {point.stanceLabel} · {point.modeLabel}</li>)}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function FramingVisualDeck({ frames, axes, sourceLens }: { frames: Frame[]; axes: ComparisonAxis[]; sourceLens?: Comparison["sourceLens"] }) {
+  const frameOutletCount = new Set(frames.filter((frame) => frame.source).map((frame) => frame.source)).size;
+  const matrixOutletCount = new Set(axes.flatMap((axis) => axis.variants.flatMap((variant) => variant.outlets.map((outlet) => outlet.source)))).size;
+  const sourcingOutletCount = sourceLens?.byOutlet.filter((entry) => entry.roleCounts?.length).length ?? 0;
+  if (frameOutletCount < 2 && matrixOutletCount < 2 && sourcingOutletCount < 2) return null;
+  return (
+    <section className="analysis-visual-deck" aria-label="매체별 프레임과 보도 방식 시각화">
+      {frameOutletCount >= 2 && (
+        <AnalysisCard title="프레임 구성" method="Policy Frames Codebook · 다중 라벨">
+          <FrameCompositionByOutlet frames={frames} embedded />
+        </AnalysisCard>
+      )}
+      {axes.length >= 2 && matrixOutletCount >= 2 && (
+        <AnalysisCard title="문제 정의·원인·평가·해결책" method="Entman (1993) 기능 추출">
+          <EntmanMatrix axes={axes} embedded />
+        </AnalysisCard>
+      )}
+      {sourceLens && sourcingOutletCount >= 2 && (
+        <AnalysisCard title="누구의 목소리로 말하는가" method="인용원(sourcing) 분석">
+          <SourcingBars byOutlet={sourceLens.byOutlet} embedded />
+        </AnalysisCard>
+      )}
+      {axes.length >= 2 && matrixOutletCount >= 2 && (
+        <AnalysisCard title="논조와 보도 방식" method="평가 표현 · Iyengar (1991) 참고">
+          <StanceLandscape axes={axes} />
+        </AnalysisCard>
+      )}
+    </section>
   );
 }
 
@@ -461,7 +577,7 @@ function issueSpectrum(comparison: Comparison) {
   };
 }
 
-function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
+function StructuredComparisonView({ comparison, frames }: { comparison: Comparison; frames: Frame[] }) {
   const summaryItems = [
     ["여러 매체가 함께 설명한 것", comparison.summary?.commonGround],
     ["설명이 가장 크게 갈린 지점", comparison.summary?.mainDifference],
@@ -504,6 +620,8 @@ function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
           </dl>
         )}
       </header>
+
+      <FramingVisualDeck frames={frames} axes={axes} sourceLens={sourceLens} />
 
       {spectrum && (
         <section className="issue-spectrum-card" aria-labelledby="issue-spectrum-title">
@@ -562,14 +680,11 @@ function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
         ) : <p className="withheld">문제 정의·원인·책임·평가·해법을 매체 간에 비교할 만큼 본문 근거가 모이지 않았습니다.</p>}
       </section>
 
-      <EntmanMatrix axes={axes} />
-
       {sourceLens && (
         <section className="comparison-section source-lens" aria-labelledby="source-lens-title">
           <div className="comparison-section-heading">
             <div><h3 id="source-lens-title">누구의 목소리로 설명했나</h3><p>인용·간접인용으로 확인된 발화자 범주입니다. 등장하지 않았다는 사실만 보여주며 의도적 배제를 뜻하지 않습니다.</p></div>
           </div>
-          <SourcingBars byOutlet={sourceLens.byOutlet} />
           <div className="voice-overview">
             <div><h4>여러 매체에 공통 등장</h4>{sourceLens.sharedVoices.length ? <ul>{sourceLens.sharedVoices.map((voice) => <li key={voice}>{voice}</li>)}</ul> : <p>공통 발화자 범주가 확인되지 않았습니다.</p>}</div>
             <div><h4>일부 매체에서만 등장</h4>{sourceLens.voicesPresentInSomeOutlets.length ? <ul>{sourceLens.voicesPresentInSomeOutlets.map((voice) => <li key={voice}>{voice}</li>)}</ul> : <p>매체별 차이가 확인되지 않았습니다.</p>}</div>
@@ -1027,7 +1142,7 @@ export default function AgendaDashboard() {
                 {tab === "compare" && (
                   <div id="analysis-panel-compare" role="tabpanel" aria-labelledby="analysis-tab-compare" className="evidence-first">
                     {hasStructuredComparison(detail.comparison)
-                      ? <StructuredComparisonView comparison={detail.comparison} />
+                      ? <StructuredComparisonView comparison={detail.comparison} frames={detail.frames} />
                       : <LegacyComparisonView comparison={detail.comparison} articles={detail.articles} openArticles={() => setTab("articles")} />}
                   </div>
                 )}
