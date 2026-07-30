@@ -44,6 +44,8 @@ class CloudDeploymentContractTests(unittest.TestCase):
         self.assertIn("Do not enable body collection or analysis", script)
         self.assertIn("[switch]$DeferBigQuerySchema", script)
         self.assertIn("Do not deploy collection, analysis", script)
+        self.assertIn('@("builder", "roles/artifactregistry.writer")', script)
+        self.assertIn('@("builder", "roles/storage.objectViewer")', script)
 
     def test_bigquery_schema_requires_partition_filters(self) -> None:
         schema = (ROOT / "src" / "backend" / "sql" / "schema.sql").read_text(encoding="utf-8")
@@ -72,6 +74,11 @@ class CloudDeploymentContractTests(unittest.TestCase):
         args = build["steps"][0]["args"]
         self.assertIn("src/backend/Dockerfile", args)
         self.assertIn("${_IMAGE}", build["images"])
+        self.assertEqual(
+            build["serviceAccount"],
+            "projects/project-40bc06fc-fb4b-46b6-a10/serviceAccounts/"
+            "builder@project-40bc06fc-fb4b-46b6-a10.iam.gserviceaccount.com",
+        )
 
 
 if __name__ == "__main__":

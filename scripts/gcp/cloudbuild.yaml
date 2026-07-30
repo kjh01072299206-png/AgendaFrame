@@ -9,5 +9,6 @@ steps:
       - .
 images:
   - ${_IMAGE}
+serviceAccount: projects/project-40bc06fc-fb4b-46b6-a10/serviceAccounts/builder@project-40bc06fc-fb4b-46b6-a10.iam.gserviceaccount.com
 options:
   logging: CLOUD_LOGGING_ONLY
