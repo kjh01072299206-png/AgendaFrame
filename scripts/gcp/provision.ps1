@@ -56,6 +56,20 @@ if (-not $SpendCapsConfirmed) {
 $Gcloud = Resolve-CloudSdkCommand -Name "gcloud"
 $Bq = Resolve-CloudSdkCommand -Name "bq"
 
+function Test-GcloudResource {
+    param([Parameter(Mandatory)][string[]]$Arguments)
+
+    $PreviousPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "SilentlyContinue"
+        & $Gcloud.Source @Arguments *> $null
+        return $LASTEXITCODE -eq 0
+    }
+    finally {
+        $ErrorActionPreference = $PreviousPreference
+    }
+}
+
 $Account = (& $Gcloud.Source auth list --filter=status:ACTIVE --format="value(account)").Trim()
 if (-not $Account) {
     throw "No active gcloud account. Run gcloud auth login first."
@@ -77,18 +91,23 @@ $Services = @(
 & $Gcloud.Source services enable @Services --project $ProjectId
 if ($LASTEXITCODE -ne 0) { throw "Failed to enable required APIs." }
 
-& $Gcloud.Source artifacts repositories describe agendaframe --location $Region --project $ProjectId 2>$null
-if ($LASTEXITCODE -ne 0) {
+if (-not (Test-GcloudResource -Arguments @(
+    "artifacts", "repositories", "describe", "agendaframe",
+    "--location", $Region, "--project", $ProjectId
+))) {
     & $Gcloud.Source artifacts repositories create agendaframe `
         --repository-format docker --location $Region --project $ProjectId `
         --description "AgendaFrame immutable batch images"
+    if ($LASTEXITCODE -ne 0) { throw "Failed to create Artifact Registry repository." }
 }
 
-& $Gcloud.Source storage buckets describe "gs://$Bucket" --project $ProjectId 2>$null
-if ($LASTEXITCODE -ne 0) {
+if (-not (Test-GcloudResource -Arguments @(
+    "storage", "buckets", "describe", "gs://$Bucket", "--project", $ProjectId
+))) {
     & $Gcloud.Source storage buckets create "gs://$Bucket" `
         --project $ProjectId --location $Region `
         --uniform-bucket-level-access --public-access-prevention
+    if ($LASTEXITCODE -ne 0) { throw "Failed to create private body bucket." }
 }
 & $Gcloud.Source storage buckets update "gs://$Bucket" --lifecycle-file $LifecyclePath
 
@@ -98,11 +117,13 @@ Get-Content -LiteralPath $SchemaPath -Raw | & $Bq.Source query `
 if ($LASTEXITCODE -ne 0) { throw "BigQuery schema creation failed." }
 
 foreach ($Name in @("collector", "analyzer", "publisher")) {
-    & $Gcloud.Source iam service-accounts describe `
-        "$Name@$ProjectId.iam.gserviceaccount.com" --project $ProjectId 2>$null
-    if ($LASTEXITCODE -ne 0) {
+    if (-not (Test-GcloudResource -Arguments @(
+        "iam", "service-accounts", "describe",
+        "$Name@$ProjectId.iam.gserviceaccount.com", "--project", $ProjectId
+    ))) {
         & $Gcloud.Source iam service-accounts create $Name `
             --project $ProjectId --display-name "AgendaFrame $Name"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to create $Name service account." }
     }
 }
 

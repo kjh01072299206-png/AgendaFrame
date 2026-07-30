@@ -36,6 +36,8 @@ class CloudDeploymentContractTests(unittest.TestCase):
         self.assertIn("[switch]$SpendCapsConfirmed", script)
         self.assertIn("Refusing to target an unreviewed project", script)
         self.assertIn("Apply is blocked until", script)
+        self.assertIn("function Test-GcloudResource", script)
+        self.assertIn("SilentlyContinue", script)
 
     def test_bigquery_schema_requires_partition_filters(self) -> None:
         schema = (ROOT / "src" / "backend" / "sql" / "schema.sql").read_text(encoding="utf-8")
