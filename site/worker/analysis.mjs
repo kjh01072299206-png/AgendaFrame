@@ -1,13 +1,13 @@
 export const ANALYSIS_PROVIDER = "structured_extractive";
-export const ANALYSIS_MODEL_VERSION = "agenda-structure-v5";
-export const CLUSTERING_VERSION = "agenda-concepts-complete-link-v5";
+export const ANALYSIS_MODEL_VERSION = "agenda-structure-v6";
+export const CLUSTERING_VERSION = "agenda-concepts-complete-link-v6";
 export const SCORE_VERSION = "observed-agenda-v4";
 export const FRAME_TAXONOMY_VERSION = "frame-elements-v5";
 export const PUBLIC_AGENDA_CATEGORIES = Object.freeze(["정치", "경제", "사회", "국제", "스포츠", "생활·IT"]);
 const SECONDARY_AGENDA_CATEGORIES = new Set(["스포츠", "생활·IT"]);
 
 const agendaConceptDefinitions = [
-  { key: "supplementary-investigation-authority", label: "보완수사권 행사 범위", patterns: [/보완\s*수사권/u] },
+  { key: "supplementary-investigation-authority", label: "보완수사권 제도 논쟁", patterns: [/보완\s*수사권/u] },
   { key: "platform-terms-fees", label: "플랫폼 약관·수수료 정책", patterns: [/쿠팡|배달앱|온라인\s*플랫폼/u, /약관|수수료|멤버십|해지|가격/u] },
 ];
 

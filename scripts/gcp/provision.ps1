@@ -14,6 +14,7 @@ $ErrorActionPreference = "Stop"
 $ExpectedProject = "project-40bc06fc-fb4b-46b6-a10"
 $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..\..")).Path
 $SchemaPath = Join-Path $RepoRoot "src\backend\sql\schema.sql"
+$GrantsPath = Join-Path $RepoRoot "src\backend\sql\grants.sql"
 $LifecyclePath = Join-Path $RepoRoot "config\gcp\storage-lifecycle.json"
 $Bucket = "$ProjectId-agendaframe-private"
 
@@ -169,6 +170,22 @@ foreach ($Binding in $Bindings) {
     $Member = "serviceAccount:$($Binding[0])@$ProjectId.iam.gserviceaccount.com"
     & $Gcloud.Source projects add-iam-policy-binding $ProjectId `
         --member $Member --role $Binding[1] --condition=None --quiet | Out-Null
+}
+
+# Table-scoped grants run last: a GRANT fails unless both the table and the
+# grantee service account already exist. The publisher's project-level role is
+# read-only on purpose, so this is what lets mark_published() run its UPDATE.
+if ($DeferBigQuerySchema) {
+    Write-Warning (
+        "Table-scoped BigQuery grants skipped because the schema was deferred. " +
+        "The publisher cannot mark rows as published until grants.sql is applied."
+    )
+}
+else {
+    Get-Content -LiteralPath $GrantsPath -Raw | & $Bq.Source query `
+        --project_id=$ProjectId --location=$Region --use_legacy_sql=false `
+        --maximum_bytes_billed=1073741824
+    if ($LASTEXITCODE -ne 0) { throw "Failed to apply table-scoped BigQuery grants." }
 }
 
 Write-Host "GCP foundation provisioned for $ProjectId." -ForegroundColor Green

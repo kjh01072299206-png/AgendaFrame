@@ -31,3 +31,31 @@ After the full offline gate passes and the reviewed commit is clean,
 configuration-check Cloud Run Job. It does not analyze an article. The
 collection and analysis schedule remains intentionally absent while every real
 source is `metadata_only`.
+
+`deploy-trial-jobs.ps1` deploys the two one-shot pilot jobs that `deploy.ps1`
+deliberately leaves out:
+
+- `agendaframe-frame-trial` runs `live-run` as the analyzer service account
+  against a hand-reviewed authorization file and a transient private input.
+- `agendaframe-publish-trial` runs `publish` as the publisher service account
+  with `--cluster-approval-json`. The retired `--approve-published-cluster`
+  option must not be used.
+
+Both jobs reuse the guards from `deploy.ps1`: hard-pinned project, dry run by
+default, `-Apply -FullGatePassed`, a clean tracked tree, and an image tag that
+must equal the checked-out 40-character commit SHA. Deployment is free, so
+starting a billed run needs the separate `-Execute` switch.
+
+`--max-retries` is pinned to `0` for these two jobs even though
+`cloud_run.max_retries` is `1`. A retried publish job could re-import a cluster
+that already reached the site, and a retried analysis job could spend Vertex
+quota twice on the same articles.
+
+No Cloud Scheduler trigger is created for the trial jobs and none should be. The
+analysis input is a reviewed file, not a crawl, and the pilot is a single
+experiment on seven approved articles.
+
+Table-scoped BigQuery grants live in `src/backend/sql/grants.sql` and are applied
+by `provision.ps1` after the service accounts exist. The publisher's
+project-level BigQuery role stays read-only; the grant is what allows
+`mark_published()` to update `frame_analyses.publication_status`.

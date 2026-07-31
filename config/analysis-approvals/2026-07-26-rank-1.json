@@ -1,0 +1,56 @@
+{
+  "schema_version": 3,
+  "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
+  "cluster_id": "bigkinds-2026-07-26-rank-1",
+  "reviewed_by": "AgendaFrame agent-assisted evidence audit",
+  "reviewed_at": "2026-07-31T00:00:00+09:00",
+  "purpose": "transient_framing_analysis",
+  "text_scope": "transient_public_page_extract",
+  "valid_until": "2026-10-31",
+  "retain_body": false,
+  "cluster_review_status": "approved_same_event",
+  "approved_articles": {
+    "01100801.20260726130958001": {
+      "source_id": "chosun",
+      "canonical_url": "https://www.chosun.com/politics/assembly/2026/07/26/C5BGFKVOZNEOHIIZGKTJ7HOXUE",
+      "published_date": "2026-07-26",
+      "body_sha256": "5ec6a2aaf37a3a579b6ddcfb499238a24f531b57eee73ec7cbc30f0eef2827bf"
+    },
+    "01100201.20260726113123001": {
+      "source_id": "kmib",
+      "canonical_url": "https://www.kmib.co.kr/article/view.asp?arcid=0030163070&code=61111511&cp=kd",
+      "published_date": "2026-07-26",
+      "body_sha256": "b351df7daff0eeafe9588760fc96888dcaafbfab022a78f1fa26fdb8cb16e260"
+    },
+    "01100701.20260726110741001": {
+      "source_id": "segye",
+      "canonical_url": "https://www.segye.com/newsView/20260726503694",
+      "published_date": "2026-07-26",
+      "body_sha256": "8c778a677fc436fd63f48f2e4c441373e3bca72f6a87489b696c40d458550d82"
+    },
+    "01101101.20260726104709001": {
+      "source_id": "hankookilbo",
+      "canonical_url": "https://www.hankookilbo.com/news/article/A2026072610430004556",
+      "published_date": "2026-07-26",
+      "body_sha256": "d3d11f7debee31df1d17e10176ddfeff309f514d7d7de8dce5cf5f70d57ce30c"
+    },
+    "01100901.20260726103800001": {
+      "source_id": "joongang",
+      "canonical_url": "https://www.joongang.co.kr/article/25448158",
+      "published_date": "2026-07-26",
+      "body_sha256": "cd44d9571687266c86eb98757a601dd2cc1cfc6c2ec82a67ecdd2f62c491a110"
+    },
+    "01100401.20260726101915001": {
+      "source_id": "donga",
+      "canonical_url": "https://www.donga.com/news/Politics/article/all/20260726/134364287/1",
+      "published_date": "2026-07-26",
+      "body_sha256": "7a1ca311bf320bb316f45f951ce605818886a9d8b58aa60622d3b72b3d32f1f9"
+    },
+    "01100701.20260726101351001": {
+      "source_id": "segye",
+      "canonical_url": "https://www.segye.com/newsView/20260726503036",
+      "published_date": "2026-07-26",
+      "body_sha256": "a1f15cfbe98818019841668d5f4489a4acfebc9b07a4fe0a83e8c3e24c3b3bd9"
+    }
+  }
+}

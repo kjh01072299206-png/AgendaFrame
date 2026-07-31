@@ -35,7 +35,8 @@
             "enum": ["supported", "conflicting", "explicit_not_stated"]
           },
           "value": {
-            "type": ["string", "null"]
+            "type": ["string", "null"],
+            "maxLength": 160
           },
           "voice_kind": {
             "type": ["string", "null"],
@@ -68,7 +69,7 @@
         "additionalProperties": false
       }
     },
-    "prompt_version": {"const": "2.0.0"},
+    "prompt_version": {"const": "2.2.0"},
     "schema_version": {"const": 2}
   },
   "additionalProperties": false

@@ -240,3 +240,116 @@ test("accepts semantic v2 profiles and discloses AI use in comparisons", async (
   );
   assert.equal(comparison.method.semantic_ai, true);
 });
+
+test("keeps different semantic values as separate comparison variants", async () => {
+  const first = await analyzeArticleFraming({
+    articleId: "semantic-difference-1",
+    title: "수사권 논쟁",
+    bodyText: "정부의 수사 제도 개편은 절차적 혼선을 줄여야 한다는 문제를 다룬다.",
+  });
+  const second = await analyzeArticleFraming({
+    articleId: "semantic-difference-2",
+    title: "수사권 논쟁",
+    bodyText: "수사 제도 개편으로 시민의 권리가 침해될 수 있다는 문제를 다룬다.",
+  });
+  for (const [profile, value, variantKey] of [
+    [first, "절차 혼선의 해소 필요", "untrusted-shared-key"],
+    [second, "시민 권리 침해 우려", "untrusted-shared-key"],
+  ]) {
+    profile.schema_version = AI_ARTICLE_FRAME_PROFILE_SCHEMA;
+    profile.engine = {
+      ...profile.engine,
+      semantic_ai: true,
+      approach: "semantic_evidence_bounded",
+      prompt_version: "2.0.0",
+    };
+    const item = profile.dimensions.problem_definition.items[0];
+    profile.dimensions.problem_definition.items = [item];
+    item.code = "semantic_problem_definition";
+    item.variant_key = variantKey;
+    item.public_paraphrase = value;
+  }
+  const comparison = buildIssueFrameComparison(
+    [first, second],
+    [
+      { articleId: first.article.article_id, sourceId: "alpha", sourceName: "알파", mediaGroupId: "alpha" },
+      { articleId: second.article.article_id, sourceId: "beta", sourceName: "베타", mediaGroupId: "beta" },
+    ],
+  );
+  const axis = comparison.comparison_axes.find(
+    (entry) => entry.dimension === "problem_definition",
+  );
+  assert.equal(axis.patterns.length, 2);
+  assert.deepEqual(
+    axis.patterns.map((pattern) => pattern.public_paraphrase).sort(),
+    ["시민 권리 침해 우려", "절차 혼선의 해소 필요"].sort(),
+  );
+  assert.equal(comparison.summary_30_seconds.divergence_detected, false);
+  assert.match(comparison.summary_30_seconds.main_difference, /사람 검토 전까지 보류/);
+});
+
+test("counts unique articles rather than evidence spans in each pattern", async () => {
+  const profile = await analyzeArticleFraming({
+    articleId: "unique-article-count",
+    title: "안전 대책",
+    bodyText: "안전 사고 피해가 커지고 있다. 재난 피해 확산도 우려된다.",
+  });
+  const dimension = profile.dimensions.problem_definition;
+  assert.ok(dimension.items.length >= 1);
+  dimension.items.push(structuredClone(dimension.items[0]));
+  const comparison = buildIssueFrameComparison(
+    [profile],
+    [{ articleId: profile.article.article_id, sourceId: "alpha", sourceName: "알파" }],
+  );
+  const axis = comparison.comparison_axes.find(
+    (entry) => entry.dimension === "problem_definition",
+  );
+  assert.equal(axis.patterns[0].article_count, 1);
+  assert.equal(axis.patterns[0].article_ids.length, 1);
+});
+
+test("applies source-dominance safety to semantic profiles with unknown genre", async () => {
+  const profiles = [];
+  for (const articleId of ["semantic-source-1", "semantic-source-2"]) {
+    const profile = await analyzeArticleFraming({
+      articleId,
+      title: "정치인 발언 전달",
+      bodyText: '야당 의원은 "정부가 책임지고 제도를 고쳐야 한다"고 주장했다.',
+    });
+    profile.schema_version = AI_ARTICLE_FRAME_PROFILE_SCHEMA;
+    profile.engine = {
+      ...profile.engine,
+      semantic_ai: true,
+      approach: "semantic_evidence_bounded",
+      prompt_version: "2.0.0",
+    };
+    profile.genre = { code: "unknown", label: "자동 분류 안 함", evidence: [] };
+    profiles.push(profile);
+  }
+  const metadata = [
+    { articleId: "semantic-source-1", sourceId: "alpha", sourceName: "알파", mediaGroupId: "alpha" },
+    { articleId: "semantic-source-2", sourceId: "beta", sourceName: "베타", mediaGroupId: "beta" },
+  ];
+  const baseline = buildIssueFrameComparison(profiles, metadata);
+  const duplicated = structuredClone(profiles);
+  for (const profile of duplicated) {
+    const observed = Object.values(profile.dimensions).find(
+      (dimension) => dimension.items?.length,
+    );
+    if (observed) {
+      observed.items.push(
+        ...Array.from({ length: 9 }, () => structuredClone(observed.items[0])),
+      );
+    }
+  }
+  const comparison = buildIssueFrameComparison(
+    duplicated,
+    metadata,
+  );
+  assert.equal(comparison.method.source_dominance_check.detected, true);
+  assert.equal(comparison.summary_30_seconds.divergence_detected, false);
+  assert.equal(
+    comparison.method.source_dominance_check.total_item_count,
+    baseline.method.source_dominance_check.total_item_count,
+  );
+});

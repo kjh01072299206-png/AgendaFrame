@@ -3,13 +3,15 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import unicodedata
 from typing import Any
 from urllib.request import Request, urlopen
 
-from ai.framing import FRAME_DIMENSIONS, FrameResult
+from ai.framing import FRAME_DIMENSIONS, FrameResult, validate_frame_result
 from crawler.models import ArticleDocument
 
 PUBLIC_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v2"
+COMPARISON_ENGINE_VERSION = "korean-evidence-rules-v2"
 DIMENSION_MAP = {
     "problem_definition": "problem_definition",
     "causal_attribution": "causal_interpretation",
@@ -21,6 +23,15 @@ DIMENSION_MAP = {
 
 def _sha256(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _semantic_variant_key(dimension: str, value: str) -> str:
+    normalized = unicodedata.normalize("NFKC", value).casefold()
+    normalized = re.sub(r"[^\w]+", " ", normalized, flags=re.UNICODE)
+    normalized = " ".join(normalized.split())
+    if not normalized:
+        raise ValueError("A semantic frame value must contain meaningful text.")
+    return f"semantic:{dimension}:{_sha256(normalized)}"
 
 
 def _sentences(body: str) -> list[dict[str, Any]]:
@@ -79,10 +90,22 @@ def _evidence_locator(
 
 
 def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, Any]:
+    validate_frame_result(article, result)
     body = article.body_text or ""
     if not body or not article.body_hash:
         raise ValueError("A verified article body is required to publish an analyzed profile.")
     sentence_rows = _sentences(body)
+    analyzed_character_count = (
+        result.analyzed_character_count
+        if result.analyzed_character_count is not None
+        else len(body)
+    )
+    input_truncated = (
+        result.input_truncated
+        if result.input_truncated is not None
+        else analyzed_character_count < len(body)
+    )
+    text_scope = result.text_scope or article.text_scope
     dimensions_by_name = {str(dimension["dimension"]): dimension for dimension in result.dimensions}
     missing = FRAME_DIMENSIONS - dimensions_by_name.keys()
     if missing:
@@ -105,6 +128,10 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
             "items": [
                 {
                     "code": f"semantic_{source_name}",
+                    "variant_key": _semantic_variant_key(
+                        source_name,
+                        str(source["value"]),
+                    ),
                     "public_paraphrase": str(source["value"]),
                     "voice": {
                         "kind": voice_kind,
@@ -143,6 +170,14 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
 
     return {
         "schema_version": PUBLIC_PROFILE_SCHEMA,
+        "lineage": {
+            "model_id": result.model_id,
+            "prompt_version": result.prompt_version,
+            "analysis_schema_version": PUBLIC_PROFILE_SCHEMA,
+            "model_output_schema_version": result.schema_version,
+            "comparison_engine_version": COMPARISON_ENGINE_VERSION,
+            "approval": result.approval_lineage,
+        },
         "engine": {
             "name": "AgendaFrame Vertex evidence coder",
             "version": result.model_id,
@@ -159,6 +194,9 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
         },
         "article": {
             "article_id": article.article_id,
+            # The site importer may assign a local database ID. Preserve the
+            # upstream identity used to derive title and evidence fingerprints.
+            "upstream_article_id": article.article_id,
             "published_at": article.published_at.isoformat(),
             "title_sha256": _sha256(f"agendaframe:title:v2:{article.article_id}:{article.title}"),
             "body_sha256": article.body_hash,
@@ -167,6 +205,11 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
             "paragraph_count": max((row["paragraph"] for row in sentence_rows), default=0),
             "sentence_count": len(sentence_rows),
             "raw_body_retained": False,
+        },
+        "extraction": {
+            "text_scope": text_scope,
+            "analyzed_character_count": analyzed_character_count,
+            "input_truncated": input_truncated,
         },
         "genre": {"code": "unknown", "label": "자동 분류 안 함", "evidence": []},
         "dimensions": dimensions,
@@ -180,7 +223,7 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
         },
         "framing_devices": [],
         "review": {
-            "status": "ai_draft",
+            "status": "automatic_draft",
             "requires_human_review": True,
             "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다.",
         },
@@ -212,21 +255,47 @@ def publication_row(article: ArticleDocument, result: FrameResult) -> dict[str, 
 
 class StructuredPublisher:
     def __init__(self, origin: str, endpoint_path: str, token: str) -> None:
-        self.url = f"{origin.rstrip('/')}{endpoint_path}"
+        self.origin = origin.rstrip("/")
+        self.import_url = f"{self.origin}{endpoint_path}"
         self.token = token
 
     def publish(self, rows: list[dict[str, object]]) -> dict[str, object]:
-        body = json.dumps({"rows": rows}, ensure_ascii=False).encode("utf-8")
+        return self._post(
+            self.import_url,
+            {"rows": rows},
+            extra_headers={"x-agendaframe-source": "gcp-batch-v1"},
+        )
+
+    def analyze(
+        self,
+        target_date: str,
+        *,
+        approved_same_event_clusters: list[dict[str, object]] | None = None,
+    ) -> dict[str, object]:
+        payload: dict[str, object] = {"date": target_date}
+        if approved_same_event_clusters:
+            payload["approved_same_event_clusters"] = approved_same_event_clusters
+        return self._post(f"{self.origin}/api/analyze", payload)
+
+    def _post(
+        self,
+        url: str,
+        payload: dict[str, object],
+        *,
+        extra_headers: dict[str, str] | None = None,
+    ) -> dict[str, object]:
+        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        headers = {
+            "authorization": f"Bearer {self.token}",
+            "content-type": "application/json",
+            "user-agent": "AgendaFrame-GCP-Publisher/1.0",
+        }
+        headers.update(extra_headers or {})
         request = Request(
-            self.url,
+            url,
             data=body,
             method="POST",
-            headers={
-                "authorization": f"Bearer {self.token}",
-                "content-type": "application/json",
-                "user-agent": "AgendaFrame-GCP-Publisher/1.0",
-                "x-agendaframe-source": "gcp-batch-v1",
-            },
+            headers=headers,
         )
         with urlopen(request, timeout=30) as response:  # noqa: S310
             return json.loads(response.read().decode("utf-8"))

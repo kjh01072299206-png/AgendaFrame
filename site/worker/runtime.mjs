@@ -20,6 +20,8 @@ const PROMPT_VERSION = "framing-codebook-v5";
 const EVALUATION_DATASET_VERSION = "not_configured";
 const COMPATIBLE_ANALYSIS_MODELS = new Set([ANALYSIS_MODEL_VERSION, "agenda-rules-v4", "agenda-rules-v3", "agenda-rules-v2"]);
 const PUBLIC_AGENDA_CATEGORY_SET = new Set(PUBLIC_AGENDA_CATEGORIES);
+const SHA256_HEX_PATTERN = /^[a-f0-9]{64}$/;
+const SEMANTIC_TEXT_SCOPES = new Set(["provider_export", "provider_excerpt", "transient_public_page_extract"]);
 
 const assets = globalThis.__AGENDAFRAME_ASSETS__ ?? {};
 let sourcePanel = globalThis.__AGENDAFRAME_SOURCE_PANEL__ ?? {
@@ -118,22 +120,31 @@ export function classifySnapshotStatus({ targetDate = null, dataAsOf = null, col
   return { status: "normal", label: "정상", staleDays: 0 };
 }
 
-function analysisVersions(run) {
+function analysisVersions(run, comparisonLineage = null) {
   const modelVersion = run?.modelVersion ?? ANALYSIS_MODEL_VERSION;
   const current = modelVersion === ANALYSIS_MODEL_VERSION;
   const versionFour = modelVersion === "agenda-rules-v4";
+  const approval = comparisonLineage?.approval ?? null;
   return {
     sourcePolicyVersion: sourcePanel.panelVersion ?? "unknown",
     clusteringVersion: current ? CLUSTERING_VERSION : versionFour ? "event-anchors-complete-link-v2" : "legacy-v1-unverified",
     scoreVersion: current ? SCORE_VERSION : versionFour ? "observed-agenda-v3" : "legacy-v1-unverified",
     frameTaxonomyVersion: current ? FRAME_TAXONOMY_VERSION : versionFour ? "frame-signals-v4" : "legacy-v1-unverified",
-    modelId: modelVersion,
-    promptVersion: current ? PROMPT_VERSION : versionFour ? "not_applicable_rules" : "legacy-unverified",
+    modelId: comparisonLineage?.modelId ?? modelVersion,
+    promptVersion: comparisonLineage?.promptVersion ?? (current ? PROMPT_VERSION : versionFour ? "not_applicable_rules" : "legacy-unverified"),
+    analysisSchemaVersion: comparisonLineage?.analysisSchemaVersion ?? null,
+    comparisonEngineVersion: comparisonLineage?.comparisonEngineVersion ?? null,
+    authorizationId: approval?.authorizationId ?? null,
+    approvalFingerprint: approval?.fingerprint ?? null,
+    clusterId: approval?.clusterId ?? null,
+    reviewer: approval?.reviewer ?? null,
+    approvalReviewedAt: approval?.reviewedAt ?? null,
+    approvedUrlsSha256: approval?.approvedUrlsSha256 ?? null,
     evaluationDatasetVersion: EVALUATION_DATASET_VERSION,
   };
 }
 
-function responseMeta(run = null, runtimeMode = "demo") {
+function responseMeta(run = null, runtimeMode = "demo", comparisonLineage = null) {
   return {
     schemaVersion: PUBLIC_API_SCHEMA_VERSION,
     runtimeMode,
@@ -141,7 +152,7 @@ function responseMeta(run = null, runtimeMode = "demo") {
     runId: run?.id ?? null,
     basisDate: run?.targetDate ?? null,
     publishedAt: run?.finishedAt ?? null,
-    ...analysisVersions(run),
+    ...analysisVersions(run, comparisonLineage),
   };
 }
 
@@ -451,15 +462,13 @@ async function handleImport(
   { provider = "bigkinds_export", trigger = "manual" } = {},
 ) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
-  if (!env?.IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503);
+  if (!env?.IMPORT_TOKEN && !env?.CODEX_IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503);
 
   if (!isSameSiteRequest(request, env)) {
     return jsonResponse({ error: "같은 사이트에서 보낸 요청만 허용됩니다." }, 403);
   }
 
-  const authorization = request.headers.get("authorization") ?? "";
-  const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
-  if (!(await secureTokenMatches(token, env.IMPORT_TOKEN))) {
+  if (!(await adminAuthorized(request, env))) {
     return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
   }
 
@@ -835,6 +844,16 @@ export function validateAnalyzedImportRows(inputRows, panel = sourcePanel, now =
     if (profile?.schema_version !== AI_ARTICLE_FRAME_PROFILE_SCHEMA) {
       throw new Error(`${index + 1}행: 지원하지 않는 AI 분석 스키마입니다.`);
     }
+    validateSemanticProfileLineage(profile, `${index + 1}번째 분석 프로필`);
+    validateSemanticExtraction(profile, bodyCharacters, `${index + 1}번째 분석 프로필`);
+    const upstreamArticleId = String(row.article?.article_id ?? "").trim();
+    if (
+      !upstreamArticleId
+      || profile?.article?.article_id !== upstreamArticleId
+      || profile?.article?.upstream_article_id !== upstreamArticleId
+    ) {
+      throw new Error(`${index + 1}행: 상류 기사 식별자와 분석 프로필이 일치하지 않습니다.`);
+    }
     if (profile?.article?.body_sha256 !== bodyHash || Number(profile?.article?.body_character_count) !== bodyCharacters) {
       throw new Error(`${index + 1}행: 기사 정보와 분석 프로필의 본문 식별값이 다릅니다.`);
     }
@@ -851,7 +870,7 @@ export function validateAnalyzedImportRows(inputRows, panel = sourcePanel, now =
 
 async function handleAnalyzedImport(request, env) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503, { request });
-  if (!env?.IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503, { request });
+  if (!env?.IMPORT_TOKEN && !env?.CODEX_IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503, { request });
   if (request.headers.get("x-agendaframe-source") !== "gcp-batch-v1") {
     return jsonResponse({ error: "허용된 배치 게시자 요청이 아닙니다." }, 403, { request });
   }
@@ -902,7 +921,6 @@ async function handleAnalyzedImport(request, env) {
     const statements = rows.map((row, index) => {
       const articleId = lookups[index]?.results?.[0]?.id;
       if (!articleId) throw new Error("저장한 기사 식별자를 찾지 못했습니다.");
-      row.profile.article.article_id = articleId;
       const validation = validateArticleFrameProfile(row.profile);
       if (!validation.valid) throw new Error(`게시 직전 분석 프로필 검증 실패: ${validation.errors.join("; ")}`);
       const modelVersion = String(row.profile.engine?.version ?? "").slice(0, 120);
@@ -911,7 +929,7 @@ async function handleAnalyzedImport(request, env) {
       return env.DB.prepare(`
         INSERT INTO article_frame_profiles
           (id, article_id, body_hash, body_characters, profile_json, status, failure_code, extractor_version, provider, model_version, prompt_version, schema_version, review_status, analyzed_at)
-        VALUES (?, ?, ?, ?, ?, 'analyzed', NULL, ?, 'vertex_ai', ?, ?, ?, 'ai_draft', ?)
+        VALUES (?, ?, ?, ?, ?, 'analyzed', NULL, ?, 'vertex_ai', ?, ?, ?, 'automatic_draft', ?)
         ON CONFLICT(article_id, extractor_version, model_version, schema_version) DO UPDATE SET
           body_hash = excluded.body_hash,
           body_characters = excluded.body_characters,
@@ -920,7 +938,7 @@ async function handleAnalyzedImport(request, env) {
           failure_code = NULL,
           provider = excluded.provider,
           prompt_version = excluded.prompt_version,
-          review_status = 'ai_draft',
+          review_status = 'automatic_draft',
           analyzed_at = excluded.analyzed_at
       `).bind(
         crypto.randomUUID(),
@@ -942,7 +960,7 @@ async function handleAnalyzedImport(request, env) {
       metadata: metadataResult,
       bodyStorageCount: 0,
       schemaVersion: AI_ARTICLE_FRAME_PROFILE_SCHEMA,
-      reviewStatus: "ai_draft",
+      reviewStatus: "automatic_draft",
     }, 201, { request });
   } catch (error) {
     console.error("AgendaFrame analyzed import failed", error);
@@ -952,7 +970,7 @@ async function handleAnalyzedImport(request, env) {
 
 async function handleStructuredImport(request, env) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503, { request });
-  if (!env?.IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503, { request });
+  if (!env?.IMPORT_TOKEN && !env?.CODEX_IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503, { request });
   if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "같은 사이트에서 보낸 요청만 허용됩니다." }, 403, { request });
   if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401, { request });
 
@@ -1266,7 +1284,12 @@ function parseDetectedFrames(value) {
 function parseFrameProfile(value) {
   try {
     const profile = JSON.parse(String(value ?? "{}"));
-    return validateArticleFrameProfile(profile).valid ? profile : null;
+    if (!validateArticleFrameProfile(profile).valid) return null;
+    if (profile.schema_version === AI_ARTICLE_FRAME_PROFILE_SCHEMA) {
+      validateSemanticProfileLineage(profile, "저장된 분석 프로필");
+      validateSemanticExtraction(profile, Number(profile.article?.body_character_count), "저장된 분석 프로필");
+    }
+    return profile;
   } catch {
     return null;
   }
@@ -1279,6 +1302,7 @@ async function loadArticleFrameProfiles(db, start, end) {
     JOIN articles a ON a.id = profiles.article_id
     WHERE a.published_at >= ? AND a.published_at < ?
       AND profiles.status IN ('analyzed', 'partial')
+      AND profiles.review_status != 'rejected'
     ORDER BY
       profiles.article_id ASC,
       CASE profiles.provider WHEN 'vertex_ai' THEN 0 ELSE 1 END,
@@ -1288,9 +1312,275 @@ async function loadArticleFrameProfiles(db, start, end) {
   for (const row of result.results ?? []) {
     if (profiles.has(row.articleId)) continue;
     const profile = parseFrameProfile(row.profileJson);
-    if (profile) profiles.set(row.articleId, profile);
+    if (profile) {
+      profile.article.upstream_article_id ??= profile.article.article_id;
+      profile.article.article_id = row.articleId;
+      profiles.set(row.articleId, profile);
+    }
   }
   return profiles;
+}
+
+export function clusterArticleSignature(values) {
+  if (!Array.isArray(values) || values.length < 2) return "";
+  try {
+    const normalized = uniqueStrings(values.map((value) => canonicalizeArticleUrl(value))).sort();
+    return normalized.length >= 2 ? normalized.join("\n") : "";
+  } catch {
+    return "";
+  }
+}
+
+export async function clusterArticleSetSha256(values) {
+  const signature = clusterArticleSignature(values);
+  return signature ? sha256Hex(signature) : "";
+}
+
+function requireLineageString(value, field, context) {
+  const normalized = String(value ?? "").trim();
+  if (!normalized || normalized.length > 200) {
+    throw new Error(`${context}의 ${field} 값이 없거나 너무 깁니다.`);
+  }
+  return normalized;
+}
+
+function requireLineageHash(value, field, context) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!SHA256_HEX_PATTERN.test(normalized)) {
+    throw new Error(`${context}의 ${field} 값은 소문자 SHA-256이어야 합니다.`);
+  }
+  return normalized;
+}
+
+function normalizePublicApproval(value, context) {
+  if (!isPlainObject(value)) throw new Error(`${context}의 approval 객체가 필요합니다.`);
+  const reviewedAtValue = requireLineageString(value.reviewed_at, "reviewed_at", context);
+  const reviewedAt = new Date(reviewedAtValue);
+  if (!Number.isFinite(reviewedAt.getTime())) {
+    throw new Error(`${context}의 reviewed_at 값은 ISO-8601 시각이어야 합니다.`);
+  }
+  return {
+    authorizationId: requireLineageString(value.authorization_id, "authorization_id", context),
+    fingerprint: requireLineageHash(value.fingerprint, "fingerprint", context),
+    clusterId: requireLineageString(value.cluster_id, "cluster_id", context),
+    reviewer: requireLineageString(value.reviewer, "reviewer", context),
+    reviewedAt: reviewedAt.toISOString(),
+    approvedUrlsSha256: requireLineageHash(value.approved_urls_sha256, "approved_urls_sha256", context),
+  };
+}
+
+function validateSemanticExtraction(profile, bodyCharacters, context = "semantic profile") {
+  const extraction = profile?.extraction;
+  if (!isPlainObject(extraction)) throw new Error(`${context}의 extraction 객체가 필요합니다.`);
+  const textScope = String(extraction.text_scope ?? "").trim();
+  const analyzedCharacters = Number(extraction.analyzed_character_count);
+  const inputTruncated = extraction.input_truncated;
+  if (!SEMANTIC_TEXT_SCOPES.has(textScope)) {
+    throw new Error(`${context}의 text_scope가 승인된 값이 아닙니다.`);
+  }
+  if (!Number.isInteger(analyzedCharacters) || analyzedCharacters < 1 || analyzedCharacters > bodyCharacters) {
+    throw new Error(`${context}의 analyzed_character_count가 본문 범위를 벗어났습니다.`);
+  }
+  if (typeof inputTruncated !== "boolean") {
+    throw new Error(`${context}의 input_truncated는 boolean이어야 합니다.`);
+  }
+  if (!inputTruncated && analyzedCharacters !== bodyCharacters) {
+    throw new Error(`${context}가 미절단 입력이라면 분석 문자 수와 본문 문자 수가 같아야 합니다.`);
+  }
+  if (inputTruncated && analyzedCharacters >= bodyCharacters) {
+    throw new Error(`${context}가 절단 입력이라면 분석 문자 수가 본문 문자 수보다 작아야 합니다.`);
+  }
+  return { textScope, analyzedCharacters, inputTruncated };
+}
+
+function validateSemanticProfileLineage(profile, context = "semantic profile") {
+  if (!isPlainObject(profile?.lineage)) throw new Error(`${context}의 lineage 객체가 필요합니다.`);
+  const modelId = requireLineageString(profile.lineage.model_id, "model_id", context);
+  const promptVersion = requireLineageString(profile.lineage.prompt_version, "prompt_version", context);
+  const analysisSchemaVersion = requireLineageString(
+    profile.lineage.analysis_schema_version,
+    "analysis_schema_version",
+    context,
+  );
+  const comparisonEngineVersion = requireLineageString(
+    profile.lineage.comparison_engine_version,
+    "comparison_engine_version",
+    context,
+  );
+  if (modelId !== String(profile.engine?.version ?? "")) {
+    throw new Error(`${context}의 model_id가 engine.version과 일치하지 않습니다.`);
+  }
+  if (promptVersion !== String(profile.engine?.prompt_version ?? "")) {
+    throw new Error(`${context}의 prompt_version이 engine.prompt_version과 일치하지 않습니다.`);
+  }
+  if (analysisSchemaVersion !== String(profile.schema_version ?? "")) {
+    throw new Error(`${context}의 analysis_schema_version이 profile.schema_version과 일치하지 않습니다.`);
+  }
+  if (comparisonEngineVersion !== FRAMING_ENGINE_VERSION) {
+    throw new Error(`${context}의 comparison_engine_version이 현재 비교 엔진과 일치하지 않습니다.`);
+  }
+  return {
+    modelId,
+    promptVersion,
+    analysisSchemaVersion,
+    comparisonEngineVersion,
+    approval: normalizePublicApproval(profile.lineage.approval, context),
+  };
+}
+
+function profileAnalysisLineage(profile) {
+  if (profile?.schema_version === AI_ARTICLE_FRAME_PROFILE_SCHEMA) {
+    return validateSemanticProfileLineage(profile);
+  }
+  return {
+    modelId: String(profile?.engine?.version ?? FRAMING_ENGINE_VERSION),
+    promptVersion: "not_applicable_rules",
+    analysisSchemaVersion: String(profile?.schema_version ?? ARTICLE_FRAME_PROFILE_SCHEMA),
+    comparisonEngineVersion: FRAMING_ENGINE_VERSION,
+    approval: null,
+  };
+}
+
+function equalApproval(left, right) {
+  return Boolean(left && right)
+    && left.authorizationId === right.authorizationId
+    && left.fingerprint === right.fingerprint
+    && left.clusterId === right.clusterId
+    && left.reviewer === right.reviewer
+    && left.reviewedAt === right.reviewedAt
+    && left.approvedUrlsSha256 === right.approvedUrlsSha256;
+}
+
+export async function approvedClusterApprovals(payload) {
+  const clusters = payload?.approved_same_event_clusters;
+  if (clusters === undefined) return new Map();
+  if (!Array.isArray(clusters) || clusters.length > 20) {
+    throw new Error("승인된 동일 사건 클러스터는 최대 20개의 배열이어야 합니다.");
+  }
+  const approvals = new Map();
+  const clusterIds = new Set();
+  for (const [index, cluster] of clusters.entries()) {
+    const context = `${index + 1}번째 동일 사건 승인`;
+    if (!isPlainObject(cluster)) {
+      throw new Error(`${context}은 승인 지문을 포함한 객체여야 하며 URL 배열만으로는 승인할 수 없습니다.`);
+    }
+    const approvedUrls = cluster.approved_urls;
+    if (!Array.isArray(approvedUrls) || approvedUrls.length < 2 || approvedUrls.length > 50) {
+      throw new Error(`${context}의 approved_urls는 2~50개의 URL이어야 합니다.`);
+    }
+    let canonicalUrls;
+    try {
+      canonicalUrls = approvedUrls.map((value) => canonicalizeArticleUrl(value));
+    } catch {
+      throw new Error(`${context}의 approved_urls에 올바르지 않은 URL이 있습니다.`);
+    }
+    if (new Set(canonicalUrls).size !== canonicalUrls.length) {
+      throw new Error(`${context}의 approved_urls에 중복 URL이 있습니다.`);
+    }
+    const signature = clusterArticleSignature(canonicalUrls);
+    if (!signature) throw new Error(`${context}의 URL 집합을 확인해 주세요.`);
+    const approval = normalizePublicApproval(cluster, context);
+    const expectedHash = await sha256Hex(signature);
+    if (approval.approvedUrlsSha256 !== expectedHash) {
+      throw new Error(`${context}의 approved_urls_sha256이 정확한 URL 집합과 일치하지 않습니다.`);
+    }
+    if (approvals.has(signature)) throw new Error(`${context}의 URL 집합이 중복 승인되었습니다.`);
+    if (clusterIds.has(approval.clusterId)) throw new Error(`${context}의 cluster_id가 중복되었습니다.`);
+    approvals.set(signature, { ...approval, approvedUrls: signature.split("\n") });
+    clusterIds.add(approval.clusterId);
+  }
+  return approvals;
+}
+
+export function resolveClusterApproval(issueUrls, profiles, approvals) {
+  const signature = clusterArticleSignature(issueUrls);
+  const approval = signature && approvals instanceof Map ? approvals.get(signature) ?? null : null;
+  const semanticProfiles = profiles.filter((profile) => profile?.schema_version === AI_ARTICLE_FRAME_PROFILE_SCHEMA);
+  if (!approval && semanticProfiles.length) {
+    throw new Error("Semantic analysis profiles require an approval object bound to the exact issue URL set.");
+  }
+  if (!approval) return null;
+  if (!profiles.length) throw new Error("The approved issue URL set has no usable analysis profiles.");
+  for (const profile of profiles) {
+    const lineage = profileAnalysisLineage(profile);
+    if (!equalApproval(lineage.approval, approval)) {
+      throw new Error("The analysis profile approval lineage does not match the exact issue approval.");
+    }
+  }
+  return approval;
+}
+
+function comparisonAnalysisLineage(profiles, approval = null) {
+  if (!profiles.length) throw new Error("At least one analysis profile is required for comparison lineage.");
+  const lineages = profiles.map(profileAnalysisLineage);
+  const first = lineages[0];
+  for (const lineage of lineages.slice(1)) {
+    if (
+      lineage.modelId !== first.modelId
+      || lineage.promptVersion !== first.promptVersion
+      || lineage.analysisSchemaVersion !== first.analysisSchemaVersion
+      || lineage.comparisonEngineVersion !== first.comparisonEngineVersion
+    ) {
+      throw new Error("A comparison cannot publish mixed model, prompt, schema, or comparison-engine lineage.");
+    }
+  }
+  return {
+    modelId: first.modelId,
+    promptVersion: first.promptVersion,
+    analysisSchemaVersion: first.analysisSchemaVersion,
+    comparisonEngineVersion: first.comparisonEngineVersion,
+    approval: approval ? {
+      authorizationId: approval.authorizationId,
+      fingerprint: approval.fingerprint,
+      clusterId: approval.clusterId,
+      reviewer: approval.reviewer,
+      reviewedAt: approval.reviewedAt,
+      approvedUrlsSha256: approval.approvedUrlsSha256,
+    } : null,
+  };
+}
+
+function withheldClusterReviewComparison(profiles, issue, articleMetadata) {
+  const outlets = new Set(articleMetadata.map((article) => article.sourceId ?? article.source));
+  const mediaGroups = new Set(
+    articleMetadata.map((article) => article.mediaGroupId ?? article.sourceId ?? article.source),
+  );
+  return {
+    lineage: comparisonAnalysisLineage(profiles),
+    status: "withheld_insufficient_evidence",
+    divergenceDetected: false,
+    evidenceBasis: profiles.length ? "evidence_spans" : "headline_metadata_only",
+    reason: "자동 사건 군집의 동일성 검토가 끝나지 않아 매체 간 프레이밍 비교를 보류했습니다.",
+    methodologyLabel: "동일 사건 확인 대기",
+    reviewStatus: "cluster_review_required",
+    summary: {
+      commonGround: null,
+      mainDifference: "서로 다른 사건이나 후속 반응이 섞였을 가능성을 먼저 확인해야 합니다.",
+      whyItMatters: "사건 단위가 다르면 기사 내용의 차이를 언론사 프레임 차이로 잘못 읽을 수 있습니다.",
+      sourceContext: null,
+    },
+    sample: {
+      analyzedArticles: profiles.length,
+      textScope: profiles.some((profile) => profile.extraction?.text_scope === "provider_excerpt")
+        ? "provider_excerpt"
+        : "article_body",
+      outlets: outlets.size,
+      independentMediaGroups: mediaGroups.size,
+      excludedArticles: Math.max(0, Number(issue.articleCount ?? 0) - profiles.length),
+      inputTruncatedArticles: profiles.filter((profile) => profile.extraction?.input_truncated === true).length,
+    },
+    axes: [],
+    sourceLens: {
+      sharedVoices: [],
+      voicesPresentInSomeOutlets: [],
+      byOutlet: [],
+    },
+    contextGaps: [],
+    limitations: [
+      "동일 사건으로 사람 검토가 완료되기 전에는 매체 간 차이를 공개하지 않습니다.",
+      "기사 메타데이터와 원문 링크는 계속 확인할 수 있습니다.",
+    ],
+  };
 }
 
 function uniqueStrings(values) {
@@ -1303,9 +1593,28 @@ function isPlainObject(value) {
 
 function isStructuredComparisonPayload(value) {
   if (!isPlainObject(value)) return false;
+  if (!isPlainObject(value.lineage)
+    || typeof value.lineage.modelId !== "string"
+    || typeof value.lineage.promptVersion !== "string"
+    || typeof value.lineage.analysisSchemaVersion !== "string"
+    || typeof value.lineage.comparisonEngineVersion !== "string") return false;
+  if (value.lineage.approval !== null) {
+    const approval = value.lineage.approval;
+    if (!isPlainObject(approval)
+      || typeof approval.authorizationId !== "string"
+      || typeof approval.clusterId !== "string"
+      || typeof approval.reviewer !== "string"
+      || typeof approval.reviewedAt !== "string"
+      || !Number.isFinite(Date.parse(approval.reviewedAt))
+      || !SHA256_HEX_PATTERN.test(String(approval.fingerprint ?? ""))
+      || !SHA256_HEX_PATTERN.test(String(approval.approvedUrlsSha256 ?? ""))) return false;
+  }
   if (!["available", "partial", "withheld_insufficient_evidence"].includes(value.status)) return false;
   if (typeof value.divergenceDetected !== "boolean" || !isPlainObject(value.summary) || !isPlainObject(value.sample)) return false;
   if (!["provider_excerpt", "article_body"].includes(value.sample.textScope)) return false;
+  if (!Number.isInteger(value.sample.inputTruncatedArticles)
+    || value.sample.inputTruncatedArticles < 0
+    || value.sample.inputTruncatedArticles > Number(value.sample.analyzedArticles ?? 0)) return false;
   if (!Array.isArray(value.axes) || !isPlainObject(value.sourceLens) || !Array.isArray(value.contextGaps) || !Array.isArray(value.limitations)) return false;
   if (!Array.isArray(value.sourceLens.sharedVoices) || !Array.isArray(value.sourceLens.voicesPresentInSomeOutlets) || !Array.isArray(value.sourceLens.byOutlet)) return false;
   if (!value.axes.every((axis) => isPlainObject(axis) && typeof axis.dimension === "string" && typeof axis.label === "string"
@@ -1328,7 +1637,7 @@ function isStructuredComparisonPayload(value) {
   return !/"(?:raw_body|rawBody|body_text|bodyText|sentence_text|sentenceText|quote|quotation|excerpt|html|content)"\s*:/i.test(JSON.stringify(value));
 }
 
-function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { issueArticleCount = issueArticles.length } = {}) {
+function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { issueArticleCount = issueArticles.length, approval = null } = {}) {
   const articleById = new Map(issueArticles.map((article) => [String(article.id), article]));
   const profileById = new Map(profiles.map((profile) => [String(profile.article.article_id), profile]));
   const rawAxes = rawComparison.comparison_axes ?? [];
@@ -1433,13 +1742,18 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
     "표본 본문에서 확인되지 않은 요소는 실제 부재나 의도적 누락을 뜻하지 않습니다.",
   ];
   const providerExcerptCount = profiles.filter((profile) => profile.extraction?.text_scope === "provider_excerpt").length;
+  const inputTruncatedCount = profiles.filter((profile) => profile.extraction?.input_truncated === true).length;
   if (providerExcerptCount) {
     limitations.unshift(`BigKinds가 제공한 본문 발췌 ${providerExcerptCount}건을 분석했습니다. 기사 전문 전체를 분석한 결과가 아닙니다.`);
+  }
+  if (inputTruncatedCount) {
+    limitations.unshift(`모델 입력 한도로 본문 일부만 분석한 기사 ${inputTruncatedCount}건이 포함되었습니다.`);
   }
   const excluded = Math.max(0, Number(issueArticleCount) - usableProfiles);
   if (excluded) limitations.push(`본문을 확보·검증하지 못한 기사 ${excluded}건은 구조화 비교에서 제외했습니다.`);
 
   return {
+    lineage: comparisonAnalysisLineage(profiles, approval),
     status,
     divergenceDetected,
     evidenceBasis: usableProfiles ? "evidence_spans" : "headline_metadata_only",
@@ -1462,6 +1776,7 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
       outlets: Number(sample.outlet_count ?? new Set(issueArticles.map((article) => article.source)).size),
       independentMediaGroups: independentGroups,
       excludedArticles: excluded,
+      inputTruncatedArticles: inputTruncatedCount,
     },
     axes,
     sourceLens: {
@@ -1740,7 +2055,10 @@ async function handleTransientAnalyze(request, env) {
       const analysisResponse = await handleAnalyze(new Request(new URL("/api/analyze", request.url), {
         method: "POST",
         headers: analysisHeaders,
-        body: JSON.stringify({ date: targetDate }),
+        body: JSON.stringify({
+          date: targetDate,
+          approved_same_event_clusters: payload.approved_same_event_clusters,
+        }),
       }), env);
       analysis = await analysisResponse.json();
       if (!analysisResponse.ok) return jsonResponse(analysis, analysisResponse.status, { request });
@@ -1988,8 +2306,10 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
 
   const db = env.DB;
   let targetDate;
+  let reviewedClusterApprovals;
   try {
     targetDate = await resolveAnalysisDate(db, String(payload.date ?? "").trim());
+    reviewedClusterApprovals = await approvedClusterApprovals(payload);
   } catch (error) {
     return jsonResponse({ error: error.message }, 400);
   }
@@ -2081,22 +2401,53 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
       maxIssues: 80,
     });
     const issueIds = await Promise.all(analyzed.map((issue, index) => sha256Hex(`${runId}:${index}:${issue.title}`)));
+    const consumedClusterApprovals = new Set();
     analyzed.forEach((issue, index) => {
       const profiles = issue.articles
         .map((article) => frameProfiles.get(article.id))
         .filter(Boolean);
       if (!profiles.length) return;
+      const issueSignature = clusterArticleSignature(
+        issue.articles.map((article) => article.url ?? article.canonicalUrl),
+      );
+      const clusterApproval = resolveClusterApproval(
+        issue.articles.map((article) => article.url ?? article.canonicalUrl),
+        profiles,
+        reviewedClusterApprovals,
+      );
+      const clusterNeedsReview = issue.clusterQuality === "review_required";
+      const clusterWasReviewed = Boolean(clusterApproval);
+      if (clusterApproval) consumedClusterApprovals.add(issueSignature);
+      if (clusterNeedsReview && !clusterWasReviewed) {
+        issue.structuredComparison = withheldClusterReviewComparison(
+          profiles,
+          issue,
+          issue.articles,
+        );
+        return;
+      }
       const rawComparison = buildIssueFrameComparison(profiles, issue.articles, {
         issueId: issueIds[index],
         issueTitle: issue.title,
       });
+      rawComparison.review.cluster_status = clusterWasReviewed
+        ? "approved_same_event"
+        : "automatic_cohesive";
+      rawComparison.review.cluster_approval = clusterApproval;
       issue.structuredComparison = publicComparisonFromEngine(rawComparison, profiles, issue.articles, {
         issueArticleCount: issue.articleCount,
+        approval: clusterApproval,
       });
       if (!isStructuredComparisonPayload(issue.structuredComparison)) {
         throw new Error("공개 구조화 비교 계약 검증에 실패했습니다.");
       }
     });
+    const unusedApprovalCount = [...reviewedClusterApprovals.keys()]
+      .filter((signature) => !consumedClusterApprovals.has(signature))
+      .length;
+    if (unusedApprovalCount) {
+      throw new Error(`${unusedApprovalCount} approved cluster(s) did not match an analyzed issue with usable profiles.`);
+    }
     const statements = [];
     analyzed.forEach((issue, index) => {
       const issueId = issueIds[index];
@@ -2203,6 +2554,7 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
           && (Boolean(content?.bodyText) || content?.bodyAnalysisAvailable === true))
         .length,
       issueCount: analyzed.length,
+      approvedClusterCount: consumedClusterApprovals.size,
       paidServicesUsed: false,
     }, 201);
   } catch (error) {
@@ -2597,7 +2949,7 @@ async function handleIssueDetail(request, issueId, env) {
     report: publicReport,
     outlets: (outlets.results ?? []).map((outlet) => ({ ...outlet, placement: placementByWeight[outlet.placementWeight] ?? "미확인" })),
     comparison: structuredComparison ?? evidenceFirstComparison(issue, publicArticles),
-    meta: responseMeta(run, "live_metadata"),
+    meta: responseMeta(run, "live_metadata", structuredComparison?.lineage ?? null),
   }, 200, { request, etag: true, cacheControl: "public, max-age=300, immutable" });
 }
 

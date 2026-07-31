@@ -83,6 +83,20 @@ type ComparisonAxis = {
 };
 type Comparison = {
   status: string;
+  lineage?: {
+    modelId: string;
+    promptVersion: string;
+    analysisSchemaVersion: string;
+    comparisonEngineVersion: string;
+    approval: null | {
+      authorizationId: string;
+      fingerprint: string;
+      clusterId: string;
+      reviewer: string;
+      reviewedAt: string;
+      approvedUrlsSha256: string;
+    };
+  };
   divergenceDetected?: boolean;
   evidenceBasis?: "headline_metadata_only" | "body_signals_not_structured_comparison" | "evidence_spans" | string;
   reason?: string;
@@ -105,6 +119,7 @@ type Comparison = {
     outlets: number;
     independentMediaGroups: number;
     excludedArticles: number;
+    inputTruncatedArticles?: number;
   };
   axes?: ComparisonAxis[];
   sourceLens?: {
@@ -226,6 +241,7 @@ const reviewLabels: Record<string, string> = {
   ai_draft: "AI 분석 초안",
   automatic_draft: "자동 구조화 초안",
   review_required: "사람 검토 필요",
+  cluster_review_required: "동일 사건 검토 대기",
   not_human_reviewed: "사람 검토 전",
   pending: "검토 대기",
 };
@@ -501,6 +517,7 @@ function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
             <div><dt>언론사</dt><dd>{comparison.sample.outlets}곳</dd></div>
             <div><dt>독립 미디어그룹</dt><dd>{comparison.sample.independentMediaGroups}개</dd></div>
             <div><dt>제외·유보</dt><dd>{comparison.sample.excludedArticles}건</dd></div>
+            <div><dt>입력 절단</dt><dd>{comparison.sample.inputTruncatedArticles ?? 0}건</dd></div>
           </dl>
         )}
       </header>
@@ -634,6 +651,27 @@ function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
         <details className="comparison-limitations">
           <summary>이 분석을 해석할 때 확인할 한계 <span>{limitations.length}개</span></summary>
           <ul>{limitations.map((limitation, index) => <li key={`${limitation}-${index}`}>{limitation}</li>)}</ul>
+        </details>
+      )}
+      {comparison.lineage && (
+        <details className="comparison-limitations">
+          <summary>분석 이력과 승인 근거</summary>
+          <dl>
+            <div><dt>분석 모델</dt><dd>{comparison.lineage.modelId}</dd></div>
+            <div><dt>프롬프트</dt><dd>{comparison.lineage.promptVersion}</dd></div>
+            <div><dt>분석 스키마</dt><dd>{comparison.lineage.analysisSchemaVersion}</dd></div>
+            <div><dt>비교 엔진</dt><dd>{comparison.lineage.comparisonEngineVersion}</dd></div>
+            {comparison.lineage.approval ? (
+              <>
+                <div><dt>승인 ID</dt><dd>{comparison.lineage.approval.authorizationId}</dd></div>
+                <div><dt>클러스터 ID</dt><dd>{comparison.lineage.approval.clusterId}</dd></div>
+                <div><dt>검토자</dt><dd>{comparison.lineage.approval.reviewer}</dd></div>
+                <div><dt>검토 시각</dt><dd>{formatDateTime(comparison.lineage.approval.reviewedAt)}</dd></div>
+                <div><dt>승인 지문</dt><dd><code>{comparison.lineage.approval.fingerprint}</code></dd></div>
+                <div><dt>승인 URL 집합</dt><dd><code>{comparison.lineage.approval.approvedUrlsSha256}</code></dd></div>
+              </>
+            ) : <div><dt>동일 사건 승인</dt><dd>별도 승인 지문 없음</dd></div>}
+          </dl>
         </details>
       )}
     </div>

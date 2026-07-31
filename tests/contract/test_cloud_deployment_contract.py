@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -47,11 +48,77 @@ class CloudDeploymentContractTests(unittest.TestCase):
         self.assertIn('@("builder", "roles/artifactregistry.writer")', script)
         self.assertIn('@("builder", "roles/storage.objectViewer")', script)
 
+    def test_publisher_can_update_publication_status_without_project_wide_write(
+        self,
+    ) -> None:
+        """mark_published() runs a DML UPDATE, so read-only access is not enough.
+
+        The publisher's project-level BigQuery role is intentionally
+        dataViewer. Without a narrower write grant the publish job fails at the
+        very last step, after the site import already succeeded, which leaves
+        the site populated while BigQuery still says "pending".
+        """
+        store = (ROOT / "src" / "backend" / "gcp_store.py").read_text(encoding="utf-8")
+        self.assertIn("UPDATE `", store)
+        self.assertIn('SET publication_status = "published"', store)
+
+        script = (ROOT / "scripts" / "gcp" / "provision.ps1").read_text(encoding="utf-8")
+        self.assertIn('@("publisher", "roles/bigquery.dataViewer")', script)
+        self.assertIn('@("publisher", "roles/bigquery.jobUser")', script)
+        self.assertNotIn('@("publisher", "roles/bigquery.dataEditor")', script)
+        self.assertIn("grants.sql", script)
+        self.assertIn("Failed to apply table-scoped BigQuery grants.", script)
+
+        grants = (ROOT / "src" / "backend" / "sql" / "grants.sql").read_text(encoding="utf-8")
+        self.assertIn("GRANT `roles/bigquery.dataEditor`", grants)
+        self.assertIn("ON TABLE `project-40bc06fc-fb4b-46b6-a10", grants)
+        self.assertIn("agendaframe.frame_analyses`", grants)
+        self.assertIn("serviceAccount:publisher@", grants)
+        # The write grant must stay scoped to the one table the publisher
+        # updates. A SCHEMA-level grant would cover articles as well.
+        self.assertNotIn("ON SCHEMA", grants)
+
     def test_bigquery_schema_requires_partition_filters(self) -> None:
         schema = (ROOT / "src" / "backend" / "sql" / "schema.sql").read_text(encoding="utf-8")
         self.assertGreaterEqual(schema.count("require_partition_filter=TRUE"), 4)
         self.assertNotIn("article_body STRING", schema)
         self.assertNotIn("evidence_text", schema)
+
+    def test_partitioned_table_queries_bound_the_raw_partitioning_column(self) -> None:
+        """Every query must survive require_partition_filter=TRUE.
+
+        `frame_analyses` is partitioned by DATE(analyzed_at) and `articles` by
+        DATE(published_at), both with require_partition_filter=TRUE. BigQuery
+        only eliminates partitions from predicates on the raw partitioning
+        column; a timezone-shifted `DATE(col, "Asia/Seoul")` comparison does not
+        qualify and the query is rejected outright. A cost guard that dies this
+        way blocks the run before any article is analyzed, so guard it here
+        rather than discovering it against the live dataset.
+        """
+        source = (ROOT / "src" / "backend" / "gcp_store.py").read_text(encoding="utf-8")
+        partition_columns = {
+            "frame_analyses": "analyzed_at",
+            "articles": "published_at",
+        }
+        blocks = [block.split('"""', 1)[0] for block in source.split('query = f"""')[1:]]
+        self.assertGreaterEqual(len(blocks), 4)
+
+        checked = 0
+        for block in blocks:
+            for table, column in partition_columns.items():
+                if f".{table}`" not in block:
+                    continue
+                checked += 1
+                bounded = re.search(
+                    rf"(?<!\()\b(?:\w+\.)?{column}\s*>=",
+                    block,
+                )
+                self.assertIsNotNone(
+                    bounded,
+                    f"a query over `{table}` lacks a raw `{column} >= ...` bound and "
+                    f"will be rejected by require_partition_filter=TRUE:\n{block}",
+                )
+        self.assertGreaterEqual(checked, 5)
 
     def test_cloud_run_deploys_only_a_clean_immutable_validated_commit(self) -> None:
         script = (ROOT / "scripts" / "gcp" / "deploy.ps1").read_text(encoding="utf-8")
@@ -62,6 +129,47 @@ class CloudDeploymentContractTests(unittest.TestCase):
         self.assertIn("runtime:$CommitSha", script)
         self.assertIn("agendaframe-config-check", script)
         self.assertIn("cloudbuild.yaml", script)
+
+    def test_trial_jobs_are_scripted_with_the_same_immutability_guards(self) -> None:
+        """The pilot's analysis and publish jobs must not be hand-typed gcloud.
+
+        deploy.ps1 only deploys agendaframe-config-check. Running the pilot by
+        hand would bypass the clean-tree, full-gate and exact-SHA checks and
+        leave nothing reviewable, so the two one-shot jobs are scripted with the
+        same guards.
+        """
+        script = (ROOT / "scripts" / "gcp" / "deploy-trial-jobs.ps1").read_text(encoding="utf-8")
+        self.assertIn("agendaframe-frame-trial", script)
+        self.assertIn("agendaframe-publish-trial", script)
+
+        # Inherited guards.
+        self.assertIn("Refusing to target an unreviewed project", script)
+        self.assertIn("[switch]$Apply", script)
+        self.assertIn("[switch]$FullGatePassed", script)
+        self.assertIn("Deployment is blocked until the full offline gate has passed.", script)
+        self.assertIn("status --porcelain --untracked-files=no", script)
+        self.assertIn("CommitSha must match the checked-out commit.", script)
+        self.assertIn('"^[a-f0-9]{40}$"', script)
+        self.assertIn("runtime:$CommitSha", script)
+
+        # One-shot posture: no retries, no scheduler, billed run is opt-in.
+        # Match the command that would create a trigger, not the word, so the
+        # script can still explain in prose why no schedule exists.
+        self.assertIn('"--max-retries", "0"', script)
+        self.assertIn("[switch]$Execute", script)
+        self.assertNotIn("scheduler jobs create", script)
+        self.assertNotIn("--schedule", script)
+
+        # Least-privilege identities per job.
+        self.assertIn('"analyzer@$ProjectId.iam.gserviceaccount.com"', script)
+        self.assertIn('"publisher@$ProjectId.iam.gserviceaccount.com"', script)
+
+        # The retired publication flag must not come back.
+        self.assertNotIn("--approve-published-cluster", script)
+        self.assertIn("--cluster-approval-json=", script)
+
+        # Transient input contract, mirrored from backend.main._private_gcs_parts.
+        self.assertIn("transient-inputs/", script)
 
     def test_cloud_build_context_excludes_local_outputs_and_frontend(self) -> None:
         ignore = (ROOT / ".gcloudignore").read_text(encoding="utf-8")

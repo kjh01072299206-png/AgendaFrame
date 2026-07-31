@@ -39,10 +39,18 @@ class GcpAnalysisStore:
         return next(iter(self.bq.query(query, job_config=job_config).result()), None) is not None
 
     def analyzed_today_count(self) -> int:
+        # `frame_analyses` is PARTITION BY DATE(analyzed_at) with
+        # require_partition_filter=TRUE. A `DATE(analyzed_at, "Asia/Seoul")`
+        # predicate cannot be used for partition elimination, so the timezone
+        # comparison alone is rejected before any model call happens. Bound the
+        # raw partitioning column as well. The 2-day window is deliberate: the
+        # KST day (UTC+9) straddles two UTC partitions, so a tighter bound would
+        # drop rows analyzed earlier on the same Seoul day.
         query = f"""
             SELECT COUNT(*) AS count
             FROM `{self.config.project_id}.{self.config.dataset}.frame_analyses`
-            WHERE DATE(analyzed_at, "Asia/Seoul") = CURRENT_DATE("Asia/Seoul")
+            WHERE analyzed_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 2 DAY)
+              AND DATE(analyzed_at, "Asia/Seoul") = CURRENT_DATE("Asia/Seoul")
         """
         job_config = self.bigquery.QueryJobConfig(
             maximum_bytes_billed=self.config.maximum_bytes_billed,
@@ -92,7 +100,14 @@ class GcpAnalysisStore:
         }
         self._insert_json("frame_analyses", analysis_row, analysis_key)
 
-    def pending_publication_rows(self, limit: int) -> list[dict[str, Any]]:
+    def pending_publication_rows(
+        self,
+        limit: int,
+        *,
+        target_date: str | None = None,
+        article_ids: list[str] | None = None,
+    ) -> list[dict[str, Any]]:
+        selected_article_ids = article_ids or []
         query = f"""
             SELECT
               f.analysis_key,
@@ -104,18 +119,35 @@ class GcpAnalysisStore:
               a.published_at,
               a.collected_at,
               a.section,
-              a.body_hash
+              a.body_hash,
+              a.text_scope
             FROM `{self.config.project_id}.{self.config.dataset}.frame_analyses` f
             JOIN `{self.config.project_id}.{self.config.dataset}.articles` a
               ON a.article_id = f.article_id
               AND a.published_at >= TIMESTAMP("2026-01-01")
             WHERE f.analyzed_at >= TIMESTAMP("2026-01-01")
               AND f.publication_status = "pending"
+              AND (
+                @target_date IS NULL
+                OR DATE(a.published_at, "Asia/Seoul") = DATE(@target_date)
+              )
+              AND (
+                ARRAY_LENGTH(@article_ids) = 0
+                OR f.article_id IN UNNEST(@article_ids)
+              )
             ORDER BY f.analyzed_at ASC
             LIMIT @limit
         """
         job_config = self.bigquery.QueryJobConfig(
-            query_parameters=[self.bigquery.ScalarQueryParameter("limit", "INT64", limit)],
+            query_parameters=[
+                self.bigquery.ScalarQueryParameter("limit", "INT64", limit),
+                self.bigquery.ScalarQueryParameter("target_date", "STRING", target_date),
+                self.bigquery.ArrayQueryParameter(
+                    "article_ids",
+                    "STRING",
+                    selected_article_ids,
+                ),
+            ],
             maximum_bytes_billed=self.config.maximum_bytes_billed,
         )
         rows = []
@@ -134,7 +166,7 @@ class GcpAnalysisStore:
                         "published_at": row["published_at"].isoformat(),
                         "collected_at": row["collected_at"].isoformat(),
                         "section": row["section"],
-                        "text_scope": "authorized_body",
+                        "text_scope": row["text_scope"],
                         "body_hash": row["body_hash"],
                         "body_characters": profile["article"]["body_character_count"],
                     },

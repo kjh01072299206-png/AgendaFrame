@@ -824,6 +824,21 @@ function sortedPatterns(patterns) {
     .sort((a, b) => b.article_count - a.article_count || a.code.localeCompare(b.code));
 }
 
+function semanticVariantKey(dimension, item, profile) {
+  if (profile.engine?.semantic_ai !== true) {
+    return normalizeText(item.variant_key) || String(item.code);
+  }
+  const normalizedMeaning = normalizeText(item.public_paraphrase)
+    .normalize("NFKC")
+    .toLocaleLowerCase("ko-KR")
+    .replace(/[^\p{L}\p{N}_]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return normalizedMeaning
+    ? `semantic:${dimension}:${normalizedMeaning}`
+    : String(item.code);
+}
+
 function buildAxis(dimension, profiles, metadataById) {
   const patterns = new Map();
   let outletNarrationCount = 0;
@@ -839,19 +854,22 @@ function buildAxis(dimension, profiles, metadataById) {
     if (result.outlet_narration_observed) outletNarrationCount += 1;
     else sourceAttributedOnlyCount += 1;
     for (const item of result.items) {
-      const key = `${item.code}:${item.voice.kind === "journalist_narration" ? "narration" : "source"}`;
+      const variantKey = semanticVariantKey(dimension, item, profile);
+      const voiceScope = item.voice.kind === "journalist_narration" ? "outlet_narration" : "attributed_source";
+      const key = `${variantKey}:${voiceScope}`;
       const current = patterns.get(key) ?? {
         code: item.code,
+        variant_key: variantKey,
         public_paraphrase: item.public_paraphrase,
-        voice_scope: item.voice.kind === "journalist_narration" ? "outlet_narration" : "attributed_source",
+        voice_scope: voiceScope,
         article_count: 0,
         outlets: new Set(),
         article_ids: new Set(),
         evidence: [],
       };
-      current.article_count += 1;
       current.outlets.add(outletLabel(articleId, metadataById));
       current.article_ids.add(articleId);
+      current.article_count = current.article_ids.size;
       current.evidence.push({ article_id: articleId, source_id: outletId(articleId, metadataById), ...item.evidence });
       patterns.set(key, current);
     }
@@ -981,17 +999,32 @@ function describeCommon(axes, profileCount) {
 }
 
 function sourceDominance(profiles) {
-  const items = profiles.flatMap((profile) =>
-    DIMENSION_ORDER.flatMap((dimension) => profile.dimensions?.[dimension]?.items ?? []),
+  const voiceObservations = new Set();
+  for (const profile of profiles) {
+    const articleId = String(profile.article?.article_id ?? "");
+    for (const dimension of DIMENSION_ORDER) {
+      for (const item of profile.dimensions?.[dimension]?.items ?? []) {
+        const voiceScope = item.voice?.kind === "journalist_narration"
+          ? "outlet_narration"
+          : "attributed_source";
+        voiceObservations.add(`${articleId}\n${dimension}\n${voiceScope}`);
+      }
+    }
+  }
+  const attributedItemCount = [...voiceObservations]
+    .filter((value) => value.endsWith("\nattributed_source"))
+    .length;
+  const share = voiceObservations.size ? attributedItemCount / voiceObservations.size : 0;
+  const sourceDominanceSafeGenre = profiles.every((profile) =>
+    profile.genre?.code === "straight_news"
+    || (profile.engine?.semantic_ai === true && profile.genre?.code === "unknown"),
   );
-  const attributedItems = items.filter((item) => item.voice?.kind !== "journalist_narration");
-  const share = items.length ? attributedItems.length / items.length : 0;
   return {
     detected: profiles.length >= 2
-      && profiles.every((profile) => profile.genre?.code === "straight_news")
+      && sourceDominanceSafeGenre
       && share >= 0.7,
-    attributed_item_count: attributedItems.length,
-    total_item_count: items.length,
+    attributed_item_count: attributedItemCount,
+    total_item_count: voiceObservations.size,
     attributed_share: Math.round(share * 1000) / 1000,
   };
 }
@@ -1022,6 +1055,11 @@ export function buildIssueFrameComparison(profiles, articleMetadata = [], option
   const notObservedStatements = axes.map((axis) => axis.not_observed_statement).filter(Boolean);
   const titleOnlyOrShort = profiles.filter((profile) => profile.article.body_character_count < 300).length;
   const sourceDominated = sourceDominance(profiles);
+  const semanticDraftPresent = profiles.some(
+    (profile) =>
+      profile.engine?.semantic_ai === true
+      && profile.review?.status !== "human_reviewed",
+  );
   const common = sourceDominated.detected
     ? "비교 표본에서 관측된 핵심 문제·원인·평가 표현의 대부분은 취재원 발언에 귀속됩니다."
     : describeCommon(axes, profiles.length);
@@ -1031,7 +1069,12 @@ export function buildIssueFrameComparison(profiles, articleMetadata = [], option
         detected: false,
         text: "취재원 발언이 설명을 지배해, 표현 차이를 매체 자체의 프레임 차이로 확정하지 않았습니다.",
       }
-    : observedDivergence;
+    : semanticDraftPresent
+      ? {
+          detected: false,
+          text: "AI가 구조화한 설명 변형은 표시하지만, 의미가 실제로 갈렸다는 판단은 사람 검토 전까지 보류합니다.",
+        }
+      : observedDivergence;
   const dominantRole = sourceLens.roles[0];
   const sourceSummary = sourceDominated.detected
     ? `분석 항목의 ${Math.round(sourceDominated.attributed_share * 100)}%가 직접·간접인용 또는 인용 경계의 표현으로 분류됐습니다. 같은 발언을 어느 위치에 배치했는지는 비교할 수 있지만, 이를 매체의 동의로 해석하면 안 됩니다.`

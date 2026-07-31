@@ -272,7 +272,7 @@ export const analysisRuns = sqliteTable(
     targetDate: text("target_date").notNull(),
     provider: text("provider").notNull(),
     modelVersion: text("model_version").notNull(),
-    status: text("status", { enum: ["running", "success", "failed"] }).notNull(),
+    status: text("status", { enum: ["running", "success", "failed", "rolled_back"] }).notNull(),
     startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
     finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
     articleCount: integer("article_count").notNull().default(0),
