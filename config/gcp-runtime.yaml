@@ -12,15 +12,21 @@ storage:
 vertex:
   location: global
   model: gemini-2.5-flash-lite
-  prompt_version: 2.2.0
+  prompt_version: 2.3.0
   schema_version: 2
   max_articles_per_run: 50
   max_articles_per_day: 200
   max_input_characters_per_article: 20000
-  max_output_tokens: 800
+  # Six frame dimensions plus evidence locators need enough room to avoid
+  # truncated JSON responses. The batch guard still bounds article count and
+  # total spend before any model call.
+  max_output_tokens: 3200
   thinking_budget: 0
-  estimated_input_usd_per_million_tokens: 0.05
-  estimated_output_usd_per_million_tokens: 0.20
+  # The implementation uses synchronous generate_content, so use Standard
+  # Vertex pricing here. Batch/Flex can be selected separately after a verified
+  # batch adapter is added.
+  estimated_input_usd_per_million_tokens: 0.10
+  estimated_output_usd_per_million_tokens: 0.40
 cost_controls:
   vertex_monthly_target_usd: 5
   cloud_run_monthly_target_usd: 2

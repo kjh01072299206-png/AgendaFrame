@@ -46,5 +46,15 @@ class CostGuard:
         ):
             raise CostLimitExceeded("Daily article cap would be exceeded.")
         estimate = self.estimate(body_character_counts)
-        if estimate.estimated_cost_usd > self.config.estimated_daily_vertex_limit_usd:
+        # The store tracks completed article count, not their historical token
+        # usage. Treat already-processed articles as worst-case inputs so a
+        # sequence of individually affordable batches cannot cross the daily
+        # dollar cap.
+        prior_worst_case = self.estimate(
+            [self.config.vertex.max_input_characters_per_article] * already_analyzed_today
+        )
+        cumulative_estimated_cost = (
+            prior_worst_case.estimated_cost_usd + estimate.estimated_cost_usd
+        )
+        if cumulative_estimated_cost > self.config.estimated_daily_vertex_limit_usd:
             raise CostLimitExceeded("Estimated Vertex cost would exceed the daily limit.")

@@ -10,6 +10,7 @@ from unittest.mock import patch
 from ai.framing import (
     FRAME_DIMENSIONS,
     FrameResult,
+    VertexFrameAnalyzer,
     _align_payload_evidence,
     validate_frame_result,
 )
@@ -108,7 +109,7 @@ class CloudRuntimeTests(unittest.TestCase):
         self.assertEqual(self.config.vertex.thinking_budget, 0)
         self.assertLessEqual(self.config.vertex.max_articles_per_run, 50)
         self.assertLessEqual(self.config.vertex.max_articles_per_day, 200)
-        self.assertEqual(self.config.vertex.prompt_version, "2.2.0")
+        self.assertEqual(self.config.vertex.prompt_version, "2.3.0")
 
     def test_source_registry_defaults_all_real_sources_to_metadata_only(self) -> None:
         registry = SourcePolicyRegistry.from_yaml(ROOT / "config" / "source-policies.yaml")
@@ -132,6 +133,11 @@ class CloudRuntimeTests(unittest.TestCase):
     def test_cost_guard_blocks_run_and_daily_caps_before_model_calls(self) -> None:
         guard = CostGuard(self.config)
         guard.enforce_run([1000] * 5, already_analyzed_today=0)
+        with self.assertRaises(CostLimitExceeded):
+            guard.enforce_run(
+                [self.config.vertex.max_input_characters_per_article] * 130,
+                already_analyzed_today=0,
+            )
         with self.assertRaises(CostLimitExceeded):
             guard.enforce_run([1000] * 51, already_analyzed_today=0)
         with self.assertRaises(CostLimitExceeded):
@@ -183,6 +189,46 @@ class CloudRuntimeTests(unittest.TestCase):
                 body,
                 {"dimensions": [{"evidence": [{"text": "본문에 없는 표현"}]}]},
             )
+
+    def test_model_evidence_whitespace_is_repaired_to_an_exact_source_slice(self) -> None:
+        body = "첫 문장입니다.\n\n두  번째 문장입니다."
+        payload = {
+            "dimensions": [
+                {
+                    "evidence": [
+                        {
+                            "start": 0,
+                            "end": 7,
+                            "text": "두 번째 문장입니다.",
+                        }
+                    ]
+                }
+            ]
+        }
+        aligned = _align_payload_evidence("article-1", body, payload)
+        span = aligned["dimensions"][0]["evidence"][0]
+        self.assertEqual(span["text"], "두  번째 문장입니다.")
+        self.assertEqual(body[span["start"] : span["end"]], span["text"])
+
+    def test_vertex_malformed_output_becomes_review_needed_instead_of_aborting_batch(self) -> None:
+        class FakeModels:
+            def generate_content(self, **_kwargs):
+                return type("Response", (), {"text": "not-json", "usage_metadata": None})()
+
+        class FakeClient:
+            models = FakeModels()
+
+        with patch("google.genai.Client", return_value=FakeClient()):
+            result = VertexFrameAnalyzer(self.config).analyze(article())
+
+        self.assertEqual(result.decision, "review_needed")
+        self.assertEqual(
+            {dimension["dimension"] for dimension in result.dimensions},
+            FRAME_DIMENSIONS,
+        )
+        self.assertTrue(
+            all(dimension["status"] == "explicit_not_stated" for dimension in result.dimensions)
+        )
 
     def test_pipeline_withholds_body_analysis_until_policy_allows_it(self) -> None:
         registry = SourcePolicyRegistry(

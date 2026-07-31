@@ -69,7 +69,7 @@
         "additionalProperties": false
       }
     },
-    "prompt_version": {"const": "2.2.0"},
+    "prompt_version": {"const": "2.3.0"},
     "schema_version": {"const": 2}
   },
   "additionalProperties": false
