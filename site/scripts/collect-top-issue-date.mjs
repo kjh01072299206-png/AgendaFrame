@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { parseBigKindsXlsx } from "../lib/bigkinds-xlsx.mjs";
+import { isBigKindsExcludedValue, parseBigKindsXlsx } from "../lib/bigkinds-xlsx.mjs";
 import { analyzeArticles, extractBodyFrameSignals } from "../worker/analysis.mjs";
 import { extractArticleBody } from "../worker/article-extractor.mjs";
 import {
@@ -101,7 +101,7 @@ const column = Object.fromEntries(headers.map((header, index) => [header, index]
 const dateKey = targetDate.replaceAll("-", "");
 const inputArticles = rows.slice(1)
   .filter((row) => String(row[column["일자"]] ?? "").replace(/\D/g, "") === dateKey)
-  .filter((row) => !String(row[column["분석제외 여부"]] ?? "").trim())
+  .filter((row) => !isBigKindsExcludedValue(row[column["분석제외 여부"]]))
   .flatMap((row) => {
     const source = String(row[column["언론사"]] ?? "").trim();
     const sourceConfig = SOURCE_IDS.get(source);

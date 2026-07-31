@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { buildTrialAuthorization, sha256Text } from "../lib/bigkinds-trial.mjs";
-import { parseBigKindsXlsx } from "../lib/bigkinds-xlsx.mjs";
+import { isBigKindsExcludedValue, parseBigKindsXlsx } from "../lib/bigkinds-xlsx.mjs";
 import { analyzeArticles, extractBodyFrameSignals } from "../worker/analysis.mjs";
 
 const SOURCE_IDS = new Map([
@@ -42,6 +42,7 @@ function parseArgs(argv) {
     reviewedAt: "",
     validUntil: "2026-10-31",
     bodyJsonl: "",
+    workbookBodies: false,
     requireFullBodies: false,
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -56,6 +57,7 @@ function parseArgs(argv) {
     else if (value === "--reviewed-at") args.reviewedAt = argv[++index] ?? "";
     else if (value === "--valid-until") args.validUntil = argv[++index] ?? "";
     else if (value === "--body-jsonl") args.bodyJsonl = argv[++index] ?? "";
+    else if (value === "--workbook-bodies") args.workbookBodies = true;
     else if (value === "--require-full-bodies") args.requireFullBodies = true;
     else throw new Error(`지원하지 않는 인수입니다: ${value}`);
   }
@@ -124,7 +126,7 @@ const targetKey = args.date.replaceAll("-", "");
 const collectedAt = new Date().toISOString();
 const candidates = table.slice(1).flatMap((row) => {
   if (String(row[column["일자"]] ?? "").replace(/\D/g, "") !== targetKey) return [];
-  if (String(row[column["분석제외 여부"]] ?? "").trim()) return [];
+  if (isBigKindsExcludedValue(row[column["분석제외 여부"]])) return [];
   const source = String(row[column["언론사"]] ?? "").trim();
   const sourceConfig = SOURCE_IDS.get(source);
   const title = String(row[column["제목"]] ?? "").trim();
@@ -132,6 +134,8 @@ const candidates = table.slice(1).flatMap((row) => {
   const providerExcerpt = String(row[column["본문"]] ?? "").trim();
   const fullBody = fullBodies.get(normalizedUrl(canonicalUrl));
   const bodyText = fullBody || providerExcerpt;
+  const workbookBodyIsFull = args.workbookBodies && providerExcerpt.length >= 40;
+  const hasFullBody = Boolean(fullBody) || workbookBodyIsFull;
   if (!sourceConfig || !title || !canonicalUrl || bodyText.length < 40) return [];
   const articleId = String(row[column["뉴스 식별자"]] ?? "").trim() || sha256Text(canonicalUrl);
   return [{
@@ -147,7 +151,7 @@ const candidates = table.slice(1).flatMap((row) => {
     transientContent: true,
     bodyAnalysisAvailable: true,
     bodyFrameSignals: extractBodyFrameSignals(bodyText),
-    textScope: fullBody ? "transient_public_page_extract" : "provider_excerpt",
+    textScope: hasFullBody ? "transient_public_page_extract" : "provider_excerpt",
   }];
 });
 

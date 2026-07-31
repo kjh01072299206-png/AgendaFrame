@@ -811,10 +811,14 @@ export function validateStructuredImportRows(inputRows, panel = sourcePanel, now
     if (excerpt.length < 40 || excerpt.length > 5_000) {
       throw new Error(`${index + 1}행: 분석용 본문 발췌는 40~5,000자여야 합니다.`);
     }
+    const textScope = String(input.text_scope ?? input.textScope ?? "provider_excerpt").trim();
+    if (!["provider_excerpt", "transient_public_page_extract"].includes(textScope)) {
+      throw new Error(`${index + 1}행: 본문 처리 범위를 확인해 주세요.`);
+    }
     return {
       ...metadata,
       excerpt,
-      textScope: "provider_excerpt",
+      textScope,
     };
   });
 }
@@ -1091,10 +1095,13 @@ async function handleStructuredImport(request, env) {
       ));
     }
     await runBatches(env.DB, statements);
+    const textScope = rows.every((row) => row.textScope === "transient_public_page_extract")
+      ? "transient_public_page_extract"
+      : "provider_excerpt";
     return jsonResponse({
       ...metadataResult,
       analyzedExcerpts: results.length,
-      textScope: "provider_excerpt",
+      textScope,
       rawTextStored: false,
       extractorVersion: BIGKINDS_EXCERPT_EXTRACTOR_VERSION,
       framingEngineVersion: FRAMING_ENGINE_VERSION,

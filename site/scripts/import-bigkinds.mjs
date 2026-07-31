@@ -1,14 +1,12 @@
 import { readFile, stat } from "node:fs/promises";
 import process from "node:process";
-import { parseBigKindsXlsx } from "../lib/bigkinds-xlsx.mjs";
+import { isBigKindsExcludedValue, parseBigKindsXlsx } from "../lib/bigkinds-xlsx.mjs";
 
 const BATCH_SIZE = 100;
 const MAX_ROWS = 20_000;
 const DEFAULT_ORIGIN = "https://agendaframe-capstone.kjh01072299206.chatgpt.site";
-const FALSE_LIKE = new Set(["", "0", "false", "n", "no", "아니오", "미제외"]);
-
 function parseArgs(argv) {
-  const args = { file: "", origin: DEFAULT_ORIGIN, startBatch: 0, analyze: false, dryRun: false };
+  const args = { file: "", origin: DEFAULT_ORIGIN, startBatch: 0, analyze: false, dryRun: false, date: "", workbookBodies: false, metadataOnly: false };
   for (let index = 0; index < argv.length; index += 1) {
     const value = argv[index];
     if (!args.file && !value.startsWith("--")) args.file = value;
@@ -16,6 +14,9 @@ function parseArgs(argv) {
     else if (value === "--start-batch") args.startBatch = Number(argv[++index] ?? 0);
     else if (value === "--analyze") args.analyze = true;
     else if (value === "--dry-run") args.dryRun = true;
+    else if (value === "--date") args.date = argv[++index] ?? "";
+    else if (value === "--workbook-bodies") args.workbookBodies = true;
+    else if (value === "--metadata-only") args.metadataOnly = true;
     else throw new Error(`지원하지 않는 인수입니다: ${value}`);
   }
   if (!args.file) throw new Error("BigKinds .xlsx 파일 경로가 필요합니다.");
@@ -106,8 +107,7 @@ async function main() {
   let excludedRows = 0;
   let missingUrlRows = 0;
   const rows = table.slice(1).flatMap((values, index) => {
-    const excluded = columns.excluded >= 0
-      && !FALSE_LIKE.has(String(values[columns.excluded] ?? "").trim().toLowerCase());
+    const excluded = columns.excluded >= 0 && isBigKindsExcludedValue(values[columns.excluded]);
     if (excluded) {
       excludedRows += 1;
       return [];
@@ -117,18 +117,20 @@ async function main() {
       return [];
     }
     const excerpt = columns.excerpt >= 0 ? String(values[columns.excerpt] ?? "").trim() : "";
+    const rowPublishedAt = publishedAt(values[columns.publishedAt], columns.newsId >= 0 ? values[columns.newsId] : "");
+    if (args.date && rowPublishedAt.slice(0, 10) !== args.date) return [];
     return [{
       _line: index + 2,
       source: String(values[columns.source] ?? "").trim(),
       title: String(values[columns.title] ?? "").trim(),
       url: normalizeUrl(values[columns.url]),
-      published_at: publishedAt(values[columns.publishedAt], columns.newsId >= 0 ? values[columns.newsId] : ""),
+      published_at: rowPublishedAt,
       collected_at: collectedAt,
       section: columns.section >= 0 ? String(values[columns.section] ?? "").trim() : "",
       homepage_placement: "",
       homepage_rank: "",
       excerpt,
-      textScope: "provider_excerpt",
+      textScope: args.workbookBodies ? "transient_public_page_extract" : "provider_excerpt",
     }];
   });
   const dates = [...new Set(rows.map((row) => row.published_at.slice(0, 10)))].sort();
@@ -151,7 +153,7 @@ async function main() {
   let analyzedExcerpts = 0;
   for (let index = args.startBatch; index < batches.length; index += 1) {
     const batch = batches[index];
-    const structured = batch.filter((row) => row.excerpt.length >= 40);
+    const structured = args.metadataOnly ? [] : batch.filter((row) => row.excerpt.length >= 40);
     const metadataOnly = batch.filter((row) => row.excerpt.length < 40).map((row) => {
       const metadata = { ...row };
       delete metadata.excerpt;
