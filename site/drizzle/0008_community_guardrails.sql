@@ -19,7 +19,7 @@ CREATE TABLE `community_reports` (
   `id` text PRIMARY KEY NOT NULL,
   `comment_id` text NOT NULL,
   `reporter_hash` text NOT NULL,
-  `reason` text NOT NULL CHECK (`length(`reason`) <= 200),
+  `reason` text NOT NULL CHECK (length(`reason`) <= 200),
   `status` text DEFAULT 'open' NOT NULL CHECK (`status` IN ('open', 'reviewed', 'dismissed')),
   `created_at` integer NOT NULL,
   FOREIGN KEY (`comment_id`) REFERENCES `community_comments`(`id`) ON UPDATE no action ON DELETE cascade
