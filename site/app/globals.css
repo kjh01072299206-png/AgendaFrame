@@ -483,9 +483,22 @@ body { background: var(--paper); font-size: 14px; line-height: 1.55; }
 .big-score span { font-size: 11px; }
 .detail-metrics { margin-bottom: 14px; }
 .detail-metrics span { padding: 6px 8px; background: var(--paper-deep); }
+.cluster-diagnostic { margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+.cluster-diagnostic.caution { border-color: #e4c680; background: var(--amber-soft); }
+.cluster-diagnostic.watch { border-color: #b9c6e8; background: #f4f7ff; }
+.cluster-diagnostic.ok { border-color: #b8d9cc; background: #f2faf6; }
+.cluster-diagnostic-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.cluster-diagnostic-heading strong { color: var(--ink); font-size: 12px; }
+.cluster-diagnostic-heading span { padding: 3px 7px; border-radius: 999px; background: white; color: #4f596a; font-size: 10px; font-weight: 800; }
+.cluster-diagnostic.caution .cluster-diagnostic-heading span { color: #6d4a08; }
+.cluster-diagnostic.watch .cluster-diagnostic-heading span { color: #315292; }
+.cluster-diagnostic.ok .cluster-diagnostic-heading span { color: #167769; }
+.cluster-diagnostic p { margin: 5px 0 3px; color: #4f596a; font-size: 11px; line-height: 1.55; }
+.cluster-diagnostic small { color: var(--muted); font-size: 10px; }
 .score-details { margin-bottom: 4px; }
 .score-breakdown { gap: 12px; padding: 14px; border: 0; background: var(--paper); }
 .analysis-tabs { gap: 22px; margin-top: 20px; }
+.analysis-tabs.analysis-tabs-top { margin-top: 0; margin-bottom: 22px; }
 .analysis-tabs button { min-height: 44px; font-size: 12px; }
 
 .evidence-first { padding-top: 18px; }

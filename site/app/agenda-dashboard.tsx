@@ -4,6 +4,7 @@ import { FormEvent, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useS
 import { CommunityPanel } from "./community-panel";
 import { EvidenceChat } from "./evidence-chat";
 import { SelfCheck } from "./self-check";
+import top5PilotData from "../data/top5-2026-07-26.json";
 
 type Health = {
   status: string;
@@ -327,6 +328,221 @@ function formatAgendaDate(value?: string | null) {
 
 const ISSUE_SCOPE = "general_daily_10";
 const ISSUE_SCOPE_LABEL = "국내 10대 종합일간지";
+type Top5PilotIssue = (typeof top5PilotData.issues)[number];
+
+function normalizedArticleUrl(value?: string | null) {
+  if (!value) return "";
+  try {
+    const url = new URL(value);
+    [...url.searchParams.keys()]
+      .filter((key) => key.toLowerCase().startsWith("utm_") || ["ref", "source", "fbclid", "gclid"].includes(key.toLowerCase()))
+      .forEach((key) => url.searchParams.delete(key));
+    url.hash = "";
+    return url.toString().replace(/\/$/u, "");
+  } catch {
+    return String(value).trim();
+  }
+}
+
+function findTop5PilotIssue(detail: IssueDetail): Top5PilotIssue | null {
+  if (detail.issue.issueDate !== "2026-07-26") return null;
+  const articleUrls = new Set(detail.articles.map((article) => normalizedArticleUrl(article.url)));
+  const ranked = top5PilotData.issues
+    .map((candidate) => ({
+      candidate,
+      overlap: candidate.articleMetadata.filter((article) => articleUrls.has(normalizedArticleUrl(article.canonicalUrl))).length,
+    }))
+    .sort((left, right) => right.overlap - left.overlap || left.candidate.rank - right.candidate.rank);
+  const best = ranked[0];
+  return best && best.overlap >= 2 ? best.candidate : null;
+}
+
+function pilotComparisonToPublic(pilotIssue: Top5PilotIssue, articles: Article[]): Comparison {
+  const pilot = pilotIssue.comparison;
+  const metadataById = new Map(pilotIssue.articleMetadata.map((article) => [article.articleId, article]));
+  const articleByUrl = new Map(articles.map((article) => [normalizedArticleUrl(article.url), article]));
+  const sourceForArticle = (articleId: string) => {
+    const metadata = metadataById.get(articleId);
+    const article = metadata ? articleByUrl.get(normalizedArticleUrl(metadata.canonicalUrl)) : undefined;
+    return {
+      source: metadata?.source ?? article?.source ?? "출처 미확인",
+      sourceUrl: metadata?.canonicalUrl ?? article?.url ?? "#",
+    };
+  };
+  const toEvidence = (pattern: (typeof pilot.comparison_axes)[number]["patterns"][number]) => (pattern.evidence ?? []).map((evidence) => {
+    const source = sourceForArticle(evidence.article_id);
+    return {
+      source: source.source,
+      articleId: evidence.article_id,
+      sourceUrl: source.sourceUrl,
+      claimId: pattern.variant_key,
+      evidenceLocator: evidence.locator ? `${evidence.locator.paragraph}문단 ${evidence.locator.sentence}문장` : null,
+      evidenceHash: evidence.sentence_sha256 ?? null,
+      voiceKind: pattern.voice_scope === "outlet_narration" ? "journalist_narration" : "source_attributed",
+    };
+  });
+  const axes: ComparisonAxis[] = pilot.comparison_axes.map((axis) => ({
+    dimension: axis.dimension,
+    label: axis.label,
+    variants: axis.patterns.map((pattern) => ({
+      groupId: pattern.variant_key,
+      frameFamily: pattern.code,
+      claimIds: [pattern.variant_key],
+      summary: pattern.public_paraphrase,
+      outlets: toEvidence(pattern),
+      commitment: pattern.voice_scope === "outlet_narration" ? "explicit" : "source_attributed",
+      status: pattern.voice_scope === "outlet_narration" ? "supported" : "attributed_source",
+      evidenceLocator: pattern.evidence?.[0]?.locator ? `${pattern.evidence[0].locator.paragraph}문단 ${pattern.evidence[0].locator.sentence}문장` : null,
+      basis: "기사 본문 위치·비복원 지문 확인 · 원문 문장 미저장",
+    })),
+  }));
+  const articleCountBySource = new Map<string, number>();
+  for (const article of pilotIssue.articleMetadata) articleCountBySource.set(article.source, (articleCountBySource.get(article.source) ?? 0) + 1);
+  const roles = pilot.source_lens?.roles ?? [];
+  const sourceLens = pilot.source_lens ? {
+    sharedVoices: roles.filter((role) => role.outlet_count >= pilot.sample.outlet_count).map((role) => role.role_label),
+    voicesPresentInSomeOutlets: roles.filter((role) => role.outlet_count > 0 && role.outlet_count < pilot.sample.outlet_count).map((role) => role.role_label),
+    byOutlet: (pilot.source_lens.by_outlet ?? []).map((entry) => {
+      const articleCount = articleCountBySource.get(entry.outlet) ?? 0;
+      return {
+        source: entry.outlet,
+        articleCount,
+        sourceArticleCount: articleCount,
+        voices: entry.roles.map((role) => role.role_label),
+        roleCounts: entry.roles.map((role) => ({
+          role: role.role,
+          roleLabel: role.role_label,
+          count: role.count,
+          articleCount: role.count,
+          presenceRate: articleCount ? role.count / articleCount : 0,
+          directQuoteArticleCount: 0,
+          indirectAttributionArticleCount: 0,
+          mentionCount: role.count,
+        })),
+        officialShare: null,
+        affectedGroupVoice: false,
+        affectedGroupPresenceRate: 0,
+      };
+    }),
+    caution: pilot.source_lens.caution ?? null,
+  } : undefined;
+  const reviewStatus = pilot.review?.cluster_status === "review_required" ? "cluster_review_required" : "automatic_draft";
+  return {
+    status: "provisional",
+    lineage: {
+      modelId: "korean-evidence-rules-v2",
+      promptVersion: "framing-codebook-v5",
+      analysisSchemaVersion: "agendaframe.issue-frame-comparison.v1",
+      comparisonEngineVersion: "korean-evidence-rules-v2",
+      approval: null,
+    },
+    divergenceDetected: Boolean(pilot.summary_30_seconds?.divergence_detected),
+    evidenceBasis: "evidence_spans",
+    methodologyLabel: "본문 기반 구조화 추출",
+    reviewStatus,
+    summary: {
+      commonGround: pilot.summary_30_seconds?.common_ground ?? null,
+      mainDifference: pilot.summary_30_seconds?.main_difference ?? null,
+      whyItMatters: "이 결과는 사람 검토 전 자동 분석 초안입니다. 매체의 의도나 정치적 성향이 아니라, 분석한 본문에서 확인된 설명 요소만 비교합니다.",
+      sourceContext: pilot.summary_30_seconds?.source_context ?? null,
+    },
+    sample: {
+      analyzedArticles: pilot.sample.article_count,
+      textScope: "article_body",
+      outlets: pilot.sample.outlet_count,
+      independentMediaGroups: pilot.sample.independent_media_group_count,
+      excludedArticles: pilot.sample.short_body_article_count,
+      inputTruncatedArticles: 0,
+    },
+    axes,
+    sourceLens,
+    limitations: [
+      pilot.summary_30_seconds?.limit ?? "자동 추출 결과이며 사람 검토 전입니다.",
+      "같은 사건으로 묶인 기사 집합의 경계가 검토되기 전이므로, 매체 간 차이를 최종 판정으로 해석하지 마세요.",
+      "본문 전문은 공개하거나 저장하지 않고 기사별 위치와 비복원 지문으로만 근거를 연결합니다.",
+    ],
+  };
+}
+
+function applyTop5Pilot(detail: IssueDetail): IssueDetail {
+  const pilotIssue = findTop5PilotIssue(detail);
+  if (!pilotIssue) return detail;
+  const pilotUrls = new Set(pilotIssue.articleMetadata.map((article) => normalizedArticleUrl(article.canonicalUrl)));
+  const articles = detail.articles.map((article) => ({
+    ...article,
+    contentAvailable: pilotUrls.has(normalizedArticleUrl(article.url)) ? 1 : article.contentAvailable,
+  }));
+  return {
+    ...detail,
+    issue: {
+      ...detail.issue,
+      contentAvailableCount: pilotIssue.articleCount,
+      evidenceBasis: "structured_body_profiles_and_metadata",
+      clusterQuality: pilotIssue.clusterQuality === "review_required" ? "review_required" : "cohesive",
+      modelVersion: "korean-evidence-rules-v2",
+      provider: "structured_extractive",
+    },
+    articles,
+    comparison: pilotComparisonToPublic(pilotIssue, articles),
+  };
+}
+
+type ClusterDiagnostic = {
+  tone: "ok" | "watch" | "caution";
+  label: string;
+  reason: string;
+  articleCount: number;
+  minSimilarity: number | null;
+  medianSimilarity: number | null;
+};
+
+function getClusterDiagnostic(detail: IssueDetail): ClusterDiagnostic {
+  const similarities = detail.articles
+    .map((article) => article.similarity)
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value))
+    .sort((left, right) => left - right);
+  const toPercent = (value: number | undefined) => value === undefined ? null : Math.round(Math.max(0, Math.min(1, value)) * 100);
+  const minSimilarity = toPercent(similarities[0]);
+  const medianSimilarity = toPercent(similarities.length ? similarities[Math.floor((similarities.length - 1) / 2)] : undefined);
+  if (!similarities.length) {
+    return {
+      tone: "watch",
+      label: "유사도 자료 부족",
+      reason: "현재 응답에 기사별 제목 유사도가 없어 묶음 응집도를 확인할 수 없습니다.",
+      articleCount: detail.articles.length,
+      minSimilarity,
+      medianSimilarity,
+    };
+  }
+  if (detail.issue.clusterQuality === "review_required" || (minSimilarity ?? 100) < 25) {
+    return {
+      tone: "caution",
+      label: "묶음 검토 필요",
+      reason: "대표 제목과의 유사도가 낮은 기사가 포함되어 있어, 후속 보도나 관련 사건이 함께 묶였는지 확인해야 합니다.",
+      articleCount: detail.articles.length,
+      minSimilarity,
+      medianSimilarity,
+    };
+  }
+  if ((minSimilarity ?? 100) < 40) {
+    return {
+      tone: "watch",
+      label: "유사도 편차 있음",
+      reason: "기사 수가 적더라도 제목의 사건·행동이 충분히 겹치는지 확인한 뒤 비교 결과를 읽어 주세요.",
+      articleCount: detail.articles.length,
+      minSimilarity,
+      medianSimilarity,
+    };
+  }
+  return {
+    tone: "ok",
+    label: "상대적으로 응집된 묶음",
+    reason: "제목 유사도가 비교적 고르게 나타납니다. 최종 사건 동일성은 사람 검토 전입니다.",
+    articleCount: detail.articles.length,
+    minSimilarity,
+    medianSimilarity,
+  };
+}
 
 function naturalIssueTitle(value?: string | null) {
   const normalized = String(value ?? "")
@@ -1154,7 +1370,7 @@ export default function AgendaDashboard() {
     let cancelled = false;
     fetch(`/api/issues/${encodeURIComponent(selectedIssueId)}?scope=${ISSUE_SCOPE}`, { cache: "no-store" })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error("detail unavailable")))
-      .then((payload) => { if (!cancelled) setDetail(payload); })
+      .then((payload) => { if (!cancelled) setDetail(applyTop5Pilot(payload as IssueDetail)); })
       .catch(() => { if (!cancelled) { setDetail(null); setDetailError("이슈 근거를 불러오지 못했습니다."); } });
     return () => { cancelled = true; };
   }, [detailRequestNonce, selectedIssueId]);
@@ -1334,12 +1550,15 @@ export default function AgendaDashboard() {
                 </button>
               )) : <div className="empty-state"><strong>표시할 이슈가 없습니다.</strong><span>선택한 분야에 분석된 기사 제목이 아직 없습니다.</span></div>}
             </div>
-            <p className="panel-note"><span aria-hidden="true">ⓘ</span> 상위 5개는 {ISSUE_SCOPE_LABEL} 안의 기사 수·참여 매체를 기준으로 정렬합니다. 사회적 중요도·사실성·여론을 뜻하지 않습니다.</p>
+            <p className="panel-note"><span aria-hidden="true">ⓘ</span> 상위 5개는 {ISSUE_SCOPE_LABEL} 안의 기사 수·참여 매체를 기준으로 정렬합니다. 사회적 중요도·사실성·여론을 뜻하지 않습니다. 기사 수가 적은 경우에는 서로 다른 사건을 섞지 않도록 묶음을 분리한 결과일 수 있습니다.</p>
           </aside>
 
           <article className="detail-panel" id="issue-analysis-panel" aria-live="polite">
             {!selectedIssue ? <div className="empty-state detail-empty"><strong>비교할 이슈를 선택해 주세요.</strong><span>이슈를 선택하면 매체별 제목과 현재 확인 가능한 근거가 여기에 나타납니다.</span></div> : detailError ? <div className="empty-state error-state" role="alert"><strong>이슈 근거를 불러오지 못했습니다.</strong><span>{detailError}</span><button type="button" onClick={retryDetail}>근거 다시 불러오기</button></div> : !detail || detail.issue.id !== selectedIssueId ? <div className="skeleton-detail" role="status" aria-label="선택한 이슈의 근거를 불러오는 중"><i className="skeleton-line" aria-hidden="true" /><i className="skeleton-line" aria-hidden="true" /><i className="skeleton-line" aria-hidden="true" /><i className="skeleton-line" aria-hidden="true" /></div> : (
               <>
+                <div className="analysis-tabs analysis-tabs-top" role="tablist" aria-label="이슈 분석 보기">
+                  {analysisTabs.map(([value, label]) => <button key={value} id={`analysis-tab-${value}`} type="button" role="tab" aria-selected={tab === value} aria-controls={`analysis-panel-${value}`} tabIndex={tab === value ? 0 : -1} className={tab === value ? "active" : ""} onKeyDown={(event) => handleTabKeyDown(event, value)} onClick={() => setTab(value)}>{label}</button>)}
+                </div>
                 <button className="mobile-back" type="button" onClick={() => {
                   const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
                   document.getElementById("ranking-title")?.scrollIntoView({ behavior, block: "start" });
@@ -1347,10 +1566,11 @@ export default function AgendaDashboard() {
                 <div className="detail-kicker"><p>{detail.issue.category} · {detail.issue.issueDate} · {ISSUE_SCOPE_LABEL} {detail.issue.sourceCount}곳</p><span className="confidence review">{detail.issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 필요" : detail.issue.scoreStatus === "scope_observed_components" ? "표본 기준 자동 정렬" : "자동 분석 · 검토 전"}</span></div>
                 <div className="detail-title-row"><div><h2 ref={detailTitleRef} tabIndex={-1}>{naturalIssueTitle(detail.issue.title)}</h2><p className="detail-summary">{detail.issue.summary}</p></div><div className="big-score"><strong>{detail.issue.agendaScore === null ? "–" : Math.round(detail.issue.agendaScore)}</strong><span>{detail.issue.agendaScore === null ? "산출 보류" : "10대 종합일간지 확산 /100"}</span></div></div>
                 <div className="detail-metrics"><span>관련 제목 <b>{detail.issue.articleCount}건</b></span><span>포함 매체 <b>{detail.issue.sourceCount}/{configuredSourceCount}곳</b></span><span>본문 단서 <b>{detail.issue.contentAvailableCount}/{detail.issue.articleCount}건</b></span><span>사람 검토 <b>미완료</b></span></div>
+                {(() => {
+                  const diagnostic = getClusterDiagnostic(detail);
+                  return <aside className={`cluster-diagnostic ${diagnostic.tone}`} aria-label="기사 묶음 진단"><div className="cluster-diagnostic-heading"><strong>기사 묶음 진단</strong><span>{diagnostic.label}</span></div><p>{diagnostic.reason}</p><small>{diagnostic.articleCount}건 · 최저 제목 유사도 {diagnostic.minSimilarity === null ? "확인 불가" : `${diagnostic.minSimilarity}%`} · 중앙값 {diagnostic.medianSimilarity === null ? "확인 불가" : `${diagnostic.medianSimilarity}%`}</small></aside>;
+                })()}
                 <details className="score-details"><summary>점수 근거와 관측 범위</summary><div className="score-breakdown"><ScorePart label="독립 미디어그룹 커버리지" value={detail.issue.diversityScore} /><ScorePart label="홈페이지 배치" value={detail.issue.placementScore} note={`${detail.issue.placementObservedCount}/${detail.issue.placementTotalCount}건 관측`} /><ScorePart label="기사량" value={detail.issue.volumeScore} /><ScorePart label="후속 보도량" value={detail.issue.followUpVolumeScore} /></div><p>현재 상위 5개 정렬은 국내 10대 종합일간지 안에서 참여 매체 60%와 기사량(최대 10건) 40%를 사용합니다. 홈페이지 배치와 후속 보도는 별도 관측값으로 보여주며, 동일 미디어그룹은 커버리지에서 한 번만 셉니다. 이 점수는 중요도·진실성·여론을 뜻하지 않습니다.</p></details>
-                <div className="analysis-tabs" role="tablist" aria-label="이슈 분석 보기">
-                  {analysisTabs.map(([value, label]) => <button key={value} id={`analysis-tab-${value}`} type="button" role="tab" aria-selected={tab === value} aria-controls={`analysis-panel-${value}`} tabIndex={tab === value ? 0 : -1} className={tab === value ? "active" : ""} onKeyDown={(event) => handleTabKeyDown(event, value)} onClick={() => setTab(value)}>{label}</button>)}
-                </div>
                 {tab === "compare" && (
                   <div id="analysis-panel-compare" role="tabpanel" aria-labelledby="analysis-tab-compare" className="evidence-first">
                     {hasStructuredComparison(detail.comparison)
