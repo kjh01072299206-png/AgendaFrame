@@ -202,6 +202,37 @@ function representativeArticle(articles) {
   return articles[bestIndex];
 }
 
+function dedupeHeadlineWords(value) {
+  const result = [];
+  for (const word of String(value ?? "").split(/\s+/).filter(Boolean)) {
+    const previous = result.at(-1);
+    if (!previous || previous === word) {
+      if (!previous) result.push(word);
+      continue;
+    }
+    // Headlines such as "검경 수사팀 수사" repeat the same event noun.
+    // Remove only the short nested duplicate; do not collapse ordinary
+    // compound nouns or phrases with different roots.
+    if (word.length >= 2 && previous.length >= 2 && (previous.endsWith(word) || word.endsWith(previous)) && Math.abs(previous.length - word.length) <= 2) {
+      if (word.length > previous.length) result[result.length - 1] = word;
+      continue;
+    }
+    result.push(word);
+  }
+  return result.join(" ");
+}
+
+function normalizeIssueHeadline(value) {
+  const deduped = dedupeHeadlineWords(value)
+    .replace(/\s+(?:관련\s+)?이슈$/u, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  if (deduped.length <= 58) return deduped;
+  const firstClause = deduped.split(/\s*[|·]\s*|\s+[―–—]\s+/u)[0]?.trim();
+  if (firstClause && firstClause.length >= 10 && firstClause.length <= 58) return firstClause;
+  return `${deduped.slice(0, 57).trimEnd()}…`;
+}
+
 export function cleanHeadlineToIssueTitle(rawTitle, articles = []) {
   if (!rawTitle) return "주요 이슈";
 
@@ -213,6 +244,7 @@ export function cleanHeadlineToIssueTitle(rawTitle, articles = []) {
     .replace(/\s+/g, " ")
     .trim();
 
+  const headline = normalizeIssueHeadline(clean);
   const conceptCounts = new Map();
   for (const article of articles.length ? articles : [{ title: rawTitle }]) {
     for (const concept of agendaConcepts(article.title)) {
@@ -221,7 +253,11 @@ export function cleanHeadlineToIssueTitle(rawTitle, articles = []) {
   }
   const leadingConcept = [...conceptCounts.entries()].sort((left, right) => right[1] - left[1])[0]?.[0];
   const conceptDefinition = agendaConceptDefinitions.find((definition) => definition.key === leadingConcept);
-  if (conceptDefinition) return conceptDefinition.label;
+  // Keep a readable event headline whenever one is available. Broad concept
+  // labels such as "정책 동향" are useful as secondary tags, but they erase
+  // the event that the user is trying to compare.
+  if (conceptDefinition && !/(동향|관련 보도|주요 의제)$/u.test(conceptDefinition.label)) return conceptDefinition.label;
+  if (headline.length >= 8) return headline;
 
   const actors = [];
   if (/국힘|국민의힘|원내지도부/.test(clean)) actors.push("국민의힘 지도부");
@@ -244,6 +280,8 @@ export function cleanHeadlineToIssueTitle(rawTitle, articles = []) {
   if (/정책|지원|대책|개편|추진/.test(clean)) actions.push("정책 동향");
 
   if (actors.length > 0 && actions.length > 0) {
+    // Prefer the representative event wording when it is readable. The
+    // actor/action fallback remains only for genuinely short headlines.
     const actorStr = [...new Set(actors)].join("·");
     const actionStr = [...new Set(actions)].join(" ");
     return `${actorStr} ${actionStr}`;
@@ -252,11 +290,11 @@ export function cleanHeadlineToIssueTitle(rawTitle, articles = []) {
   const tokens = titleTokens(clean).filter((t) => !["멱살", "소동", "파문", "속보"].includes(t));
   if (tokens.length >= 2) {
     const selected = tokens.slice(0, 3);
-    const suffix = detectIssueSuffix(articles.length ? articles : [{ title: rawTitle }]) || "이슈";
-    return selected.join(" ") + " " + suffix;
+    const suffix = detectIssueSuffix(articles.length ? articles : [{ title: rawTitle }]);
+    return selected.join(" ") + (suffix ? ` ${suffix}` : " 관련 보도");
   }
 
-  return clean || "주요 이슈";
+  return headline || clean || "주요 이슈";
 }
 
 function synthesizeIssueTitle(articles, representative) {

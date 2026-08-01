@@ -38,6 +38,43 @@ export function configureSourcePanel(panel) {
   if (panel?.sources?.length) sourcePanel = panel;
 }
 
+const ISSUE_SCOPE_KEYS = new Set(["all", "general_daily_10"]);
+
+function resolveIssueScope(request) {
+  const value = new URL(request.url).searchParams.get("scope");
+  const key = value?.trim() || "all";
+  if (!ISSUE_SCOPE_KEYS.has(key)) return null;
+  if (key === "all") {
+    const configuredCount = sourcePanel.sources.filter((source) => source.active).length || 22;
+    return { key, sourceType: null, label: "전체 온라인 뉴스 표본", configuredCount, sourceNames: null };
+  }
+  const scopedSources = sourcePanel.sources.filter((source) => source.active && source.sourceType === "general_daily");
+  return {
+    key,
+    sourceType: "general_daily",
+    label: "국내 10대 종합일간지",
+    configuredCount: scopedSources.length || 10,
+    sourceNames: new Set(scopedSources.map((source) => source.name)),
+  };
+}
+
+function comparisonOnlyUsesSources(value, allowedSources) {
+  if (!allowedSources || !value || typeof value !== "object") return true;
+  const seen = new Set();
+  const visit = (node, key = "") => {
+    if (typeof node === "string" && (key === "source" || key === "supportingOutlets")) seen.add(node);
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item, key);
+      return;
+    }
+    if (node && typeof node === "object") {
+      for (const [childKey, child] of Object.entries(node)) visit(child, childKey);
+    }
+  };
+  visit(value);
+  return [...seen].every((source) => allowedSources.has(source));
+}
+
 const securityHeaders = {
   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
   "cross-origin-opener-policy": "same-origin",
@@ -159,7 +196,7 @@ function responseMeta(run = null, runtimeMode = "demo", comparisonLineage = null
   };
 }
 
-function publicIssue(row, run) {
+function publicIssue(row, run, configuredSources = 22, preserveScore = false) {
   const placementObservedCount = Number(row.placementObservedCount ?? 0);
   const contentAvailableCount = Number(row.contentAvailableCount ?? 0);
   const structuredProfileCount = Number(row.structuredProfileCount ?? 0);
@@ -167,11 +204,14 @@ function publicIssue(row, run) {
   const issue = { ...row };
   delete issue.confidence;
 
-  const cleanedTitle = cleanHeadlineToIssueTitle(row.title);
+  const cleanedTitle = cleanHeadlineToIssueTitle(row.representativeTitle || row.title);
+  delete issue.representativeTitle;
   const sourceCount = Number(row.sourceCount ?? 1);
-  const coverageRatio = sourceCount / 22;
+  const coverageRatio = sourceCount / Math.max(1, configuredSources);
   const coverageFactor = Math.min(1.0, 0.45 + coverageRatio * 0.8);
-  const adjustedAgendaScore = Math.round(Number(row.agendaScore ?? 0) * coverageFactor * 10) / 10;
+  const adjustedAgendaScore = preserveScore
+    ? Math.round(Number(row.agendaScore ?? 0) * 10) / 10
+    : Math.round(Number(row.agendaScore ?? 0) * coverageFactor * 10) / 10;
 
   return {
     ...issue,
@@ -181,7 +221,7 @@ function publicIssue(row, run) {
     placementObservedCount,
     placementTotalCount: Number(row.placementTotalCount ?? row.articleCount ?? 0),
     followUpVolumeScore: Number(row.repetitionScore ?? 0),
-    scoreStatus: legacy ? "legacy_reanalysis_required" : (placementObservedCount ? "observed_components" : "placement_excluded"),
+    scoreStatus: legacy ? "legacy_reanalysis_required" : (preserveScore ? "scope_observed_components" : (placementObservedCount ? "observed_components" : "placement_excluded")),
     calibrationStatus: "not_calibrated",
     clusterQuality: legacy ? "review_required" : "not_human_reviewed",
     contentAvailableCount,
@@ -2976,9 +3016,20 @@ function validKstDate(value) {
 async function handleIssueDates(request, env) {
   if (!env?.DB) return jsonResponse({ dates: [], meta: responseMeta(null, "demo") }, 200, { request, etag: true, cacheControl: "public, max-age=30, must-revalidate" });
   const url = new URL(request.url);
+  const scope = resolveIssueScope(request);
+  if (!scope) return jsonResponse({ error: "吏?먰븯吏 ?딅뒗 遺꾩꽍 ?쒕낯?낅땲??" }, 400, { request });
   const limitValue = Number(url.searchParams.get("limit") ?? 31);
   const limit = Number.isInteger(limitValue) ? Math.min(Math.max(limitValue, 1), 90) : 31;
   const categoryPlaceholders = PUBLIC_AGENDA_CATEGORIES.map(() => "?").join(", ");
+  const scopeIssueClause = scope.key === "all" ? "" : `AND EXISTS (
+          SELECT 1
+          FROM issue_articles scoped_date_ia
+          JOIN articles scoped_date_a ON scoped_date_a.id = scoped_date_ia.article_id
+          JOIN media_sources scoped_date_s ON scoped_date_s.id = scoped_date_a.source_id
+          WHERE scoped_date_ia.issue_id = public_issues.id
+            AND scoped_date_s.source_type = ?
+            AND scoped_date_s.active = 1
+        )`;
   const result = await env.DB.prepare(`
     SELECT id, targetDate, analyzedAt, articleCount, issueCount
     FROM (
@@ -2987,7 +3038,7 @@ async function handleIssueDates(request, env) {
         ranked.targetDate,
         ranked.analyzedAt,
         ranked.articleCount,
-        (SELECT COUNT(*) FROM issues public_issues WHERE public_issues.run_id = ranked.id AND public_issues.category IN (${categoryPlaceholders})) AS issueCount
+        (SELECT COUNT(*) FROM issues public_issues WHERE public_issues.run_id = ranked.id AND public_issues.category IN (${categoryPlaceholders}) ${scopeIssueClause}) AS issueCount
       FROM (
         SELECT
           id,
@@ -3003,7 +3054,7 @@ async function handleIssueDates(request, env) {
     WHERE issueCount > 0
     ORDER BY targetDate DESC
     LIMIT ?
-  `).bind(...PUBLIC_AGENDA_CATEGORIES, limit).all();
+  `).bind(...PUBLIC_AGENDA_CATEGORIES, ...(scope.key === "all" ? [] : [scope.sourceType]), limit).all();
   const dates = (result.results ?? []).map((entry) => ({
     date: entry.targetDate,
     analyzedAt: Number(entry.analyzedAt ?? 0) || null,
@@ -3012,6 +3063,7 @@ async function handleIssueDates(request, env) {
   }));
   return jsonResponse({
     dates,
+    scope: { key: scope.key, label: scope.label, configuredSources: scope.configuredCount },
     meta: responseMeta(null, "live_metadata"),
   }, 200, { request, etag: true, cacheControl: "public, max-age=300, must-revalidate" });
 }
@@ -3119,6 +3171,97 @@ async function handleAnalysisRollback(request, runId, env) {
   return jsonResponse({ rolledBackRunId: runId, fallbackRunId: fallback.id, targetDate: run.targetDate }, 200, { request });
 }
 
+async function handleScopedIssues(request, env, scope, run, category, limit) {
+  const categoryPlaceholders = PUBLIC_AGENDA_CATEGORIES.map(() => "?").join(", ");
+  const clauses = ["i.run_id = ?", `i.category IN (${categoryPlaceholders})`];
+  const parameters = [run.id, ...PUBLIC_AGENDA_CATEGORIES];
+  if (category) {
+    clauses.push("i.category = ?");
+    parameters.push(category);
+  }
+  const where = clauses.join(" AND ");
+  const scopeExists = `EXISTS (
+    SELECT 1
+    FROM issue_articles scoped_exists_ia
+    JOIN articles scoped_exists_a ON scoped_exists_a.id = scoped_exists_ia.article_id
+    JOIN media_sources scoped_exists_s ON scoped_exists_s.id = scoped_exists_a.source_id
+    WHERE scoped_exists_ia.issue_id = i.id
+      AND scoped_exists_s.source_type = ?
+      AND scoped_exists_s.active = 1
+  )`;
+  const [count, result, categoryResult] = await Promise.all([
+    env.DB.prepare(`SELECT COUNT(*) AS total FROM issues i WHERE ${where} AND ${scopeExists}`).bind(...parameters, scope.sourceType).first(),
+    env.DB.prepare(`
+      WITH scoped_issue_metrics AS (
+        SELECT
+          ia.issue_id,
+          COUNT(*) AS articleCount,
+          COUNT(DISTINCT a.source_id) AS sourceCount,
+          SUM(CASE WHEN (EXISTS(
+            SELECT 1 FROM article_contents ac
+            WHERE ac.article_id = ia.article_id
+              AND ac.status = 'active'
+              AND ac.analysis_allowed = 1
+              AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+          ) OR EXISTS(
+            SELECT 1 FROM frame_analyses fa
+            WHERE fa.issue_id = ia.issue_id
+              AND fa.article_id = ia.article_id
+              AND fa.evidence_basis = 'body_transient'
+          )) THEN 1 ELSE 0 END) AS contentAvailableCount,
+          SUM(CASE WHEN EXISTS(
+            SELECT 1 FROM article_frame_profiles profiles
+            WHERE profiles.article_id = ia.article_id
+              AND profiles.status IN ('analyzed', 'partial')
+          ) THEN 1 ELSE 0 END) AS structuredProfileCount,
+          SUM(CASE WHEN a.homepage_placement IS NOT NULL OR EXISTS(
+            SELECT 1 FROM placement_observations po WHERE po.article_id = a.id
+          ) THEN 1 ELSE 0 END) AS placementObservedCount
+        FROM issue_articles ia
+        JOIN articles a ON a.id = ia.article_id
+        JOIN media_sources s ON s.id = a.source_id
+        WHERE s.source_type = ? AND s.active = 1
+        GROUP BY ia.issue_id
+      )
+      SELECT
+        i.id, i.issue_date AS issueDate, i.title, i.summary, i.category,
+        (SELECT scoped_title_a.title
+         FROM issue_articles scoped_title_ia
+         JOIN articles scoped_title_a ON scoped_title_a.id = scoped_title_ia.article_id
+         JOIN media_sources scoped_title_s ON scoped_title_s.id = scoped_title_a.source_id
+         WHERE scoped_title_ia.issue_id = i.id AND scoped_title_s.source_type = ? AND scoped_title_s.active = 1
+         ORDER BY scoped_title_ia.representative DESC, scoped_title_a.published_at DESC
+         LIMIT 1) AS representativeTitle,
+        m.articleCount, m.sourceCount,
+        ROUND((m.sourceCount * 60.0 / ?) + (MIN(m.articleCount, 10) * 4.0), 1) AS agendaScore,
+        ROUND(m.sourceCount * 100.0 / ?, 1) AS diversityScore,
+        ROUND(m.placementObservedCount * 100.0 / MAX(m.articleCount, 1), 1) AS placementScore,
+        ROUND(MIN(m.articleCount, 10) * 10.0, 1) AS volumeScore,
+        i.repetition_score AS repetitionScore,
+        NULL AS confidence,
+        m.placementObservedCount,
+        m.articleCount AS placementTotalCount,
+        m.contentAvailableCount,
+        m.structuredProfileCount
+      FROM issues i
+      JOIN scoped_issue_metrics m ON m.issue_id = i.id
+      WHERE ${where}
+      ORDER BY m.sourceCount DESC, m.articleCount DESC, i.title ASC
+      LIMIT ?
+    `).bind(scope.sourceType, scope.configuredCount, scope.configuredCount, ...parameters, limit).all(),
+    env.DB.prepare(`SELECT i.category, COUNT(*) AS count FROM issues i WHERE i.run_id = ? AND i.category IN (${categoryPlaceholders}) AND ${scopeExists} GROUP BY i.category ORDER BY count DESC, i.category`).bind(run.id, ...PUBLIC_AGENDA_CATEGORIES, scope.sourceType).all(),
+  ]);
+  return jsonResponse({
+    run,
+    scope: { key: scope.key, label: scope.label, configuredSources: scope.configuredCount },
+    issues: (result.results ?? []).map((issue) => publicIssue(issue, run, scope.configuredCount, true)),
+    total: Number(count?.total ?? 0),
+    categories: categoryResult.results ?? [],
+    analysisDisclosure: "국내 10대 종합일간지 기사만으로 보도 확산과 설명 차이를 비교합니다. 이 점수는 사회적 중요도·사실성·여론을 뜻하지 않습니다.",
+    meta: responseMeta(run, "live_metadata"),
+  }, 200, { request, etag: true, cacheControl: "public, max-age=60, must-revalidate" });
+}
+
 async function handleIssues(request, env) {
   if (!env?.DB) return jsonResponse({ issues: [], total: 0, run: null, categories: [], meta: responseMeta(null, "demo") }, 200, { request, etag: true, cacheControl: "public, max-age=30, must-revalidate" });
   const url = new URL(request.url);
@@ -3128,8 +3271,11 @@ async function handleIssues(request, env) {
   if (category && !PUBLIC_AGENDA_CATEGORY_SET.has(category)) return jsonResponse({ error: `의제 분야는 ${PUBLIC_AGENDA_CATEGORIES.join("·")} 중에서 선택해 주세요.` }, 400, { request });
   const limitValue = Number(url.searchParams.get("limit") ?? 30);
   const limit = Number.isInteger(limitValue) ? Math.min(Math.max(limitValue, 1), 50) : 30;
+  const scope = resolveIssueScope(request);
+  if (!scope) return jsonResponse({ error: "지원하지 않는 분석 표본입니다." }, 400, { request });
   const run = await latestAnalysisRun(env.DB, date);
   if (!run) return jsonResponse({ issues: [], total: 0, run: null, categories: [], meta: responseMeta(null, "live_metadata") }, 200, { request, etag: true, cacheControl: "public, max-age=30, must-revalidate" });
+  if (scope.key !== "all") return handleScopedIssues(request, env, scope, run, category, limit);
 
   const categoryPlaceholders = PUBLIC_AGENDA_CATEGORIES.map(() => "?").join(", ");
   const clauses = ["run_id = ?", `category IN (${categoryPlaceholders})`];
@@ -3144,6 +3290,12 @@ async function handleIssues(request, env) {
     env.DB.prepare(`
       SELECT
         id, issue_date AS issueDate, title, summary, category, article_count AS articleCount, source_count AS sourceCount,
+        (SELECT a.title
+         FROM issue_articles ia
+         JOIN articles a ON a.id = ia.article_id
+         WHERE ia.issue_id = issues.id
+         ORDER BY ia.representative DESC, a.published_at DESC
+         LIMIT 1) AS representativeTitle,
         agenda_score AS agendaScore, diversity_score AS diversityScore, placement_score AS placementScore,
         volume_score AS volumeScore, repetition_score AS repetitionScore, confidence,
         (SELECT COUNT(*) FROM issue_articles ia JOIN articles a ON a.id = ia.article_id WHERE ia.issue_id = issues.id AND (a.homepage_placement IS NOT NULL OR EXISTS(SELECT 1 FROM placement_observations po WHERE po.article_id = a.id))) AS placementObservedCount,
@@ -3179,7 +3331,8 @@ async function handleIssues(request, env) {
   ]);
   return jsonResponse({
     run,
-    issues: (result.results ?? []).map((issue) => publicIssue(issue, run)),
+    scope: { key: scope.key, label: scope.label, configuredSources: scope.configuredCount },
+    issues: (result.results ?? []).map((issue) => publicIssue(issue, run, scope.configuredCount)),
     total: Number(count?.total ?? 0),
     categories: categoryResult.results ?? [],
     analysisDisclosure: "공개 본문을 저장하지 않고 근거 위치·해시와 구조화 프레임 요소를 추출한 자동 초안입니다. 사람 검토·사실성·편향 판정이 아닙니다.",
@@ -3189,9 +3342,17 @@ async function handleIssues(request, env) {
 
 async function handleIssueDetail(request, issueId, env) {
   if (!env?.DB) return jsonResponse({ error: "분석 데이터가 없습니다." }, 404, { request });
-  const issue = await env.DB.prepare(`
+  const scope = resolveIssueScope(request);
+  if (!scope) return jsonResponse({ error: "지원하지 않는 분석 표본입니다." }, 400, { request });
+  let issue = await env.DB.prepare(`
     SELECT
       i.id, i.issue_date AS issueDate, i.title, i.summary, i.category, i.article_count AS articleCount, i.source_count AS sourceCount,
+      (SELECT a.title
+       FROM issue_articles representative_ia
+       JOIN articles a ON a.id = representative_ia.article_id
+       WHERE representative_ia.issue_id = i.id
+       ORDER BY representative_ia.representative DESC, a.published_at DESC
+       LIMIT 1) AS representativeTitle,
       i.agenda_score AS agendaScore, i.diversity_score AS diversityScore, i.placement_score AS placementScore,
       i.volume_score AS volumeScore, i.repetition_score AS repetitionScore, i.confidence,
       r.id AS runId, r.target_date AS targetDate, r.provider, r.model_version AS modelVersion, r.finished_at AS analyzedAt,
@@ -3222,6 +3383,57 @@ async function handleIssueDetail(request, issueId, env) {
   `).bind(issueId).first();
   if (!issue) return jsonResponse({ error: "이슈를 찾지 못했습니다." }, 404, { request });
   if (!PUBLIC_AGENDA_CATEGORY_SET.has(issue.category)) return jsonResponse({ error: "제공 범위에 포함되지 않는 의제입니다." }, 404, { request });
+  if (scope.key !== "all") {
+    const scopedMetrics = await env.DB.prepare(`
+      SELECT
+        COUNT(*) AS articleCount,
+        COUNT(DISTINCT a.source_id) AS sourceCount,
+        SUM(CASE WHEN (EXISTS(
+          SELECT 1 FROM article_contents ac
+          WHERE ac.article_id = ia.article_id
+            AND ac.status = 'active'
+            AND ac.analysis_allowed = 1
+            AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+        ) OR EXISTS(
+          SELECT 1 FROM frame_analyses fa
+          WHERE fa.issue_id = ia.issue_id
+            AND fa.article_id = ia.article_id
+            AND fa.evidence_basis = 'body_transient'
+        )) THEN 1 ELSE 0 END) AS contentAvailableCount,
+        SUM(CASE WHEN EXISTS(
+          SELECT 1 FROM article_frame_profiles profiles
+          WHERE profiles.article_id = ia.article_id
+            AND profiles.status IN ('analyzed', 'partial')
+        ) THEN 1 ELSE 0 END) AS structuredProfileCount,
+        SUM(CASE WHEN a.homepage_placement IS NOT NULL OR EXISTS(
+          SELECT 1 FROM placement_observations po WHERE po.article_id = a.id
+        ) THEN 1 ELSE 0 END) AS placementObservedCount
+      FROM issue_articles ia
+      JOIN articles a ON a.id = ia.article_id
+      JOIN media_sources s ON s.id = a.source_id
+      WHERE ia.issue_id = ? AND s.source_type = ? AND s.active = 1
+    `).bind(issueId, scope.sourceType).first();
+    if (!scopedMetrics || Number(scopedMetrics.articleCount ?? 0) < 1) return jsonResponse({ error: "해당 표본에 포함된 기사가 없습니다." }, 404, { request });
+    issue = {
+      ...issue,
+      articleCount: Number(scopedMetrics.articleCount ?? 0),
+      sourceCount: Number(scopedMetrics.sourceCount ?? 0),
+      contentAvailableCount: Number(scopedMetrics.contentAvailableCount ?? 0),
+      structuredProfileCount: Number(scopedMetrics.structuredProfileCount ?? 0),
+      placementObservedCount: Number(scopedMetrics.placementObservedCount ?? 0),
+      placementTotalCount: Number(scopedMetrics.articleCount ?? 0),
+      agendaScore: Math.round(((Number(scopedMetrics.sourceCount ?? 0) * 60) / scope.configuredCount + Math.min(Number(scopedMetrics.articleCount ?? 0), 10) * 4) * 10) / 10,
+      diversityScore: Math.round((Number(scopedMetrics.sourceCount ?? 0) * 1000) / scope.configuredCount) / 10,
+      placementScore: Number(scopedMetrics.placementObservedCount ?? 0) ? Math.round((Number(scopedMetrics.placementObservedCount ?? 0) * 1000) / Number(scopedMetrics.articleCount ?? 1)) / 10 : null,
+      volumeScore: Math.min(Number(scopedMetrics.articleCount ?? 0), 10) * 10,
+    };
+  }
+  const articleScopeClause = scope.key === "all" ? "" : " AND s.source_type = ? AND s.active = 1";
+  const articleScopeParameters = scope.key === "all" ? [issueId] : [issueId, scope.sourceType];
+  const frameScopeClause = scope.key === "all" ? "" : " AND s.source_type = ? AND s.active = 1";
+  const frameScopeParameters = scope.key === "all" ? [issueId] : [issueId, scope.sourceType];
+  const outletScopeClause = scope.key === "all" ? "" : " AND s.source_type = ? AND s.active = 1";
+  const outletScopeParameters = scope.key === "all" ? [issueId] : [issueId, scope.sourceType];
   const [articles, frames, report, outlets, comparisonRow] = await Promise.all([
     env.DB.prepare(`
       SELECT
@@ -3243,9 +3455,9 @@ async function handleIssueDetail(request, issueId, env) {
       FROM issue_articles ia
       JOIN articles a ON a.id = ia.article_id
       JOIN media_sources s ON s.id = a.source_id
-      WHERE ia.issue_id = ?
+      WHERE ia.issue_id = ?${articleScopeClause}
       ORDER BY ia.representative DESC, a.published_at DESC
-    `).bind(issueId).all(),
+    `).bind(...articleScopeParameters).all(),
     env.DB.prepare(`
       SELECT fa.frame, fa.score, fa.confidence, fa.evidence_basis AS evidenceBasis,
         fa.evidence_text AS evidenceText, fa.evidence_start AS evidenceStart, fa.evidence_end AS evidenceEnd,
@@ -3256,9 +3468,9 @@ async function handleIssueDetail(request, issueId, env) {
       LEFT JOIN media_sources s ON s.id = fa.source_id
       LEFT JOIN articles a ON a.id = fa.article_id
       LEFT JOIN article_contents ac ON ac.id = fa.content_version_id
-      WHERE fa.issue_id = ?
+      WHERE fa.issue_id = ?${frameScopeClause}
       ORDER BY fa.score DESC
-    `).bind(issueId).all(),
+    `).bind(...frameScopeParameters).all(),
     env.DB.prepare(`
       SELECT summary, missing_perspective AS missingPerspective, caution, provider, model_version AS modelVersion, generated_at AS generatedAt
       FROM ai_reports
@@ -3270,10 +3482,10 @@ async function handleIssueDetail(request, issueId, env) {
       FROM issue_articles ia
       JOIN articles a ON a.id = ia.article_id
       JOIN media_sources s ON s.id = a.source_id
-      WHERE ia.issue_id = ?
+      WHERE ia.issue_id = ?${outletScopeClause}
       GROUP BY s.id, s.name
       ORDER BY articleCount DESC, s.name
-    `).bind(issueId).all(),
+    `).bind(...outletScopeParameters).all(),
     env.DB.prepare(`
       SELECT comparison_json AS comparisonJson
       FROM issue_frame_comparisons
@@ -3282,6 +3494,9 @@ async function handleIssueDetail(request, issueId, env) {
   ]);
   const run = { id: issue.runId, targetDate: issue.targetDate, provider: issue.provider, modelVersion: issue.modelVersion, finishedAt: issue.analyzedAt };
   const publicArticles = articles.results ?? [];
+  if (scope.key !== "all") {
+    issue.representativeTitle = publicArticles.find((article) => Number(article.representative) === 1)?.title ?? publicArticles[0]?.title ?? issue.representativeTitle;
+  }
   const currentAnalysis = COMPATIBLE_ANALYSIS_MODELS.has(issue.modelVersion);
   const publicFrames = currentAnalysis ? (frames.results ?? []).map((row) => {
     const frame = { ...row };
@@ -3317,13 +3532,14 @@ async function handleIssueDetail(request, issueId, env) {
   if (currentAnalysis && comparisonRow?.comparisonJson) {
     try {
       const parsed = JSON.parse(String(comparisonRow.comparisonJson));
-      if (isStructuredComparisonPayload(parsed)) structuredComparison = parsed;
+      if (isStructuredComparisonPayload(parsed) && comparisonOnlyUsesSources(parsed, scope.sourceNames)) structuredComparison = parsed;
     } catch {
       structuredComparison = null;
     }
   }
   return jsonResponse({
-    issue: publicIssue(issue, run),
+    scope: { key: scope.key, label: scope.label, configuredSources: scope.configuredCount },
+    issue: publicIssue(issue, run, scope.configuredCount, scope.key !== "all"),
     articles: publicArticles,
     frames: publicFrames,
     report: publicReport,

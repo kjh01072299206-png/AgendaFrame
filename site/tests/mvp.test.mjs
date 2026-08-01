@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import sourcePanel from "../data/sources.json" with { type: "json" };
-import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, PUBLIC_AGENDA_CATEGORIES, analyzeArticles, classifyAgendaCategory, titleTokens } from "../worker/analysis.mjs";
+import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, PUBLIC_AGENDA_CATEGORIES, analyzeArticles, classifyAgendaCategory, cleanHeadlineToIssueTitle, titleTokens } from "../worker/analysis.mjs";
 import { getAnalysisProvider } from "../worker/analysis-provider.mjs";
 import { approvedClusterApprovals, calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, clusterArticleSetSha256, clusterArticleSignature, configureSourcePanel, enumerateKstDates, extractArticleBodyFromHtml, handleApiRequest, resolveClusterApproval, validateAnalyzedImportRows, validateImportRows, validateStructuredImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
 
@@ -126,7 +126,7 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
   }
   assert.match(dashboard, /22개 주요 종합일간지·경제매체·뉴스통신사/);
   assert.match(dashboard, /fetch\("\/api\/sources"/);
-  assert.match(dashboard, /fetch\("\/api\/issues\/dates\?limit=31"/);
+  assert.match(dashboard, /fetch\(`\/api\/issues\/dates\?limit=31&scope=\$\{ISSUE_SCOPE\}`/);
   assert.match(dashboard, /날짜별 의제/);
   assert.match(dashboard, /archive-disclosure/);
   assert.doesNotMatch(dashboard, /핵심 의제 우선 · 스포츠·생활·IT 후순위/);
@@ -138,6 +138,11 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
   assert.match(dashboard, /approvedUrlsSha256/);
   assert.match(dashboard, /role="tab"/);
   assert.match(dashboard, /aria-controls={`analysis-panel-/);
+  assert.match(dashboard, /general_daily_10/);
+  assert.match(dashboard, /FramingEditorialView/);
+  assert.match(dashboard, /\["chat", "AI 대화"\]/u);
+  assert.match(dashboard, /\["selfcheck", "자기점검"\]/u);
+  assert.match(dashboard, /\["community", "커뮤니티"\]/u);
   assert.doesNotMatch(dashboard, /신뢰도 \{/);
   assert.doesNotMatch(dashboard, /agenda-list" aria-live/);
 
@@ -227,6 +232,12 @@ test("clusters real-looking article titles and produces explainable scores", () 
   assert.equal(ANALYSIS_MODEL_VERSION, "agenda-structure-v6");
   assert.equal(getAnalysisProvider().analyze, analyzeArticles);
   assert.throws(() => getAnalysisProvider("vertex_ai"), /지원하지 않는 분석 공급자/);
+});
+
+test("keeps issue names event-shaped instead of appending a generic issue suffix", () => {
+  assert.equal(cleanHeadlineToIssueTitle("검경 수사팀 수사 수사 이슈"), "검경 수사팀 수사");
+  assert.equal(cleanHeadlineToIssueTitle("중대재해처벌법 개정안 국회 통과 이슈"), "중대재해처벌법 개정안 국회 통과");
+  assert.doesNotMatch(cleanHeadlineToIssueTitle("정부 정책 이슈"), /이슈$/u);
 });
 
 test("counts related outlets but deduplicates shared media groups in coverage", () => {

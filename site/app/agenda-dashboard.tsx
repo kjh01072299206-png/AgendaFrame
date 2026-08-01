@@ -42,7 +42,7 @@ type Issue = {
   followUpVolumeScore: number;
   placementObservedCount: number;
   placementTotalCount: number;
-  scoreStatus: "legacy_reanalysis_required" | "observed_components" | "placement_excluded";
+  scoreStatus: "legacy_reanalysis_required" | "observed_components" | "scope_observed_components" | "placement_excluded";
   calibrationStatus: "not_calibrated";
   clusterQuality: "review_required" | "not_human_reviewed" | "cohesive" | "insufficient_evidence";
   contentAvailableCount: number;
@@ -269,7 +269,7 @@ type IssueDetail = {
   comparison: Comparison;
 };
 
-type AnalysisTab = "compare" | "outlets" | "frames" | "articles";
+type AnalysisTab = "compare" | "outlets" | "frames" | "articles" | "chat" | "selfcheck" | "community";
 type IssueDateOption = { date: string; analyzedAt: number | null; articleCount: number; issueCount: number };
 type ArticleFilters = { q: string; source: string; section: string; articleDate: string };
 
@@ -325,6 +325,38 @@ function formatAgendaDate(value?: string | null) {
   return `${Number(month)}월 ${Number(day)}일`;
 }
 
+const ISSUE_SCOPE = "general_daily_10";
+const ISSUE_SCOPE_LABEL = "국내 10대 종합일간지";
+
+function naturalIssueTitle(value?: string | null) {
+  const normalized = String(value ?? "")
+    .replace(/\[[^\]]*\]|\([^)]*\)|<[^>]*>/g, " ")
+    .replace(/[\"“”‘’'`]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\s+(?:관련\s+)?이슈$/u, "")
+    .trim();
+  const words = normalized.split(/\s+/).filter(Boolean);
+  const deduped: string[] = [];
+  for (const word of words) {
+    const previous = deduped.at(-1);
+    if (!previous || previous === word) {
+      if (!previous) deduped.push(word);
+      continue;
+    }
+    if (word.length >= 2 && previous.length >= 2 && (previous.endsWith(word) || word.endsWith(previous)) && Math.abs(previous.length - word.length) <= 2) {
+      if (word.length > previous.length) deduped[deduped.length - 1] = word;
+      continue;
+    }
+    deduped.push(word);
+  }
+  const title = deduped.join(" ").trim();
+  if (title.length <= 58) return title || "주요 의제";
+  const firstClause = title.split(/\s*[|·]\s*|\s+[―–—]\s+/u)[0]?.trim();
+  if (firstClause && firstClause.length >= 10 && firstClause.length <= 58) return firstClause;
+  return `${title.slice(0, 57).trimEnd()}…`;
+}
+
 function ScorePart({ label, value, note }: { label: string; value: number | null; note?: string }) {
   return (
     <div className="score-part">
@@ -336,10 +368,13 @@ function ScorePart({ label, value, note }: { label: string; value: number | null
 }
 
 const analysisTabs: Array<[AnalysisTab, string]> = [
-  ["compare", "비교 요약"],
+  ["compare", "프레이밍 분석"],
   ["outlets", "매체 비교"],
   ["frames", "보조 프레임 태그"],
   ["articles", "관련 기사"],
+  ["chat", "AI 대화"],
+  ["selfcheck", "자기점검"],
+  ["community", "커뮤니티"],
 ];
 const agendaCategoryOrder = ["정치", "경제", "사회", "국제", "스포츠", "생활·IT"];
 
@@ -865,6 +900,72 @@ function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
   );
 }
 
+function FramingEditorialView({ comparison, articles }: { comparison: Comparison; articles: Article[] }) {
+  const summary = comparison.summary ?? {};
+  const narratives = comparison.narratives ?? [];
+  const sourceLens = comparison.sourceLens;
+  const issueMap = comparison.issueMap;
+  const axes = comparison.axes ?? [];
+  const readerQuestions = comparison.readerQuestions ?? [];
+  const outletCards = new Map<string, { summary: string; outlets: ComparisonSource[] }>();
+  for (const axis of axes) {
+    for (const variant of axis.variants) {
+      for (const outlet of variant.outlets) {
+        const current = outletCards.get(outlet.source);
+        outletCards.set(outlet.source, {
+          summary: current?.summary ?? variant.summary,
+          outlets: [...(current?.outlets ?? []), outlet],
+        });
+      }
+    }
+  }
+  const cards = [...outletCards.entries()].map(([source, value]) => ({ source, ...value }));
+  const divergence = summary.mainDifference
+    || (narratives.length >= 2 ? `${narratives[0].problem.summary} ↔ ${narratives[1].problem.summary}` : null);
+  const hasEditorialEvidence = Boolean(divergence || narratives.length || issueMap || sourceLens || axes.length);
+
+  return (
+    <div className="framing-editorial">
+      <section className="framing-lede" aria-labelledby="framing-lede-title">
+        <div className="framing-lede-copy">
+          <p className="context-label">어디서 갈렸나</p>
+          <h3 id="framing-lede-title">{divergence ?? "같은 사건을 어떤 문제로 설명했는지부터 확인합니다."}</h3>
+          <p>{summary.whyItMatters ?? "이 화면은 언론사의 성향을 점수화하지 않고, 본문에서 확인된 문제 정의·원인·책임·해법의 차이를 사건별로 비교합니다."}</p>
+          <div className="framing-method-line"><span>{readableCode(comparison.status, statusLabels)}</span>{comparison.sample && <span>본문 근거 {comparison.sample.analyzedArticles}건 · {comparison.sample.outlets}개 매체</span>}<span>{comparison.reviewStatus ? readableCode(comparison.reviewStatus, reviewLabels) : "자동 구조화 초안"}</span></div>
+        </div>
+        {issueMap && <IssueMapView issueMap={issueMap} isProviderExcerpt={comparison.sample?.textScope === "provider_excerpt"} />}
+      </section>
+
+      <section className="framing-report" aria-labelledby="framing-report-title">
+        <header><p className="context-label">이슈 리포트</p><h3 id="framing-report-title">무엇이 문제인가부터 달라집니다</h3><p>기사의 제목만으로 결론을 내리지 않고, 동일 사건에 연결된 본문 근거를 분석축별로 모아 읽을 수 있게 했습니다.</p></header>
+        <div className="framing-report-section">
+          <h4>쟁점 구도: ‘무엇이 문제인가’부터 다르다</h4>
+          <p>{summary.mainDifference ?? (issueMap?.reason ?? "현재 표본에서 문제 정의의 양쪽을 안정적으로 연결할 근거가 충분하지 않습니다.")}</p>
+          {issueMap?.leftAnchor && issueMap.rightAnchor && <div className="framing-contrast"><div><b>{issueMap.leftAnchor.label}</b><span>{issueMap.leftAnchor.articleCount}건 · {issueMap.leftAnchor.outletCount}개 매체</span></div><strong>↔</strong><div><b>{issueMap.rightAnchor.label}</b><span>{issueMap.rightAnchor.articleCount}건 · {issueMap.rightAnchor.outletCount}개 매체</span></div></div>}
+        </div>
+        <div className="framing-report-section">
+          <h4>두 개의 서사</h4>
+          {narratives.length >= 2 ? <div className="framing-story-grid">{narratives.slice(0, 2).map((narrative, index) => <article key={narrative.narrativeId}><span>서사 {index + 1}</span><h5>{narrative.problem.summary}</h5><p>{narrative.summary}</p><small>기사 {narrative.articleCount}건 · 매체 {narrative.outletCount}곳 · {readableCode(narrative.status, statusLabels)}</small><ComparisonSourceLinks outlets={narrative.evidence.slice(0, 4)} /></article>)}</div> : <p className="withheld">서로 다른 문제 정의와 후속 설명이 함께 확인된 서사가 두 개 미만이라, 대립하는 서사를 만들지 않았습니다.</p>}
+        </div>
+        <div className="framing-report-section">
+          <h4>누구의 목소리로 말하는가</h4>
+          {sourceLens ? <><p>{sourceLens.sharedVoices.length ? `여러 매체에서 공통으로 등장한 목소리: ${sourceLens.sharedVoices.join(" · ")}` : "모든 매체에 공통으로 등장한 발화자 범주는 확인되지 않았습니다."}</p><SourcingBars byOutlet={sourceLens.byOutlet} />{sourceLens.voicesPresentInSomeOutlets.length ? <p className="framing-voice-gap">일부 매체에서만 확인된 목소리: {sourceLens.voicesPresentInSomeOutlets.join(" · ")}</p> : null}</> : <p className="withheld">취재원 구성 비교에 필요한 본문 근거가 아직 공개 기준을 충족하지 않았습니다.</p>}
+        </div>
+      </section>
+
+      {cards.length > 0 ? <section className="framing-outlet-cards" aria-labelledby="framing-outlet-title"><header><div><p className="context-label">매체별 한 문장</p><h4 id="framing-outlet-title">각 매체는 어디에 초점을 두었나</h4></div><span>{cards.length}개 매체</span></header><div>{cards.slice(0, 10).map((card) => <article key={card.source}><strong>{card.source}</strong><p>{card.summary}</p><ComparisonSourceLinks outlets={card.outlets.slice(0, 2)} /></article>)}</div></section> : <section className="framing-outlet-cards framing-outlet-empty"><header><div><p className="context-label">매체별 한 문장</p><h4>본문 근거가 모이면 이곳에 표시합니다</h4></div></header><p className="withheld">현재는 제목·배치 메타데이터와 제한된 본문 단서만 확인됩니다. 근거 없는 매체별 프레임을 채우지 않았습니다.</p><div className="headline-fallback">{articles.slice(0, 5).map((article) => <a key={article.id} href={article.url} target="_blank" rel="noopener noreferrer"><strong>{article.source}</strong><span>{article.title}</span></a>)}</div></section>}
+
+      <section className="framing-reader-questions" aria-labelledby="framing-reader-title">
+        <header><h4 id="framing-reader-title">이렇게 읽어 보세요</h4><p>분석이 대신 판단하지 않고, 사용자가 원문에서 확인할 질문을 남깁니다.</p></header>
+        {readerQuestions.length ? <ul>{readerQuestions.slice(0, 3).map((question) => <li key={question.questionId}>{question.question}</li>)}</ul> : <ul><li>각 매체는 사건을 어떤 문제로 정의했나요?</li><li>원인과 책임을 직접 말한 근거가 본문에 있나요?</li><li>누구의 목소리가 공통으로 등장하고, 누구의 목소리는 보이지 않나요?</li></ul>}
+      </section>
+
+      {!hasEditorialEvidence && <p className="framing-release-note">현재 프레이밍 분석은 근거 부족으로 보류되어 있습니다. 본문 분석과 동일 사건 검토가 완료되면 위 리포트가 채워집니다.</p>}
+      {hasEditorialEvidence && <details className="framing-raw-details"><summary>전체 분석축과 근거 연결 보기</summary><StructuredComparisonView comparison={comparison} /></details>}
+    </div>
+  );
+}
+
 function LegacyComparisonView({ comparison, articles, openArticles }: { comparison: Comparison; articles: Article[]; openArticles: () => void }) {
   const commonFacts = comparison.commonFacts ?? [];
   const divergenceQuestions = comparison.divergenceQuestions ?? [];
@@ -962,7 +1063,7 @@ export default function AgendaDashboard() {
 
   const loadIssueDates = useCallback(async (preferredDate = "") => {
     try {
-      const response = await fetch("/api/issues/dates?limit=31", { cache: "no-store" });
+      const response = await fetch(`/api/issues/dates?limit=31&scope=${ISSUE_SCOPE}`, { cache: "no-store" });
       if (!response.ok) throw new Error("issue dates unavailable");
       const payload = await response.json();
       const nextDates = Array.isArray(payload.dates) ? payload.dates : [];
@@ -983,7 +1084,7 @@ export default function AgendaDashboard() {
     setLoadingIssues(true);
     setIssueError("");
     try {
-      const parameters = new URLSearchParams({ limit: "5" });
+      const parameters = new URLSearchParams({ limit: "5", scope: ISSUE_SCOPE });
       if (nextCategory !== "전체") parameters.set("category", nextCategory);
       if (nextDate) parameters.set("date", nextDate);
       const response = await fetch(`/api/issues?${parameters}`, { cache: "no-store" });
@@ -1050,7 +1151,7 @@ export default function AgendaDashboard() {
   useEffect(() => {
     if (!selectedIssueId) return;
     let cancelled = false;
-    fetch(`/api/issues/${encodeURIComponent(selectedIssueId)}`, { cache: "no-store" })
+    fetch(`/api/issues/${encodeURIComponent(selectedIssueId)}?scope=${ISSUE_SCOPE}`, { cache: "no-store" })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error("detail unavailable")))
       .then((payload) => { if (!cancelled) setDetail(payload); })
       .catch(() => { if (!cancelled) { setDetail(null); setDetailError("이슈 근거를 불러오지 못했습니다."); } });
@@ -1171,7 +1272,7 @@ export default function AgendaDashboard() {
   const detectedFrames = detail?.frames.filter((frame) => frame.score > 0 && frame.evidenceText) ?? [];
   const bodyBackedFrameCount = detail?.frames.filter((frame) => frame.evidenceBasis.startsWith("body_") && frame.score > 0).length ?? 0;
   const bodyEvidenceCount = health?.collection.bodyEvidenceCount ?? 0;
-  const configuredSourceCount = health?.collection.configuredSources ?? (sources.length || 22);
+  const configuredSourceCount = sources.filter((source) => source.sourceType === "general_daily").length || 10;
   const sourceGroups = useMemo(() => ["general_daily", "business_media", "news_agency"].map((sourceType) => {
     const entries = sources.filter((source) => source.sourceType === sourceType).sort((a, b) => a.sampleOrder - b.sampleOrder);
     return { sourceType, label: entries[0]?.sourceTypeLabel ?? sourceType, entries };
@@ -1192,7 +1293,7 @@ export default function AgendaDashboard() {
           <div className="overview-copy">
             <p className="context-label">날짜별 보도 비교</p>
             <h1 id="hero-title">같은 사건,<br />매체별 근거로 나란히 봅니다.</h1>
-            <p className="overview-description">22개 주요 종합일간지·경제매체·뉴스통신사의 온라인 기사와 홈페이지 배치를 사건별로 묶었습니다. 근거가 부족한 분석은 제공하지 않고, 비교할 수 있는 부분과 아직 판단할 수 없는 부분을 구분합니다.</p>
+            <p className="overview-description">오늘은 {ISSUE_SCOPE_LABEL}의 온라인 기사만 같은 사건별로 묶어 비교합니다. 근거가 부족한 분석은 제공하지 않고, 비교할 수 있는 부분과 아직 판단할 수 없는 부분을 구분합니다.</p>
             <div className="overview-actions"><a className="primary-action" href="#agenda-workspace">날짜별 의제 비교하기</a><button className="secondary-action" type="button" onClick={() => setMethodOpen(true)}>분석 범위 확인</button></div>
             {!bodyEvidenceCount && <p className="evidence-limit"><strong>현재 본문 근거 없음</strong><span>프레임 탭에는 기사 제목에서 확인된 표현 단서만 표시됩니다.</span></p>}
             {!currentSnapshot && <p className="freshness-warning" role="status"><strong>{freshness.label}</strong>{freshness.staleDays ? ` · 기준일로부터 ${freshness.staleDays}일 지났습니다.` : " · 최신 수집 상태를 확인해 주세요."}</p>}
@@ -1200,7 +1301,7 @@ export default function AgendaDashboard() {
           <dl className="overview-status" aria-label="현재 분석 범위">
             <div><dt>자료 기준</dt><dd>{basisDate?.replaceAll("-", ".") ?? "확인 중"}</dd></div>
             <div><dt>분석 매체</dt><dd>{configuredSourceCount}개 언론사</dd></div>
-            <div><dt>분석 기사</dt><dd>{(health?.collection.articleCount ?? 0).toLocaleString("ko-KR")}건</dd></div>
+            <div><dt>전체 수집 기사</dt><dd>{(health?.collection.articleCount ?? 0).toLocaleString("ko-KR")}건</dd></div>
             <div><dt>현재 근거</dt><dd>{bodyEvidenceCount ? `본문 구조화 초안 ${bodyEvidenceCount.toLocaleString("ko-KR")}건` : "제목·배치 메타데이터"}</dd></div>
             <div><dt>사람 검토</dt><dd>진행 전</dd></div>
             <div><dt>최근 분석</dt><dd>{formatDateTime(health?.timestamps?.analyzedAt)}</dd></div>
@@ -1209,8 +1310,8 @@ export default function AgendaDashboard() {
 
         <section className="workspace" id="agenda-workspace" aria-label="뉴스 이슈 비교">
           <aside className="ranking-panel" aria-labelledby="ranking-title">
-            <div className="section-heading agenda-heading">
-              <div><p className="context-label">보도 집중도 상위</p><h2 id="ranking-title">{formatAgendaDate(basisDate)} 주요 의제</h2><p className="section-description">날짜를 고른 뒤 비교할 의제를 선택하세요.</p></div>
+              <div className="section-heading agenda-heading">
+              <div><p className="context-label">{ISSUE_SCOPE_LABEL} · 보도 확산 상위</p><h2 id="ranking-title">{formatAgendaDate(basisDate)} 주요 의제</h2><p className="section-description">날짜를 고른 뒤 상위 5개 의제 중 하나를 선택하세요.</p></div>
               <label className="issue-date-control" htmlFor="issue-date">
                 <span>분석 기준일</span>
                 <select id="issue-date" value={issueDate} disabled={!availableDates.length} onChange={(event) => handleIssueDate(event.target.value)}>
@@ -1227,12 +1328,12 @@ export default function AgendaDashboard() {
               {loadingIssues ? <div className="skeleton-stack" role="status" aria-label="선택한 날짜의 의제를 불러오는 중">{[0, 1, 2, 3].map((item) => <i className="skeleton-row" key={item} aria-hidden="true" />)}</div> : issueError ? <div className="empty-state error-state" role="alert"><strong>의제를 불러오지 못했습니다.</strong><span>{issueError}</span><button type="button" onClick={() => loadIssues(category, issueDate)}>의제 다시 불러오기</button></div> : issues.length ? issues.map((issue, index) => (
                 <button key={issue.id} type="button" className={`agenda-card${issue.id === selectedIssueId ? " active" : ""}`} aria-pressed={issue.id === selectedIssueId} aria-current={issue.id === selectedIssueId ? "true" : undefined} aria-controls="issue-analysis-panel" onClick={() => selectIssue(issue.id)}>
                   <span className="agenda-rank">{index + 1}</span>
-                  <span className="agenda-copy"><span className="agenda-meta"><b className="category-tag">{issue.category}</b>{issue.sourceCount}/{configuredSourceCount}개 매체 · 관련 기사 {issue.articleCount}건</span><strong>{issue.title}</strong><small>{issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 대기" : "의제 자동 묶음 · 검토 전"}</small></span>
-                  <span className="agenda-score"><strong>{issue.agendaScore === null ? "–" : Math.round(issue.agendaScore)}</strong><small>{issue.agendaScore === null ? "보류" : "집중도"}</small></span>
+                  <span className="agenda-copy"><span className="agenda-meta"><b className="category-tag">{issue.category}</b>{issue.sourceCount}/{configuredSourceCount}개 매체 · 관련 기사 {issue.articleCount}건</span><strong>{naturalIssueTitle(issue.title)}</strong><small>{issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 대기" : issue.scoreStatus === "scope_observed_components" ? "10대 종합일간지 기준" : "의제 자동 묶음 · 검토 전"}</small></span>
+                  <span className="agenda-score"><strong>{issue.agendaScore === null ? "–" : Math.round(issue.agendaScore)}</strong><small>{issue.agendaScore === null ? "보류" : "표본 확산"}</small></span>
                 </button>
               )) : <div className="empty-state"><strong>표시할 이슈가 없습니다.</strong><span>선택한 분야에 분석된 기사 제목이 아직 없습니다.</span></div>}
             </div>
-            <p className="panel-note"><span aria-hidden="true">ⓘ</span> 순위는 표본 안의 노출량입니다. 중요도·사실성·여론을 뜻하지 않습니다.</p>
+            <p className="panel-note"><span aria-hidden="true">ⓘ</span> 상위 5개는 {ISSUE_SCOPE_LABEL} 안의 기사 수·참여 매체를 기준으로 정렬합니다. 사회적 중요도·사실성·여론을 뜻하지 않습니다.</p>
           </aside>
 
           <article className="detail-panel" id="issue-analysis-panel" aria-live="polite">
@@ -1242,24 +1343,26 @@ export default function AgendaDashboard() {
                   const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
                   document.getElementById("ranking-title")?.scrollIntoView({ behavior, block: "start" });
                 }}>← 이슈 목록</button>
-                <div className="detail-kicker"><p>{detail.issue.category} · {detail.issue.issueDate} · {detail.issue.sourceCount}개 언론사</p><span className="confidence review">{detail.issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 필요" : "자동 분석 · 검토 전"}</span></div>
-                <div className="detail-title-row"><div><h2 ref={detailTitleRef} tabIndex={-1}>{detail.issue.title}</h2><p className="detail-summary">{detail.issue.summary}</p></div><div className="big-score"><strong>{detail.issue.agendaScore === null ? "–" : Math.round(detail.issue.agendaScore)}</strong><span>{detail.issue.agendaScore === null ? "산출 보류" : "표본 내 집중도 /100"}</span></div></div>
+                <div className="detail-kicker"><p>{detail.issue.category} · {detail.issue.issueDate} · {ISSUE_SCOPE_LABEL} {detail.issue.sourceCount}곳</p><span className="confidence review">{detail.issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 필요" : detail.issue.scoreStatus === "scope_observed_components" ? "표본 기준 자동 정렬" : "자동 분석 · 검토 전"}</span></div>
+                <div className="detail-title-row"><div><h2 ref={detailTitleRef} tabIndex={-1}>{naturalIssueTitle(detail.issue.title)}</h2><p className="detail-summary">{detail.issue.summary}</p></div><div className="big-score"><strong>{detail.issue.agendaScore === null ? "–" : Math.round(detail.issue.agendaScore)}</strong><span>{detail.issue.agendaScore === null ? "산출 보류" : "10대 종합일간지 확산 /100"}</span></div></div>
                 <div className="detail-metrics"><span>관련 제목 <b>{detail.issue.articleCount}건</b></span><span>포함 매체 <b>{detail.issue.sourceCount}/{configuredSourceCount}곳</b></span><span>본문 단서 <b>{detail.issue.contentAvailableCount}/{detail.issue.articleCount}건</b></span><span>사람 검토 <b>미완료</b></span></div>
-                <details className="score-details"><summary>점수 근거와 관측 범위</summary><div className="score-breakdown"><ScorePart label="독립 미디어그룹 커버리지" value={detail.issue.diversityScore} /><ScorePart label="홈페이지 배치" value={detail.issue.placementScore} note={`${detail.issue.placementObservedCount}/${detail.issue.placementTotalCount}건 관측`} /><ScorePart label="기사량" value={detail.issue.volumeScore} /><ScorePart label="후속 보도량" value={detail.issue.followUpVolumeScore} /></div><p>관측된 메타데이터만 계산하며 동일 미디어그룹은 커버리지에서 한 번만 셉니다. 이 점수는 중요도·진실성·여론을 뜻하지 않습니다.</p></details>
+                <details className="score-details"><summary>점수 근거와 관측 범위</summary><div className="score-breakdown"><ScorePart label="독립 미디어그룹 커버리지" value={detail.issue.diversityScore} /><ScorePart label="홈페이지 배치" value={detail.issue.placementScore} note={`${detail.issue.placementObservedCount}/${detail.issue.placementTotalCount}건 관측`} /><ScorePart label="기사량" value={detail.issue.volumeScore} /><ScorePart label="후속 보도량" value={detail.issue.followUpVolumeScore} /></div><p>현재 상위 5개 정렬은 국내 10대 종합일간지 안에서 참여 매체 60%와 기사량(최대 10건) 40%를 사용합니다. 홈페이지 배치와 후속 보도는 별도 관측값으로 보여주며, 동일 미디어그룹은 커버리지에서 한 번만 셉니다. 이 점수는 중요도·진실성·여론을 뜻하지 않습니다.</p></details>
                 <div className="analysis-tabs" role="tablist" aria-label="이슈 분석 보기">
                   {analysisTabs.map(([value, label]) => <button key={value} id={`analysis-tab-${value}`} type="button" role="tab" aria-selected={tab === value} aria-controls={`analysis-panel-${value}`} tabIndex={tab === value ? 0 : -1} className={tab === value ? "active" : ""} onKeyDown={(event) => handleTabKeyDown(event, value)} onClick={() => setTab(value)}>{label}</button>)}
                 </div>
                 {tab === "compare" && (
                   <div id="analysis-panel-compare" role="tabpanel" aria-labelledby="analysis-tab-compare" className="evidence-first">
                     {hasStructuredComparison(detail.comparison)
-                      ? <StructuredComparisonView comparison={detail.comparison} />
+                      ? <FramingEditorialView comparison={detail.comparison} articles={detail.articles} />
                       : <LegacyComparisonView comparison={detail.comparison} articles={detail.articles} openArticles={() => setTab("articles")} />}
                   </div>
                 )}
                 {tab === "outlets" && <div id="analysis-panel-outlets" role="tabpanel" aria-labelledby="analysis-tab-outlets" className="outlet-list"><p className="expert-note"><strong>읽는 법</strong> 기사 수와 홈페이지 배치는 편향·사실성·논조를 판정하는 값이 아닙니다.</p><div className="outlet-head"><span>언론사</span><span>기사</span><span>홈 배치</span><span>대표 제목</span></div>{detail.outlets.map((outlet) => { const article = detail.articles.find((entry) => entry.source === outlet.source); const placement = outletPlacementLabels[outlet.placement] ?? outlet.placement; return <div className="outlet-row" key={outlet.source}><strong>{outlet.source}</strong><b>{outlet.articleCount}건</b><span className={`placement-badge${placement === "관측 없음" ? " unknown" : ""}`}>{placement}</span><p>{article ? <a href={article.url} target="_blank" rel="noopener noreferrer">{article.title}</a> : "대표 제목 미확인"}</p></div>; })}</div>}
                 {tab === "frames" && <div id="analysis-panel-frames" role="tabpanel" aria-labelledby="analysis-tab-frames" className="frame-layout">{detail.frames.length ? <><p className="expert-note frame-note"><strong>보조 지표</strong> {bodyBackedFrameCount ? `본문에서 관측한 일반 프레임 태그 ${bodyBackedFrameCount}개와 제목 단서를 구분해 표시합니다.` : "현재는 제목에 포함된 보조 표현 태그만 표시합니다."} 이 탭은 문제 정의·원인·책임·평가·해법 비교를 대체하지 않으며, 합계도 100%가 아닙니다.</p><FrameCompositionByOutlet frames={detail.frames} /><div className="frame-chart">{detail.frames.map((frame) => <div className="frame-row" key={frame.frame}><span>{frameLabels[frame.frame] ?? frame.frame}</span><div aria-hidden="true"><i style={{ width: `${frame.score}%`, background: frameColors[frame.frame] }} /></div><b>{frame.score > 0 ? `${frame.score.toFixed(1)}%` : "검출 없음"}</b></div>)}</div><div className="evidence-panel"><h3>관측된 보조 표현 태그</h3>{detectedFrames.length ? detectedFrames.map((frame) => <article key={frame.frame}><span style={{ color: frameColors[frame.frame] }}>{frameLabels[frame.frame]}</span><p>{frame.evidenceText}</p><small><b>{frame.evidenceBasis === "headline" ? "제목 단서" : frame.evidenceBasis === "body_transient" ? "임시 본문 분석 · 전문 미저장" : frame.evidenceBasis === "body_public" ? "이용 허가 본문" : "비공개 본문·문장 검토 전"}</b>{frame.sourceUrl ? <> · <a href={frame.sourceUrl} target="_blank" rel="noopener noreferrer">{frame.source ?? "원문"}에서 확인 →</a></> : ` · ${frame.source ?? "출처 미확인"}`}</small></article>) : <p className="withheld">현재 근거 범위에서는 사전에 정의된 보조 표현 태그를 검출하지 못했습니다.</p>}</div></> : <p className="withheld">기존 분석은 근거 오류 가능성이 있어 숨겼습니다. 재분석 뒤 실제로 검출된 보조 태그만 표시합니다.</p>}</div>}
                 {tab === "articles" && <div id="analysis-panel-articles" role="tabpanel" aria-labelledby="analysis-tab-articles" className="article-table"><div className="article-tools"><div><strong>관련 원문 {detail.articles.length}건</strong><p>제목 유사도는 같은 사건을 묶기 위한 참고값이며 기사 신뢰도 점수가 아닙니다.</p></div></div><div>{detail.articles.map((article) => <article className="article-item" key={article.id}><span className="article-outlet">{article.source}</span><div><strong>{article.title}</strong><small>{formatDateTime(article.publishedAt)} · 대표 제목과 단어 유사도 {Math.round((article.similarity ?? 0) * 100)}% · {article.contentAvailable ? "본문 구조화 초안 있음" : "제목 근거만 있음"}</small></div><a className="article-link" href={article.url} target="_blank" rel="noopener noreferrer">원문 열기</a></article>)}</div></div>}
-                <div className="trust-tools"><EvidenceChat issueId={detail.issue.id} /><SelfCheck /><CommunityPanel issueId={detail.issue.id} /></div>
+                {tab === "chat" && <div id="analysis-panel-chat" role="tabpanel" aria-labelledby="analysis-tab-chat" className="analysis-tool-panel"><EvidenceChat issueId={detail.issue.id} /></div>}
+                {tab === "selfcheck" && <div id="analysis-panel-selfcheck" role="tabpanel" aria-labelledby="analysis-tab-selfcheck" className="analysis-tool-panel"><SelfCheck /></div>}
+                {tab === "community" && <div id="analysis-panel-community" role="tabpanel" aria-labelledby="analysis-tab-community" className="analysis-tool-panel"><CommunityPanel issueId={detail.issue.id} /></div>}
               </>
             )}
           </article>
@@ -1291,9 +1394,9 @@ export default function AgendaDashboard() {
         <section className="method-preview" id="comparison" aria-labelledby="method-title"><div><p className="context-label">서비스 원칙</p><h2 id="method-title">이 서비스가 판단하지 않는 것</h2><p>AgendaFrame은 언론사의 옳고 그름을 채점하지 않습니다. 사용자가 원문을 비교할 때 필요한 관측값과 근거의 빈칸을 함께 보여줍니다.</p></div><div className="principles"><article><span>근거</span><h3>근거가 없으면 보류</h3><p>본문에 없는 사실·원인·취재원을 추정하지 않고, 확인할 수 없는 이유를 표시합니다.</p></article><article><span>구분</span><h3>사건과 설명을 분리</h3><p>같은 주제 안의 다른 사건은 분리하고, 설명 차이는 인용 가능한 근거가 있을 때만 묶습니다.</p></article><article><span>범위</span><h3>점수의 의미를 제한</h3><p>보도 집중도는 표본의 노출량입니다. 중요도·신뢰도·여론처럼 읽히지 않도록 범위를 붙입니다.</p></article></div></section>
       </main>
 
-      <footer><div className="brand footer-brand"><span className="brand-mark" aria-hidden="true">AF</span><span className="brand-copy"><b>AgendaFrame</b><small>보도 근거 비교</small></span></div><p>22개 종합일간지·경제매체·뉴스통신사 온라인 표본 · 방송 제외 · 자동 분석 검토 전</p><button type="button" onClick={() => setMethodOpen(true)}>방법론과 한계</button></footer>
+      <footer><div className="brand footer-brand"><span className="brand-mark" aria-hidden="true">AF</span><span className="brand-copy"><b>AgendaFrame</b><small>보도 근거 비교</small></span></div><p>전체 수집 22개 종합일간지·경제매체·뉴스통신사 온라인 표본 · 현재 비교 국내 10대 종합일간지 · 방송 제외 · 자동 분석 검토 전</p><button type="button" onClick={() => setMethodOpen(true)}>방법론과 한계</button></footer>
 
-      <dialog ref={methodDialogRef} className="modal" aria-labelledby="method-dialog-title" aria-describedby="method-dialog-description" onCancel={() => setMethodOpen(false)} onClose={() => setMethodOpen(false)}><form method="dialog"><button className="modal-close" aria-label="방법론 닫기">×</button></form><p className="context-label">보도 집중도 v4</p><h2 id="method-dialog-title">집중도는 중요도 점수가 아닙니다</h2><p className="modal-lead" id="method-dialog-description">22개 주요 종합일간지·경제매체·뉴스통신사의 온라인 뉴스 표본에서 한 사건이 얼마나 넓고 반복적으로 노출됐는지 보여주는 0–100 지표입니다. 사회적 중요도·진실성·기사 품질·여론을 평가하지 않습니다.</p><div className="formula" aria-label="보도 집중도 가중치"><span>독립 미디어그룹 커버리지 <b>45%</b></span><i>+</i><span>기사량 <b>30%</b></span><i>+</i><span>관측된 홈 배치 <b>15%</b></span><i>+</i><span>후속 보도량 <b>10%</b></span></div><p className="modal-detail">동일 미디어그룹의 여러 매체는 커버리지에서 한 번만 셉니다. 홈페이지 배치는 반복 관측이 있으면 기사별 평균을 사용하고, 관측이 없는 기사는 중립값으로 추정하지 않습니다. TV 편성·영상 리포트와 온라인 기사 배열을 같은 기준으로 비교할 수 없어 방송사는 표본에서 제외했습니다.</p><p className="method-caution"><strong>현재 제공 범위</strong> 이슈 묶음과 집중도는 제목·배치 메타데이터를 사용합니다. 이용 권한이 확인된 본문은 비공개로 분석하고, 공개 기사 본문은 메모리에서 임시 분석한 뒤 폐기합니다. 문제·원인·책임·평가·해법과 취재원 구성은 근거 위치에 연결한 자동 구조화 초안으로 제공하며, 사람 검토 전 결과이므로 사실성·편향·의도 판정이 아닙니다.</p></dialog>
+      <dialog ref={methodDialogRef} className="modal" aria-labelledby="method-dialog-title" aria-describedby="method-dialog-description" onCancel={() => setMethodOpen(false)} onClose={() => setMethodOpen(false)}><form method="dialog"><button className="modal-close" aria-label="방법론 닫기">×</button></form><p className="context-label">국내 10대 종합일간지 표본</p><h2 id="method-dialog-title">집중도는 중요도 점수가 아닙니다</h2><p className="modal-lead" id="method-dialog-description">전체 수집 표본은 22개 주요 종합일간지·경제매체·뉴스통신사이며, 현재 비교 화면은 그중 국내 10대 종합일간지 온라인 기사만 사용합니다. 상위 5개는 이 표본 안에서 사건이 얼마나 넓게 반복 노출됐는지 보여주는 0–100 지표입니다. 사회적 중요도·진실성·기사 품질·여론을 평가하지 않습니다.</p><div className="formula" aria-label="국내 10대 종합일간지 표본 확산 가중치"><span>참여 매체 비율 <b>60%</b></span><i>+</i><span>기사량(최대 10건) <b>40%</b></span></div><p className="modal-detail">동일 미디어그룹의 여러 매체는 커버리지에서 한 번만 셉니다. 홈페이지 배치와 후속 보도는 별도 관측값으로 보여주며, TV 편성·영상 리포트와 온라인 기사 배열을 같은 기준으로 비교할 수 없어 방송사는 표본에서 제외했습니다.</p><p className="method-caution"><strong>현재 제공 범위</strong> 이슈 묶음과 표본 확산은 제목·배치 메타데이터를 사용합니다. 이용 권한이 확인된 본문은 비공개로 분석하고, 공개 기사 본문은 메모리에서 임시 분석한 뒤 폐기합니다. 문제·원인·책임·평가·해법과 취재원 구성은 근거 위치에 연결한 자동 구조화 초안으로 제공하며, 사람 검토 전 결과이므로 사실성·편향·의도 판정이 아닙니다.</p></dialog>
     </>
   );
 }
