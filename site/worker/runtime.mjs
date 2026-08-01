@@ -3248,7 +3248,7 @@ async function handleScopedIssues(request, env, scope, run, category, limit) {
       WHERE ${where}
       ORDER BY m.sourceCount DESC, m.articleCount DESC, i.title ASC
       LIMIT ?
-    `).bind(scope.sourceType, scope.configuredCount, scope.configuredCount, ...parameters, limit).all(),
+    `).bind(scope.sourceType, scope.sourceType, scope.configuredCount, scope.configuredCount, ...parameters, limit).all(),
     env.DB.prepare(`SELECT i.category, COUNT(*) AS count FROM issues i WHERE i.run_id = ? AND i.category IN (${categoryPlaceholders}) AND ${scopeExists} GROUP BY i.category ORDER BY count DESC, i.category`).bind(run.id, ...PUBLIC_AGENDA_CATEGORIES, scope.sourceType).all(),
   ]);
   return jsonResponse({

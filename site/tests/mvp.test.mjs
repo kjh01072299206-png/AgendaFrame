@@ -1275,6 +1275,38 @@ test("lists successful public agenda dates and rejects invalid issue dates", asy
   assert.equal((await excludedCategory.json()).error.code, "INVALID_REQUEST");
 });
 
+test("binds scoped issue metrics in the same order as their SQL placeholders", async () => {
+  const statements = [];
+  const run = { id: "run-scope", targetDate: "2026-07-26", provider: "rules_local", modelVersion: ANALYSIS_MODEL_VERSION, finishedAt: 100, articleCount: 10, issueCount: 1 };
+  const DB = {
+    prepare(sql) {
+      return {
+        bind(...parameters) {
+          statements.push({ sql, parameters });
+          return {
+            first: async () => {
+              if (sql.includes("FROM analysis_runs")) return run;
+              if (sql.includes("SELECT COUNT(*) AS total FROM issues i")) return { total: 1 };
+              throw new Error(`Unexpected first query: ${sql}`);
+            },
+            all: async () => {
+              if (sql.includes("WITH scoped_issue_metrics")) return { results: [{ id: "scope-issue", issueDate: "2026-07-26", title: "대표 기사 제목", summary: "요약", category: "정치", articleCount: 2, sourceCount: 2, agendaScore: 52, diversityScore: 20, placementScore: null, volumeScore: 20, repetitionScore: 0, confidence: null, placementObservedCount: 0, placementTotalCount: 2, contentAvailableCount: 0, structuredProfileCount: 0 }] };
+              if (sql.includes("GROUP BY i.category")) return { results: [{ category: "정치", count: 1 }] };
+              throw new Error(`Unexpected all query: ${sql}`);
+            },
+          };
+        },
+      };
+    },
+  };
+
+  const response = await handleApiRequest(new Request("https://example.test/api/issues?date=2026-07-26&scope=general_daily_10&limit=5"), { DB });
+  assert.equal(response.status, 200);
+  const scopedMetrics = statements.find(({ sql }) => sql.includes("WITH scoped_issue_metrics"));
+  assert.deepEqual(scopedMetrics.parameters.slice(0, 4), ["general_daily", "general_daily", 10, 10]);
+  assert.equal(scopedMetrics.parameters.at(-1), 5);
+});
+
 test("reports resumable per-day analysis status", async () => {
   const DB = {
     prepare(sql) {
