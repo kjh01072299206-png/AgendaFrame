@@ -1302,6 +1302,9 @@ test("binds scoped issue metrics in the same order as their SQL placeholders", a
 
   const response = await handleApiRequest(new Request("https://example.test/api/issues?date=2026-07-26&scope=general_daily_10&limit=5"), { DB });
   assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.issues[0].agendaScore, 52);
+  assert.equal(body.issues[0].scoreStatus, "scope_observed_components");
   const scopedMetrics = statements.find(({ sql }) => sql.includes("WITH scoped_issue_metrics"));
   assert.deepEqual(scopedMetrics.parameters.slice(0, 4), ["general_daily", "general_daily", 10, 10]);
   assert.equal(scopedMetrics.parameters.at(-1), 5);

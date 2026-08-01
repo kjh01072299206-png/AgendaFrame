@@ -212,18 +212,19 @@ function publicIssue(row, run, configuredSources = 22, preserveScore = false) {
   const adjustedAgendaScore = preserveScore
     ? Math.round(Number(row.agendaScore ?? 0) * 10) / 10
     : Math.round(Number(row.agendaScore ?? 0) * coverageFactor * 10) / 10;
+  const scoreUnavailable = legacy && !preserveScore;
 
   return {
     ...issue,
     title: cleanedTitle,
-    agendaScore: legacy ? null : adjustedAgendaScore,
+    agendaScore: scoreUnavailable ? null : adjustedAgendaScore,
     placementScore: placementObservedCount ? Number(row.placementScore) : null,
     placementObservedCount,
     placementTotalCount: Number(row.placementTotalCount ?? row.articleCount ?? 0),
     followUpVolumeScore: Number(row.repetitionScore ?? 0),
-    scoreStatus: legacy ? "legacy_reanalysis_required" : (preserveScore ? "scope_observed_components" : (placementObservedCount ? "observed_components" : "placement_excluded")),
+    scoreStatus: scoreUnavailable ? "legacy_reanalysis_required" : (preserveScore ? "scope_observed_components" : (placementObservedCount ? "observed_components" : "placement_excluded")),
     calibrationStatus: "not_calibrated",
-    clusterQuality: legacy ? "review_required" : "not_human_reviewed",
+    clusterQuality: scoreUnavailable ? "review_required" : "not_human_reviewed",
     contentAvailableCount,
     structuredProfileCount,
     evidenceBasis: structuredProfileCount
