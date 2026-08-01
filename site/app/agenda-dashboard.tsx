@@ -398,12 +398,32 @@ function pilotComparisonToPublic(pilotIssue: Top5PilotIssue, articles: Article[]
   }));
   const articleCountBySource = new Map<string, number>();
   for (const article of pilotIssue.articleMetadata) articleCountBySource.set(article.source, (articleCountBySource.get(article.source) ?? 0) + 1);
+  const roleArticlesBySource = new Map<string, Map<string, Set<string>>>();
+  for (const profile of pilotIssue.profiles) {
+    const metadata = metadataById.get(profile.article.article_id);
+    if (!metadata) continue;
+    const observedRoles = new Set<string>();
+    const dimensions = Object.values(profile.dimensions) as Array<{ items?: Array<{ voice?: { speaker_role?: string | null } | null }> }>;
+    for (const dimension of dimensions) {
+      for (const item of dimension.items ?? []) {
+        if (item.voice?.speaker_role) observedRoles.add(item.voice.speaker_role);
+      }
+    }
+    const sourceRoles = roleArticlesBySource.get(metadata.source) ?? new Map<string, Set<string>>();
+    for (const role of observedRoles) {
+      const articleIds = sourceRoles.get(role) ?? new Set<string>();
+      articleIds.add(profile.article.article_id);
+      sourceRoles.set(role, articleIds);
+    }
+    roleArticlesBySource.set(metadata.source, sourceRoles);
+  }
   const roles = pilot.source_lens?.roles ?? [];
   const sourceLens = pilot.source_lens ? {
     sharedVoices: roles.filter((role) => role.outlet_count >= pilot.sample.outlet_count).map((role) => role.role_label),
     voicesPresentInSomeOutlets: roles.filter((role) => role.outlet_count > 0 && role.outlet_count < pilot.sample.outlet_count).map((role) => role.role_label),
     byOutlet: (pilot.source_lens.by_outlet ?? []).map((entry) => {
       const articleCount = articleCountBySource.get(entry.outlet) ?? 0;
+      const roleArticles = roleArticlesBySource.get(entry.outlet) ?? new Map<string, Set<string>>();
       return {
         source: entry.outlet,
         articleCount,
@@ -412,9 +432,9 @@ function pilotComparisonToPublic(pilotIssue: Top5PilotIssue, articles: Article[]
         roleCounts: entry.roles.map((role) => ({
           role: role.role,
           roleLabel: role.role_label,
-          count: role.count,
-          articleCount: role.count,
-          presenceRate: articleCount ? role.count / articleCount : 0,
+          count: roleArticles.get(role.role)?.size ?? 0,
+          articleCount: roleArticles.get(role.role)?.size ?? 0,
+          presenceRate: articleCount ? (roleArticles.get(role.role)?.size ?? 0) / articleCount : 0,
           directQuoteArticleCount: 0,
           indirectAttributionArticleCount: 0,
           mentionCount: role.count,
