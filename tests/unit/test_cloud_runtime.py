@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from ai.framing import (
     FRAME_DIMENSIONS,
+    FRAME_FAMILIES,
     FrameResult,
     VertexFrameAnalyzer,
     _align_payload_evidence,
@@ -109,7 +110,8 @@ class CloudRuntimeTests(unittest.TestCase):
         self.assertEqual(self.config.vertex.thinking_budget, 0)
         self.assertLessEqual(self.config.vertex.max_articles_per_run, 50)
         self.assertLessEqual(self.config.vertex.max_articles_per_day, 200)
-        self.assertEqual(self.config.vertex.prompt_version, "2.3.0")
+        self.assertEqual(self.config.vertex.prompt_version, "2.4.0")
+        self.assertEqual(self.config.vertex.schema_version, 3)
 
     def test_source_registry_defaults_all_real_sources_to_metadata_only(self) -> None:
         registry = SourcePolicyRegistry.from_yaml(ROOT / "config" / "source-policies.yaml")
@@ -438,6 +440,9 @@ class CloudRuntimeTests(unittest.TestCase):
         )
         problem = payload["profile"]["dimensions"]["problem_definition"]
         self.assertRegex(problem["items"][0]["variant_key"], r"^semantic:problem_definition:")
+        self.assertRegex(problem["items"][0]["claim_id"], r"^claim:[a-f0-9]{64}$")
+        self.assertEqual(problem["model_status"], "supported")
+        self.assertEqual(payload["profile"]["review"]["analysis_decision"], "analyze")
         tampered = supported_result(value)
         tampered_dimensions = json.loads(json.dumps(tampered.dimensions))
         supported = next(
@@ -592,6 +597,71 @@ class CloudRuntimeTests(unittest.TestCase):
         rows[0]["profile"] = {"lineage": {"approval": {**lineage, "cluster_id": "other"}}}
         with self.assertRaisesRegex(ValueError, "approved analysis lineage"):
             _validate_publication_rows_against_approval(rows, approval)
+
+    def test_schema_three_preserves_frame_family_claim_and_role_only_sources(self) -> None:
+        value = article('정부 관계자는 "안전 대책을 강화한다"고 말했다.')
+        base = supported_result(value)
+        dimensions = json.loads(json.dumps(base.dimensions))
+        supported = next(
+            dimension for dimension in dimensions if dimension["status"] == "supported"
+        )
+        supported["frame_family"] = "safety_harm"
+        start = (value.body_text or "").index("안전 대책")
+        result = replace(
+            base,
+            dimensions=tuple(dimensions),
+            schema_version=3,
+            actors=(
+                {
+                    "role": "government_official",
+                    "voice_kind": "direct_quote",
+                    "evidence": [
+                        {
+                            "article_id": value.article_id,
+                            "start": start,
+                            "end": start + len("안전 대책"),
+                            "text": "안전 대책",
+                        }
+                    ],
+                },
+            ),
+        )
+        validate_frame_result(value, result)
+        payload = publication_row(value, result)
+        profile = payload["profile"]
+        problem = profile["dimensions"]["problem_definition"]
+        self.assertEqual(
+            problem["items"][0]["variant_key"],
+            "semantic:problem_definition:family:safety_harm",
+        )
+        self.assertEqual(problem["items"][0]["frame_family"], "safety_harm")
+        self.assertRegex(problem["items"][0]["claim_id"], r"^claim:[a-f0-9]{64}$")
+        self.assertEqual(problem["model_status"], "supported")
+        self.assertEqual(profile["actors_and_sources"][0]["role"], "government_official")
+        self.assertEqual(profile["actors_and_sources"][0]["role_label"], "정부·공공기관")
+        self.assertEqual(profile["actors_and_sources"][0]["direct_quote_count"], 1)
+        self.assertRegex(
+            profile["actors_and_sources"][0]["evidence"][0]["sentence_sha256"],
+            r"^[a-f0-9]{64}$",
+        )
+        serialized = json.dumps(payload, ensure_ascii=False)
+        self.assertNotIn(value.body_text or "", serialized)
+        self.assertNotIn("정부 관계자는", serialized)
+
+    def test_schema_three_rejects_incompatible_frame_family(self) -> None:
+        value = article()
+        base = supported_result(value)
+        dimensions = json.loads(json.dumps(base.dimensions))
+        supported = next(
+            dimension for dimension in dimensions if dimension["status"] == "supported"
+        )
+        supported["frame_family"] = "political_incentive"
+        with self.assertRaisesRegex(ValueError, "valid frame family|incompatible"):
+            validate_frame_result(
+                value,
+                replace(base, dimensions=tuple(dimensions), schema_version=3),
+            )
+        self.assertIn("safety_harm", FRAME_FAMILIES["problem_definition"])
 
     def test_invalid_config_schema_is_rejected(self) -> None:
         path = ROOT / "tests" / "fixtures" / "config" / "invalid-runtime.yaml"

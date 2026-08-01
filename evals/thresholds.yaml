@@ -6,6 +6,11 @@ release_status: blocked_until_labeled_holdout
 
 release_policy:
   allow_synthetic_only: false
+  require_real_labeled_holdout: true
+  require_semantic_review: true
+  require_staging_health_check: true
+  require_canary_observation: true
+  require_rollback_drill: true
 
 human_review:
   minimum_independent_annotators: 2

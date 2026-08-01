@@ -24,6 +24,9 @@ test("builds the real React dashboard and admin application", async () => {
   assert.match(worker, /\/api\/analyze\/transient/);
   assert.match(worker, /profiles\.review_status != 'rejected'/);
   assert.match(worker, /'automatic_draft'/);
+  assert.match(worker, /\/api\/chat/);
+  assert.match(worker, /\/api\/admin\/release\/evaluate/);
+  assert.match(worker, /community_comments/);
 });
 
 test("binds a same-event approval to the exact canonical URL set", () => {
@@ -118,7 +121,7 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
   for (const copy of ["같은 사건,", "근거가 부족한 분석은", "본문 구조화 초안", "임시 본문 분석", "사람 검토", "중요도·사실성·여론을 뜻하지 않습니다"]) {
     assert.match(dashboard, new RegExp(copy));
   }
-  for (const copy of ["어디서 갈렸나", "쟁점 지형", "리포트로 읽기", "이렇게 읽어보세요"]) {
+  for (const copy of ["어디서 갈렸나", "쟁점 지도", "기사들이 연결한 서사", "근거로 만든 독자 질문"]) {
     assert.match(dashboard, new RegExp(copy));
   }
   assert.match(dashboard, /22개 주요 종합일간지·경제매체·뉴스통신사/);
@@ -664,7 +667,7 @@ test("accepts authenticated homepage geometry as repeated observations", async (
 
 test("uses the checked-in JSON Schema as the public lineage contract", async () => {
   const schema = JSON.parse(await readFile(new URL("../docs/public-api.schema.json", import.meta.url), "utf8"));
-  assert.equal(schema["x-api-version"], "agendaframe-public-v4");
+  assert.equal(schema["x-api-version"], "agendaframe-public-v5");
   const required = schema.$defs.LineageMeta.required;
   for (const field of ["snapshotId", "runId", "sourcePolicyVersion", "clusteringVersion", "scoreVersion", "modelId", "promptVersion", "analysisSchemaVersion", "comparisonEngineVersion", "authorizationId", "approvalFingerprint", "clusterId", "reviewer", "approvalReviewedAt", "approvedUrlsSha256", "evaluationDatasetVersion", "publishedAt"]) {
     assert.ok(required.includes(field), `missing lineage field: ${field}`);
@@ -673,6 +676,14 @@ test("uses the checked-in JSON Schema as the public lineage contract", async () 
   assert.ok(schema.$defs.Comparison.oneOf.some((entry) => entry.$ref === "#/$defs/LegacyComparison"));
   assert.ok(schema.$defs.Comparison.oneOf.some((entry) => entry.$ref === "#/$defs/StructuredComparison"));
   assert.ok(schema.$defs.StructuredComparison.required.includes("axes"));
+  for (const field of ["issueMap", "narratives", "readerQuestions"]) {
+    assert.ok(schema.$defs.StructuredComparison.required.includes(field), `missing structured comparison field: ${field}`);
+  }
+  assert.equal(schema.$defs.StructuredComparison.properties.narratives.maxItems, 2);
+  assert.equal(schema.$defs.StructuredComparison.properties.readerQuestions.maxItems, 3);
+  assert.ok(schema.$defs.IssueMap.required.includes("selectionBasis"));
+  assert.ok(schema.$defs.Narrative.required.includes("claimIds"));
+  assert.ok(schema.$defs.ReaderQuestion.required.includes("evidence"));
   assert.ok(schema.$defs.StructuredComparison.required.includes("lineage"));
   assert.deepEqual(schema.$defs.AnalysisLineage.required, [
     "modelId", "promptVersion", "analysisSchemaVersion", "comparisonEngineVersion", "approval",
@@ -1106,10 +1117,37 @@ test("publishes the actual comparison and approval lineage in issue detail metad
       inputTruncatedArticles: 0,
     },
     axes: [],
+    issueMap: {
+      status: "withheld_insufficient_evidence",
+      reason: "Not enough evidence for an issue map.",
+      axisId: null,
+      dimension: "problem_definition",
+      label: "문제 정의",
+      leftAnchor: null,
+      rightAnchor: null,
+      selectionBasis: {
+        minimumArticles: 4,
+        minimumOutlets: 3,
+        minimumIndependentMediaGroups: 2,
+        minimumArticlesPerAnchor: 2,
+        articleCount: 2,
+        outletCount: 2,
+        independentMediaGroups: 2,
+        balancedCoverage: null,
+        overlap: null,
+        axisStrength: null,
+        coveredArticleCount: 0,
+        formula: null,
+      },
+      outlets: [],
+    },
+    narratives: [],
+    readerQuestions: [],
     sourceLens: {
       sharedVoices: [],
       voicesPresentInSomeOutlets: [],
       byOutlet: [],
+      caution: null,
     },
     contextGaps: [],
     limitations: ["Automatic draft."],
@@ -1174,7 +1212,7 @@ test("filters and paginates the complete article collection", async () => {
   assert.equal(body.hasMore, true);
   assert.equal(typeof body.nextCursor, "string");
   assert.equal(body.meta.runtimeMode, "live_metadata");
-  assert.equal(body.meta.schemaVersion, "agendaframe-public-v4");
+  assert.equal(body.meta.schemaVersion, "agendaframe-public-v5");
   assert.deepEqual(body.articles, [article]);
   assert.equal(statements.length, 2);
   assert.match(statements[0].sql, /a\.source_id = \?/);
@@ -1215,7 +1253,7 @@ test("lists successful public agenda dates and rejects invalid issue dates", asy
     ["2026-07-14", 120, 20],
     ["2026-07-13", 90, 16],
   ]);
-  assert.equal(body.meta.schemaVersion, "agendaframe-public-v4");
+  assert.equal(body.meta.schemaVersion, "agendaframe-public-v5");
 
   const invalidDate = await handleApiRequest(new Request("https://example.test/api/issues?date=2026-02-30"), { DB });
   assert.equal(invalidDate.status, 400);

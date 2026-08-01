@@ -12,8 +12,8 @@ storage:
 vertex:
   location: global
   model: gemini-2.5-flash-lite
-  prompt_version: 2.3.0
-  schema_version: 2
+  prompt_version: 2.4.0
+  schema_version: 3
   max_articles_per_run: 50
   max_articles_per_day: 200
   max_input_characters_per_article: 20000

@@ -11,6 +11,9 @@ import {
   validateArticleFrameProfile,
 } from "./framing-engine.mjs";
 import publicApiSchema from "../docs/public-api.schema.json" with { type: "json" };
+import { handleCommunityRequest } from "./community.mjs";
+import { handleEvidenceChat } from "./evidence-chat.mjs";
+import { handleReleaseAdminRequest } from "./release-admin.mjs";
 
 const analysisProvider = getAnalysisProvider();
 const ANALYSIS_PROVIDER = analysisProvider.provider;
@@ -1577,10 +1580,37 @@ function withheldClusterReviewComparison(profiles, issue, articleMetadata) {
       inputTruncatedArticles: profiles.filter((profile) => profile.extraction?.input_truncated === true).length,
     },
     axes: [],
+    issueMap: {
+      status: "withheld_review_required",
+      reason: "동일 사건 검토가 끝나지 않아 쟁점 지도 계산을 보류했습니다.",
+      axisId: null,
+      dimension: "problem_definition",
+      label: "문제 정의",
+      leftAnchor: null,
+      rightAnchor: null,
+      selectionBasis: {
+        minimumArticles: 4,
+        minimumOutlets: 3,
+        minimumIndependentMediaGroups: 2,
+        minimumArticlesPerAnchor: 2,
+        articleCount: profiles.length,
+        outletCount: outlets.size,
+        independentMediaGroups: mediaGroups.size,
+        balancedCoverage: null,
+        overlap: null,
+        axisStrength: null,
+        coveredArticleCount: 0,
+        formula: null,
+      },
+      outlets: [],
+    },
+    narratives: [],
+    readerQuestions: [],
     sourceLens: {
       sharedVoices: [],
       voicesPresentInSomeOutlets: [],
       byOutlet: [],
+      caution: null,
     },
     contextGaps: [],
     limitations: [
@@ -1598,20 +1628,158 @@ function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function isNonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isStringArray(value, { nonEmpty = false } = {}) {
+  return Array.isArray(value)
+    && (!nonEmpty || value.length > 0)
+    && value.every(isNonEmptyString);
+}
+
+function isFiniteRange(value, minimum, maximum) {
+  return typeof value === "number"
+    && Number.isFinite(value)
+    && value >= minimum
+    && value <= maximum;
+}
+
+function isPublicClaimEvidence(value) {
+  return isPlainObject(value)
+    && isNonEmptyString(value.claimId)
+    && isNonEmptyString(value.articleId)
+    && isNonEmptyString(value.source)
+    && isNonEmptyString(value.sourceUrl)
+    && (value.evidenceLocator === null || isNonEmptyString(value.evidenceLocator))
+    && (value.evidenceHash === null || SHA256_HEX_PATTERN.test(String(value.evidenceHash)))
+    && (value.voiceKind === null || isNonEmptyString(value.voiceKind));
+}
+
+function isPublicEvidenceList(value, claimIds, { nonEmpty = false } = {}) {
+  return Array.isArray(value)
+    && (!nonEmpty || value.length > 0)
+    && value.every((evidence) => isPublicClaimEvidence(evidence) && claimIds.includes(evidence.claimId));
+}
+
+function isPublicNarrativeClause(value) {
+  if (value === null) return true;
+  if (!isPlainObject(value)
+    || !isNonEmptyString(value.dimension)
+    || !isNonEmptyString(value.label)
+    || !isNonEmptyString(value.groupId)
+    || !isNonEmptyString(value.summary)
+    || !Number.isInteger(value.supportingArticleCount)
+    || value.supportingArticleCount < 2
+    || !Number.isInteger(value.observedArticleCount)
+    || value.observedArticleCount < value.supportingArticleCount
+    || !isFiniteRange(value.supportShare, 0.6, 1)
+    || !isStringArray(value.claimIds, { nonEmpty: true })) return false;
+  return isPublicEvidenceList(value.evidence, value.claimIds, { nonEmpty: true });
+}
+
+function isPublicIssueMapAnchor(value) {
+  if (!isPlainObject(value)
+    || !isNonEmptyString(value.groupId)
+    || !isNonEmptyString(value.label)
+    || !(value.frameFamily === null || isNonEmptyString(value.frameFamily))
+    || !Number.isInteger(value.articleCount)
+    || value.articleCount < 2
+    || !Number.isInteger(value.outletCount)
+    || value.outletCount < 1
+    || !Number.isInteger(value.independentMediaGroups)
+    || value.independentMediaGroups < 1
+    || !isStringArray(value.claimIds, { nonEmpty: true })) return false;
+  return isPublicEvidenceList(value.evidence, value.claimIds, { nonEmpty: true });
+}
+
+function isPublicIssueMap(value) {
+  if (!isPlainObject(value)
+    || !["available", "provisional", "withheld_insufficient_evidence", "withheld_source_dominated", "withheld_review_required"].includes(value.status)
+    || !isNonEmptyString(value.reason)
+    || !(value.axisId === null || isNonEmptyString(value.axisId))
+    || value.dimension !== "problem_definition"
+    || !isNonEmptyString(value.label)
+    || !isPlainObject(value.selectionBasis)
+    || !Array.isArray(value.outlets)) return false;
+  const selection = value.selectionBasis;
+  for (const field of ["minimumArticles", "minimumOutlets", "minimumIndependentMediaGroups", "minimumArticlesPerAnchor", "articleCount", "outletCount", "independentMediaGroups", "coveredArticleCount"]) {
+    if (!Number.isInteger(selection[field]) || selection[field] < 0) return false;
+  }
+  for (const field of ["balancedCoverage", "overlap", "axisStrength"]) {
+    if (!(selection[field] === null || isFiniteRange(selection[field], 0, 1))) return false;
+  }
+  if (!(selection.formula === null || isNonEmptyString(selection.formula))) return false;
+  const available = ["available", "provisional"].includes(value.status);
+  if (available) {
+    if (!isNonEmptyString(value.axisId)
+      || !isPublicIssueMapAnchor(value.leftAnchor)
+      || !isPublicIssueMapAnchor(value.rightAnchor)) return false;
+  } else if (value.axisId !== null || value.leftAnchor !== null || value.rightAnchor !== null || value.outlets.length) {
+    return false;
+  }
+  return value.outlets.every((outlet) => {
+    if (!isPlainObject(outlet)
+      || !isNonEmptyString(outlet.sourceId)
+      || !isNonEmptyString(outlet.source)
+      || !["left", "mixed", "right", "insufficient"].includes(outlet.classification)
+      || !(outlet.score === null || isFiniteRange(outlet.score, -1, 1))
+      || !(outlet.displayPosition === null || isFiniteRange(outlet.displayPosition, 10, 90))
+      || !["insufficient", "single_article_observation", "automatic_draft", "supported"].includes(outlet.evidenceStatus)
+      || !isStringArray(outlet.claimIds)) return false;
+    for (const field of ["articleCount", "eligibleArticleCount", "leftArticleCount", "mixedArticleCount", "rightArticleCount"]) {
+      if (!Number.isInteger(outlet[field]) || outlet[field] < 0) return false;
+    }
+    return isPublicEvidenceList(outlet.evidence, outlet.claimIds);
+  });
+}
+
+function isPublicNarrative(value) {
+  if (!isPlainObject(value)
+    || !isNonEmptyString(value.narrativeId)
+    || !["automatic_draft", "supported"].includes(value.status)
+    || !isNonEmptyString(value.summary)
+    || !Number.isInteger(value.articleCount)
+    || value.articleCount < 2
+    || !Number.isInteger(value.outletCount)
+    || value.outletCount < 1
+    || !Number.isInteger(value.independentMediaGroups)
+    || value.independentMediaGroups < 1
+    || !isFiniteRange(value.completeness, 0.6, 1)
+    || !isStringArray(value.supportingArticleIds, { nonEmpty: true })
+    || !isStringArray(value.supportingOutlets, { nonEmpty: true })
+    || !isStringArray(value.claimIds, { nonEmpty: true })
+    || !isPublicEvidenceList(value.evidence, value.claimIds, { nonEmpty: true })
+    || !isPublicNarrativeClause(value.problem)
+    || value.problem === null) return false;
+  return [value.cause, value.responsibility, value.evaluation, value.remedy]
+    .every(isPublicNarrativeClause);
+}
+
+function isPublicReaderQuestion(value) {
+  if (!isPlainObject(value)
+    || !isNonEmptyString(value.questionId)
+    || !["narrative_contrast", "issue_axis_contrast", "affected_voice_gap", "source_voice_gap", "context_gap"].includes(value.triggerType)
+    || !isNonEmptyString(value.question)
+    || !isStringArray(value.basisClaimIds, { nonEmpty: true })
+    || !isStringArray(value.basisArticleIds, { nonEmpty: true })) return false;
+  return isPublicEvidenceList(value.evidence, value.basisClaimIds, { nonEmpty: true });
+}
+
 function isStructuredComparisonPayload(value) {
   if (!isPlainObject(value)) return false;
   if (!isPlainObject(value.lineage)
-    || typeof value.lineage.modelId !== "string"
-    || typeof value.lineage.promptVersion !== "string"
-    || typeof value.lineage.analysisSchemaVersion !== "string"
-    || typeof value.lineage.comparisonEngineVersion !== "string") return false;
+    || !isNonEmptyString(value.lineage.modelId)
+    || !isNonEmptyString(value.lineage.promptVersion)
+    || !isNonEmptyString(value.lineage.analysisSchemaVersion)
+    || !isNonEmptyString(value.lineage.comparisonEngineVersion)) return false;
   if (value.lineage.approval !== null) {
     const approval = value.lineage.approval;
     if (!isPlainObject(approval)
-      || typeof approval.authorizationId !== "string"
-      || typeof approval.clusterId !== "string"
-      || typeof approval.reviewer !== "string"
-      || typeof approval.reviewedAt !== "string"
+      || !isNonEmptyString(approval.authorizationId)
+      || !isNonEmptyString(approval.clusterId)
+      || !isNonEmptyString(approval.reviewer)
+      || !isNonEmptyString(approval.reviewedAt)
       || !Number.isFinite(Date.parse(approval.reviewedAt))
       || !SHA256_HEX_PATTERN.test(String(approval.fingerprint ?? ""))
       || !SHA256_HEX_PATTERN.test(String(approval.approvedUrlsSha256 ?? ""))) return false;
@@ -1619,34 +1787,123 @@ function isStructuredComparisonPayload(value) {
   if (!["available", "partial", "withheld_insufficient_evidence"].includes(value.status)) return false;
   if (typeof value.divergenceDetected !== "boolean" || !isPlainObject(value.summary) || !isPlainObject(value.sample)) return false;
   if (!["provider_excerpt", "article_body"].includes(value.sample.textScope)) return false;
-  if (!Number.isInteger(value.sample.inputTruncatedArticles)
-    || value.sample.inputTruncatedArticles < 0
-    || value.sample.inputTruncatedArticles > Number(value.sample.analyzedArticles ?? 0)) return false;
-  if (!Array.isArray(value.axes) || !isPlainObject(value.sourceLens) || !Array.isArray(value.contextGaps) || !Array.isArray(value.limitations)) return false;
-  if (!Array.isArray(value.sourceLens.sharedVoices) || !Array.isArray(value.sourceLens.voicesPresentInSomeOutlets) || !Array.isArray(value.sourceLens.byOutlet)) return false;
-  if (!value.axes.every((axis) => isPlainObject(axis) && typeof axis.dimension === "string" && typeof axis.label === "string"
+  for (const field of ["analyzedArticles", "outlets", "independentMediaGroups", "excludedArticles", "inputTruncatedArticles"]) {
+    if (!Number.isInteger(value.sample[field]) || value.sample[field] < 0) return false;
+  }
+  if (value.sample.inputTruncatedArticles > value.sample.analyzedArticles) return false;
+  if (!Array.isArray(value.axes)
+    || !isPublicIssueMap(value.issueMap)
+    || !Array.isArray(value.narratives)
+    || value.narratives.length > 2
+    || !value.narratives.every(isPublicNarrative)
+    || !Array.isArray(value.readerQuestions)
+    || value.readerQuestions.length > 3
+    || !value.readerQuestions.every(isPublicReaderQuestion)
+    || !isPlainObject(value.sourceLens)
+    || !Array.isArray(value.contextGaps)
+    || !Array.isArray(value.limitations)) return false;
+  if (!isStringArray(value.sourceLens.sharedVoices)
+    || !isStringArray(value.sourceLens.voicesPresentInSomeOutlets)
+    || !Array.isArray(value.sourceLens.byOutlet)
+    || !(value.sourceLens.caution === null || isNonEmptyString(value.sourceLens.caution))) return false;
+  if (!value.axes.every((axis) => isPlainObject(axis) && isNonEmptyString(axis.dimension) && isNonEmptyString(axis.label)
     && Array.isArray(axis.variants) && axis.variants.every((variant) => isPlainObject(variant)
-      && typeof variant.summary === "string"
+      && isNonEmptyString(variant.groupId)
+      && (variant.frameFamily === null || isNonEmptyString(variant.frameFamily))
+      && isStringArray(variant.claimIds, { nonEmpty: true })
+      && isNonEmptyString(variant.summary)
       && Array.isArray(variant.outlets)
       && variant.outlets.every((outlet) => isPlainObject(outlet)
-        && typeof outlet.source === "string"
-        && typeof outlet.articleId === "string"
-        && typeof outlet.sourceUrl === "string")))) return false;
-  if (!value.sourceLens.byOutlet.every((entry) => isPlainObject(entry)
-    && typeof entry.source === "string"
-    && Array.isArray(entry.voices))) return false;
+        && isNonEmptyString(outlet.source)
+        && isNonEmptyString(outlet.articleId)
+        && isNonEmptyString(outlet.sourceUrl)
+        && isNonEmptyString(outlet.claimId)
+        && variant.claimIds.includes(outlet.claimId))))) return false;
+  if (!value.sourceLens.byOutlet.every((entry) => {
+    if (!isPlainObject(entry)
+      || !isNonEmptyString(entry.source)
+      || !Number.isInteger(entry.articleCount)
+      || entry.articleCount < 0
+      || !Number.isInteger(entry.sourceArticleCount)
+      || entry.sourceArticleCount < 0
+      || entry.sourceArticleCount > entry.articleCount
+      || !isStringArray(entry.voices)
+      || !Array.isArray(entry.roleCounts)
+      || !(entry.officialShare === null || isFiniteRange(entry.officialShare, 0, 1))
+      || typeof entry.affectedGroupVoice !== "boolean"
+      || !isFiniteRange(entry.affectedGroupPresenceRate, 0, 1)) return false;
+    return entry.roleCounts.every((role) => isPlainObject(role)
+      && isNonEmptyString(role.role)
+      && isNonEmptyString(role.roleLabel)
+      && Number.isInteger(role.count)
+      && role.count > 0
+      && role.count === role.articleCount
+      && isFiniteRange(role.presenceRate, 0, 1)
+      && Number.isInteger(role.directQuoteArticleCount)
+      && role.directQuoteArticleCount >= 0
+      && Number.isInteger(role.indirectAttributionArticleCount)
+      && role.indirectAttributionArticleCount >= 0
+      && Number.isInteger(role.mentionCount)
+      && role.mentionCount >= 0);
+  })) return false;
   if (!value.contextGaps.every((gap) => isPlainObject(gap)
-    && typeof gap.feature === "string"
-    && Array.isArray(gap.presentInOutlets)
-    && Array.isArray(gap.notObservedInOutlets)
-    && typeof gap.displayText === "string")) return false;
-  if (!value.limitations.every((item) => typeof item === "string")) return false;
+    && isNonEmptyString(gap.feature)
+    && isStringArray(gap.presentInOutlets)
+    && isStringArray(gap.notObservedInOutlets)
+    && isNonEmptyString(gap.displayText))) return false;
+  if (!value.limitations.every(isNonEmptyString)) return false;
   return !/"(?:raw_body|rawBody|body_text|bodyText|sentence_text|sentenceText|quote|quotation|excerpt|html|content)"\s*:/i.test(JSON.stringify(value));
 }
 
 function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { issueArticleCount = issueArticles.length, approval = null } = {}) {
   const articleById = new Map(issueArticles.map((article) => [String(article.id), article]));
   const profileById = new Map(profiles.map((profile) => [String(profile.article.article_id), profile]));
+  const publicEvidence = (entry) => {
+    const article = articleById.get(String(entry?.article_id));
+    if (!article) return null;
+    const locator = entry?.locator;
+    return {
+      claimId: String(entry.claim_id ?? ""),
+      articleId: String(article.id),
+      source: String(article.source),
+      sourceUrl: String(article.url ?? article.canonicalUrl),
+      evidenceLocator: locator ? `${locator.paragraph}문단 ${locator.sentence}문장` : null,
+      evidenceHash: entry?.sentence_sha256 ?? null,
+      voiceKind: entry?.voice_kind ?? null,
+    };
+  };
+  const publicEvidenceList = (entries) => {
+    const seen = new Set();
+    return (entries ?? []).flatMap((entry) => {
+      const evidence = publicEvidence(entry);
+      if (!evidence) return [];
+      const key = `${evidence.articleId}:${evidence.claimId}:${evidence.evidenceHash}`;
+      if (seen.has(key)) return [];
+      seen.add(key);
+      return [evidence];
+    });
+  };
+  const publicAnchor = (anchor) => anchor ? {
+    groupId: anchor.group_id,
+    label: anchor.label,
+    frameFamily: anchor.frame_family,
+    articleCount: Number(anchor.article_count ?? 0),
+    outletCount: Number(anchor.outlet_count ?? 0),
+    independentMediaGroups: Number(anchor.independent_media_group_count ?? 0),
+    claimIds: anchor.claim_ids ?? [],
+    evidence: publicEvidenceList(anchor.evidence),
+  } : null;
+  const publicClause = (clause) => clause ? {
+    dimension: clause.dimension,
+    label: clause.label,
+    groupId: clause.group_id,
+    summary: clause.summary,
+    supportingArticleCount: Number(clause.supporting_article_count ?? 0),
+    observedArticleCount: Number(clause.observed_article_count ?? 0),
+    supportShare: Number(clause.support_share ?? 0),
+    claimIds: clause.claim_ids ?? [],
+    evidence: publicEvidenceList(clause.evidence),
+  } : null;
   const rawAxes = rawComparison.comparison_axes ?? [];
   const divergenceDetected = rawComparison.summary_30_seconds?.divergence_detected === true;
   const axes = rawAxes
@@ -1668,11 +1925,16 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
             source: article.source,
             articleId: article.id,
             sourceUrl: article.url,
+            claimId: articleEvidence?.claim_id ?? null,
             evidenceLocator: locator ? `${locator.paragraph}문단 ${locator.sentence}문장` : null,
             evidenceHash: articleEvidence?.sentence_sha256 ?? null,
+            voiceKind: articleEvidence?.voice_kind ?? null,
           });
         }
         return {
+          groupId: pattern.variant_key,
+          frameFamily: pattern.frame_family ?? null,
+          claimIds: pattern.claim_ids ?? [],
           summary: pattern.public_paraphrase,
           outlets,
           commitment: pattern.voice_scope === "outlet_narration" ? "explicit" : "source_attributed",
@@ -1683,6 +1945,72 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
       }),
     }))
     .filter((axis) => axis.variants.length);
+
+  const rawIssueMap = rawComparison.issue_map ?? {};
+  const issueMap = {
+    status: rawIssueMap.status ?? "withheld_insufficient_evidence",
+    reason: rawIssueMap.reason ?? "쟁점 지도 계산 결과가 없습니다.",
+    axisId: rawIssueMap.axis_id ?? null,
+    dimension: rawIssueMap.dimension ?? "problem_definition",
+    label: rawIssueMap.label ?? "문제 정의",
+    leftAnchor: publicAnchor(rawIssueMap.left_anchor),
+    rightAnchor: publicAnchor(rawIssueMap.right_anchor),
+    selectionBasis: {
+      minimumArticles: Number(rawIssueMap.selection_basis?.minimum_articles ?? 4),
+      minimumOutlets: Number(rawIssueMap.selection_basis?.minimum_outlets ?? 3),
+      minimumIndependentMediaGroups: Number(rawIssueMap.selection_basis?.minimum_independent_media_groups ?? 2),
+      minimumArticlesPerAnchor: Number(rawIssueMap.selection_basis?.minimum_articles_per_anchor ?? 2),
+      articleCount: Number(rawIssueMap.selection_basis?.article_count ?? profiles.length),
+      outletCount: Number(rawIssueMap.selection_basis?.outlet_count ?? 0),
+      independentMediaGroups: Number(rawIssueMap.selection_basis?.independent_media_group_count ?? 0),
+      balancedCoverage: rawIssueMap.selection_basis?.balanced_coverage ?? null,
+      overlap: rawIssueMap.selection_basis?.overlap ?? null,
+      axisStrength: rawIssueMap.selection_basis?.axis_strength ?? null,
+      coveredArticleCount: Number(rawIssueMap.selection_basis?.covered_article_count ?? 0),
+      formula: rawIssueMap.selection_basis?.formula ?? null,
+    },
+    outlets: (rawIssueMap.outlets ?? []).map((outlet) => ({
+      sourceId: outlet.source_id,
+      source: outlet.source,
+      classification: outlet.classification,
+      score: outlet.score,
+      displayPosition: outlet.display_position,
+      articleCount: Number(outlet.article_count ?? 0),
+      eligibleArticleCount: Number(outlet.eligible_article_count ?? 0),
+      leftArticleCount: Number(outlet.left_article_count ?? 0),
+      mixedArticleCount: Number(outlet.mixed_article_count ?? 0),
+      rightArticleCount: Number(outlet.right_article_count ?? 0),
+      evidenceStatus: outlet.evidence_status,
+      claimIds: outlet.claim_ids ?? [],
+      evidence: publicEvidenceList(outlet.evidence),
+    })),
+  };
+  const narratives = (rawComparison.narratives ?? []).map((narrative) => ({
+    narrativeId: narrative.narrative_id,
+    status: narrative.status,
+    summary: narrative.summary,
+    articleCount: Number(narrative.article_count ?? 0),
+    outletCount: Number(narrative.outlet_count ?? 0),
+    independentMediaGroups: Number(narrative.independent_media_group_count ?? 0),
+    completeness: Number(narrative.completeness ?? 0),
+    supportingArticleIds: narrative.supporting_article_ids ?? [],
+    supportingOutlets: narrative.supporting_outlets ?? [],
+    claimIds: narrative.claim_ids ?? [],
+    evidence: publicEvidenceList(narrative.evidence),
+    problem: publicClause(narrative.problem),
+    cause: publicClause(narrative.cause),
+    responsibility: publicClause(narrative.responsibility),
+    evaluation: publicClause(narrative.evaluation),
+    remedy: publicClause(narrative.remedy),
+  }));
+  const readerQuestions = (rawComparison.reader_questions ?? []).map((question) => ({
+    questionId: question.question_id,
+    triggerType: question.trigger_type,
+    question: question.question,
+    basisClaimIds: question.basis_claim_ids ?? [],
+    basisArticleIds: question.basis_article_ids ?? [],
+    evidence: publicEvidenceList(question.evidence),
+  }));
 
   const sample = rawComparison.sample ?? {};
   const analyzedOutletCount = Number(sample.outlet_count ?? 0);
@@ -1701,19 +2029,27 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
   const byOutlet = profileOutlets.map((outlet) => {
     const entry = rawByOutlet.get(outlet) ?? { outlet, roles: [] };
     const counts = entry.roles ?? [];
-    const total = counts.reduce((sum, role) => sum + Number(role.count ?? 0), 0);
-    const official = counts
-      .filter((role) => ["government_official", "political_actor", "judiciary_law_enforcement", "anonymous_official"].includes(role.role))
-      .reduce((sum, role) => sum + Number(role.count ?? 0), 0);
     return {
       source: entry.outlet,
+      articleCount: Number(entry.article_count ?? 0),
+      sourceArticleCount: Number(entry.source_article_count ?? 0),
       voices: uniqueStrings(counts.map((role) => role.role_label)),
       roleCounts: counts
-        .map((role) => ({ role: String(role.role), roleLabel: String(role.role_label ?? role.role), count: Number(role.count ?? 0) }))
-        .filter((role) => role.count > 0)
-        .sort((a, b) => b.count - a.count),
-      officialShare: total ? Math.round((official / total) * 1000) / 1000 : null,
-      affectedGroupVoice: counts.some((role) => role.role === "affected_person"),
+        .map((role) => ({
+          role: String(role.role),
+          roleLabel: String(role.role_label ?? role.role),
+          count: Number(role.article_count ?? role.count ?? 0),
+          articleCount: Number(role.article_count ?? role.count ?? 0),
+          presenceRate: Number(role.presence_rate ?? 0),
+          directQuoteArticleCount: Number(role.direct_quote_article_count ?? 0),
+          indirectAttributionArticleCount: Number(role.indirect_attribution_article_count ?? 0),
+          mentionCount: Number(role.mention_count ?? role.count ?? 0),
+        }))
+        .filter((role) => role.articleCount > 0)
+        .sort((a, b) => b.articleCount - a.articleCount || a.role.localeCompare(b.role)),
+      officialShare: entry.official_share ?? null,
+      affectedGroupVoice: Number(entry.affected_group_presence_rate ?? 0) > 0,
+      affectedGroupPresenceRate: Number(entry.affected_group_presence_rate ?? 0),
     };
   });
 
@@ -1786,10 +2122,14 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
       inputTruncatedArticles: inputTruncatedCount,
     },
     axes,
+    issueMap,
+    narratives,
+    readerQuestions,
     sourceLens: {
       sharedVoices: uniqueStrings(sharedVoices),
       voicesPresentInSomeOutlets: uniqueStrings(voicesPresentInSomeOutlets),
       byOutlet,
+      caution: rawComparison.source_lens?.caution ?? null,
     },
     contextGaps,
     limitations,
@@ -2455,10 +2795,12 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
     if (unusedApprovalCount) {
       throw new Error(`${unusedApprovalCount} approved cluster(s) did not match an analyzed issue with usable profiles.`);
     }
-    const statements = [];
-    analyzed.forEach((issue, index) => {
+    const statementGroups = [];
+    for (let index = 0; index < analyzed.length; index += 1) {
+      const issue = analyzed[index];
       const issueId = issueIds[index];
-      statements.push(db.prepare(`
+      const generatedAt = Date.now();
+      const statements = [db.prepare(`
         INSERT INTO issues
           (id, run_id, issue_date, title, summary, category, article_count, source_count, agenda_score, diversity_score, placement_score, volume_score, repetition_score, confidence)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -2477,7 +2819,7 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
         issue.volumeScore,
         issue.repetitionScore,
         issue.confidence ?? 0,
-      ));
+      )];
       issue.articles.forEach((article) => {
         statements.push(db.prepare(`
           INSERT INTO issue_articles (id, issue_id, article_id, similarity, representative)
@@ -2518,7 +2860,7 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
         issue.report.caution,
         ANALYSIS_PROVIDER,
         ANALYSIS_MODEL_VERSION,
-        Date.now(),
+        generatedAt,
       ));
       if (issue.structuredComparison) {
         statements.push(db.prepare(`
@@ -2534,11 +2876,42 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
           "structured_extractive",
           FRAMING_ENGINE_VERSION,
           ISSUE_FRAME_COMPARISON_SCHEMA,
-          Date.now(),
+          generatedAt,
         ));
       }
-    });
-    await runBatches(db, statements);
+      const comparisonSchemaVersion = issue.structuredComparison ? ISSUE_FRAME_COMPARISON_SCHEMA : "none";
+      const publicationPayload = JSON.stringify({
+        schemaVersion: 1,
+        issueId,
+        runId,
+        targetDate,
+        publicApiVersion: PUBLIC_API_SCHEMA_VERSION,
+        comparisonSchemaVersion,
+      });
+      const publicationPayloadHash = await sha256Hex(publicationPayload);
+      statements.push(db.prepare(`
+        INSERT INTO publication_outbox_events (
+          id, destination, aggregate_type, aggregate_id, aggregate_version,
+          event_type, payload, payload_hash, idempotency_key, status,
+          attempt_count, available_at, claim_token, claimed_by, lease_expires_at,
+          last_error_code, last_error_at, delivered_at, created_at, updated_at
+        ) VALUES (?, 'public-site-local', 'issue', ?, 1, 'issue.published', ?, ?, ?, 'pending', 0, ?, NULL, NULL, NULL, NULL, NULL, NULL, ?, ?)
+      `).bind(
+        crypto.randomUUID(),
+        issueId,
+        publicationPayload,
+        publicationPayloadHash,
+        `issue:${issueId}:published:v1`,
+        generatedAt,
+        generatedAt,
+        generatedAt,
+      ));
+      if (statements.length > 100) {
+        throw new Error("한 이슈의 원자적 게시 작업이 D1 안전 한도를 초과했습니다.");
+      }
+      statementGroups.push(statements);
+    }
+    for (const statements of statementGroups) await db.batch(statements);
     const finishedAt = Date.now();
     await db.prepare(`
       UPDATE analysis_runs
@@ -3183,6 +3556,16 @@ async function handleQualityReview(request, issueId, env) {
 export async function handleApiRequest(request, env = {}) {
   const url = new URL(request.url);
   if (!url.pathname.startsWith("/api/")) return null;
+
+  if (url.pathname === "/api/chat") return handleEvidenceChat(request, env);
+  if (url.pathname.startsWith("/api/issues/") && url.pathname.endsWith("/community")) return handleCommunityRequest(request, env);
+  if (url.pathname.startsWith("/api/comments/") && url.pathname.endsWith("/report")) return handleCommunityRequest(request, env);
+  if (url.pathname.startsWith("/api/admin/community/")) {
+    return handleCommunityRequest(request, env, { isAdmin: await adminAuthorized(request, env) });
+  }
+  if (url.pathname === "/api/admin/release/evaluate") {
+    return handleReleaseAdminRequest(request, env, { isAdmin: await adminAuthorized(request, env) });
+  }
 
   if (url.pathname === "/api/health" && request.method === "GET") {
     if (!env.DB) {

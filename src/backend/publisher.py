@@ -19,19 +19,42 @@ DIMENSION_MAP = {
     "evaluation": "moral_evaluation",
     "treatment_recommendation": "treatment_recommendation",
 }
+ROLE_LABELS = {
+    "government_official": "정부·공공기관",
+    "political_actor": "정당·정치권",
+    "judiciary_law_enforcement": "법조·수사기관",
+    "expert_research": "전문가·연구자",
+    "civil_society": "시민사회·이익집단",
+    "business": "기업·산업계",
+    "affected_person": "당사자·시민",
+    "anonymous_official": "익명·비실명 관계자",
+    "other": "기타 취재원",
+}
 
 
 def _sha256(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
-def _semantic_variant_key(dimension: str, value: str) -> str:
+def _semantic_variant_key(dimension: str, value: str, frame_family: str | None) -> str:
+    if frame_family:
+        return f"semantic:{dimension}:family:{frame_family}"
     normalized = unicodedata.normalize("NFKC", value).casefold()
     normalized = re.sub(r"[^\w]+", " ", normalized, flags=re.UNICODE)
     normalized = " ".join(normalized.split())
     if not normalized:
         raise ValueError("A semantic frame value must contain meaningful text.")
     return f"semantic:{dimension}:{_sha256(normalized)}"
+
+
+def _claim_id(
+    article_id: str,
+    dimension: str,
+    variant_key: str,
+    voice_kind: str,
+) -> str:
+    material = f"agendaframe:claim:v1:{article_id}:{dimension}:{variant_key}:{voice_kind}"
+    return f"claim:{_sha256(material)}"
 
 
 def _sentences(body: str) -> list[dict[str, Any]]:
@@ -117,21 +140,34 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
         if source["status"] == "explicit_not_stated":
             dimensions[public_name] = {
                 "status": "not_observed",
+                "model_status": "explicit_not_stated",
                 "outlet_narration_observed": False,
                 "items": [],
             }
             continue
         voice_kind = str(source["voice_kind"])
+        frame_family = source.get("frame_family")
+        variant_key = _semantic_variant_key(
+            public_name,
+            str(source["value"]),
+            str(frame_family) if frame_family else None,
+        )
+        claim_id = _claim_id(
+            article.article_id,
+            public_name,
+            variant_key,
+            voice_kind,
+        )
         dimensions[public_name] = {
             "status": ("observed" if voice_kind == "journalist_narration" else "source_attributed"),
+            "model_status": str(source["status"]),
             "outlet_narration_observed": voice_kind == "journalist_narration",
             "items": [
                 {
-                    "code": f"semantic_{source_name}",
-                    "variant_key": _semantic_variant_key(
-                        source_name,
-                        str(source["value"]),
-                    ),
+                    "claim_id": claim_id,
+                    "code": f"semantic_{public_name}",
+                    "frame_family": frame_family,
+                    "variant_key": variant_key,
                     "public_paraphrase": str(source["value"]),
                     "voice": {
                         "kind": voice_kind,
@@ -148,23 +184,52 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
             ],
         }
 
+    actor_groups: dict[str, dict[str, Any]] = {}
+    for actor in result.actors:
+        role = str(actor["role"])
+        current = actor_groups.setdefault(
+            role,
+            {
+                "actor_id": f"actor:{_sha256(f'agendaframe:actor:v1:{article.article_id}:{role}')}",
+                "role": role,
+                "role_label": ROLE_LABELS[role],
+                "direct_quote_count": 0,
+                "indirect_attribution_count": 0,
+                "evidence": [],
+            },
+        )
+        evidence = [
+            _evidence_locator(article.article_id, body, span, sentence_rows)
+            for span in actor["evidence"]
+        ]
+        if actor["voice_kind"] == "direct_quote":
+            current["direct_quote_count"] += len(evidence)
+        else:
+            current["indirect_attribution_count"] += len(evidence)
+        known = {item["sentence_sha256"] for item in current["evidence"]}
+        current["evidence"].extend(
+            item for item in evidence if item["sentence_sha256"] not in known
+        )
+
+    actors_and_sources = sorted(actor_groups.values(), key=lambda item: item["role"])
     actor_source = dimensions_by_name["actor_visibility"]
-    actors_and_sources = []
-    if actor_source["status"] != "explicit_not_stated":
+    if not actors_and_sources and actor_source["status"] != "explicit_not_stated":
+        evidence = [
+            _evidence_locator(article.article_id, body, span, sentence_rows)
+            for span in actor_source["evidence"]
+        ]
         actors_and_sources.append(
             {
+                "actor_id": f"actor:{_sha256(f'agendaframe:actor:v1:{article.article_id}:other')}",
                 "role": "other",
-                "role_label": str(actor_source["value"]),
-                "direct_quote_count": sum(
-                    1
-                    for _ in actor_source["evidence"]
-                    if actor_source["voice_kind"] == "direct_quote"
+                "role_label": ROLE_LABELS["other"],
+                "direct_quote_count": (
+                    len(evidence) if actor_source["voice_kind"] == "direct_quote" else 0
                 ),
-                "indirect_attribution_count": sum(
-                    1
-                    for _ in actor_source["evidence"]
-                    if actor_source["voice_kind"] != "direct_quote"
+                "indirect_attribution_count": (
+                    0 if actor_source["voice_kind"] == "direct_quote" else len(evidence)
                 ),
+                "evidence": evidence,
             }
         )
 
@@ -224,6 +289,7 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
         "framing_devices": [],
         "review": {
             "status": "automatic_draft",
+            "analysis_decision": result.decision,
             "requires_human_review": True,
             "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다.",
         },

@@ -1,9 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://agendaframe-capstone.kjh01072299206.chatgpt.site/schemas/public-api-v4.json",
+  "$id": "https://agendaframe-capstone.kjh01072299206.chatgpt.site/schemas/public-api-v5.json",
   "title": "AgendaFrame public API",
   "description": "Public read API contract. Demo and live responses share this shape; runtimeMode identifies the source.",
-  "x-api-version": "agendaframe-public-v4",
+  "x-api-version": "agendaframe-public-v5",
+  "x-routes": {
+    "chat": {"method": "POST", "path": "/api/chat", "grounding": "published_issue_comparison_only"},
+    "community": {"list": "GET /api/issues/{issueId}/community", "create": "POST /api/issues/{issueId}/community", "report": "POST /api/comments/{commentId}/report"},
+    "release": {"gate": "evals/thresholds.yaml", "promotion": "staging -> canary -> production"}
+  },
   "oneOf": [
     { "$ref": "#/$defs/HealthResponse" },
     { "$ref": "#/$defs/ArticleListResponse" },
@@ -25,7 +30,7 @@
         "evaluationDatasetVersion"
       ],
       "properties": {
-        "schemaVersion": { "const": "agendaframe-public-v4" },
+        "schemaVersion": { "const": "agendaframe-public-v5" },
         "runtimeMode": { "enum": ["demo", "live_metadata", "unavailable"] },
         "snapshotId": { "type": ["string", "null"] },
         "runId": { "type": ["string", "null"] },
@@ -192,11 +197,179 @@
       },
       "additionalProperties": false
     },
+    "ClaimEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claimId", "articleId", "source", "sourceUrl", "evidenceLocator", "evidenceHash", "voiceKind"],
+      "properties": {
+        "claimId": { "type": "string", "minLength": 1 },
+        "articleId": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "sourceUrl": { "type": "string", "format": "uri" },
+        "evidenceLocator": { "type": ["string", "null"], "minLength": 1 },
+        "evidenceHash": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+        "voiceKind": { "type": ["string", "null"], "minLength": 1 }
+      }
+    },
+    "IssueMapAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["groupId", "label", "frameFamily", "articleCount", "outletCount", "independentMediaGroups", "claimIds", "evidence"],
+      "properties": {
+        "groupId": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "frameFamily": { "type": ["string", "null"] },
+        "articleCount": { "type": "integer", "minimum": 2 },
+        "outletCount": { "type": "integer", "minimum": 1 },
+        "independentMediaGroups": { "type": "integer", "minimum": 1 },
+        "claimIds": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ClaimEvidence" } }
+      }
+    },
+    "IssueMapSelectionBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimumArticles", "minimumOutlets", "minimumIndependentMediaGroups", "minimumArticlesPerAnchor",
+        "articleCount", "outletCount", "independentMediaGroups", "balancedCoverage", "overlap",
+        "axisStrength", "coveredArticleCount", "formula"
+      ],
+      "properties": {
+        "minimumArticles": { "type": "integer", "minimum": 0 },
+        "minimumOutlets": { "type": "integer", "minimum": 0 },
+        "minimumIndependentMediaGroups": { "type": "integer", "minimum": 0 },
+        "minimumArticlesPerAnchor": { "type": "integer", "minimum": 0 },
+        "articleCount": { "type": "integer", "minimum": 0 },
+        "outletCount": { "type": "integer", "minimum": 0 },
+        "independentMediaGroups": { "type": "integer", "minimum": 0 },
+        "balancedCoverage": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "overlap": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "axisStrength": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "coveredArticleCount": { "type": "integer", "minimum": 0 },
+        "formula": { "type": ["string", "null"] }
+      }
+    },
+    "IssueMapOutlet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceId", "source", "classification", "score", "displayPosition", "articleCount",
+        "eligibleArticleCount", "leftArticleCount", "mixedArticleCount", "rightArticleCount",
+        "evidenceStatus", "claimIds", "evidence"
+      ],
+      "properties": {
+        "sourceId": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "classification": { "enum": ["left", "mixed", "right", "insufficient"] },
+        "score": { "type": ["number", "null"], "minimum": -1, "maximum": 1 },
+        "displayPosition": { "type": ["number", "null"], "minimum": 10, "maximum": 90 },
+        "articleCount": { "type": "integer", "minimum": 0 },
+        "eligibleArticleCount": { "type": "integer", "minimum": 0 },
+        "leftArticleCount": { "type": "integer", "minimum": 0 },
+        "mixedArticleCount": { "type": "integer", "minimum": 0 },
+        "rightArticleCount": { "type": "integer", "minimum": 0 },
+        "evidenceStatus": { "enum": ["insufficient", "single_article_observation", "automatic_draft", "supported"] },
+        "claimIds": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/ClaimEvidence" } }
+      }
+    },
+    "IssueMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reason", "axisId", "dimension", "label", "leftAnchor", "rightAnchor", "selectionBasis", "outlets"],
+      "properties": {
+        "status": { "enum": ["available", "provisional", "withheld_insufficient_evidence", "withheld_source_dominated", "withheld_review_required"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "axisId": { "type": ["string", "null"] },
+        "dimension": { "const": "problem_definition" },
+        "label": { "type": "string", "minLength": 1 },
+        "leftAnchor": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/IssueMapAnchor" }] },
+        "rightAnchor": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/IssueMapAnchor" }] },
+        "selectionBasis": { "$ref": "#/$defs/IssueMapSelectionBasis" },
+        "outlets": { "type": "array", "items": { "$ref": "#/$defs/IssueMapOutlet" } }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "enum": ["available", "provisional"] } } },
+          "then": {
+            "properties": {
+              "axisId": { "type": "string", "minLength": 1 },
+              "leftAnchor": { "$ref": "#/$defs/IssueMapAnchor" },
+              "rightAnchor": { "$ref": "#/$defs/IssueMapAnchor" }
+            }
+          },
+          "else": {
+            "properties": {
+              "axisId": { "type": "null" },
+              "leftAnchor": { "type": "null" },
+              "rightAnchor": { "type": "null" },
+              "outlets": { "type": "array", "maxItems": 0 }
+            }
+          }
+        }
+      ]
+    },
+    "NarrativeClause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dimension", "label", "groupId", "summary", "supportingArticleCount", "observedArticleCount", "supportShare", "claimIds", "evidence"],
+      "properties": {
+        "dimension": { "enum": ["problem_definition", "causal_interpretation", "responsibility_attribution", "moral_evaluation", "treatment_recommendation"] },
+        "label": { "type": "string", "minLength": 1 },
+        "groupId": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "supportingArticleCount": { "type": "integer", "minimum": 2 },
+        "observedArticleCount": { "type": "integer", "minimum": 2 },
+        "supportShare": { "type": "number", "minimum": 0.6, "maximum": 1 },
+        "claimIds": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ClaimEvidence" } }
+      }
+    },
+    "Narrative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "narrativeId", "status", "summary", "articleCount", "outletCount", "independentMediaGroups",
+        "completeness", "supportingArticleIds", "supportingOutlets", "claimIds", "evidence",
+        "problem", "cause", "responsibility", "evaluation", "remedy"
+      ],
+      "properties": {
+        "narrativeId": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["automatic_draft", "supported"] },
+        "summary": { "type": "string", "minLength": 1 },
+        "articleCount": { "type": "integer", "minimum": 2 },
+        "outletCount": { "type": "integer", "minimum": 1 },
+        "independentMediaGroups": { "type": "integer", "minimum": 1 },
+        "completeness": { "type": "number", "minimum": 0.6, "maximum": 1 },
+        "supportingArticleIds": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "supportingOutlets": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "claimIds": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ClaimEvidence" } },
+        "problem": { "$ref": "#/$defs/NarrativeClause" },
+        "cause": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/NarrativeClause" }] },
+        "responsibility": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/NarrativeClause" }] },
+        "evaluation": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/NarrativeClause" }] },
+        "remedy": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/NarrativeClause" }] }
+      }
+    },
+    "ReaderQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["questionId", "triggerType", "question", "basisClaimIds", "basisArticleIds", "evidence"],
+      "properties": {
+        "questionId": { "type": "string", "minLength": 1 },
+        "triggerType": { "enum": ["narrative_contrast", "issue_axis_contrast", "affected_voice_gap", "source_voice_gap", "context_gap"] },
+        "question": { "type": "string", "minLength": 1 },
+        "basisClaimIds": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "basisArticleIds": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ClaimEvidence" } }
+      }
+    },
     "StructuredComparison": {
       "type": "object",
       "required": [
         "lineage", "status", "divergenceDetected", "evidenceBasis", "reason", "methodologyLabel", "reviewStatus",
-        "summary", "sample", "axes", "sourceLens", "contextGaps", "limitations"
+        "summary", "sample", "axes", "issueMap", "narratives", "readerQuestions", "sourceLens", "contextGaps", "limitations"
       ],
       "properties": {
         "lineage": { "$ref": "#/$defs/AnalysisLineage" },
@@ -244,28 +417,30 @@
             "required": ["dimension", "label", "variants"],
             "properties": {
               "dimension": { "enum": ["problem_definition", "causal_interpretation", "responsibility_attribution", "moral_evaluation", "treatment_recommendation"] },
-              "label": { "type": "string" },
+              "label": { "type": "string", "minLength": 1 },
               "variants": {
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["summary", "outlets", "commitment", "status"],
+                  "required": ["groupId", "frameFamily", "claimIds", "summary", "outlets", "commitment", "status", "evidenceLocator", "basis"],
                   "properties": {
-                    "summary": { "type": "string" },
+                    "groupId": { "type": "string", "minLength": 1 },
+                    "frameFamily": { "type": ["string", "null"] },
+                    "claimIds": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+                    "summary": { "type": "string", "minLength": 1 },
                     "outlets": {
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["source", "articleId", "sourceUrl"],
+                        "required": ["source", "articleId", "sourceUrl", "claimId", "evidenceLocator", "evidenceHash", "voiceKind"],
                         "properties": {
-                          "source": { "type": "string" },
-                          "articleId": { "type": "string" },
+                          "source": { "type": "string", "minLength": 1 },
+                          "articleId": { "type": "string", "minLength": 1 },
                           "sourceUrl": { "type": "string", "format": "uri" },
+                          "claimId": { "type": "string", "minLength": 1 },
                           "evidenceLocator": { "type": ["string", "null"] },
-                          "evidenceHash": {
-                            "type": ["string", "null"],
-                            "pattern": "^[a-f0-9]{64}$"
-                          }
+                          "evidenceHash": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+                          "voiceKind": { "type": ["string", "null"] }
                         },
                         "additionalProperties": false
                       }
@@ -282,39 +457,57 @@
             "additionalProperties": false
           }
         },
+        "issueMap": { "$ref": "#/$defs/IssueMap" },
+        "narratives": { "type": "array", "maxItems": 2, "items": { "$ref": "#/$defs/Narrative" } },
+        "readerQuestions": { "type": "array", "maxItems": 3, "items": { "$ref": "#/$defs/ReaderQuestion" } },
         "sourceLens": {
           "type": "object",
-          "required": ["sharedVoices", "voicesPresentInSomeOutlets", "byOutlet"],
+          "required": ["sharedVoices", "voicesPresentInSomeOutlets", "byOutlet", "caution"],
           "properties": {
-            "sharedVoices": { "type": "array", "items": { "type": "string" } },
-            "voicesPresentInSomeOutlets": { "type": "array", "items": { "type": "string" } },
+            "sharedVoices": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+            "voicesPresentInSomeOutlets": { "type": "array", "items": { "type": "string", "minLength": 1 } },
             "byOutlet": {
               "type": "array",
               "items": {
                 "type": "object",
-                "required": ["source", "voices", "officialShare", "affectedGroupVoice"],
+                "required": [
+                  "source", "articleCount", "sourceArticleCount", "voices", "roleCounts",
+                  "officialShare", "affectedGroupVoice", "affectedGroupPresenceRate"
+                ],
                 "properties": {
-                  "source": { "type": "string" },
-                  "voices": { "type": "array", "items": { "type": "string" } },
+                  "source": { "type": "string", "minLength": 1 },
+                  "articleCount": { "type": "integer", "minimum": 0 },
+                  "sourceArticleCount": { "type": "integer", "minimum": 0 },
+                  "voices": { "type": "array", "items": { "type": "string", "minLength": 1 } },
                   "roleCounts": {
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "required": ["role", "roleLabel", "count"],
+                      "required": [
+                        "role", "roleLabel", "count", "articleCount", "presenceRate",
+                        "directQuoteArticleCount", "indirectAttributionArticleCount", "mentionCount"
+                      ],
                       "properties": {
-                        "role": { "type": "string" },
-                        "roleLabel": { "type": "string" },
-                        "count": { "type": "integer", "minimum": 1 }
+                        "role": { "type": "string", "minLength": 1 },
+                        "roleLabel": { "type": "string", "minLength": 1 },
+                        "count": { "type": "integer", "minimum": 1 },
+                        "articleCount": { "type": "integer", "minimum": 1 },
+                        "presenceRate": { "type": "number", "minimum": 0, "maximum": 1 },
+                        "directQuoteArticleCount": { "type": "integer", "minimum": 0 },
+                        "indirectAttributionArticleCount": { "type": "integer", "minimum": 0 },
+                        "mentionCount": { "type": "integer", "minimum": 0 }
                       },
                       "additionalProperties": false
                     }
                   },
                   "officialShare": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
-                  "affectedGroupVoice": { "type": "boolean" }
+                  "affectedGroupVoice": { "type": "boolean" },
+                  "affectedGroupPresenceRate": { "type": "number", "minimum": 0, "maximum": 1 }
                 },
                 "additionalProperties": false
               }
-            }
+            },
+            "caution": { "type": ["string", "null"] }
           },
           "additionalProperties": false
         },

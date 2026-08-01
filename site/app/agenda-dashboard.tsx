@@ -1,6 +1,9 @@
 ﻿"use client";
 
 import { FormEvent, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CommunityPanel } from "./community-panel";
+import { EvidenceChat } from "./evidence-chat";
+import { SelfCheck } from "./self-check";
 
 type Health = {
   status: string;
@@ -62,17 +65,117 @@ type Article = {
 };
 
 type Frame = { frame: string; score: number; calibrationStatus: string; evidenceBasis: "headline" | "body_private" | "body_public" | "body_transient"; evidenceText?: string | null; source?: string | null; articleId?: string | null; sourceUrl?: string | null };
+type ClaimEvidence = {
+  claimId: string;
+  articleId: string;
+  source: string;
+  sourceUrl: string;
+  evidenceLocator: string | null;
+  evidenceHash: string | null;
+  voiceKind: string | null;
+};
+type IssueMapAnchor = {
+  groupId: string;
+  label: string;
+  frameFamily: string | null;
+  articleCount: number;
+  outletCount: number;
+  independentMediaGroups: number;
+  claimIds: string[];
+  evidence: ClaimEvidence[];
+};
+type IssueMapOutlet = {
+  sourceId: string;
+  source: string;
+  classification: "left" | "mixed" | "right" | "insufficient";
+  score: number | null;
+  displayPosition: number | null;
+  articleCount: number;
+  eligibleArticleCount: number;
+  leftArticleCount: number;
+  mixedArticleCount: number;
+  rightArticleCount: number;
+  evidenceStatus: "insufficient" | "single_article_observation" | "automatic_draft" | "supported";
+  claimIds: string[];
+  evidence: ClaimEvidence[];
+};
+type IssueMap = {
+  status: "available" | "provisional" | "withheld_insufficient_evidence" | "withheld_source_dominated" | "withheld_review_required";
+  reason: string;
+  axisId: string | null;
+  dimension: "problem_definition";
+  label: string;
+  leftAnchor: IssueMapAnchor | null;
+  rightAnchor: IssueMapAnchor | null;
+  selectionBasis: {
+    minimumArticles: number;
+    minimumOutlets: number;
+    minimumIndependentMediaGroups: number;
+    minimumArticlesPerAnchor: number;
+    articleCount: number;
+    outletCount: number;
+    independentMediaGroups: number;
+    balancedCoverage: number | null;
+    overlap: number | null;
+    axisStrength: number | null;
+    coveredArticleCount: number;
+    formula: string | null;
+  };
+  outlets: IssueMapOutlet[];
+};
+type NarrativeClause = {
+  dimension: string;
+  label: string;
+  groupId: string;
+  summary: string;
+  supportingArticleCount: number;
+  observedArticleCount: number;
+  supportShare: number;
+  claimIds: string[];
+  evidence: ClaimEvidence[];
+};
+type Narrative = {
+  narrativeId: string;
+  status: "automatic_draft" | "supported";
+  summary: string;
+  articleCount: number;
+  outletCount: number;
+  independentMediaGroups: number;
+  completeness: number;
+  supportingArticleIds: string[];
+  supportingOutlets: string[];
+  claimIds: string[];
+  evidence: ClaimEvidence[];
+  problem: NarrativeClause;
+  cause: NarrativeClause | null;
+  responsibility: NarrativeClause | null;
+  evaluation: NarrativeClause | null;
+  remedy: NarrativeClause | null;
+};
+type ReaderQuestion = {
+  questionId: string;
+  triggerType: "narrative_contrast" | "issue_axis_contrast" | "affected_voice_gap" | "source_voice_gap" | "context_gap";
+  question: string;
+  basisClaimIds: string[];
+  basisArticleIds: string[];
+  evidence: ClaimEvidence[];
+};
 type ComparisonSource = {
   source: string;
   articleId: string;
   sourceUrl: string;
+  claimId: string;
   evidenceLocator?: string | null;
   evidenceHash?: string | null;
+  voiceKind?: string | null;
 };
 type ComparisonAxis = {
   dimension: string;
   label: string;
   variants: Array<{
+    groupId: string;
+    frameFamily: string | null;
+    claimIds: string[];
     summary: string;
     outlets: ComparisonSource[];
     commitment: string;
@@ -122,16 +225,32 @@ type Comparison = {
     inputTruncatedArticles?: number;
   };
   axes?: ComparisonAxis[];
+  issueMap?: IssueMap;
+  narratives?: Narrative[];
+  readerQuestions?: ReaderQuestion[];
   sourceLens?: {
     sharedVoices: string[];
     voicesPresentInSomeOutlets: string[];
     byOutlet: Array<{
       source: string;
+      articleCount: number;
+      sourceArticleCount: number;
       voices: string[];
-      roleCounts?: Array<{ role: string; roleLabel: string; count: number }>;
-      officialShare?: number | null;
-      affectedGroupVoice?: boolean | number | string | null;
+      roleCounts: Array<{
+        role: string;
+        roleLabel: string;
+        count: number;
+        articleCount: number;
+        presenceRate: number;
+        directQuoteArticleCount: number;
+        indirectAttributionArticleCount: number;
+        mentionCount: number;
+      }>;
+      officialShare: number | null;
+      affectedGroupVoice: boolean;
+      affectedGroupPresenceRate: number;
     }>;
+    caution: string | null;
   };
   contextGaps?: Array<{
     feature: string;
@@ -226,9 +345,15 @@ const agendaCategoryOrder = ["정치", "경제", "사회", "국제", "스포츠"
 
 const statusLabels: Record<string, string> = {
   available: "구조화 비교 가능",
+  provisional: "자동 분석 초안",
   partial: "일부 비교 가능",
   withheld_insufficient_evidence: "근거 부족으로 보류",
+  withheld_source_dominated: "취재원 발언 중심이라 보류",
+  withheld_review_required: "동일 사건 검토 대기",
   supported: "근거 확인",
+  automatic_draft: "자동 분석 초안",
+  single_article_observation: "기사 1건 관측",
+  insufficient: "근거 부족",
   abstained: "판단 보류",
   conflicting: "근거가 엇갈림",
   not_observed: "본문에서 미관측",
@@ -255,6 +380,21 @@ const commitmentLabels: Record<string, string> = {
   not_observed: "본문에서 미관측",
 };
 
+const issueMapClassLabels: Record<IssueMapOutlet["classification"], string> = {
+  left: "왼쪽 문제 정의에 더 연결",
+  mixed: "두 문제 정의가 함께 관측",
+  right: "오른쪽 문제 정의에 더 연결",
+  insufficient: "위치 판단 근거 부족",
+};
+
+const readerQuestionLabels: Record<ReaderQuestion["triggerType"], string> = {
+  narrative_contrast: "서사 연결 차이",
+  issue_axis_contrast: "문제 정의 차이",
+  affected_voice_gap: "당사자 목소리 차이",
+  source_voice_gap: "취재원 구성 차이",
+  context_gap: "맥락 관측 차이",
+};
+
 function readableCode(value?: string | null, labels: Record<string, string> = {}) {
   if (!value) return null;
   return labels[value] ?? value.replaceAll("_", " ");
@@ -270,7 +410,7 @@ function affectedVoiceLabel(value?: boolean | number | string | null) {
   if (typeof value === "boolean") return value ? "당사자 목소리 있음" : "당사자 목소리 미관측";
   if (typeof value === "number") {
     const share = formatShare(value);
-    return share ? `당사자 발화 비중 ${share}` : null;
+    return share ? `당사자 등장 기사 비율 ${share}` : null;
   }
   return value || null;
 }
@@ -280,6 +420,9 @@ function hasStructuredComparison(comparison: Comparison) {
     comparison.methodologyLabel
     || comparison.summary
     || comparison.axes?.length
+    || comparison.issueMap
+    || comparison.narratives?.length
+    || comparison.readerQuestions?.length
     || comparison.sourceLens
     || comparison.contextGaps?.length
     || comparison.limitations?.length
@@ -302,31 +445,32 @@ function ComparisonSourceLinks({ outlets }: { outlets: ComparisonSource[] }) {
 }
 
 function SourcingBars({ byOutlet }: { byOutlet: NonNullable<Comparison["sourceLens"]>["byOutlet"] }) {
-  const rows = byOutlet
-    .map((entry) => ({ source: entry.source, roleCounts: entry.roleCounts ?? [] }))
-    .filter((entry) => entry.roleCounts.length > 0);
+  const rows = byOutlet.filter((entry) => entry.roleCounts.length > 0);
   if (rows.length < 2) return null;
-  const legend = new Map<string, string>();
-  rows.forEach((row) => row.roleCounts.forEach((role) => legend.set(role.role, role.roleLabel)));
   return (
     <div className="sourcing-bars">
-      <h4>누구의 목소리로 말하는가 <small>인용원(sourcing) 관측치</small></h4>
-      <p className="viz-caption">직접 인용·간접 인용으로 확인된 발화 횟수입니다. 막대 길이는 목소리의 가시성 관측치이며 매체의 지지·취재원 신뢰도 판정이 아닙니다.</p>
-      {rows.map((row) => {
-        const total = row.roleCounts.reduce((sum, role) => sum + role.count, 0);
-        return (
-          <div className="viz-bar-row" key={row.source}>
-            <span className="viz-bar-label">{row.source}</span>
-            <div className="viz-bar-track" role="img" aria-label={`${row.source}: ${row.roleCounts.map((role) => `${role.roleLabel} ${role.count}회`).join(", ")}`}>
-              {row.roleCounts.map((role) => (
-                <i key={role.role} style={{ flexGrow: role.count, background: sourceRoleColors[role.role] ?? sourceRoleColors.other }} title={`${role.roleLabel} ${role.count}회`}>{role.count}</i>
-              ))}
-            </div>
-            <b className="viz-bar-total">{total}회</b>
+      <h4>누구의 목소리로 말하는가 <small>역할별 기사 등장률</small></h4>
+      <p className="viz-caption">같은 역할이 한 기사에서 여러 번 인용돼도 기사 한 건으로 셉니다. 비율은 각 언론사의 분석 기사 중 해당 역할이 한 번 이상 등장한 기사 비율이며, 매체의 지지나 취재원 신뢰도 판정이 아닙니다.</p>
+      {rows.map((row) => (
+        <div className="source-prevalence-row" key={row.source}>
+          <div className="source-prevalence-heading">
+            <strong>{row.source}</strong>
+            <span>취재원 관측 {row.sourceArticleCount}/{row.articleCount}건</span>
           </div>
-        );
-      })}
-      <div className="viz-legend">{[...legend].map(([role, label]) => <span key={role}><i style={{ background: sourceRoleColors[role] ?? sourceRoleColors.other }} aria-hidden="true" />{label}</span>)}</div>
+          <div className="source-prevalence-roles">
+            {row.roleCounts.map((role) => {
+              const percentage = Math.round(role.presenceRate * 100);
+              return (
+                <div key={role.role} aria-label={`${role.roleLabel}: ${row.articleCount}건 중 ${role.articleCount}건, ${percentage}%`}>
+                  <span><i style={{ width: `${percentage}%`, background: sourceRoleColors[role.role] ?? sourceRoleColors.other }} /></span>
+                  <b>{role.roleLabel}</b>
+                  <small>{role.articleCount}/{row.articleCount}건 · {percentage}%</small>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -425,56 +569,114 @@ function FrameCompositionByOutlet({ frames }: { frames: Frame[] }) {
   );
 }
 
-function issueSpectrum(comparison: Comparison) {
-  const axis = comparison.axes?.find((entry) => entry.dimension === "problem_definition") ?? comparison.axes?.[0];
-  if (!axis) return null;
-  const variants = [...axis.variants]
-    .filter((variant) => variant.outlets.length)
-    .sort((left, right) => new Set(right.outlets.map((outlet) => outlet.source)).size - new Set(left.outlets.map((outlet) => outlet.source)).size)
-    .slice(0, 2);
-  if (variants.length < 2) return null;
-  const outletSides = new Map<string, Set<number>>();
-  variants.forEach((variant, variantIndex) => {
-    variant.outlets.forEach((outlet) => {
-      const sides = outletSides.get(outlet.source) ?? new Set<number>();
-      sides.add(variantIndex);
-      outletSides.set(outlet.source, sides);
-    });
-  });
-  const outletEntries = [...outletSides].map(([source, sides]) => ({
-    source,
-    side: sides.size > 1 ? "center" : sides.has(0) ? "left" : "right",
-    overlap: sides.size > 1,
-  }));
-  const sideCounts = outletEntries.reduce<Record<string, number>>((counts, outlet) => {
-    counts[outlet.side] = (counts[outlet.side] ?? 0) + 1;
-    return counts;
-  }, {});
-  const sideIndexes: Record<string, number> = {};
-  const outlets = outletEntries.map((outlet) => {
-    const index = sideIndexes[outlet.side] ?? 0;
-    sideIndexes[outlet.side] = index + 1;
-    const count = sideCounts[outlet.side] ?? 1;
-    const spread = count === 1 ? 0.5 : index / (count - 1);
-    const position = outlet.side === "left"
-      ? 8 + spread * 27
-      : outlet.side === "right"
-        ? 65 + spread * 27
-        : 46 + spread * 8;
+function IssueMapView({ issueMap, isProviderExcerpt }: { issueMap: IssueMap; isProviderExcerpt: boolean }) {
+  const leftAnchor = issueMap.leftAnchor;
+  const rightAnchor = issueMap.rightAnchor;
+  const isAvailable = ["available", "provisional"].includes(issueMap.status)
+    && leftAnchor !== null
+    && rightAnchor !== null;
+  const positionedOutlets = issueMap.outlets.filter(
+    (outlet): outlet is IssueMapOutlet & { displayPosition: number } => typeof outlet.displayPosition === "number",
+  );
+  const insufficientOutlets = issueMap.outlets.filter((outlet) => outlet.displayPosition === null || outlet.classification === "insufficient");
 
-    return {
-      source: outlet.source,
-      position,
-      top: index % 2 ? 42 : 2,
-      overlap: outlet.overlap,
-    };
-  });
-  return {
-    label: axis.label,
-    left: variants[0],
-    right: variants[1],
-    outlets,
-  };
+  return (
+    <section className={`issue-spectrum-card issue-map-${issueMap.status}`} aria-labelledby="issue-spectrum-title">
+      <header>
+        <div><p className="context-label">어디서 갈렸나</p><h3 id="issue-spectrum-title">{issueMap.label}의 쟁점 지도</h3></div>
+        <span>{readableCode(issueMap.status, statusLabels)}</span>
+      </header>
+      <p className="spectrum-intro">{issueMap.reason} 좌우 위치는 정치 성향 점수가 아니라, 기사당 한 표로 아래 두 문제 정의와 연결된 정도를 계산한 값입니다.</p>
+      {isAvailable ? (
+        <>
+          <div className="spectrum-labels">
+            <strong>{leftAnchor.label}<small>{leftAnchor.articleCount}건 · {leftAnchor.outletCount}개 매체</small></strong>
+            <strong>{rightAnchor.label}<small>{rightAnchor.articleCount}건 · {rightAnchor.outletCount}개 매체</small></strong>
+          </div>
+          <div className="spectrum-track" aria-label={`${leftAnchor.label}와 ${rightAnchor.label} 사이 계산된 매체별 위치`}>
+            <i aria-hidden="true" />
+            {positionedOutlets.map((outlet, index) => (
+              <span
+                className={`${outlet.classification} evidence-${outlet.evidenceStatus}`}
+                key={outlet.sourceId}
+                style={{ left: `${outlet.displayPosition}%`, top: `${index % 2 ? 44 : 2}px` }}
+                title={`${issueMapClassLabels[outlet.classification]} · 점수 ${outlet.score?.toFixed(3) ?? "미산출"} · ${outlet.eligibleArticleCount}건`}
+              >{outlet.source.replace(/일보|신문|뉴스$/u, "")}</span>
+            ))}
+          </div>
+          <div className="issue-map-outlet-list" aria-label="매체별 계산 근거">
+            {issueMap.outlets.map((outlet) => (
+              <article key={outlet.sourceId} className={outlet.classification === "insufficient" ? "insufficient" : ""}>
+                <strong>{outlet.source}</strong>
+                <span>{issueMapClassLabels[outlet.classification]}</span>
+                <small>
+                  {outlet.score === null ? "점수 미산출" : `점수 ${outlet.score.toFixed(3)} · 화면 위치 ${outlet.displayPosition}%`}
+                  {` · 좌 ${outlet.leftArticleCount} / 함께 ${outlet.mixedArticleCount} / 우 ${outlet.rightArticleCount}건`}
+                  {` · ${readableCode(outlet.evidenceStatus, statusLabels)}`}
+                </small>
+              </article>
+            ))}
+          </div>
+          {insufficientOutlets.length > 0 && <p className="issue-map-caution">기사 한 건 이하의 관측치는 위치 해석에서 충분한 근거로 보지 않습니다: {insufficientOutlets.map((outlet) => outlet.source).join(" · ")}</p>}
+          <dl className="issue-map-method">
+            <div><dt>축 강도</dt><dd>{issueMap.selectionBasis.axisStrength?.toFixed(3) ?? "미산출"}</dd></div>
+            <div><dt>양쪽 균형 포괄률</dt><dd>{formatShare(issueMap.selectionBasis.balancedCoverage) ?? "미산출"}</dd></div>
+            <div><dt>양쪽 중복률</dt><dd>{formatShare(issueMap.selectionBasis.overlap) ?? "미산출"}</dd></div>
+            <div><dt>계산 표본</dt><dd>{issueMap.selectionBasis.articleCount}건 · {issueMap.selectionBasis.outletCount}개 매체 · {issueMap.selectionBasis.independentMediaGroups}개 독립 그룹</dd></div>
+          </dl>
+        </>
+      ) : (
+        <div className="issue-map-withheld">
+          <strong>지도 산출을 보류했습니다.</strong>
+          <p>현재 {issueMap.selectionBasis.articleCount}건·{issueMap.selectionBasis.outletCount}개 매체·{issueMap.selectionBasis.independentMediaGroups}개 독립 그룹입니다. 최소 기준은 기사 {issueMap.selectionBasis.minimumArticles}건, 언론사 {issueMap.selectionBasis.minimumOutlets}곳, 독립 그룹 {issueMap.selectionBasis.minimumIndependentMediaGroups}개, 양쪽 문제 정의별 {issueMap.selectionBasis.minimumArticlesPerAnchor}건입니다.</p>
+        </div>
+      )}
+      <p className="issue-map-basis">{isProviderExcerpt ? "본문 발췌" : "본문"}의 검증된 위치·해시와 claim ID를 사용했습니다. 같은 문장의 반복이나 인용 횟수는 위치 점수를 키우지 않습니다.</p>
+    </section>
+  );
+}
+
+function NarrativeReport({ narratives }: { narratives: Narrative[] }) {
+  return (
+    <section className="comparison-section narrative-report" aria-labelledby="narrative-report-title">
+      <div className="comparison-section-heading">
+        <div><h3 id="narrative-report-title">기사들이 연결한 서사</h3><p>문제 정의가 같고 원인·책임·평가·해법 중 두 차원 이상이 충돌 없이 함께 나타난 기사만 묶었습니다. 모든 기사끼리 호환되는 완전연결 군집만 최대 두 개 표시합니다.</p></div>
+        <span>{narratives.length}개 서사</span>
+      </div>
+      {narratives.length ? (
+        <div className="narrative-grid">
+          {narratives.map((narrative, narrativeIndex) => {
+            const clauses = [
+              ["문제", narrative.problem],
+              ["원인", narrative.cause],
+              ["책임", narrative.responsibility],
+              ["평가", narrative.evaluation],
+              ["해법", narrative.remedy],
+            ] as const;
+            return (
+              <article className="narrative-card" key={narrative.narrativeId}>
+                <header>
+                  <div><span>서사 {narrativeIndex + 1}</span><h4>{narrative.problem.summary}</h4></div>
+                  <small>{readableCode(narrative.status, statusLabels)}</small>
+                </header>
+                <ol className="narrative-flow">
+                  {clauses.map(([label, clause]) => (
+                    <li key={label} className={clause ? "observed" : "not-observed"}>
+                      <span>{label}</span>
+                      <p>{clause?.summary ?? "공통 연결을 확정할 근거 부족"}</p>
+                      {clause && <small>{clause.supportingArticleCount}/{clause.observedArticleCount}건 지지 · {formatShare(clause.supportShare)}</small>}
+                    </li>
+                  ))}
+                </ol>
+                <p className="narrative-sample">기사 {narrative.articleCount}건 · 매체 {narrative.outletCount}곳 · 독립 그룹 {narrative.independentMediaGroups}개 · 완성도 {formatShare(narrative.completeness)}</p>
+                <ComparisonSourceLinks outlets={narrative.evidence.slice(0, 6)} />
+              </article>
+            );
+          })}
+        </div>
+      ) : <p className="withheld">문제 정의와 두 개 이상의 후속 차원을 함께 연결하는 기사 군집이 두 건 이상 모이지 않아 서사를 만들지 않았습니다.</p>}
+    </section>
+  );
 }
 
 function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
@@ -485,10 +687,12 @@ function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
     ["취재원 구성에서 확인된 것", comparison.summary?.sourceContext],
   ].filter((entry): entry is [string, string] => Boolean(entry[1]));
   const axes = comparison.axes ?? [];
+  const issueMap = comparison.issueMap;
+  const narratives = comparison.narratives ?? [];
+  const readerQuestions = comparison.readerQuestions ?? [];
   const sourceLens = comparison.sourceLens;
   const contextGaps = comparison.contextGaps ?? [];
   const limitations = comparison.limitations ?? [];
-  const spectrum = issueSpectrum(comparison);
   const isProviderExcerpt = comparison.sample?.textScope === "provider_excerpt";
 
   return (
@@ -522,31 +726,9 @@ function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
         )}
       </header>
 
-      {spectrum && (
-        <section className="issue-spectrum-card" aria-labelledby="issue-spectrum-title">
-          <header>
-            <div><p className="context-label">어디서 갈렸나</p><h3 id="issue-spectrum-title">{spectrum.label}의 쟁점 지형</h3></div>
-            <span>{isProviderExcerpt ? "본문 발췌 기반" : "본문 근거 기반"}</span>
-          </header>
-          <p className="spectrum-intro">같은 사건에서 어떤 문제 정의가 전면에 놓였는지 보여줍니다. 좌우 위치는 정치 성향 점수가 아니라, 아래 두 설명 그룹과의 상대적 연결입니다.</p>
-          <div className="spectrum-labels" aria-hidden="true"><strong>{spectrum.left.summary}</strong><strong>{spectrum.right.summary}</strong></div>
-          <div className="spectrum-track" aria-label={`${spectrum.left.summary}와 ${spectrum.right.summary} 사이 매체별 위치`}>
-            <i aria-hidden="true" />
-            {spectrum.outlets.map((outlet) => (
-              <span
-                className={outlet.overlap ? "overlap" : ""}
-                key={outlet.source}
-                style={{ left: `${outlet.position}%`, top: `${outlet.top}px` }}
-                title={outlet.overlap ? "두 설명이 모두 관측됨" : undefined}
-              >{outlet.source.replace(/일보|신문|뉴스$/u, "")}</span>
-            ))}
-          </div>
-          <div className="spectrum-accessible">
-            <h4>{spectrum.left.summary}</h4><p>{spectrum.left.outlets.map((outlet) => outlet.source).join(" · ")}</p>
-            <h4>{spectrum.right.summary}</h4><p>{spectrum.right.outlets.map((outlet) => outlet.source).join(" · ")}</p>
-          </div>
-        </section>
-      )}
+      {issueMap && <IssueMapView issueMap={issueMap} isProviderExcerpt={isProviderExcerpt} />}
+
+      <NarrativeReport narratives={narratives} />
 
       <section className="comparison-section" aria-labelledby="comparison-axes-title">
         <div className="comparison-section-heading">
@@ -584,9 +766,10 @@ function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
       {sourceLens && (
         <section className="comparison-section source-lens" aria-labelledby="source-lens-title">
           <div className="comparison-section-heading">
-            <div><h3 id="source-lens-title">누구의 목소리로 설명했나</h3><p>인용·간접인용으로 확인된 발화자 범주입니다. 등장하지 않았다는 사실만 보여주며 의도적 배제를 뜻하지 않습니다.</p></div>
+            <div><h3 id="source-lens-title">누구의 목소리로 설명했나</h3><p>각 역할이 등장한 고유 기사 비율입니다. 같은 기사의 반복 인용은 한 번만 세며, 미관측은 의도적 배제를 뜻하지 않습니다.</p></div>
           </div>
           <SourcingBars byOutlet={sourceLens.byOutlet} />
+          {sourceLens.caution && <p className="source-lens-caution">{sourceLens.caution}</p>}
           <div className="voice-overview">
             <div><h4>여러 매체에 공통 등장</h4>{sourceLens.sharedVoices.length ? <ul>{sourceLens.sharedVoices.map((voice) => <li key={voice}>{voice}</li>)}</ul> : <p>공통 발화자 범주가 확인되지 않았습니다.</p>}</div>
             <div><h4>일부 매체에서만 등장</h4>{sourceLens.voicesPresentInSomeOutlets.length ? <ul>{sourceLens.voicesPresentInSomeOutlets.map((voice) => <li key={voice}>{voice}</li>)}</ul> : <p>매체별 차이가 확인되지 않았습니다.</p>}</div>
@@ -596,12 +779,12 @@ function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
               <div className="voice-table-head" role="row"><span role="columnheader">언론사</span><span role="columnheader">확인된 목소리</span><span role="columnheader">구성 단서</span></div>
               {sourceLens.byOutlet.map((entry) => {
                 const officialShare = formatShare(entry.officialShare);
-                const affectedVoice = affectedVoiceLabel(entry.affectedGroupVoice);
+                const affectedVoice = affectedVoiceLabel(entry.affectedGroupPresenceRate);
                 return (
                   <div className="voice-table-row" role="row" key={entry.source}>
                     <strong role="cell">{entry.source}</strong>
                     <p role="cell">{entry.voices.length ? entry.voices.join(" · ") : "본문에서 발화자 미관측"}</p>
-                    <p role="cell">{[officialShare ? `기관·정치권 발언 단서 ${officialShare}` : null, affectedVoice].filter(Boolean).join(" · ") || "추가 단서 없음"}</p>
+                    <p role="cell">{[officialShare ? `기관·정치권 등장 기사 비율 ${officialShare}` : null, affectedVoice].filter(Boolean).join(" · ") || "추가 단서 없음"}</p>
                   </div>
                 );
               })}
@@ -631,19 +814,23 @@ function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
       )}
 
       <section className="reading-brief" aria-labelledby="reading-brief-title">
-        <header><p className="context-label">리포트로 읽기</p><h3 id="reading-brief-title">이 비교에서 확인할 세 가지</h3></header>
-        <div>
-          <article><span>01</span><h4>쟁점 구도</h4><p>{comparison.summary?.mainDifference ?? "서로 다른 문제 정의가 확인되는지 기사별 근거를 비교해 보세요."}</p></article>
-          <article><span>02</span><h4>설명의 구조</h4><p>{axes.length ? `${axes.map((axis) => axis.label).join("·")} 가운데 어떤 요소가 명시됐고 무엇이 관측되지 않았는지 확인하세요.` : "문제 정의에서 원인·책임·해법으로 설명이 어떻게 이어지는지 확인하세요."}</p></article>
-          <article><span>03</span><h4>누구의 목소리인가</h4><p>{comparison.summary?.sourceContext ?? "기관·정치권·전문가·시민·당사자 가운데 누구의 발언이 설명의 중심인지 확인하세요."}</p></article>
-        </div>
+        <header><p className="context-label">근거로 만든 독자 질문</p><h3 id="reading-brief-title">이 비교에서 더 확인할 질문</h3></header>
+        {readerQuestions.length ? (
+          <div>
+            {readerQuestions.map((question, index) => (
+              <article key={question.questionId}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <h4>{readerQuestionLabels[question.triggerType]}</h4>
+                <p>{question.question}</p>
+                <small className="reader-question-basis">claim {question.basisClaimIds.length}개 · 기사 {question.basisArticleIds.length}건 근거</small>
+                <ComparisonSourceLinks outlets={question.evidence.slice(0, 5)} />
+              </article>
+            ))}
+          </div>
+        ) : <p className="withheld">서사·쟁점축·취재원 구성의 차이를 뒷받침하는 claim과 기사 근거가 함께 확인되지 않아 독자 질문을 자동 생성하지 않았습니다.</p>}
         <aside>
-          <h4>이렇게 읽어보세요</h4>
-          <ul>
-            <li>내가 먼저 읽은 기사는 이 사건을 어떤 ‘문제’로 정의했나?</li>
-            <li>기사의 원인 설명은 기자 서술인가, 인용된 취재원의 주장인가?</li>
-            <li>다른 매체에서만 등장한 맥락이나 당사자 목소리가 있는가?</li>
-          </ul>
+          <h4>질문 생성 기준</h4>
+          <p>두 서사가 두 차원 이상 다르거나, 쟁점축 양쪽 근거가 있거나, 역할별 기사 등장률 차이가 50%p 이상일 때만 질문 후보를 만듭니다. 각 질문은 위 원문 링크와 claim ID에 연결됩니다.</p>
         </aside>
       </section>
 
@@ -1072,6 +1259,7 @@ export default function AgendaDashboard() {
                 {tab === "outlets" && <div id="analysis-panel-outlets" role="tabpanel" aria-labelledby="analysis-tab-outlets" className="outlet-list"><p className="expert-note"><strong>읽는 법</strong> 기사 수와 홈페이지 배치는 편향·사실성·논조를 판정하는 값이 아닙니다.</p><div className="outlet-head"><span>언론사</span><span>기사</span><span>홈 배치</span><span>대표 제목</span></div>{detail.outlets.map((outlet) => { const article = detail.articles.find((entry) => entry.source === outlet.source); const placement = outletPlacementLabels[outlet.placement] ?? outlet.placement; return <div className="outlet-row" key={outlet.source}><strong>{outlet.source}</strong><b>{outlet.articleCount}건</b><span className={`placement-badge${placement === "관측 없음" ? " unknown" : ""}`}>{placement}</span><p>{article ? <a href={article.url} target="_blank" rel="noopener noreferrer">{article.title}</a> : "대표 제목 미확인"}</p></div>; })}</div>}
                 {tab === "frames" && <div id="analysis-panel-frames" role="tabpanel" aria-labelledby="analysis-tab-frames" className="frame-layout">{detail.frames.length ? <><p className="expert-note frame-note"><strong>보조 지표</strong> {bodyBackedFrameCount ? `본문에서 관측한 일반 프레임 태그 ${bodyBackedFrameCount}개와 제목 단서를 구분해 표시합니다.` : "현재는 제목에 포함된 보조 표현 태그만 표시합니다."} 이 탭은 문제 정의·원인·책임·평가·해법 비교를 대체하지 않으며, 합계도 100%가 아닙니다.</p><FrameCompositionByOutlet frames={detail.frames} /><div className="frame-chart">{detail.frames.map((frame) => <div className="frame-row" key={frame.frame}><span>{frameLabels[frame.frame] ?? frame.frame}</span><div aria-hidden="true"><i style={{ width: `${frame.score}%`, background: frameColors[frame.frame] }} /></div><b>{frame.score > 0 ? `${frame.score.toFixed(1)}%` : "검출 없음"}</b></div>)}</div><div className="evidence-panel"><h3>관측된 보조 표현 태그</h3>{detectedFrames.length ? detectedFrames.map((frame) => <article key={frame.frame}><span style={{ color: frameColors[frame.frame] }}>{frameLabels[frame.frame]}</span><p>{frame.evidenceText}</p><small><b>{frame.evidenceBasis === "headline" ? "제목 단서" : frame.evidenceBasis === "body_transient" ? "임시 본문 분석 · 전문 미저장" : frame.evidenceBasis === "body_public" ? "이용 허가 본문" : "비공개 본문·문장 검토 전"}</b>{frame.sourceUrl ? <> · <a href={frame.sourceUrl} target="_blank" rel="noopener noreferrer">{frame.source ?? "원문"}에서 확인 →</a></> : ` · ${frame.source ?? "출처 미확인"}`}</small></article>) : <p className="withheld">현재 근거 범위에서는 사전에 정의된 보조 표현 태그를 검출하지 못했습니다.</p>}</div></> : <p className="withheld">기존 분석은 근거 오류 가능성이 있어 숨겼습니다. 재분석 뒤 실제로 검출된 보조 태그만 표시합니다.</p>}</div>}
                 {tab === "articles" && <div id="analysis-panel-articles" role="tabpanel" aria-labelledby="analysis-tab-articles" className="article-table"><div className="article-tools"><div><strong>관련 원문 {detail.articles.length}건</strong><p>제목 유사도는 같은 사건을 묶기 위한 참고값이며 기사 신뢰도 점수가 아닙니다.</p></div></div><div>{detail.articles.map((article) => <article className="article-item" key={article.id}><span className="article-outlet">{article.source}</span><div><strong>{article.title}</strong><small>{formatDateTime(article.publishedAt)} · 대표 제목과 단어 유사도 {Math.round((article.similarity ?? 0) * 100)}% · {article.contentAvailable ? "본문 구조화 초안 있음" : "제목 근거만 있음"}</small></div><a className="article-link" href={article.url} target="_blank" rel="noopener noreferrer">원문 열기</a></article>)}</div></div>}
+                <div className="trust-tools"><EvidenceChat issueId={detail.issue.id} /><SelfCheck /><CommunityPanel issueId={detail.issue.id} /></div>
               </>
             )}
           </article>

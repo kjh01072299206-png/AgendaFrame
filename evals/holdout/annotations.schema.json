@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgendaFrame real article annotation record",
+  "type": "object",
+  "required": ["schema_version", "dataset_version", "case_id", "split", "source", "article", "annotation", "evidence_policy", "locked"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "dataset_version": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "pattern": "^real-[0-9]{4}$"},
+    "split": {"const": "locked_holdout"},
+    "source": {
+      "type": "object",
+      "required": ["kind", "provider", "license_basis", "rights_status"],
+      "properties": {
+        "kind": {"const": "real"},
+        "provider": {"type": "string", "minLength": 1},
+        "license_basis": {"type": "string", "minLength": 1},
+        "rights_status": {"type": "string", "enum": ["pending_confirmation", "licensed", "authorized_research", "public_license"]}
+      },
+      "additionalProperties": false
+    },
+    "article": {
+      "type": "object",
+      "required": ["article_id", "outlet", "title", "url", "body_sha256", "body_available"],
+      "properties": {
+        "article_id": {"type": "string", "minLength": 1},
+        "outlet": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1},
+        "url": {"type": "string", "format": "uri"},
+        "published_at": {"type": ["string", "null"]},
+        "body_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "body_available": {"type": "boolean"},
+        "body_status": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "annotation": {
+      "type": "object",
+      "required": ["status", "independent_annotators_required", "annotator_ids", "labels", "adjudicated", "agreement"],
+      "properties": {
+        "status": {"type": "string", "enum": ["unlabeled", "in_progress", "labeled", "adjudicated"]},
+        "independent_annotators_required": {"const": 2},
+        "annotator_ids": {"type": "array", "items": {"type": "string"}, "minItems": 0, "maxItems": 2},
+        "labels": {"type": "array", "items": {"type": "object"}},
+        "adjudicated": {"type": "boolean"},
+        "agreement": {"type": ["object", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "evidence_policy": {
+      "type": "object",
+      "required": ["raw_body_included", "evidence_text_included", "evidence_locator_required", "evidence_hash_required"],
+      "properties": {
+        "raw_body_included": {"const": false},
+        "evidence_text_included": {"const": false},
+        "evidence_locator_required": {"const": true},
+        "evidence_hash_required": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "locked": {"const": true}
+  },
+  "additionalProperties": false
+}

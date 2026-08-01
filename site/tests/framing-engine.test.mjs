@@ -10,6 +10,70 @@ import {
   validateArticleFrameProfile,
 } from "../worker/framing-engine.mjs";
 
+const NARRATIVE_FIELDS = [
+  ["problem_definition", "problem"],
+  ["causal_interpretation", "cause"],
+  ["responsibility_attribution", "responsibility"],
+  ["moral_evaluation", "evaluation"],
+  ["treatment_recommendation", "remedy"],
+];
+
+async function narrativeProfile(articleId, family, { affectedVoice = false } = {}) {
+  const profile = await analyzeArticleFraming({
+    articleId,
+    title: "같은 정책 쟁점",
+    bodyText: "정부의 지원 대책은 집행 지연이 문제로 지적돼 제도 개선이 필요하다.",
+  });
+  const evidence = Object.values(profile.dimensions)
+    .flatMap((dimension) => dimension.items ?? [])
+    .find(Boolean)?.evidence;
+  assert.ok(evidence);
+  const labels = family === "burden"
+    ? {
+        problem: "기업의 제도 대응 부담을 핵심 문제로 설명합니다.",
+        cause: "급격한 시행 준비가 비용 부담을 키웠다고 설명합니다.",
+        responsibility: "정책 설계 기관의 보완 책임을 강조합니다.",
+        evaluation: "현장 준비를 고려하지 않은 시행이라고 평가합니다.",
+        remedy: "단계적 시행과 비용 지원을 제안합니다.",
+      }
+    : {
+        problem: "노동자의 안전 피해를 핵심 문제로 설명합니다.",
+        cause: "현장 감독 공백이 피해를 키웠다고 설명합니다.",
+        responsibility: "사업주와 감독기관의 예방 책임을 강조합니다.",
+        evaluation: "예방 의무를 충분히 이행하지 않았다고 평가합니다.",
+        remedy: "안전 감독과 예방 조치 강화를 제안합니다.",
+      };
+  for (const [dimension, field] of NARRATIVE_FIELDS) {
+    const claimHex = Buffer.from(`${articleId}:${dimension}`).toString("hex").padEnd(64, "0").slice(0, 64);
+    profile.dimensions[dimension] = {
+      status: "observed",
+      model_status: "supported",
+      outlet_narration_observed: true,
+      items: [{
+        claim_id: `claim:${claimHex}`,
+        code: `${family}_${field}`,
+        frame_family: `${family}_${field}`,
+        variant_key: `rules:${dimension}:${family}_${field}`,
+        public_paraphrase: labels[field],
+        voice: { kind: "journalist_narration", speaker_name: null, speaker_role: null },
+        evidence,
+      }],
+    };
+  }
+  profile.actors_and_sources = affectedVoice
+    ? [{
+        actor_id: `actor:${Buffer.from(articleId).toString("hex").padEnd(64, "0").slice(0, 64)}`,
+        name: null,
+        role: "affected_person",
+        role_label: "당사자·시민",
+        direct_quote_count: 1,
+        indirect_attribution_count: 0,
+        evidence: [evidence],
+      }]
+    : [];
+  return profile;
+}
+
 test("segments Korean paragraphs and sentences with stable locators", () => {
   const sentences = segmentKoreanArticle("첫 문장입니다. 둘째 문장입니다.\n\n새 문단입니다!");
   assert.deepEqual(
@@ -112,6 +176,7 @@ test("does not label a source-dominated straight-news bundle as an outlet framin
   );
 
   assert.equal(comparison.method.source_dominance_check.detected, true);
+  assert.equal(comparison.issue_map.status, "withheld_source_dominated");
   assert.equal(comparison.summary_30_seconds.divergence_detected, false);
   assert.match(comparison.summary_30_seconds.main_difference, /매체 자체의 프레임 차이로 확정하지 않았습니다/);
 });
@@ -183,6 +248,84 @@ test("builds a useful issue comparison without treating source quotes as outlet 
   assert.ok(responsibility.patterns.every((pattern) => pattern.voice_scope !== "outlet_narration"));
   assert.ok(comparison.not_observed_statements.length > 0);
   assert.equal(JSON.stringify(comparison).includes("정부가 책임져야 하고"), false);
+});
+
+test("calculates issue-map anchors and outlet positions from one vote per article", async () => {
+  const fixtures = [
+    ["alpha-left-1", "알파일보", "alpha", "정부의 지원 대책은 집행 지연과 제도 공백이 문제로 지적된다."],
+    ["alpha-left-2", "알파일보", "alpha", "복지 정책의 집행 지연과 지원 사업의 공백이 문제로 지적된다."],
+    ["beta-right-1", "베타신문", "beta", "산업재해 사고와 노동자 피해가 증가해 안전 문제가 커지고 있다."],
+    ["beta-right-2", "베타신문", "beta", "현장 사고와 인명 피해가 확산해 안전 문제가 커지고 있다."],
+    ["gamma-left", "감마뉴스", "gamma", "지원 제도의 집행 지연과 정책 공백이 문제로 지적된다."],
+    ["gamma-right", "감마뉴스", "gamma", "사고 피해가 증가하고 시민 안전 문제가 커지고 있다."],
+  ];
+  const profiles = [];
+  const metadata = [];
+  for (const [articleId, sourceName, mediaGroupId, bodyText] of fixtures) {
+    profiles.push(await analyzeArticleFraming({ articleId, title: "같은 정책 쟁점", bodyText }));
+    metadata.push({ articleId, sourceId: mediaGroupId, sourceName, mediaGroupId });
+  }
+
+  const comparison = buildIssueFrameComparison(profiles, metadata);
+  const map = comparison.issue_map;
+  assert.equal(map.status, "available");
+  assert.equal(map.dimension, "problem_definition");
+  assert.equal(map.left_anchor.article_count, 3);
+  assert.equal(map.right_anchor.article_count, 3);
+  assert.equal(map.selection_basis.axis_strength, 0.5);
+  const bySource = new Map(map.outlets.map((outlet) => [outlet.source, outlet]));
+  assert.deepEqual(
+    [bySource.get("알파일보").classification, bySource.get("알파일보").score, bySource.get("알파일보").display_position],
+    ["left", -1, 10],
+  );
+  assert.deepEqual(
+    [bySource.get("베타신문").classification, bySource.get("베타신문").score, bySource.get("베타신문").display_position],
+    ["right", 1, 90],
+  );
+  assert.deepEqual(
+    [bySource.get("감마뉴스").classification, bySource.get("감마뉴스").score, bySource.get("감마뉴스").display_position],
+    ["mixed", 0, 50],
+  );
+  assert.ok(map.outlets.every((outlet) => outlet.evidence.length >= 2));
+  assert.ok(map.outlets.flatMap((outlet) => outlet.claim_ids).every((claimId) => /^claim:[a-f0-9]{64}$/.test(claimId)));
+});
+
+test("builds at most two complete-link narratives and evidence-based reader questions", async () => {
+  const profiles = [
+    await narrativeProfile("burden-1", "burden"),
+    await narrativeProfile("burden-2", "burden"),
+    await narrativeProfile("safety-1", "safety", { affectedVoice: true }),
+    await narrativeProfile("safety-2", "safety", { affectedVoice: true }),
+  ];
+  const metadata = [
+    { articleId: "burden-1", sourceId: "alpha", sourceName: "알파", mediaGroupId: "alpha" },
+    { articleId: "burden-2", sourceId: "beta", sourceName: "베타", mediaGroupId: "beta" },
+    { articleId: "safety-1", sourceId: "gamma", sourceName: "감마", mediaGroupId: "gamma" },
+    { articleId: "safety-2", sourceId: "delta", sourceName: "델타", mediaGroupId: "delta" },
+  ];
+
+  const comparison = buildIssueFrameComparison(profiles, metadata);
+  assert.equal(comparison.narratives.length, 2);
+  assert.ok(comparison.narratives.every((narrative) => narrative.article_count === 2));
+  assert.ok(comparison.narratives.every((narrative) => narrative.completeness === 1));
+  assert.ok(comparison.narratives.every((narrative) => narrative.problem && narrative.cause && narrative.remedy));
+  assert.ok(comparison.narratives.every((narrative) => narrative.claim_ids.length === 10));
+  assert.ok(comparison.narratives.every((narrative) => narrative.evidence.length >= 2));
+
+  const affectedRole = comparison.source_lens.roles.find((role) => role.role === "affected_person");
+  assert.equal(affectedRole.article_count, 2);
+  assert.equal(affectedRole.presence_gap, 1);
+  const gamma = comparison.source_lens.by_outlet.find((entry) => entry.outlet === "감마");
+  assert.equal(gamma.roles[0].article_count, 1);
+  assert.equal(gamma.roles[0].presence_rate, 1);
+  assert.equal(gamma.roles[0].mention_count, 1);
+
+  assert.deepEqual(
+    comparison.reader_questions.map((question) => question.trigger_type),
+    ["narrative_contrast", "issue_axis_contrast", "affected_voice_gap"],
+  );
+  assert.ok(comparison.reader_questions.every((question) => question.basis_claim_ids.length));
+  assert.ok(comparison.reader_questions.every((question) => question.evidence.length));
 });
 
 test("does not call multiple patterns inside one media group a cross-outlet divergence", async () => {
@@ -266,6 +409,7 @@ test("keeps different semantic values as separate comparison variants", async ()
     const item = profile.dimensions.problem_definition.items[0];
     profile.dimensions.problem_definition.items = [item];
     item.code = "semantic_problem_definition";
+    item.frame_family = null;
     item.variant_key = variantKey;
     item.public_paraphrase = value;
   }
