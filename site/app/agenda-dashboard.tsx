@@ -331,7 +331,8 @@ const ISSUE_SCOPE_LABEL = "국내 10대 종합일간지";
 function naturalIssueTitle(value?: string | null) {
   const normalized = String(value ?? "")
     .replace(/\[[^\]]*\]|\([^)]*\)|<[^>]*>/g, " ")
-    .replace(/[\"“”‘’'`]/gu, " ")
+    .replace(/["“”‘’']/gu, " ")
+    .replace(/`/g, " ")
     .replace(/\s+/g, " ")
     .trim()
     .replace(/\s+(?:관련\s+)?이슈$/u, "")

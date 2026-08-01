@@ -239,7 +239,8 @@ export function cleanHeadlineToIssueTitle(rawTitle, articles = []) {
   const clean = String(rawTitle)
     .replace(/\[[^\]]*\]|\([^)]*\)|<[^>]*>/g, " ")
     .replace(/^[0-9가-힣A-Za-z]+\s*기자\s*=/g, "")
-    .replace(/['"“”‘’'`\(\)\[\]]/gu, " ")
+    .replace(/["“”‘’']/gu, " ")
+    .replace(/[`()[\]]/g, " ")
     .replace(/[\.\?!…\:\-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
