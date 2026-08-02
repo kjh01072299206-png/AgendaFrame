@@ -43,6 +43,7 @@ type Issue = {
   calibrationStatus: "not_calibrated";
   clusterQuality: "review_required" | "not_human_reviewed" | "cohesive" | "insufficient_evidence";
   contentAvailableCount: number;
+  structuredProfileCount?: number;
   evidenceBasis: "headline_metadata_only" | "body_signals_and_metadata" | "structured_body_profiles_and_metadata";
 };
 
@@ -118,6 +119,57 @@ type Comparison = {
       affectedGroupVoice?: boolean | number | string | null;
     }>;
   };
+  analysisModules?: {
+    frameComposition: {
+      status: "available" | "partial";
+      methodVersion: string;
+      taxonomyVersion: string;
+      unit: "article_presence";
+      multiLabel: true;
+      byOutlet: Array<{
+        source: string;
+        analyzedArticles: number;
+        assignmentCount: number;
+        labels: Array<{
+          code: string;
+          label: string;
+          articleCount: number;
+          articleShare: number;
+          sentenceCount: number;
+          compositionShare: number;
+          evidenceRefs: ComparisonSource[];
+        }>;
+      }>;
+      caution?: string | null;
+    };
+    reportingStyle: {
+      status: "available" | "partial";
+      methodVersion: string;
+      byOutlet: Array<{
+        source: string;
+        analyzedArticles: number;
+        evaluation: { status: "observed" | "abstained"; index: number | null; observedArticles: number; criticalArticles: number; supportiveArticles: number; attributedOnlyArticles: number; evidenceRefs: ComparisonSource[] };
+        scope: { status: "observed" | "abstained"; index: number | null; observedArticles: number; episodicSentenceCount: number; thematicSentenceCount: number; evidenceRefs: ComparisonSource[] };
+      }>;
+      caution?: string | null;
+    };
+    morphology: {
+      status: "available" | "partial";
+      analyzer: { name: string; mode: string; version: string; dictionaryVersion: string; posTagset: string };
+      minimumDocumentFrequency: number;
+      minimumMediaGroupFrequency: number;
+      byOutlet: Array<{
+        source: string;
+        analyzedArticles: number;
+        tokenCount: number;
+        contentTokenCount: number;
+        negationCount: number;
+        posCounts: Record<string, number>;
+        terms: Array<{ term: string; pos: string; count: number; documentCount: number; perThousand: number; evidenceRefs: ComparisonSource[] }>;
+      }>;
+      limitations: string[];
+    };
+  };
   contextGaps?: Array<{
     feature: string;
     presentInOutlets: string[];
@@ -146,6 +198,21 @@ const frameLabels: Record<string, string> = {
   law: "법·제도",
   policy: "정책 효과",
   citizen: "시민 영향",
+  economic: "경제",
+  capacity_resources: "역량·자원",
+  morality: "도덕성",
+  fairness_equality: "공정·평등",
+  legality_constitutionality: "법·헌정",
+  policy_prescription: "정책 처방",
+  crime_punishment: "범죄·처벌",
+  security_defense: "안보·국방",
+  health_safety: "건강·안전",
+  quality_of_life: "삶의 질",
+  cultural_identity: "문화·정체성",
+  public_opinion: "여론",
+  political: "정치 과정",
+  external_regulation: "대외 관계·평판",
+  other: "기타 정책 맥락",
 };
 
 const frameColors: Record<string, string> = {
@@ -155,6 +222,21 @@ const frameColors: Record<string, string> = {
   law: "#315da8",
   policy: "#11745b",
   citizen: "#248b9e",
+  economic: "#8a5412",
+  capacity_resources: "#456a35",
+  morality: "#65478b",
+  fairness_equality: "#9a3658",
+  legality_constitutionality: "#2f4f86",
+  policy_prescription: "#0d6c62",
+  crime_punishment: "#8f352e",
+  security_defense: "#3c527a",
+  health_safety: "#487733",
+  quality_of_life: "#24758a",
+  cultural_identity: "#76527f",
+  public_opinion: "#5b6572",
+  political: "#9b4a32",
+  external_regulation: "#42617b",
+  other: "#59636f",
 };
 const sourceRoleColors: Record<string, string> = {
   government_official: "#3f5c96",
@@ -265,6 +347,7 @@ function hasStructuredComparison(comparison: Comparison) {
     || comparison.summary
     || comparison.axes?.length
     || comparison.sourceLens
+    || comparison.analysisModules
     || comparison.contextGaps?.length
     || comparison.limitations?.length
   );
@@ -328,10 +411,14 @@ function EntmanMatrix({ axes, embedded = false }: { axes: ComparisonAxis[]; embe
               <tr key={source}>
                 <th scope="row">{source}</th>
                 {axes.map((axis) => {
-                  const summaries = axis.variants
-                    .filter((variant) => variant.outlets.some((outlet) => outlet.source === source))
-                    .map((variant) => variant.summary);
-                  return <td key={axis.dimension}>{summaries.length ? summaries.join(" · ") : <span className="not-observed">미관측</span>}</td>;
+                  const variants = axis.variants
+                    .filter((variant) => variant.outlets.some((outlet) => outlet.source === source));
+                  const visibleVariants = variants.slice(0, 1);
+                  return <td key={axis.dimension}>{variants.length ? <>{visibleVariants.map((variant, index) => (
+                    <span className="entman-variant" key={`${variant.summary}-${index}`}>
+                      {variant.summary}<small>{variant.commitment === "explicit" ? "기자 서술" : "취재원 귀속"}</small>
+                    </span>
+                  ))}{variants.length > visibleVariants.length && <small className="entman-overflow">외 {variants.length - visibleVariants.length}개 근거 유형</small>}</> : <span className="not-observed">미관측</span>}</td>;
                 })}
               </tr>
             ))}
@@ -346,179 +433,237 @@ function EntmanMatrix({ axes, embedded = false }: { axes: ComparisonAxis[]; embe
     <section className="comparison-section entman-section" aria-labelledby="entman-matrix-title">
       <div className="comparison-section-heading">
         <div><h3 id="entman-matrix-title">문제 정의·원인·평가·해결책</h3><p>같은 분석축을 언론사 기준으로 재배열한 표입니다. 본문에서 실제 관측된 설명만 요약합니다.</p></div>
-        <span>Entman (1993) 4기능</span>
+        <span>Entman 기반 5개 분석축</span>
       </div>
       {matrix}
     </section>
   );
 }
 
-function FrameCompositionByOutlet({ frames, embedded = false }: { frames: Frame[]; embedded?: boolean }) {
+function FrameCompositionByOutlet({ module, embedded = false }: { module: NonNullable<Comparison["analysisModules"]>["frameComposition"]; embedded?: boolean }) {
   const [selected, setSelected] = useState<{ source: string; frame: string } | null>(null);
-  const bySource = new Map<string, Map<string, Frame[]>>();
-  for (const frame of frames) {
-    if (!frame.source) continue;
-    const frameMap = bySource.get(frame.source) ?? new Map<string, Frame[]>();
-    const list = frameMap.get(frame.frame) ?? [];
-    list.push(frame);
-    frameMap.set(frame.frame, list);
-    bySource.set(frame.source, frameMap);
-  }
-  const rows = [...bySource.entries()].map(([source, frameMap]) => ({
-    source,
-    segments: [...frameMap.entries()].map(([code, list]) => ({ code, count: list.length, evidence: list })).sort((a, b) => b.count - a.count),
-  }));
+  const rows = module.byOutlet
+    .map((entry) => ({ source: entry.source, analyzedArticles: entry.analyzedArticles, segments: entry.labels.filter((label) => label.articleCount > 0) }))
+    .filter((entry) => entry.segments.length > 0);
   if (rows.length < 2) return null;
   const legendCodes = [...new Set(rows.flatMap((row) => row.segments.map((segment) => segment.code)))];
-  const selectedEvidence = selected
-    ? rows.find((row) => row.source === selected.source)?.segments.find((segment) => segment.code === selected.frame)?.evidence ?? []
-    : [];
+  const selectedSegment = selected
+    ? rows.find((row) => row.source === selected.source)?.segments.find((segment) => segment.code === selected.frame)
+    : null;
   return (
     <div className={`frame-composition${embedded ? " embedded" : ""}`}>
       {!embedded && <h4>프레임 구성 <small>매체별 표현 단서 · 다중 라벨</small></h4>}
-      <p className="viz-caption">막대의 구간을 누르면 해당 프레임 판단의 근거 문장이 표시됩니다. 구간 크기는 검출된 표현 단서 수이며 기사 논조 점수가 아닙니다.</p>
+      <p className="viz-caption">기사마다 같은 라벨은 한 번만 세고, 매체별 전체 라벨 배정 중 각 라벨의 구성비를 표시합니다. 다중 라벨이므로 기사 포함률의 합은 100%를 넘을 수 있습니다.</p>
       {rows.map((row) => {
-        const total = row.segments.reduce((sum, segment) => sum + segment.count, 0);
+        const total = row.segments.reduce((sum, segment) => sum + segment.articleCount, 0);
         return (
           <div className="viz-bar-row" key={row.source}>
             <span className="viz-bar-label">{row.source}</span>
-            <div className="viz-bar-track">
+            <div className="viz-bar-track" role="group" aria-label={`${row.source}의 프레임 라벨 구성`}>
               {row.segments.map((segment) => (
                 <button
                   type="button"
                   key={segment.code}
                   className={selected?.source === row.source && selected?.frame === segment.code ? "active" : ""}
-                  style={{ flexGrow: segment.count, background: frameColors[segment.code] ?? "#9099a6" }}
-                  title={`${frameLabels[segment.code] ?? segment.code} 단서 ${segment.count}건`}
-                  aria-label={`${row.source}의 ${frameLabels[segment.code] ?? segment.code} 프레임 근거 ${segment.count}건 보기`}
+                  style={{ flexGrow: segment.compositionShare, background: frameColors[segment.code] ?? "#59636f" }}
+                  title={`${segment.label} · ${segment.articleCount}/${row.analyzedArticles}건에서 관측`}
+                  aria-label={`${row.source}의 ${segment.label} 프레임 근거 보기. ${row.analyzedArticles}건 중 ${segment.articleCount}건에서 관측`}
                   onClick={() => setSelected(selected?.source === row.source && selected?.frame === segment.code ? null : { source: row.source, frame: segment.code })}
-                >{segment.count}</button>
+                >{segment.compositionShare >= 0.08 ? segment.articleCount : <span className="sr-only">{segment.articleCount}건</span>}</button>
               ))}
             </div>
-            <b className="viz-bar-total">{total}건</b>
+            <b className="viz-bar-total" title={`분석 기사 ${row.analyzedArticles}건`}>{total}개</b>
           </div>
         );
       })}
       <div className="viz-legend">{legendCodes.map((code) => <span key={code}><i style={{ background: frameColors[code] ?? "#9099a6" }} aria-hidden="true" />{frameLabels[code] ?? code}</span>)}</div>
-      {selected && (
+      {selected && selectedSegment && (
         <div className="frame-evidence-detail" role="status">
-          <h5>{selected.source} · {frameLabels[selected.frame] ?? selected.frame} 근거</h5>
-          {selectedEvidence.length ? selectedEvidence.map((frame, index) => (
-            <p key={`${frame.articleId}-${index}`}>
-              {frame.evidenceText ?? "근거 문장이 저장되지 않았습니다."}
-              {frame.sourceUrl && <> · <a href={frame.sourceUrl} target="_blank" rel="noopener noreferrer">원문 확인 →</a></>}
-            </p>
-          )) : <p>표시할 근거 문장이 없습니다.</p>}
+          <h5>{selected.source} · {selectedSegment.label}</h5>
+          <p>분석 기사 중 {Math.round(selectedSegment.articleShare * 100)}%({selectedSegment.articleCount}건), 문장 단서 {selectedSegment.sentenceCount}건에서 관측했습니다.</p>
+          {selectedSegment.evidenceRefs.length ? <ComparisonSourceLinks outlets={selectedSegment.evidenceRefs} /> : <p>공개 가능한 근거 위치가 없습니다.</p>}
         </div>
       )}
+      {module.caution && <p className="viz-method-note">{module.caution}</p>}
     </div>
   );
 }
 
-function AnalysisCard({ title, method, children }: { title: string; method: string; children: ReactNode }) {
+function AnalysisCard({ title, method, children, defaultOpen = true }: { title: string; method: string; children: ReactNode; defaultOpen?: boolean }) {
   return (
-    <details className="analysis-visual-card" open>
+    <details className="analysis-visual-card" open={defaultOpen}>
       <summary><span><strong>{title}</strong><small>{method}</small></span></summary>
       <div className="analysis-visual-body">{children}</div>
     </details>
   );
 }
 
-const criticalStancePattern = /비판|부정|우려|문제|실패|부적절|위법|책임|논란|갈등|침해|부담/u;
-const supportiveStancePattern = /긍정|지지|성과|효과|개선|적절|환영|찬성|강화|보완/u;
-const thematicPattern = /구조|제도|정책|법|맥락|원인|역사|사회|시스템|규제|정부|공공기관/u;
-const episodicPattern = /개인|사건|현장|피해|사고|당사자|발언|인물|충돌/u;
-
 function clampLandscapeValue(value: number) {
   return Math.max(8, Math.min(92, value));
 }
 
-function outletJitter(source: string, salt: number) {
-  const hash = [...source].reduce((sum, character, index) => sum + character.charCodeAt(0) * (index + salt + 1), 0);
-  return (hash % 9) - 4;
+function evaluationIndexLabel(value: number | null) {
+  if (value == null) return "평가 표현 판정 유보";
+  if (value <= -0.2) return "부정적 평가 표현 우세";
+  if (value >= 0.2) return "긍정적 평가 표현 우세";
+  return "긍정·부정 평가 표현 혼합";
 }
 
-function buildStanceLandscape(axes: ComparisonAxis[]) {
-  const outlets = [...new Set(axes.flatMap((axis) => axis.variants.flatMap((variant) => variant.outlets.map((outlet) => outlet.source))))];
-  return outlets.map((source) => {
-    const summaries = axes.flatMap((axis) => axis.variants
-      .filter((variant) => variant.outlets.some((outlet) => outlet.source === source))
-      .map((variant) => ({ dimension: axis.dimension, text: variant.summary })));
-    const evaluationText = summaries.filter((entry) => entry.dimension === "moral_evaluation").map((entry) => entry.text).join(" ");
-    const critical = criticalStancePattern.test(evaluationText) ? 1 : 0;
-    const supportive = supportiveStancePattern.test(evaluationText) ? 1 : 0;
-    const thematic = summaries.filter((entry) => thematicPattern.test(entry.text)).length;
-    const episodic = summaries.filter((entry) => episodicPattern.test(entry.text)).length;
-    const stanceDelta = supportive - critical;
-    const coverage = axes.length ? summaries.length / axes.length : 0;
-    const modeDelta = thematic + episodic > 0 ? (thematic - episodic) / (thematic + episodic) : coverage - 0.5;
-    return {
-      source,
-      x: clampLandscapeValue(50 + stanceDelta * 27 + outletJitter(source, 1)),
-      y: clampLandscapeValue(50 - modeDelta * 34 + outletJitter(source, 3)),
-      stanceLabel: critical > supportive ? "비판적 평가 단서" : supportive > critical ? "유보·긍정 평가 단서" : "평가 방향 미관측",
-      modeLabel: thematic > episodic ? "주제적 맥락 단서 우세" : episodic > thematic ? "일화적 사건 단서 우세" : "보도 방식 단서 혼합",
-      evidenceCount: summaries.length,
-    };
-  });
+function scopeIndexLabel(value: number | null) {
+  if (value == null) return "보도 범위 판정 유보";
+  if (value <= -0.2) return "일화적 단서 우세";
+  if (value >= 0.2) return "주제적 단서 우세";
+  return "일화·주제 단서 혼합";
 }
 
-function StanceLandscape({ axes }: { axes: ComparisonAxis[] }) {
-  const points = buildStanceLandscape(axes);
-  if (points.length < 2) return null;
+function StanceLandscape({ module }: { module: NonNullable<Comparison["analysisModules"]>["reportingStyle"] }) {
+  const points = module.byOutlet
+    .filter((entry) => entry.evaluation.index != null && entry.scope.index != null)
+    .map((entry) => ({
+      ...entry,
+      x: clampLandscapeValue(50 + Number(entry.evaluation.index) * 42),
+      y: clampLandscapeValue(50 - Number(entry.scope.index) * 42),
+    }));
+  const allEvidence = (entry: (typeof module.byOutlet)[number]) => {
+    const seen = new Set<string>();
+    return [...entry.evaluation.evidenceRefs, ...entry.scope.evidenceRefs].filter((evidence) => {
+      const key = `${evidence.articleId}:${evidence.evidenceHash ?? ""}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 4);
+  };
   return (
     <div className="stance-landscape">
-      <div className="stance-plot" role="img" aria-label="매체별 평가 표현과 일화적·주제적 보도 단서의 상대적 위치">
-        <span className="axis-label axis-top">주제적 단서 (구조·맥락)</span>
-        <span className="axis-label axis-bottom">일화적 단서 (사건·인물)</span>
-        <span className="axis-label axis-left">비판적 표현</span>
-        <span className="axis-label axis-right">유보·긍정 표현</span>
-        {points.map((point) => (
-          <span
-            className="stance-point"
-            key={point.source}
-            style={{ left: `${point.x}%`, top: `${point.y}%` }}
-            title={`${point.source}: ${point.stanceLabel}, ${point.modeLabel}, 관측 단서 ${point.evidenceCount}개`}
-          >{point.source.replace(/일보|신문|뉴스$/u, "")}</span>
-        ))}
-      </div>
+      {points.length >= 2 ? (
+        <div className="stance-plot" role="img" aria-label="기자 서술의 평가 표현과 일화적·주제적 보도 단서의 매체별 위치">
+          <span className="axis-label axis-top">주제적 단서 (구조·맥락)</span>
+          <span className="axis-label axis-bottom">일화적 단서 (사건·인물)</span>
+          <span className="axis-label axis-left">부정적 평가 표현</span>
+          <span className="axis-label axis-right">긍정적 평가 표현</span>
+          {points.map((point) => (
+            <span
+              className="stance-point"
+              key={point.source}
+              style={{ left: `${point.x}%`, top: `${point.y}%` }}
+              title={`${point.source}: ${evaluationIndexLabel(point.evaluation.index)}, ${scopeIndexLabel(point.scope.index)}`}
+            >{point.source.replace(/일보|신문|뉴스$/u, "")}</span>
+          ))}
+        </div>
+      ) : <div className="stance-withheld">두 축 모두에서 근거가 관측된 매체가 2곳 미만이라 좌표 배치를 유보했습니다.</div>}
       <div className="stance-explainer">
-        <p><strong>가로축</strong>은 규범적 평가에서 확인된 비판·우려와 긍정·지지 표현의 상대적 위치입니다.</p>
-        <p><strong>세로축</strong>은 사건·인물 중심의 일화적 단서와 구조·제도·맥락 중심의 주제적 단서를 비교합니다.</p>
-        <p className="stance-caution">자동 구조화 문구를 규칙으로 배치한 탐색용 시각화입니다. 정치 성향·논조·매체 입장을 확정하는 점수가 아닙니다.</p>
-        <ul className="stance-accessible">
-          {points.map((point) => <li key={point.source}><strong>{point.source}</strong> · {point.stanceLabel} · {point.modeLabel}</li>)}
-        </ul>
+        <p><strong>가로축</strong>은 취재원 인용을 제외하고 기자 서술에서 명시적으로 관측된 부정·긍정 정당성 평가의 기사별 평균입니다.</p>
+        <p><strong>세로축</strong>은 각 기사 안의 사건·인물 단서와 구조·제도·맥락 단서 비율을 기사별로 정규화한 평균입니다.</p>
+        <p className="stance-caution">자동 규칙 관측치입니다. 정치 성향·매체 지지도·보도의 우열을 뜻하지 않으며, 근거가 없으면 중앙에 임의 배치하지 않습니다.</p>
+        <div className="style-evidence-list">
+          {module.byOutlet.map((entry) => (
+            <details key={entry.source}>
+              <summary><strong>{entry.source}</strong><span>{evaluationIndexLabel(entry.evaluation.index)} · {scopeIndexLabel(entry.scope.index)}</span></summary>
+              <p>평가 근거 기사 {entry.evaluation.observedArticles}건, 보도 범위 근거 기사 {entry.scope.observedArticles}건, 취재원 평가만 관측된 기사 {entry.evaluation.attributedOnlyArticles}건</p>
+              {allEvidence(entry).length ? <ComparisonSourceLinks outlets={allEvidence(entry)} /> : <p>공개 가능한 근거 위치가 없습니다.</p>}
+            </details>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-function FramingVisualDeck({ frames, axes, sourceLens }: { frames: Frame[]; axes: ComparisonAxis[]; sourceLens?: Comparison["sourceLens"] }) {
-  const frameOutletCount = new Set(frames.filter((frame) => frame.source).map((frame) => frame.source)).size;
+const morphologyPosLabels: Record<string, string> = { noun: "명사형", predicate: "서술어형", particle: "조사", number: "수치", foreign: "외국어" };
+const morphologyPosColors: Record<string, string> = { noun: "#31588c", predicate: "#0f6c62", particle: "#6b7280", number: "#8a5412", foreign: "#65478b" };
+
+function MorphologyPanel({ module }: { module: NonNullable<Comparison["analysisModules"]>["morphology"] }) {
+  const [selected, setSelected] = useState<{ source: string; term: string } | null>(null);
+  const selectedTerm = selected
+    ? module.byOutlet.find((entry) => entry.source === selected.source)?.terms.find((term) => term.term === selected.term)
+    : null;
+  const posKeys = [...new Set(module.byOutlet.flatMap((entry) => Object.keys(entry.posCounts)))];
+  return (
+    <div className="morphology-panel">
+      <p className="viz-caption">조사와 일부 활용형을 원형에 가깝게 정규화한 뒤, 이슈 안에서 2개 이상 기사와 2개 이상 독립 미디어그룹에 반복된 어휘만 표시합니다.</p>
+      <div className="morphology-sample">
+        <span><strong>{module.byOutlet.reduce((sum, entry) => sum + entry.analyzedArticles, 0)}</strong> 분석 기사</span>
+        <span><strong>{module.byOutlet.reduce((sum, entry) => sum + entry.tokenCount, 0).toLocaleString("ko-KR")}</strong> 형태 단위</span>
+        <span><strong>{module.byOutlet.reduce((sum, entry) => sum + entry.negationCount, 0).toLocaleString("ko-KR")}</strong> 부정 표지</span>
+        <span><strong>DF {module.minimumDocumentFrequency}+ · MG {module.minimumMediaGroupFrequency}+</strong> 공개 기준</span>
+      </div>
+      <div className="morphology-pos-bars" aria-label="매체별 형태 단위 구성">
+        {module.byOutlet.map((entry) => {
+          const total = Object.values(entry.posCounts).reduce((sum, count) => sum + count, 0);
+          return (
+            <div className="viz-bar-row" key={entry.source}>
+              <span className="viz-bar-label">{entry.source}</span>
+              <div className="viz-bar-track" role="img" aria-label={`${entry.source}: ${posKeys.map((pos) => `${morphologyPosLabels[pos] ?? pos} ${entry.posCounts[pos] ?? 0}`).join(", ")}`}>
+                {posKeys.map((pos) => {
+                  const count = entry.posCounts[pos] ?? 0;
+                  return count > 0 ? <i key={pos} style={{ flexGrow: count, background: morphologyPosColors[pos] ?? "#59636f" }}>{count / Math.max(1, total) >= 0.08 ? count : <span className="sr-only">{count}</span>}</i> : null;
+                })}
+              </div>
+              <b className="viz-bar-total">{total.toLocaleString("ko-KR")}</b>
+            </div>
+          );
+        })}
+      </div>
+      <div className="viz-legend">{posKeys.map((pos) => <span key={pos}><i style={{ background: morphologyPosColors[pos] ?? "#59636f" }} aria-hidden="true" />{morphologyPosLabels[pos] ?? pos}</span>)}</div>
+      <div className="morphology-term-grid">
+        {module.byOutlet.map((entry) => (
+          <section key={entry.source}>
+            <h5>{entry.source}<small>내용어 {entry.contentTokenCount.toLocaleString("ko-KR")} · 부정 표지 {entry.negationCount.toLocaleString("ko-KR")}</small></h5>
+            {entry.terms.length ? <ol>{entry.terms.slice(0, 10).map((term) => (
+              <li key={`${term.pos}-${term.term}`}>
+                <button type="button" className={selected?.source === entry.source && selected?.term === term.term ? "active" : ""} onClick={() => setSelected(selected?.source === entry.source && selected?.term === term.term ? null : { source: entry.source, term: term.term })}>
+                  <span>{term.term}<small>{morphologyPosLabels[term.pos] ?? term.pos}</small></span>
+                  <b>{term.perThousand.toFixed(1)}</b>
+                </button>
+              </li>
+            ))}</ol> : <p className="not-observed">공개 빈도 기준을 충족한 반복 어휘가 없습니다.</p>}
+          </section>
+        ))}
+      </div>
+      {selected && selectedTerm && (
+        <div className="frame-evidence-detail" role="status">
+          <h5>{selected.source} · {selectedTerm.term}</h5>
+          <p>내용어 1,000개당 {selectedTerm.perThousand.toFixed(1)}회 · {selectedTerm.documentCount}개 기사에서 {selectedTerm.count}회 관측</p>
+          {selectedTerm.evidenceRefs.length ? <ComparisonSourceLinks outlets={selectedTerm.evidenceRefs} /> : <p>공개 가능한 근거 위치가 없습니다.</p>}
+        </div>
+      )}
+      <p className="viz-method-note"><strong>{module.analyzer.mode === "controlled_lexicon_fallback" ? "경량 규칙형 분석" : module.analyzer.name}</strong> · {module.limitations.join(" ")}</p>
+    </div>
+  );
+}
+
+function FramingVisualDeck({ axes, sourceLens, modules }: { axes: ComparisonAxis[]; sourceLens?: Comparison["sourceLens"]; modules?: Comparison["analysisModules"] }) {
+  const frameOutletCount = modules?.frameComposition.byOutlet.filter((entry) => entry.labels.length).length ?? 0;
   const matrixOutletCount = new Set(axes.flatMap((axis) => axis.variants.flatMap((variant) => variant.outlets.map((outlet) => outlet.source)))).size;
   const sourcingOutletCount = sourceLens?.byOutlet.filter((entry) => entry.roleCounts?.length).length ?? 0;
-  if (frameOutletCount < 2 && matrixOutletCount < 2 && sourcingOutletCount < 2) return null;
+  const styleOutletCount = modules?.reportingStyle.byOutlet.length ?? 0;
+  const morphologyOutletCount = modules?.morphology.byOutlet.length ?? 0;
+  if (frameOutletCount < 2 && matrixOutletCount < 2 && sourcingOutletCount < 2 && styleOutletCount < 2 && morphologyOutletCount < 2) return null;
   return (
     <section className="analysis-visual-deck" aria-label="매체별 프레임과 보도 방식 시각화">
-      {frameOutletCount >= 2 && (
-        <AnalysisCard title="프레임 구성" method="Policy Frames Codebook · 다중 라벨">
-          <FrameCompositionByOutlet frames={frames} embedded />
+      {modules && frameOutletCount >= 2 && (
+        <AnalysisCard title="프레임 구성" method="Policy Frames Codebook-inspired · 기사 단위 다중 라벨">
+          <FrameCompositionByOutlet module={modules.frameComposition} embedded />
         </AnalysisCard>
       )}
       {axes.length >= 2 && matrixOutletCount >= 2 && (
-        <AnalysisCard title="문제 정의·원인·평가·해결책" method="Entman (1993) 기능 추출">
+        <AnalysisCard title="문제 정의·원인·책임·평가·해결책" method="Entman 기반 5개 분석축">
           <EntmanMatrix axes={axes} embedded />
         </AnalysisCard>
       )}
       {sourceLens && sourcingOutletCount >= 2 && (
-        <AnalysisCard title="누구의 목소리로 말하는가" method="인용원(sourcing) 분석">
+        <AnalysisCard title="누구의 목소리로 말하는가" method="인용원(sourcing) 분석" defaultOpen={false}>
           <SourcingBars byOutlet={sourceLens.byOutlet} embedded />
         </AnalysisCard>
       )}
-      {axes.length >= 2 && matrixOutletCount >= 2 && (
-        <AnalysisCard title="논조와 보도 방식" method="평가 표현 · Iyengar (1991) 참고">
-          <StanceLandscape axes={axes} />
+      {modules && styleOutletCount >= 2 && (
+        <AnalysisCard title="평가 표현과 보도 방식" method="기자 서술 분리 · Iyengar (1991) 참고" defaultOpen={false}>
+          <StanceLandscape module={modules.reportingStyle} />
+        </AnalysisCard>
+      )}
+      {modules && morphologyOutletCount >= 2 && (
+        <AnalysisCard title="형태소·어휘 신호" method="조사·활용 정규화 · 반복 어휘 분석" defaultOpen={false}>
+          <MorphologyPanel module={modules.morphology} />
         </AnalysisCard>
       )}
     </section>
@@ -529,7 +674,7 @@ function issueSpectrum(comparison: Comparison) {
   const axis = comparison.axes?.find((entry) => entry.dimension === "problem_definition") ?? comparison.axes?.[0];
   if (!axis) return null;
   const variants = [...axis.variants]
-    .filter((variant) => variant.outlets.length)
+    .filter((variant) => variant.outlets.length && variant.commitment === "explicit")
     .sort((left, right) => new Set(right.outlets.map((outlet) => outlet.source)).size - new Set(left.outlets.map((outlet) => outlet.source)).size)
     .slice(0, 2);
   if (variants.length < 2) return null;
@@ -541,43 +686,21 @@ function issueSpectrum(comparison: Comparison) {
       outletSides.set(outlet.source, sides);
     });
   });
-  const outletEntries = [...outletSides].map(([source, sides]) => ({
-    source,
-    side: sides.size > 1 ? "center" : sides.has(0) ? "left" : "right",
-    overlap: sides.size > 1,
-  }));
-  const sideCounts = outletEntries.reduce<Record<string, number>>((counts, outlet) => {
-    counts[outlet.side] = (counts[outlet.side] ?? 0) + 1;
-    return counts;
-  }, {});
-  const sideIndexes: Record<string, number> = {};
-  const outlets = outletEntries.map((outlet) => {
-    const index = sideIndexes[outlet.side] ?? 0;
-    sideIndexes[outlet.side] = index + 1;
-    const count = sideCounts[outlet.side] ?? 1;
-    const spread = count === 1 ? 0.5 : index / (count - 1);
-    const position = outlet.side === "left"
-      ? 8 + spread * 27
-      : outlet.side === "right"
-        ? 65 + spread * 27
-        : 46 + spread * 8;
-
-    return {
-      source: outlet.source,
-      position,
-      top: index % 2 ? 42 : 2,
-      overlap: outlet.overlap,
-    };
-  });
+  const groups = { left: [] as string[], both: [] as string[], right: [] as string[] };
+  for (const [source, sides] of outletSides) {
+    if (sides.size > 1) groups.both.push(source);
+    else if (sides.has(0)) groups.left.push(source);
+    else groups.right.push(source);
+  }
   return {
     label: axis.label,
     left: variants[0],
     right: variants[1],
-    outlets,
+    groups,
   };
 }
 
-function StructuredComparisonView({ comparison, frames }: { comparison: Comparison; frames: Frame[] }) {
+function StructuredComparisonView({ comparison }: { comparison: Comparison }) {
   const summaryItems = [
     ["여러 매체가 함께 설명한 것", comparison.summary?.commonGround],
     ["설명이 가장 크게 갈린 지점", comparison.summary?.mainDifference],
@@ -621,7 +744,7 @@ function StructuredComparisonView({ comparison, frames }: { comparison: Comparis
         )}
       </header>
 
-      <FramingVisualDeck frames={frames} axes={axes} sourceLens={sourceLens} />
+      <FramingVisualDeck axes={axes} sourceLens={sourceLens} modules={comparison.analysisModules} />
 
       {spectrum && (
         <section className="issue-spectrum-card" aria-labelledby="issue-spectrum-title">
@@ -629,22 +752,11 @@ function StructuredComparisonView({ comparison, frames }: { comparison: Comparis
             <div><p className="context-label">어디서 갈렸나</p><h3 id="issue-spectrum-title">{spectrum.label}의 쟁점 지형</h3></div>
             <span>{isProviderExcerpt ? "본문 발췌 기반" : "본문 근거 기반"}</span>
           </header>
-          <p className="spectrum-intro">같은 사건에서 어떤 문제 정의가 전면에 놓였는지 보여줍니다. 좌우 위치는 정치 성향 점수가 아니라, 아래 두 설명 그룹과의 상대적 연결입니다.</p>
-          <div className="spectrum-labels" aria-hidden="true"><strong>{spectrum.left.summary}</strong><strong>{spectrum.right.summary}</strong></div>
-          <div className="spectrum-track" aria-label={`${spectrum.left.summary}와 ${spectrum.right.summary} 사이 매체별 위치`}>
-            <i aria-hidden="true" />
-            {spectrum.outlets.map((outlet) => (
-              <span
-                className={outlet.overlap ? "overlap" : ""}
-                key={outlet.source}
-                style={{ left: `${outlet.position}%`, top: `${outlet.top}px` }}
-                title={outlet.overlap ? "두 설명이 모두 관측됨" : undefined}
-              >{outlet.source.replace(/일보|신문|뉴스$/u, "")}</span>
-            ))}
-          </div>
-          <div className="spectrum-accessible">
-            <h4>{spectrum.left.summary}</h4><p>{spectrum.left.outlets.map((outlet) => outlet.source).join(" · ")}</p>
-            <h4>{spectrum.right.summary}</h4><p>{spectrum.right.outlets.map((outlet) => outlet.source).join(" · ")}</p>
+          <p className="spectrum-intro">기자 서술에서 관측된 두 문제 정의를 범주로 나눴습니다. 범주 사이의 거리나 정치 성향을 뜻하지 않습니다.</p>
+          <div className="spectrum-groups">
+            <article><h4>{spectrum.left.summary}</h4><p>{spectrum.groups.left.length ? spectrum.groups.left.join(" · ") : "해당 매체 없음"}</p></article>
+            <article className="overlap"><h4>두 설명이 함께 관측됨</h4><p>{spectrum.groups.both.length ? spectrum.groups.both.join(" · ") : "해당 매체 없음"}</p></article>
+            <article><h4>{spectrum.right.summary}</h4><p>{spectrum.groups.right.length ? spectrum.groups.right.join(" · ") : "해당 매체 없음"}</p></article>
           </div>
         </section>
       )}
@@ -1134,7 +1246,7 @@ export default function AgendaDashboard() {
                 }}>← 이슈 목록</button>
                 <div className="detail-kicker"><p>{detail.issue.category} · {detail.issue.issueDate} · {detail.issue.sourceCount}개 언론사</p><span className="confidence review">{detail.issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 필요" : "자동 분석 · 검토 전"}</span></div>
                 <div className="detail-title-row"><div><h2 ref={detailTitleRef} tabIndex={-1}>{detail.issue.title}</h2><p className="detail-summary">{detail.issue.summary}</p></div><div className="big-score"><strong>{detail.issue.agendaScore === null ? "–" : Math.round(detail.issue.agendaScore)}</strong><span>{detail.issue.agendaScore === null ? "산출 보류" : "표본 내 집중도 /100"}</span></div></div>
-                <div className="detail-metrics"><span>관련 제목 <b>{detail.issue.articleCount}건</b></span><span>포함 매체 <b>{detail.issue.sourceCount}/{configuredSourceCount}곳</b></span><span>본문 단서 <b>{detail.issue.contentAvailableCount}/{detail.issue.articleCount}건</b></span><span>사람 검토 <b>미완료</b></span></div>
+                <div className="detail-metrics"><span>관련 제목 <b>{detail.issue.articleCount}건</b></span><span>포함 매체 <b>{detail.issue.sourceCount}/{configuredSourceCount}곳</b></span><span>{detail.issue.structuredProfileCount ? "구조화 본문" : "본문 단서"} <b>{detail.issue.structuredProfileCount ?? detail.issue.contentAvailableCount}/{detail.issue.articleCount}건</b></span><span>사람 검토 <b>미완료</b></span></div>
                 <details className="score-details"><summary>점수 근거와 관측 범위</summary><div className="score-breakdown"><ScorePart label="독립 미디어그룹 커버리지" value={detail.issue.diversityScore} /><ScorePart label="홈페이지 배치" value={detail.issue.placementScore} note={`${detail.issue.placementObservedCount}/${detail.issue.placementTotalCount}건 관측`} /><ScorePart label="기사량" value={detail.issue.volumeScore} /><ScorePart label="후속 보도량" value={detail.issue.followUpVolumeScore} /></div><p>관측된 메타데이터만 계산하며 동일 미디어그룹은 커버리지에서 한 번만 셉니다. 이 점수는 중요도·진실성·여론을 뜻하지 않습니다.</p></details>
                 <div className="analysis-tabs" role="tablist" aria-label="이슈 분석 보기">
                   {analysisTabs.map(([value, label]) => <button key={value} id={`analysis-tab-${value}`} type="button" role="tab" aria-selected={tab === value} aria-controls={`analysis-panel-${value}`} tabIndex={tab === value ? 0 : -1} className={tab === value ? "active" : ""} onKeyDown={(event) => handleTabKeyDown(event, value)} onClick={() => setTab(value)}>{label}</button>)}
@@ -1142,12 +1254,12 @@ export default function AgendaDashboard() {
                 {tab === "compare" && (
                   <div id="analysis-panel-compare" role="tabpanel" aria-labelledby="analysis-tab-compare" className="evidence-first">
                     {hasStructuredComparison(detail.comparison)
-                      ? <StructuredComparisonView comparison={detail.comparison} frames={detail.frames} />
+                      ? <StructuredComparisonView comparison={detail.comparison} />
                       : <LegacyComparisonView comparison={detail.comparison} articles={detail.articles} openArticles={() => setTab("articles")} />}
                   </div>
                 )}
                 {tab === "outlets" && <div id="analysis-panel-outlets" role="tabpanel" aria-labelledby="analysis-tab-outlets" className="outlet-list"><p className="expert-note"><strong>읽는 법</strong> 기사 수와 홈페이지 배치는 편향·사실성·논조를 판정하는 값이 아닙니다.</p><div className="outlet-head"><span>언론사</span><span>기사</span><span>홈 배치</span><span>대표 제목</span></div>{detail.outlets.map((outlet) => { const article = detail.articles.find((entry) => entry.source === outlet.source); const placement = outletPlacementLabels[outlet.placement] ?? outlet.placement; return <div className="outlet-row" key={outlet.source}><strong>{outlet.source}</strong><b>{outlet.articleCount}건</b><span className={`placement-badge${placement === "관측 없음" ? " unknown" : ""}`}>{placement}</span><p>{article ? <a href={article.url} target="_blank" rel="noopener noreferrer">{article.title}</a> : "대표 제목 미확인"}</p></div>; })}</div>}
-                {tab === "frames" && <div id="analysis-panel-frames" role="tabpanel" aria-labelledby="analysis-tab-frames" className="frame-layout">{detail.frames.length ? <><p className="expert-note frame-note"><strong>보조 지표</strong> {bodyBackedFrameCount ? `본문에서 관측한 일반 프레임 태그 ${bodyBackedFrameCount}개와 제목 단서를 구분해 표시합니다.` : "현재는 제목에 포함된 보조 표현 태그만 표시합니다."} 이 탭은 문제 정의·원인·책임·평가·해법 비교를 대체하지 않으며, 합계도 100%가 아닙니다.</p><FrameCompositionByOutlet frames={detail.frames} /><div className="frame-chart">{detail.frames.map((frame) => <div className="frame-row" key={frame.frame}><span>{frameLabels[frame.frame] ?? frame.frame}</span><div aria-hidden="true"><i style={{ width: `${frame.score}%`, background: frameColors[frame.frame] }} /></div><b>{frame.score > 0 ? `${frame.score.toFixed(1)}%` : "검출 없음"}</b></div>)}</div><div className="evidence-panel"><h3>관측된 보조 표현 태그</h3>{detectedFrames.length ? detectedFrames.map((frame) => <article key={frame.frame}><span style={{ color: frameColors[frame.frame] }}>{frameLabels[frame.frame]}</span><p>{frame.evidenceText}</p><small><b>{frame.evidenceBasis === "headline" ? "제목 단서" : frame.evidenceBasis === "body_transient" ? "임시 본문 분석 · 전문 미저장" : frame.evidenceBasis === "body_public" ? "이용 허가 본문" : "비공개 본문·문장 검토 전"}</b>{frame.sourceUrl ? <> · <a href={frame.sourceUrl} target="_blank" rel="noopener noreferrer">{frame.source ?? "원문"}에서 확인 →</a></> : ` · ${frame.source ?? "출처 미확인"}`}</small></article>) : <p className="withheld">현재 근거 범위에서는 사전에 정의된 보조 표현 태그를 검출하지 못했습니다.</p>}</div></> : <p className="withheld">기존 분석은 근거 오류 가능성이 있어 숨겼습니다. 재분석 뒤 실제로 검출된 보조 태그만 표시합니다.</p>}</div>}
+                {tab === "frames" && <div id="analysis-panel-frames" role="tabpanel" aria-labelledby="analysis-tab-frames" className="frame-layout">{detail.frames.length ? <><p className="expert-note frame-note"><strong>레거시 보조 지표</strong> {bodyBackedFrameCount ? `본문에서 관측한 일반 표현 태그 ${bodyBackedFrameCount}개와 제목 단서를 구분해 표시합니다.` : "현재는 제목에 포함된 보조 표현 태그만 표시합니다."} 이 탭의 값은 이슈 전체 집계이며 매체별 프레임 구성으로 해석하지 않습니다. 새 기사별 Policy Frames 구성은 비교 탭에서 재분석 완료 후 표시됩니다.</p><div className="frame-chart">{detail.frames.map((frame) => <div className="frame-row" key={frame.frame}><span>{frameLabels[frame.frame] ?? frame.frame}</span><div aria-hidden="true"><i style={{ width: `${frame.score}%`, background: frameColors[frame.frame] }} /></div><b>{frame.score > 0 ? `${frame.score.toFixed(1)}%` : "검출 없음"}</b></div>)}</div><div className="evidence-panel"><h3>관측된 보조 표현 태그</h3>{detectedFrames.length ? detectedFrames.map((frame) => <article key={frame.frame}><span style={{ color: frameColors[frame.frame] }}>{frameLabels[frame.frame]}</span><p>{frame.evidenceText}</p><small><b>{frame.evidenceBasis === "headline" ? "제목 단서" : frame.evidenceBasis === "body_transient" ? "임시 본문 분석 · 전문 미저장" : frame.evidenceBasis === "body_public" ? "이용 허가 본문" : "비공개 본문·문장 검토 전"}</b>{frame.sourceUrl ? <> · <a href={frame.sourceUrl} target="_blank" rel="noopener noreferrer">{frame.source ?? "원문"}에서 확인 →</a></> : ` · ${frame.source ?? "출처 미확인"}`}</small></article>) : <p className="withheld">현재 근거 범위에서는 사전에 정의된 보조 표현 태그를 검출하지 못했습니다.</p>}</div></> : <p className="withheld">기존 분석은 근거 오류 가능성이 있어 숨겼습니다. 재분석 뒤 실제로 검출된 보조 태그만 표시합니다.</p>}</div>}
                 {tab === "articles" && <div id="analysis-panel-articles" role="tabpanel" aria-labelledby="analysis-tab-articles" className="article-table"><div className="article-tools"><div><strong>관련 원문 {detail.articles.length}건</strong><p>제목 유사도는 같은 사건을 묶기 위한 참고값이며 기사 신뢰도 점수가 아닙니다.</p></div></div><div>{detail.articles.map((article) => <article className="article-item" key={article.id}><span className="article-outlet">{article.source}</span><div><strong>{article.title}</strong><small>{formatDateTime(article.publishedAt)} · 대표 제목과 단어 유사도 {Math.round((article.similarity ?? 0) * 100)}% · {article.contentAvailable ? "본문 구조화 초안 있음" : "제목 근거만 있음"}</small></div><a className="article-link" href={article.url} target="_blank" rel="noopener noreferrer">원문 열기</a></article>)}</div></div>}
               </>
             )}

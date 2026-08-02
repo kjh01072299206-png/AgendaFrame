@@ -8,6 +8,10 @@ import {
   segmentKoreanArticle,
   validateArticleFrameProfile,
 } from "../worker/framing-engine.mjs";
+import {
+  summarizeKoreanMorphology,
+  tokenizeKoreanMorphology,
+} from "../worker/korean-morphology.mjs";
 
 test("segments Korean paragraphs and sentences with stable locators", () => {
   const sentences = segmentKoreanArticle("첫 문장입니다. 둘째 문장입니다.\n\n새 문단입니다!");
@@ -15,6 +19,56 @@ test("segments Korean paragraphs and sentences with stable locators", () => {
     sentences.map(({ paragraph, sentence }) => [paragraph, sentence]),
     [[1, 1], [1, 2], [2, 1]],
   );
+});
+
+test("normalizes Korean particles and predicate endings without retaining token sequences", () => {
+  const tokens = tokenizeKoreanMorphology("정책을 개선했고 지원해야 하지만 실패했다. 실패가 아니었다.");
+
+  for (const [lemma, pos] of [
+    ["정책", "noun"],
+    ["개선하다", "predicate"],
+    ["지원하다", "predicate"],
+    ["실패하다", "predicate"],
+    ["아니다", "predicate"],
+    ["을", "particle"],
+  ]) {
+    assert.ok(tokens.some((token) => token.lemma === lemma && token.pos === pos), `missing normalized token: ${lemma}/${pos}`);
+  }
+
+  const summary = summarizeKoreanMorphology([
+    { text: "정책을 개선했고 정책은 개선해야 한다." },
+  ]);
+  const frequencies = new Map(summary.term_frequencies.map((term) => [`${term.pos}:${term.term}`, term.count]));
+  assert.equal(frequencies.get("noun:정책"), 2);
+  assert.equal(frequencies.get("predicate:개선하다"), 2);
+  assert.equal(summary.raw_tokens_retained, false);
+  assert.equal(Object.hasOwn(summary, "tokens"), false);
+
+  const boilerplate = summarizeKoreanMorphology([
+    { text: "기자는 현장에 있는 것으로 전해졌다고 밝혔다. 관련 기사는 구독할 수 있다." },
+  ]).term_frequencies.map((term) => term.term);
+  assert.equal(boilerplate.includes("했다"), false);
+  assert.equal(boilerplate.includes("있는"), false);
+  assert.equal(boilerplate.includes("것으"), false);
+  assert.equal(boilerplate.includes("관련기사"), false);
+});
+
+test("matches Policy descriptors on normalized lemmas instead of Korean substrings", async () => {
+  const substringOnly = await analyzeArticleFraming({
+    articleId: "descriptor-substring-only",
+    title: "회의 참석",
+    bodyText: "안전모를 착용한 시장님은 경제학자와 회의를 열었다.",
+  });
+  const substringCodes = substringOnly.secondary_descriptors.policy_frames.map((descriptor) => descriptor.code);
+  assert.equal(substringCodes.includes("health_safety"), false);
+  assert.equal(substringCodes.includes("economic"), false);
+
+  const grounded = await analyzeArticleFraming({
+    articleId: "descriptor-grounded",
+    title: "현장 안전 대책",
+    bodyText: "안전 사고로 환자와 의료 인력의 위험이 커졌다.",
+  });
+  assert.ok(grounded.secondary_descriptors.policy_frames.some((descriptor) => descriptor.code === "health_safety"));
 });
 
 test("returns evidence fingerprints and never leaks raw body or exact sentences", async () => {
@@ -57,6 +111,22 @@ test("keeps a quoted source claim separate from outlet narration", async () => {
   assert.ok(responsibility.items.length >= 1);
   assert.ok(responsibility.items.every((item) => item.voice.kind !== "journalist_narration"));
   assert.ok(responsibility.items.some((item) => item.voice.speaker_role === "anonymous_official"));
+});
+
+test("keeps the same framing code once per distinct journalist and source voice", async () => {
+  const profile = await analyzeArticleFraming({
+    articleId: "same-code-distinct-voices",
+    title: "결정 평가",
+    bodyText: [
+      "이 결정은 부당하고 무책임한 조치다.",
+      '시민단체 관계자는 "이 결정은 부당하고 무책임하다"고 말했다.',
+    ].join("\n\n"),
+  });
+
+  const evaluations = profile.dimensions.moral_evaluation.items
+    .filter((item) => item.code === "negative_legitimacy_evaluation");
+  assert.equal(evaluations.filter((item) => item.voice.kind === "journalist_narration").length, 1);
+  assert.equal(evaluations.filter((item) => item.voice.kind === "direct_quote").length, 1);
 });
 
 test("captures political incentives, legitimacy criticism, and institutional checks without adopting a quoted position", async () => {
@@ -204,6 +274,82 @@ test("does not call multiple patterns inside one media group a cross-outlet dive
   );
   assert.equal(comparison.summary_30_seconds.divergence_detected, false);
   assert.match(comparison.summary_30_seconds.main_difference, /충분하지 않습니다/);
+});
+
+test("aggregates evidence-grounded analysis modules and suppresses unsupported values", async () => {
+  const profiles = await Promise.all([
+    analyzeArticleFraming({
+      articleId: "module-alpha",
+      title: "제도 평가",
+      bodyText: "공통의제와 예산 부족, 인력 부족을 구조적 정책 문제로 다뤘다. 이 결정은 부당하고 무책임한 조치다. 희귀알파어가 언급됐다.",
+    }),
+    analyzeArticleFraming({
+      articleId: "module-beta",
+      title: "현장 반응",
+      bodyText: '공통의제를 둘러싼 현장 사례를 전했다. 정부 관계자는 "이 결정은 부당하고 무책임하다"고 말했다. 희귀베타어가 언급됐다.',
+    }),
+    analyzeArticleFraming({
+      articleId: "module-gamma",
+      title: "회의 개최",
+      bodyText: "위원회는 오전 열 시 정기 회의를 열었다.",
+    }),
+  ]);
+  const metadata = [
+    { articleId: "module-alpha", sourceId: "alpha", sourceName: "알파일보", mediaGroupId: "alpha" },
+    { articleId: "module-beta", sourceId: "beta", sourceName: "베타신문", mediaGroupId: "beta" },
+    { articleId: "module-gamma", sourceId: "gamma", sourceName: "감마통신", mediaGroupId: "gamma" },
+  ];
+  const comparison = buildIssueFrameComparison(profiles, metadata);
+  const modules = comparison.analysis_modules;
+
+  assert.equal(modules.frame_composition.status, "available");
+  assert.equal(modules.frame_composition.unit, "article_presence");
+  assert.equal(modules.frame_composition.multi_label, true);
+  const alphaFrames = modules.frame_composition.by_outlet.find((outlet) => outlet.outlet === "알파일보");
+  assert.ok(alphaFrames.labels.some((label) => label.code === "capacity_resources" && label.article_count === 1));
+
+  const alphaStyle = modules.reporting_style.by_outlet.find((outlet) => outlet.outlet === "알파일보");
+  assert.equal(alphaStyle.evaluation.status, "observed");
+  assert.equal(alphaStyle.evaluation.index, -1);
+  assert.equal(alphaStyle.evaluation.critical_article_count, 1);
+  assert.ok(alphaStyle.evaluation.evidence.length > 0);
+
+  const betaStyle = modules.reporting_style.by_outlet.find((outlet) => outlet.outlet === "베타신문");
+  assert.equal(betaStyle.evaluation.status, "abstained");
+  assert.equal(betaStyle.evaluation.index, null);
+  assert.equal(betaStyle.evaluation.attributed_only_article_count, 1);
+  assert.deepEqual(betaStyle.evaluation.evidence, []);
+
+  const gammaStyle = modules.reporting_style.by_outlet.find((outlet) => outlet.outlet === "감마통신");
+  assert.deepEqual(
+    [gammaStyle.evaluation.status, gammaStyle.evaluation.index, gammaStyle.scope.status, gammaStyle.scope.index],
+    ["abstained", null, "abstained", null],
+  );
+  assert.deepEqual(gammaStyle.evaluation.evidence, []);
+  assert.deepEqual(gammaStyle.scope.evidence, []);
+
+  assert.equal(modules.morphology.minimum_document_frequency, 2);
+  assert.equal(modules.morphology.minimum_media_group_frequency, 2);
+  const morphologyTerms = modules.morphology.by_outlet.flatMap((outlet) => outlet.terms.map((term) => term.term));
+  assert.ok(morphologyTerms.includes("공통의제"));
+  assert.equal(morphologyTerms.includes("희귀알파어"), false);
+  assert.equal(morphologyTerms.includes("희귀베타어"), false);
+
+  const renamed = buildIssueFrameComparison(profiles, metadata.map((entry, index) => ({
+    ...entry,
+    sourceName: `완전히다른매체명-${index + 1}`,
+  })));
+  const styleValues = (result) => result.analysis_modules.reporting_style.by_outlet.map((outlet) => ({
+    analyzed_article_count: outlet.analyzed_article_count,
+    evaluation: outlet.evaluation,
+    scope: outlet.scope,
+  }));
+  assert.deepEqual(styleValues(renamed), styleValues(comparison));
+  for (const outlet of comparison.analysis_modules.reporting_style.by_outlet) {
+    assert.equal(Object.hasOwn(outlet, "x"), false);
+    assert.equal(Object.hasOwn(outlet, "y"), false);
+    assert.equal(Object.hasOwn(outlet, "jitter"), false);
+  }
 });
 
 test("validator rejects conventional raw-text carrier fields", async () => {

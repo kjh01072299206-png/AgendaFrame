@@ -46,6 +46,15 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
   assert.match(dashboard, /<details className="score-details">/);
   assert.match(dashboard, /role="tab"/);
   assert.match(dashboard, /aria-controls={`analysis-panel-/);
+  assert.match(dashboard, /comparison\.analysisModules/);
+  assert.match(dashboard, /<FrameCompositionByOutlet module={modules\.frameComposition}/);
+  assert.match(dashboard, /<StanceLandscape module={modules\.reportingStyle}/);
+  assert.match(dashboard, /structuredProfileCount \? "구조화 본문"/);
+  assert.match(dashboard, /variants\.slice\(0, 1\)/);
+  assert.match(styles, /\.analysis-visual-deck \{ min-width: 0;/);
+  assert.doesNotMatch(dashboard, /criticalStancePattern|supportiveStancePattern|outletJitter|buildStanceLandscape/);
+  assert.doesNotMatch(dashboard, /<FrameCompositionByOutlet frames=/);
+  assert.doesNotMatch(dashboard, /<StanceLandscape axes=/);
   assert.doesNotMatch(dashboard, /신뢰도 \{/);
   assert.doesNotMatch(dashboard, /agenda-list" aria-live/);
 
@@ -417,6 +426,13 @@ test("resumes public body analysis across batches and stores only derived signal
   assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO article_body_signals")));
   assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO article_frame_profiles")));
   assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO issue_frame_comparisons")));
+  const comparisonInsert = statements.find((statement) => statement.sql.includes("INSERT INTO issue_frame_comparisons"));
+  const storedComparison = JSON.parse(comparisonInsert.parameters[2]);
+  assert.ok(storedComparison.analysisModules?.frameComposition);
+  assert.ok(storedComparison.analysisModules?.reportingStyle);
+  assert.ok(storedComparison.analysisModules?.morphology);
+  assert.ok(storedComparison.analysisModules.morphology.byOutlet.every((outlet) => Number.isInteger(outlet.negationCount)));
+  assert.doesNotMatch(JSON.stringify(storedComparison), /"(?:raw_body|bodyText|sentenceText|tokens)"\s*:/i);
   assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO frame_analyses") && statement.parameters.includes("body_transient")));
   assert.ok(!statements.some((statement) => statement.sql.includes("INSERT INTO article_contents")));
   assert.equal(JSON.stringify(statements).includes(body), false);
@@ -584,6 +600,11 @@ test("uses the checked-in JSON Schema as the public lineage contract", async () 
   assert.ok(schema.$defs.Comparison.oneOf.some((entry) => entry.$ref === "#/$defs/LegacyComparison"));
   assert.ok(schema.$defs.Comparison.oneOf.some((entry) => entry.$ref === "#/$defs/StructuredComparison"));
   assert.ok(schema.$defs.StructuredComparison.required.includes("axes"));
+  assert.ok(schema.$defs.StructuredComparison.properties.analysisModules);
+  assert.equal(schema.$defs.StructuredComparison.required.includes("analysisModules"), false);
+  for (const moduleName of ["frameComposition", "reportingStyle", "morphology"]) {
+    assert.ok(schema.$defs.AnalysisModules.required.includes(moduleName), `missing analysis module contract: ${moduleName}`);
+  }
   assert.ok(schema.$defs.LegacyComparison.required.includes("availableHeadlineEvidence"));
 });
 
@@ -672,6 +693,16 @@ test("validates BigKinds excerpts for transient structured analysis without reta
   assert.equal(rows.length, 1);
   assert.equal(rows[0].textScope, "provider_excerpt");
   assert.ok(rows[0].excerpt.length >= 40);
+  const [fullBody] = validateStructuredImportRows([{
+    source: "한겨레",
+    title: "본문 전체 분석 검증",
+    url: "https://www.hani.co.kr/arti/politics/full-body.html",
+    published_at: "2026-07-26T13:00:00+09:00",
+    textScope: "article_body",
+    excerpt: "전체 기사 본문을 저장하지 않고 메모리에서만 구조화 분석한다. ".repeat(220),
+  }]);
+  assert.equal(fullBody.textScope, "article_body");
+  assert.ok(fullBody.excerpt.length > 5_000);
   assert.throws(() => validateStructuredImportRows([{
     source: "한겨레",
     title: "짧은 발췌",
@@ -679,6 +710,14 @@ test("validates BigKinds excerpts for transient structured analysis without reta
     published_at: "2026-07-26T12:30:00+09:00",
     excerpt: "너무 짧음",
   }]), /40~5,000자/);
+  assert.throws(() => validateStructuredImportRows([{
+    source: "한겨레",
+    title: "잘못된 범위",
+    url: "https://www.hani.co.kr/arti/politics/bad-scope.html",
+    published_at: "2026-07-26T12:30:00+09:00",
+    textScope: "full_text",
+    excerpt: "분석에 충분한 길이지만 허용되지 않은 범위 값이다. ".repeat(3),
+  }]), /provider_excerpt 또는 article_body/);
 });
 
 test("reports no-cost health and protects write endpoints", async () => {
