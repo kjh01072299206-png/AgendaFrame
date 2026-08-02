@@ -12,6 +12,7 @@ function parseArgs(argv) {
     if (!args.file && !value.startsWith("--")) args.file = value;
     else if (value === "--origin") args.origin = argv[++index] ?? "";
     else if (value === "--start-batch") args.startBatch = Number(argv[++index] ?? 0);
+    else if (value === "--date") args.date = String(argv[++index] ?? "").trim();
     else if (value === "--analyze") args.analyze = true;
     else if (value === "--dry-run") args.dryRun = true;
     else if (value === "--date") args.date = argv[++index] ?? "";
@@ -21,7 +22,17 @@ function parseArgs(argv) {
   }
   if (!args.file) throw new Error("BigKinds .xlsx 파일 경로가 필요합니다.");
   if (!Number.isInteger(args.startBatch) || args.startBatch < 0) throw new Error("--start-batch는 0 이상의 정수여야 합니다.");
+  if (args.date && !/^\d{4}-\d{2}-\d{2}$/.test(args.date)) throw new Error("--date는 YYYY-MM-DD 형식이어야 합니다.");
   return args;
+}
+
+function isExcludedStatus(value) {
+  const statuses = String(value ?? "")
+    .toLowerCase()
+    .split(",")
+    .map((entry) => entry.trim().replace(/\s+/g, ""))
+    .filter(Boolean);
+  return statuses.some((status) => EXCLUDED_LIKE.has(status));
 }
 
 function normalizeHeader(value) {
@@ -133,18 +144,23 @@ async function main() {
       textScope: args.workbookBodies ? "transient_public_page_extract" : "provider_excerpt",
     }];
   });
-  const dates = [...new Set(rows.map((row) => row.published_at.slice(0, 10)))].sort();
-  const batches = Array.from({ length: Math.ceil(rows.length / BATCH_SIZE) }, (_, index) =>
-    rows.slice(index * BATCH_SIZE, (index + 1) * BATCH_SIZE));
+  const selectedRows = args.date ? rows.filter((row) => row.published_at.slice(0, 10) === args.date) : rows;
+  if (args.date && selectedRows.length === 0) throw new Error(`${args.date} 기사가 파일에 없습니다.`);
+  const dates = [...new Set(selectedRows.map((row) => row.published_at.slice(0, 10)))].sort();
+  const batches = Array.from({ length: Math.ceil(selectedRows.length / BATCH_SIZE) }, (_, index) =>
+    selectedRows.slice(index * BATCH_SIZE, (index + 1) * BATCH_SIZE));
   if (args.dryRun) {
     console.log(JSON.stringify({
       inputRows: table.length - 1,
       excludedRows,
       missingUrlRows,
-      acceptedRows: rows.length,
-      analyzableExcerpts: rows.filter((row) => row.excerpt.length >= 40).length,
+      acceptedRows: selectedRows.length,
+      analyzableExcerpts: selectedRows.filter((row) => row.excerpt.length >= 40).length,
       batches: batches.length,
       dates,
+      requestedDate: args.date || null,
+      textScopes: Object.fromEntries([...new Set(selectedRows.map((row) => row.textScope))]
+        .map((scope) => [scope, selectedRows.filter((row) => row.textScope === scope).length])),
       rawTextStored: false,
     }));
     return;
@@ -183,9 +199,12 @@ async function main() {
     inputRows: table.length - 1,
     excludedRows,
     missingUrlRows,
-    acceptedRows: rows.length,
+    acceptedRows: selectedRows.length,
     analyzedExcerpts,
     dates,
+    requestedDate: args.date || null,
+    textScopes: Object.fromEntries([...new Set(selectedRows.map((row) => row.textScope))]
+      .map((scope) => [scope, selectedRows.filter((row) => row.textScope === scope).length])),
     rawTextStored: false,
   }));
 }

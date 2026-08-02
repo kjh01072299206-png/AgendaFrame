@@ -525,7 +525,8 @@
             "additionalProperties": false
           }
         },
-        "limitations": { "type": "array", "items": { "type": "string" } }
+        "limitations": { "type": "array", "items": { "type": "string" } },
+        "analysisModules": { "$ref": "#/$defs/AnalysisModules" }
       },
       "additionalProperties": false
     },

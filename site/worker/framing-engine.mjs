@@ -196,21 +196,21 @@ const GENERIC_FRAME_RULES = Object.freeze([
 // Policy Frames Codebook-inspired descriptors. They are secondary descriptors,
 // not a claim that a complete policy frame has been semantically identified.
 const POLICY_DESCRIPTOR_RULES = Object.freeze([
-  { code: "economic", label: "경제", patterns: [/(?:비용|예산|성장|소득|고용|시장|산업|경제|금리|물가)/] },
-  { code: "capacity_resources", label: "역량·자원", patterns: [/(?:인력|예산|시설|역량|재원|자원|기술|인프라)/] },
-  { code: "morality", label: "도덕성", patterns: [/(?:윤리|도덕|정의|양심|옳|그르|정당|부당)/] },
-  { code: "fairness_equality", label: "공정·평등", patterns: [/(?:공정|평등|차별|격차|특혜|형평|분배|취약)/] },
-  { code: "legality_constitutionality", label: "법·헌정", patterns: [/(?:법률|헌법|위법|위헌|법적|판결|재판|절차)/] },
-  { code: "policy_prescription", label: "정책 처방", patterns: [/(?:정책|대책|개선|보완|개정|도입|폐지|지원|규제)/] },
-  { code: "crime_punishment", label: "범죄·처벌", patterns: [/(?:범죄|수사|기소|처벌|형량|구속|검찰|경찰)/] },
-  { code: "security_defense", label: "안보·국방", patterns: [/(?:안보|국방|군사|전쟁|북한|무기|외교|동맹)/] },
-  { code: "health_safety", label: "건강·안전", patterns: [/(?:건강|질병|환자|의료|안전|재난|사고|위험|방역)/] },
-  { code: "quality_of_life", label: "삶의 질", patterns: [/(?:주거|교육|돌봄|복지|생활|삶의 질|교통|환경)/] },
-  { code: "cultural_identity", label: "문화·정체성", patterns: [/(?:문화|정체성|전통|종교|세대|젠더|지역 정서)/] },
-  { code: "public_opinion", label: "여론", patterns: [/(?:여론|설문|조사 결과|지지율|반대 여론|찬성 여론)/] },
-  { code: "political", label: "정치 과정", patterns: [/(?:여당|야당|국회|선거|정당|대통령실|정치권)/] },
-  { code: "external_regulation", label: "대외 관계·평판", patterns: [/(?:국제사회|해외|외교|무역|제재|협약|국가 이미지|평판)/] },
-  { code: "other", label: "기타 정책 맥락", patterns: [/(?:별도 쟁점|기타 쟁점)/] },
+  { code: "economic", label: "경제", terms: ["비용", "예산", "성장", "소득", "고용", "시장", "산업", "경제", "금리", "물가"], strongPatterns: [/(?:경제적 부담|금리 인상|물가 상승|일자리 감소|예산 삭감)/] },
+  { code: "capacity_resources", label: "역량·자원", terms: ["인력", "예산", "시설", "역량", "재원", "자원", "기술", "인프라"], strongPatterns: [/(?:인력 부족|예산 부족|재원 부족|인프라 부족)/] },
+  { code: "morality", label: "도덕성", terms: ["윤리", "도덕", "정의", "양심", "정당", "부당"], strongPatterns: [/(?:비윤리|도덕적|부당하|정당하지 않)/] },
+  { code: "fairness_equality", label: "공정·평등", terms: ["공정", "평등", "차별", "격차", "특혜", "형평", "분배", "취약"], strongPatterns: [/(?:불공정|불평등|차별|특혜|형평성)/] },
+  { code: "legality_constitutionality", label: "법·헌정", terms: ["법률", "헌법", "법적", "판결", "재판", "절차", "법치주의"], strongPatterns: [/(?:위법|위헌|절차 위반|법적 논란|법치주의 훼손)/] },
+  { code: "policy_prescription", label: "정책 처방", terms: ["정책", "대책", "개선하다", "보완하다", "개정하다", "도입하다", "폐지하다", "지원하다", "규제하다"], strongPatterns: [/(?:개선해야|보완해야|개정해야|도입해야|폐지해야|대책을 마련|정책을 추진)/] },
+  { code: "crime_punishment", label: "범죄·처벌", terms: ["범죄", "수사", "기소", "처벌", "형량", "구속", "검찰", "경찰"], strongPatterns: [/(?:범죄|처벌해야|기소|구속영장)/] },
+  { code: "security_defense", label: "안보·국방", terms: ["안보", "국방", "군사", "전쟁", "북한", "무기", "외교", "동맹"], strongPatterns: [/(?:국가 안보|군사적 위협|국방력|무력 충돌)/] },
+  { code: "health_safety", label: "건강·안전", terms: ["건강", "질병", "환자", "의료", "안전", "재난", "사고", "위험", "방역"], strongPatterns: [/(?:안전 사고|인명 피해|건강권|감염 확산|재난 대응)/] },
+  { code: "quality_of_life", label: "삶의 질", terms: ["주거", "교육", "돌봄", "복지", "생활", "교통", "환경"], strongPatterns: [/(?:삶의 질|주거 불안|돌봄 공백|생활 여건)/] },
+  { code: "cultural_identity", label: "문화·정체성", terms: ["문화", "정체성", "전통", "종교", "세대", "젠더", "지역"], strongPatterns: [/(?:문화적 정체성|세대 갈등|지역 정서)/] },
+  { code: "public_opinion", label: "여론", terms: ["여론", "설문", "지지율", "찬성", "반대"], strongPatterns: [/(?:조사 결과|찬성 여론|반대 여론|지지율)/] },
+  { code: "political", label: "정치 과정", terms: ["여당", "야당", "국회", "선거", "정당", "대통령실", "정치권"], strongPatterns: [/(?:여야 공방|정치적 갈등|선거 전략|국회 논의)/] },
+  { code: "external_regulation", label: "대외 관계·평판", terms: ["국제사회", "해외", "외교", "무역", "제재", "협약", "평판"], strongPatterns: [/(?:국가 이미지|국제적 평판|무역 제재|외교 관계)/] },
+  { code: "other", label: "기타 정책 맥락", terms: [], strongPatterns: [/(?:별도 쟁점|기타 쟁점)/], minimumUniqueTerms: 0 },
 ]);
 
 const CONTROLLED_CONCEPTS = Object.freeze([
@@ -418,12 +418,12 @@ async function extractDimensions(articleId, sentences) {
   const dimensions = {};
   for (const dimension of DIMENSION_ORDER) {
     const items = [];
-    const seenCodes = new Set();
+    const seenCodeScopes = new Set();
     for (const sentence of sentences) {
       for (const rule of DIMENSION_RULES[dimension]) {
         const match = rule.pattern.exec(sentence.text);
         rule.pattern.lastIndex = 0;
-        if (!match || seenCodes.has(rule.code)) continue;
+        if (!match) continue;
         const voice = classifyVoice(sentence.text, match.index);
         const evidence = await evidenceReference(articleId, sentence);
         const variantKey = `rules:${dimension}:${rule.code}`;
@@ -438,7 +438,7 @@ async function extractDimensions(articleId, sentences) {
           voice,
           evidence,
         });
-        seenCodes.add(rule.code);
+        seenCodeScopes.add(dedupeKey);
       }
     }
     dimensions[dimension] = dimensionResult(items);
@@ -524,7 +524,16 @@ async function descriptorSignals(articleId, sentences, rules) {
   for (const rule of rules) {
     const matched = [];
     for (const sentence of sentences) {
-      if (rule.patterns.some((pattern) => pattern.test(sentence.text))) matched.push(sentence);
+      if (rule.terms) {
+        const lemmas = contentLemmaSet(sentence.text);
+        const termHits = new Set(rule.terms.filter((term) => lemmas.has(term)));
+        const strongMatch = (rule.strongPatterns ?? []).some((pattern) => pattern.test(sentence.text));
+        const minimumUniqueTerms = rule.minimumUniqueTerms ?? 2;
+        const meetsTermThreshold = rule.terms.length > 0 && termHits.size >= minimumUniqueTerms;
+        if (strongMatch || meetsTermThreshold) matched.push(sentence);
+      } else if (rule.patterns.some((pattern) => pattern.test(sentence.text))) {
+        matched.push(sentence);
+      }
     }
     if (!matched.length) continue;
     results.push({
@@ -537,6 +546,16 @@ async function descriptorSignals(articleId, sentences, rules) {
     });
   }
   return results.sort((a, b) => b.sentence_count - a.sentence_count || a.code.localeCompare(b.code));
+}
+
+async function morphologyTermEvidence(articleId, sentences, morphology) {
+  const evidence = [];
+  for (const term of morphology.term_frequencies ?? []) {
+    const sentence = sentences.find((candidate) => contentLemmaSet(candidate.text).has(term.term));
+    if (!sentence) continue;
+    evidence.push({ term: term.term, pos: term.pos, evidence: await evidenceReference(articleId, sentence) });
+  }
+  return evidence;
 }
 
 async function contextProfile(articleId, sentences) {
@@ -676,6 +695,7 @@ export async function analyzeArticleFraming(input) {
   const genre = genreRule(title, sentences);
   const sources = await sourceProfile(articleId, sentences);
   const dimensions = await extractDimensions(articleId, sentences);
+  const morphology = summarizeKoreanMorphology(sentences);
   const profile = {
     schema_version: ARTICLE_FRAME_PROFILE_SCHEMA,
     engine: {
@@ -714,6 +734,10 @@ export async function analyzeArticleFraming(input) {
       policy_frames: await descriptorSignals(articleId, sentences, POLICY_DESCRIPTOR_RULES),
       controlled_associations: associationMap(sentences),
     },
+    morphology: {
+      ...morphology,
+      term_evidence: await morphologyTermEvidence(articleId, sentences, morphology),
+    },
     framing_devices: await framingDevices(articleId, title, sentences, sources),
     review: {
       status: "machine_observation_unreviewed",
@@ -736,7 +760,7 @@ function findForbiddenKeys(value, path = "$", errors = []) {
   }
   if (!value || typeof value !== "object") return errors;
   for (const [key, child] of Object.entries(value)) {
-    if (/^(?:bodyText|body_text|rawBody|raw_body|sentenceText|sentence_text|quote|quotation|excerpt|html|content)$/i.test(key)) {
+    if (/^(?:bodyText|body_text|rawBody|raw_body|sentenceText|sentence_text|quote|quotation|excerpt|html|content|tokens|token_sequence|morpheme_sequence)$/i.test(key)) {
       errors.push(`${path}.${key} may contain raw article text`);
     }
     findForbiddenKeys(child, `${path}.${key}`, errors);
@@ -765,6 +789,22 @@ export function validateArticleFrameProfile(profile) {
   }
   if (profile.article?.raw_body_retained !== false) errors.push("raw_body_retained must be false");
   if (!/^[a-f0-9]{64}$/.test(String(profile.article?.body_sha256 ?? ""))) errors.push("body_sha256 must be SHA-256 hex");
+  if (profile.morphology?.raw_tokens_retained !== false) errors.push("morphology.raw_tokens_retained must be false");
+  if (profile.morphology?.analyzer?.version !== KOREAN_MORPHOLOGY_VERSION) errors.push("unsupported morphology analyzer version");
+  if (!Number.isInteger(profile.morphology?.token_count) || profile.morphology.token_count < 0) errors.push("invalid morphology token_count");
+  for (const term of profile.morphology?.term_frequencies ?? []) {
+    if (typeof term.term !== "string" || term.term.length < 2 || term.term.length > 20) errors.push("invalid morphology term");
+    if (!Number.isInteger(term.count) || term.count < 1) errors.push("invalid morphology term count");
+  }
+  const morphologyEvidence = new Map((profile.morphology?.term_evidence ?? [])
+    .map((entry) => [`${entry.pos}:${entry.term}`, entry.evidence]));
+  for (const term of profile.morphology?.term_frequencies ?? []) {
+    const evidence = morphologyEvidence.get(`${term.pos}:${term.term}`);
+    if (!/^[a-f0-9]{64}$/.test(String(evidence?.sentence_sha256 ?? ""))) errors.push("morphology term missing evidence hash");
+    if (!Number.isInteger(evidence?.locator?.paragraph) || !Number.isInteger(evidence?.locator?.sentence)) {
+      errors.push("morphology term missing evidence locator");
+    }
+  }
   for (const dimension of DIMENSION_ORDER) {
     const result = profile.dimensions?.[dimension];
     if (!result || !["observed", "source_attributed", "not_observed"].includes(result.status)) {
@@ -1075,6 +1115,227 @@ function buildSourceLens(profiles, metadataById) {
       };
     }),
     caution: "목소리 가시성은 역할이 등장한 고유 기사 비율을 우선하며, 반복 인용 횟수는 보조 정보로만 제공합니다.",
+  };
+}
+
+function buildFrameLens(profiles, metadataById) {
+  const byOutlet = new Map();
+  for (const profile of profiles) {
+    const articleId = String(profile.article.article_id);
+    const outletName = outletLabel(articleId, metadataById);
+    const outlet = byOutlet.get(outletName) ?? { outlet: outletName, articles: new Set(), labels: new Map() };
+    outlet.articles.add(articleId);
+    for (const descriptor of profile.secondary_descriptors?.policy_frames ?? []) {
+      const label = outlet.labels.get(descriptor.code) ?? {
+        code: descriptor.code,
+        label: descriptor.label,
+        articles: new Set(),
+        sentence_count: 0,
+        evidence: [],
+      };
+      label.articles.add(articleId);
+      label.sentence_count += Number(descriptor.sentence_count ?? 0);
+      label.evidence.push(...(descriptor.evidence ?? []).map((entry) => ({ article_id: articleId, ...entry })));
+      outlet.labels.set(descriptor.code, label);
+    }
+    byOutlet.set(outletName, outlet);
+  }
+  return {
+    status: byOutlet.size >= 2 ? "available" : "partial",
+    taxonomy: "Policy Frames Codebook-inspired descriptors",
+    taxonomy_version: "policy-descriptors-v2",
+    method_version: FRAMING_ENGINE_VERSION,
+    unit: "article_presence",
+    multi_label: true,
+    by_outlet: [...byOutlet.values()].map((outlet) => {
+      const analyzedArticles = outlet.articles.size;
+      const labels = [...outlet.labels.values()];
+      const assignmentCount = labels.reduce((sum, label) => sum + label.articles.size, 0);
+      return {
+        outlet: outlet.outlet,
+        analyzed_article_count: analyzedArticles,
+        assignment_count: assignmentCount,
+        labels: labels
+          .map((label) => ({
+            code: label.code,
+            label: label.label,
+            article_count: label.articles.size,
+            article_share: analyzedArticles ? label.articles.size / analyzedArticles : 0,
+            sentence_count: label.sentence_count,
+            composition_share: assignmentCount ? label.articles.size / assignmentCount : 0,
+            evidence: uniqueEvidence(label.evidence).slice(0, 4),
+          }))
+          .sort((left, right) => right.article_count - left.article_count || left.code.localeCompare(right.code)),
+      };
+    }),
+    caution: "기사별 라벨 존재 여부를 집계한 다중 라벨 보조 지표입니다. 기사 수가 많은 매체나 긴 기사가 과대 반영되지 않도록 기사당 라벨을 한 번만 셉니다.",
+  };
+}
+
+function buildReportingStyleLens(profiles, metadataById) {
+  const NEGATIVE_EVALUATIONS = new Set(["negative_legitimacy_evaluation"]);
+  const POSITIVE_EVALUATIONS = new Set(["positive_legitimacy_evaluation"]);
+  const byOutlet = new Map();
+  for (const profile of profiles) {
+    const articleId = String(profile.article.article_id);
+    const outletName = outletLabel(articleId, metadataById);
+    const outlet = byOutlet.get(outletName) ?? {
+      outlet: outletName,
+      articles: new Set(),
+      evaluationValues: [],
+      evaluationEvidence: [],
+      criticalArticles: 0,
+      supportiveArticles: 0,
+      attributedOnlyArticles: 0,
+      scopeValues: [],
+      scopeEvidence: [],
+      episodicSentenceCount: 0,
+      thematicSentenceCount: 0,
+    };
+    outlet.articles.add(articleId);
+    const evaluationItems = profile.dimensions?.moral_evaluation?.items ?? [];
+    const narrationItems = evaluationItems.filter((item) => item.voice?.kind === "journalist_narration");
+    const negative = narrationItems.filter((item) => NEGATIVE_EVALUATIONS.has(item.code)).length;
+    const positive = narrationItems.filter((item) => POSITIVE_EVALUATIONS.has(item.code)).length;
+    if (negative + positive > 0) {
+      outlet.evaluationValues.push((positive - negative) / (positive + negative));
+      outlet.evaluationEvidence.push(...narrationItems
+        .filter((item) => NEGATIVE_EVALUATIONS.has(item.code) || POSITIVE_EVALUATIONS.has(item.code))
+        .map((item) => ({ article_id: articleId, ...item.evidence })));
+      if (negative > positive) outlet.criticalArticles += 1;
+      if (positive > negative) outlet.supportiveArticles += 1;
+    } else if (evaluationItems.some((item) => item.voice?.kind !== "journalist_narration")) {
+      outlet.attributedOnlyArticles += 1;
+    }
+    const episodic = Number(profile.scope?.episodic_sentence_count ?? 0);
+    const thematic = Number(profile.scope?.thematic_sentence_count ?? 0);
+    if (episodic + thematic > 0) outlet.scopeValues.push((thematic - episodic) / (thematic + episodic));
+    outlet.scopeEvidence.push(...[
+      ...(profile.scope?.evidence?.episodic ?? []),
+      ...(profile.scope?.evidence?.thematic ?? []),
+    ].map((entry) => ({ article_id: articleId, ...entry })));
+    outlet.episodicSentenceCount += episodic;
+    outlet.thematicSentenceCount += thematic;
+    byOutlet.set(outletName, outlet);
+  }
+  const average = (values) => values.length
+    ? Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 1000) / 1000
+    : null;
+  return {
+    status: byOutlet.size >= 2 ? "available" : "partial",
+    method_version: FRAMING_ENGINE_VERSION,
+    by_outlet: [...byOutlet.values()].map((outlet) => ({
+      outlet: outlet.outlet,
+      analyzed_article_count: outlet.articles.size,
+      evaluation: {
+        status: outlet.evaluationValues.length ? "observed" : "abstained",
+        index: average(outlet.evaluationValues),
+        observed_article_count: outlet.evaluationValues.length,
+        critical_article_count: outlet.criticalArticles,
+        supportive_article_count: outlet.supportiveArticles,
+        attributed_only_article_count: outlet.attributedOnlyArticles,
+        evidence: uniqueEvidence(outlet.evaluationEvidence).slice(0, 5),
+      },
+      scope: {
+        status: outlet.scopeValues.length ? "observed" : "abstained",
+        index: average(outlet.scopeValues),
+        observed_article_count: outlet.scopeValues.length,
+        episodic_sentence_count: outlet.episodicSentenceCount,
+        thematic_sentence_count: outlet.thematicSentenceCount,
+        evidence: uniqueEvidence(outlet.scopeEvidence).slice(0, 5),
+      },
+    })),
+    caution: "평가 지수는 기자 서술에서 명시적으로 관측된 긍정·부정 정당성 표현만 사용합니다. 인용된 취재원 평가는 제외하며 정치 성향이나 매체 지지도를 뜻하지 않습니다.",
+  };
+}
+
+function buildMorphologyLens(profiles, metadataById) {
+  const termDocuments = new Map();
+  const termMediaGroups = new Map();
+  for (const profile of profiles) {
+    const articleId = String(profile.article.article_id);
+    const mediaGroup = mediaGroupForArticle(articleId, metadataById);
+    for (const term of profile.morphology?.term_frequencies ?? []) {
+      const key = `${term.pos}:${term.term}`;
+      const documents = termDocuments.get(key) ?? new Set();
+      documents.add(articleId);
+      termDocuments.set(key, documents);
+      const groups = termMediaGroups.get(key) ?? new Set();
+      groups.add(mediaGroup);
+      termMediaGroups.set(key, groups);
+    }
+  }
+  const allowedTerms = new Set([...termDocuments.entries()]
+    .filter(([key, documents]) => documents.size >= 2 && (termMediaGroups.get(key)?.size ?? 0) >= 2)
+    .map(([key]) => key));
+  const byOutlet = new Map();
+  for (const profile of profiles) {
+    const articleId = String(profile.article.article_id);
+    const outletName = outletLabel(articleId, metadataById);
+    const outlet = byOutlet.get(outletName) ?? {
+      outlet: outletName,
+      articles: new Set(),
+      tokenCount: 0,
+      contentTokenCount: 0,
+      negationCount: 0,
+      posCounts: {},
+      terms: new Map(),
+    };
+    outlet.articles.add(articleId);
+    outlet.tokenCount += Number(profile.morphology?.token_count ?? 0);
+    outlet.contentTokenCount += Number(profile.morphology?.content_token_count ?? 0);
+    outlet.negationCount += Number(profile.morphology?.negation_count ?? 0);
+    for (const [pos, count] of Object.entries(profile.morphology?.pos_counts ?? {})) {
+      outlet.posCounts[pos] = (outlet.posCounts[pos] ?? 0) + Number(count ?? 0);
+    }
+    for (const term of profile.morphology?.term_frequencies ?? []) {
+      const key = `${term.pos}:${term.term}`;
+      if (!allowedTerms.has(key)) continue;
+      const current = outlet.terms.get(key) ?? { term: term.term, pos: term.pos, count: 0, documents: new Set(), evidence: [] };
+      current.count += Number(term.count ?? 0);
+      current.documents.add(articleId);
+      const termEvidence = (profile.morphology?.term_evidence ?? [])
+        .find((entry) => entry.term === term.term && entry.pos === term.pos)?.evidence;
+      if (termEvidence) current.evidence.push({ article_id: articleId, ...termEvidence });
+      outlet.terms.set(key, current);
+    }
+    byOutlet.set(outletName, outlet);
+  }
+  return {
+    status: byOutlet.size >= 2 && allowedTerms.size ? "available" : "partial",
+    analyzer: {
+      name: "AgendaFrame Korean controlled morphology",
+      mode: KOREAN_MORPHOLOGY_MODE,
+      version: KOREAN_MORPHOLOGY_VERSION,
+      dictionary_version: KOREAN_MORPHOLOGY_DICTIONARY_VERSION,
+      pos_tagset: "agendaframe-lite-v1",
+    },
+    minimum_document_frequency: 2,
+    minimum_media_group_frequency: 2,
+    by_outlet: [...byOutlet.values()].map((outlet) => ({
+      outlet: outlet.outlet,
+      analyzed_article_count: outlet.articles.size,
+      token_count: outlet.tokenCount,
+      content_token_count: outlet.contentTokenCount,
+      negation_count: outlet.negationCount,
+      pos_counts: outlet.posCounts,
+      terms: [...outlet.terms.values()]
+        .map((term) => ({
+          term: term.term,
+          pos: term.pos,
+          count: term.count,
+          document_count: term.documents.size,
+          per_thousand: outlet.contentTokenCount ? Math.round((term.count / outlet.contentTokenCount) * 1_000_000) / 1000 : 0,
+          evidence: uniqueEvidence(term.evidence).slice(0, 3),
+        }))
+        .sort((left, right) => right.per_thousand - left.per_thousand || right.document_count - left.document_count || left.term.localeCompare(right.term, "ko"))
+        .slice(0, 15),
+    })),
+    limitations: [
+      "공개 핵심어는 이슈 안에서 2개 이상 기사와 2개 이상 독립 미디어그룹에 등장한 항목만 표시합니다.",
+      "단어 순서와 원문 문장은 저장하지 않으며, 빈도는 프레임·논조·기사 품질 판정이 아닙니다.",
+      "현재 배포 환경에서는 조사·일부 활용을 정규화하는 경량 규칙형 분석기를 사용합니다.",
+    ],
   };
 }
 
@@ -1679,6 +1940,11 @@ export function buildIssueFrameComparison(profiles, articleMetadata = [], option
   }));
   const axes = DIMENSION_ORDER.map((dimension) => buildAxis(dimension, profiles, metadataById));
   const sourceLens = buildSourceLens(profiles, metadataById);
+  const analysisModules = {
+    frame_composition: buildFrameLens(profiles, metadataById),
+    reporting_style: buildReportingStyleLens(profiles, metadataById),
+    morphology: buildMorphologyLens(profiles, metadataById),
+  };
   const scopeCounts = countBy(profiles, (profile) => profile.scope.code);
   const contextCounts = countBy(profiles, (profile) => profile.context_depth.level);
   const notObservedStatements = axes.map((axis) => axis.not_observed_statement).filter(Boolean);
@@ -1758,6 +2024,7 @@ export function buildIssueFrameComparison(profiles, articleMetadata = [], option
     reader_questions: readerQuestions,
     comparison_axes: axes,
     source_lens: sourceLens,
+    analysis_modules: analysisModules,
     secondary_descriptors: {
       generic_frames: dominantSecondary(profiles, "generic_frames"),
       policy_frames: dominantSecondary(profiles, "policy_frames"),
