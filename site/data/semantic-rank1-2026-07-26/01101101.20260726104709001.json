@@ -1,0 +1,234 @@
+{
+  "articleId": "01101101.20260726104709001",
+  "profile": {
+    "article": {
+      "article_id": "01101101.20260726104709001",
+      "body_character_count": 918,
+      "body_sha256": "d3d11f7debee31df1d17e10176ddfeff309f514d7d7de8dce5cf5f70d57ce30c",
+      "body_word_count": 200,
+      "paragraph_count": 1,
+      "published_at": "2026-07-26T10:47:09+09:00",
+      "raw_body_retained": false,
+      "sentence_count": 14,
+      "title_sha256": "68297f804ac5361454a15add9be93b4422e76b6f0d40fa65fd4386e503944db4",
+      "upstream_article_id": "01101101.20260726104709001"
+    },
+    "engine": {
+      "analysis_schema_version": 3,
+      "approach": "semantic_evidence_bounded",
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ],
+      "name": "AgendaFrame Vertex evidence coder",
+      "prompt_version": "2.4.1",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "version": "gemini-2.5-flash-lite"
+    },
+    "dimensions": {
+      "causal_interpretation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "정치적 이해관계에 따른 정책 결정",
+            "frame_family": "political_incentive",
+            "voice": {
+              "kind": "uncertain_quote",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 7
+              },
+              "sentence_sha256": "c4bcd4646efb27a9bc98d723994e96e4f8a714b8af238b6d21661710608504b4"
+            }
+          },
+          {
+            "public_paraphrase": "정치적 이해관계에 따른 정책 결정",
+            "frame_family": "political_incentive",
+            "voice": {
+              "kind": "uncertain_quote",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 7
+              },
+              "sentence_sha256": "c4bcd4646efb27a9bc98d723994e96e4f8a714b8af238b6d21661710608504b4"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "정치적 비겁함과 추악한 거래에 대한 부정적 평가",
+            "frame_family": "legitimacy_negative",
+            "voice": {
+              "kind": "uncertain_quote",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "c9f06fccdef2b5c742b15d8619acc3e94de504e012a1527e94acbfa8986a3aed"
+            }
+          },
+          {
+            "public_paraphrase": "정치적 비겁함과 추악한 거래에 대한 부정적 평가",
+            "frame_family": "legitimacy_negative",
+            "voice": {
+              "kind": "uncertain_quote",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "0c36fd0c078ffce5e2eea5ebfe1386c52cd8d3da98ef54ec7c9efbb3fecd4cea"
+            }
+          }
+        ]
+      },
+      "problem_definition": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "public_paraphrase": "검찰 보완수사권 폐지를 둘러싼 정치적 갈등",
+            "frame_family": "political_conflict",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "c9f06fccdef2b5c742b15d8619acc3e94de504e012a1527e94acbfa8986a3aed"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "정부와 여당의 책임",
+            "frame_family": "government",
+            "voice": {
+              "kind": "uncertain_quote",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "652c75cef51a08a5177dce1018aabd880a69e2a33d9d48a883d800e0ed452d89"
+            }
+          },
+          {
+            "public_paraphrase": "정부와 여당의 책임",
+            "frame_family": "government",
+            "voice": {
+              "kind": "uncertain_quote",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 14
+              },
+              "sentence_sha256": "470e3251b50db8be928fb8e037dbaabc360bc2eeb5f98b5595d374db858a12c7"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "대통령의 재의요구권(거부권) 행사 촉구",
+            "frame_family": "institutional_check",
+            "voice": {
+              "kind": "uncertain_quote",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 12
+              },
+              "sentence_sha256": "67cdaafb2544e2fd522fa1808887a8e0b4f6c8b93b6eda077e72fdc030d50db1"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:3b6ade3968f15e95da2f76fa67d72f4da08a779f38b728f79e5c5dc10cd78694",
+        "direct_quote_count": 1,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 3
+            },
+            "sentence_sha256": "c9f06fccdef2b5c742b15d8619acc3e94de504e012a1527e94acbfa8986a3aed"
+          }
+        ],
+        "indirect_attribution_count": 0,
+        "role": "political_actor",
+        "role_label": "정당·정치권"
+      }
+    ],
+    "review": {
+      "analysis_decision": "analyze",
+      "fallback_reason": null,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다.",
+      "requires_human_review": true,
+      "status": "automatic_draft"
+    },
+    "extraction": {
+      "analyzed_character_count": 918,
+      "input_truncated": false,
+      "text_scope": "transient_public_page_extract"
+    },
+    "lineage": {
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "approval": {
+        "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753",
+        "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
+        "cluster_id": "bigkinds-2026-07-26-rank-1",
+        "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
+        "reviewed_at": "2026-07-31T00:00:00+09:00",
+        "reviewer": "AgendaFrame agent-assisted evidence audit"
+      },
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "model_id": "gemini-2.5-flash-lite",
+      "model_output_schema_version": 3,
+      "prompt_version": "2.4.1"
+    }
+  }
+}

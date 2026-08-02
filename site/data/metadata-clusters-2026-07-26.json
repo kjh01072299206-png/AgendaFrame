@@ -1,0 +1,236 @@
+{
+  "schema_version": "agendaframe.metadata-issue-cluster.v1",
+  "generated_at": "2026-08-02T06:05:59.184675+00:00",
+  "basis_date": "2026-07-26",
+  "scope": "title_source_published_at_only",
+  "engine": {
+    "model": "gemini-2.5-flash-lite",
+    "prompt_version": "1.0.0",
+    "schema_version": 1,
+    "semantic_ai": true
+  },
+  "clusters": [
+    {
+      "issue_id": "bigkinds-2026-07-26-top-1",
+      "issue_title": "보완수사권 제도 논쟁",
+      "decision": "analyze",
+      "coherence": "high",
+      "summary": "국민의힘 정점식 의원이 대통령과 정부 여당을 향해 보완수사권 폐지 시 동반 몰락을 경고하며 비판하고 있습니다. 이는 보완수사권 폐지를 당론으로 정한 국민의힘 내부의 갈등과 대통령의 침묵을 지적하는 내용입니다.",
+      "common_subjects": [
+        "보완수사권",
+        "정점식 의원",
+        "대통령",
+        "정부 여당",
+        "국민의힘"
+      ],
+      "narrative_variants": [
+        {
+          "label": "정점식 의원, 보완수사권 폐지 시 정부 여당 몰락 경고",
+          "description": "정점식 의원이 보완수사권 폐지 시 정부 여당이 동반 몰락할 것이라고 경고하는 내용을 다룹니다.",
+          "article_ids": [
+            "01100801.20260726130958001",
+            "01100701.20260726110741001",
+            "01101101.20260726104709001",
+            "01100701.20260726101351001"
+          ]
+        },
+        {
+          "label": "정점식 의원, 대통령의 보완수사권 관련 침묵 비판",
+          "description": "정점식 의원이 대통령의 보완수사권 관련 침묵을 '비겁하다'고 비판하며 추악한 흥정이라고 지적하는 내용을 다룹니다.",
+          "article_ids": [
+            "01100201.20260726113123001",
+            "01100401.20260726101915001"
+          ]
+        },
+        {
+          "label": "국민의힘, 보완수사권 폐지 당론에 대한 비판",
+          "description": "국민의힘 내부에서 보완수사권 폐지 당론에 대해 '국민 팔아먹은 것도 매국'이라고 비판하는 내용을 다룹니다.",
+          "article_ids": [
+            "01100901.20260726103800001"
+          ]
+        }
+      ],
+      "outlier_article_ids": [],
+      "engine": {
+        "name": "AgendaFrame metadata issue clustering",
+        "version": "gemini-2.5-flash-lite",
+        "semantic_ai": true,
+        "prompt_version": "1.0.0",
+        "schema_version": 1,
+        "text_scope": "title_source_published_at_only",
+        "limitations": [
+          "제목·매체·게시 시각만 사용한 AI 의제 요약이며 본문 프레이밍 분석이 아닙니다.",
+          "제목에 명시되지 않은 사건의 원인·책임·의도를 추론하지 않습니다.",
+          "기사 본문 근거가 없으므로 같은 사건인지에 대한 최종 확정은 사람 검토가 필요합니다."
+        ]
+      },
+      "fallback_reason": null
+    },
+    {
+      "issue_id": "bigkinds-2026-07-26-top-2",
+      "issue_title": "국민의힘 지도부·권영진 의원·정점식 의원 내부 갈등 및 충돌 거취 표명 요구",
+      "decision": "analyze",
+      "coherence": "high",
+      "summary": "국민의힘 권영진 의원이 정점식 의원과 멱살을 잡는 사건이 발생했으며, 이에 대해 당 지도부는 권 의원에게 스스로 거취를 정할 것을 요구하고 있습니다.",
+      "common_subjects": [
+        "권영진 의원",
+        "정점식 의원",
+        "국민의힘",
+        "원내지도부",
+        "거취 표명 요구"
+      ],
+      "narrative_variants": [
+        {
+          "label": "권영진 의원, 정점식 의원 멱살 사건 후 거취 요구받아",
+          "description": "권영진 의원이 정점식 의원과 멱살을 잡는 사건이 발생한 후, 국민의힘 원내지도부가 권 의원에게 스스로 거취를 정할 것을 요구하는 내용을 다룹니다.",
+          "article_ids": [
+            "01100801.20260726134520001",
+            "01100401.20260726122650001",
+            "01100901.20260726120217001",
+            "01100101.20260726114754001",
+            "01100501.20260726114426001",
+            "01100611.20260726114357001"
+          ]
+        }
+      ],
+      "outlier_article_ids": [],
+      "engine": {
+        "name": "AgendaFrame metadata issue clustering",
+        "version": "gemini-2.5-flash-lite",
+        "semantic_ai": true,
+        "prompt_version": "1.0.0",
+        "schema_version": 1,
+        "text_scope": "title_source_published_at_only",
+        "limitations": [
+          "제목·매체·게시 시각만 사용한 AI 의제 요약이며 본문 프레이밍 분석이 아닙니다.",
+          "제목에 명시되지 않은 사건의 원인·책임·의도를 추론하지 않습니다.",
+          "기사 본문 근거가 없으므로 같은 사건인지에 대한 최종 확정은 사람 검토가 필요합니다."
+        ]
+      },
+      "fallback_reason": null
+    },
+    {
+      "issue_id": "bigkinds-2026-07-26-top-3",
+      "issue_title": "검경 수사팀 수사 진행",
+      "decision": "analyze",
+      "coherence": "high",
+      "summary": "경산 아파트 방화 사건과 관련하여 경찰이 보복 범죄 가능성에 초점을 맞춰 수사를 진행하고 있습니다. 사건 발생 전 관리실과의 갈등 및 고소 사실이 수사의 단서가 되고 있습니다.",
+      "common_subjects": [
+        "경산 아파트 방화",
+        "경찰 수사",
+        "보복 범죄",
+        "관리실 갈등",
+        "고소"
+      ],
+      "narrative_variants": [
+        {
+          "label": "경산 아파트 방화 사건, 경찰 보복 범죄 가능성 수사",
+          "description": "경산 아파트 방화 사건의 원인을 보복 범죄 가능성에 두고 경찰이 집중 수사하는 내용을 다룹니다.",
+          "article_ids": [
+            "01100611.20260726160027001",
+            "01101101.20260726143628001",
+            "01100101.20260726092625001",
+            "01100201.20260726074621001"
+          ]
+        }
+      ],
+      "outlier_article_ids": [],
+      "engine": {
+        "name": "AgendaFrame metadata issue clustering",
+        "version": "gemini-2.5-flash-lite",
+        "semantic_ai": true,
+        "prompt_version": "1.0.0",
+        "schema_version": 1,
+        "text_scope": "title_source_published_at_only",
+        "limitations": [
+          "제목·매체·게시 시각만 사용한 AI 의제 요약이며 본문 프레이밍 분석이 아닙니다.",
+          "제목에 명시되지 않은 사건의 원인·책임·의도를 추론하지 않습니다.",
+          "기사 본문 근거가 없으므로 같은 사건인지에 대한 최종 확정은 사람 검토가 필요합니다."
+        ]
+      },
+      "fallback_reason": null
+    },
+    {
+      "issue_id": "bigkinds-2026-07-26-top-4",
+      "issue_title": "권경애 학폭 재판 이슈",
+      "decision": "analyze",
+      "coherence": "high",
+      "summary": "권경애 변호사가 학폭 소송 재판에 불참(노쇼)한 가운데, 법원의 화해 권고를 불복하고 손해배상 소송으로 결론이 날 전망입니다. 유족 또한 이의를 신청했습니다.",
+      "common_subjects": [
+        "권경애 변호사",
+        "학폭 재판",
+        "노쇼",
+        "화해 권고 불복",
+        "손해배상 소송"
+      ],
+      "narrative_variants": [
+        {
+          "label": "권경애 변호사, 학폭 재판 노쇼 후 화해 권고 불복",
+          "description": "권경애 변호사가 학폭 재판에 불참한 후 법원의 화해 권고를 불복하여 손해배상 소송으로 진행될 가능성을 다룹니다.",
+          "article_ids": [
+            "01101101.20260726155810001",
+            "01100201.20260726155602001",
+            "01100901.20260726153703001",
+            "01100801.20260726124207001"
+          ]
+        }
+      ],
+      "outlier_article_ids": [],
+      "engine": {
+        "name": "AgendaFrame metadata issue clustering",
+        "version": "gemini-2.5-flash-lite",
+        "semantic_ai": true,
+        "prompt_version": "1.0.0",
+        "schema_version": 1,
+        "text_scope": "title_source_published_at_only",
+        "limitations": [
+          "제목·매체·게시 시각만 사용한 AI 의제 요약이며 본문 프레이밍 분석이 아닙니다.",
+          "제목에 명시되지 않은 사건의 원인·책임·의도를 추론하지 않습니다.",
+          "기사 본문 근거가 없으므로 같은 사건인지에 대한 최종 확정은 사람 검토가 필요합니다."
+        ]
+      },
+      "fallback_reason": null
+    },
+    {
+      "issue_id": "bigkinds-2026-07-26-top-5",
+      "issue_title": "음성서 외국인 여명 이슈",
+      "decision": "analyze",
+      "coherence": "high",
+      "summary": "충북 음성에서 외국인 10여 명이 집단 패싸움을 벌여 2명이 사상하는 사건이 발생했습니다. 이 중 40대 외국인은 살인 혐의로 입건되었습니다.",
+      "common_subjects": [
+        "음성",
+        "외국인",
+        "패싸움",
+        "사상자 발생",
+        "살인 혐의 입건"
+      ],
+      "narrative_variants": [
+        {
+          "label": "음성서 외국인 집단 패싸움, 2명 사상",
+          "description": "충북 음성에서 외국인들이 집단 패싸움을 벌여 2명의 사상자가 발생한 사건을 다룹니다.",
+          "article_ids": [
+            "01100611.20260726132449001",
+            "01100501.20260726131922001",
+            "01100701.20260726130444001",
+            "01100201.20260726112314001"
+          ]
+        }
+      ],
+      "outlier_article_ids": [],
+      "engine": {
+        "name": "AgendaFrame metadata issue clustering",
+        "version": "gemini-2.5-flash-lite",
+        "semantic_ai": true,
+        "prompt_version": "1.0.0",
+        "schema_version": 1,
+        "text_scope": "title_source_published_at_only",
+        "limitations": [
+          "제목·매체·게시 시각만 사용한 AI 의제 요약이며 본문 프레이밍 분석이 아닙니다.",
+          "제목에 명시되지 않은 사건의 원인·책임·의도를 추론하지 않습니다.",
+          "기사 본문 근거가 없으므로 같은 사건인지에 대한 최종 확정은 사람 검토가 필요합니다."
+        ]
+      },
+      "fallback_reason": null
+    }
+  ]
+}

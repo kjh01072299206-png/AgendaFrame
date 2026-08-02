@@ -152,6 +152,24 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
   assert.match(styles, /min-height: 44px/);
 });
 
+test("keeps the initial-five reader surface separate from site-wide tools", async () => {
+  const home = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const reader = await readFile(new URL("../app/initial-five.tsx", import.meta.url), "utf8");
+  const method = await readFile(new URL("../app/method/page.tsx", import.meta.url), "utf8");
+  const selfCheck = await readFile(new URL("../app/tools/self-check/page.tsx", import.meta.url), "utf8");
+  const community = await readFile(new URL("../app/community/page.tsx", import.meta.url), "utf8");
+
+  assert.match(home, /InitialFiveExperience/);
+  assert.match(reader, /role="tablist"/);
+  assert.match(reader, /role="tabpanel"/);
+  assert.match(reader, /상세 페이지로 열기/);
+  assert.match(reader, /semantic_ai/);
+  assert.match(reader, /근거 기반 미리보기/);
+  assert.match(method, /AI 의미 분석 결과/);
+  assert.match(selfCheck, /SelfCheck/);
+  assert.match(community, /CommunityHub/);
+});
+
 test("packages Sites hosting metadata and database migrations", async () => {
   const hosting = JSON.parse(await readFile(new URL("../dist/.openai/hosting.json", import.meta.url), "utf8"));
   assert.equal(hosting.project_id, "appgprj_6a54eb02c21c819199c3369cc67c6857");

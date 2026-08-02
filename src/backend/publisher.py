@@ -9,6 +9,7 @@ from urllib.request import Request, urlopen
 
 from ai.framing import FRAME_DIMENSIONS, FrameResult, validate_frame_result
 from crawler.models import ArticleDocument
+from crawler.text import sentence_rows
 
 PUBLIC_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v2"
 COMPARISON_ENGINE_VERSION = "korean-evidence-rules-v2"
@@ -58,31 +59,7 @@ def _claim_id(
 
 
 def _sentences(body: str) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    cursor = 0
-    paragraphs = re.split(r"\n\s*\n", body)
-    for paragraph_number, paragraph in enumerate(paragraphs, start=1):
-        paragraph_start = body.find(paragraph, cursor)
-        cursor = paragraph_start + len(paragraph)
-        sentence_cursor = paragraph_start
-        parts = [part for part in re.split(r"(?<=[.!?。！？])\s+|\n+", paragraph) if part.strip()]
-        for sentence_number, part in enumerate(parts, start=1):
-            stripped = part.strip()
-            start = body.find(stripped, sentence_cursor)
-            if start < 0:
-                continue
-            end = start + len(stripped)
-            sentence_cursor = end
-            rows.append(
-                {
-                    "paragraph": paragraph_number,
-                    "sentence": sentence_number,
-                    "start": start,
-                    "end": end,
-                    "text": stripped,
-                }
-            )
-    return rows
+    return sentence_rows(body)
 
 
 def _evidence_locator(
@@ -133,6 +110,19 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
     missing = FRAME_DIMENSIONS - dimensions_by_name.keys()
     if missing:
         raise ValueError(f"Missing frame dimensions: {', '.join(sorted(missing))}")
+
+    semantic_ai_succeeded = result.decision == "analyze" and result.fallback_reason is None
+    limitations = [
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다.",
+    ]
+    if semantic_ai_succeeded:
+        limitations.insert(0, "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.")
+    else:
+        limitations.insert(
+            0,
+            "AI 호출 또는 근거 검증이 완료되지 않아 의미 분석을 보류했습니다. 사람 검토가 필요합니다.",
+        )
 
     dimensions: dict[str, Any] = {}
     for source_name, public_name in DIMENSION_MAP.items():
@@ -246,16 +236,17 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
         "engine": {
             "name": "AgendaFrame Vertex evidence coder",
             "version": result.model_id,
-            "approach": "semantic_evidence_bounded",
-            "semantic_ai": True,
+            "approach": (
+                "semantic_evidence_bounded"
+                if semantic_ai_succeeded
+                else "semantic_evidence_bounded_fallback"
+            ),
+            "semantic_ai": semantic_ai_succeeded,
+            "status": "semantic_draft" if semantic_ai_succeeded else "review_needed",
             "prompt_version": result.prompt_version,
             "analysis_schema_version": result.schema_version,
             "evidence_storage": "locator_and_salted_sha256_only",
-            "limitations": [
-                "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
-                "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
-                "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다.",
-            ],
+            "limitations": limitations,
         },
         "article": {
             "article_id": article.article_id,
@@ -290,6 +281,7 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
         "review": {
             "status": "automatic_draft",
             "analysis_decision": result.decision,
+            "fallback_reason": result.fallback_reason,
             "requires_human_review": True,
             "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다.",
         },

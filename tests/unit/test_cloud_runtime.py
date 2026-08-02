@@ -110,7 +110,7 @@ class CloudRuntimeTests(unittest.TestCase):
         self.assertEqual(self.config.vertex.thinking_budget, 0)
         self.assertLessEqual(self.config.vertex.max_articles_per_run, 50)
         self.assertLessEqual(self.config.vertex.max_articles_per_day, 200)
-        self.assertEqual(self.config.vertex.prompt_version, "2.4.0")
+        self.assertEqual(self.config.vertex.prompt_version, "2.4.1")
         self.assertEqual(self.config.vertex.schema_version, 3)
 
     def test_source_registry_defaults_all_real_sources_to_metadata_only(self) -> None:
@@ -231,6 +231,117 @@ class CloudRuntimeTests(unittest.TestCase):
         self.assertTrue(
             all(dimension["status"] == "explicit_not_stated" for dimension in result.dimensions)
         )
+
+    def test_vertex_output_validation_retries_and_can_recover(self) -> None:
+        response_payload = {
+            "decision": "analyze",
+            "dimensions": [
+                {
+                    "dimension": dimension,
+                    "status": "explicit_not_stated",
+                    "value": None,
+                    "frame_family": None,
+                    "voice_kind": None,
+                    "evidence": [],
+                    "reason": "No direct evidence.",
+                }
+                for dimension in sorted(FRAME_DIMENSIONS)
+            ],
+            "actors": [],
+        }
+
+        class FakeModels:
+            attempts = 0
+
+            def generate_content(self, **_kwargs):
+                self.attempts += 1
+                if self.attempts == 1:
+                    return type("Response", (), {"text": "not-json", "usage_metadata": None})()
+                return type(
+                    "Response",
+                    (),
+                    {"text": json.dumps(response_payload), "usage_metadata": None},
+                )()
+
+        models = FakeModels()
+
+        class FakeClient:
+            def __init__(self):
+                self.models = models
+
+        with patch("google.genai.Client", return_value=FakeClient()):
+            result = VertexFrameAnalyzer(self.config).analyze(article())
+
+        self.assertEqual(result.decision, "analyze")
+        self.assertEqual(models.attempts, 2)
+
+    def test_vertex_non_retryable_failure_is_persistable_review_needed(self) -> None:
+        class FakeModels:
+            def generate_content(self, **_kwargs):
+                raise PermissionError("permission denied")
+
+        class FakeClient:
+            models = FakeModels()
+
+        with patch("google.genai.Client", return_value=FakeClient()):
+            result = VertexFrameAnalyzer(self.config).analyze(article())
+
+        self.assertEqual(result.decision, "review_needed")
+        self.assertEqual(
+            result.fallback_reason,
+            "Vertex AI output failed validation (PermissionError); human review is required.",
+        )
+        payload = publication_row(article(), result)
+        self.assertFalse(payload["profile"]["engine"]["semantic_ai"])
+        self.assertEqual(payload["profile"]["engine"]["status"], "review_needed")
+        self.assertEqual(payload["profile"]["review"]["fallback_reason"], result.fallback_reason)
+
+    def test_vertex_transient_failure_retries_and_can_recover(self) -> None:
+        response_payload = {
+            "decision": "analyze",
+            "dimensions": [
+                {
+                    "dimension": dimension,
+                    "status": "explicit_not_stated",
+                    "value": None,
+                    "frame_family": None,
+                    "voice_kind": None,
+                    "evidence": [],
+                    "reason": "직접 근거 없음",
+                }
+                for dimension in sorted(FRAME_DIMENSIONS)
+            ],
+            "actors": [],
+        }
+
+        class FakeModels:
+            attempts = 0
+
+            def generate_content(self, **_kwargs):
+                self.attempts += 1
+                if self.attempts == 1:
+                    raise RuntimeError("503 Service Unavailable")
+                return type(
+                    "Response",
+                    (),
+                    {"text": json.dumps(response_payload), "usage_metadata": None},
+                )()
+
+        models = FakeModels()
+
+        class FakeClient:
+            def __init__(self):
+                self.models = models
+
+        with (
+            patch("google.genai.Client", return_value=FakeClient()),
+            patch("ai.framing.time.sleep") as sleep,
+        ):
+            result = VertexFrameAnalyzer(self.config).analyze(article())
+
+        self.assertEqual(result.decision, "analyze")
+        self.assertEqual(models.attempts, 2)
+        sleep.assert_called_once_with(2.0)
 
     def test_pipeline_withholds_body_analysis_until_policy_allows_it(self) -> None:
         registry = SourcePolicyRegistry(

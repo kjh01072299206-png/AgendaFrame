@@ -1,0 +1,277 @@
+{
+  "articleId": "01100801.20260726130958001",
+  "profile": {
+    "article": {
+      "article_id": "01100801.20260726130958001",
+      "body_character_count": 902,
+      "body_sha256": "5ec6a2aaf37a3a579b6ddcfb499238a24f531b57eee73ec7cbc30f0eef2827bf",
+      "body_word_count": 200,
+      "paragraph_count": 1,
+      "published_at": "2026-07-26T13:09:58+09:00",
+      "raw_body_retained": false,
+      "sentence_count": 11,
+      "title_sha256": "33313fcfd87fcc43da19dfc3eb3c547dabc62d15929f1cfd0d03f6ad24aa250f",
+      "upstream_article_id": "01100801.20260726130958001"
+    },
+    "engine": {
+      "analysis_schema_version": 3,
+      "approach": "semantic_evidence_bounded",
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ],
+      "name": "AgendaFrame Vertex evidence coder",
+      "prompt_version": "2.4.1",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "version": "gemini-2.5-flash-lite"
+    },
+    "dimensions": {
+      "causal_interpretation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "정치공학적 거래와 강성 팬덤의 압박으로 인한 입법 추진",
+            "frame_family": "political_incentive",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "94b2ebcf570fb1bf6d1a701dded4239c2371925ed5e74607537f875cb81d01f4"
+            }
+          },
+          {
+            "public_paraphrase": "정치공학적 거래와 강성 팬덤의 압박으로 인한 입법 추진",
+            "frame_family": "political_incentive",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "fc4e48ae4698bf49da9697479a2eb5a04db03c9d17d2672956b41348f80f5c1c"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "정치공학적 거래와 입법 폭주에 대한 부정적 평가",
+            "frame_family": "legitimacy_negative",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "94b2ebcf570fb1bf6d1a701dded4239c2371925ed5e74607537f875cb81d01f4"
+            }
+          },
+          {
+            "public_paraphrase": "정치공학적 거래와 입법 폭주에 대한 부정적 평가",
+            "frame_family": "legitimacy_negative",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "fc4e48ae4698bf49da9697479a2eb5a04db03c9d17d2672956b41348f80f5c1c"
+            }
+          }
+        ]
+      },
+      "problem_definition": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "검찰 보완수사권 폐지가 형사사법 시스템을 마비시킬 수 있다는 우려",
+            "frame_family": "safety_harm",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 11
+              },
+              "sentence_sha256": "b2df817e1c0f5314d87b3db61a6a4f6b191a8f4a6dffd07903fa5d697374fa70"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "대통령과 여당, 민주당 강경파에게 책임 전가",
+            "frame_family": "legislature_politics",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "94b2ebcf570fb1bf6d1a701dded4239c2371925ed5e74607537f875cb81d01f4"
+            }
+          },
+          {
+            "public_paraphrase": "대통령과 여당, 민주당 강경파에게 책임 전가",
+            "frame_family": "legislature_politics",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "bd78fccf9ced99e9620ced33e475e83168396bdf7693d7f2be8e04e90107231b"
+            }
+          },
+          {
+            "public_paraphrase": "대통령과 여당, 민주당 강경파에게 책임 전가",
+            "frame_family": "legislature_politics",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "fc4e48ae4698bf49da9697479a2eb5a04db03c9d17d2672956b41348f80f5c1c"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "보완수사권 폐지 시 정부 여당의 동반 몰락 경고",
+            "frame_family": "institutional_check",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "e9810a9c6cae16a32125d23bb224e6a719b825b5f175229f2ffac1c95c6173ad"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:21a562ade94f06f518d783ca641c10f97b7a6d1287b71401c1d619dbb1bad23d",
+        "direct_quote_count": 0,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 1
+            },
+            "sentence_sha256": "84573df4d6f8127ebc730720c63e2e354540b9375613205c9679e649e3c0a319"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 4
+            },
+            "sentence_sha256": "5c70daeb416975e153a3acfd706aa44f296e23cc48689977109ab08e87765c71"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 6
+            },
+            "sentence_sha256": "bd78fccf9ced99e9620ced33e475e83168396bdf7693d7f2be8e04e90107231b"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 9
+            },
+            "sentence_sha256": "fc4e48ae4698bf49da9697479a2eb5a04db03c9d17d2672956b41348f80f5c1c"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 10
+            },
+            "sentence_sha256": "2134559be2608f6eb9b4d8b4db4ad0eb2c976d9f86ea9de8fe0542603b446a1c"
+          }
+        ],
+        "indirect_attribution_count": 5,
+        "role": "political_actor",
+        "role_label": "정당·정치권"
+      }
+    ],
+    "review": {
+      "analysis_decision": "analyze",
+      "fallback_reason": null,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다.",
+      "requires_human_review": true,
+      "status": "automatic_draft"
+    },
+    "extraction": {
+      "analyzed_character_count": 902,
+      "input_truncated": false,
+      "text_scope": "transient_public_page_extract"
+    },
+    "lineage": {
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "approval": {
+        "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753",
+        "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
+        "cluster_id": "bigkinds-2026-07-26-rank-1",
+        "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
+        "reviewed_at": "2026-07-31T00:00:00+09:00",
+        "reviewer": "AgendaFrame agent-assisted evidence audit"
+      },
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "model_id": "gemini-2.5-flash-lite",
+      "model_output_schema_version": 3,
+      "prompt_version": "2.4.1"
+    }
+  }
+}

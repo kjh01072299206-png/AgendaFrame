@@ -8,6 +8,7 @@ from typing import Any, Protocol
 
 from backend.config import RuntimeConfig
 from crawler.models import ArticleDocument
+from crawler.text import evidence_fits_sentence
 
 FRAME_FAMILIES = {
     "problem_definition": {
@@ -86,6 +87,7 @@ SOURCE_ROLES = {
 }
 MAX_PUBLIC_PARAPHRASE_CHARACTERS = 160
 MAX_VERBATIM_BODY_MATCH_CHARACTERS = 24
+VERTEX_RETRY_BACKOFF_SECONDS = (2.0, 4.0)
 
 
 @dataclass(frozen=True)
@@ -103,6 +105,7 @@ class FrameResult:
     analyzed_character_count: int | None = None
     input_truncated: bool | None = None
     approval_lineage: dict[str, str] | None = None
+    fallback_reason: str | None = None
 
 
 class FrameAnalyzer(Protocol):
@@ -154,6 +157,8 @@ def _validate_evidence_spans(
             raise ValueError("Invalid evidence offsets.")
         if not isinstance(excerpt, str) or text[start:end] != excerpt:
             raise ValueError("Evidence is not an exact substring of the article.")
+        if not evidence_fits_sentence(text, start, end):
+            raise ValueError("Evidence must fit inside one article sentence.")
         if result.analyzed_character_count is not None and end > result.analyzed_character_count:
             raise ValueError("Evidence falls outside the analyzed article input.")
 
@@ -269,18 +274,27 @@ class VertexFrameAnalyzer:
                 input_truncated=False,
             )
 
-        from google import genai
-        from google.genai import types
-
-        client = genai.Client(
-            vertexai=True,
-            project=self.config.project_id,
-            location=self.config.vertex.location,
-        )
         body = article.body_text[: self.config.vertex.max_input_characters_per_article]
+        try:
+            from google import genai
+            from google.genai import types
+
+            client = genai.Client(
+                vertexai=True,
+                project=self.config.project_id,
+                location=self.config.vertex.location,
+            )
+        except Exception as error:
+            return _review_needed_result(
+                article,
+                self.config,
+                body,
+                f"Vertex AI client is unavailable ({type(error).__name__}).",
+            )
+
         prompt = _build_prompt(article.article_id, article.title, body)
         last_error: Exception | None = None
-        for _attempt in range(2):
+        for attempt in range(self.config.vertex.max_attempts):
             try:
                 response = client.models.generate_content(
                     model=self.config.vertex.model,
@@ -320,42 +334,70 @@ class VertexFrameAnalyzer:
             except (TypeError, ValueError) as error:
                 last_error = error
             except Exception as error:
-                # Transient Vertex quota/service responses must not abort an
-                # entire batch. Retry once with a short bounded backoff; the
-                # final fallback below marks the article for human review.
-                if not _is_retryable_vertex_error(error):
-                    raise
                 last_error = error
-                if _attempt == 0:
-                    time.sleep(4)
+            # A failed model call must not discard the article or abort the
+            # entire batch. Retry transient quota/service failures, then
+            # persist a review-needed row with no inferred frame.
+            if (
+                attempt < self.config.vertex.max_attempts - 1
+                and last_error is not None
+                and _is_retryable_vertex_error(last_error)
+            ):
+                time.sleep(VERTEX_RETRY_BACKOFF_SECONDS[attempt])
+                continue
+            if (
+                attempt < self.config.vertex.max_attempts - 1
+                and isinstance(last_error, (TypeError, ValueError))
+            ):
+                # Model JSON/evidence validation can be nondeterministic even
+                # at temperature 0. Retry malformed output without a delay;
+                # the bounded attempt count and cost guard still cap spend.
+                continue
+            break
 
-        # A malformed model response must not abort the whole batch. Preserve
-        # the article as an explicit human-review item with no inferred frame.
         reason = (
             "Vertex AI output failed evidence validation; human review is required."
             if last_error is None
             else f"Vertex AI output failed validation ({type(last_error).__name__}); human review is required."
         )
-        return FrameResult(
-            article_id=article.article_id,
-            decision="review_needed",
-            dimensions=tuple(
-                {
-                    "dimension": name,
-                    "status": "explicit_not_stated",
-                    "value": None,
-                    "evidence": [],
-                    "reason": reason,
-                }
-                for name in sorted(FRAME_DIMENSIONS)
-            ),
-            model_id=self.config.vertex.model,
-            prompt_version=self.config.vertex.prompt_version,
-            schema_version=self.config.vertex.schema_version,
-            text_scope=article.text_scope,
-            analyzed_character_count=len(body),
-            input_truncated=len(body) < len(article.body_text),
-        )
+        return _review_needed_result(article, self.config, body, reason)
+
+
+def _review_needed_result(
+    article: ArticleDocument,
+    config: RuntimeConfig,
+    body: str,
+    reason: str,
+) -> FrameResult:
+    """Return a safe, persistable result when semantic analysis is unavailable.
+
+    The fallback intentionally contains no inferred values or evidence. The
+    pipeline can therefore finish, expose the article as review-needed, and
+    leave the precomputed rules-based site snapshot available without
+    presenting a failed model call as a successful semantic analysis.
+    """
+
+    return FrameResult(
+        article_id=article.article_id,
+        decision="review_needed",
+        dimensions=tuple(
+            {
+                "dimension": name,
+                "status": "explicit_not_stated",
+                "value": None,
+                "evidence": [],
+                "reason": reason,
+            }
+            for name in sorted(FRAME_DIMENSIONS)
+        ),
+        model_id=config.vertex.model,
+        prompt_version=config.vertex.prompt_version,
+        schema_version=config.vertex.schema_version,
+        text_scope=article.text_scope,
+        analyzed_character_count=len(body),
+        input_truncated=len(body) < len(article.body_text or ""),
+        fallback_reason=reason,
+    )
 
 
 def _is_retryable_vertex_error(error: Exception) -> bool:
@@ -407,6 +449,14 @@ Also return an actors array for directly or indirectly attributed sources. Each 
 must use only a role from SOURCE_ROLES, a source voice_kind, and exact evidence spans.
 Do not return a person's or organization's name; return role codes only.
 SOURCE_ROLES: {source_roles}
+The top-level decision must be exactly one of: analyze, review_needed, defer.
+Use analyze when the supplied body supports at least one reliable observation;
+use defer only when the body cannot be analyzed; use review_needed only when
+the evidence is too ambiguous for a safe draft. Return exactly six dimension
+objects, one for each named dimension, and keep the actors array empty unless
+the body contains a directly or indirectly attributed source. Keep each
+supported dimension to one concise paraphrase and one or two evidence spans so
+the JSON remains compact.
 Return JSON only.
 
 ARTICLE_ID: {article_id}
@@ -511,85 +561,59 @@ def _normalized_with_offsets(value: str) -> tuple[str, list[int]]:
 
 
 def _response_schema() -> dict[str, Any]:
+    # Vertex structured-output serving rejects the full frame taxonomy and
+    # nested enum/bounds constraints as an over-constrained schema. Keep the
+    # provider schema structural (types and required fields only), then enforce
+    # the detailed taxonomy/evidence contract in
+    # _align_payload_evidence()/validate_frame_result() after parsing. This
+    # preserves useful structured JSON output without turning a valid model
+    # call into an INVALID_ARGUMENT fallback.
     evidence = {
         "type": "object",
-        "required": ["article_id", "start", "end", "text"],
         "properties": {
             "article_id": {"type": "string"},
-            "start": {"type": "integer", "minimum": 0},
-            "end": {"type": "integer", "minimum": 1},
-            "text": {"type": "string", "minLength": 1},
+            "start": {"type": "integer"},
+            "end": {"type": "integer"},
+            "text": {"type": "string"},
         },
-        "additionalProperties": False,
+        "required": ["article_id", "start", "end", "text"],
     }
-    all_families = sorted(set().union(*FRAME_FAMILIES.values()))
+    dimension = {
+        "type": "object",
+        "properties": {
+            "dimension": {"type": "string"},
+            "status": {"type": "string"},
+            "value": {"type": ["string", "null"]},
+            "frame_family": {"type": ["string", "null"]},
+            "voice_kind": {"type": ["string", "null"]},
+            "evidence": {"type": "array", "items": evidence},
+            "reason": {"type": ["string", "null"]},
+        },
+        "required": [
+            "dimension",
+            "status",
+            "value",
+            "frame_family",
+            "voice_kind",
+            "evidence",
+            "reason",
+        ],
+    }
+    actor = {
+        "type": "object",
+        "properties": {
+            "role": {"type": "string"},
+            "voice_kind": {"type": "string"},
+            "evidence": {"type": "array", "items": evidence},
+        },
+        "required": ["role", "voice_kind", "evidence"],
+    }
     return {
         "type": "object",
         "required": ["decision", "dimensions", "actors"],
         "properties": {
-            "decision": {"enum": ["analyze", "review_needed", "defer"]},
-            "dimensions": {
-                "type": "array",
-                "minItems": 6,
-                "maxItems": 6,
-                "items": {
-                    "type": "object",
-                    "required": [
-                        "dimension",
-                        "status",
-                        "value",
-                        "frame_family",
-                        "voice_kind",
-                        "evidence",
-                        "reason",
-                    ],
-                    "properties": {
-                        "dimension": {"enum": sorted(FRAME_DIMENSIONS)},
-                        "status": {"enum": ["supported", "conflicting", "explicit_not_stated"]},
-                        "value": {
-                            "type": ["string", "null"],
-                            "maxLength": MAX_PUBLIC_PARAPHRASE_CHARACTERS,
-                        },
-                        "frame_family": {
-                            "type": ["string", "null"],
-                            "enum": [*all_families, None],
-                        },
-                        "voice_kind": {
-                            "type": ["string", "null"],
-                            "enum": [
-                                "journalist_narration",
-                                "direct_quote",
-                                "indirect_source",
-                                "uncertain_quote",
-                                None,
-                            ],
-                        },
-                        "evidence": {"type": "array", "items": evidence},
-                        "reason": {"type": ["string", "null"]},
-                    },
-                    "additionalProperties": False,
-                },
-            },
-            "actors": {
-                "type": "array",
-                "maxItems": 24,
-                "items": {
-                    "type": "object",
-                    "required": ["role", "voice_kind", "evidence"],
-                    "properties": {
-                        "role": {"enum": sorted(SOURCE_ROLES)},
-                        "voice_kind": {
-                            "enum": ["direct_quote", "indirect_source", "uncertain_quote"]
-                        },
-                        "evidence": {
-                            "type": "array",
-                            "minItems": 1,
-                            "items": evidence,
-                        },
-                    },
-                    "additionalProperties": False,
-                },
-            },
+            "decision": {"type": "string"},
+            "dimensions": {"type": "array", "items": dimension},
+            "actors": {"type": "array", "items": actor},
         },
-        "additionalProperties": False,
     }

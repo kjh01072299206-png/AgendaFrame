@@ -1,0 +1,420 @@
+{
+  "articleId": "01100901.20260726103800001",
+  "profile": {
+    "article": {
+      "article_id": "01100901.20260726103800001",
+      "body_character_count": 2672,
+      "body_sha256": "cd44d9571687266c86eb98757a601dd2cc1cfc6c2ec82a67ecdd2f62c491a110",
+      "body_word_count": 586,
+      "paragraph_count": 1,
+      "published_at": "2026-07-26T10:38:00+09:00",
+      "raw_body_retained": false,
+      "sentence_count": 28,
+      "title_sha256": "05a96b245ceae28e9264d7d4a50d46877ac88e76d6a5ebac3f93e53b07d5c88b",
+      "upstream_article_id": "01100901.20260726103800001"
+    },
+    "engine": {
+      "analysis_schema_version": 3,
+      "approach": "semantic_evidence_bounded",
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ],
+      "name": "AgendaFrame Vertex evidence coder",
+      "prompt_version": "2.4.1",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "version": "gemini-2.5-flash-lite"
+    },
+    "dimensions": {
+      "causal_interpretation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "대통령과 여당의 정치적 흥정 및 강성 당원의 눈치를 보는 행위",
+            "frame_family": "political_incentive",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "18201bd95dad42cc2dd6b25ac56c14a885bb020e15db02da5316987dd2974309"
+            }
+          },
+          {
+            "public_paraphrase": "대통령과 여당의 정치적 흥정 및 강성 당원의 눈치를 보는 행위",
+            "frame_family": "political_incentive",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 7
+              },
+              "sentence_sha256": "855c130a1e6653dd99ee871cb509b9e1dd32245227ba466302c7e087ce760add"
+            }
+          },
+          {
+            "public_paraphrase": "대통령과 여당의 정치적 흥정 및 강성 당원의 눈치를 보는 행위",
+            "frame_family": "political_incentive",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "547db6eb2f5540c54776dbf8a067a285e5eb5e677b8e58656f0e1f64275367a2"
+            }
+          },
+          {
+            "public_paraphrase": "대통령과 여당의 정치적 흥정 및 강성 당원의 눈치를 보는 행위",
+            "frame_family": "political_incentive",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 22
+              },
+              "sentence_sha256": "1684c23fabf2ae55d32d068d17a2783de5e643939d553c08f8d65d0f576e304a"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "보완수사권 폐지가 법치주의 근간을 흔드는 만행이자 비겁한 행태라는 부정적 평가",
+            "frame_family": "legitimacy_negative",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "64548b243770c09eac7c4c49031b118facf36a0924ba2d2ce2d711ce505c012e"
+            }
+          },
+          {
+            "public_paraphrase": "보완수사권 폐지가 법치주의 근간을 흔드는 만행이자 비겁한 행태라는 부정적 평가",
+            "frame_family": "legitimacy_negative",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "64548b243770c09eac7c4c49031b118facf36a0924ba2d2ce2d711ce505c012e"
+            }
+          },
+          {
+            "public_paraphrase": "보완수사권 폐지가 법치주의 근간을 흔드는 만행이자 비겁한 행태라는 부정적 평가",
+            "frame_family": "legitimacy_negative",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 13
+              },
+              "sentence_sha256": "c05de4be256ac8a8d492bbfed50ed5d40e810e6be8394c6b88f65e7bafe0ba47"
+            }
+          },
+          {
+            "public_paraphrase": "보완수사권 폐지가 법치주의 근간을 흔드는 만행이자 비겁한 행태라는 부정적 평가",
+            "frame_family": "legitimacy_negative",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 20
+              },
+              "sentence_sha256": "c78e6ac8d8bc6a31dde0031f6c2ee878d5d229a4182bbeca31240d5773a8b989"
+            }
+          }
+        ]
+      },
+      "problem_definition": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "보완수사권 폐지가 국민 안전을 위협하고 법치주의 근간을 흔드는 행위라는 주장",
+            "frame_family": "safety_harm",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "17035b08ff7e5d162b761248472d8f433321ad6ecc73d92b592ae970337de32f"
+            }
+          },
+          {
+            "public_paraphrase": "보완수사권 폐지가 국민 안전을 위협하고 법치주의 근간을 흔드는 행위라는 주장",
+            "frame_family": "safety_harm",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "18201bd95dad42cc2dd6b25ac56c14a885bb020e15db02da5316987dd2974309"
+            }
+          },
+          {
+            "public_paraphrase": "보완수사권 폐지가 국민 안전을 위협하고 법치주의 근간을 흔드는 행위라는 주장",
+            "frame_family": "safety_harm",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 13
+              },
+              "sentence_sha256": "c05de4be256ac8a8d492bbfed50ed5d40e810e6be8394c6b88f65e7bafe0ba47"
+            }
+          },
+          {
+            "public_paraphrase": "보완수사권 폐지가 국민 안전을 위협하고 법치주의 근간을 흔드는 행위라는 주장",
+            "frame_family": "safety_harm",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 20
+              },
+              "sentence_sha256": "c78e6ac8d8bc6a31dde0031f6c2ee878d5d229a4182bbeca31240d5773a8b989"
+            }
+          },
+          {
+            "public_paraphrase": "보완수사권 폐지가 국민 안전을 위협하고 법치주의 근간을 흔드는 행위라는 주장",
+            "frame_family": "safety_harm",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 25
+              },
+              "sentence_sha256": "fbd743705fb02c4beb5d90f9b9ce88abdf1e596ebd7dd6d3b859881e6785f1dc"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "대통령, 여당, 민주당 강경파 및 강성 당원",
+            "frame_family": "legislature_politics",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "18201bd95dad42cc2dd6b25ac56c14a885bb020e15db02da5316987dd2974309"
+            }
+          },
+          {
+            "public_paraphrase": "대통령, 여당, 민주당 강경파 및 강성 당원",
+            "frame_family": "legislature_politics",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "547db6eb2f5540c54776dbf8a067a285e5eb5e677b8e58656f0e1f64275367a2"
+            }
+          },
+          {
+            "public_paraphrase": "대통령, 여당, 민주당 강경파 및 강성 당원",
+            "frame_family": "legislature_politics",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 22
+              },
+              "sentence_sha256": "1684c23fabf2ae55d32d068d17a2783de5e643939d553c08f8d65d0f576e304a"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "보완수사권 폐지 법안 본회의 상정 저지를 위한 총력 투쟁",
+            "frame_family": "strengthen_policy",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 16
+              },
+              "sentence_sha256": "3e420c9104783737bff2c8d84556f6e406e57b7b5f8c119b220127050975d244"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:f044ef66e080d0f43098f5a89a9944325290aac26251200ff53a0503cfaaf61f",
+        "direct_quote_count": 0,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 1
+            },
+            "sentence_sha256": "c53ab84d07e6d78900d12ae34ed24974448af69b3e9eda25a0a16113a493bd87"
+          }
+        ],
+        "indirect_attribution_count": 1,
+        "role": "government_official",
+        "role_label": "정부·공공기관"
+      },
+      {
+        "actor_id": "actor:a6f64603cf38d9a8a19e06836513f782d461dbc206151ac43f155063d055163c",
+        "direct_quote_count": 0,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 4
+            },
+            "sentence_sha256": "17035b08ff7e5d162b761248472d8f433321ad6ecc73d92b592ae970337de32f"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 5
+            },
+            "sentence_sha256": "18201bd95dad42cc2dd6b25ac56c14a885bb020e15db02da5316987dd2974309"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 13
+            },
+            "sentence_sha256": "c05de4be256ac8a8d492bbfed50ed5d40e810e6be8394c6b88f65e7bafe0ba47"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 19
+            },
+            "sentence_sha256": "a7613dfd831bae4228a1690a49efbb18f5d2a4b75ff00731576bf78d5fb08d43"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 25
+            },
+            "sentence_sha256": "fbd743705fb02c4beb5d90f9b9ce88abdf1e596ebd7dd6d3b859881e6785f1dc"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 16
+            },
+            "sentence_sha256": "3e420c9104783737bff2c8d84556f6e406e57b7b5f8c119b220127050975d244"
+          }
+        ],
+        "indirect_attribution_count": 7,
+        "role": "political_actor",
+        "role_label": "정당·정치권"
+      }
+    ],
+    "review": {
+      "analysis_decision": "analyze",
+      "fallback_reason": null,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다.",
+      "requires_human_review": true,
+      "status": "automatic_draft"
+    },
+    "extraction": {
+      "analyzed_character_count": 2672,
+      "input_truncated": false,
+      "text_scope": "transient_public_page_extract"
+    },
+    "lineage": {
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "approval": {
+        "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753",
+        "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
+        "cluster_id": "bigkinds-2026-07-26-rank-1",
+        "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
+        "reviewed_at": "2026-07-31T00:00:00+09:00",
+        "reviewer": "AgendaFrame agent-assisted evidence audit"
+      },
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "model_id": "gemini-2.5-flash-lite",
+      "model_output_schema_version": 3,
+      "prompt_version": "2.4.1"
+    }
+  }
+}

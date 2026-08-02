@@ -27,7 +27,11 @@ class CostGuard:
             for value in body_character_counts
         ]
         input_tokens = sum(max(1, value // 3) for value in limited)
-        output_tokens = len(limited) * self.config.vertex.max_output_tokens
+        output_tokens = (
+            len(limited)
+            * self.config.vertex.max_output_tokens
+            * self.config.vertex.max_attempts
+        )
         input_cost = input_tokens / 1_000_000 * self.config.vertex.input_usd_per_million_tokens
         output_cost = output_tokens / 1_000_000 * self.config.vertex.output_usd_per_million_tokens
         return UsageEstimate(

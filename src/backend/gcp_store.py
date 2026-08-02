@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import UTC, datetime
 from typing import Any
@@ -26,8 +27,12 @@ class GcpAnalysisStore:
         query = f"""
             SELECT 1
             FROM `{self.config.project_id}.{self.config.dataset}.frame_analyses`
-            WHERE analysis_key = @analysis_key
+            WHERE (
+                analysis_key = @analysis_key
+                OR STARTS_WITH(analysis_key, CONCAT(@analysis_key, "|retry:"))
+            )
               AND analyzed_at >= TIMESTAMP("2026-01-01")
+              AND decision = "analyze"
             LIMIT 1
         """
         job_config = self.bigquery.QueryJobConfig(
@@ -88,7 +93,11 @@ class GcpAnalysisStore:
             "analysis_key": analysis_key,
             "article_id": article.article_id,
             "decision": result.decision,
-            "profile_json": public_profile(article, result),
+            # BigQuery's JSON column accepts a JSON document string through
+            # insert_rows_json. Passing the Python dict makes the REST client
+            # treat it as a RECORD and fails with "profile_json is not a
+            # record" against the deployed JSON schema.
+            "profile_json": json.dumps(public_profile(article, result), ensure_ascii=False),
             "model_id": result.model_id,
             "prompt_version": result.prompt_version,
             "schema_version": result.schema_version,
@@ -98,7 +107,81 @@ class GcpAnalysisStore:
             "publication_status": "pending",
             "analyzed_at": datetime.now(UTC).isoformat(),
         }
-        self._insert_json("frame_analyses", analysis_row, analysis_key)
+        if self._update_pending_analysis(analysis_row):
+            return
+        self._insert_json("frame_analyses", analysis_row, str(analysis_row["analysis_key"]))
+
+    def _update_pending_analysis(self, row: dict[str, Any]) -> bool:
+        """Replace a prior review-needed draft when a bounded retry succeeds."""
+
+        query = f"""
+            UPDATE `{self.config.project_id}.{self.config.dataset}.frame_analyses`
+            SET
+              article_id = @article_id,
+              decision = @decision,
+              profile_json = PARSE_JSON(@profile_json),
+              model_id = @model_id,
+              prompt_version = @prompt_version,
+              schema_version = @schema_version,
+              input_tokens = @input_tokens,
+              output_tokens = @output_tokens,
+              review_status = @review_status,
+              publication_status = @publication_status,
+              published_at = NULL,
+              analyzed_at = @analyzed_at
+            WHERE analysis_key = @analysis_key
+              AND publication_status = "pending"
+              AND analyzed_at >= TIMESTAMP("2026-01-01")
+        """
+        job_config = self.bigquery.QueryJobConfig(
+            query_parameters=[
+                self.bigquery.ScalarQueryParameter(
+                    "analysis_key", "STRING", row["analysis_key"]
+                ),
+                self.bigquery.ScalarQueryParameter("article_id", "STRING", row["article_id"]),
+                self.bigquery.ScalarQueryParameter("decision", "STRING", row["decision"]),
+                self.bigquery.ScalarQueryParameter(
+                    "profile_json", "STRING", row["profile_json"]
+                ),
+                self.bigquery.ScalarQueryParameter("model_id", "STRING", row["model_id"]),
+                self.bigquery.ScalarQueryParameter(
+                    "prompt_version", "STRING", row["prompt_version"]
+                ),
+                self.bigquery.ScalarQueryParameter(
+                    "schema_version", "INT64", row["schema_version"]
+                ),
+                self.bigquery.ScalarQueryParameter(
+                    "input_tokens", "INT64", row["input_tokens"]
+                ),
+                self.bigquery.ScalarQueryParameter(
+                    "output_tokens", "INT64", row["output_tokens"]
+                ),
+                self.bigquery.ScalarQueryParameter(
+                    "review_status", "STRING", row["review_status"]
+                ),
+                self.bigquery.ScalarQueryParameter(
+                    "publication_status", "STRING", row["publication_status"]
+                ),
+                self.bigquery.ScalarQueryParameter(
+                    "analyzed_at", "TIMESTAMP", row["analyzed_at"]
+                ),
+            ],
+            maximum_bytes_billed=self.config.maximum_bytes_billed,
+        )
+        try:
+            result = self.bq.query(query, job_config=job_config).result()
+        except Exception as error:
+            if "streaming buffer" not in str(error).lower():
+                raise
+            # BigQuery cannot update a row that is still in the streaming
+            # buffer. Keep the failed draft for audit and write this successful
+            # retry under a deterministic successor key instead.
+            row["analysis_key"] = (
+                f"{row['analysis_key']}|retry:"
+                f"{hashlib.sha256(str(row['profile_json']).encode('utf-8')).hexdigest()[:16]}"
+            )
+            return False
+        return bool(getattr(result, "num_dml_affected_rows", 0))
 
     def pending_publication_rows(
         self,
@@ -126,6 +209,7 @@ class GcpAnalysisStore:
               ON a.article_id = f.article_id
               AND a.published_at >= TIMESTAMP("2026-01-01")
             WHERE f.analyzed_at >= TIMESTAMP("2026-01-01")
+              AND f.decision = "analyze"
               AND f.publication_status = "pending"
               AND (
                 @target_date IS NULL
@@ -135,6 +219,10 @@ class GcpAnalysisStore:
                 ARRAY_LENGTH(@article_ids) = 0
                 OR f.article_id IN UNNEST(@article_ids)
               )
+            QUALIFY ROW_NUMBER() OVER (
+                PARTITION BY f.article_id
+                ORDER BY f.analyzed_at DESC
+            ) = 1
             ORDER BY f.analyzed_at ASC
             LIMIT @limit
         """

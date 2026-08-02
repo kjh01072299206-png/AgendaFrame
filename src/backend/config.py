@@ -16,6 +16,7 @@ class VertexLimits:
     max_articles_per_day: int
     max_input_characters_per_article: int
     max_output_tokens: int
+    max_attempts: int
     thinking_budget: int
     input_usd_per_million_tokens: float
     output_usd_per_million_tokens: float
@@ -58,6 +59,7 @@ class RuntimeConfig:
                 max_articles_per_day=int(vertex["max_articles_per_day"]),
                 max_input_characters_per_article=int(vertex["max_input_characters_per_article"]),
                 max_output_tokens=int(vertex["max_output_tokens"]),
+                max_attempts=int(vertex["max_attempts"]),
                 thinking_budget=int(vertex["thinking_budget"]),
                 input_usd_per_million_tokens=float(
                     vertex["estimated_input_usd_per_million_tokens"]

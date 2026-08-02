@@ -1,0 +1,196 @@
+{
+  "articleId": "01100701.20260726110741001",
+  "profile": {
+    "article": {
+      "article_id": "01100701.20260726110741001",
+      "body_character_count": 1058,
+      "body_sha256": "8c778a677fc436fd63f48f2e4c441373e3bca72f6a87489b696c40d458550d82",
+      "body_word_count": 230,
+      "paragraph_count": 1,
+      "published_at": "2026-07-26T11:07:41+09:00",
+      "raw_body_retained": false,
+      "sentence_count": 15,
+      "title_sha256": "ec06b272ec48267e27b91ad5276f972827600c586615d0c7fcc38907e42cf994",
+      "upstream_article_id": "01100701.20260726110741001"
+    },
+    "engine": {
+      "analysis_schema_version": 3,
+      "approach": "semantic_evidence_bounded",
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ],
+      "name": "AgendaFrame Vertex evidence coder",
+      "prompt_version": "2.4.1",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "version": "gemini-2.5-flash-lite"
+    },
+    "dimensions": {
+      "causal_interpretation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "public_paraphrase": "여당 강경파의 오만과 대통령의 무기력한 방관이 형사사법 시스템 마비의 원인임",
+            "frame_family": "individual_action",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 13
+              },
+              "sentence_sha256": "cb9ac1ce3f07fdc4a16feab5b673fc841df7a438b6d3e5482bea40fff3a30c81"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "public_paraphrase": "보완수사권 폐지 추진은 국민의 생명과 안전을 정치공학적으로 이용하는 것임",
+            "frame_family": "effectiveness_negative",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "15b56a8e0d86979ee87e0374c575210ea8cb8f6f93fcf986a9ca57a26f57d343"
+            }
+          }
+        ]
+      },
+      "problem_definition": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "public_paraphrase": "보완수사권 폐지가 형사사법 시스템을 마비시키고 국민 안전을 위협함",
+            "frame_family": "safety_harm",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 13
+              },
+              "sentence_sha256": "cb9ac1ce3f07fdc4a16feab5b673fc841df7a438b6d3e5482bea40fff3a30c81"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "public_paraphrase": "대통령과 여당 강경파가 형사사법 시스템 마비에 책임이 있음",
+            "frame_family": "government",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 13
+              },
+              "sentence_sha256": "cb9ac1ce3f07fdc4a16feab5b673fc841df7a438b6d3e5482bea40fff3a30c81"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "public_paraphrase": "대통령은 보완수사권 폐지 추진에 대한 침묵을 멈추고 입장을 밝혀야 함",
+            "frame_family": "strengthen_policy",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "75379a1b6addd46fa3a7ba45adadff1ba4e9d4f611bc8148a868b04f11bde67c"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:8ac249c5380d49545f786a44825e9a2a01c629dfea6656989c16af2e684cb4b4",
+        "direct_quote_count": 2,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 2
+            },
+            "sentence_sha256": "c4e2a935dbf8d149024f8a29c31904272748601eaa6d2927b722dbebdd2bddc7"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 12
+            },
+            "sentence_sha256": "dd8bead15cd84c36d86a8470c2761f9a50c197339c00f9fbb5bc49595e75574c"
+          }
+        ],
+        "indirect_attribution_count": 0,
+        "role": "political_actor",
+        "role_label": "정당·정치권"
+      }
+    ],
+    "review": {
+      "analysis_decision": "analyze",
+      "fallback_reason": null,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다.",
+      "requires_human_review": true,
+      "status": "automatic_draft"
+    },
+    "extraction": {
+      "analyzed_character_count": 1058,
+      "input_truncated": false,
+      "text_scope": "transient_public_page_extract"
+    },
+    "lineage": {
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "approval": {
+        "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753",
+        "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
+        "cluster_id": "bigkinds-2026-07-26-rank-1",
+        "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
+        "reviewed_at": "2026-07-31T00:00:00+09:00",
+        "reviewer": "AgendaFrame agent-assisted evidence audit"
+      },
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "model_id": "gemini-2.5-flash-lite",
+      "model_output_schema_version": 3,
+      "prompt_version": "2.4.1"
+    }
+  }
+}

@@ -1,0 +1,219 @@
+{
+  "articleId": "01100701.20260726101351001",
+  "profile": {
+    "article": {
+      "article_id": "01100701.20260726101351001",
+      "body_character_count": 701,
+      "body_sha256": "a1f15cfbe98818019841668d5f4489a4acfebc9b07a4fe0a83e8c3e24c3b3bd9",
+      "body_word_count": 152,
+      "paragraph_count": 1,
+      "published_at": "2026-07-26T10:13:51+09:00",
+      "raw_body_retained": false,
+      "sentence_count": 8,
+      "title_sha256": "a4d00c9c7be2286d27c316a27930a38c160dce2ea8d15f4c29fd7f3e48b7d5e9",
+      "upstream_article_id": "01100701.20260726101351001"
+    },
+    "engine": {
+      "analysis_schema_version": 3,
+      "approach": "semantic_evidence_bounded",
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ],
+      "name": "AgendaFrame Vertex evidence coder",
+      "prompt_version": "2.4.1",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "version": "gemini-2.5-flash-lite"
+    },
+    "dimensions": {
+      "causal_interpretation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "정치적 흥정과 거래가 보완수사권 폐지의 원인으로 지목됨",
+            "frame_family": "political_incentive",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "76b832cfbb396701ef1847d9f4a0dbf8eab7517c05f7622d26ba8bc7ff738fc6"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "보완수사권 폐지가 정부와 여당의 동반 몰락을 초래할 것이라는 부정적 평가",
+            "frame_family": "legitimacy_negative",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "24620918d2a8d7977fa48a3183856e73a0e959b112577625186b85d0e94c1b1d"
+            }
+          }
+        ]
+      },
+      "problem_definition": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "보완수사권 폐지가 생명과 안전을 정치적으로 흥정하는 문제로 비춰짐",
+            "frame_family": "safety_harm",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "76b832cfbb396701ef1847d9f4a0dbf8eab7517c05f7622d26ba8bc7ff738fc6"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "대통령과 여당, 민주당 강경파 및 의원들이 보완수사권 폐지 문제에 책임이 있다고 지목됨",
+            "frame_family": "legislature_politics",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "76b832cfbb396701ef1847d9f4a0dbf8eab7517c05f7622d26ba8bc7ff738fc6"
+            }
+          },
+          {
+            "public_paraphrase": "대통령과 여당, 민주당 강경파 및 의원들이 보완수사권 폐지 문제에 책임이 있다고 지목됨",
+            "frame_family": "legislature_politics",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "197152d1751a38b2497ee3b406230307bd5209d842b56cf6be24f0d04ab53408"
+            }
+          },
+          {
+            "public_paraphrase": "대통령과 여당, 민주당 강경파 및 의원들이 보완수사권 폐지 문제에 책임이 있다고 지목됨",
+            "frame_family": "legislature_politics",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 7
+              },
+              "sentence_sha256": "830da1ad0f368462539dba21c3c3b443051e334f669db281abb469037f27fd2c"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "보완수사권 폐지 시 정부와 여당의 동반 몰락을 경고하며 사실상 반대 의사 표명",
+            "frame_family": "institutional_check",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "24620918d2a8d7977fa48a3183856e73a0e959b112577625186b85d0e94c1b1d"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:979ac35c3d160f5c037575ed8533bd87a5e0f8381cc66bc6c7b17f4187bc06d9",
+        "direct_quote_count": 0,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 1
+            },
+            "sentence_sha256": "76b832cfbb396701ef1847d9f4a0dbf8eab7517c05f7622d26ba8bc7ff738fc6"
+          }
+        ],
+        "indirect_attribution_count": 1,
+        "role": "political_actor",
+        "role_label": "정당·정치권"
+      }
+    ],
+    "review": {
+      "analysis_decision": "analyze",
+      "fallback_reason": null,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다.",
+      "requires_human_review": true,
+      "status": "automatic_draft"
+    },
+    "extraction": {
+      "analyzed_character_count": 701,
+      "input_truncated": false,
+      "text_scope": "transient_public_page_extract"
+    },
+    "lineage": {
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "approval": {
+        "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753",
+        "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
+        "cluster_id": "bigkinds-2026-07-26-rank-1",
+        "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
+        "reviewed_at": "2026-07-31T00:00:00+09:00",
+        "reviewer": "AgendaFrame agent-assisted evidence audit"
+      },
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "model_id": "gemini-2.5-flash-lite",
+      "model_output_schema_version": 3,
+      "prompt_version": "2.4.1"
+    }
+  }
+}

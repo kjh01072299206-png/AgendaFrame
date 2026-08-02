@@ -1,0 +1,226 @@
+{
+  "articleId": "01100401.20260726101915001",
+  "profile": {
+    "article": {
+      "article_id": "01100401.20260726101915001",
+      "body_character_count": 856,
+      "body_sha256": "7a1ca311bf320bb316f45f951ce605818886a9d8b58aa60622d3b72b3d32f1f9",
+      "body_word_count": 191,
+      "paragraph_count": 1,
+      "published_at": "2026-07-26T10:19:15+09:00",
+      "raw_body_retained": false,
+      "sentence_count": 11,
+      "title_sha256": "d5ee3c3b4803a10596a8fc4734ba7360b5c095a2a65edabeb4893afbb3714970",
+      "upstream_article_id": "01100401.20260726101915001"
+    },
+    "engine": {
+      "analysis_schema_version": 3,
+      "approach": "semantic_evidence_bounded",
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ],
+      "name": "AgendaFrame Vertex evidence coder",
+      "prompt_version": "2.4.1",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "version": "gemini-2.5-flash-lite"
+    },
+    "dimensions": {
+      "causal_interpretation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "정치적 이해관계에 따른 흥정",
+            "frame_family": "political_incentive",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "f602d884e512b45d06982aada6d361c1f2c36d5f03887f604730ca3095bb6f7f"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "정치적 흥정으로 인한 부정적 평가",
+            "frame_family": "legitimacy_negative",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "e5ebfc276183c5959f7ae2fcc069921ae902512cbe555922884a4dab6c5a073f"
+            }
+          },
+          {
+            "public_paraphrase": "정치적 흥정으로 인한 부정적 평가",
+            "frame_family": "legitimacy_negative",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "eee9be7d7373b5d8f0ba7e6c9e0ca67ded33c710ef6807a9d64a65f284eca39b"
+            }
+          }
+        ]
+      },
+      "problem_definition": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "public_paraphrase": "검찰 보완수사권 폐지를 둘러싼 정치적 흥정",
+            "frame_family": "political_conflict",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "e5ebfc276183c5959f7ae2fcc069921ae902512cbe555922884a4dab6c5a073f"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "대통령과 여당, 민주당의 책임",
+            "frame_family": "government",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "e5ebfc276183c5959f7ae2fcc069921ae902512cbe555922884a4dab6c5a073f"
+            }
+          },
+          {
+            "public_paraphrase": "대통령과 여당, 민주당의 책임",
+            "frame_family": "government",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 11
+              },
+              "sentence_sha256": "71039f8ca42327d36ba7a82812fa4c776d0c1ca7c24ac952995b71bed51955d2"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "public_paraphrase": "대통령의 입장 표명 촉구",
+            "frame_family": "information_transparency",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 7
+              },
+              "sentence_sha256": "d24462c3f43379ea8222ae84ec66df3e7fc9055c68f3f30bd0c34f9099262c78"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:a83431e747d3c6b37e1f76df97c5481cfbc401f14565fc3d3e72e297b93ba4f8",
+        "direct_quote_count": 1,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 3
+            },
+            "sentence_sha256": "e5ebfc276183c5959f7ae2fcc069921ae902512cbe555922884a4dab6c5a073f"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 7
+            },
+            "sentence_sha256": "d24462c3f43379ea8222ae84ec66df3e7fc9055c68f3f30bd0c34f9099262c78"
+          }
+        ],
+        "indirect_attribution_count": 1,
+        "role": "political_actor",
+        "role_label": "정당·정치권"
+      }
+    ],
+    "review": {
+      "analysis_decision": "analyze",
+      "fallback_reason": null,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다.",
+      "requires_human_review": true,
+      "status": "automatic_draft"
+    },
+    "extraction": {
+      "analyzed_character_count": 856,
+      "input_truncated": false,
+      "text_scope": "transient_public_page_extract"
+    },
+    "lineage": {
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "approval": {
+        "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753",
+        "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
+        "cluster_id": "bigkinds-2026-07-26-rank-1",
+        "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
+        "reviewed_at": "2026-07-31T00:00:00+09:00",
+        "reviewer": "AgendaFrame agent-assisted evidence audit"
+      },
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "model_id": "gemini-2.5-flash-lite",
+      "model_output_schema_version": 3,
+      "prompt_version": "2.4.1"
+    }
+  }
+}
