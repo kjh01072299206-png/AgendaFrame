@@ -23,8 +23,8 @@ function columnIndex(reference) {
 
 function sharedStrings(xml) {
   if (!xml) return [];
-  return [...xml.matchAll(/<si\b[^>]*>([\s\S]*?)<\/si>/g)].map((match) =>
-    [...match[1].matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g)]
+  return [...xml.matchAll(/<(?:\w+:)?si\b[^>]*>([\s\S]*?)<\/(?:\w+:)?si>/g)].map((match) =>
+    [...match[1].matchAll(/<(?:\w+:)?t\b[^>]*>([\s\S]*?)<\/(?:\w+:)?t>/g)]
       .map((text) => xmlText(text[1]))
       .join(""));
 }
@@ -32,9 +32,11 @@ function sharedStrings(xml) {
 function cellValue(attributes, body, strings) {
   const type = attributes.match(/\bt="([^"]+)"/)?.[1] ?? "";
   if (type === "inlineStr") {
-    return [...body.matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g)].map((match) => xmlText(match[1])).join("");
+    return [...body.matchAll(/<(?:\w+:)?t\b[^>]*>([\s\S]*?)<\/(?:\w+:)?t>/g)]
+      .map((match) => xmlText(match[1]))
+      .join("");
   }
-  const raw = body.match(/<v\b[^>]*>([\s\S]*?)<\/v>/)?.[1] ?? "";
+  const raw = body.match(/<(?:\w+:)?v\b[^>]*>([\s\S]*?)<\/(?:\w+:)?v>/)?.[1] ?? "";
   if (type === "s") return strings[Number(raw)] ?? "";
   if (type === "b") return raw === "1";
   if (type === "str") return xmlText(raw);
@@ -52,10 +54,10 @@ export function parseBigKindsXlsx(input) {
   const strings = sharedStrings(files["xl/sharedStrings.xml"] ? decoder.decode(files["xl/sharedStrings.xml"]) : "");
   const sheet = decoder.decode(files[sheetPath]);
   const rows = [];
-  for (const rowMatch of sheet.matchAll(/<row\b([^>]*)>([\s\S]*?)<\/row>/g)) {
+  for (const rowMatch of sheet.matchAll(/<(?:\w+:)?row\b([^>]*)>([\s\S]*?)<\/(?:\w+:)?row>/g)) {
     const rowNumber = Number(rowMatch[1].match(/\br="(\d+)"/)?.[1] ?? rows.length + 1);
     const row = [];
-    for (const cellMatch of rowMatch[2].matchAll(/<c\b([^>]*)>([\s\S]*?)<\/c>/g)) {
+    for (const cellMatch of rowMatch[2].matchAll(/<(?:\w+:)?c\b([^>]*)>([\s\S]*?)<\/(?:\w+:)?c>/g)) {
       const reference = cellMatch[1].match(/\br="([^"]+)"/)?.[1] ?? "";
       row[columnIndex(reference)] = cellValue(cellMatch[1], cellMatch[2], strings);
     }

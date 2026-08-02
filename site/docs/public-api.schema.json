@@ -136,6 +136,173 @@
       },
       "additionalProperties": false
     },
+    "AnalysisEvidenceRef": {
+      "type": "object",
+      "required": ["source", "articleId", "sourceUrl", "evidenceLocator", "evidenceHash"],
+      "properties": {
+        "source": { "type": "string" },
+        "articleId": { "type": "string" },
+        "sourceUrl": { "type": "string", "format": "uri" },
+        "evidenceLocator": { "type": ["string", "null"] },
+        "evidenceHash": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "AnalysisModules": {
+      "type": "object",
+      "required": ["frameComposition", "reportingStyle", "morphology"],
+      "properties": {
+        "frameComposition": {
+          "type": "object",
+          "required": ["status", "methodVersion", "taxonomyVersion", "unit", "multiLabel", "byOutlet", "caution"],
+          "properties": {
+            "status": { "enum": ["available", "partial"] },
+            "methodVersion": { "type": "string" },
+            "taxonomyVersion": { "type": "string" },
+            "unit": { "const": "article_presence" },
+            "multiLabel": { "const": true },
+            "byOutlet": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["source", "analyzedArticles", "assignmentCount", "labels"],
+                "properties": {
+                  "source": { "type": "string" },
+                  "analyzedArticles": { "type": "integer", "minimum": 0 },
+                  "assignmentCount": { "type": "integer", "minimum": 0 },
+                  "labels": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["code", "label", "articleCount", "articleShare", "sentenceCount", "compositionShare", "evidenceRefs"],
+                      "properties": {
+                        "code": { "type": "string" },
+                        "label": { "type": "string" },
+                        "articleCount": { "type": "integer", "minimum": 0 },
+                        "articleShare": { "type": "number", "minimum": 0, "maximum": 1 },
+                        "sentenceCount": { "type": "integer", "minimum": 0 },
+                        "compositionShare": { "type": "number", "minimum": 0, "maximum": 1 },
+                        "evidenceRefs": { "type": "array", "items": { "$ref": "#/$defs/AnalysisEvidenceRef" } }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "caution": { "type": ["string", "null"] }
+          },
+          "additionalProperties": false
+        },
+        "reportingStyle": {
+          "type": "object",
+          "required": ["status", "methodVersion", "byOutlet", "caution"],
+          "properties": {
+            "status": { "enum": ["available", "partial"] },
+            "methodVersion": { "type": "string" },
+            "byOutlet": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["source", "analyzedArticles", "evaluation", "scope"],
+                "properties": {
+                  "source": { "type": "string" },
+                  "analyzedArticles": { "type": "integer", "minimum": 0 },
+                  "evaluation": {
+                    "type": "object",
+                    "required": ["status", "index", "observedArticles", "criticalArticles", "supportiveArticles", "attributedOnlyArticles", "evidenceRefs"],
+                    "properties": {
+                      "status": { "enum": ["observed", "abstained"] },
+                      "index": { "type": ["number", "null"], "minimum": -1, "maximum": 1 },
+                      "observedArticles": { "type": "integer", "minimum": 0 },
+                      "criticalArticles": { "type": "integer", "minimum": 0 },
+                      "supportiveArticles": { "type": "integer", "minimum": 0 },
+                      "attributedOnlyArticles": { "type": "integer", "minimum": 0 },
+                      "evidenceRefs": { "type": "array", "items": { "$ref": "#/$defs/AnalysisEvidenceRef" } }
+                    },
+                    "additionalProperties": false
+                  },
+                  "scope": {
+                    "type": "object",
+                    "required": ["status", "index", "observedArticles", "episodicSentenceCount", "thematicSentenceCount", "evidenceRefs"],
+                    "properties": {
+                      "status": { "enum": ["observed", "abstained"] },
+                      "index": { "type": ["number", "null"], "minimum": -1, "maximum": 1 },
+                      "observedArticles": { "type": "integer", "minimum": 0 },
+                      "episodicSentenceCount": { "type": "integer", "minimum": 0 },
+                      "thematicSentenceCount": { "type": "integer", "minimum": 0 },
+                      "evidenceRefs": { "type": "array", "items": { "$ref": "#/$defs/AnalysisEvidenceRef" } }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "caution": { "type": ["string", "null"] }
+          },
+          "additionalProperties": false
+        },
+        "morphology": {
+          "type": "object",
+          "required": ["status", "analyzer", "minimumDocumentFrequency", "minimumMediaGroupFrequency", "byOutlet", "limitations"],
+          "properties": {
+            "status": { "enum": ["available", "partial"] },
+            "analyzer": {
+              "type": "object",
+              "required": ["name", "mode", "version", "dictionaryVersion", "posTagset"],
+              "properties": {
+                "name": { "type": "string" },
+                "mode": { "type": "string" },
+                "version": { "type": "string" },
+                "dictionaryVersion": { "type": "string" },
+                "posTagset": { "type": "string" }
+              },
+              "additionalProperties": false
+            },
+            "minimumDocumentFrequency": { "type": "integer", "minimum": 1 },
+            "minimumMediaGroupFrequency": { "type": "integer", "minimum": 1 },
+            "byOutlet": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["source", "analyzedArticles", "tokenCount", "contentTokenCount", "negationCount", "posCounts", "terms"],
+                "properties": {
+                  "source": { "type": "string" },
+                  "analyzedArticles": { "type": "integer", "minimum": 0 },
+                  "tokenCount": { "type": "integer", "minimum": 0 },
+                  "contentTokenCount": { "type": "integer", "minimum": 0 },
+                  "negationCount": { "type": "integer", "minimum": 0 },
+                  "posCounts": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+                  "terms": {
+                    "type": "array",
+                    "maxItems": 15,
+                    "items": {
+                      "type": "object",
+                      "required": ["term", "pos", "count", "documentCount", "perThousand", "evidenceRefs"],
+                      "properties": {
+                        "term": { "type": "string", "minLength": 2, "maxLength": 20 },
+                        "pos": { "enum": ["noun", "predicate", "foreign"] },
+                        "count": { "type": "integer", "minimum": 1 },
+                        "documentCount": { "type": "integer", "minimum": 1 },
+                        "perThousand": { "type": "number", "minimum": 0 },
+                        "evidenceRefs": { "type": "array", "items": { "$ref": "#/$defs/AnalysisEvidenceRef" } }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "limitations": { "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "StructuredComparison": {
       "type": "object",
       "required": [
@@ -267,7 +434,8 @@
             "additionalProperties": false
           }
         },
-        "limitations": { "type": "array", "items": { "type": "string" } }
+        "limitations": { "type": "array", "items": { "type": "string" } },
+        "analysisModules": { "$ref": "#/$defs/AnalysisModules" }
       },
       "additionalProperties": false
     },

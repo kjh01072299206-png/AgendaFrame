@@ -15,7 +15,7 @@ const analysisProvider = getAnalysisProvider();
 const ANALYSIS_PROVIDER = analysisProvider.provider;
 const ANALYSIS_MODEL_VERSION = analysisProvider.modelVersion;
 const PUBLIC_API_SCHEMA_VERSION = publicApiSchema["x-api-version"];
-const PROMPT_VERSION = "framing-codebook-v5";
+const PROMPT_VERSION = "framing-codebook-v6";
 const EVALUATION_DATASET_VERSION = "not_configured";
 const COMPATIBLE_ANALYSIS_MODELS = new Set([ANALYSIS_MODEL_VERSION, "agenda-rules-v4", "agenda-rules-v3", "agenda-rules-v2"]);
 const PUBLIC_AGENDA_CATEGORY_SET = new Set(PUBLIC_AGENDA_CATEGORIES);
@@ -603,7 +603,7 @@ const ARTICLE_FETCH_CONCURRENCY = 2;
 const ARTICLE_HTML_MAX_BYTES = 2 * 1024 * 1024;
 const ARTICLE_REDIRECT_LIMIT = 3;
 const ARTICLE_EXTRACTOR_VERSION = "public-news-body-v2";
-const BIGKINDS_EXCERPT_EXTRACTOR_VERSION = "bigkinds-export-excerpt-v1";
+const BIGKINDS_TEXT_EXTRACTOR_VERSION = "bigkinds-export-text-v2";
 const STRUCTURED_IMPORT_BATCH_LIMIT = 100;
 
 function integerInRange(value, minimum, maximum, label) {
@@ -781,7 +781,7 @@ function normalizeArticleBody(value) {
 export function validateStructuredImportRows(inputRows, panel = sourcePanel, now = new Date().toISOString()) {
   if (!Array.isArray(inputRows) || inputRows.length === 0) throw new Error("가져올 기사 행이 없습니다.");
   if (inputRows.length > STRUCTURED_IMPORT_BATCH_LIMIT) {
-    throw new Error(`본문 발췌 분석은 한 번에 최대 ${STRUCTURED_IMPORT_BATCH_LIMIT}행까지 처리할 수 있습니다.`);
+    throw new Error(`본문 구조화 분석은 한 번에 최대 ${STRUCTURED_IMPORT_BATCH_LIMIT}행까지 처리할 수 있습니다.`);
   }
   const metadataRows = inputRows.map((row) => {
     if (!row || typeof row !== "object" || Array.isArray(row)) return row;
@@ -795,13 +795,18 @@ export function validateStructuredImportRows(inputRows, panel = sourcePanel, now
   return validatedMetadata.map((metadata, index) => {
     const input = inputRows[index];
     const excerpt = normalizeArticleBody(input.excerpt ?? input.body_excerpt);
-    if (excerpt.length < 40 || excerpt.length > 5_000) {
-      throw new Error(`${index + 1}행: 분석용 본문 발췌는 40~5,000자여야 합니다.`);
+    const textScope = String(input.textScope ?? input.text_scope ?? "provider_excerpt").trim();
+    if (!["provider_excerpt", "article_body"].includes(textScope)) {
+      throw new Error(`${index + 1}행: 본문 범위는 provider_excerpt 또는 article_body여야 합니다.`);
+    }
+    const maximumCharacters = textScope === "article_body" ? 200_000 : 5_000;
+    if (excerpt.length < 40 || excerpt.length > maximumCharacters) {
+      throw new Error(`${index + 1}행: ${textScope === "article_body" ? "분석용 기사 본문" : "분석용 본문 발췌"}은 40~${maximumCharacters.toLocaleString("ko-KR")}자여야 합니다.`);
     }
     return {
       ...metadata,
       excerpt,
-      textScope: "provider_excerpt",
+      textScope,
     };
   });
 }
@@ -817,7 +822,7 @@ async function handleStructuredImport(request, env) {
     const payload = await readJsonPayload(request, 4 * 1024 * 1024);
     rows = validateStructuredImportRows(payload.rows);
   } catch (error) {
-    return jsonResponse({ error: error instanceof Error ? error.message : "본문 발췌 가져오기 형식을 확인해 주세요." }, 400, { request });
+    return jsonResponse({ error: error instanceof Error ? error.message : "분석용 본문 가져오기 형식을 확인해 주세요." }, 400, { request });
   }
 
   const forwardedHeaders = new Headers({ "content-type": "application/json" });
@@ -865,7 +870,7 @@ async function handleStructuredImport(request, env) {
         quality: 1,
         text_scope: row.textScope,
         source_characters: row.excerpt.length,
-        extractor_version: BIGKINDS_EXCERPT_EXTRACTOR_VERSION,
+        extractor_version: BIGKINDS_TEXT_EXTRACTOR_VERSION,
       };
       const validation = validateArticleFrameProfile(profile);
       if (!validation.valid) throw new Error(`구조화 분석 검증 실패: ${validation.errors.join("; ")}`);
@@ -897,7 +902,7 @@ async function handleStructuredImport(request, env) {
         result.bodyHash,
         result.bodyCharacters,
         JSON.stringify(result.detectedFrames),
-        BIGKINDS_EXCERPT_EXTRACTOR_VERSION,
+        BIGKINDS_TEXT_EXTRACTOR_VERSION,
         FRAME_TAXONOMY_VERSION,
         analyzedAt,
       ));
@@ -921,7 +926,7 @@ async function handleStructuredImport(request, env) {
         result.bodyHash,
         result.bodyCharacters,
         JSON.stringify(result.profile),
-        BIGKINDS_EXCERPT_EXTRACTOR_VERSION,
+        BIGKINDS_TEXT_EXTRACTOR_VERSION,
         FRAMING_ENGINE_VERSION,
         PROMPT_VERSION,
         ARTICLE_FRAME_PROFILE_SCHEMA,
@@ -932,14 +937,14 @@ async function handleStructuredImport(request, env) {
     return jsonResponse({
       ...metadataResult,
       analyzedExcerpts: results.length,
-      textScope: "provider_excerpt",
+      textScope: [...new Set(rows.map((row) => row.textScope))].join(","),
       rawTextStored: false,
-      extractorVersion: BIGKINDS_EXCERPT_EXTRACTOR_VERSION,
+      extractorVersion: BIGKINDS_TEXT_EXTRACTOR_VERSION,
       framingEngineVersion: FRAMING_ENGINE_VERSION,
     }, 201, { request });
   } catch (error) {
     console.error("AgendaFrame structured import failed", error);
-    return jsonResponse({ error: "기사 메타데이터는 저장했지만 본문 발췌 구조화 분석을 완료하지 못했습니다." }, 500, { request });
+    return jsonResponse({ error: "기사 메타데이터는 저장했지만 본문 구조화 분석을 완료하지 못했습니다." }, 500, { request });
   }
 }
 
@@ -1185,12 +1190,44 @@ function isStructuredComparisonPayload(value) {
     && Array.isArray(gap.notObservedInOutlets)
     && typeof gap.displayText === "string")) return false;
   if (!value.limitations.every((item) => typeof item === "string")) return false;
+  if (value.analysisModules != null) {
+    const modules = value.analysisModules;
+    if (!isPlainObject(modules) || !isPlainObject(modules.frameComposition)
+      || !isPlainObject(modules.reportingStyle) || !isPlainObject(modules.morphology)) return false;
+    if (!Array.isArray(modules.frameComposition.byOutlet)
+      || !Array.isArray(modules.reportingStyle.byOutlet)
+      || !Array.isArray(modules.morphology.byOutlet)) return false;
+    if (!modules.frameComposition.byOutlet.every((entry) => isPlainObject(entry)
+      && typeof entry.source === "string" && Array.isArray(entry.labels))) return false;
+    if (!modules.reportingStyle.byOutlet.every((entry) => isPlainObject(entry)
+      && typeof entry.source === "string" && isPlainObject(entry.evaluation) && isPlainObject(entry.scope))) return false;
+    if (!modules.morphology.byOutlet.every((entry) => isPlainObject(entry)
+      && typeof entry.source === "string" && Array.isArray(entry.terms))) return false;
+  }
   return !/"(?:raw_body|rawBody|body_text|bodyText|sentence_text|sentenceText|quote|quotation|excerpt|html|content)"\s*:/i.test(JSON.stringify(value));
 }
 
 function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { issueArticleCount = issueArticles.length } = {}) {
   const articleById = new Map(issueArticles.map((article) => [String(article.id), article]));
   const profileById = new Map(profiles.map((profile) => [String(profile.article.article_id), profile]));
+  const publicEvidenceRefs = (entries = []) => {
+    const seen = new Set();
+    return entries.flatMap((entry) => {
+      const article = articleById.get(String(entry.article_id));
+      if (!article) return [];
+      const locator = entry.locator;
+      const key = `${article.id}:${locator?.paragraph ?? ""}:${locator?.sentence ?? ""}:${entry.sentence_sha256 ?? ""}`;
+      if (seen.has(key)) return [];
+      seen.add(key);
+      return [{
+        source: article.source,
+        articleId: article.id,
+        sourceUrl: article.url,
+        evidenceLocator: locator ? `${locator.paragraph}문단 ${locator.sentence}문장` : null,
+        evidenceHash: entry.sentence_sha256 ?? null,
+      }];
+    });
+  };
   const rawAxes = rawComparison.comparison_axes ?? [];
   const divergenceDetected = rawComparison.summary_30_seconds?.divergence_detected === true;
   const axes = rawAxes
@@ -1261,6 +1298,87 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
     };
   });
 
+  const rawModules = rawComparison.analysis_modules;
+  const analysisModules = rawModules ? {
+    frameComposition: {
+      status: rawModules.frame_composition?.status ?? "partial",
+      methodVersion: rawModules.frame_composition?.method_version ?? FRAMING_ENGINE_VERSION,
+      taxonomyVersion: rawModules.frame_composition?.taxonomy_version ?? "policy-descriptors-v2",
+      unit: "article_presence",
+      multiLabel: true,
+      byOutlet: (rawModules.frame_composition?.by_outlet ?? []).map((entry) => ({
+        source: entry.outlet,
+        analyzedArticles: Number(entry.analyzed_article_count ?? 0),
+        assignmentCount: Number(entry.assignment_count ?? 0),
+        labels: (entry.labels ?? []).map((label) => ({
+          code: String(label.code),
+          label: String(label.label),
+          articleCount: Number(label.article_count ?? 0),
+          articleShare: Number(label.article_share ?? 0),
+          sentenceCount: Number(label.sentence_count ?? 0),
+          compositionShare: Number(label.composition_share ?? 0),
+          evidenceRefs: publicEvidenceRefs(label.evidence),
+        })),
+      })),
+      caution: rawModules.frame_composition?.caution ?? null,
+    },
+    reportingStyle: {
+      status: rawModules.reporting_style?.status ?? "partial",
+      methodVersion: rawModules.reporting_style?.method_version ?? FRAMING_ENGINE_VERSION,
+      byOutlet: (rawModules.reporting_style?.by_outlet ?? []).map((entry) => ({
+        source: entry.outlet,
+        analyzedArticles: Number(entry.analyzed_article_count ?? 0),
+        evaluation: {
+          status: entry.evaluation?.status ?? "abstained",
+          index: Number.isFinite(entry.evaluation?.index) ? Number(entry.evaluation.index) : null,
+          observedArticles: Number(entry.evaluation?.observed_article_count ?? 0),
+          criticalArticles: Number(entry.evaluation?.critical_article_count ?? 0),
+          supportiveArticles: Number(entry.evaluation?.supportive_article_count ?? 0),
+          attributedOnlyArticles: Number(entry.evaluation?.attributed_only_article_count ?? 0),
+          evidenceRefs: publicEvidenceRefs(entry.evaluation?.evidence),
+        },
+        scope: {
+          status: entry.scope?.status ?? "abstained",
+          index: Number.isFinite(entry.scope?.index) ? Number(entry.scope.index) : null,
+          observedArticles: Number(entry.scope?.observed_article_count ?? 0),
+          episodicSentenceCount: Number(entry.scope?.episodic_sentence_count ?? 0),
+          thematicSentenceCount: Number(entry.scope?.thematic_sentence_count ?? 0),
+          evidenceRefs: publicEvidenceRefs(entry.scope?.evidence),
+        },
+      })),
+      caution: rawModules.reporting_style?.caution ?? null,
+    },
+    morphology: {
+      status: rawModules.morphology?.status ?? "partial",
+      analyzer: {
+        name: String(rawModules.morphology?.analyzer?.name ?? "AgendaFrame Korean controlled morphology"),
+        mode: String(rawModules.morphology?.analyzer?.mode ?? "controlled_lexicon_fallback"),
+        version: String(rawModules.morphology?.analyzer?.version ?? "unknown"),
+        dictionaryVersion: String(rawModules.morphology?.analyzer?.dictionary_version ?? "unknown"),
+        posTagset: String(rawModules.morphology?.analyzer?.pos_tagset ?? "agendaframe-lite-v1"),
+      },
+      minimumDocumentFrequency: Number(rawModules.morphology?.minimum_document_frequency ?? 2),
+      minimumMediaGroupFrequency: Number(rawModules.morphology?.minimum_media_group_frequency ?? 2),
+      byOutlet: (rawModules.morphology?.by_outlet ?? []).map((entry) => ({
+        source: entry.outlet,
+        analyzedArticles: Number(entry.analyzed_article_count ?? 0),
+        tokenCount: Number(entry.token_count ?? 0),
+        contentTokenCount: Number(entry.content_token_count ?? 0),
+        negationCount: Number(entry.negation_count ?? 0),
+        posCounts: Object.fromEntries(Object.entries(entry.pos_counts ?? {}).map(([pos, count]) => [pos, Number(count ?? 0)])),
+        terms: (entry.terms ?? []).map((term) => ({
+          term: String(term.term),
+          pos: String(term.pos),
+          count: Number(term.count ?? 0),
+          documentCount: Number(term.document_count ?? 0),
+          perThousand: Number(term.per_thousand ?? 0),
+          evidenceRefs: publicEvidenceRefs(term.evidence),
+        })),
+      })),
+      limitations: (rawModules.morphology?.limitations ?? []).map(String),
+    },
+  } : null;
+
   const contextGaps = rawAxes.flatMap((axis) => {
     const presentInOutlets = [];
     const notObservedInOutlets = [];
@@ -1329,6 +1447,7 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
       voicesPresentInSomeOutlets: uniqueStrings(voicesPresentInSomeOutlets),
       byOutlet,
     },
+    ...(analysisModules ? { analysisModules } : {}),
     contextGaps,
     limitations,
   };
