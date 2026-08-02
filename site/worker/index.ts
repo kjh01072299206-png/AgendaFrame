@@ -38,21 +38,10 @@ interface ExecutionContext {
 // const imageConfig: ImageConfig = { dangerouslyAllowSVG: true };
 
 const worker = {
-  scheduled(controller: { scheduledTime: number }, env: Env, ctx: ExecutionContext): void {
-    ctx.waitUntil(
-      import("./operations.mjs").then(({ runScheduledOperations }) => runScheduledOperations(env, {
-        scheduledTime: controller.scheduledTime,
-      })),
-    );
-  },
-
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
     try {
-      const { handleOperationsAdminRequest } = await import("./operations.mjs");
-      const operationsResponse = await handleOperationsAdminRequest(request, env);
-      if (operationsResponse) return withSecurityHeaders(operationsResponse);
       const apiResponse = await handleApiRequest(request, env);
       if (apiResponse) return withSecurityHeaders(apiResponse);
     } catch (error) {

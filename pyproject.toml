@@ -5,13 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "agendaframe-tooling"
 version = "0.1.0"
-description = "AgendaFrame offline tooling, cloud batch pipeline, and quality harness"
+description = "Offline tooling and quality harness for AgendaFrame"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-  "google-cloud-bigquery>=3.38,<4",
-  "google-cloud-storage>=3.4,<4",
-  "google-genai>=1.53,<2",
   "openpyxl>=3.1,<4",
   "Pillow>=10.4,<12",
   "python-docx>=1.1,<2",
@@ -28,7 +25,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["agendaframe*", "ai*", "backend*", "crawler*"]
+include = ["agendaframe*"]
 namespaces = false
 
 [tool.pytest.ini_options]

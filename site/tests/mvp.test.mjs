@@ -3,9 +3,9 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import sourcePanel from "../data/sources.json" with { type: "json" };
-import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, PUBLIC_AGENDA_CATEGORIES, analyzeArticles, classifyAgendaCategory, cleanHeadlineToIssueTitle, titleTokens } from "../worker/analysis.mjs";
+import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, PUBLIC_AGENDA_CATEGORIES, analyzeArticles, classifyAgendaCategory, titleTokens } from "../worker/analysis.mjs";
 import { getAnalysisProvider } from "../worker/analysis-provider.mjs";
-import { approvedClusterApprovals, calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, clusterArticleSetSha256, clusterArticleSignature, configureSourcePanel, enumerateKstDates, extractArticleBodyFromHtml, handleApiRequest, resolveClusterApproval, validateAnalyzedImportRows, validateImportRows, validateStructuredImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
+import { calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, configureSourcePanel, enumerateKstDates, extractArticleBodyFromHtml, handleApiRequest, validateImportRows, validateStructuredImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
 
 configureSourcePanel(sourcePanel);
 
@@ -18,100 +18,10 @@ test("builds the real React dashboard and admin application", async () => {
   const worker = await readFile(new URL("../dist/server/index.js", import.meta.url), "utf8");
   assert.match(worker, /\/api\/analyze/);
   assert.match(worker, /structured_extractive/);
-  assert.match(worker, /agenda-structure-v6/);
+  assert.match(worker, /agenda-structure-v5/);
   assert.match(worker, /\/api\/quality/);
   assert.match(worker, /\/api\/analysis\/runs/);
   assert.match(worker, /\/api\/analyze\/transient/);
-  assert.match(worker, /profiles\.review_status != 'rejected'/);
-  assert.match(worker, /'automatic_draft'/);
-  assert.match(worker, /\/api\/chat/);
-  assert.match(worker, /\/api\/admin\/release\/evaluate/);
-  assert.match(worker, /community_comments/);
-});
-
-test("binds a same-event approval to the exact canonical URL set", () => {
-  const first = clusterArticleSignature([
-    "https://www.hani.co.kr/arti/politics/a.html?utm_source=trial",
-    "https://www.khan.co.kr/article/b",
-  ]);
-  const reordered = clusterArticleSignature([
-    "https://www.khan.co.kr/article/b",
-    "https://www.hani.co.kr/arti/politics/a.html",
-  ]);
-  const changed = clusterArticleSignature([
-    "https://www.khan.co.kr/article/c",
-    "https://www.hani.co.kr/arti/politics/a.html",
-  ]);
-  assert.equal(first, reordered);
-  assert.notEqual(first, changed);
-});
-
-test("requires approval identity and fingerprint for the exact semantic cluster URL set", async () => {
-  const urls = [
-    "https://www.hani.co.kr/arti/politics/a.html?utm_source=trial",
-    "https://www.khan.co.kr/article/b",
-  ];
-  const approvedUrlsSha256 = await clusterArticleSetSha256(urls);
-  const inputApproval = {
-    authorization_id: "authorization-2026-07-26",
-    fingerprint: "a".repeat(64),
-    cluster_id: "cluster-rank-1",
-    reviewer: "reviewer-1",
-    reviewed_at: "2026-07-30T12:00:00+09:00",
-    approved_urls_sha256: approvedUrlsSha256,
-    approved_urls: urls,
-  };
-  const approvals = await approvedClusterApprovals({
-    approved_same_event_clusters: [inputApproval],
-  });
-  const profile = {
-    schema_version: "agendaframe.article-frame-profile.v2",
-    engine: {
-      semantic_ai: true,
-      version: "gemini-fixture",
-      prompt_version: "2.1.0",
-    },
-    lineage: {
-      model_id: "gemini-fixture",
-      prompt_version: "2.1.0",
-      analysis_schema_version: "agendaframe.article-frame-profile.v2",
-      comparison_engine_version: "korean-evidence-rules-v2",
-      approval: {
-        authorization_id: inputApproval.authorization_id,
-        fingerprint: inputApproval.fingerprint,
-        cluster_id: inputApproval.cluster_id,
-        reviewer: inputApproval.reviewer,
-        reviewed_at: inputApproval.reviewed_at,
-        approved_urls_sha256: inputApproval.approved_urls_sha256,
-      },
-    },
-  };
-
-  const matched = resolveClusterApproval([...urls].reverse(), [profile], approvals);
-  assert.equal(matched.authorizationId, inputApproval.authorization_id);
-  assert.equal(matched.clusterId, inputApproval.cluster_id);
-  assert.equal(matched.reviewedAt, "2026-07-30T03:00:00.000Z");
-  assert.throws(
-    () => resolveClusterApproval([urls[0], "https://www.khan.co.kr/article/changed"], [profile], approvals),
-    /exact issue URL set/,
-  );
-
-  const mismatchedProfile = structuredClone(profile);
-  mismatchedProfile.lineage.approval.fingerprint = "b".repeat(64);
-  assert.throws(
-    () => resolveClusterApproval(urls, [mismatchedProfile], approvals),
-    /does not match/,
-  );
-  await assert.rejects(
-    approvedClusterApprovals({
-      approved_same_event_clusters: [{ ...inputApproval, approved_urls_sha256: "c".repeat(64) }],
-    }),
-    /정확한 URL 집합/,
-  );
-  await assert.rejects(
-    approvedClusterApprovals({ approved_same_event_clusters: [urls] }),
-    /URL 배열만으로는 승인할 수 없습니다/,
-  );
 });
 
 test("keeps the public dashboard readable, evidence-first, and explicit about limits", async () => {
@@ -121,12 +31,12 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
   for (const copy of ["같은 사건,", "근거가 부족한 분석은", "본문 구조화 초안", "임시 본문 분석", "사람 검토", "중요도·사실성·여론을 뜻하지 않습니다"]) {
     assert.match(dashboard, new RegExp(copy));
   }
-  for (const copy of ["어디서 갈렸나", "쟁점 지도", "기사들이 연결한 서사", "근거로 만든 독자 질문"]) {
+  for (const copy of ["어디서 갈렸나", "쟁점 지형", "리포트로 읽기", "이렇게 읽어보세요"]) {
     assert.match(dashboard, new RegExp(copy));
   }
   assert.match(dashboard, /22개 주요 종합일간지·경제매체·뉴스통신사/);
   assert.match(dashboard, /fetch\("\/api\/sources"/);
-  assert.match(dashboard, /fetch\(`\/api\/issues\/dates\?limit=31&scope=\$\{ISSUE_SCOPE\}`/);
+  assert.match(dashboard, /fetch\("\/api\/issues\/dates\?limit=31"/);
   assert.match(dashboard, /날짜별 의제/);
   assert.match(dashboard, /archive-disclosure/);
   assert.doesNotMatch(dashboard, /핵심 의제 우선 · 스포츠·생활·IT 후순위/);
@@ -134,15 +44,17 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
   assert.doesNotMatch(topNavigation, /기사 검색/);
   assert.doesNotMatch(dashboard, /\["한겨레","경향신문","한국일보","중앙일보","조선일보"\]/);
   assert.match(dashboard, /<details className="score-details">/);
-  assert.match(dashboard, /분석 이력과 승인 근거/);
-  assert.match(dashboard, /approvedUrlsSha256/);
   assert.match(dashboard, /role="tab"/);
   assert.match(dashboard, /aria-controls={`analysis-panel-/);
-  assert.match(dashboard, /general_daily_10/);
-  assert.match(dashboard, /FramingEditorialView/);
-  assert.match(dashboard, /\["chat", "AI 대화"\]/u);
-  assert.match(dashboard, /\["selfcheck", "자기점검"\]/u);
-  assert.match(dashboard, /\["community", "커뮤니티"\]/u);
+  assert.match(dashboard, /comparison\.analysisModules/);
+  assert.match(dashboard, /<FrameCompositionByOutlet module={modules\.frameComposition}/);
+  assert.match(dashboard, /<StanceLandscape module={modules\.reportingStyle}/);
+  assert.match(dashboard, /structuredProfileCount \? "구조화 본문"/);
+  assert.match(dashboard, /variants\.slice\(0, 1\)/);
+  assert.match(styles, /\.analysis-visual-deck \{ min-width: 0;/);
+  assert.doesNotMatch(dashboard, /criticalStancePattern|supportiveStancePattern|outletJitter|buildStanceLandscape/);
+  assert.doesNotMatch(dashboard, /<FrameCompositionByOutlet frames=/);
+  assert.doesNotMatch(dashboard, /<StanceLandscape axes=/);
   assert.doesNotMatch(dashboard, /신뢰도 \{/);
   assert.doesNotMatch(dashboard, /agenda-list" aria-live/);
 
@@ -229,15 +141,9 @@ test("clusters real-looking article titles and produces explainable scores", () 
   assert.ok(housing.agendaScore > issues.find((issue) => issue.articleCount === 1).agendaScore);
   assert.deepEqual(titleTokens("[단독] 정부의 청년 주거지원 정책 발표"), ["청년", "주거지원", "정책", "발표"]);
   assert.equal(ANALYSIS_PROVIDER, "structured_extractive");
-  assert.equal(ANALYSIS_MODEL_VERSION, "agenda-structure-v6");
+  assert.equal(ANALYSIS_MODEL_VERSION, "agenda-structure-v5");
   assert.equal(getAnalysisProvider().analyze, analyzeArticles);
   assert.throws(() => getAnalysisProvider("vertex_ai"), /지원하지 않는 분석 공급자/);
-});
-
-test("keeps issue names event-shaped instead of appending a generic issue suffix", () => {
-  assert.equal(cleanHeadlineToIssueTitle("검경 수사팀 수사 수사 이슈"), "검경 수사팀 수사");
-  assert.equal(cleanHeadlineToIssueTitle("중대재해처벌법 개정안 국회 통과 이슈"), "중대재해처벌법 개정안 국회 통과");
-  assert.doesNotMatch(cleanHeadlineToIssueTitle("정부 정책 이슈"), /이슈$/u);
 });
 
 test("counts related outlets but deduplicates shared media groups in coverage", () => {
@@ -258,7 +164,7 @@ test("merges shared agenda concepts and keeps sports or lifestyle technology aft
     { id: "platform-1", sourceId: "hankook", source: "한국일보", title: "온라인 플랫폼 수수료 규제 법안 추진", section: "IT_과학" },
   ], { configuredSourceCount: 5 });
 
-  const authority = issues.find((issue) => issue.title === "보완수사권 제도 논쟁");
+  const authority = issues.find((issue) => issue.title === "보완수사권 행사 범위");
   assert.ok(authority);
   assert.equal(authority.articleCount, 2);
   assert.deepEqual(authority.articles.map((article) => article.id).sort(), ["authority-1", "authority-2"]);
@@ -520,6 +426,13 @@ test("resumes public body analysis across batches and stores only derived signal
   assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO article_body_signals")));
   assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO article_frame_profiles")));
   assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO issue_frame_comparisons")));
+  const comparisonInsert = statements.find((statement) => statement.sql.includes("INSERT INTO issue_frame_comparisons"));
+  const storedComparison = JSON.parse(comparisonInsert.parameters[2]);
+  assert.ok(storedComparison.analysisModules?.frameComposition);
+  assert.ok(storedComparison.analysisModules?.reportingStyle);
+  assert.ok(storedComparison.analysisModules?.morphology);
+  assert.ok(storedComparison.analysisModules.morphology.byOutlet.every((outlet) => Number.isInteger(outlet.negationCount)));
+  assert.doesNotMatch(JSON.stringify(storedComparison), /"(?:raw_body|bodyText|sentenceText|tokens)"\s*:/i);
   assert.ok(statements.some((statement) => statement.sql.includes("INSERT INTO frame_analyses") && statement.parameters.includes("body_transient")));
   assert.ok(!statements.some((statement) => statement.sql.includes("INSERT INTO article_contents")));
   assert.equal(JSON.stringify(statements).includes(body), false);
@@ -678,29 +591,20 @@ test("accepts authenticated homepage geometry as repeated observations", async (
 
 test("uses the checked-in JSON Schema as the public lineage contract", async () => {
   const schema = JSON.parse(await readFile(new URL("../docs/public-api.schema.json", import.meta.url), "utf8"));
-  assert.equal(schema["x-api-version"], "agendaframe-public-v5");
+  assert.equal(schema["x-api-version"], "agendaframe-public-v4");
   const required = schema.$defs.LineageMeta.required;
-  for (const field of ["snapshotId", "runId", "sourcePolicyVersion", "clusteringVersion", "scoreVersion", "modelId", "promptVersion", "analysisSchemaVersion", "comparisonEngineVersion", "authorizationId", "approvalFingerprint", "clusterId", "reviewer", "approvalReviewedAt", "approvedUrlsSha256", "evaluationDatasetVersion", "publishedAt"]) {
+  for (const field of ["snapshotId", "runId", "sourcePolicyVersion", "clusteringVersion", "scoreVersion", "modelId", "promptVersion", "evaluationDatasetVersion", "publishedAt"]) {
     assert.ok(required.includes(field), `missing lineage field: ${field}`);
   }
   assert.ok(schema.$defs.IssueDetailResponse.required.includes("comparison"));
   assert.ok(schema.$defs.Comparison.oneOf.some((entry) => entry.$ref === "#/$defs/LegacyComparison"));
   assert.ok(schema.$defs.Comparison.oneOf.some((entry) => entry.$ref === "#/$defs/StructuredComparison"));
   assert.ok(schema.$defs.StructuredComparison.required.includes("axes"));
-  for (const field of ["issueMap", "narratives", "readerQuestions"]) {
-    assert.ok(schema.$defs.StructuredComparison.required.includes(field), `missing structured comparison field: ${field}`);
+  assert.ok(schema.$defs.StructuredComparison.properties.analysisModules);
+  assert.equal(schema.$defs.StructuredComparison.required.includes("analysisModules"), false);
+  for (const moduleName of ["frameComposition", "reportingStyle", "morphology"]) {
+    assert.ok(schema.$defs.AnalysisModules.required.includes(moduleName), `missing analysis module contract: ${moduleName}`);
   }
-  assert.equal(schema.$defs.StructuredComparison.properties.narratives.maxItems, 2);
-  assert.equal(schema.$defs.StructuredComparison.properties.readerQuestions.maxItems, 3);
-  assert.ok(schema.$defs.IssueMap.required.includes("selectionBasis"));
-  assert.ok(schema.$defs.Narrative.required.includes("claimIds"));
-  assert.ok(schema.$defs.ReaderQuestion.required.includes("evidence"));
-  assert.ok(schema.$defs.StructuredComparison.required.includes("lineage"));
-  assert.deepEqual(schema.$defs.AnalysisLineage.required, [
-    "modelId", "promptVersion", "analysisSchemaVersion", "comparisonEngineVersion", "approval",
-  ]);
-  assert.ok(schema.$defs.ApprovalLineage.required.includes("fingerprint"));
-  assert.ok(schema.$defs.ApprovalLineage.required.includes("reviewedAt"));
   assert.ok(schema.$defs.LegacyComparison.required.includes("availableHeadlineEvidence"));
 });
 
@@ -789,6 +693,16 @@ test("validates BigKinds excerpts for transient structured analysis without reta
   assert.equal(rows.length, 1);
   assert.equal(rows[0].textScope, "provider_excerpt");
   assert.ok(rows[0].excerpt.length >= 40);
+  const [fullBody] = validateStructuredImportRows([{
+    source: "한겨레",
+    title: "본문 전체 분석 검증",
+    url: "https://www.hani.co.kr/arti/politics/full-body.html",
+    published_at: "2026-07-26T13:00:00+09:00",
+    textScope: "article_body",
+    excerpt: "전체 기사 본문을 저장하지 않고 메모리에서만 구조화 분석한다. ".repeat(220),
+  }]);
+  assert.equal(fullBody.textScope, "article_body");
+  assert.ok(fullBody.excerpt.length > 5_000);
   assert.throws(() => validateStructuredImportRows([{
     source: "한겨레",
     title: "짧은 발췌",
@@ -796,155 +710,14 @@ test("validates BigKinds excerpts for transient structured analysis without reta
     published_at: "2026-07-26T12:30:00+09:00",
     excerpt: "너무 짧음",
   }]), /40~5,000자/);
-});
-
-test("validates body-free GCP semantic analysis imports", () => {
-  const hash = "a".repeat(64);
-  const profile = {
-    schema_version: "agendaframe.article-frame-profile.v2",
-    engine: {
-      semantic_ai: true,
-      version: "gemini-fixture",
-      prompt_version: "2.0.0",
-    },
-    lineage: {
-      model_id: "gemini-fixture",
-      prompt_version: "2.0.0",
-      analysis_schema_version: "agendaframe.article-frame-profile.v2",
-      comparison_engine_version: "korean-evidence-rules-v2",
-      approval: {
-        authorization_id: "authorization-fixture",
-        fingerprint: "b".repeat(64),
-        cluster_id: "cluster-fixture",
-        reviewer: "reviewer-fixture",
-        reviewed_at: "2026-07-29T12:00:00+09:00",
-        approved_urls_sha256: "c".repeat(64),
-      },
-    },
-    article: {
-      article_id: "gcp-article-1",
-      upstream_article_id: "gcp-article-1",
-      body_sha256: hash,
-      body_character_count: 120,
-      sentence_count: 1,
-      raw_body_retained: false,
-    },
-    extraction: {
-      text_scope: "transient_public_page_extract",
-      analyzed_character_count: 120,
-      input_truncated: false,
-    },
-    genre: { code: "unknown" },
-    dimensions: Object.fromEntries(
-      ["problem_definition", "causal_interpretation", "responsibility_attribution", "moral_evaluation", "treatment_recommendation"]
-        .map((dimension) => [dimension, { status: "not_observed", outlet_narration_observed: false, items: [] }]),
-    ),
-    actors_and_sources: [],
-    context_depth: { level: "unknown" },
-    scope: { code: "unknown" },
-    secondary_descriptors: { generic_frames: [], policy_frames: [], controlled_associations: [] },
-    framing_devices: [],
-    review: { status: "automatic_draft", requires_human_review: true },
-  };
-  const [row] = validateAnalyzedImportRows([{
-    article: {
-      article_id: "gcp-article-1",
-      source_id: "hani",
-      title: "검증용 GCP 분석 기사",
-      canonical_url: "https://www.hani.co.kr/arti/politics/gcp-test.html",
-      published_at: "2026-07-30T09:00:00+09:00",
-      collected_at: "2026-07-30T09:10:00+09:00",
-      section: "정치",
-      body_hash: hash,
-      body_characters: 120,
-    },
-    profile,
-  }]);
-  assert.equal(row.profile.engine.semantic_ai, true);
-  assert.equal(row.profile.lineage.approval.authorization_id, "authorization-fixture");
-  assert.equal(row.profile.extraction.input_truncated, false);
-  assert.equal(row.bodyHash, hash);
-  assert.doesNotMatch(JSON.stringify(row), /"body_text"|"raw_body"|"excerpt"/);
-  const contradictoryExtraction = structuredClone(profile);
-  contradictoryExtraction.extraction.input_truncated = true;
-  assert.throws(
-    () => validateAnalyzedImportRows([{
-      article: {
-        article_id: "gcp-article-1",
-        source_id: "hani",
-        title: "GCP extraction validation",
-        canonical_url: "https://www.hani.co.kr/arti/politics/gcp-extraction.html",
-        published_at: "2026-07-30T09:00:00+09:00",
-        collected_at: "2026-07-30T09:10:00+09:00",
-        section: "politics",
-        body_hash: hash,
-        body_characters: 120,
-      },
-      profile: contradictoryExtraction,
-    }]),
-    /절단 입력/,
-  );
-  assert.throws(
-    () => validateAnalyzedImportRows([{
-      article: {
-        article_id: "different-upstream-id",
-        source_id: "hani",
-        title: "검증용 GCP 분석 기사",
-        canonical_url: "https://www.hani.co.kr/arti/politics/gcp-test.html",
-        published_at: "2026-07-30T09:00:00+09:00",
-        collected_at: "2026-07-30T09:10:00+09:00",
-        section: "정치",
-        body_hash: hash,
-        body_characters: 120,
-      },
-      profile,
-    }]),
-    /상류 기사 식별자/,
-  );
-});
-
-test("rejects semantic imports without authenticated lineage", () => {
-  const hash = "d".repeat(64);
-  const profile = {
-    schema_version: "agendaframe.article-frame-profile.v2",
-    engine: { semantic_ai: true, version: "gemini-fixture", prompt_version: "2.1.0" },
-    article: {
-      article_id: "gcp-missing-lineage",
-      upstream_article_id: "gcp-missing-lineage",
-      body_sha256: hash,
-      body_character_count: 120,
-      sentence_count: 1,
-      raw_body_retained: false,
-    },
-    genre: { code: "unknown" },
-    dimensions: Object.fromEntries(
-      ["problem_definition", "causal_interpretation", "responsibility_attribution", "moral_evaluation", "treatment_recommendation"]
-        .map((dimension) => [dimension, { status: "not_observed", outlet_narration_observed: false, items: [] }]),
-    ),
-    actors_and_sources: [],
-    context_depth: { level: "unknown" },
-    scope: { code: "unknown" },
-    secondary_descriptors: { generic_frames: [], policy_frames: [], controlled_associations: [] },
-    framing_devices: [],
-    review: { status: "automatic_draft", requires_human_review: true },
-  };
-  assert.throws(
-    () => validateAnalyzedImportRows([{
-      article: {
-        article_id: "gcp-missing-lineage",
-        source_id: "hani",
-        title: "GCP lineage validation",
-        canonical_url: "https://www.hani.co.kr/arti/politics/gcp-lineage.html",
-        published_at: "2026-07-30T09:00:00+09:00",
-        collected_at: "2026-07-30T09:10:00+09:00",
-        section: "politics",
-        body_hash: hash,
-        body_characters: 120,
-      },
-      profile,
-    }]),
-    /lineage/,
-  );
+  assert.throws(() => validateStructuredImportRows([{
+    source: "한겨레",
+    title: "잘못된 범위",
+    url: "https://www.hani.co.kr/arti/politics/bad-scope.html",
+    published_at: "2026-07-26T12:30:00+09:00",
+    textScope: "full_text",
+    excerpt: "분석에 충분한 길이지만 허용되지 않은 범위 값이다. ".repeat(3),
+  }]), /provider_excerpt 또는 article_body/);
 });
 
 test("reports no-cost health and protects write endpoints", async () => {
@@ -956,7 +729,7 @@ test("reports no-cost health and protects write endpoints", async () => {
   assert.equal(healthBody.collection.method, "bigkinds_export");
   assert.equal(healthBody.collection.directCrawling, false);
   assert.equal(healthBody.collection.configuredSources, 22);
-  assert.equal(healthBody.meta.clusteringVersion, "agenda-concepts-complete-link-v6");
+  assert.equal(healthBody.meta.clusteringVersion, "agenda-concepts-complete-link-v5");
   assert.equal(healthBody.meta.scoreVersion, "observed-agenda-v4");
 
   const sources = await handleApiRequest(new Request("https://example.test/api/sources"));
@@ -983,12 +756,6 @@ test("reports no-cost health and protects write endpoints", async () => {
     body: JSON.stringify({ rows: [] }),
   }), { DB: {}, IMPORT_TOKEN: "correct" });
   assert.equal(unauthorized.status, 401);
-  const rotatedToken = await handleApiRequest(new Request("https://example.test/api/import", {
-    method: "POST",
-    headers: { authorization: "Bearer new-token", "content-type": "application/json", origin: "https://example.test" },
-    body: JSON.stringify({ rows: [] }),
-  }), { DB: {}, IMPORT_TOKEN: "old-token", CODEX_IMPORT_TOKEN: "new-token" });
-  assert.equal(rotatedToken.status, 400);
   const qualityUnauthorized = await handleApiRequest(new Request("https://example.test/api/quality?date=2026-07-14", {
     headers: { authorization: "Bearer wrong", origin: "https://example.test" },
   }), { DB: {}, IMPORT_TOKEN: "correct" });
@@ -1089,117 +856,6 @@ test("hides legacy scores and unsupported comparison claims in issue detail", as
   assert.equal(response.headers.has("etag"), true);
 });
 
-test("publishes the actual comparison and approval lineage in issue detail metadata", async () => {
-  const reviewedAt = "2026-07-30T03:00:00.000Z";
-  const lineage = {
-    modelId: "gemini-2.5-flash-lite",
-    promptVersion: "2.1.0",
-    analysisSchemaVersion: "agendaframe.article-frame-profile.v2",
-    comparisonEngineVersion: "korean-evidence-rules-v2",
-    approval: {
-      authorizationId: "authorization-2026-07-26",
-      fingerprint: "a".repeat(64),
-      clusterId: "cluster-rank-1",
-      reviewer: "reviewer-1",
-      reviewedAt,
-      approvedUrlsSha256: "b".repeat(64),
-    },
-  };
-  const comparison = {
-    lineage,
-    status: "partial",
-    divergenceDetected: false,
-    evidenceBasis: "evidence_spans",
-    reason: "No supported divergence was observed.",
-    methodologyLabel: "evidence-first",
-    reviewStatus: "automatic_draft",
-    summary: {
-      commonGround: null,
-      mainDifference: null,
-      whyItMatters: null,
-      sourceContext: null,
-    },
-    sample: {
-      analyzedArticles: 2,
-      textScope: "article_body",
-      outlets: 2,
-      independentMediaGroups: 2,
-      excludedArticles: 0,
-      inputTruncatedArticles: 0,
-    },
-    axes: [],
-    issueMap: {
-      status: "withheld_insufficient_evidence",
-      reason: "Not enough evidence for an issue map.",
-      axisId: null,
-      dimension: "problem_definition",
-      label: "문제 정의",
-      leftAnchor: null,
-      rightAnchor: null,
-      selectionBasis: {
-        minimumArticles: 4,
-        minimumOutlets: 3,
-        minimumIndependentMediaGroups: 2,
-        minimumArticlesPerAnchor: 2,
-        articleCount: 2,
-        outletCount: 2,
-        independentMediaGroups: 2,
-        balancedCoverage: null,
-        overlap: null,
-        axisStrength: null,
-        coveredArticleCount: 0,
-        formula: null,
-      },
-      outlets: [],
-    },
-    narratives: [],
-    readerQuestions: [],
-    sourceLens: {
-      sharedVoices: [],
-      voicesPresentInSomeOutlets: [],
-      byOutlet: [],
-      caution: null,
-    },
-    contextGaps: [],
-    limitations: ["Automatic draft."],
-  };
-  const issue = {
-    id: "lineage-issue", runId: "run-lineage", targetDate: "2026-07-26", provider: "rules_local", modelVersion: ANALYSIS_MODEL_VERSION, analyzedAt: Date.parse("2026-07-26T19:00:00+09:00"),
-    issueDate: "2026-07-26", title: "lineage title", summary: "lineage summary", category: "정치", articleCount: 2, sourceCount: 2,
-    agendaScore: 70, diversityScore: 50, placementScore: 20, volumeScore: 40, repetitionScore: 0, confidence: 0, placementObservedCount: 0, placementTotalCount: 2,
-  };
-  const DB = {
-    prepare(sql) {
-      return {
-        bind() {
-          if (sql.includes("FROM issues i")) return { first: async () => issue };
-          if (sql.includes("FROM issue_articles ia") && sql.includes("ORDER BY ia.representative")) return { all: async () => ({ results: [] }) };
-          if (sql.includes("FROM frame_analyses")) return { all: async () => ({ results: [] }) };
-          if (sql.includes("FROM ai_reports")) return { first: async () => null };
-          if (sql.includes("GROUP BY s.id")) return { all: async () => ({ results: [] }) };
-          if (sql.includes("FROM issue_frame_comparisons")) return { first: async () => ({ comparisonJson: JSON.stringify(comparison) }) };
-          throw new Error(`Unexpected SQL: ${sql}`);
-        },
-      };
-    },
-  };
-
-  const response = await handleApiRequest(new Request("https://example.test/api/issues/lineage-issue"), { DB });
-  assert.equal(response.status, 200);
-  const body = await response.json();
-  assert.deepEqual(body.comparison.lineage, lineage);
-  assert.equal(body.meta.modelId, lineage.modelId);
-  assert.equal(body.meta.promptVersion, lineage.promptVersion);
-  assert.equal(body.meta.analysisSchemaVersion, lineage.analysisSchemaVersion);
-  assert.equal(body.meta.comparisonEngineVersion, lineage.comparisonEngineVersion);
-  assert.equal(body.meta.authorizationId, lineage.approval.authorizationId);
-  assert.equal(body.meta.approvalFingerprint, lineage.approval.fingerprint);
-  assert.equal(body.meta.clusterId, lineage.approval.clusterId);
-  assert.equal(body.meta.reviewer, lineage.approval.reviewer);
-  assert.equal(body.meta.approvalReviewedAt, reviewedAt);
-  assert.equal(body.meta.approvedUrlsSha256, lineage.approval.approvedUrlsSha256);
-});
-
 test("filters and paginates the complete article collection", async () => {
   const statements = [];
   const article = { id: "article-1", sourceId: "hani", source: "한겨레", title: "주거 정책 기사", url: "https://www.hani.co.kr/arti/politics/test.html", section: "정치_국회", publishedAt: Date.parse("2026-07-14T17:44:48+09:00"), collectedAt: Date.parse("2026-07-14T18:00:00+09:00"), homepagePlacement: null, homepageRank: null };
@@ -1223,7 +879,7 @@ test("filters and paginates the complete article collection", async () => {
   assert.equal(body.hasMore, true);
   assert.equal(typeof body.nextCursor, "string");
   assert.equal(body.meta.runtimeMode, "live_metadata");
-  assert.equal(body.meta.schemaVersion, "agendaframe-public-v5");
+  assert.equal(body.meta.schemaVersion, "agendaframe-public-v4");
   assert.deepEqual(body.articles, [article]);
   assert.equal(statements.length, 2);
   assert.match(statements[0].sql, /a\.source_id = \?/);
@@ -1264,7 +920,7 @@ test("lists successful public agenda dates and rejects invalid issue dates", asy
     ["2026-07-14", 120, 20],
     ["2026-07-13", 90, 16],
   ]);
-  assert.equal(body.meta.schemaVersion, "agendaframe-public-v5");
+  assert.equal(body.meta.schemaVersion, "agendaframe-public-v4");
 
   const invalidDate = await handleApiRequest(new Request("https://example.test/api/issues?date=2026-02-30"), { DB });
   assert.equal(invalidDate.status, 400);
@@ -1273,41 +929,6 @@ test("lists successful public agenda dates and rejects invalid issue dates", asy
   const excludedCategory = await handleApiRequest(new Request("https://example.test/api/issues?category=%EC%97%B0%EC%98%88"), { DB });
   assert.equal(excludedCategory.status, 400);
   assert.equal((await excludedCategory.json()).error.code, "INVALID_REQUEST");
-});
-
-test("binds scoped issue metrics in the same order as their SQL placeholders", async () => {
-  const statements = [];
-  const run = { id: "run-scope", targetDate: "2026-07-26", provider: "rules_local", modelVersion: ANALYSIS_MODEL_VERSION, finishedAt: 100, articleCount: 10, issueCount: 1 };
-  const DB = {
-    prepare(sql) {
-      return {
-        bind(...parameters) {
-          statements.push({ sql, parameters });
-          return {
-            first: async () => {
-              if (sql.includes("FROM analysis_runs")) return run;
-              if (sql.includes("SELECT COUNT(*) AS total FROM issues i")) return { total: 1 };
-              throw new Error(`Unexpected first query: ${sql}`);
-            },
-            all: async () => {
-              if (sql.includes("WITH scoped_issue_metrics")) return { results: [{ id: "scope-issue", issueDate: "2026-07-26", title: "대표 기사 제목", summary: "요약", category: "정치", articleCount: 2, sourceCount: 2, agendaScore: 52, diversityScore: 20, placementScore: null, volumeScore: 20, repetitionScore: 0, confidence: null, placementObservedCount: 0, placementTotalCount: 2, contentAvailableCount: 0, structuredProfileCount: 0 }] };
-              if (sql.includes("GROUP BY i.category")) return { results: [{ category: "정치", count: 1 }] };
-              throw new Error(`Unexpected all query: ${sql}`);
-            },
-          };
-        },
-      };
-    },
-  };
-
-  const response = await handleApiRequest(new Request("https://example.test/api/issues?date=2026-07-26&scope=general_daily_10&limit=5"), { DB });
-  assert.equal(response.status, 200);
-  const body = await response.json();
-  assert.equal(body.issues[0].agendaScore, 52);
-  assert.equal(body.issues[0].scoreStatus, "scope_observed_components");
-  const scopedMetrics = statements.find(({ sql }) => sql.includes("WITH scoped_issue_metrics"));
-  assert.deepEqual(scopedMetrics.parameters.slice(0, 4), ["general_daily", "general_daily", 10, 10]);
-  assert.equal(scopedMetrics.parameters.at(-1), 5);
 });
 
 test("reports resumable per-day analysis status", async () => {

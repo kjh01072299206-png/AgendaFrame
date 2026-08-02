@@ -69,22 +69,6 @@ def validate_gold(eval_root: Path) -> dict[str, Any]:
     )
 
     report_records = read_jsonl(eval_root / "report" / "gold.jsonl")
-    holdout_path = eval_root / "holdout" / "manifest.jsonl"
-    holdout_records = read_jsonl(holdout_path) if holdout_path.is_file() else []
-    for record in holdout_records:
-        if record.get("source", {}).get("kind") != "real":
-            raise ValueError(f"{holdout_path}: holdout records must be real article records")
-        if record.get("split") != "locked_holdout" or record.get("locked") is not True:
-            raise ValueError(f"{holdout_path}: records must be locked holdout records")
-        article = record.get("article", {})
-        if "body" in article or "html" in article or record.get("body") is not None:
-            raise ValueError(f"{holdout_path}: raw article body must not be committed")
-    holdout_status = "unlabeled"
-    if holdout_records and all(
-        record.get("annotation", {}).get("status") in {"labeled", "adjudicated"}
-        for record in holdout_records
-    ):
-        holdout_status = "labeled_pending_gate"
     prompt_manifest = yaml.safe_load(
         (eval_root / "prompts" / "manifest.yaml").read_text(encoding="utf-8")
     )
@@ -104,12 +88,6 @@ def validate_gold(eval_root: Path) -> dict[str, Any]:
         "model_quality_measured": False,
         "dataset_status": thresholds["dataset_status"],
         "release_eligible": thresholds["release_eligible"],
-        "holdout_packet": {
-            "records": len(holdout_records),
-            "status": holdout_status,
-            "raw_body_committed": False,
-            "release_ready": False,
-        },
         "case_counts": {
             "clustering": len(clustering_records),
             "framing": len(framing_records),

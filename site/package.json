@@ -9,7 +9,7 @@
     "dev": "vite",
     "build": "vite build",
     "start": "vite --host 127.0.0.1",
-    "test": "npm run build && node --test --test-isolation=none tests/mvp.test.mjs tests/article-extractor.test.mjs tests/framing-engine.test.mjs tests/bigkinds-xlsx.test.mjs tests/prepare-bigkinds-gcp-trial.test.mjs tests/durable-jobs.test.mjs tests/publication-outbox.test.mjs tests/operations.test.mjs tests/release-guard.test.mjs tests/release-admin.test.mjs tests/evidence-chat.test.mjs tests/community.test.mjs",
+    "test": "npm run build && node --test --test-isolation=none tests/mvp.test.mjs tests/article-extractor.test.mjs tests/framing-engine.test.mjs tests/bigkinds-xlsx.test.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",

@@ -7,10 +7,17 @@
  * sentence locators and salted SHA-256 fingerprints of the supporting sentence.
  */
 
-export const ARTICLE_FRAME_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v1";
-export const AI_ARTICLE_FRAME_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v2";
-export const ISSUE_FRAME_COMPARISON_SCHEMA = "agendaframe.issue-frame-comparison.v1";
-export const FRAMING_ENGINE_VERSION = "korean-evidence-rules-v2";
+import {
+  contentLemmaSet,
+  KOREAN_MORPHOLOGY_DICTIONARY_VERSION,
+  KOREAN_MORPHOLOGY_MODE,
+  KOREAN_MORPHOLOGY_VERSION,
+  summarizeKoreanMorphology,
+} from "./korean-morphology.mjs";
+
+export const ARTICLE_FRAME_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v2";
+export const ISSUE_FRAME_COMPARISON_SCHEMA = "agendaframe.issue-frame-comparison.v2";
+export const FRAMING_ENGINE_VERSION = "korean-morph-evidence-rules-v3";
 
 const DIMENSION_ORDER = Object.freeze([
   "problem_definition",
@@ -196,21 +203,21 @@ const GENERIC_FRAME_RULES = Object.freeze([
 // Policy Frames Codebook-inspired descriptors. They are secondary descriptors,
 // not a claim that a complete policy frame has been semantically identified.
 const POLICY_DESCRIPTOR_RULES = Object.freeze([
-  { code: "economic", label: "경제", patterns: [/(?:비용|예산|성장|소득|고용|시장|산업|경제|금리|물가)/] },
-  { code: "capacity_resources", label: "역량·자원", patterns: [/(?:인력|예산|시설|역량|재원|자원|기술|인프라)/] },
-  { code: "morality", label: "도덕성", patterns: [/(?:윤리|도덕|정의|양심|옳|그르|정당|부당)/] },
-  { code: "fairness_equality", label: "공정·평등", patterns: [/(?:공정|평등|차별|격차|특혜|형평|분배|취약)/] },
-  { code: "legality_constitutionality", label: "법·헌정", patterns: [/(?:법률|헌법|위법|위헌|법적|판결|재판|절차)/] },
-  { code: "policy_prescription", label: "정책 처방", patterns: [/(?:정책|대책|개선|보완|개정|도입|폐지|지원|규제)/] },
-  { code: "crime_punishment", label: "범죄·처벌", patterns: [/(?:범죄|수사|기소|처벌|형량|구속|검찰|경찰)/] },
-  { code: "security_defense", label: "안보·국방", patterns: [/(?:안보|국방|군사|전쟁|북한|무기|외교|동맹)/] },
-  { code: "health_safety", label: "건강·안전", patterns: [/(?:건강|질병|환자|의료|안전|재난|사고|위험|방역)/] },
-  { code: "quality_of_life", label: "삶의 질", patterns: [/(?:주거|교육|돌봄|복지|생활|삶의 질|교통|환경)/] },
-  { code: "cultural_identity", label: "문화·정체성", patterns: [/(?:문화|정체성|전통|종교|세대|젠더|지역 정서)/] },
-  { code: "public_opinion", label: "여론", patterns: [/(?:여론|설문|조사 결과|지지율|반대 여론|찬성 여론)/] },
-  { code: "political", label: "정치 과정", patterns: [/(?:여당|야당|국회|선거|정당|대통령실|정치권)/] },
-  { code: "external_regulation", label: "대외 관계·평판", patterns: [/(?:국제사회|해외|외교|무역|제재|협약|국가 이미지|평판)/] },
-  { code: "other", label: "기타 정책 맥락", patterns: [/(?:별도 쟁점|기타 쟁점)/] },
+  { code: "economic", label: "경제", terms: ["비용", "예산", "성장", "소득", "고용", "시장", "산업", "경제", "금리", "물가"], strongPatterns: [/(?:경제적 부담|금리 인상|물가 상승|일자리 감소|예산 삭감)/] },
+  { code: "capacity_resources", label: "역량·자원", terms: ["인력", "예산", "시설", "역량", "재원", "자원", "기술", "인프라"], strongPatterns: [/(?:인력 부족|예산 부족|재원 부족|인프라 부족)/] },
+  { code: "morality", label: "도덕성", terms: ["윤리", "도덕", "정의", "양심", "정당", "부당"], strongPatterns: [/(?:비윤리|도덕적|부당하|정당하지 않)/] },
+  { code: "fairness_equality", label: "공정·평등", terms: ["공정", "평등", "차별", "격차", "특혜", "형평", "분배", "취약"], strongPatterns: [/(?:불공정|불평등|차별|특혜|형평성)/] },
+  { code: "legality_constitutionality", label: "법·헌정", terms: ["법률", "헌법", "법적", "판결", "재판", "절차", "법치주의"], strongPatterns: [/(?:위법|위헌|절차 위반|법적 논란|법치주의 훼손)/] },
+  { code: "policy_prescription", label: "정책 처방", terms: ["정책", "대책", "개선하다", "보완하다", "개정하다", "도입하다", "폐지하다", "지원하다", "규제하다"], strongPatterns: [/(?:개선해야|보완해야|개정해야|도입해야|폐지해야|대책을 마련|정책을 추진)/] },
+  { code: "crime_punishment", label: "범죄·처벌", terms: ["범죄", "수사", "기소", "처벌", "형량", "구속", "검찰", "경찰"], strongPatterns: [/(?:범죄|처벌해야|기소|구속영장)/] },
+  { code: "security_defense", label: "안보·국방", terms: ["안보", "국방", "군사", "전쟁", "북한", "무기", "외교", "동맹"], strongPatterns: [/(?:국가 안보|군사적 위협|국방력|무력 충돌)/] },
+  { code: "health_safety", label: "건강·안전", terms: ["건강", "질병", "환자", "의료", "안전", "재난", "사고", "위험", "방역"], strongPatterns: [/(?:안전 사고|인명 피해|건강권|감염 확산|재난 대응)/] },
+  { code: "quality_of_life", label: "삶의 질", terms: ["주거", "교육", "돌봄", "복지", "생활", "교통", "환경"], strongPatterns: [/(?:삶의 질|주거 불안|돌봄 공백|생활 여건)/] },
+  { code: "cultural_identity", label: "문화·정체성", terms: ["문화", "정체성", "전통", "종교", "세대", "젠더", "지역"], strongPatterns: [/(?:문화적 정체성|세대 갈등|지역 정서)/] },
+  { code: "public_opinion", label: "여론", terms: ["여론", "설문", "지지율", "찬성", "반대"], strongPatterns: [/(?:조사 결과|찬성 여론|반대 여론|지지율)/] },
+  { code: "political", label: "정치 과정", terms: ["여당", "야당", "국회", "선거", "정당", "대통령실", "정치권"], strongPatterns: [/(?:여야 공방|정치적 갈등|선거 전략|국회 논의)/] },
+  { code: "external_regulation", label: "대외 관계·평판", terms: ["국제사회", "해외", "외교", "무역", "제재", "협약", "평판"], strongPatterns: [/(?:국가 이미지|국제적 평판|무역 제재|외교 관계)/] },
+  { code: "other", label: "기타 정책 맥락", terms: [], strongPatterns: [/(?:별도 쟁점|기타 쟁점)/], minimumUniqueTerms: 0 },
 ]);
 
 const CONTROLLED_CONCEPTS = Object.freeze([
@@ -418,27 +425,25 @@ async function extractDimensions(articleId, sentences) {
   const dimensions = {};
   for (const dimension of DIMENSION_ORDER) {
     const items = [];
-    const seenCodes = new Set();
+    const seenCodeScopes = new Set();
     for (const sentence of sentences) {
       for (const rule of DIMENSION_RULES[dimension]) {
         const match = rule.pattern.exec(sentence.text);
         rule.pattern.lastIndex = 0;
-        if (!match || seenCodes.has(rule.code)) continue;
+        if (!match) continue;
         const voice = classifyVoice(sentence.text, match.index);
-        const evidence = await evidenceReference(articleId, sentence);
-        const variantKey = `rules:${dimension}:${rule.code}`;
+        const voiceScope = voice.kind === "journalist_narration" ? "narration" : "source";
+        const dedupeKey = `${rule.code}:${voiceScope}`;
+        if (seenCodeScopes.has(dedupeKey)) continue;
         items.push({
-          claim_id: `claim:${await sha256(`agendaframe:claim:v1:${articleId}:${dimension}:${variantKey}:${voice.kind}`)}`,
           code: rule.code,
-          frame_family: rule.code,
-          variant_key: variantKey,
           public_paraphrase: voice.kind === "journalist_narration"
             ? rule.paraphrase
             : `${ROLE_LABELS[voice.speaker_role] ?? "취재원"}의 발언·설명에서 ${rule.paraphrase.replace(/합니다\.$/, "하는 관점이 제시됩니다.")}`,
           voice,
-          evidence,
+          evidence: await evidenceReference(articleId, sentence),
         });
-        seenCodes.add(rule.code);
+        seenCodeScopes.add(dedupeKey);
       }
     }
     dimensions[dimension] = dimensionResult(items);
@@ -524,7 +529,16 @@ async function descriptorSignals(articleId, sentences, rules) {
   for (const rule of rules) {
     const matched = [];
     for (const sentence of sentences) {
-      if (rule.patterns.some((pattern) => pattern.test(sentence.text))) matched.push(sentence);
+      if (rule.terms) {
+        const lemmas = contentLemmaSet(sentence.text);
+        const termHits = new Set(rule.terms.filter((term) => lemmas.has(term)));
+        const strongMatch = (rule.strongPatterns ?? []).some((pattern) => pattern.test(sentence.text));
+        const minimumUniqueTerms = rule.minimumUniqueTerms ?? 2;
+        const meetsTermThreshold = rule.terms.length > 0 && termHits.size >= minimumUniqueTerms;
+        if (strongMatch || meetsTermThreshold) matched.push(sentence);
+      } else if (rule.patterns.some((pattern) => pattern.test(sentence.text))) {
+        matched.push(sentence);
+      }
     }
     if (!matched.length) continue;
     results.push({
@@ -537,6 +551,16 @@ async function descriptorSignals(articleId, sentences, rules) {
     });
   }
   return results.sort((a, b) => b.sentence_count - a.sentence_count || a.code.localeCompare(b.code));
+}
+
+async function morphologyTermEvidence(articleId, sentences, morphology) {
+  const evidence = [];
+  for (const term of morphology.term_frequencies ?? []) {
+    const sentence = sentences.find((candidate) => contentLemmaSet(candidate.text).has(term.term));
+    if (!sentence) continue;
+    evidence.push({ term: term.term, pos: term.pos, evidence: await evidenceReference(articleId, sentence) });
+  }
+  return evidence;
 }
 
 async function contextProfile(articleId, sentences) {
@@ -676,6 +700,7 @@ export async function analyzeArticleFraming(input) {
   const genre = genreRule(title, sentences);
   const sources = await sourceProfile(articleId, sentences);
   const dimensions = await extractDimensions(articleId, sentences);
+  const morphology = summarizeKoreanMorphology(sentences);
   const profile = {
     schema_version: ARTICLE_FRAME_PROFILE_SCHEMA,
     engine: {
@@ -714,6 +739,10 @@ export async function analyzeArticleFraming(input) {
       policy_frames: await descriptorSignals(articleId, sentences, POLICY_DESCRIPTOR_RULES),
       controlled_associations: associationMap(sentences),
     },
+    morphology: {
+      ...morphology,
+      term_evidence: await morphologyTermEvidence(articleId, sentences, morphology),
+    },
     framing_devices: await framingDevices(articleId, title, sentences, sources),
     review: {
       status: "machine_observation_unreviewed",
@@ -736,7 +765,7 @@ function findForbiddenKeys(value, path = "$", errors = []) {
   }
   if (!value || typeof value !== "object") return errors;
   for (const [key, child] of Object.entries(value)) {
-    if (/^(?:bodyText|body_text|rawBody|raw_body|sentenceText|sentence_text|quote|quotation|excerpt|html|content)$/i.test(key)) {
+    if (/^(?:bodyText|body_text|rawBody|raw_body|sentenceText|sentence_text|quote|quotation|excerpt|html|content|tokens|token_sequence|morpheme_sequence)$/i.test(key)) {
       errors.push(`${path}.${key} may contain raw article text`);
     }
     findForbiddenKeys(child, `${path}.${key}`, errors);
@@ -754,17 +783,26 @@ function findForbiddenKeys(value, path = "$", errors = []) {
 export function validateArticleFrameProfile(profile) {
   const errors = [];
   if (!profile || typeof profile !== "object") return { valid: false, errors: ["profile must be an object"] };
-  const deterministicProfile = profile.schema_version === ARTICLE_FRAME_PROFILE_SCHEMA;
-  const semanticProfile = profile.schema_version === AI_ARTICLE_FRAME_PROFILE_SCHEMA;
-  if (!deterministicProfile && !semanticProfile) errors.push("unsupported schema_version");
-  if (deterministicProfile && profile.engine?.semantic_ai !== false) {
-    errors.push("semantic_ai must be false for the deterministic schema");
-  }
-  if (semanticProfile && profile.engine?.semantic_ai !== true) {
-    errors.push("semantic_ai must be true for the semantic schema");
-  }
+  if (profile.schema_version !== ARTICLE_FRAME_PROFILE_SCHEMA) errors.push("unsupported schema_version");
+  if (profile.engine?.semantic_ai !== false) errors.push("semantic_ai must be false for this engine");
   if (profile.article?.raw_body_retained !== false) errors.push("raw_body_retained must be false");
   if (!/^[a-f0-9]{64}$/.test(String(profile.article?.body_sha256 ?? ""))) errors.push("body_sha256 must be SHA-256 hex");
+  if (profile.morphology?.raw_tokens_retained !== false) errors.push("morphology.raw_tokens_retained must be false");
+  if (profile.morphology?.analyzer?.version !== KOREAN_MORPHOLOGY_VERSION) errors.push("unsupported morphology analyzer version");
+  if (!Number.isInteger(profile.morphology?.token_count) || profile.morphology.token_count < 0) errors.push("invalid morphology token_count");
+  for (const term of profile.morphology?.term_frequencies ?? []) {
+    if (typeof term.term !== "string" || term.term.length < 2 || term.term.length > 20) errors.push("invalid morphology term");
+    if (!Number.isInteger(term.count) || term.count < 1) errors.push("invalid morphology term count");
+  }
+  const morphologyEvidence = new Map((profile.morphology?.term_evidence ?? [])
+    .map((entry) => [`${entry.pos}:${entry.term}`, entry.evidence]));
+  for (const term of profile.morphology?.term_frequencies ?? []) {
+    const evidence = morphologyEvidence.get(`${term.pos}:${term.term}`);
+    if (!/^[a-f0-9]{64}$/.test(String(evidence?.sentence_sha256 ?? ""))) errors.push("morphology term missing evidence hash");
+    if (!Number.isInteger(evidence?.locator?.paragraph) || !Number.isInteger(evidence?.locator?.sentence)) {
+      errors.push("morphology term missing evidence locator");
+    }
+  }
   for (const dimension of DIMENSION_ORDER) {
     const result = profile.dimensions?.[dimension];
     if (!result || !["observed", "source_attributed", "not_observed"].includes(result.status)) {
@@ -778,16 +816,6 @@ export function validateArticleFrameProfile(profile) {
     for (const item of result.items ?? []) {
       if (!["journalist_narration", "direct_quote", "indirect_source", "uncertain_quote"].includes(item.voice?.kind)) {
         errors.push(`${dimension} has invalid voice`);
-      }
-      if (item.claim_id !== undefined && !/^claim:[a-f0-9]{64}$/.test(String(item.claim_id))) {
-        errors.push(`${dimension} has invalid claim_id`);
-      }
-      if (item.frame_family !== undefined && item.frame_family !== null
-        && !/^[a-z0-9_]{2,80}$/.test(String(item.frame_family))) {
-        errors.push(`${dimension} has invalid frame_family`);
-      }
-      if (item.variant_key !== undefined && !String(item.variant_key).trim()) {
-        errors.push(`${dimension} has invalid variant_key`);
       }
       if (!/^[a-f0-9]{64}$/.test(String(item.evidence?.sentence_sha256 ?? ""))) {
         errors.push(`${dimension} has invalid evidence hash`);
@@ -830,44 +858,13 @@ function countBy(items, getter) {
 
 function sortedPatterns(patterns) {
   return [...patterns.values()]
-    .map((pattern) => {
-      const paraphrases = [...pattern.paraphrases].sort((a, b) => a.localeCompare(b, "ko"));
-      return {
-        ...pattern,
-        public_paraphrase: paraphrases[0] ?? pattern.public_paraphrase,
-        paraphrases,
-        outlets: [...pattern.outlets].sort((a, b) => a.localeCompare(b, "ko")),
-        article_ids: [...pattern.article_ids].sort(),
-        claim_ids: [...pattern.claim_ids].sort(),
-        evidence: pattern.evidence.slice(0, 8),
-      };
-    })
+    .map((pattern) => ({
+      ...pattern,
+      outlets: [...pattern.outlets].sort((a, b) => a.localeCompare(b, "ko")),
+      article_ids: [...pattern.article_ids].sort(),
+      evidence: pattern.evidence.slice(0, 8),
+    }))
     .sort((a, b) => b.article_count - a.article_count || a.code.localeCompare(b.code));
-}
-
-function semanticVariantKey(dimension, item, profile) {
-  if (profile.engine?.semantic_ai !== true) {
-    return normalizeText(item.variant_key) || String(item.code);
-  }
-  const frameFamily = String(item.frame_family ?? "").trim();
-  if (/^[a-z0-9_]{2,80}$/.test(frameFamily)) {
-    return `semantic:${dimension}:family:${frameFamily}`;
-  }
-  const normalizedMeaning = normalizeText(item.public_paraphrase)
-    .normalize("NFKC")
-    .toLocaleLowerCase("ko-KR")
-    .replace(/[^\p{L}\p{N}_]+/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return normalizedMeaning
-    ? `semantic:${dimension}:${normalizedMeaning}`
-    : String(item.code);
-}
-
-function claimIdForItem(articleId, dimension, variantKey, voiceScope, item) {
-  const provided = String(item.claim_id ?? "");
-  if (/^claim:[a-f0-9]{64}$/.test(provided)) return provided;
-  return `legacy:${articleId}:${dimension}:${variantKey}:${voiceScope}`;
 }
 
 function buildAxis(dimension, profiles, metadataById) {
@@ -885,35 +882,20 @@ function buildAxis(dimension, profiles, metadataById) {
     if (result.outlet_narration_observed) outletNarrationCount += 1;
     else sourceAttributedOnlyCount += 1;
     for (const item of result.items) {
-      const variantKey = semanticVariantKey(dimension, item, profile);
-      const voiceScope = item.voice.kind === "journalist_narration" ? "outlet_narration" : "attributed_source";
-      const claimId = claimIdForItem(articleId, dimension, variantKey, voiceScope, item);
-      const key = `${variantKey}:${voiceScope}`;
+      const key = `${item.code}:${item.voice.kind === "journalist_narration" ? "narration" : "source"}`;
       const current = patterns.get(key) ?? {
         code: item.code,
-        frame_family: item.frame_family ?? null,
-        variant_key: variantKey,
         public_paraphrase: item.public_paraphrase,
-        paraphrases: new Set(),
-        voice_scope: voiceScope,
+        voice_scope: item.voice.kind === "journalist_narration" ? "outlet_narration" : "attributed_source",
         article_count: 0,
         outlets: new Set(),
         article_ids: new Set(),
-        claim_ids: new Set(),
         evidence: [],
       };
-      current.paraphrases.add(item.public_paraphrase);
+      current.article_count += 1;
       current.outlets.add(outletLabel(articleId, metadataById));
       current.article_ids.add(articleId);
-      current.claim_ids.add(claimId);
-      current.article_count = current.article_ids.size;
-      current.evidence.push({
-        article_id: articleId,
-        source_id: outletId(articleId, metadataById),
-        claim_id: claimId,
-        voice_kind: item.voice.kind,
-        ...item.evidence,
-      });
+      current.evidence.push({ article_id: articleId, source_id: outletId(articleId, metadataById), ...item.evidence });
       patterns.set(key, current);
     }
   }
@@ -933,148 +915,268 @@ function buildAxis(dimension, profiles, metadataById) {
 
 function buildSourceLens(profiles, metadataById) {
   const roles = new Map();
-  const outletArticles = new Map();
-  const outletSourceArticles = new Map();
   const byOutlet = new Map();
   for (const profile of profiles) {
     const articleId = profile.article.article_id;
     const sourceName = outletLabel(articleId, metadataById);
-    const articles = outletArticles.get(sourceName) ?? new Set();
-    articles.add(articleId);
-    outletArticles.set(sourceName, articles);
-    const roleMap = byOutlet.get(sourceName) ?? new Map();
-    byOutlet.set(sourceName, roleMap);
-    for (const source of profile.actors_and_sources ?? []) {
-      const directCount = Number(source.direct_quote_count ?? 0);
-      const indirectCount = Number(source.indirect_attribution_count ?? 0);
-      if (directCount + indirectCount <= 0) continue;
-      const sourceArticles = outletSourceArticles.get(sourceName) ?? new Set();
-      sourceArticles.add(articleId);
-      outletSourceArticles.set(sourceName, sourceArticles);
+    for (const source of profile.actors_and_sources) {
       const role = roles.get(source.role) ?? {
         role: source.role,
         role_label: source.role_label,
         articles: new Set(),
         outlets: new Set(),
-        direct_articles: new Set(),
-        indirect_articles: new Set(),
-        observation_ids: new Set(),
-        evidence: [],
         direct_quote_count: 0,
         indirect_attribution_count: 0,
       };
       role.articles.add(articleId);
       role.outlets.add(sourceName);
-      const observationId = String(
-        source.actor_id ?? `source-observation:${articleId}:${source.role}`,
-      );
-      role.observation_ids.add(observationId);
-      role.evidence.push(
-        ...(source.evidence ?? []).map((evidence) => ({
-          article_id: articleId,
-          source_id: outletId(articleId, metadataById),
-          claim_id: observationId,
-          voice_kind: directCount > 0 ? "direct_quote" : "indirect_source",
-          ...evidence,
-        })),
-      );
-      if (directCount > 0) role.direct_articles.add(articleId);
-      if (indirectCount > 0) role.indirect_articles.add(articleId);
-      role.direct_quote_count += directCount;
-      role.indirect_attribution_count += indirectCount;
+      role.direct_quote_count += source.direct_quote_count;
+      role.indirect_attribution_count += source.indirect_attribution_count;
       roles.set(source.role, role);
 
-      const outletRole = roleMap.get(source.role) ?? {
-        role: source.role,
-        role_label: source.role_label,
-        articles: new Set(),
-        direct_articles: new Set(),
-        indirect_articles: new Set(),
-        observation_ids: new Set(),
-        evidence: [],
-        mention_count: 0,
-      };
-      outletRole.articles.add(articleId);
-      outletRole.observation_ids.add(observationId);
-      outletRole.evidence.push(...role.evidence.filter((item) => item.article_id === articleId));
-      if (directCount > 0) outletRole.direct_articles.add(articleId);
-      if (indirectCount > 0) outletRole.indirect_articles.add(articleId);
-      outletRole.mention_count += directCount + indirectCount;
-      roleMap.set(source.role, outletRole);
+      const outlet = byOutlet.get(sourceName) ?? new Map();
+      outlet.set(source.role, (outlet.get(source.role) ?? 0) + source.direct_quote_count + source.indirect_attribution_count);
+      byOutlet.set(sourceName, outlet);
     }
   }
-  const outletNames = [...outletArticles.keys()].sort((a, b) => a.localeCompare(b, "ko"));
   const roleRows = [...roles.values()]
-    .map((role) => {
-      const rates = outletNames.map((outlet) => {
-        const denominator = outletArticles.get(outlet)?.size ?? 0;
-        const numerator = byOutlet.get(outlet)?.get(role.role)?.articles.size ?? 0;
-        return denominator ? numerator / denominator : 0;
-      });
-      return {
-        role: role.role,
-        role_label: role.role_label,
-        article_count: role.articles.size,
-        outlet_count: role.outlets.size,
-        direct_quote_article_count: role.direct_articles.size,
-        indirect_attribution_article_count: role.indirect_articles.size,
-        direct_quote_count: role.direct_quote_count,
-        indirect_attribution_count: role.indirect_attribution_count,
-        observation_ids: [...role.observation_ids].sort(),
-        evidence: uniqueComparisonEvidence(role.evidence),
-        presence_gap: rates.length
-          ? Math.round((Math.max(...rates) - Math.min(...rates)) * 1000) / 1000
-          : 0,
-      };
-    })
-    .sort((a, b) => b.article_count - a.article_count || a.role.localeCompare(b.role));
-  const officialRoles = new Set([
-    "government_official",
-    "political_actor",
-    "judiciary_law_enforcement",
-    "anonymous_official",
-  ]);
+    .map((role) => ({
+      role: role.role,
+      role_label: role.role_label,
+      article_count: role.articles.size,
+      outlet_count: role.outlets.size,
+      direct_quote_count: role.direct_quote_count,
+      indirect_attribution_count: role.indirect_attribution_count,
+    }))
+    .sort((a, b) => (b.direct_quote_count + b.indirect_attribution_count) - (a.direct_quote_count + a.indirect_attribution_count));
   return {
     roles: roleRows,
-    by_outlet: outletNames.map((outlet) => {
-      const totalArticleCount = outletArticles.get(outlet)?.size ?? 0;
-      const sourceArticleCount = outletSourceArticles.get(outlet)?.size ?? 0;
-      const roleRowsForOutlet = [...(byOutlet.get(outlet)?.values() ?? [])]
-        .map((role) => ({
-          role: role.role,
-          role_label: role.role_label,
-          count: role.articles.size,
-          article_count: role.articles.size,
-          presence_rate: totalArticleCount
-            ? Math.round((role.articles.size / totalArticleCount) * 1000) / 1000
-            : 0,
-          direct_quote_article_count: role.direct_articles.size,
-          indirect_attribution_article_count: role.indirect_articles.size,
-          mention_count: role.mention_count,
-          observation_ids: [...role.observation_ids].sort(),
-          evidence: uniqueComparisonEvidence(role.evidence),
-        }))
-        .sort((a, b) => b.article_count - a.article_count || a.role.localeCompare(b.role));
-      const officialArticleIds = new Set();
-      for (const role of byOutlet.get(outlet)?.values() ?? []) {
-        if (!officialRoles.has(role.role)) continue;
-        for (const articleId of role.articles) officialArticleIds.add(articleId);
-      }
-      const affected = byOutlet.get(outlet)?.get("affected_person")?.articles.size ?? 0;
+    by_outlet: [...byOutlet.entries()].map(([outlet, roleCounts]) => ({
+      outlet,
+      roles: [...roleCounts.entries()].map(([role, count]) => ({ role, role_label: ROLE_LABELS[role] ?? ROLE_LABELS.other, count })),
+    })),
+    caution: "인용 횟수는 목소리의 가시성을 나타내는 관측치이며, 취재원의 신뢰도나 매체의 지지 여부를 뜻하지 않습니다.",
+  };
+}
+
+function buildFrameLens(profiles, metadataById) {
+  const byOutlet = new Map();
+  for (const profile of profiles) {
+    const articleId = String(profile.article.article_id);
+    const outletName = outletLabel(articleId, metadataById);
+    const outlet = byOutlet.get(outletName) ?? { outlet: outletName, articles: new Set(), labels: new Map() };
+    outlet.articles.add(articleId);
+    for (const descriptor of profile.secondary_descriptors?.policy_frames ?? []) {
+      const label = outlet.labels.get(descriptor.code) ?? {
+        code: descriptor.code,
+        label: descriptor.label,
+        articles: new Set(),
+        sentence_count: 0,
+        evidence: [],
+      };
+      label.articles.add(articleId);
+      label.sentence_count += Number(descriptor.sentence_count ?? 0);
+      label.evidence.push(...(descriptor.evidence ?? []).map((entry) => ({ article_id: articleId, ...entry })));
+      outlet.labels.set(descriptor.code, label);
+    }
+    byOutlet.set(outletName, outlet);
+  }
+  return {
+    status: byOutlet.size >= 2 ? "available" : "partial",
+    taxonomy: "Policy Frames Codebook-inspired descriptors",
+    taxonomy_version: "policy-descriptors-v2",
+    method_version: FRAMING_ENGINE_VERSION,
+    unit: "article_presence",
+    multi_label: true,
+    by_outlet: [...byOutlet.values()].map((outlet) => {
+      const analyzedArticles = outlet.articles.size;
+      const labels = [...outlet.labels.values()];
+      const assignmentCount = labels.reduce((sum, label) => sum + label.articles.size, 0);
       return {
-        outlet,
-        article_count: totalArticleCount,
-        source_article_count: sourceArticleCount,
-        official_share: sourceArticleCount
-          ? Math.round((officialArticleIds.size / sourceArticleCount) * 1000) / 1000
-          : null,
-        affected_group_presence_rate: totalArticleCount
-          ? Math.round((affected / totalArticleCount) * 1000) / 1000
-          : 0,
-        roles: roleRowsForOutlet,
+        outlet: outlet.outlet,
+        analyzed_article_count: analyzedArticles,
+        assignment_count: assignmentCount,
+        labels: labels
+          .map((label) => ({
+            code: label.code,
+            label: label.label,
+            article_count: label.articles.size,
+            article_share: analyzedArticles ? label.articles.size / analyzedArticles : 0,
+            sentence_count: label.sentence_count,
+            composition_share: assignmentCount ? label.articles.size / assignmentCount : 0,
+            evidence: uniqueEvidence(label.evidence).slice(0, 4),
+          }))
+          .sort((left, right) => right.article_count - left.article_count || left.code.localeCompare(right.code)),
       };
     }),
-    caution: "목소리 가시성은 역할이 등장한 고유 기사 비율을 우선하며, 반복 인용 횟수는 보조 정보로만 제공합니다.",
+    caution: "기사별 라벨 존재 여부를 집계한 다중 라벨 보조 지표입니다. 기사 수가 많은 매체나 긴 기사가 과대 반영되지 않도록 기사당 라벨을 한 번만 셉니다.",
+  };
+}
+
+function buildReportingStyleLens(profiles, metadataById) {
+  const NEGATIVE_EVALUATIONS = new Set(["negative_legitimacy_evaluation"]);
+  const POSITIVE_EVALUATIONS = new Set(["positive_legitimacy_evaluation"]);
+  const byOutlet = new Map();
+  for (const profile of profiles) {
+    const articleId = String(profile.article.article_id);
+    const outletName = outletLabel(articleId, metadataById);
+    const outlet = byOutlet.get(outletName) ?? {
+      outlet: outletName,
+      articles: new Set(),
+      evaluationValues: [],
+      evaluationEvidence: [],
+      criticalArticles: 0,
+      supportiveArticles: 0,
+      attributedOnlyArticles: 0,
+      scopeValues: [],
+      scopeEvidence: [],
+      episodicSentenceCount: 0,
+      thematicSentenceCount: 0,
+    };
+    outlet.articles.add(articleId);
+    const evaluationItems = profile.dimensions?.moral_evaluation?.items ?? [];
+    const narrationItems = evaluationItems.filter((item) => item.voice?.kind === "journalist_narration");
+    const negative = narrationItems.filter((item) => NEGATIVE_EVALUATIONS.has(item.code)).length;
+    const positive = narrationItems.filter((item) => POSITIVE_EVALUATIONS.has(item.code)).length;
+    if (negative + positive > 0) {
+      outlet.evaluationValues.push((positive - negative) / (positive + negative));
+      outlet.evaluationEvidence.push(...narrationItems
+        .filter((item) => NEGATIVE_EVALUATIONS.has(item.code) || POSITIVE_EVALUATIONS.has(item.code))
+        .map((item) => ({ article_id: articleId, ...item.evidence })));
+      if (negative > positive) outlet.criticalArticles += 1;
+      if (positive > negative) outlet.supportiveArticles += 1;
+    } else if (evaluationItems.some((item) => item.voice?.kind !== "journalist_narration")) {
+      outlet.attributedOnlyArticles += 1;
+    }
+    const episodic = Number(profile.scope?.episodic_sentence_count ?? 0);
+    const thematic = Number(profile.scope?.thematic_sentence_count ?? 0);
+    if (episodic + thematic > 0) outlet.scopeValues.push((thematic - episodic) / (thematic + episodic));
+    outlet.scopeEvidence.push(...[
+      ...(profile.scope?.evidence?.episodic ?? []),
+      ...(profile.scope?.evidence?.thematic ?? []),
+    ].map((entry) => ({ article_id: articleId, ...entry })));
+    outlet.episodicSentenceCount += episodic;
+    outlet.thematicSentenceCount += thematic;
+    byOutlet.set(outletName, outlet);
+  }
+  const average = (values) => values.length
+    ? Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 1000) / 1000
+    : null;
+  return {
+    status: byOutlet.size >= 2 ? "available" : "partial",
+    method_version: FRAMING_ENGINE_VERSION,
+    by_outlet: [...byOutlet.values()].map((outlet) => ({
+      outlet: outlet.outlet,
+      analyzed_article_count: outlet.articles.size,
+      evaluation: {
+        status: outlet.evaluationValues.length ? "observed" : "abstained",
+        index: average(outlet.evaluationValues),
+        observed_article_count: outlet.evaluationValues.length,
+        critical_article_count: outlet.criticalArticles,
+        supportive_article_count: outlet.supportiveArticles,
+        attributed_only_article_count: outlet.attributedOnlyArticles,
+        evidence: uniqueEvidence(outlet.evaluationEvidence).slice(0, 5),
+      },
+      scope: {
+        status: outlet.scopeValues.length ? "observed" : "abstained",
+        index: average(outlet.scopeValues),
+        observed_article_count: outlet.scopeValues.length,
+        episodic_sentence_count: outlet.episodicSentenceCount,
+        thematic_sentence_count: outlet.thematicSentenceCount,
+        evidence: uniqueEvidence(outlet.scopeEvidence).slice(0, 5),
+      },
+    })),
+    caution: "평가 지수는 기자 서술에서 명시적으로 관측된 긍정·부정 정당성 표현만 사용합니다. 인용된 취재원 평가는 제외하며 정치 성향이나 매체 지지도를 뜻하지 않습니다.",
+  };
+}
+
+function buildMorphologyLens(profiles, metadataById) {
+  const termDocuments = new Map();
+  const termMediaGroups = new Map();
+  for (const profile of profiles) {
+    const articleId = String(profile.article.article_id);
+    const mediaGroup = mediaGroupForArticle(articleId, metadataById);
+    for (const term of profile.morphology?.term_frequencies ?? []) {
+      const key = `${term.pos}:${term.term}`;
+      const documents = termDocuments.get(key) ?? new Set();
+      documents.add(articleId);
+      termDocuments.set(key, documents);
+      const groups = termMediaGroups.get(key) ?? new Set();
+      groups.add(mediaGroup);
+      termMediaGroups.set(key, groups);
+    }
+  }
+  const allowedTerms = new Set([...termDocuments.entries()]
+    .filter(([key, documents]) => documents.size >= 2 && (termMediaGroups.get(key)?.size ?? 0) >= 2)
+    .map(([key]) => key));
+  const byOutlet = new Map();
+  for (const profile of profiles) {
+    const articleId = String(profile.article.article_id);
+    const outletName = outletLabel(articleId, metadataById);
+    const outlet = byOutlet.get(outletName) ?? {
+      outlet: outletName,
+      articles: new Set(),
+      tokenCount: 0,
+      contentTokenCount: 0,
+      negationCount: 0,
+      posCounts: {},
+      terms: new Map(),
+    };
+    outlet.articles.add(articleId);
+    outlet.tokenCount += Number(profile.morphology?.token_count ?? 0);
+    outlet.contentTokenCount += Number(profile.morphology?.content_token_count ?? 0);
+    outlet.negationCount += Number(profile.morphology?.negation_count ?? 0);
+    for (const [pos, count] of Object.entries(profile.morphology?.pos_counts ?? {})) {
+      outlet.posCounts[pos] = (outlet.posCounts[pos] ?? 0) + Number(count ?? 0);
+    }
+    for (const term of profile.morphology?.term_frequencies ?? []) {
+      const key = `${term.pos}:${term.term}`;
+      if (!allowedTerms.has(key)) continue;
+      const current = outlet.terms.get(key) ?? { term: term.term, pos: term.pos, count: 0, documents: new Set(), evidence: [] };
+      current.count += Number(term.count ?? 0);
+      current.documents.add(articleId);
+      const termEvidence = (profile.morphology?.term_evidence ?? [])
+        .find((entry) => entry.term === term.term && entry.pos === term.pos)?.evidence;
+      if (termEvidence) current.evidence.push({ article_id: articleId, ...termEvidence });
+      outlet.terms.set(key, current);
+    }
+    byOutlet.set(outletName, outlet);
+  }
+  return {
+    status: byOutlet.size >= 2 && allowedTerms.size ? "available" : "partial",
+    analyzer: {
+      name: "AgendaFrame Korean controlled morphology",
+      mode: KOREAN_MORPHOLOGY_MODE,
+      version: KOREAN_MORPHOLOGY_VERSION,
+      dictionary_version: KOREAN_MORPHOLOGY_DICTIONARY_VERSION,
+      pos_tagset: "agendaframe-lite-v1",
+    },
+    minimum_document_frequency: 2,
+    minimum_media_group_frequency: 2,
+    by_outlet: [...byOutlet.values()].map((outlet) => ({
+      outlet: outlet.outlet,
+      analyzed_article_count: outlet.articles.size,
+      token_count: outlet.tokenCount,
+      content_token_count: outlet.contentTokenCount,
+      negation_count: outlet.negationCount,
+      pos_counts: outlet.posCounts,
+      terms: [...outlet.terms.values()]
+        .map((term) => ({
+          term: term.term,
+          pos: term.pos,
+          count: term.count,
+          document_count: term.documents.size,
+          per_thousand: outlet.contentTokenCount ? Math.round((term.count / outlet.contentTokenCount) * 1_000_000) / 1000 : 0,
+          evidence: uniqueEvidence(term.evidence).slice(0, 3),
+        }))
+        .sort((left, right) => right.per_thousand - left.per_thousand || right.document_count - left.document_count || left.term.localeCompare(right.term, "ko"))
+        .slice(0, 15),
+    })),
+    limitations: [
+      "공개 핵심어는 이슈 안에서 2개 이상 기사와 2개 이상 독립 미디어그룹에 등장한 항목만 표시합니다.",
+      "단어 순서와 원문 문장은 저장하지 않으며, 빈도는 프레임·논조·기사 품질 판정이 아닙니다.",
+      "현재 배포 환경에서는 조사·일부 활용을 정규화하는 경량 규칙형 분석기를 사용합니다.",
+    ],
   };
 }
 
@@ -1143,519 +1245,19 @@ function describeCommon(axes, profileCount) {
 }
 
 function sourceDominance(profiles) {
-  const voiceObservations = new Set();
-  for (const profile of profiles) {
-    const articleId = String(profile.article?.article_id ?? "");
-    for (const dimension of DIMENSION_ORDER) {
-      for (const item of profile.dimensions?.[dimension]?.items ?? []) {
-        const voiceScope = item.voice?.kind === "journalist_narration"
-          ? "outlet_narration"
-          : "attributed_source";
-        voiceObservations.add(`${articleId}\n${dimension}\n${voiceScope}`);
-      }
-    }
-  }
-  const attributedItemCount = [...voiceObservations]
-    .filter((value) => value.endsWith("\nattributed_source"))
-    .length;
-  const share = voiceObservations.size ? attributedItemCount / voiceObservations.size : 0;
-  const sourceDominanceSafeGenre = profiles.every((profile) =>
-    profile.genre?.code === "straight_news"
-    || (profile.engine?.semantic_ai === true && profile.genre?.code === "unknown"),
+  const items = profiles.flatMap((profile) =>
+    DIMENSION_ORDER.flatMap((dimension) => profile.dimensions?.[dimension]?.items ?? []),
   );
+  const attributedItems = items.filter((item) => item.voice?.kind !== "journalist_narration");
+  const share = items.length ? attributedItems.length / items.length : 0;
   return {
     detected: profiles.length >= 2
-      && sourceDominanceSafeGenre
+      && profiles.every((profile) => profile.genre?.code === "straight_news")
       && share >= 0.7,
-    attributed_item_count: attributedItemCount,
-    total_item_count: voiceObservations.size,
+    attributed_item_count: attributedItems.length,
+    total_item_count: items.length,
     attributed_share: Math.round(share * 1000) / 1000,
   };
-}
-
-function uniqueComparisonEvidence(entries) {
-  const seen = new Set();
-  return entries.filter((entry) => {
-    const key = `${entry.article_id}:${entry.claim_id}:${entry.sentence_sha256}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-function issueMapAnchor(pattern, metadataById) {
-  const mediaGroups = new Set(
-    pattern.article_ids.map((articleId) => mediaGroupForArticle(articleId, metadataById)),
-  );
-  return {
-    group_id: pattern.variant_key,
-    label: pattern.public_paraphrase,
-    frame_family: pattern.frame_family ?? null,
-    article_count: pattern.article_count,
-    outlet_count: pattern.outlets.length,
-    independent_media_group_count: mediaGroups.size,
-    claim_ids: pattern.claim_ids,
-    evidence: pattern.evidence,
-  };
-}
-
-function issueMapPair(patterns, profileCount) {
-  const candidates = [];
-  for (let leftIndex = 0; leftIndex < patterns.length; leftIndex += 1) {
-    const left = patterns[leftIndex];
-    if (left.article_count < 2) continue;
-    for (let rightIndex = leftIndex + 1; rightIndex < patterns.length; rightIndex += 1) {
-      const right = patterns[rightIndex];
-      if (right.article_count < 2) continue;
-      const leftArticles = new Set(left.article_ids);
-      const rightArticles = new Set(right.article_ids);
-      const intersection = [...leftArticles].filter((articleId) => rightArticles.has(articleId)).length;
-      const union = new Set([...leftArticles, ...rightArticles]).size;
-      const leftCoverage = leftArticles.size / Math.max(1, profileCount);
-      const rightCoverage = rightArticles.size / Math.max(1, profileCount);
-      const balancedCoverage = leftCoverage + rightCoverage
-        ? (2 * leftCoverage * rightCoverage) / (leftCoverage + rightCoverage)
-        : 0;
-      const overlap = union ? intersection / union : 0;
-      candidates.push({
-        left,
-        right,
-        balanced_coverage: Math.round(balancedCoverage * 1000) / 1000,
-        overlap: Math.round(overlap * 1000) / 1000,
-        axis_strength: Math.round(balancedCoverage * (1 - overlap) * 1000) / 1000,
-        covered_article_count: union,
-        smaller_anchor_article_count: Math.min(left.article_count, right.article_count),
-      });
-    }
-  }
-  return candidates.sort((left, right) =>
-    right.axis_strength - left.axis_strength
-    || right.smaller_anchor_article_count - left.smaller_anchor_article_count
-    || right.covered_article_count - left.covered_article_count
-    || `${left.left.variant_key}:${left.right.variant_key}`.localeCompare(
-      `${right.left.variant_key}:${right.right.variant_key}`,
-    ))[0] ?? null;
-}
-
-function buildIssueMap(axes, profiles, metadataById, sourceDominated, semanticDraftPresent) {
-  const problemAxis = axes.find((axis) => axis.dimension === "problem_definition");
-  const narrationPatterns = problemAxis?.patterns.filter(
-    (pattern) => pattern.voice_scope === "outlet_narration",
-  ) ?? [];
-  const outletIds = new Set(
-    profiles.map((profile) => outletId(profile.article.article_id, metadataById)),
-  );
-  const mediaGroups = new Set(
-    profiles.map((profile) => mediaGroupForArticle(profile.article.article_id, metadataById)),
-  );
-  const structuralRequirements = {
-    minimum_articles: 4,
-    minimum_outlets: 3,
-    minimum_independent_media_groups: 2,
-    minimum_articles_per_anchor: 2,
-  };
-  const withheld = (status, reason) => ({
-    status,
-    reason,
-    axis_id: null,
-    dimension: "problem_definition",
-    label: problemAxis?.label ?? DIMENSION_LABELS.problem_definition,
-    left_anchor: null,
-    right_anchor: null,
-    selection_basis: {
-      ...structuralRequirements,
-      article_count: profiles.length,
-      outlet_count: outletIds.size,
-      independent_media_group_count: mediaGroups.size,
-    },
-    outlets: [],
-  });
-
-  if (sourceDominated.detected) {
-    return withheld(
-      "withheld_source_dominated",
-      "취재원 발언이 분석 항목의 70% 이상을 차지해 언론사 자체의 쟁점 위치 계산을 보류했습니다.",
-    );
-  }
-  if (
-    profiles.length < structuralRequirements.minimum_articles
-    || outletIds.size < structuralRequirements.minimum_outlets
-    || mediaGroups.size < structuralRequirements.minimum_independent_media_groups
-  ) {
-    return withheld(
-      "withheld_insufficient_evidence",
-      "쟁점 지도를 만들기 위한 기사·언론사·독립 미디어그룹 표본이 충분하지 않습니다.",
-    );
-  }
-  const pair = issueMapPair(narrationPatterns, profiles.length);
-  if (!pair) {
-    return withheld(
-      "withheld_insufficient_evidence",
-      "문제 정의 양쪽에서 각각 두 건 이상의 기자 서술 근거를 확인하지 못했습니다.",
-    );
-  }
-
-  const leftArticles = new Set(pair.left.article_ids);
-  const rightArticles = new Set(pair.right.article_ids);
-  const profilesByOutlet = new Map();
-  for (const profile of profiles) {
-    const articleId = profile.article.article_id;
-    const sourceId = outletId(articleId, metadataById);
-    const source = outletLabel(articleId, metadataById);
-    const current = profilesByOutlet.get(sourceId) ?? { source_id: sourceId, source, profiles: [] };
-    current.profiles.push(profile);
-    profilesByOutlet.set(sourceId, current);
-  }
-  const outlets = [...profilesByOutlet.values()].map((entry) => {
-    let leftCount = 0;
-    let rightCount = 0;
-    let mixedCount = 0;
-    const eligibleArticleIds = new Set();
-    for (const profile of entry.profiles) {
-      const articleId = profile.article.article_id;
-      const left = leftArticles.has(articleId);
-      const right = rightArticles.has(articleId);
-      if (!left && !right) continue;
-      eligibleArticleIds.add(articleId);
-      if (left && right) mixedCount += 1;
-      else if (left) leftCount += 1;
-      else rightCount += 1;
-    }
-    const eligibleArticleCount = leftCount + rightCount + mixedCount;
-    const score = eligibleArticleCount
-      ? Math.round(((rightCount - leftCount) / eligibleArticleCount) * 1000) / 1000
-      : null;
-    const classification = eligibleArticleCount < 2
-      ? "insufficient"
-      : score <= -1 / 3
-        ? "left"
-        : score >= 1 / 3
-          ? "right"
-          : "mixed";
-    const evidence = uniqueComparisonEvidence(
-      [...pair.left.evidence, ...pair.right.evidence].filter(
-        (item) => eligibleArticleIds.has(item.article_id),
-      ),
-    );
-    return {
-      source_id: entry.source_id,
-      source: entry.source,
-      classification,
-      score,
-      display_position: score === null ? null : Math.round((50 + 40 * score) * 10) / 10,
-      article_count: entry.profiles.length,
-      eligible_article_count: eligibleArticleCount,
-      left_article_count: leftCount,
-      mixed_article_count: mixedCount,
-      right_article_count: rightCount,
-      evidence_status: eligibleArticleCount === 0
-        ? "insufficient"
-        : eligibleArticleCount === 1
-          ? "single_article_observation"
-          : semanticDraftPresent
-            ? "automatic_draft"
-            : "supported",
-      claim_ids: [...new Set(evidence.map((item) => item.claim_id))].sort(),
-      evidence,
-    };
-  }).sort((left, right) =>
-    (left.score === null) - (right.score === null)
-    || (left.score ?? 0) - (right.score ?? 0)
-    || left.source.localeCompare(right.source, "ko"));
-
-  return {
-    status: semanticDraftPresent ? "provisional" : "available",
-    reason: semanticDraftPresent
-      ? "검증된 본문 근거로 계산했지만 의미 분류는 사람 검토 전인 자동 분석 초안입니다."
-      : "기사당 한 표로 두 문제 정의와의 연결을 계산했습니다.",
-    axis_id: `problem_definition:${pair.left.variant_key}:${pair.right.variant_key}`,
-    dimension: "problem_definition",
-    label: problemAxis.label,
-    left_anchor: issueMapAnchor(pair.left, metadataById),
-    right_anchor: issueMapAnchor(pair.right, metadataById),
-    selection_basis: {
-      ...structuralRequirements,
-      article_count: profiles.length,
-      outlet_count: outletIds.size,
-      independent_media_group_count: mediaGroups.size,
-      balanced_coverage: pair.balanced_coverage,
-      overlap: pair.overlap,
-      axis_strength: pair.axis_strength,
-      covered_article_count: pair.covered_article_count,
-      formula: "axisStrength=harmonicCoverage*(1-overlap); outletScore=(right-left)/(left+mixed+right)",
-    },
-    outlets,
-  };
-}
-
-function narrativeSignature(profile, metadataById) {
-  const articleId = profile.article.article_id;
-  const dimensions = new Map();
-  for (const dimension of DIMENSION_ORDER) {
-    const result = profile.dimensions?.[dimension];
-    if (!result || result.status === "not_observed" || result.model_status === "conflicting") continue;
-    const groups = new Map();
-    for (const item of result.items ?? []) {
-      if (item.voice?.kind !== "journalist_narration") continue;
-      const variantKey = semanticVariantKey(dimension, item, profile);
-      const claimId = claimIdForItem(articleId, dimension, variantKey, "outlet_narration", item);
-      const group = groups.get(variantKey) ?? {
-        group_id: variantKey,
-        labels: new Set(),
-        claim_ids: new Set(),
-        evidence: [],
-      };
-      group.labels.add(item.public_paraphrase);
-      group.claim_ids.add(claimId);
-      group.evidence.push({
-        article_id: articleId,
-        source_id: outletId(articleId, metadataById),
-        claim_id: claimId,
-        voice_kind: item.voice.kind,
-        ...item.evidence,
-      });
-      groups.set(variantKey, group);
-    }
-    if (groups.size) dimensions.set(dimension, groups);
-  }
-  return { article_id: articleId, profile, dimensions };
-}
-
-function groupsIntersect(left, right) {
-  if (!left || !right) return false;
-  return [...left.keys()].some((key) => right.has(key));
-}
-
-function narrativeCompatible(left, right) {
-  if (!groupsIntersect(
-    left.dimensions.get("problem_definition"),
-    right.dimensions.get("problem_definition"),
-  )) return false;
-  let matchingDimensions = 0;
-  let conflictingDimensions = 0;
-  for (const dimension of DIMENSION_ORDER.slice(1)) {
-    const leftGroups = left.dimensions.get(dimension);
-    const rightGroups = right.dimensions.get(dimension);
-    if (!leftGroups || !rightGroups) continue;
-    if (groupsIntersect(leftGroups, rightGroups)) matchingDimensions += 1;
-    else conflictingDimensions += 1;
-  }
-  return matchingDimensions >= 2 && conflictingDimensions === 0;
-}
-
-function completeLinkNarrativeClusters(signatures) {
-  const clusters = [];
-  for (const signature of [...signatures].sort((a, b) => a.article_id.localeCompare(b.article_id))) {
-    const compatible = clusters
-      .filter((cluster) => cluster.every((member) => narrativeCompatible(signature, member)))
-      .sort((left, right) => right.length - left.length
-        || left.map((member) => member.article_id).join(":").localeCompare(
-          right.map((member) => member.article_id).join(":"),
-        ));
-    if (compatible.length) compatible[0].push(signature);
-    else clusters.push([signature]);
-  }
-  return clusters;
-}
-
-function dominantNarrativeClause(cluster, dimension) {
-  const observedMembers = cluster.filter((member) => member.dimensions.has(dimension));
-  if (!observedMembers.length) return null;
-  const groups = new Map();
-  for (const member of observedMembers) {
-    for (const [groupId, item] of member.dimensions.get(dimension)) {
-      const group = groups.get(groupId) ?? {
-        group_id: groupId,
-        labels: new Set(),
-        article_ids: new Set(),
-        claim_ids: new Set(),
-        evidence: [],
-      };
-      group.article_ids.add(member.article_id);
-      for (const label of item.labels) group.labels.add(label);
-      for (const claimId of item.claim_ids) group.claim_ids.add(claimId);
-      group.evidence.push(...item.evidence);
-      groups.set(groupId, group);
-    }
-  }
-  const ranked = [...groups.values()].sort((left, right) =>
-    right.article_ids.size - left.article_ids.size || left.group_id.localeCompare(right.group_id));
-  const selected = ranked[0];
-  if (!selected || selected.article_ids.size < 2) return null;
-  if (ranked[1]?.article_ids.size === selected.article_ids.size) return null;
-  const supportShare = selected.article_ids.size / observedMembers.length;
-  if (supportShare < 0.6) return null;
-  return {
-    dimension,
-    label: DIMENSION_LABELS[dimension],
-    group_id: selected.group_id,
-    summary: [...selected.labels].sort((a, b) => a.localeCompare(b, "ko"))[0],
-    supporting_article_count: selected.article_ids.size,
-    observed_article_count: observedMembers.length,
-    support_share: Math.round(supportShare * 1000) / 1000,
-    article_ids: [...selected.article_ids].sort(),
-    claim_ids: [...selected.claim_ids].sort(),
-    evidence: uniqueComparisonEvidence(selected.evidence),
-  };
-}
-
-function buildNarratives(profiles, metadataById) {
-  const signatures = profiles.map((profile) => narrativeSignature(profile, metadataById));
-  const semanticDraftPresent = profiles.some(
-    (profile) => profile.engine?.semantic_ai === true && profile.review?.status !== "human_reviewed",
-  );
-  const dimensionFields = {
-    problem_definition: "problem",
-    causal_interpretation: "cause",
-    responsibility_attribution: "responsibility",
-    moral_evaluation: "evaluation",
-    treatment_recommendation: "remedy",
-  };
-  const candidates = completeLinkNarrativeClusters(signatures)
-    .filter((cluster) => cluster.length >= 2)
-    .map((cluster) => {
-      const clauses = {};
-      for (const dimension of DIMENSION_ORDER) {
-        clauses[dimensionFields[dimension]] = dominantNarrativeClause(cluster, dimension);
-      }
-      const downstreamCount = DIMENSION_ORDER.slice(1)
-        .filter((dimension) => clauses[dimensionFields[dimension]]).length;
-      if (!clauses.problem || downstreamCount < 2) return null;
-      const articleIds = cluster.map((member) => member.article_id).sort();
-      const outlets = [...new Set(articleIds.map((articleId) => outletLabel(articleId, metadataById)))]
-        .sort((a, b) => a.localeCompare(b, "ko"));
-      const mediaGroups = new Set(
-        articleIds.map((articleId) => mediaGroupForArticle(articleId, metadataById)),
-      );
-      const observedClauses = Object.values(clauses).filter(Boolean);
-      const claimIds = [...new Set(observedClauses.flatMap((clause) => clause.claim_ids))].sort();
-      const evidence = uniqueComparisonEvidence(observedClauses.flatMap((clause) => clause.evidence));
-      return {
-        status: semanticDraftPresent ? "automatic_draft" : "supported",
-        article_count: articleIds.length,
-        outlet_count: outlets.length,
-        independent_media_group_count: mediaGroups.size,
-        completeness: Math.round((observedClauses.length / DIMENSION_ORDER.length) * 1000) / 1000,
-        supporting_article_ids: articleIds,
-        supporting_outlets: outlets,
-        claim_ids: claimIds,
-        evidence,
-        ...clauses,
-        summary: observedClauses
-          .map((clause) => `${clause.label}: ${clause.summary}`)
-          .join(" · "),
-      };
-    })
-    .filter(Boolean)
-    .sort((left, right) =>
-      right.article_count - left.article_count
-      || right.outlet_count - left.outlet_count
-      || right.completeness - left.completeness
-      || right.independent_media_group_count - left.independent_media_group_count
-      || left.summary.localeCompare(right.summary, "ko"))
-    .slice(0, 2);
-  return candidates.map((narrative, index) => ({
-    narrative_id: `narrative-${index + 1}`,
-    ...narrative,
-  }));
-}
-
-function buildReaderQuestions(issueMap, narratives, sourceLens, axes, profiles, metadataById) {
-  const candidates = [];
-  if (narratives.length >= 2) {
-    const fields = ["problem", "cause", "responsibility", "evaluation", "remedy"];
-    const differing = fields.filter((field) =>
-      narratives[0][field]?.group_id
-      && narratives[1][field]?.group_id
-      && narratives[0][field].group_id !== narratives[1][field].group_id);
-    if (differing.length >= 2) {
-      const evidence = uniqueComparisonEvidence([
-        ...narratives[0].evidence,
-        ...narratives[1].evidence,
-      ]);
-      candidates.push({
-        question_id: "narrative-contrast",
-        trigger_type: "narrative_contrast",
-        priority: 0,
-        question: "두 주요 서사는 같은 사건의 원인·책임·해법을 왜 다르게 연결할까요?",
-        basis_claim_ids: [...new Set([...narratives[0].claim_ids, ...narratives[1].claim_ids])].sort(),
-        basis_article_ids: [...new Set(evidence.map((item) => item.article_id))].sort(),
-        evidence,
-      });
-    }
-  }
-  if (issueMap.left_anchor && issueMap.right_anchor) {
-    const evidence = uniqueComparisonEvidence([
-      ...issueMap.left_anchor.evidence,
-      ...issueMap.right_anchor.evidence,
-    ]);
-    candidates.push({
-      question_id: "problem-definition-contrast",
-      trigger_type: "issue_axis_contrast",
-      priority: 1,
-      question: `왜 일부 보도는 ${issueMap.left_anchor.label}을, 다른 보도는 ${issueMap.right_anchor.label}을 중심 문제로 제시했을까요?`,
-      basis_claim_ids: [...new Set([
-        ...issueMap.left_anchor.claim_ids,
-        ...issueMap.right_anchor.claim_ids,
-      ])].sort(),
-      basis_article_ids: [...new Set(evidence.map((item) => item.article_id))].sort(),
-      evidence,
-    });
-  }
-  const voiceGap = [...(sourceLens.roles ?? [])]
-    .filter((role) => role.presence_gap >= 0.5 && role.observation_ids?.length)
-    .sort((left, right) =>
-      (right.role === "affected_person") - (left.role === "affected_person")
-      || right.presence_gap - left.presence_gap
-      || right.article_count - left.article_count
-      || left.role.localeCompare(right.role))[0];
-  if (voiceGap) {
-    const evidence = uniqueComparisonEvidence(voiceGap.evidence ?? []);
-    candidates.push({
-      question_id: `source-gap-${voiceGap.role}`,
-      trigger_type: voiceGap.role === "affected_person" ? "affected_voice_gap" : "source_voice_gap",
-      priority: voiceGap.role === "affected_person" ? 2 : 3,
-      question: `${voiceGap.role_label}의 목소리가 일부 매체에서만 관측된 차이는 사건 이해에 어떤 영향을 줄까요?`,
-      basis_claim_ids: voiceGap.observation_ids,
-      basis_article_ids: [...new Set(evidence.map((item) => item.article_id))].sort(),
-      evidence,
-    });
-  }
-  for (const axis of axes) {
-    const presentOutlets = new Set();
-    const absentOutlets = new Set();
-    for (const profile of profiles) {
-      if (profile.extraction?.input_truncated === true) continue;
-      const articleId = profile.article.article_id;
-      const outlet = outletLabel(articleId, metadataById);
-      const result = profile.dimensions?.[axis.dimension];
-      if (!result) continue;
-      if (result.status === "not_observed") absentOutlets.add(outlet);
-      else presentOutlets.add(outlet);
-    }
-    if (presentOutlets.size < 2 || absentOutlets.size < 1) continue;
-    const patterns = axis.patterns.filter((pattern) => pattern.voice_scope === "outlet_narration");
-    const evidence = uniqueComparisonEvidence(patterns.flatMap((pattern) => pattern.evidence));
-    const claimIds = [...new Set(patterns.flatMap((pattern) => pattern.claim_ids))].sort();
-    if (!claimIds.length) continue;
-    candidates.push({
-      question_id: `context-gap-${axis.dimension}`,
-      trigger_type: "context_gap",
-      priority: 4 + DIMENSION_ORDER.indexOf(axis.dimension),
-      question: `일부 기사에서만 ${axis.label} 설명이 관측된 차이를 함께 확인해 볼까요?`,
-      basis_claim_ids: claimIds,
-      basis_article_ids: [...new Set(evidence.map((item) => item.article_id))].sort(),
-      evidence,
-    });
-  }
-  return candidates
-    .filter((candidate) => candidate.basis_claim_ids.length && candidate.evidence.length)
-    .sort((left, right) => left.priority - right.priority || left.question_id.localeCompare(right.question_id))
-    .slice(0, 3)
-    .map(({ priority, ...question }) => {
-      void priority;
-      return question;
-    });
 }
 
 /**
@@ -1679,32 +1281,16 @@ export function buildIssueFrameComparison(profiles, articleMetadata = [], option
   }));
   const axes = DIMENSION_ORDER.map((dimension) => buildAxis(dimension, profiles, metadataById));
   const sourceLens = buildSourceLens(profiles, metadataById);
+  const analysisModules = {
+    frame_composition: buildFrameLens(profiles, metadataById),
+    reporting_style: buildReportingStyleLens(profiles, metadataById),
+    morphology: buildMorphologyLens(profiles, metadataById),
+  };
   const scopeCounts = countBy(profiles, (profile) => profile.scope.code);
   const contextCounts = countBy(profiles, (profile) => profile.context_depth.level);
   const notObservedStatements = axes.map((axis) => axis.not_observed_statement).filter(Boolean);
   const titleOnlyOrShort = profiles.filter((profile) => profile.article.body_character_count < 300).length;
   const sourceDominated = sourceDominance(profiles);
-  const semanticDraftPresent = profiles.some(
-    (profile) =>
-      profile.engine?.semantic_ai === true
-      && profile.review?.status !== "human_reviewed",
-  );
-  const issueMap = buildIssueMap(
-    axes,
-    profiles,
-    metadataById,
-    sourceDominated,
-    semanticDraftPresent,
-  );
-  const narratives = buildNarratives(profiles, metadataById);
-  const readerQuestions = buildReaderQuestions(
-    issueMap,
-    narratives,
-    sourceLens,
-    axes,
-    profiles,
-    metadataById,
-  );
   const common = sourceDominated.detected
     ? "비교 표본에서 관측된 핵심 문제·원인·평가 표현의 대부분은 취재원 발언에 귀속됩니다."
     : describeCommon(axes, profiles.length);
@@ -1714,12 +1300,7 @@ export function buildIssueFrameComparison(profiles, articleMetadata = [], option
         detected: false,
         text: "취재원 발언이 설명을 지배해, 표현 차이를 매체 자체의 프레임 차이로 확정하지 않았습니다.",
       }
-    : semanticDraftPresent
-      ? {
-          detected: false,
-          text: "AI가 구조화한 설명 변형은 표시하지만, 의미가 실제로 갈렸다는 판단은 사람 검토 전까지 보류합니다.",
-        }
-      : observedDivergence;
+    : observedDivergence;
   const dominantRole = sourceLens.roles[0];
   const sourceSummary = sourceDominated.detected
     ? `분석 항목의 ${Math.round(sourceDominated.attributed_share * 100)}%가 직접·간접인용 또는 인용 경계의 표현으로 분류됐습니다. 같은 발언을 어느 위치에 배치했는지는 비교할 수 있지만, 이를 매체의 동의로 해석하면 안 됩니다.`
@@ -1739,7 +1320,12 @@ export function buildIssueFrameComparison(profiles, articleMetadata = [], option
       outlet_voice_separated_from_sources: true,
       source_dominance_check: sourceDominated,
       secondary_taxonomies_are_descriptive_only: true,
-      semantic_ai: profiles.some((profile) => profile.engine?.semantic_ai === true),
+      morphology_analyzer: {
+        mode: KOREAN_MORPHOLOGY_MODE,
+        version: KOREAN_MORPHOLOGY_VERSION,
+        dictionary_version: KOREAN_MORPHOLOGY_DICTIONARY_VERSION,
+      },
+      semantic_ai: false,
       caution: "동일 사건으로 검증된 기사끼리만 비교해야 하며, 관측되지 않은 요소를 의도적 누락으로 해석하지 않습니다.",
     },
     sample: {
@@ -1753,11 +1339,9 @@ export function buildIssueFrameComparison(profiles, articleMetadata = [], option
       scope: scopeCounts,
       article_ids: articleIds,
     },
-    issue_map: issueMap,
-    narratives,
-    reader_questions: readerQuestions,
     comparison_axes: axes,
     source_lens: sourceLens,
+    analysis_modules: analysisModules,
     secondary_descriptors: {
       generic_frames: dominantSecondary(profiles, "generic_frames"),
       policy_frames: dominantSecondary(profiles, "policy_frames"),

@@ -1,15 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { strToU8, zipSync } from "fflate";
-import { isBigKindsExcludedValue, parseBigKindsXlsx } from "../lib/bigkinds-xlsx.mjs";
-
-test("treats only explicit exclusion markers as excluded", () => {
-  assert.equal(isBigKindsExcludedValue("예외"), true);
-  assert.equal(isBigKindsExcludedValue("제외"), true);
-  assert.equal(isBigKindsExcludedValue("본문 확보"), false);
-  assert.equal(isBigKindsExcludedValue(""), false);
-  assert.equal(isBigKindsExcludedValue(null), false);
-});
+import { parseBigKindsXlsx } from "../lib/bigkinds-xlsx.mjs";
 
 test("reads real worksheet cells even when the exported dimension incorrectly says A1", () => {
   const workbook = zipSync({
@@ -34,23 +26,19 @@ test("reads real worksheet cells even when the exported dimension incorrectly sa
   ]);
 });
 
-test("reads namespace-prefixed worksheet XML emitted by some Excel exports", () => {
+test("reads XLSX worksheet XML that uses namespace-prefixed tags", () => {
   const workbook = zipSync({
-    "xl/sharedStrings.xml": strToU8(`<?xml version="1.0" encoding="UTF-8"?>
-      <x:sst xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-        <x:si><x:t>뉴스 식별자</x:t></x:si><x:si><x:t>본문</x:t></x:si>
-      </x:sst>`),
+    "xl/sharedStrings.xml": strToU8('<?xml version="1.0"?><x:sst xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main"/>'),
     "xl/worksheets/sheet1.xml": strToU8(`<?xml version="1.0" encoding="UTF-8"?>
       <x:worksheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
         <x:sheetData>
-          <x:row r="1"><x:c r="A1" t="s"><x:v>0</x:v></x:c><x:c r="B1" t="s"><x:v>1</x:v></x:c></x:row>
-          <x:row r="2"><x:c r="A2" t="inlineStr"><x:is><x:t>NEWS.20260726010101</x:t></x:is></x:c><x:c r="B2" t="inlineStr"><x:is><x:t>본문 확보</x:t></x:is></x:c></x:row>
+          <x:row r="1"><x:c r="A1" t="inlineStr"><x:is><x:t>일자</x:t></x:is></x:c><x:c r="B1" t="inlineStr"><x:is><x:t>본문</x:t></x:is></x:c></x:row>
+          <x:row r="2"><x:c r="A2"><x:v>20260726</x:v></x:c><x:c r="B2" t="inlineStr"><x:is><x:t>검증 본문</x:t></x:is></x:c></x:row>
         </x:sheetData>
       </x:worksheet>`),
   });
-  const rows = parseBigKindsXlsx(workbook);
-  assert.deepEqual(rows, [
-    ["뉴스 식별자", "본문"],
-    ["NEWS.20260726010101", "본문 확보"],
+  assert.deepEqual(parseBigKindsXlsx(workbook), [
+    ["일자", "본문"],
+    [20260726, "검증 본문"],
   ]);
 });
