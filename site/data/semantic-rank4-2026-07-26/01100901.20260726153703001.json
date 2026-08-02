@@ -1,0 +1,242 @@
+{
+  "articleId": "01100901.20260726153703001",
+  "profile": {
+    "schema_version": "agendaframe.article-frame-profile.v2",
+    "lineage": {
+      "model_id": "gemini-2.5-flash-lite",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "model_output_schema_version": 3,
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "approval": {
+        "authorization_id": "bigkinds-2026-07-26-rank-4-00a35b874b22",
+        "fingerprint": "9601bb0520e2c8d760ee3ae0e38c6c324c052db0aaf1b8a8112ce5501beff5b7",
+        "cluster_id": "bigkinds-2026-07-26-rank-4",
+        "reviewer": "AgendaFrame agent-assisted evidence audit",
+        "reviewed_at": "2026-08-02T00:00:00+09:00",
+        "approved_urls_sha256": "815e7ea12b6ad20238a92fa219920094b9184b129e4c83e7c872f0a97f79be1e"
+      }
+    },
+    "engine": {
+      "name": "AgendaFrame Vertex evidence coder",
+      "version": "gemini-2.5-flash-lite",
+      "approach": "semantic_evidence_bounded",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": 3,
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ]
+    },
+    "article": {
+      "article_id": "01100901.20260726153703001",
+      "upstream_article_id": "01100901.20260726153703001",
+      "published_at": "2026-07-26T15:37:03+09:00",
+      "title_sha256": "1c9e0d0f281d0ed2e04ff1bb147b1fab449909b4dc2c6be5a36eaf3f0968aced",
+      "body_sha256": "3aed71633faf3f1e02e76b093b6d575709367ac15604539a77044f888d99bec3",
+      "body_character_count": 1479,
+      "body_word_count": 336,
+      "paragraph_count": 1,
+      "sentence_count": 22,
+      "raw_body_retained": false
+    },
+    "extraction": {
+      "text_scope": "transient_public_page_extract",
+      "analyzed_character_count": 1479,
+      "input_truncated": false
+    },
+    "genre": {
+      "code": "unknown",
+      "label": "자동 분류 안 함",
+      "evidence": []
+    },
+    "dimensions": {
+      "problem_definition": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:0b0c310efc581f39fecfaa84ac8d72ededb86c2f96282ee7483319bb1c0f797a",
+            "code": "semantic_problem_definition",
+            "frame_family": "rights_fairness",
+            "variant_key": "semantic:problem_definition:family:rights_fairness",
+            "public_paraphrase": "학교폭력 피해자 유족이 변호사의 재판 불출석으로 패소하여 손해배상 소송을 제기함",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "828b56e878759b04aa1496c30b0bf7b742c6e760bcaf0789a67300c43cb12c2f"
+            }
+          }
+        ]
+      },
+      "causal_interpretation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:b65f6fc7b4c4b297793a9178d90be9bd03029a470ae8ce4763fdb46f4081a9e8",
+            "code": "semantic_causal_interpretation",
+            "frame_family": "individual_action",
+            "variant_key": "semantic:causal_interpretation:family:individual_action",
+            "public_paraphrase": "변호사의 재판 불출석으로 인한 패소",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 14
+              },
+              "sentence_sha256": "61286e1636b22ee0666352e975504cdf221d3fd44149b4623c8981b8a53488b1"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:15066023f8813f1168ab148176c10c1a78f5e9e71ae44c287c45d967be29292c",
+            "code": "semantic_responsibility_attribution",
+            "frame_family": "individual_actor",
+            "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+            "public_paraphrase": "변호사의 재판 불출석으로 인한 패소에 대한 책임",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 14
+              },
+              "sentence_sha256": "61286e1636b22ee0666352e975504cdf221d3fd44149b4623c8981b8a53488b1"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:842427eb9981d6f1c98d99a3303ab23ab78f837369ad12c14a90a0371f57f280",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "effectiveness_negative",
+            "variant_key": "semantic:moral_evaluation:family:effectiveness_negative",
+            "public_paraphrase": "화해권고결정에 대한 양측의 이의신청으로 인한 재판 절차 진행",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "7dcac104f09ebc5f958a4779f5552ad00000c65467f766858cba66c1a213ff10"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "claim_id": "claim:d736f780c4be130af6c06b754dec2c9e9242b4ff119b0df8c8a196f8a325dd79",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "investigation_accountability",
+            "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+            "public_paraphrase": "화해 대신 판결을 통해 변호사의 잘못을 명확히 하고 형사고소 및 손해배상 청구 확대",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 13
+              },
+              "sentence_sha256": "662217d4caab19c0b0e10b2bbc46509b8257de86e49266f17bc723bb95fa1f83"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:41bcb9be1d00f2897243fe2f9df8bd73058284047198dbf824fe49c1fc4df204",
+        "role": "affected_person",
+        "role_label": "당사자·시민",
+        "direct_quote_count": 0,
+        "indirect_attribution_count": 1,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 13
+            },
+            "sentence_sha256": "662217d4caab19c0b0e10b2bbc46509b8257de86e49266f17bc723bb95fa1f83"
+          }
+        ]
+      },
+      {
+        "actor_id": "actor:dac914e06ab8ddb325c82ae51d16e30a9f0ae8ec38ebc6178200698d182b18b1",
+        "role": "other",
+        "role_label": "기타 취재원",
+        "direct_quote_count": 0,
+        "indirect_attribution_count": 1,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 12
+            },
+            "sentence_sha256": "dd45e26f8be86f8ba63be52560280249f9d247e4e15411d39e5b9e69593e60a7"
+          }
+        ]
+      }
+    ],
+    "context_depth": {
+      "level": "unknown"
+    },
+    "scope": {
+      "code": "unknown"
+    },
+    "secondary_descriptors": {
+      "generic_frames": [],
+      "policy_frames": [],
+      "controlled_associations": []
+    },
+    "framing_devices": [],
+    "review": {
+      "status": "automatic_draft",
+      "analysis_decision": "analyze",
+      "analysis_state": "succeeded",
+      "attempt_count": 1,
+      "idempotency_fingerprint": "3da45c0515518a39b2106cad03e7503f0f9db267824133cc13078b001411294d",
+      "error_code": null,
+      "fallback_reason": null,
+      "requires_human_review": true,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+    }
+  }
+}

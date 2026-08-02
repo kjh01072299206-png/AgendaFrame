@@ -1,0 +1,154 @@
+{
+  "schemaVersion": "agendaframe.initial-five.public.v1",
+  "basisDate": "2026-07-26",
+  "generatedAt": "2026-07-31T17:12:31.662Z",
+  "issueCount": 5,
+  "articleCount": 25,
+  "issues": [
+    {
+      "issueId": "bigkinds-2026-07-26-top-1",
+      "rank": 1,
+      "title": "정점식 의원의 특검 보완수사권 주장",
+      "category": "정치",
+      "articleCount": 7,
+      "outletCount": 6,
+      "status": "succeeded",
+      "payloadKey": "issues/bigkinds-2026-07-26-top-1.json",
+      "clusterAi": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.0.0",
+        "schemaVersion": 1
+      },
+      "semantic": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.5.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "succeededArticleCount": 7,
+        "reviewNeededArticleCount": 0
+      }
+    },
+    {
+      "issueId": "bigkinds-2026-07-26-top-2",
+      "rank": 2,
+      "title": "권영진 의원의 정점식 의원 멱살 논란",
+      "category": "정치",
+      "articleCount": 6,
+      "outletCount": 6,
+      "status": "succeeded",
+      "payloadKey": "issues/bigkinds-2026-07-26-top-2.json",
+      "clusterAi": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.0.0",
+        "schemaVersion": 1
+      },
+      "semantic": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.5.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "succeededArticleCount": 6,
+        "reviewNeededArticleCount": 0
+      }
+    },
+    {
+      "issueId": "bigkinds-2026-07-26-top-3",
+      "rank": 3,
+      "title": "경산 아파트 방화·보복범죄 수사",
+      "category": "사회",
+      "articleCount": 4,
+      "outletCount": 4,
+      "status": "succeeded",
+      "payloadKey": "issues/bigkinds-2026-07-26-top-3.json",
+      "clusterAi": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.0.0",
+        "schemaVersion": 1
+      },
+      "semantic": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.5.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "succeededArticleCount": 4,
+        "reviewNeededArticleCount": 0
+      }
+    },
+    {
+      "issueId": "bigkinds-2026-07-26-top-4",
+      "rank": 4,
+      "title": "권경애 재판 불출석 손해배상 조정",
+      "category": "사회",
+      "articleCount": 4,
+      "outletCount": 4,
+      "status": "succeeded",
+      "payloadKey": "issues/bigkinds-2026-07-26-top-4.json",
+      "clusterAi": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.0.0",
+        "schemaVersion": 1
+      },
+      "semantic": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.5.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "succeededArticleCount": 4,
+        "reviewNeededArticleCount": 0
+      }
+    },
+    {
+      "issueId": "bigkinds-2026-07-26-top-5",
+      "rank": 5,
+      "title": "음성 외국인 집단 난투 사건",
+      "category": "사회",
+      "articleCount": 4,
+      "outletCount": 4,
+      "status": "succeeded",
+      "payloadKey": "issues/bigkinds-2026-07-26-top-5.json",
+      "clusterAi": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.0.0",
+        "schemaVersion": 1
+      },
+      "semantic": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.5.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "succeededArticleCount": 4,
+        "reviewNeededArticleCount": 0
+      }
+    }
+  ],
+  "lineage": {
+    "top5SchemaVersion": "agendaframe.top5-framing-pilot.v1",
+    "metadataSchemaVersion": "agendaframe.metadata-issue-cluster.v1",
+    "metadataGeneratedAt": "2026-08-02T14:33:45.855490+00:00"
+  }
+}

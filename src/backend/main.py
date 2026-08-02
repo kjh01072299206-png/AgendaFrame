@@ -11,6 +11,7 @@ from ai.framing import VertexFrameAnalyzer
 from backend.config import RuntimeConfig
 from backend.cost_guard import CostGuard
 from backend.gcp_store import GcpAnalysisStore
+from backend.pilot import load_pilot_approvals, validate_pilot_articles
 from backend.pipeline import BatchPipeline
 from backend.publisher import StructuredPublisher
 from crawler.authorization import DatasetAnalysisAuthorization
@@ -40,11 +41,26 @@ def build_parser() -> argparse.ArgumentParser:
     live_authorization = live.add_mutually_exclusive_group()
     live_authorization.add_argument("--authorization-json", type=Path)
     live_authorization.add_argument("--authorization-gcs-uri")
+    live.add_argument(
+        "--resume",
+        action="store_true",
+        help="Re-drive only review-needed or retry-wait articles; never re-run successes.",
+    )
     publish = subcommands.add_parser("publish")
     publish.add_argument("--limit", type=int, default=50)
     publish.add_argument("--date")
     publish.add_argument("--analyze-date")
     publish.add_argument("--cluster-approval-json", type=Path)
+    status = subcommands.add_parser("status")
+    status.add_argument("--date", default="2026-07-26")
+    status.add_argument("--article-id", action="append", dest="article_ids", default=[])
+    pilot = subcommands.add_parser("validate-pilot")
+    pilot.add_argument("--input-jsonl", type=Path, required=True)
+    pilot.add_argument(
+        "--approval-directory",
+        type=Path,
+        default=Path("config/analysis-approvals"),
+    )
     return parser
 
 
@@ -72,9 +88,23 @@ def main() -> int:
         estimate = CostGuard(config).estimate([args.characters_per_article] * args.articles)
         print(json.dumps(estimate.__dict__, ensure_ascii=False))
         return 0
+    if args.command == "validate-pilot":
+        approvals = load_pilot_approvals(args.approval_directory)
+        articles = _read_articles(args.input_jsonl)
+        summary = validate_pilot_articles(articles, approvals)
+        print(json.dumps(summary, ensure_ascii=False))
+        return 0
 
     _require_live_opt_in(config)
     store = GcpAnalysisStore(config)
+    if args.command == "status":
+        datetime.fromisoformat(args.date)
+        summary = store.status_summary(
+            article_ids=list(args.article_ids),
+            target_date=args.date,
+        )
+        print(json.dumps(summary, ensure_ascii=False))
+        return 0
     if args.command == "publish":
         if args.limit < 1 or args.limit > config.vertex.max_articles_per_run:
             raise ValueError("Publish limit exceeds the reviewed per-run cap.")
@@ -95,11 +125,7 @@ def main() -> int:
         rows = store.pending_publication_rows(
             args.limit,
             target_date=args.date,
-            article_ids=(
-                sorted(cluster_approval.approved_articles)
-                if cluster_approval
-                else None
-            ),
+            article_ids=(sorted(cluster_approval.approved_articles) if cluster_approval else None),
         )
         if not rows:
             if cluster_approval:
@@ -158,7 +184,7 @@ def main() -> int:
             store=store,
             dataset_authorization=authorization,
         )
-        result = pipeline.run(articles)
+        result = pipeline.run(articles, resume=args.resume)
     finally:
         _delete_transient_gcs_inputs(
             (args.input_gcs_uri, args.authorization_gcs_uri),
@@ -197,8 +223,7 @@ def _validate_publication_rows_against_approval(
         assert isinstance(profile, dict)
         if (
             str(article.get("source_id") or "") != binding.source_id
-            or canonicalize_url(str(article.get("canonical_url") or ""))
-            != binding.canonical_url
+            or canonicalize_url(str(article.get("canonical_url") or "")) != binding.canonical_url
             or str(article.get("body_hash") or "") != binding.body_sha256
         ):
             raise ValueError("Pending publication row does not match its approved binding.")
@@ -293,9 +318,7 @@ def _delete_transient_gcs_inputs(
         except Exception as error:  # cleanup must try every reviewed input
             failures.append(f"{uri}: {type(error).__name__}")
     if failures:
-        raise RuntimeError(
-            "Transient GCS input cleanup failed: " + ", ".join(failures)
-        )
+        raise RuntimeError("Transient GCS input cleanup failed: " + ", ".join(failures))
 
 
 def _private_gcs_parts(uri: str, config: RuntimeConfig) -> tuple[str, str]:

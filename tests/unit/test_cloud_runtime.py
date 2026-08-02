@@ -110,7 +110,22 @@ class CloudRuntimeTests(unittest.TestCase):
         self.assertEqual(self.config.vertex.thinking_budget, 0)
         self.assertLessEqual(self.config.vertex.max_articles_per_run, 50)
         self.assertLessEqual(self.config.vertex.max_articles_per_day, 200)
-        self.assertEqual(self.config.vertex.prompt_version, "2.4.1")
+        self.assertEqual(self.config.vertex.prompt_version, "2.5.0")
+
+    def test_response_schema_constrains_voice_kinds(self) -> None:
+        from ai.framing import _response_schema
+
+        schema = _response_schema()
+        dimension_voice = schema["properties"]["dimensions"]["items"]["properties"]["voice_kind"]
+        actor_voice = schema["properties"]["actors"]["items"]["properties"]["voice_kind"]
+        self.assertEqual(
+            set(dimension_voice["enum"]),
+            {"journalist_narration", "direct_quote", "indirect_source", "uncertain_quote", None},
+        )
+        self.assertEqual(
+            set(actor_voice["enum"]),
+            {"direct_quote", "indirect_source", "uncertain_quote"},
+        )
         self.assertEqual(self.config.vertex.schema_version, 3)
 
     def test_source_registry_defaults_all_real_sources_to_metadata_only(self) -> None:
@@ -249,12 +264,38 @@ class CloudRuntimeTests(unittest.TestCase):
             ],
             "actors": [],
         }
+        observed_article = article()
+        observed_text = (observed_article.body_text or "")[:10]
+        observed_dimension = next(
+            item
+            for item in response_payload["dimensions"]
+            if item["dimension"] == "problem_definition"
+        )
+        observed_dimension.update(
+            {
+                "status": "supported",
+                "value": "기사에서 안전 문제를 관찰",
+                "frame_family": "safety_harm",
+                "voice_kind": "journalist_narration",
+                "evidence": [
+                    {
+                        "article_id": observed_article.article_id,
+                        "start": 0,
+                        "end": len(observed_text),
+                        "text": observed_text,
+                    }
+                ],
+                "reason": None,
+            }
+        )
 
         class FakeModels:
             attempts = 0
+            prompts: list[str] = []
 
-            def generate_content(self, **_kwargs):
+            def generate_content(self, **kwargs):
                 self.attempts += 1
+                self.prompts.append(str(kwargs.get("contents", "")))
                 if self.attempts == 1:
                     return type("Response", (), {"text": "not-json", "usage_metadata": None})()
                 return type(
@@ -274,6 +315,8 @@ class CloudRuntimeTests(unittest.TestCase):
 
         self.assertEqual(result.decision, "analyze")
         self.assertEqual(models.attempts, 2)
+        self.assertIn("검증 오류", models.prompts[1])
+        self.assertNotEqual(models.prompts[0], models.prompts[1])
 
     def test_vertex_non_retryable_failure_is_persistable_review_needed(self) -> None:
         class FakeModels:
@@ -313,6 +356,30 @@ class CloudRuntimeTests(unittest.TestCase):
             ],
             "actors": [],
         }
+        observed_article = article()
+        observed_text = (observed_article.body_text or "")[:10]
+        observed_dimension = next(
+            item
+            for item in response_payload["dimensions"]
+            if item["dimension"] == "problem_definition"
+        )
+        observed_dimension.update(
+            {
+                "status": "supported",
+                "value": "기사에서 안전 문제를 관찰",
+                "frame_family": "safety_harm",
+                "voice_kind": "journalist_narration",
+                "evidence": [
+                    {
+                        "article_id": observed_article.article_id,
+                        "start": 0,
+                        "end": len(observed_text),
+                        "text": observed_text,
+                    }
+                ],
+                "reason": None,
+            }
+        )
 
         class FakeModels:
             attempts = 0

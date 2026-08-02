@@ -6,9 +6,20 @@ from datetime import UTC, datetime
 from typing import Any
 
 from ai.framing import FrameResult
+from backend.analysis_state import (
+    AnalysisState,
+    assert_state_transition,
+    utc_now_iso,
+)
 from backend.config import RuntimeConfig
 from backend.publisher import public_profile
 from crawler.models import ArticleDocument
+
+
+def _result_state(result: FrameResult) -> AnalysisState:
+    if result.analysis_state:
+        return AnalysisState(result.analysis_state)
+    return AnalysisState.SUCCEEDED if result.decision == "analyze" else AnalysisState.REVIEW_NEEDED
 
 
 class GcpAnalysisStore:
@@ -24,6 +35,9 @@ class GcpAnalysisStore:
         self.bucket = self.storage.bucket(config.bucket)
 
     def already_analyzed(self, analysis_key: str) -> bool:
+        current_state = self.current_state(analysis_key)
+        if current_state is AnalysisState.SUCCEEDED:
+            return True
         query = f"""
             SELECT 1
             FROM `{self.config.project_id}.{self.config.dataset}.frame_analyses`
@@ -42,6 +56,157 @@ class GcpAnalysisStore:
             maximum_bytes_billed=self.config.maximum_bytes_billed,
         )
         return next(iter(self.bq.query(query, job_config=job_config).result()), None) is not None
+
+    def current_state(self, analysis_key: str) -> AnalysisState | None:
+        query = f"""
+            SELECT analysis_state
+            FROM `{self.config.project_id}.{self.config.dataset}.analysis_states`
+            WHERE updated_at >= TIMESTAMP("2026-01-01")
+              AND idempotency_fingerprint = @analysis_key
+            ORDER BY updated_at DESC
+            LIMIT 1
+        """
+        job_config = self.bigquery.QueryJobConfig(
+            query_parameters=[
+                self.bigquery.ScalarQueryParameter("analysis_key", "STRING", analysis_key)
+            ],
+            maximum_bytes_billed=self.config.maximum_bytes_billed,
+        )
+        try:
+            row = next(iter(self.bq.query(query, job_config=job_config).result()), None)
+        except Exception as error:
+            # A pre-migration deployment has no state table yet. The legacy
+            # frame row remains the fallback for the success check, while a
+            # live pilot will fail its schema preflight before model calls.
+            if "analysis_states" not in str(error):
+                raise
+            return None
+        if not row or not row["analysis_state"]:
+            return None
+        return AnalysisState(str(row["analysis_state"]))
+
+    def attempt_count(self, analysis_key: str) -> int:
+        query = f"""
+            SELECT attempt_count
+            FROM `{self.config.project_id}.{self.config.dataset}.analysis_states`
+            WHERE updated_at >= TIMESTAMP("2026-01-01")
+              AND idempotency_fingerprint = @analysis_key
+            ORDER BY updated_at DESC
+            LIMIT 1
+        """
+        job_config = self.bigquery.QueryJobConfig(
+            query_parameters=[
+                self.bigquery.ScalarQueryParameter("analysis_key", "STRING", analysis_key)
+            ],
+            maximum_bytes_billed=self.config.maximum_bytes_billed,
+        )
+        try:
+            row = next(iter(self.bq.query(query, job_config=job_config).result()), None)
+        except Exception as error:
+            if "analysis_states" not in str(error):
+                raise
+            return 0
+        return int(row["attempt_count"] or 0) if row else 0
+
+    def mark_state(
+        self,
+        analysis_key: str,
+        article_id: str,
+        state: AnalysisState,
+        *,
+        attempt_count: int,
+        error_code: str | None = None,
+        next_attempt_at: str | None = None,
+    ) -> None:
+        previous = self.current_state(analysis_key)
+        assert_state_transition(previous, state)
+        if attempt_count < 0:
+            raise ValueError("Analysis attempt count cannot be negative.")
+        query = f"""
+            MERGE `{self.config.project_id}.{self.config.dataset}.analysis_states` AS target
+            USING (
+              SELECT
+                @idempotency_fingerprint AS idempotency_fingerprint,
+                @article_id AS article_id,
+                @analysis_state AS analysis_state,
+                @attempt_count AS attempt_count,
+                @error_code AS error_code,
+                @next_attempt_at AS next_attempt_at,
+                @updated_at AS updated_at
+            ) AS incoming
+            ON target.idempotency_fingerprint = incoming.idempotency_fingerprint
+              AND target.updated_at >= TIMESTAMP("2026-01-01")
+            WHEN MATCHED THEN UPDATE SET
+              article_id = incoming.article_id,
+              analysis_state = incoming.analysis_state,
+              attempt_count = incoming.attempt_count,
+              error_code = incoming.error_code,
+              next_attempt_at = incoming.next_attempt_at,
+              updated_at = incoming.updated_at
+            WHEN NOT MATCHED THEN INSERT (
+              idempotency_fingerprint,
+              article_id,
+              analysis_state,
+              attempt_count,
+              error_code,
+              next_attempt_at,
+              updated_at
+            ) VALUES (
+              incoming.idempotency_fingerprint,
+              incoming.article_id,
+              incoming.analysis_state,
+              incoming.attempt_count,
+              incoming.error_code,
+              incoming.next_attempt_at,
+              incoming.updated_at
+            )
+        """
+        job_config = self.bigquery.QueryJobConfig(
+            query_parameters=[
+                self.bigquery.ScalarQueryParameter(
+                    "idempotency_fingerprint", "STRING", analysis_key
+                ),
+                self.bigquery.ScalarQueryParameter("article_id", "STRING", article_id),
+                self.bigquery.ScalarQueryParameter("analysis_state", "STRING", state.value),
+                self.bigquery.ScalarQueryParameter("attempt_count", "INT64", attempt_count),
+                self.bigquery.ScalarQueryParameter("error_code", "STRING", error_code),
+                self.bigquery.ScalarQueryParameter("next_attempt_at", "TIMESTAMP", next_attempt_at),
+                self.bigquery.ScalarQueryParameter("updated_at", "TIMESTAMP", utc_now_iso()),
+            ],
+            maximum_bytes_billed=self.config.maximum_bytes_billed,
+        )
+        self.bq.query(query, job_config=job_config).result()
+
+    def status_summary(
+        self,
+        *,
+        article_ids: list[str],
+        target_date: str,
+    ) -> dict[str, Any]:
+        query = f"""
+            SELECT analysis_state, COUNT(*) AS count
+            FROM `{self.config.project_id}.{self.config.dataset}.analysis_states`
+            WHERE updated_at >= TIMESTAMP("2026-01-01")
+              AND DATE(updated_at, "Asia/Seoul") >= DATE(@target_date)
+              AND DATE(updated_at, "Asia/Seoul") < DATE_ADD(DATE(@target_date), INTERVAL 1 DAY)
+              AND article_id IN UNNEST(@article_ids)
+            GROUP BY analysis_state
+            ORDER BY analysis_state
+        """
+        job_config = self.bigquery.QueryJobConfig(
+            query_parameters=[
+                self.bigquery.ScalarQueryParameter("target_date", "STRING", target_date),
+                self.bigquery.ArrayQueryParameter("article_ids", "STRING", article_ids),
+            ],
+            maximum_bytes_billed=self.config.maximum_bytes_billed,
+        )
+        rows = self.bq.query(query, job_config=job_config).result()
+        counts = {state.value: 0 for state in AnalysisState}
+        for row in rows:
+            state = str(row["analysis_state"])
+            if state in counts:
+                counts[state] = int(row["count"])
+        return {"target_date": target_date, "article_count": len(article_ids), "states": counts}
 
     def analyzed_today_count(self) -> int:
         # `frame_analyses` is PARTITION BY DATE(analyzed_at) with
@@ -108,8 +273,22 @@ class GcpAnalysisStore:
             "analyzed_at": datetime.now(UTC).isoformat(),
         }
         if self._update_pending_analysis(analysis_row):
+            self.mark_state(
+                result.idempotency_fingerprint or analysis_key,
+                article.article_id,
+                _result_state(result),
+                attempt_count=result.attempt_count,
+                error_code=result.error_code,
+            )
             return
         self._insert_json("frame_analyses", analysis_row, str(analysis_row["analysis_key"]))
+        self.mark_state(
+            result.idempotency_fingerprint or analysis_key,
+            article.article_id,
+            _result_state(result),
+            attempt_count=result.attempt_count,
+            error_code=result.error_code,
+        )
 
     def _update_pending_analysis(self, row: dict[str, Any]) -> bool:
         """Replace a prior review-needed draft when a bounded retry succeeds."""
@@ -135,14 +314,10 @@ class GcpAnalysisStore:
         """
         job_config = self.bigquery.QueryJobConfig(
             query_parameters=[
-                self.bigquery.ScalarQueryParameter(
-                    "analysis_key", "STRING", row["analysis_key"]
-                ),
+                self.bigquery.ScalarQueryParameter("analysis_key", "STRING", row["analysis_key"]),
                 self.bigquery.ScalarQueryParameter("article_id", "STRING", row["article_id"]),
                 self.bigquery.ScalarQueryParameter("decision", "STRING", row["decision"]),
-                self.bigquery.ScalarQueryParameter(
-                    "profile_json", "STRING", row["profile_json"]
-                ),
+                self.bigquery.ScalarQueryParameter("profile_json", "STRING", row["profile_json"]),
                 self.bigquery.ScalarQueryParameter("model_id", "STRING", row["model_id"]),
                 self.bigquery.ScalarQueryParameter(
                     "prompt_version", "STRING", row["prompt_version"]
@@ -150,21 +325,13 @@ class GcpAnalysisStore:
                 self.bigquery.ScalarQueryParameter(
                     "schema_version", "INT64", row["schema_version"]
                 ),
-                self.bigquery.ScalarQueryParameter(
-                    "input_tokens", "INT64", row["input_tokens"]
-                ),
-                self.bigquery.ScalarQueryParameter(
-                    "output_tokens", "INT64", row["output_tokens"]
-                ),
-                self.bigquery.ScalarQueryParameter(
-                    "review_status", "STRING", row["review_status"]
-                ),
+                self.bigquery.ScalarQueryParameter("input_tokens", "INT64", row["input_tokens"]),
+                self.bigquery.ScalarQueryParameter("output_tokens", "INT64", row["output_tokens"]),
+                self.bigquery.ScalarQueryParameter("review_status", "STRING", row["review_status"]),
                 self.bigquery.ScalarQueryParameter(
                     "publication_status", "STRING", row["publication_status"]
                 ),
-                self.bigquery.ScalarQueryParameter(
-                    "analyzed_at", "TIMESTAMP", row["analyzed_at"]
-                ),
+                self.bigquery.ScalarQueryParameter("analyzed_at", "TIMESTAMP", row["analyzed_at"]),
             ],
             maximum_bytes_billed=self.config.maximum_bytes_billed,
         )

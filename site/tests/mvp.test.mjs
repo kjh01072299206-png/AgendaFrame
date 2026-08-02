@@ -114,23 +114,27 @@ test("requires approval identity and fingerprint for the exact semantic cluster 
   );
 });
 
-test("keeps the public dashboard readable, evidence-first, and explicit about limits", async () => {
+test("keeps the public dashboard focused on date, issue, and outlet exploration", async () => {
   const dashboard = await readFile(new URL("../app/agenda-dashboard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
 
-  for (const copy of ["같은 사건,", "근거가 부족한 분석은", "본문 구조화 초안", "임시 본문 분석", "사람 검토", "중요도·사실성·여론을 뜻하지 않습니다"]) {
+  for (const copy of ["전체 데이터", "날짜·의제·매체로 기사 찾기", "분석 기준일과 의제를 고른 뒤", "중요도·사실성·여론을 뜻하지 않습니다"]) {
     assert.match(dashboard, new RegExp(copy));
+  }
+  for (const reportCopy of ["근거가 부족한 분석은", "현재 본문 근거 없음", "사람 검토</dt>"]) {
+    assert.doesNotMatch(dashboard, new RegExp(reportCopy));
   }
   for (const copy of ["어디서 갈렸나", "쟁점 지도", "기사들이 연결한 서사", "근거로 만든 독자 질문"]) {
     assert.match(dashboard, new RegExp(copy));
   }
-  assert.match(dashboard, /22개 주요 종합일간지·경제매체·뉴스통신사/);
+  assert.match(dashboard, /전체 수집 22개 매체 온라인 표본/);
   assert.match(dashboard, /fetch\("\/api\/sources"/);
   assert.match(dashboard, /fetch\(`\/api\/issues\/dates\?limit=31&scope=\$\{ISSUE_SCOPE\}`/);
-  assert.match(dashboard, /날짜별 의제/);
+  assert.match(dashboard, /분석 기준일/);
   assert.match(dashboard, /archive-disclosure/);
   assert.doesNotMatch(dashboard, /핵심 의제 우선 · 스포츠·생활·IT 후순위/);
   const topNavigation = dashboard.match(/<nav className="topnav"[\s\S]*?<\/nav>/)?.[0] ?? "";
+  for (const copy of ["의제 비교", "전체 데이터", "도구"]) assert.match(topNavigation, new RegExp(copy));
   assert.doesNotMatch(topNavigation, /기사 검색/);
   assert.doesNotMatch(dashboard, /\["한겨레","경향신문","한국일보","중앙일보","조선일보"\]/);
   assert.match(dashboard, /<details className="score-details">/);
@@ -140,9 +144,9 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
   assert.match(dashboard, /aria-controls={`analysis-panel-/);
   assert.match(dashboard, /general_daily_10/);
   assert.match(dashboard, /FramingEditorialView/);
-  assert.match(dashboard, /\["chat", "AI 대화"\]/u);
-  assert.match(dashboard, /\["selfcheck", "자기점검"\]/u);
-  assert.match(dashboard, /\["community", "커뮤니티"\]/u);
+  assert.doesNotMatch(dashboard, /\["chat", "AI 대화"\]/u);
+  assert.doesNotMatch(dashboard, /\["selfcheck", "자기점검"\]/u);
+  assert.doesNotMatch(dashboard, /\["community", "커뮤니티"\]/u);
   assert.doesNotMatch(dashboard, /신뢰도 \{/);
   assert.doesNotMatch(dashboard, /agenda-list" aria-live/);
 
@@ -155,17 +159,17 @@ test("keeps the public dashboard readable, evidence-first, and explicit about li
 test("keeps the initial-five reader surface separate from site-wide tools", async () => {
   const home = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
   const reader = await readFile(new URL("../app/initial-five.tsx", import.meta.url), "utf8");
-  const method = await readFile(new URL("../app/method/page.tsx", import.meta.url), "utf8");
+  const method = await readFile(new URL("../app/tools/method/page.tsx", import.meta.url), "utf8");
   const selfCheck = await readFile(new URL("../app/tools/self-check/page.tsx", import.meta.url), "utf8");
-  const community = await readFile(new URL("../app/community/page.tsx", import.meta.url), "utf8");
+  const community = await readFile(new URL("../app/tools/community/page.tsx", import.meta.url), "utf8");
 
   assert.match(home, /InitialFiveExperience/);
   assert.match(reader, /role="tablist"/);
   assert.match(reader, /role="tabpanel"/);
-  assert.match(reader, /상세 페이지로 열기/);
-  assert.match(reader, /semantic_ai/);
-  assert.match(reader, /근거 기반 미리보기/);
-  assert.match(method, /AI 의미 분석 결과/);
+  assert.match(reader, /상세 분석 보기/);
+  assert.match(reader, /AI 본문 분석/);
+  assert.match(reader, /규칙 기반 보조 지표/);
+  assert.match(method, /AI는 근거를 대신하지 않습니다/);
   assert.match(selfCheck, /SelfCheck/);
   assert.match(community, /CommunityHub/);
 });

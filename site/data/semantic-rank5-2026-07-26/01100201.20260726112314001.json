@@ -1,0 +1,294 @@
+{
+  "articleId": "01100201.20260726112314001",
+  "profile": {
+    "schema_version": "agendaframe.article-frame-profile.v2",
+    "lineage": {
+      "model_id": "gemini-2.5-flash-lite",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "model_output_schema_version": 3,
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "approval": {
+        "authorization_id": "bigkinds-2026-07-26-rank-5-16619490411c",
+        "fingerprint": "c4af0c88ede8789712667db4872fbcec65949c563a8c15983add1b92f8291f50",
+        "cluster_id": "bigkinds-2026-07-26-rank-5",
+        "reviewer": "AgendaFrame agent-assisted evidence audit",
+        "reviewed_at": "2026-08-02T00:00:00+09:00",
+        "approved_urls_sha256": "4b223d11c96cbcd42f7b05d22baf9a563874cd549a404edb244611ef44bfa2fc"
+      }
+    },
+    "engine": {
+      "name": "AgendaFrame Vertex evidence coder",
+      "version": "gemini-2.5-flash-lite",
+      "approach": "semantic_evidence_bounded",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": 3,
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ]
+    },
+    "article": {
+      "article_id": "01100201.20260726112314001",
+      "upstream_article_id": "01100201.20260726112314001",
+      "published_at": "2026-07-26T11:23:14+09:00",
+      "title_sha256": "ffc86e179b6d2fdf13fea44342808bfc8c07eb76111d57a408d02636a31efae2",
+      "body_sha256": "36e12769374fe71dd0d3b25601765024c3099023bc4c092032df1e04e10c8a1e",
+      "body_character_count": 423,
+      "body_word_count": 102,
+      "paragraph_count": 1,
+      "sentence_count": 9,
+      "raw_body_retained": false
+    },
+    "extraction": {
+      "text_scope": "transient_public_page_extract",
+      "analyzed_character_count": 423,
+      "input_truncated": false
+    },
+    "genre": {
+      "code": "unknown",
+      "label": "자동 분류 안 함",
+      "evidence": []
+    },
+    "dimensions": {
+      "problem_definition": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:debacd0a2a0018cee753c428f4f3b7b359fcdca59e5c8264986c260e5e0c5879",
+            "code": "semantic_problem_definition",
+            "frame_family": "safety_harm",
+            "variant_key": "semantic:problem_definition:family:safety_harm",
+            "public_paraphrase": "외국인 집단 패싸움 중 흉기 사용으로 인한 사망 및 부상 사건 발생",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "6590ed479d03b2a4a96e477f82b3a5bba81f1d9a65b1cb77e4593c0cead760e7"
+            }
+          }
+        ]
+      },
+      "causal_interpretation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:d51f8c22016a26a4b1ae5d35a6a3c182da05d6ac6047335fd7f431f4fcd7885e",
+            "code": "semantic_causal_interpretation",
+            "frame_family": "individual_action",
+            "variant_key": "semantic:causal_interpretation:family:individual_action",
+            "public_paraphrase": "패싸움 중 흉기 사용으로 인한 살인 및 상해 발생",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "b5e6ed80dc8dc6ca30f644b0ad88bb2d378f7d080f1749236712968313acbbcc"
+            }
+          },
+          {
+            "claim_id": "claim:d51f8c22016a26a4b1ae5d35a6a3c182da05d6ac6047335fd7f431f4fcd7885e",
+            "code": "semantic_causal_interpretation",
+            "frame_family": "individual_action",
+            "variant_key": "semantic:causal_interpretation:family:individual_action",
+            "public_paraphrase": "패싸움 중 흉기 사용으로 인한 살인 및 상해 발생",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "9aba231c8f01e237344c3ecd75ca9041091b29b39cbdc23422f1d0af897978f1"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:db81362d667f14348a3e36d060d461f73b901b750bae44bca6d39c70e8020877",
+            "code": "semantic_responsibility_attribution",
+            "frame_family": "individual_actor",
+            "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+            "public_paraphrase": "가해 외국인 남성 A씨에게 살인 및 상해 혐의 책임 부여",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "6590ed479d03b2a4a96e477f82b3a5bba81f1d9a65b1cb77e4593c0cead760e7"
+            }
+          },
+          {
+            "claim_id": "claim:db81362d667f14348a3e36d060d461f73b901b750bae44bca6d39c70e8020877",
+            "code": "semantic_responsibility_attribution",
+            "frame_family": "individual_actor",
+            "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+            "public_paraphrase": "가해 외국인 남성 A씨에게 살인 및 상해 혐의 책임 부여",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "b5e6ed80dc8dc6ca30f644b0ad88bb2d378f7d080f1749236712968313acbbcc"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:4380fe76d4245a7dab96f7cbaa4ab69b472df878dc0288285cd3ea2599074f17",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "safety_negative",
+            "variant_key": "semantic:moral_evaluation:family:safety_negative",
+            "public_paraphrase": "외국인 집단 패싸움 및 흉기 사용으로 인한 인명 피해 발생",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "6590ed479d03b2a4a96e477f82b3a5bba81f1d9a65b1cb77e4593c0cead760e7"
+            }
+          },
+          {
+            "claim_id": "claim:4380fe76d4245a7dab96f7cbaa4ab69b472df878dc0288285cd3ea2599074f17",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "safety_negative",
+            "variant_key": "semantic:moral_evaluation:family:safety_negative",
+            "public_paraphrase": "외국인 집단 패싸움 및 흉기 사용으로 인한 인명 피해 발생",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "9c629baffdff8be182cb394f22944553a9cd3bfdabedfd96d14bca89b3d7e81d"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:620b408e45637a09e4e195465266518e299984193170f2dde507ea7b21560820",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "investigation_accountability",
+            "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+            "public_paraphrase": "정확한 사건 경위 조사를 통한 철저한 수사 진행",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "ecbca660ebcf770fd2a87ddcd3cc5d05b4ed1d4e37ce98abe0974e2ede112a65"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:5445298772aecd30c96390d50cbec230fd885d93b5fbfe53a4da7927af168f2d",
+        "role": "other",
+        "role_label": "기타 취재원",
+        "direct_quote_count": 0,
+        "indirect_attribution_count": 3,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 1
+            },
+            "sentence_sha256": "6590ed479d03b2a4a96e477f82b3a5bba81f1d9a65b1cb77e4593c0cead760e7"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 3
+            },
+            "sentence_sha256": "b5e6ed80dc8dc6ca30f644b0ad88bb2d378f7d080f1749236712968313acbbcc"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 8
+            },
+            "sentence_sha256": "ecbca660ebcf770fd2a87ddcd3cc5d05b4ed1d4e37ce98abe0974e2ede112a65"
+          }
+        ]
+      }
+    ],
+    "context_depth": {
+      "level": "unknown"
+    },
+    "scope": {
+      "code": "unknown"
+    },
+    "secondary_descriptors": {
+      "generic_frames": [],
+      "policy_frames": [],
+      "controlled_associations": []
+    },
+    "framing_devices": [],
+    "review": {
+      "status": "automatic_draft",
+      "analysis_decision": "analyze",
+      "analysis_state": "succeeded",
+      "attempt_count": 1,
+      "idempotency_fingerprint": "c57ccce5e402dd7817da6ce4610b9b302782998079d1be91147e01b657567cf3",
+      "error_code": null,
+      "fallback_reason": null,
+      "requires_human_review": true,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+    }
+  }
+}

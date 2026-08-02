@@ -1,0 +1,38 @@
+{
+  "schema_version": 3,
+  "authorization_id": "bigkinds-2026-07-26-rank-3-f87f13a7010f",
+  "cluster_id": "bigkinds-2026-07-26-rank-3",
+  "reviewed_by": "AgendaFrame agent-assisted evidence audit",
+  "reviewed_at": "2026-08-02T00:00:00+09:00",
+  "purpose": "transient_framing_analysis",
+  "text_scope": "transient_public_page_extract",
+  "valid_until": "2026-10-31",
+  "retain_body": false,
+  "cluster_review_status": "approved_same_event",
+  "approved_articles": {
+    "01100611.20260726160027001": {
+      "source_id": "seoul",
+      "canonical_url": "https://www.seoul.co.kr/news/newsView.php?id=20260726500076",
+      "published_date": "2026-07-26",
+      "body_sha256": "b201a3f2e231ffcb99ff738bd7249286d195536923dd9ede57847363f6e83e01"
+    },
+    "01101101.20260726143628001": {
+      "source_id": "hankookilbo",
+      "canonical_url": "https://www.hankookilbo.com/news/article/A2026072610590003559",
+      "published_date": "2026-07-26",
+      "body_sha256": "2aa598fa01201576c0ca910b87f5c29842e1d02c2e97d7fafb840f51b8b52a22"
+    },
+    "01100101.20260726092625001": {
+      "source_id": "khan",
+      "canonical_url": "https://www.khan.co.kr/article/202607260925001",
+      "published_date": "2026-07-26",
+      "body_sha256": "616f941b9a2970743a04e4c2a8e5a234cac1a481fe537a01aea9b303ea2d738e"
+    },
+    "01100201.20260726074621001": {
+      "source_id": "kmib",
+      "canonical_url": "https://www.kmib.co.kr/article/view.asp?arcid=0030162143&code=61121111&cp=kd",
+      "published_date": "2026-07-26",
+      "body_sha256": "32df9ae9b5bd1158edab11597e1400d2af11d726d893732398ff139bdc88b099"
+    }
+  }
+}

@@ -1,42 +1,96 @@
 {
   "articleId": "01100801.20260726130958001",
   "profile": {
-    "article": {
-      "article_id": "01100801.20260726130958001",
-      "body_character_count": 902,
-      "body_sha256": "5ec6a2aaf37a3a579b6ddcfb499238a24f531b57eee73ec7cbc30f0eef2827bf",
-      "body_word_count": 200,
-      "paragraph_count": 1,
-      "published_at": "2026-07-26T13:09:58+09:00",
-      "raw_body_retained": false,
-      "sentence_count": 11,
-      "title_sha256": "33313fcfd87fcc43da19dfc3eb3c547dabc62d15929f1cfd0d03f6ad24aa250f",
-      "upstream_article_id": "01100801.20260726130958001"
+    "schema_version": "agendaframe.article-frame-profile.v2",
+    "lineage": {
+      "model_id": "gemini-2.5-flash-lite",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "model_output_schema_version": 3,
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "approval": {
+        "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
+        "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
+        "cluster_id": "bigkinds-2026-07-26-rank-1",
+        "reviewer": "AgendaFrame agent-assisted evidence audit",
+        "reviewed_at": "2026-07-31T00:00:00+09:00",
+        "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753"
+      }
     },
     "engine": {
-      "analysis_schema_version": 3,
+      "name": "AgendaFrame Vertex evidence coder",
+      "version": "gemini-2.5-flash-lite",
       "approach": "semantic_evidence_bounded",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": 3,
       "evidence_storage": "locator_and_salted_sha256_only",
       "limitations": [
         "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
         "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
         "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
-      ],
-      "name": "AgendaFrame Vertex evidence coder",
-      "prompt_version": "2.4.1",
-      "semantic_ai": true,
-      "status": "semantic_draft",
-      "version": "gemini-2.5-flash-lite"
+      ]
+    },
+    "article": {
+      "article_id": "01100801.20260726130958001",
+      "upstream_article_id": "01100801.20260726130958001",
+      "published_at": "2026-07-26T13:09:58+09:00",
+      "title_sha256": "33313fcfd87fcc43da19dfc3eb3c547dabc62d15929f1cfd0d03f6ad24aa250f",
+      "body_sha256": "5ec6a2aaf37a3a579b6ddcfb499238a24f531b57eee73ec7cbc30f0eef2827bf",
+      "body_character_count": 902,
+      "body_word_count": 200,
+      "paragraph_count": 1,
+      "sentence_count": 9,
+      "raw_body_retained": false
+    },
+    "extraction": {
+      "text_scope": "transient_public_page_extract",
+      "analyzed_character_count": 902,
+      "input_truncated": false
+    },
+    "genre": {
+      "code": "unknown",
+      "label": "자동 분류 안 함",
+      "evidence": []
     },
     "dimensions": {
+      "problem_definition": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:70feff14122c9a91edeed88b999b89cb5aeb406be543589dc1e3dbf9fd79e772",
+            "code": "semantic_problem_definition",
+            "frame_family": "political_conflict",
+            "variant_key": "semantic:problem_definition:family:political_conflict",
+            "public_paraphrase": "검찰 보완수사권 폐지가 정치적 거래의 대상이 되고 있음",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "94b2ebcf570fb1bf6d1a701dded4239c2371925ed5e74607537f875cb81d01f4"
+            }
+          }
+        ]
+      },
       "causal_interpretation": {
         "status": "source_attributed",
         "model_status": "supported",
         "outlet_narration_observed": false,
         "items": [
           {
-            "public_paraphrase": "정치공학적 거래와 강성 팬덤의 압박으로 인한 입법 추진",
+            "claim_id": "claim:5befa69c040675cc002cd924a443f21d086f10d3ad1ea0b701f5b502a90436f3",
+            "code": "semantic_causal_interpretation",
             "frame_family": "political_incentive",
+            "variant_key": "semantic:causal_interpretation:family:political_incentive",
+            "public_paraphrase": "정치적 흥정과 강성 지지층의 압박이 보완수사권 폐지 추진의 원인임",
             "voice": {
               "kind": "indirect_source",
               "speaker_role": null
@@ -50,8 +104,11 @@
             }
           },
           {
-            "public_paraphrase": "정치공학적 거래와 강성 팬덤의 압박으로 인한 입법 추진",
+            "claim_id": "claim:5befa69c040675cc002cd924a443f21d086f10d3ad1ea0b701f5b502a90436f3",
+            "code": "semantic_causal_interpretation",
             "frame_family": "political_incentive",
+            "variant_key": "semantic:causal_interpretation:family:political_incentive",
+            "public_paraphrase": "정치적 흥정과 강성 지지층의 압박이 보완수사권 폐지 추진의 원인임",
             "voice": {
               "kind": "indirect_source",
               "speaker_role": null
@@ -59,68 +116,9 @@
             "evidence": {
               "locator": {
                 "paragraph": 1,
-                "sentence": 9
+                "sentence": 7
               },
-              "sentence_sha256": "fc4e48ae4698bf49da9697479a2eb5a04db03c9d17d2672956b41348f80f5c1c"
-            }
-          }
-        ]
-      },
-      "moral_evaluation": {
-        "status": "source_attributed",
-        "model_status": "supported",
-        "outlet_narration_observed": false,
-        "items": [
-          {
-            "public_paraphrase": "정치공학적 거래와 입법 폭주에 대한 부정적 평가",
-            "frame_family": "legitimacy_negative",
-            "voice": {
-              "kind": "indirect_source",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 3
-              },
-              "sentence_sha256": "94b2ebcf570fb1bf6d1a701dded4239c2371925ed5e74607537f875cb81d01f4"
-            }
-          },
-          {
-            "public_paraphrase": "정치공학적 거래와 입법 폭주에 대한 부정적 평가",
-            "frame_family": "legitimacy_negative",
-            "voice": {
-              "kind": "indirect_source",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 9
-              },
-              "sentence_sha256": "fc4e48ae4698bf49da9697479a2eb5a04db03c9d17d2672956b41348f80f5c1c"
-            }
-          }
-        ]
-      },
-      "problem_definition": {
-        "status": "source_attributed",
-        "model_status": "supported",
-        "outlet_narration_observed": false,
-        "items": [
-          {
-            "public_paraphrase": "검찰 보완수사권 폐지가 형사사법 시스템을 마비시킬 수 있다는 우려",
-            "frame_family": "safety_harm",
-            "voice": {
-              "kind": "indirect_source",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 11
-              },
-              "sentence_sha256": "b2df817e1c0f5314d87b3db61a6a4f6b191a8f4a6dffd07903fa5d697374fa70"
+              "sentence_sha256": "b643accddb4a6803b5dde7fcf8a7e25143f8b4697e69cce7341a97e6ede3f0ad"
             }
           }
         ]
@@ -131,8 +129,11 @@
         "outlet_narration_observed": false,
         "items": [
           {
-            "public_paraphrase": "대통령과 여당, 민주당 강경파에게 책임 전가",
+            "claim_id": "claim:db4401bdcec07d7d13316bd14972dc3cb655328885e14a0918891bd0d392b618",
+            "code": "semantic_responsibility_attribution",
             "frame_family": "legislature_politics",
+            "variant_key": "semantic:responsibility_attribution:family:legislature_politics",
+            "public_paraphrase": "대통령과 여당, 민주당이 보완수사권 폐지 추진에 책임이 있음",
             "voice": {
               "kind": "indirect_source",
               "speaker_role": null
@@ -146,8 +147,11 @@
             }
           },
           {
-            "public_paraphrase": "대통령과 여당, 민주당 강경파에게 책임 전가",
+            "claim_id": "claim:db4401bdcec07d7d13316bd14972dc3cb655328885e14a0918891bd0d392b618",
+            "code": "semantic_responsibility_attribution",
             "frame_family": "legislature_politics",
+            "variant_key": "semantic:responsibility_attribution:family:legislature_politics",
+            "public_paraphrase": "대통령과 여당, 민주당이 보완수사권 폐지 추진에 책임이 있음",
             "voice": {
               "kind": "indirect_source",
               "speaker_role": null
@@ -155,14 +159,42 @@
             "evidence": {
               "locator": {
                 "paragraph": 1,
-                "sentence": 6
+                "sentence": 7
               },
-              "sentence_sha256": "bd78fccf9ced99e9620ced33e475e83168396bdf7693d7f2be8e04e90107231b"
+              "sentence_sha256": "b643accddb4a6803b5dde7fcf8a7e25143f8b4697e69cce7341a97e6ede3f0ad"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "claim_id": "claim:390fe763b004f097afc4b01712c042b174f5ac4d01026cbb26a58b28664e567f",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "safety_negative",
+            "variant_key": "semantic:moral_evaluation:family:safety_negative",
+            "public_paraphrase": "보완수사권 폐지는 범죄 대란과 사법 체계 마비를 초래할 수 있음",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "da9db61ad9f5a4350ff30a851e4439063ec640c94bfdfb9dab8939f3bdae2452"
             }
           },
           {
-            "public_paraphrase": "대통령과 여당, 민주당 강경파에게 책임 전가",
-            "frame_family": "legislature_politics",
+            "claim_id": "claim:390fe763b004f097afc4b01712c042b174f5ac4d01026cbb26a58b28664e567f",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "safety_negative",
+            "variant_key": "semantic:moral_evaluation:family:safety_negative",
+            "public_paraphrase": "보완수사권 폐지는 범죄 대란과 사법 체계 마비를 초래할 수 있음",
             "voice": {
               "kind": "indirect_source",
               "speaker_role": null
@@ -172,7 +204,7 @@
                 "paragraph": 1,
                 "sentence": 9
               },
-              "sentence_sha256": "fc4e48ae4698bf49da9697479a2eb5a04db03c9d17d2672956b41348f80f5c1c"
+              "sentence_sha256": "4a62822a904058c71025faa838e62edfd773a0288ff31bb38e8ac76adfec4ca0"
             }
           }
         ]
@@ -183,8 +215,11 @@
         "outlet_narration_observed": false,
         "items": [
           {
-            "public_paraphrase": "보완수사권 폐지 시 정부 여당의 동반 몰락 경고",
-            "frame_family": "institutional_check",
+            "claim_id": "claim:9e3ee57b38048a459c159a42b821a4963944c142e2a9753be82e7b19b42ed744",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "strengthen_policy",
+            "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+            "public_paraphrase": "보완수사권 폐지 추진을 중단하고 입법 폭주를 제어해야 함",
             "voice": {
               "kind": "indirect_source",
               "speaker_role": null
@@ -192,9 +227,27 @@
             "evidence": {
               "locator": {
                 "paragraph": 1,
-                "sentence": 5
+                "sentence": 4
               },
-              "sentence_sha256": "e9810a9c6cae16a32125d23bb224e6a719b825b5f175229f2ffac1c95c6173ad"
+              "sentence_sha256": "b7f755d0f25041f952b5eeb0aaf7b9ac161590945e0d13543c11eb939b8e7d9d"
+            }
+          },
+          {
+            "claim_id": "claim:9e3ee57b38048a459c159a42b821a4963944c142e2a9753be82e7b19b42ed744",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "strengthen_policy",
+            "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+            "public_paraphrase": "보완수사권 폐지 추진을 중단하고 입법 폭주를 제어해야 함",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "40b6c82387d917d883ffb67568b6da1445915dd89f5875e103d0812539f4c504"
             }
           }
         ]
@@ -203,75 +256,50 @@
     "actors_and_sources": [
       {
         "actor_id": "actor:21a562ade94f06f518d783ca641c10f97b7a6d1287b71401c1d619dbb1bad23d",
+        "role": "political_actor",
+        "role_label": "정당·정치권",
         "direct_quote_count": 0,
+        "indirect_attribution_count": 2,
         "evidence": [
           {
             "locator": {
               "paragraph": 1,
-              "sentence": 1
+              "sentence": 3
             },
-            "sentence_sha256": "84573df4d6f8127ebc730720c63e2e354540b9375613205c9679e649e3c0a319"
+            "sentence_sha256": "94b2ebcf570fb1bf6d1a701dded4239c2371925ed5e74607537f875cb81d01f4"
           },
           {
             "locator": {
               "paragraph": 1,
-              "sentence": 4
+              "sentence": 7
             },
-            "sentence_sha256": "5c70daeb416975e153a3acfd706aa44f296e23cc48689977109ab08e87765c71"
-          },
-          {
-            "locator": {
-              "paragraph": 1,
-              "sentence": 6
-            },
-            "sentence_sha256": "bd78fccf9ced99e9620ced33e475e83168396bdf7693d7f2be8e04e90107231b"
-          },
-          {
-            "locator": {
-              "paragraph": 1,
-              "sentence": 9
-            },
-            "sentence_sha256": "fc4e48ae4698bf49da9697479a2eb5a04db03c9d17d2672956b41348f80f5c1c"
-          },
-          {
-            "locator": {
-              "paragraph": 1,
-              "sentence": 10
-            },
-            "sentence_sha256": "2134559be2608f6eb9b4d8b4db4ad0eb2c976d9f86ea9de8fe0542603b446a1c"
+            "sentence_sha256": "b643accddb4a6803b5dde7fcf8a7e25143f8b4697e69cce7341a97e6ede3f0ad"
           }
-        ],
-        "indirect_attribution_count": 5,
-        "role": "political_actor",
-        "role_label": "정당·정치권"
+        ]
       }
     ],
+    "context_depth": {
+      "level": "unknown"
+    },
+    "scope": {
+      "code": "unknown"
+    },
+    "secondary_descriptors": {
+      "generic_frames": [],
+      "policy_frames": [],
+      "controlled_associations": []
+    },
+    "framing_devices": [],
     "review": {
+      "status": "automatic_draft",
       "analysis_decision": "analyze",
+      "analysis_state": "succeeded",
+      "attempt_count": 2,
+      "idempotency_fingerprint": "168783b3f82e2b36e45d9d8bbdc1fc32e07e08edeadc25a4f87c096fb0607153",
+      "error_code": null,
       "fallback_reason": null,
-      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다.",
       "requires_human_review": true,
-      "status": "automatic_draft"
-    },
-    "extraction": {
-      "analyzed_character_count": 902,
-      "input_truncated": false,
-      "text_scope": "transient_public_page_extract"
-    },
-    "lineage": {
-      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
-      "approval": {
-        "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753",
-        "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
-        "cluster_id": "bigkinds-2026-07-26-rank-1",
-        "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
-        "reviewed_at": "2026-07-31T00:00:00+09:00",
-        "reviewer": "AgendaFrame agent-assisted evidence audit"
-      },
-      "comparison_engine_version": "korean-evidence-rules-v2",
-      "model_id": "gemini-2.5-flash-lite",
-      "model_output_schema_version": 3,
-      "prompt_version": "2.4.1"
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
     }
   }
 }

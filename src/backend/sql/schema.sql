@@ -63,6 +63,22 @@ PARTITION BY DATE(analyzed_at)
 CLUSTER BY article_id, prompt_version
 OPTIONS(require_partition_filter=TRUE);
 
+-- Durable orchestration state is separate from the public frame result. This
+-- lets queued/running/retry rows survive a process restart without putting
+-- article bodies or evidence text in the state table.
+CREATE TABLE IF NOT EXISTS `project-40bc06fc-fb4b-46b6-a10.agendaframe.analysis_states` (
+  idempotency_fingerprint STRING NOT NULL,
+  article_id STRING NOT NULL,
+  analysis_state STRING NOT NULL,
+  attempt_count INT64 NOT NULL,
+  error_code STRING,
+  next_attempt_at TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL
+)
+PARTITION BY DATE(updated_at)
+CLUSTER BY article_id, analysis_state, idempotency_fingerprint
+OPTIONS(require_partition_filter=TRUE);
+
 CREATE TABLE IF NOT EXISTS `project-40bc06fc-fb4b-46b6-a10.agendaframe.daily_usage` (
   usage_date DATE NOT NULL,
   service STRING NOT NULL,

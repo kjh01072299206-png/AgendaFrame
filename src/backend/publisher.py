@@ -8,6 +8,7 @@ from typing import Any
 from urllib.request import Request, urlopen
 
 from ai.framing import FRAME_DIMENSIONS, FrameResult, validate_frame_result
+from backend.analysis_state import AnalysisState
 from crawler.models import ArticleDocument
 from crawler.text import sentence_rows
 
@@ -111,7 +112,11 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
     if missing:
         raise ValueError(f"Missing frame dimensions: {', '.join(sorted(missing))}")
 
-    semantic_ai_succeeded = result.decision == "analyze" and result.fallback_reason is None
+    semantic_ai_succeeded = (
+        result.decision == "analyze"
+        and result.fallback_reason is None
+        and result.analysis_state in {None, AnalysisState.SUCCEEDED.value}
+    )
     limitations = [
         "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
         "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다.",
@@ -281,6 +286,10 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
         "review": {
             "status": "automatic_draft",
             "analysis_decision": result.decision,
+            "analysis_state": result.analysis_state,
+            "attempt_count": result.attempt_count,
+            "idempotency_fingerprint": result.idempotency_fingerprint,
+            "error_code": result.error_code,
             "fallback_reason": result.fallback_reason,
             "requires_human_review": True,
             "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다.",

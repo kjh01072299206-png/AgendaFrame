@@ -1,0 +1,285 @@
+{
+  "articleId": "01101101.20260726155810001",
+  "profile": {
+    "schema_version": "agendaframe.article-frame-profile.v2",
+    "lineage": {
+      "model_id": "gemini-2.5-flash-lite",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "model_output_schema_version": 3,
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "approval": {
+        "authorization_id": "bigkinds-2026-07-26-rank-4-00a35b874b22",
+        "fingerprint": "9601bb0520e2c8d760ee3ae0e38c6c324c052db0aaf1b8a8112ce5501beff5b7",
+        "cluster_id": "bigkinds-2026-07-26-rank-4",
+        "reviewer": "AgendaFrame agent-assisted evidence audit",
+        "reviewed_at": "2026-08-02T00:00:00+09:00",
+        "approved_urls_sha256": "815e7ea12b6ad20238a92fa219920094b9184b129e4c83e7c872f0a97f79be1e"
+      }
+    },
+    "engine": {
+      "name": "AgendaFrame Vertex evidence coder",
+      "version": "gemini-2.5-flash-lite",
+      "approach": "semantic_evidence_bounded",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": 3,
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ]
+    },
+    "article": {
+      "article_id": "01101101.20260726155810001",
+      "upstream_article_id": "01101101.20260726155810001",
+      "published_at": "2026-07-26T15:58:10+09:00",
+      "title_sha256": "15579bded1bf7b0e4da9afc15f9b9e2db4e9adc07bc7804fa8268633e49db787",
+      "body_sha256": "e6a85e092c3a1c34a8bd0c1cf6fddf4d13d78bad21b451ab17fba8e45a8d0ce7",
+      "body_character_count": 1821,
+      "body_word_count": 429,
+      "paragraph_count": 1,
+      "sentence_count": 36,
+      "raw_body_retained": false
+    },
+    "extraction": {
+      "text_scope": "transient_public_page_extract",
+      "analyzed_character_count": 1821,
+      "input_truncated": false
+    },
+    "genre": {
+      "code": "unknown",
+      "label": "자동 분류 안 함",
+      "evidence": []
+    },
+    "dimensions": {
+      "problem_definition": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:7bbdfd6b6f9368f924f7d21752f735c1571722b66016e03b8947f9dd4a2d5a60",
+            "code": "semantic_problem_definition",
+            "frame_family": "rights_fairness",
+            "variant_key": "semantic:problem_definition:family:rights_fairness",
+            "public_paraphrase": "변호사의 재판 불출석으로 인한 의뢰인의 패소 및 손해배상 소송 진행",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 7
+              },
+              "sentence_sha256": "80ac352bb49b2460ce3af265afd7c02925129a290c7133b148b8843866d5d386"
+            }
+          }
+        ]
+      },
+      "causal_interpretation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:abf7e73a6ef17e0b738e099e1d22612af1316275facf223b41f2d6c3f0e509b0",
+            "code": "semantic_causal_interpretation",
+            "frame_family": "individual_action",
+            "variant_key": "semantic:causal_interpretation:family:individual_action",
+            "public_paraphrase": "변호사의 재판 불출석 및 사실 미고지",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 20
+              },
+              "sentence_sha256": "6e57eaa117c5e1d2b3e0c44b232eda7eda5fdc3c3f6f8538bdfd914a318ebfbd"
+            }
+          },
+          {
+            "claim_id": "claim:abf7e73a6ef17e0b738e099e1d22612af1316275facf223b41f2d6c3f0e509b0",
+            "code": "semantic_causal_interpretation",
+            "frame_family": "individual_action",
+            "variant_key": "semantic:causal_interpretation:family:individual_action",
+            "public_paraphrase": "변호사의 재판 불출석 및 사실 미고지",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 22
+              },
+              "sentence_sha256": "2670ed7be01d76ae0afc889cd1311b57ee93fc42c7b60122acb61c1a473b2af1"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:ffc7f51052653ff5cfe7bc77f8f85b05db4f82e90051ee552e4c822f02b63784",
+            "code": "semantic_responsibility_attribution",
+            "frame_family": "business",
+            "variant_key": "semantic:responsibility_attribution:family:business",
+            "public_paraphrase": "권경애 변호사 및 소속 법무법인",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 24
+              },
+              "sentence_sha256": "6e58d74cc705a3b738696c4e61b4166dd7006bea73a1fda86c0638049bafda80"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:553f019416871826083306f9e3e98cc8dd66fcc2132ea54aae266b08aaafd0f6",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "fairness_negative",
+            "variant_key": "semantic:moral_evaluation:family:fairness_negative",
+            "public_paraphrase": "변호사의 불성실한 소송 수행으로 인한 재판받을 권리 침해",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 23
+              },
+              "sentence_sha256": "eb181062df73c63b7f4caaa12cfeb835dfadfc0587e93a68133f74b62a566a92"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:f2e21d6ad7a4915a660c8fc9c6602a42309ef5e5c71ebc8e0d1b49044fcc5998",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "institutional_check",
+            "variant_key": "semantic:treatment_recommendation:family:institutional_check",
+            "public_paraphrase": "화해권고 결정에 대한 이의신청 및 판결 절차 진행",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 7
+              },
+              "sentence_sha256": "80ac352bb49b2460ce3af265afd7c02925129a290c7133b148b8843866d5d386"
+            }
+          },
+          {
+            "claim_id": "claim:f2e21d6ad7a4915a660c8fc9c6602a42309ef5e5c71ebc8e0d1b49044fcc5998",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "institutional_check",
+            "variant_key": "semantic:treatment_recommendation:family:institutional_check",
+            "public_paraphrase": "화해권고 결정에 대한 이의신청 및 판결 절차 진행",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "01f82c62eddd4f3a6e9fbaca672b9564e99bb65a3a337be62c5c0e7c783bec05"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:abcf937933720948d4bd2c0cae96716e3b2a3a907219d2ebbcc03496e7f986f7",
+        "role": "affected_person",
+        "role_label": "당사자·시민",
+        "direct_quote_count": 0,
+        "indirect_attribution_count": 2,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 8
+            },
+            "sentence_sha256": "01f82c62eddd4f3a6e9fbaca672b9564e99bb65a3a337be62c5c0e7c783bec05"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 9
+            },
+            "sentence_sha256": "28e8f1d357388ab769633415d2cdefe7cf27114b754ac15f3c6b30a6e40278f1"
+          }
+        ]
+      },
+      {
+        "actor_id": "actor:1f806b6ca674a85161dbb775191a46a46afbf08866318eb0b2594291bc804baa",
+        "role": "other",
+        "role_label": "기타 취재원",
+        "direct_quote_count": 0,
+        "indirect_attribution_count": 1,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 9
+            },
+            "sentence_sha256": "28e8f1d357388ab769633415d2cdefe7cf27114b754ac15f3c6b30a6e40278f1"
+          }
+        ]
+      }
+    ],
+    "context_depth": {
+      "level": "unknown"
+    },
+    "scope": {
+      "code": "unknown"
+    },
+    "secondary_descriptors": {
+      "generic_frames": [],
+      "policy_frames": [],
+      "controlled_associations": []
+    },
+    "framing_devices": [],
+    "review": {
+      "status": "automatic_draft",
+      "analysis_decision": "analyze",
+      "analysis_state": "succeeded",
+      "attempt_count": 2,
+      "idempotency_fingerprint": "9419d8b462a19a7966866b9c9c394632a6b690480a19e7c3650a8ce00deab45a",
+      "error_code": null,
+      "fallback_reason": null,
+      "requires_human_review": true,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+    }
+  }
+}

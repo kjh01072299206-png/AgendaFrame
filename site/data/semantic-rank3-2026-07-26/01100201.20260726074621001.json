@@ -1,0 +1,256 @@
+{
+  "articleId": "01100201.20260726074621001",
+  "profile": {
+    "schema_version": "agendaframe.article-frame-profile.v2",
+    "lineage": {
+      "model_id": "gemini-2.5-flash-lite",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "model_output_schema_version": 3,
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "approval": {
+        "authorization_id": "bigkinds-2026-07-26-rank-3-f87f13a7010f",
+        "fingerprint": "49b9b47e3211275d2ab63d0b409b07d71ad8442f820f3139cb12fbf693e0d2ae",
+        "cluster_id": "bigkinds-2026-07-26-rank-3",
+        "reviewer": "AgendaFrame agent-assisted evidence audit",
+        "reviewed_at": "2026-08-02T00:00:00+09:00",
+        "approved_urls_sha256": "5bad51a9594e6cf679cd775784227bf4bd41c6baad5e3cb36298f8031f057e8c"
+      }
+    },
+    "engine": {
+      "name": "AgendaFrame Vertex evidence coder",
+      "version": "gemini-2.5-flash-lite",
+      "approach": "semantic_evidence_bounded",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": 3,
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ]
+    },
+    "article": {
+      "article_id": "01100201.20260726074621001",
+      "upstream_article_id": "01100201.20260726074621001",
+      "published_at": "2026-07-26T07:46:21+09:00",
+      "title_sha256": "ad67d9175184c1fcc4976eafd032b213e261ae93be7ab9f61dfbb8d214c8bb61",
+      "body_sha256": "32df9ae9b5bd1158edab11597e1400d2af11d726d893732398ff139bdc88b099",
+      "body_character_count": 1747,
+      "body_word_count": 440,
+      "paragraph_count": 1,
+      "sentence_count": 21,
+      "raw_body_retained": false
+    },
+    "extraction": {
+      "text_scope": "transient_public_page_extract",
+      "analyzed_character_count": 1747,
+      "input_truncated": false
+    },
+    "genre": {
+      "code": "unknown",
+      "label": "자동 분류 안 함",
+      "evidence": []
+    },
+    "dimensions": {
+      "problem_definition": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:9ff5ce158ead066378ee05fe79bfed0d89c05a25875d2b3e1d6c59e2b0927ce1",
+            "code": "semantic_problem_definition",
+            "frame_family": "safety_harm",
+            "variant_key": "semantic:problem_definition:family:safety_harm",
+            "public_paraphrase": "방화 사건으로 인한 인명 및 재산 피해 발생",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "593f18bda9f520a1d3ada524b5f08d0b749c571dae6e550ce69c409b9474cce4"
+            }
+          }
+        ]
+      },
+      "causal_interpretation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:80d0a15ac8f02c8a8b830e0603773e85156bd60cc9cd342c9afa103de36b44b5",
+            "code": "semantic_causal_interpretation",
+            "frame_family": "individual_action",
+            "variant_key": "semantic:causal_interpretation:family:individual_action",
+            "public_paraphrase": "피의자가 고소 사실을 인지하고 보복 목적으로 범행을 저질렀을 가능성",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "db93426751b317395664f3b6b53762a6ce62ba4405d4583e83bd6fe8bceb2291"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:bf1bc5dd2d01f8b21aa5133d91e66077ab5b6c81f941eb608a3279974f5b5b0c",
+            "code": "semantic_responsibility_attribution",
+            "frame_family": "individual_actor",
+            "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+            "public_paraphrase": "피의자 개인의 행위에 대한 책임",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "9e92afd77609c0dd749e761b3693019d5c8005637fadb52abad2b8bd26c705e3"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:a386427f45b71bcfe7ac4c8832bfa61310279e4a47b7578ad3825eb9ed22434c",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "safety_negative",
+            "variant_key": "semantic:moral_evaluation:family:safety_negative",
+            "public_paraphrase": "방화 사건으로 인한 사망자 발생 및 심각한 피해",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 17
+              },
+              "sentence_sha256": "a59bb9adf09afefed89592330e487db925a0d2be8bd71f403e19d47675c0ef81"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:211cc78f3e57de157548d3c123c00e0f1f0a0e7ac3d457b005932784313affa1",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "investigation_accountability",
+            "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+            "public_paraphrase": "보복 범죄 여부 등 범행 동기 규명 및 관련 법 적용 검토",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "63beb10d083272cfaa5110b8df911e4c812aa161bb1483b90b0a525118b9e405"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:08e8701f83c3560b2b855e714a16e9c5a3f9f21b77e117fc5aa5dfa14bea23e4",
+        "role": "affected_person",
+        "role_label": "당사자·시민",
+        "direct_quote_count": 0,
+        "indirect_attribution_count": 2,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 10
+            },
+            "sentence_sha256": "735f14de9842e1edac60ec6c67f166e497e608eef986ea98a3be3d7aebf539a7"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 11
+            },
+            "sentence_sha256": "8ce5d2b68ed8075a69d6b7b61cb6a6c2d61dc7340433fb073d6345c6edbe9632"
+          }
+        ]
+      },
+      {
+        "actor_id": "actor:8234096339279f530abee5a9175da4570e207f9a5e1359da2652be692345eb4f",
+        "role": "government_official",
+        "role_label": "정부·공공기관",
+        "direct_quote_count": 0,
+        "indirect_attribution_count": 2,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 3
+            },
+            "sentence_sha256": "593f18bda9f520a1d3ada524b5f08d0b749c571dae6e550ce69c409b9474cce4"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 20
+            },
+            "sentence_sha256": "256cc02cc34cccd580043669be3f15b7b4f897fe26b2cfb02879079e15c56d37"
+          }
+        ]
+      }
+    ],
+    "context_depth": {
+      "level": "unknown"
+    },
+    "scope": {
+      "code": "unknown"
+    },
+    "secondary_descriptors": {
+      "generic_frames": [],
+      "policy_frames": [],
+      "controlled_associations": []
+    },
+    "framing_devices": [],
+    "review": {
+      "status": "automatic_draft",
+      "analysis_decision": "analyze",
+      "analysis_state": "succeeded",
+      "attempt_count": 1,
+      "idempotency_fingerprint": "e6dbe028570c58ddf04134684ed059acc53ad49feac56b570efa14d8000943bc",
+      "error_code": null,
+      "fallback_reason": null,
+      "requires_human_review": true,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+    }
+  }
+}

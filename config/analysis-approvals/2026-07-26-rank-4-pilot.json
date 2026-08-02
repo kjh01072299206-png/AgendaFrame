@@ -1,0 +1,38 @@
+{
+  "schema_version": 3,
+  "authorization_id": "bigkinds-2026-07-26-rank-4-00a35b874b22",
+  "cluster_id": "bigkinds-2026-07-26-rank-4",
+  "reviewed_by": "AgendaFrame agent-assisted evidence audit",
+  "reviewed_at": "2026-08-02T00:00:00+09:00",
+  "purpose": "transient_framing_analysis",
+  "text_scope": "transient_public_page_extract",
+  "valid_until": "2026-10-31",
+  "retain_body": false,
+  "cluster_review_status": "approved_same_event",
+  "approved_articles": {
+    "01101101.20260726155810001": {
+      "source_id": "hankookilbo",
+      "canonical_url": "https://www.hankookilbo.com/news/article/A2026072614520005279",
+      "published_date": "2026-07-26",
+      "body_sha256": "e6a85e092c3a1c34a8bd0c1cf6fddf4d13d78bad21b451ab17fba8e45a8d0ce7"
+    },
+    "01100201.20260726155602001": {
+      "source_id": "kmib",
+      "canonical_url": "https://www.kmib.co.kr/article/view.asp?arcid=0030163832&code=61121111&cp=kd",
+      "published_date": "2026-07-26",
+      "body_sha256": "17c49b662b6969594ef924b68e7b8b89fe1a9ea2657d15abe8134619c5ce3719"
+    },
+    "01100901.20260726153703001": {
+      "source_id": "joongang",
+      "canonical_url": "https://www.joongang.co.kr/article/25448208",
+      "published_date": "2026-07-26",
+      "body_sha256": "3aed71633faf3f1e02e76b093b6d575709367ac15604539a77044f888d99bec3"
+    },
+    "01100801.20260726124207001": {
+      "source_id": "chosun",
+      "canonical_url": "https://www.chosun.com/national/court_law/2026/07/26/YYM4D6SQHFAHVOWUALUE4XXNXU",
+      "published_date": "2026-07-26",
+      "body_sha256": "19b9d68fa13a3e35f1051658ecbda753131eb386f1625fa45d83ae726cc5284f"
+    }
+  }
+}

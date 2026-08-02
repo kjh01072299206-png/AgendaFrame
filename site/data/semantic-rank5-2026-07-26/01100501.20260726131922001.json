@@ -1,0 +1,280 @@
+{
+  "articleId": "01100501.20260726131922001",
+  "profile": {
+    "schema_version": "agendaframe.article-frame-profile.v2",
+    "lineage": {
+      "model_id": "gemini-2.5-flash-lite",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "model_output_schema_version": 3,
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "approval": {
+        "authorization_id": "bigkinds-2026-07-26-rank-5-16619490411c",
+        "fingerprint": "c4af0c88ede8789712667db4872fbcec65949c563a8c15983add1b92f8291f50",
+        "cluster_id": "bigkinds-2026-07-26-rank-5",
+        "reviewer": "AgendaFrame agent-assisted evidence audit",
+        "reviewed_at": "2026-08-02T00:00:00+09:00",
+        "approved_urls_sha256": "4b223d11c96cbcd42f7b05d22baf9a563874cd549a404edb244611ef44bfa2fc"
+      }
+    },
+    "engine": {
+      "name": "AgendaFrame Vertex evidence coder",
+      "version": "gemini-2.5-flash-lite",
+      "approach": "semantic_evidence_bounded",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": 3,
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ]
+    },
+    "article": {
+      "article_id": "01100501.20260726131922001",
+      "upstream_article_id": "01100501.20260726131922001",
+      "published_at": "2026-07-26T13:19:22+09:00",
+      "title_sha256": "765afff7beaac36e68218f883fff01370061c28c4cedee87777147ba0209d391",
+      "body_sha256": "5dd409f2026a9707a80657c44bbf68219198fea758f64da4ae96a0bb288d4395",
+      "body_character_count": 1223,
+      "body_word_count": 304,
+      "paragraph_count": 1,
+      "sentence_count": 56,
+      "raw_body_retained": false
+    },
+    "extraction": {
+      "text_scope": "transient_public_page_extract",
+      "analyzed_character_count": 1223,
+      "input_truncated": false
+    },
+    "genre": {
+      "code": "unknown",
+      "label": "자동 분류 안 함",
+      "evidence": []
+    },
+    "dimensions": {
+      "problem_definition": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:9971bac0d59e524fd00fff4e5a12a206012f7438c416fac57236036f3c1ea9e8",
+            "code": "semantic_problem_definition",
+            "frame_family": "safety_harm",
+            "variant_key": "semantic:problem_definition:family:safety_harm",
+            "public_paraphrase": "외국인 집단 패싸움 중 흉기 사용으로 인한 사망 및 중상 사건 발생",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "5c6f792c8172bc010a639c3295f8222ddce0c920feca135244ac4a3d3f740f6c"
+            }
+          },
+          {
+            "claim_id": "claim:9971bac0d59e524fd00fff4e5a12a206012f7438c416fac57236036f3c1ea9e8",
+            "code": "semantic_problem_definition",
+            "frame_family": "safety_harm",
+            "variant_key": "semantic:problem_definition:family:safety_harm",
+            "public_paraphrase": "외국인 집단 패싸움 중 흉기 사용으로 인한 사망 및 중상 사건 발생",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "969a264bf78ccec37b5fe57595d7fe19431a47f40112a7c36e70874e971b4bea"
+            }
+          }
+        ]
+      },
+      "causal_interpretation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "claim_id": "claim:cdbbd0870dd0eb07602bba8c0559417a1edfea871d628c050efb03a2cbcc8ccb",
+            "code": "semantic_causal_interpretation",
+            "frame_family": "individual_action",
+            "variant_key": "semantic:causal_interpretation:family:individual_action",
+            "public_paraphrase": "과거부터 좋지 않았던 관계에서 비롯된 집단 패싸움",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "55c04f6ed1503a2962041461e2120ca552eb34b80dbf6f5a318e519867982ded"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "claim_id": "claim:5d3629aaff4692912ac9d19ff13cd7d305993644afdd9ae4a80c181a2e74c804",
+            "code": "semantic_responsibility_attribution",
+            "frame_family": "individual_actor",
+            "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+            "public_paraphrase": "패싸움 가담자 및 가담 정도에 따른 신병 처리 결정",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 12
+              },
+              "sentence_sha256": "8c80adaf8f4448ea7c5bc606cad18467476d23cde21c73e24b6eca0fcccf1ab8"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:ccad27cf9192e3cf9f7904d8762ad7e389e17b52787e663d309b7ac99ef99c07",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "safety_negative",
+            "variant_key": "semantic:moral_evaluation:family:safety_negative",
+            "public_paraphrase": "흉기 사용으로 인한 사망 및 중상 발생으로 인한 부정적 평가",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "5c6f792c8172bc010a639c3295f8222ddce0c920feca135244ac4a3d3f740f6c"
+            }
+          },
+          {
+            "claim_id": "claim:ccad27cf9192e3cf9f7904d8762ad7e389e17b52787e663d309b7ac99ef99c07",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "safety_negative",
+            "variant_key": "semantic:moral_evaluation:family:safety_negative",
+            "public_paraphrase": "흉기 사용으로 인한 사망 및 중상 발생으로 인한 부정적 평가",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "969a264bf78ccec37b5fe57595d7fe19431a47f40112a7c36e70874e971b4bea"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "claim_id": "claim:fe0f3fd198617673ea9840cbe964fe4bad71bf162a6d30069ac31ae8eddec5c1",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "investigation_accountability",
+            "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+            "public_paraphrase": "정확한 사건 경위 조사 후 구속영장 신청 및 가담자 신병 처리 결정",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 11
+              },
+              "sentence_sha256": "8b0ff5e167083f35c4d1394abf09d08199e0cf1bfddccf487e7336979fa22141"
+            }
+          },
+          {
+            "claim_id": "claim:fe0f3fd198617673ea9840cbe964fe4bad71bf162a6d30069ac31ae8eddec5c1",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "investigation_accountability",
+            "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+            "public_paraphrase": "정확한 사건 경위 조사 후 구속영장 신청 및 가담자 신병 처리 결정",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 12
+              },
+              "sentence_sha256": "8c80adaf8f4448ea7c5bc606cad18467476d23cde21c73e24b6eca0fcccf1ab8"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:54978fbf58e59823785f6e4154987a5263da42c1e0ee0160308297b4e68a6011",
+        "role": "government_official",
+        "role_label": "정부·공공기관",
+        "direct_quote_count": 0,
+        "indirect_attribution_count": 1,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 12
+            },
+            "sentence_sha256": "8c80adaf8f4448ea7c5bc606cad18467476d23cde21c73e24b6eca0fcccf1ab8"
+          }
+        ]
+      }
+    ],
+    "context_depth": {
+      "level": "unknown"
+    },
+    "scope": {
+      "code": "unknown"
+    },
+    "secondary_descriptors": {
+      "generic_frames": [],
+      "policy_frames": [],
+      "controlled_associations": []
+    },
+    "framing_devices": [],
+    "review": {
+      "status": "automatic_draft",
+      "analysis_decision": "analyze",
+      "analysis_state": "succeeded",
+      "attempt_count": 2,
+      "idempotency_fingerprint": "dd933324c83d8fd256a9ab8e4ea531328b9a442a36d27c67f85702c72e3764ce",
+      "error_code": null,
+      "fallback_reason": null,
+      "requires_human_review": true,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+    }
+  }
+}

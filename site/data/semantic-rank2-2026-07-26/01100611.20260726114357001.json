@@ -1,0 +1,355 @@
+{
+  "articleId": "01100611.20260726114357001",
+  "profile": {
+    "schema_version": "agendaframe.article-frame-profile.v2",
+    "lineage": {
+      "model_id": "gemini-2.5-flash-lite",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "model_output_schema_version": 3,
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "approval": {
+        "authorization_id": "bigkinds-2026-07-26-rank-2-bd61980687cd",
+        "fingerprint": "ab93e3b58284e40bc01ccd710260787313a2b52613309a639a8d2b092aac5ade",
+        "cluster_id": "bigkinds-2026-07-26-rank-2",
+        "reviewer": "AgendaFrame agent-assisted evidence audit",
+        "reviewed_at": "2026-08-02T00:00:00+09:00",
+        "approved_urls_sha256": "15d2662921b661b9b34f1238e00abe9fc16b3e2a6de0be94b975c255808e52dc"
+      }
+    },
+    "engine": {
+      "name": "AgendaFrame Vertex evidence coder",
+      "version": "gemini-2.5-flash-lite",
+      "approach": "semantic_evidence_bounded",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": 3,
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ]
+    },
+    "article": {
+      "article_id": "01100611.20260726114357001",
+      "upstream_article_id": "01100611.20260726114357001",
+      "published_at": "2026-07-26T11:43:57+09:00",
+      "title_sha256": "407005ac762cab315d5cd10669edb098fd3f39415085b2c6610bb3595a7fb42c",
+      "body_sha256": "688e1ecdefc43e2ebb9bb3387aa94a9b6cfe3b39c1a2a3266698390359008ce5",
+      "body_character_count": 1396,
+      "body_word_count": 323,
+      "paragraph_count": 1,
+      "sentence_count": 25,
+      "raw_body_retained": false
+    },
+    "extraction": {
+      "text_scope": "transient_public_page_extract",
+      "analyzed_character_count": 1396,
+      "input_truncated": false
+    },
+    "genre": {
+      "code": "unknown",
+      "label": "자동 분류 안 함",
+      "evidence": []
+    },
+    "dimensions": {
+      "problem_definition": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:2063d7662ee2506245746aa04a3201a38b024525585f51a5b579cc9e93b7e01f",
+            "code": "semantic_problem_definition",
+            "frame_family": "safety_harm",
+            "variant_key": "semantic:problem_definition:family:safety_harm",
+            "public_paraphrase": "국회의원 상임위 배정 불만으로 인한 폭력 사태",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "a751c0fe108a9b89c2e16b5da585f40388b6adbfc6a8c5e5e2a9e4997c5f7557"
+            }
+          }
+        ]
+      },
+      "causal_interpretation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:10ccbe1a19958543c23540f6506dee953eb7d07ebbf207d5bf49d5ab7caca05a",
+            "code": "semantic_causal_interpretation",
+            "frame_family": "individual_action",
+            "variant_key": "semantic:causal_interpretation:family:individual_action",
+            "public_paraphrase": "개인의 불만과 잘못된 행동으로 인한 사건 발생",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "a751c0fe108a9b89c2e16b5da585f40388b6adbfc6a8c5e5e2a9e4997c5f7557"
+            }
+          },
+          {
+            "claim_id": "claim:10ccbe1a19958543c23540f6506dee953eb7d07ebbf207d5bf49d5ab7caca05a",
+            "code": "semantic_causal_interpretation",
+            "frame_family": "individual_action",
+            "variant_key": "semantic:causal_interpretation:family:individual_action",
+            "public_paraphrase": "개인의 불만과 잘못된 행동으로 인한 사건 발생",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 16
+              },
+              "sentence_sha256": "abb4cefb9ff352b462a4b0c78f45451665cba9fd104ceb9796b80ae3602ec57d"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:6ca03989fda537d917969a9d206d6a6ee4ac6c75d57803f21742c9882933ac21",
+            "code": "semantic_responsibility_attribution",
+            "frame_family": "individual_actor",
+            "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+            "public_paraphrase": "개인 의원의 잘못된 행동에 대한 책임",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "a751c0fe108a9b89c2e16b5da585f40388b6adbfc6a8c5e5e2a9e4997c5f7557"
+            }
+          },
+          {
+            "claim_id": "claim:6ca03989fda537d917969a9d206d6a6ee4ac6c75d57803f21742c9882933ac21",
+            "code": "semantic_responsibility_attribution",
+            "frame_family": "individual_actor",
+            "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+            "public_paraphrase": "개인 의원의 잘못된 행동에 대한 책임",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 16
+              },
+              "sentence_sha256": "abb4cefb9ff352b462a4b0c78f45451665cba9fd104ceb9796b80ae3602ec57d"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:64a5ba0008b40b987818b8d5854318db6eeea93c9f22a57aa72490132e425766",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "fairness_negative",
+            "variant_key": "semantic:moral_evaluation:family:fairness_negative",
+            "public_paraphrase": "국회의원의 부적절한 행동에 대한 부정적 평가",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "a751c0fe108a9b89c2e16b5da585f40388b6adbfc6a8c5e5e2a9e4997c5f7557"
+            }
+          },
+          {
+            "claim_id": "claim:64a5ba0008b40b987818b8d5854318db6eeea93c9f22a57aa72490132e425766",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "fairness_negative",
+            "variant_key": "semantic:moral_evaluation:family:fairness_negative",
+            "public_paraphrase": "국회의원의 부적절한 행동에 대한 부정적 평가",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "4f3c5d178733166bb0e38ec927339237845594ec2964a8f379bb8b89a9b74030"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:6ee1e10653a0caeb9dc4ea9c49ec2b557a16141ac97ff3955009242b925c5ce3",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "investigation_accountability",
+            "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+            "public_paraphrase": "권영진 의원의 거취 결정 및 강력한 조치 요구",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "a751c0fe108a9b89c2e16b5da585f40388b6adbfc6a8c5e5e2a9e4997c5f7557"
+            }
+          },
+          {
+            "claim_id": "claim:6ee1e10653a0caeb9dc4ea9c49ec2b557a16141ac97ff3955009242b925c5ce3",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "investigation_accountability",
+            "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+            "public_paraphrase": "권영진 의원의 거취 결정 및 강력한 조치 요구",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "a751c0fe108a9b89c2e16b5da585f40388b6adbfc6a8c5e5e2a9e4997c5f7557"
+            }
+          },
+          {
+            "claim_id": "claim:6ee1e10653a0caeb9dc4ea9c49ec2b557a16141ac97ff3955009242b925c5ce3",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "investigation_accountability",
+            "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+            "public_paraphrase": "권영진 의원의 거취 결정 및 강력한 조치 요구",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "4f3c5d178733166bb0e38ec927339237845594ec2964a8f379bb8b89a9b74030"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:75fd278a7c252c5f765e4ec182fb5f151456d260e8a2d8b5308e4a5804f0e10e",
+        "role": "government_official",
+        "role_label": "정부·공공기관",
+        "direct_quote_count": 0,
+        "indirect_attribution_count": 2,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 8
+            },
+            "sentence_sha256": "a751c0fe108a9b89c2e16b5da585f40388b6adbfc6a8c5e5e2a9e4997c5f7557"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 9
+            },
+            "sentence_sha256": "4f3c5d178733166bb0e38ec927339237845594ec2964a8f379bb8b89a9b74030"
+          }
+        ]
+      },
+      {
+        "actor_id": "actor:5de8cb7235a7b5720af8c3be69e46c7f0544ba16be6a34d4d8708839103aef65",
+        "role": "other",
+        "role_label": "기타 취재원",
+        "direct_quote_count": 0,
+        "indirect_attribution_count": 1,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 18
+            },
+            "sentence_sha256": "9de2d51229d75e630d1de767a3b79c834b5e0a4e3e7cba814700e59782087418"
+          }
+        ]
+      },
+      {
+        "actor_id": "actor:0960c56d2f2b02ceed6d44e3e8373f32f26e8aed27939b171b20cab9d88b5750",
+        "role": "political_actor",
+        "role_label": "정당·정치권",
+        "direct_quote_count": 0,
+        "indirect_attribution_count": 1,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 12
+            },
+            "sentence_sha256": "7f274cbd8292940a91381d00d61dc42537701bae9ce9a6ffcf2923eaaaf1371f"
+          }
+        ]
+      }
+    ],
+    "context_depth": {
+      "level": "unknown"
+    },
+    "scope": {
+      "code": "unknown"
+    },
+    "secondary_descriptors": {
+      "generic_frames": [],
+      "policy_frames": [],
+      "controlled_associations": []
+    },
+    "framing_devices": [],
+    "review": {
+      "status": "automatic_draft",
+      "analysis_decision": "analyze",
+      "analysis_state": "succeeded",
+      "attempt_count": 1,
+      "idempotency_fingerprint": "1b571d7f8ac7cff20d67a54867a948645119b36149c8fc0066d7adbeb6bcc143",
+      "error_code": null,
+      "fallback_reason": null,
+      "requires_human_review": true,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+    }
+  }
+}

@@ -1,42 +1,96 @@
 {
   "articleId": "01100201.20260726113123001",
   "profile": {
-    "article": {
-      "article_id": "01100201.20260726113123001",
-      "body_character_count": 814,
-      "body_sha256": "b351df7daff0eeafe9588760fc96888dcaafbfab022a78f1fa26fdb8cb16e260",
-      "body_word_count": 177,
-      "paragraph_count": 1,
-      "published_at": "2026-07-26T11:31:23+09:00",
-      "raw_body_retained": false,
-      "sentence_count": 11,
-      "title_sha256": "361420b4854b5ddee4cce65fbf6fdd030417ff97beba36cca1db5396b17a3310",
-      "upstream_article_id": "01100201.20260726113123001"
+    "schema_version": "agendaframe.article-frame-profile.v2",
+    "lineage": {
+      "model_id": "gemini-2.5-flash-lite",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "model_output_schema_version": 3,
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "approval": {
+        "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
+        "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
+        "cluster_id": "bigkinds-2026-07-26-rank-1",
+        "reviewer": "AgendaFrame agent-assisted evidence audit",
+        "reviewed_at": "2026-07-31T00:00:00+09:00",
+        "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753"
+      }
     },
     "engine": {
-      "analysis_schema_version": 3,
+      "name": "AgendaFrame Vertex evidence coder",
+      "version": "gemini-2.5-flash-lite",
       "approach": "semantic_evidence_bounded",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": 3,
       "evidence_storage": "locator_and_salted_sha256_only",
       "limitations": [
         "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
         "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
         "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
-      ],
-      "name": "AgendaFrame Vertex evidence coder",
-      "prompt_version": "2.4.1",
-      "semantic_ai": true,
-      "status": "semantic_draft",
-      "version": "gemini-2.5-flash-lite"
+      ]
+    },
+    "article": {
+      "article_id": "01100201.20260726113123001",
+      "upstream_article_id": "01100201.20260726113123001",
+      "published_at": "2026-07-26T11:31:23+09:00",
+      "title_sha256": "361420b4854b5ddee4cce65fbf6fdd030417ff97beba36cca1db5396b17a3310",
+      "body_sha256": "b351df7daff0eeafe9588760fc96888dcaafbfab022a78f1fa26fdb8cb16e260",
+      "body_character_count": 814,
+      "body_word_count": 177,
+      "paragraph_count": 1,
+      "sentence_count": 11,
+      "raw_body_retained": false
+    },
+    "extraction": {
+      "text_scope": "transient_public_page_extract",
+      "analyzed_character_count": 814,
+      "input_truncated": false
+    },
+    "genre": {
+      "code": "unknown",
+      "label": "자동 분류 안 함",
+      "evidence": []
     },
     "dimensions": {
+      "problem_definition": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:e626bda3ebe081d40c534fdc6bb808a899751da92698c4d172cb6b696280bd16",
+            "code": "semantic_problem_definition",
+            "frame_family": "political_conflict",
+            "variant_key": "semantic:problem_definition:family:political_conflict",
+            "public_paraphrase": "검찰 보완수사권 폐지를 둘러싼 정치적 갈등",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "db6aa995f39bad06cac02be09851c5606b8fd3eecdcd78d96fa9ecb3d03a5aa2"
+            }
+          }
+        ]
+      },
       "causal_interpretation": {
         "status": "source_attributed",
         "model_status": "supported",
         "outlet_narration_observed": false,
         "items": [
           {
-            "public_paraphrase": "정치적 이해관계와 여론의 역풍에 대한 우려",
+            "claim_id": "claim:a0cd9bf04efc96cc6a7f8181494d7e440dc8562a54a03fc25ee7e63c17d8b617",
+            "code": "semantic_causal_interpretation",
             "frame_family": "political_incentive",
+            "variant_key": "semantic:causal_interpretation:family:political_incentive",
+            "public_paraphrase": "대통령의 정치적 계산과 민주당 강경파의 영향",
             "voice": {
               "kind": "indirect_source",
               "speaker_role": null
@@ -51,58 +105,17 @@
           }
         ]
       },
-      "moral_evaluation": {
-        "status": "source_attributed",
-        "model_status": "supported",
-        "outlet_narration_observed": false,
-        "items": [
-          {
-            "public_paraphrase": "법치주의 근간을 뒤흔드는 행위에 대한 부정적 평가",
-            "frame_family": "legitimacy_negative",
-            "voice": {
-              "kind": "indirect_source",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 7
-              },
-              "sentence_sha256": "c44d934bd2d17ccaed60c6f9eaad1969ffc40e0d3176b24c14e19d1da79b1f5d"
-            }
-          }
-        ]
-      },
-      "problem_definition": {
-        "status": "observed",
-        "model_status": "supported",
-        "outlet_narration_observed": true,
-        "items": [
-          {
-            "public_paraphrase": "검찰의 보완수사권 폐지를 둘러싼 정치적 논란",
-            "frame_family": "political_conflict",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 3
-              },
-              "sentence_sha256": "08cf3301c06292c2d5b59d615bf239346136dd22aea968000be49065921079e2"
-            }
-          }
-        ]
-      },
       "responsibility_attribution": {
         "status": "source_attributed",
         "model_status": "supported",
         "outlet_narration_observed": false,
         "items": [
           {
-            "public_paraphrase": "대통령과 민주당 의원들의 정치적 책임 회피",
+            "claim_id": "claim:97fa5af1e6f583cf2ab918991a0727d4204d545d5d6f3125393d2f9f7be4aac0",
+            "code": "semantic_responsibility_attribution",
             "frame_family": "legislature_politics",
+            "variant_key": "semantic:responsibility_attribution:family:legislature_politics",
+            "public_paraphrase": "대통령과 민주당 의원들의 정치적 책임 회피",
             "voice": {
               "kind": "indirect_source",
               "speaker_role": null
@@ -116,8 +129,11 @@
             }
           },
           {
-            "public_paraphrase": "대통령과 민주당 의원들의 정치적 책임 회피",
+            "claim_id": "claim:97fa5af1e6f583cf2ab918991a0727d4204d545d5d6f3125393d2f9f7be4aac0",
+            "code": "semantic_responsibility_attribution",
             "frame_family": "legislature_politics",
+            "variant_key": "semantic:responsibility_attribution:family:legislature_politics",
+            "public_paraphrase": "대통령과 민주당 의원들의 정치적 책임 회피",
             "voice": {
               "kind": "indirect_source",
               "speaker_role": null
@@ -132,14 +148,60 @@
           }
         ]
       },
+      "moral_evaluation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "claim_id": "claim:cc505475434045c353081238493cfc7c3fee8e7f40d6fa4ed4281417dd568130",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "legitimacy_negative",
+            "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+            "public_paraphrase": "대통령의 침묵과 정치적 행태에 대한 부정적 평가",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "db6aa995f39bad06cac02be09851c5606b8fd3eecdcd78d96fa9ecb3d03a5aa2"
+            }
+          },
+          {
+            "claim_id": "claim:cc505475434045c353081238493cfc7c3fee8e7f40d6fa4ed4281417dd568130",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "legitimacy_negative",
+            "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+            "public_paraphrase": "대통령의 침묵과 정치적 행태에 대한 부정적 평가",
+            "voice": {
+              "kind": "indirect_source",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "7734d56e862b783c0ff66d47c82679139440c353e88c094a3497ceda64e1f653"
+            }
+          }
+        ]
+      },
       "treatment_recommendation": {
         "status": "source_attributed",
         "model_status": "supported",
         "outlet_narration_observed": false,
         "items": [
           {
-            "public_paraphrase": "대통령의 거부권 행사 촉구",
+            "claim_id": "claim:bf098ed3a388a6fb02222ef44e41b3fa3981f59cd0a2b64feebf4d831045f394",
+            "code": "semantic_treatment_recommendation",
             "frame_family": "institutional_check",
+            "variant_key": "semantic:treatment_recommendation:family:institutional_check",
+            "public_paraphrase": "대통령의 거부권 행사 촉구",
             "voice": {
               "kind": "indirect_source",
               "speaker_role": null
@@ -158,7 +220,10 @@
     "actors_and_sources": [
       {
         "actor_id": "actor:4008062ed0701e1c309f77e65fe63acf7163478a9e4acf1e7f11460f8e849e15",
+        "role": "political_actor",
+        "role_label": "정당·정치권",
         "direct_quote_count": 0,
+        "indirect_attribution_count": 1,
         "evidence": [
           {
             "locator": {
@@ -167,38 +232,31 @@
             },
             "sentence_sha256": "08cf3301c06292c2d5b59d615bf239346136dd22aea968000be49065921079e2"
           }
-        ],
-        "indirect_attribution_count": 1,
-        "role": "political_actor",
-        "role_label": "정당·정치권"
+        ]
       }
     ],
+    "context_depth": {
+      "level": "unknown"
+    },
+    "scope": {
+      "code": "unknown"
+    },
+    "secondary_descriptors": {
+      "generic_frames": [],
+      "policy_frames": [],
+      "controlled_associations": []
+    },
+    "framing_devices": [],
     "review": {
+      "status": "automatic_draft",
       "analysis_decision": "analyze",
+      "analysis_state": "succeeded",
+      "attempt_count": 1,
+      "idempotency_fingerprint": "d39e81fdf4df86fe826b18674dce4bf1ab3e85d90bd63fec9080cadefb80b51b",
+      "error_code": null,
       "fallback_reason": null,
-      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다.",
       "requires_human_review": true,
-      "status": "automatic_draft"
-    },
-    "extraction": {
-      "analyzed_character_count": 814,
-      "input_truncated": false,
-      "text_scope": "transient_public_page_extract"
-    },
-    "lineage": {
-      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
-      "approval": {
-        "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753",
-        "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
-        "cluster_id": "bigkinds-2026-07-26-rank-1",
-        "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
-        "reviewed_at": "2026-07-31T00:00:00+09:00",
-        "reviewer": "AgendaFrame agent-assisted evidence audit"
-      },
-      "comparison_engine_version": "korean-evidence-rules-v2",
-      "model_id": "gemini-2.5-flash-lite",
-      "model_output_schema_version": 3,
-      "prompt_version": "2.4.1"
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
     }
   }
 }

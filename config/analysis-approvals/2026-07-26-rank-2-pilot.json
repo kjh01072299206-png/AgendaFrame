@@ -1,0 +1,50 @@
+{
+  "schema_version": 3,
+  "authorization_id": "bigkinds-2026-07-26-rank-2-bd61980687cd",
+  "cluster_id": "bigkinds-2026-07-26-rank-2",
+  "reviewed_by": "AgendaFrame agent-assisted evidence audit",
+  "reviewed_at": "2026-08-02T00:00:00+09:00",
+  "purpose": "transient_framing_analysis",
+  "text_scope": "transient_public_page_extract",
+  "valid_until": "2026-10-31",
+  "retain_body": false,
+  "cluster_review_status": "approved_same_event",
+  "approved_articles": {
+    "01100801.20260726134520001": {
+      "source_id": "chosun",
+      "canonical_url": "https://www.chosun.com/politics/politics_general/2026/07/26/HBNRMK2SLFDBHFY2AM2X5F3WXM",
+      "published_date": "2026-07-26",
+      "body_sha256": "c19bd074aea2f3ccbf2375a8e0b39f8a086f208d0102aa5df58bd8a2f0d9a84d"
+    },
+    "01100401.20260726122650001": {
+      "source_id": "donga",
+      "canonical_url": "https://www.donga.com/news/Politics/article/all/20260726/134364892/1",
+      "published_date": "2026-07-26",
+      "body_sha256": "6af068e021bdd76e8c0074fb9dc7dc8327840d02212da3834ca0855f9f8aef11"
+    },
+    "01100901.20260726120217001": {
+      "source_id": "joongang",
+      "canonical_url": "https://www.joongang.co.kr/article/25448165",
+      "published_date": "2026-07-26",
+      "body_sha256": "873af8d6f67bf826087b7d53257f676e7a81cbf30bea258f424fc5c8dca87668"
+    },
+    "01100101.20260726114754001": {
+      "source_id": "khan",
+      "canonical_url": "https://www.khan.co.kr/article/202607261147001",
+      "published_date": "2026-07-26",
+      "body_sha256": "9577b311c219c593646322e4e7dd103d6b0708ea4f61b62d262db99f8a818aba"
+    },
+    "01100501.20260726114426001": {
+      "source_id": "munhwa",
+      "canonical_url": "https://www.munhwa.com/article/11605025",
+      "published_date": "2026-07-26",
+      "body_sha256": "dd4a12720f5fb08f5eb2cd155bdb71b76c3c4b0715f8e588ecad1b561c9e2c03"
+    },
+    "01100611.20260726114357001": {
+      "source_id": "seoul",
+      "canonical_url": "https://www.seoul.co.kr/news/newsView.php?id=20260726500042",
+      "published_date": "2026-07-26",
+      "body_sha256": "688e1ecdefc43e2ebb9bb3387aa94a9b6cfe3b39c1a2a3266698390359008ce5"
+    }
+  }
+}

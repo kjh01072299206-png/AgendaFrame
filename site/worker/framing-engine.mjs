@@ -7,6 +7,14 @@
  * sentence locators and salted SHA-256 fingerprints of the supporting sentence.
  */
 
+import {
+  contentLemmaSet,
+  KOREAN_MORPHOLOGY_DICTIONARY_VERSION,
+  KOREAN_MORPHOLOGY_MODE,
+  KOREAN_MORPHOLOGY_VERSION,
+  summarizeKoreanMorphology,
+} from "./korean-morphology.mjs";
+
 export const ARTICLE_FRAME_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v1";
 export const AI_ARTICLE_FRAME_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v2";
 export const ISSUE_FRAME_COMPARISON_SCHEMA = "agendaframe.issue-frame-comparison.v1";
@@ -425,6 +433,9 @@ async function extractDimensions(articleId, sentences) {
         rule.pattern.lastIndex = 0;
         if (!match) continue;
         const voice = classifyVoice(sentence.text, match.index);
+        const voiceScope = voice.kind === "journalist_narration" ? "narration" : "source";
+        const dedupeKey = `${rule.code}:${voiceScope}`;
+        if (seenCodeScopes.has(dedupeKey)) continue;
         const evidence = await evidenceReference(articleId, sentence);
         const variantKey = `rules:${dimension}:${rule.code}`;
         items.push({
@@ -789,20 +800,22 @@ export function validateArticleFrameProfile(profile) {
   }
   if (profile.article?.raw_body_retained !== false) errors.push("raw_body_retained must be false");
   if (!/^[a-f0-9]{64}$/.test(String(profile.article?.body_sha256 ?? ""))) errors.push("body_sha256 must be SHA-256 hex");
-  if (profile.morphology?.raw_tokens_retained !== false) errors.push("morphology.raw_tokens_retained must be false");
-  if (profile.morphology?.analyzer?.version !== KOREAN_MORPHOLOGY_VERSION) errors.push("unsupported morphology analyzer version");
-  if (!Number.isInteger(profile.morphology?.token_count) || profile.morphology.token_count < 0) errors.push("invalid morphology token_count");
-  for (const term of profile.morphology?.term_frequencies ?? []) {
-    if (typeof term.term !== "string" || term.term.length < 2 || term.term.length > 20) errors.push("invalid morphology term");
-    if (!Number.isInteger(term.count) || term.count < 1) errors.push("invalid morphology term count");
-  }
-  const morphologyEvidence = new Map((profile.morphology?.term_evidence ?? [])
-    .map((entry) => [`${entry.pos}:${entry.term}`, entry.evidence]));
-  for (const term of profile.morphology?.term_frequencies ?? []) {
-    const evidence = morphologyEvidence.get(`${term.pos}:${term.term}`);
-    if (!/^[a-f0-9]{64}$/.test(String(evidence?.sentence_sha256 ?? ""))) errors.push("morphology term missing evidence hash");
-    if (!Number.isInteger(evidence?.locator?.paragraph) || !Number.isInteger(evidence?.locator?.sentence)) {
-      errors.push("morphology term missing evidence locator");
+  if (profile.morphology != null) {
+    if (profile.morphology.raw_tokens_retained !== false) errors.push("morphology.raw_tokens_retained must be false");
+    if (profile.morphology.analyzer?.version !== KOREAN_MORPHOLOGY_VERSION) errors.push("unsupported morphology analyzer version");
+    if (!Number.isInteger(profile.morphology.token_count) || profile.morphology.token_count < 0) errors.push("invalid morphology token_count");
+    for (const term of profile.morphology.term_frequencies ?? []) {
+      if (typeof term.term !== "string" || term.term.length < 2 || term.term.length > 20) errors.push("invalid morphology term");
+      if (!Number.isInteger(term.count) || term.count < 1) errors.push("invalid morphology term count");
+    }
+    const morphologyEvidence = new Map((profile.morphology.term_evidence ?? [])
+      .map((entry) => [`${entry.pos}:${entry.term}`, entry.evidence]));
+    for (const term of profile.morphology.term_frequencies ?? []) {
+      const evidence = morphologyEvidence.get(`${term.pos}:${term.term}`);
+      if (!/^[a-f0-9]{64}$/.test(String(evidence?.sentence_sha256 ?? ""))) errors.push("morphology term missing evidence hash");
+      if (!Number.isInteger(evidence?.locator?.paragraph) || !Number.isInteger(evidence?.locator?.sentence)) {
+        errors.push("morphology term missing evidence locator");
+      }
     }
   }
   for (const dimension of DIMENSION_ORDER) {

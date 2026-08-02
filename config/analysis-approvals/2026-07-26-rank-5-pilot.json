@@ -1,0 +1,38 @@
+{
+  "schema_version": 3,
+  "authorization_id": "bigkinds-2026-07-26-rank-5-16619490411c",
+  "cluster_id": "bigkinds-2026-07-26-rank-5",
+  "reviewed_by": "AgendaFrame agent-assisted evidence audit",
+  "reviewed_at": "2026-08-02T00:00:00+09:00",
+  "purpose": "transient_framing_analysis",
+  "text_scope": "transient_public_page_extract",
+  "valid_until": "2026-10-31",
+  "retain_body": false,
+  "cluster_review_status": "approved_same_event",
+  "approved_articles": {
+    "01100611.20260726132449001": {
+      "source_id": "seoul",
+      "canonical_url": "https://www.seoul.co.kr/news/newsView.php?id=20260726500053",
+      "published_date": "2026-07-26",
+      "body_sha256": "2474bdd4e3380abba2ea0af4b0928d7c1b0b55606101dc7658d123a2480c78ed"
+    },
+    "01100501.20260726131922001": {
+      "source_id": "munhwa",
+      "canonical_url": "https://www.munhwa.com/article/11605030",
+      "published_date": "2026-07-26",
+      "body_sha256": "5dd409f2026a9707a80657c44bbf68219198fea758f64da4ae96a0bb288d4395"
+    },
+    "01100701.20260726130444001": {
+      "source_id": "segye",
+      "canonical_url": "https://www.segye.com/newsView/20260726504423",
+      "published_date": "2026-07-26",
+      "body_sha256": "555e098fbcf9e8a72c7dfec810a3e579a4ac9d3d1808e3d39d7036ac95f07118"
+    },
+    "01100201.20260726112314001": {
+      "source_id": "kmib",
+      "canonical_url": "https://www.kmib.co.kr/article/view.asp?arcid=0030163038&code=61121211&cp=kd",
+      "published_date": "2026-07-26",
+      "body_sha256": "36e12769374fe71dd0d3b25601765024c3099023bc4c092032df1e04e10c8a1e"
+    }
+  }
+}

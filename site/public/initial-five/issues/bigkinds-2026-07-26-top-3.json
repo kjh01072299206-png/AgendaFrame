@@ -1,0 +1,4492 @@
+{
+  "schemaVersion": "agendaframe.initial-five.public.v1",
+  "basisDate": "2026-07-26",
+  "status": "succeeded",
+  "issue": {
+    "issueId": "bigkinds-2026-07-26-top-3",
+    "rank": 3,
+    "title": "경산 아파트 방화·보복범죄 수사",
+    "category": "사회",
+    "articleCount": 4,
+    "outletCount": 4
+  },
+  "analysisStatus": {
+    "state": "succeeded",
+    "cluster": {
+      "label": "ai_semantic",
+      "engineLabel": "ai_semantic",
+      "semanticAi": true,
+      "status": "succeeded",
+      "model": "gemini-2.5-flash-lite",
+      "promptVersion": "2.0.0",
+      "schemaVersion": 1,
+      "source": "metadata-clusters-2026-07-26.json",
+      "decision": "analyze",
+      "coherence": "high",
+      "textScope": "title_source_published_at_only",
+      "fallbackReason": null,
+      "requiresHumanReview": true,
+      "summary": "경산의 한 아파트에서 발생한 방화 사건으로 8명의 사상자가 발생했으며, 경찰은 관리실과의 갈등 및 고소장 접수 다음 날 발생했다는 점에서 보복 범죄 가능성에 무게를 두고 수사 중이다.",
+      "commonSubjects": [
+        "경찰",
+        "관리실",
+        "방화",
+        "수사",
+        "사상",
+        "경산 아파트",
+        "경산",
+        "수사 중",
+        "2026-07-26"
+      ],
+      "narrativeVariants": [
+        {
+          "label": "사건 발생 및 피해 규모 강조",
+          "description": "방화 사건으로 인한 사상자 발생 규모와 사건의 심각성을 부각합니다.",
+          "article_ids": [
+            "01100611.20260726160027001"
+          ]
+        },
+        {
+          "label": "보복 범죄 가능성 및 수사 초점 강조",
+          "description": "경찰이 보복 범죄 가능성에 집중하여 수사하고 있음을 강조합니다.",
+          "article_ids": [
+            "01101101.20260726143628001",
+            "01100101.20260726092625001",
+            "01100201.20260726074621001"
+          ]
+        }
+      ],
+      "outlierArticleIds": [],
+      "articleIds": [
+        "01100611.20260726160027001",
+        "01101101.20260726143628001",
+        "01100101.20260726092625001",
+        "01100201.20260726074621001"
+      ]
+    },
+    "semantic": {
+      "label": "ai_semantic",
+      "engineLabel": "ai_semantic",
+      "semanticAi": true,
+      "status": "succeeded",
+      "model": "gemini-2.5-flash-lite",
+      "promptVersion": "2.5.0",
+      "schemaVersion": "agendaframe.article-frame-profile.v2",
+      "source": "semantic-rank*-2026-07-26",
+      "articleCount": 4,
+      "succeededArticleCount": 4,
+      "reviewNeededArticleCount": 0,
+      "requiresHumanReview": true
+    }
+  },
+  "clusterAi": {
+    "label": "ai_semantic",
+    "engineLabel": "ai_semantic",
+    "semanticAi": true,
+    "status": "succeeded",
+    "model": "gemini-2.5-flash-lite",
+    "promptVersion": "2.0.0",
+    "schemaVersion": 1,
+    "source": "metadata-clusters-2026-07-26.json",
+    "decision": "analyze",
+    "coherence": "high",
+    "textScope": "title_source_published_at_only",
+    "fallbackReason": null,
+    "requiresHumanReview": true,
+    "summary": "경산의 한 아파트에서 발생한 방화 사건으로 8명의 사상자가 발생했으며, 경찰은 관리실과의 갈등 및 고소장 접수 다음 날 발생했다는 점에서 보복 범죄 가능성에 무게를 두고 수사 중이다.",
+    "commonSubjects": [
+      "경찰",
+      "관리실",
+      "방화",
+      "수사",
+      "사상",
+      "경산 아파트",
+      "경산",
+      "수사 중",
+      "2026-07-26"
+    ],
+    "narrativeVariants": [
+      {
+        "label": "사건 발생 및 피해 규모 강조",
+        "description": "방화 사건으로 인한 사상자 발생 규모와 사건의 심각성을 부각합니다.",
+        "article_ids": [
+          "01100611.20260726160027001"
+        ]
+      },
+      {
+        "label": "보복 범죄 가능성 및 수사 초점 강조",
+        "description": "경찰이 보복 범죄 가능성에 집중하여 수사하고 있음을 강조합니다.",
+        "article_ids": [
+          "01101101.20260726143628001",
+          "01100101.20260726092625001",
+          "01100201.20260726074621001"
+        ]
+      }
+    ],
+    "outlierArticleIds": [],
+    "articleIds": [
+      "01100611.20260726160027001",
+      "01101101.20260726143628001",
+      "01100101.20260726092625001",
+      "01100201.20260726074621001"
+    ]
+  },
+  "articles": [
+    {
+      "articleId": "01100611.20260726160027001",
+      "id": "01100611.20260726160027001",
+      "title": "‘8명 사상’ 경산 아파트 방화 경찰, 보복 범죄 가능성 집중 수사",
+      "outlet": "서울신문",
+      "sourceId": "seoul",
+      "mediaGroupId": "seoul_group",
+      "publishedAt": "2026-07-26T16:00:27+09:00",
+      "section": "사회>사건_사고",
+      "canonicalUrl": "https://www.seoul.co.kr/news/newsView.php?id=20260726500076",
+      "bodySha256": "b201a3f2e231ffcb99ff738bd7249286d195536923dd9ede57847363f6e83e01",
+      "analysis": {
+        "semantic": {
+          "label": "ai_semantic",
+          "engineLabel": "ai_semantic",
+          "semanticAi": true,
+          "status": "succeeded",
+          "model": "gemini-2.5-flash-lite",
+          "promptVersion": "2.5.0",
+          "schemaVersion": "agendaframe.article-frame-profile.v2",
+          "source": "semantic-rank*-2026-07-26",
+          "articleId": "01100611.20260726160027001",
+          "evidenceCount": 6,
+          "bodySha256": "b201a3f2e231ffcb99ff738bd7249286d195536923dd9ede57847363f6e83e01",
+          "reviewRequired": true,
+          "fallbackReason": null
+        },
+        "rules": {
+          "label": "rules_local",
+          "engineLabel": "rules_local",
+          "semanticAi": false,
+          "status": "succeeded",
+          "model": "korean-evidence-rules-v2",
+          "promptVersion": null,
+          "schemaVersion": "agendaframe.article-frame-profile.v1",
+          "source": "top5-2026-07-26.json",
+          "articleId": "01100611.20260726160027001",
+          "evidenceCount": 14,
+          "bodySha256": "e13ab862e0e50d0eab7620e7801b7761c6720f1c93095b24e57a7edb62331e19"
+        }
+      },
+      "issueId": "bigkinds-2026-07-26-top-3"
+    },
+    {
+      "articleId": "01101101.20260726143628001",
+      "id": "01101101.20260726143628001",
+      "title": "고소장 접수 다음 날 경산 아파트 방화 보복범죄 가능성 수사",
+      "outlet": "한국일보",
+      "sourceId": "hankookilbo",
+      "mediaGroupId": "hankookilbo_group",
+      "publishedAt": "2026-07-26T14:36:28+09:00",
+      "section": "사회>사건_사고",
+      "canonicalUrl": "https://www.hankookilbo.com/news/article/A2026072610590003559",
+      "bodySha256": "2aa598fa01201576c0ca910b87f5c29842e1d02c2e97d7fafb840f51b8b52a22",
+      "analysis": {
+        "semantic": {
+          "label": "ai_semantic",
+          "engineLabel": "ai_semantic",
+          "semanticAi": true,
+          "status": "succeeded",
+          "model": "gemini-2.5-flash-lite",
+          "promptVersion": "2.5.0",
+          "schemaVersion": "agendaframe.article-frame-profile.v2",
+          "source": "semantic-rank*-2026-07-26",
+          "articleId": "01101101.20260726143628001",
+          "evidenceCount": 8,
+          "bodySha256": "2aa598fa01201576c0ca910b87f5c29842e1d02c2e97d7fafb840f51b8b52a22",
+          "reviewRequired": true,
+          "fallbackReason": null
+        },
+        "rules": {
+          "label": "rules_local",
+          "engineLabel": "rules_local",
+          "semanticAi": false,
+          "status": "succeeded",
+          "model": "korean-evidence-rules-v2",
+          "promptVersion": null,
+          "schemaVersion": "agendaframe.article-frame-profile.v1",
+          "source": "top5-2026-07-26.json",
+          "articleId": "01101101.20260726143628001",
+          "evidenceCount": 11,
+          "bodySha256": "59e99dfccf17da48d3d7de22bd9ca10671a73b0658c0b81a384e334b751d4169"
+        }
+      },
+      "issueId": "bigkinds-2026-07-26-top-3"
+    },
+    {
+      "articleId": "01100101.20260726092625001",
+      "id": "01100101.20260726092625001",
+      "title": "‘관리실과 갈등 고소’ 뒤 방화? 경찰, 경산 아파트 ‘보복 범죄’ 가능성 수사",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "mediaGroupId": "khan_group",
+      "publishedAt": "2026-07-26T09:26:25+09:00",
+      "section": "사회>사건_사고",
+      "canonicalUrl": "https://www.khan.co.kr/article/202607260925001",
+      "bodySha256": "616f941b9a2970743a04e4c2a8e5a234cac1a481fe537a01aea9b303ea2d738e",
+      "analysis": {
+        "semantic": {
+          "label": "ai_semantic",
+          "engineLabel": "ai_semantic",
+          "semanticAi": true,
+          "status": "succeeded",
+          "model": "gemini-2.5-flash-lite",
+          "promptVersion": "2.5.0",
+          "schemaVersion": "agendaframe.article-frame-profile.v2",
+          "source": "semantic-rank*-2026-07-26",
+          "articleId": "01100101.20260726092625001",
+          "evidenceCount": 5,
+          "bodySha256": "616f941b9a2970743a04e4c2a8e5a234cac1a481fe537a01aea9b303ea2d738e",
+          "reviewRequired": true,
+          "fallbackReason": null
+        },
+        "rules": {
+          "label": "rules_local",
+          "engineLabel": "rules_local",
+          "semanticAi": false,
+          "status": "succeeded",
+          "model": "korean-evidence-rules-v2",
+          "promptVersion": null,
+          "schemaVersion": "agendaframe.article-frame-profile.v1",
+          "source": "top5-2026-07-26.json",
+          "articleId": "01100101.20260726092625001",
+          "evidenceCount": 12,
+          "bodySha256": "8cb9025724c314e7140a497968c9dd49a85158ca3accec0e481c22605769055b"
+        }
+      },
+      "issueId": "bigkinds-2026-07-26-top-3"
+    },
+    {
+      "articleId": "01100201.20260726074621001",
+      "id": "01100201.20260726074621001",
+      "title": "경산 아파트 관리실 방화 참사 경찰 ‘보복 범죄’ 가능성 수사",
+      "outlet": "국민일보",
+      "sourceId": "kmib",
+      "mediaGroupId": "kmib_group",
+      "publishedAt": "2026-07-26T07:46:21+09:00",
+      "section": "사회>사건_사고",
+      "canonicalUrl": "https://www.kmib.co.kr/article/view.asp?arcid=0030162143&code=61121111&cp=kd",
+      "bodySha256": "32df9ae9b5bd1158edab11597e1400d2af11d726d893732398ff139bdc88b099",
+      "analysis": {
+        "semantic": {
+          "label": "ai_semantic",
+          "engineLabel": "ai_semantic",
+          "semanticAi": true,
+          "status": "succeeded",
+          "model": "gemini-2.5-flash-lite",
+          "promptVersion": "2.5.0",
+          "schemaVersion": "agendaframe.article-frame-profile.v2",
+          "source": "semantic-rank*-2026-07-26",
+          "articleId": "01100201.20260726074621001",
+          "evidenceCount": 8,
+          "bodySha256": "32df9ae9b5bd1158edab11597e1400d2af11d726d893732398ff139bdc88b099",
+          "reviewRequired": true,
+          "fallbackReason": null
+        },
+        "rules": {
+          "label": "rules_local",
+          "engineLabel": "rules_local",
+          "semanticAi": false,
+          "status": "succeeded",
+          "model": "korean-evidence-rules-v2",
+          "promptVersion": null,
+          "schemaVersion": "agendaframe.article-frame-profile.v1",
+          "source": "top5-2026-07-26.json",
+          "articleId": "01100201.20260726074621001",
+          "evidenceCount": 14,
+          "bodySha256": "69e26cd05a0800933d27070c299592ee2c2c6a6ec285ec0bcab655b85a21c65d"
+        }
+      },
+      "issueId": "bigkinds-2026-07-26-top-3"
+    }
+  ],
+  "semanticProfiles": [
+    {
+      "articleId": "01100611.20260726160027001",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.5.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "semantic-rank*-2026-07-26",
+        "articleId": "01100611.20260726160027001",
+        "evidenceCount": 6,
+        "bodySha256": "b201a3f2e231ffcb99ff738bd7249286d195536923dd9ede57847363f6e83e01",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 10
+          },
+          "sentenceSha256": "5585dd7a29c19f3103f469cb2b75327ba60c033c65a54c688f961795bf6bdea4"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 13
+          },
+          "sentenceSha256": "2705e6c26b774af48ec9cb84b81134ad9b39a2fd620674c4a8b4eeefada46821"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 20
+          },
+          "sentenceSha256": "8ca5a21782e03636964b0d2796bc42e64fa4c403532dbe210c2cd91e38668e14"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 21
+          },
+          "sentenceSha256": "8d3bb58f86ea966a8fbd8c067be5eb2152d066554585d911263fc50dbeb5b24e"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 23
+          },
+          "sentenceSha256": "04caa5b23678f6f870836e0a8f907e4fbd0041de39989348d5b643f1f2bacbf7"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 7
+          },
+          "sentenceSha256": "7ae4e1036c622d0675bb2a5eb1a6b671c36c74881fba490fdd19bb489f9b7b26"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-flash-lite",
+          "prompt_version": "2.5.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": {
+            "authorization_id": "bigkinds-2026-07-26-rank-3-f87f13a7010f",
+            "fingerprint": "49b9b47e3211275d2ab63d0b409b07d71ad8442f820f3139cb12fbf693e0d2ae",
+            "cluster_id": "bigkinds-2026-07-26-rank-3",
+            "reviewer": "AgendaFrame agent-assisted evidence audit",
+            "reviewed_at": "2026-08-02T00:00:00+09:00",
+            "approved_urls_sha256": "5bad51a9594e6cf679cd775784227bf4bd41c6baad5e3cb36298f8031f057e8c"
+          }
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-flash-lite",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.5.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100611.20260726160027001",
+          "upstream_article_id": "01100611.20260726160027001",
+          "published_at": "2026-07-26T16:00:27+09:00",
+          "title_sha256": "30d80b409ea0680522d3c68530c978a864fb369008d6b5b851a968418a2ba31c",
+          "body_sha256": "b201a3f2e231ffcb99ff738bd7249286d195536923dd9ede57847363f6e83e01",
+          "body_character_count": 1099,
+          "body_word_count": 269,
+          "paragraph_count": 1,
+          "sentence_count": 27
+        },
+        "extraction": {
+          "text_scope": "transient_public_page_extract",
+          "analyzed_character_count": 1099,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "unknown",
+          "label": "자동 분류 안 함",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:e856b87721d5aadde4e5dfe1a5aa27800870537395aba41c2bb9260fccc8b9ff",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "방화로 인한 다수의 사상자 발생 사건",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 10
+                  },
+                  "sentence_sha256": "5585dd7a29c19f3103f469cb2b75327ba60c033c65a54c688f961795bf6bdea4"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:5f60aab8d04e561f286f2f49b002aeb084002d6f89a07ad17a8960e1c153b376",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "피의자가 아파트 운영 문제에 대한 불만을 품고 관리사무소와 갈등을 빚은 것이 원인",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 13
+                  },
+                  "sentence_sha256": "2705e6c26b774af48ec9cb84b81134ad9b39a2fd620674c4a8b4eeefada46821"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:d23347427ff0ab741f80d916c909e124a4c00aa616dbd15074e9d122baf157d1",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "피의자 개인의 보복 범죄 가능성에 무게를 두고 수사 중",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 20
+                  },
+                  "sentence_sha256": "8ca5a21782e03636964b0d2796bc42e64fa4c403532dbe210c2cd91e38668e14"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:da881cb7abd29e5b2dc8372761205146d6ad22fb61f73da7f1a0afff4107e938",
+                "code": "semantic_moral_evaluation",
+                "frame_family": "safety_negative",
+                "variant_key": "semantic:moral_evaluation:family:safety_negative",
+                "public_paraphrase": "피의자가 전신 화상을 입고 치료 중이라 대면 조사에 어려움이 있음",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 21
+                  },
+                  "sentence_sha256": "8d3bb58f86ea966a8fbd8c067be5eb2152d066554585d911263fc50dbeb5b24e"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:6c267e13e34dd3273881f20c34e8fac29ef654347a95cea939745009090863c2",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "피의자 치료 후 체포영장 집행 및 디지털 포렌식 분석 예정",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 21
+                  },
+                  "sentence_sha256": "8d3bb58f86ea966a8fbd8c067be5eb2152d066554585d911263fc50dbeb5b24e"
+                }
+              },
+              {
+                "claim_id": "claim:6c267e13e34dd3273881f20c34e8fac29ef654347a95cea939745009090863c2",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "피의자 치료 후 체포영장 집행 및 디지털 포렌식 분석 예정",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 23
+                  },
+                  "sentence_sha256": "04caa5b23678f6f870836e0a8f907e4fbd0041de39989348d5b643f1f2bacbf7"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:2fc5a4d09d82087a30f7f39f186fbee6deab79c4e08511e9ab7516e2415546c7",
+            "role": "judiciary_law_enforcement",
+            "role_label": "법조·수사기관",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 7
+                },
+                "sentence_sha256": "7ae4e1036c622d0675bb2a5eb1a6b671c36c74881fba490fdd19bb489f9b7b26"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "unknown"
+        },
+        "scope": {
+          "code": "unknown"
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [],
+          "controlled_associations": []
+        },
+        "framing_devices": [],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "e02017a7135778eb1c2696e8170e257f92c956cb1643d9e20b0813901111aca4",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "01101101.20260726143628001",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.5.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "semantic-rank*-2026-07-26",
+        "articleId": "01101101.20260726143628001",
+        "evidenceCount": 8,
+        "bodySha256": "2aa598fa01201576c0ca910b87f5c29842e1d02c2e97d7fafb840f51b8b52a22",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 5
+          },
+          "sentenceSha256": "85189f72286bc455ad54cc5a660e21fb63b25eb9789f4cc5609d29bee7f668da"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 9
+          },
+          "sentenceSha256": "ba37259519ac9c236637843c27dd47941c4482f4e128d340eff78d634a4ee82b"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "a141c0dca2f598b3e08c7c2300f8ec28fed764f57e35d9e0d2bf0864a346db6d"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 15
+          },
+          "sentenceSha256": "d5d6b836be7c7a9fca64ef58ae889246cff8c63534629b11d5682d209af9f2c9"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 17
+          },
+          "sentenceSha256": "e526dfcce9df1872a5cfbb775ad1348431b861596ffe527aa03e419cbc67df10"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 18
+          },
+          "sentenceSha256": "0321be27e95d0a36e99a0b5a8fc98ae2594353ef461ef956be7bcb5f8b0db639"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 22
+          },
+          "sentenceSha256": "92210065c74b5c4465947252d030d749b4978fb18a98a444cfb646497f2f9db9"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 13
+          },
+          "sentenceSha256": "ecd16e843949a0fdcba5a925e3480e27750599d2ed2e49080d6e32267d771178"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-flash-lite",
+          "prompt_version": "2.5.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": {
+            "authorization_id": "bigkinds-2026-07-26-rank-3-f87f13a7010f",
+            "fingerprint": "49b9b47e3211275d2ab63d0b409b07d71ad8442f820f3139cb12fbf693e0d2ae",
+            "cluster_id": "bigkinds-2026-07-26-rank-3",
+            "reviewer": "AgendaFrame agent-assisted evidence audit",
+            "reviewed_at": "2026-08-02T00:00:00+09:00",
+            "approved_urls_sha256": "5bad51a9594e6cf679cd775784227bf4bd41c6baad5e3cb36298f8031f057e8c"
+          }
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-flash-lite",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.5.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01101101.20260726143628001",
+          "upstream_article_id": "01101101.20260726143628001",
+          "published_at": "2026-07-26T14:36:28+09:00",
+          "title_sha256": "73c84e6d28567c17b98caee5fc6ea89f3a8ede5e8515ee6942bad3fba724ef3c",
+          "body_sha256": "2aa598fa01201576c0ca910b87f5c29842e1d02c2e97d7fafb840f51b8b52a22",
+          "body_character_count": 1372,
+          "body_word_count": 335,
+          "paragraph_count": 1,
+          "sentence_count": 22
+        },
+        "extraction": {
+          "text_scope": "transient_public_page_extract",
+          "analyzed_character_count": 1372,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "unknown",
+          "label": "자동 분류 안 함",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:d80f8e945fa73d5ae70bdd4ad4d31d2f1575a5ca5fe2a7bf8e08bfd01d3b1123",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "아파트 관리사무소 방화 및 폭발 사건 발생",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 5
+                  },
+                  "sentence_sha256": "85189f72286bc455ad54cc5a660e21fb63b25eb9789f4cc5609d29bee7f668da"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:18340768acbb17690f0c6f5cd587e0a0a2ff6f689e639bad1198afda7ff42031",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "피의자가 아파트 운영 문제에 대한 불만과 고소에 대한 보복으로 범행을 저지름",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "ba37259519ac9c236637843c27dd47941c4482f4e128d340eff78d634a4ee82b"
+                }
+              },
+              {
+                "claim_id": "claim:18340768acbb17690f0c6f5cd587e0a0a2ff6f689e639bad1198afda7ff42031",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "피의자가 아파트 운영 문제에 대한 불만과 고소에 대한 보복으로 범행을 저지름",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "a141c0dca2f598b3e08c7c2300f8ec28fed764f57e35d9e0d2bf0864a346db6d"
+                }
+              },
+              {
+                "claim_id": "claim:18340768acbb17690f0c6f5cd587e0a0a2ff6f689e639bad1198afda7ff42031",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "피의자가 아파트 운영 문제에 대한 불만과 고소에 대한 보복으로 범행을 저지름",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 15
+                  },
+                  "sentence_sha256": "d5d6b836be7c7a9fca64ef58ae889246cff8c63534629b11d5682d209af9f2c9"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:e8051fd1ed4d21203df85d8b7a4b93029462f64d4df595d135fb1d222f2a4fdf",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "피의자 개인에게 방화 및 보복 범죄 혐의 책임 부여",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 5
+                  },
+                  "sentence_sha256": "85189f72286bc455ad54cc5a660e21fb63b25eb9789f4cc5609d29bee7f668da"
+                }
+              },
+              {
+                "claim_id": "claim:e8051fd1ed4d21203df85d8b7a4b93029462f64d4df595d135fb1d222f2a4fdf",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "피의자 개인에게 방화 및 보복 범죄 혐의 책임 부여",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 17
+                  },
+                  "sentence_sha256": "e526dfcce9df1872a5cfbb775ad1348431b861596ffe527aa03e419cbc67df10"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:2df49f270094a7ee793d561ac87bb36b0c39057c9999b2992e810fae51b23842",
+                "code": "semantic_moral_evaluation",
+                "frame_family": "safety_negative",
+                "variant_key": "semantic:moral_evaluation:family:safety_negative",
+                "public_paraphrase": "방화 사건으로 인한 사망자 발생 및 다수의 중상",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 18
+                  },
+                  "sentence_sha256": "0321be27e95d0a36e99a0b5a8fc98ae2594353ef461ef956be7bcb5f8b0db639"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:5ad67d0afaf140c9260378ad5a5e8f51ed9efff5fc332dcf239bf727f694c165",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "보복 범죄 혐의 적용 가능성 검토 및 철저한 수사",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 15
+                  },
+                  "sentence_sha256": "d5d6b836be7c7a9fca64ef58ae889246cff8c63534629b11d5682d209af9f2c9"
+                }
+              },
+              {
+                "claim_id": "claim:5ad67d0afaf140c9260378ad5a5e8f51ed9efff5fc332dcf239bf727f694c165",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "보복 범죄 혐의 적용 가능성 검토 및 철저한 수사",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 22
+                  },
+                  "sentence_sha256": "92210065c74b5c4465947252d030d749b4978fb18a98a444cfb646497f2f9db9"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:0e58bade84e330738239b627304154e93970d9fffe553c3671390da37a6440e0",
+            "role": "affected_person",
+            "role_label": "당사자·시민",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 13
+                },
+                "sentence_sha256": "ecd16e843949a0fdcba5a925e3480e27750599d2ed2e49080d6e32267d771178"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:377df3e8f406abc9b8700148f8b0f56e0837b8c9c82bc45bec0ffbbc5ed23ca8",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 5
+                },
+                "sentence_sha256": "85189f72286bc455ad54cc5a660e21fb63b25eb9789f4cc5609d29bee7f668da"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 22
+                },
+                "sentence_sha256": "92210065c74b5c4465947252d030d749b4978fb18a98a444cfb646497f2f9db9"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "unknown"
+        },
+        "scope": {
+          "code": "unknown"
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [],
+          "controlled_associations": []
+        },
+        "framing_devices": [],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 3,
+          "idempotency_fingerprint": "4e926a96f33284c1d3c7e066a9339e2c9fa88c7c62117dd2ac11d0da0c60ab82",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "01100101.20260726092625001",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.5.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "semantic-rank*-2026-07-26",
+        "articleId": "01100101.20260726092625001",
+        "evidenceCount": 5,
+        "bodySha256": "616f941b9a2970743a04e4c2a8e5a234cac1a481fe537a01aea9b303ea2d738e",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 14
+          },
+          "sentenceSha256": "c12eb84345f34c1e0e9cc433af9af0aadd59711218507527a671f55c8ab0094c"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 15
+          },
+          "sentenceSha256": "890c73c81ea4d7848699a2a0474ff0efa4b8cb79632e92bfbbc8bf168cc0663e"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 19
+          },
+          "sentenceSha256": "9b7d59cf24ac0ae3fc48fe4110346140845248a07fa0b896ce74c09e33ea7fb1"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 20
+          },
+          "sentenceSha256": "5a5efdf880b9b707b2928603f6756abf080cd85142a179acb1842fef761cfd56"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 22
+          },
+          "sentenceSha256": "a0602d83f51700e1a6132ea6500c34210fd44c2aa2591bdab8bfb7f9e220a980"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-flash-lite",
+          "prompt_version": "2.5.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": {
+            "authorization_id": "bigkinds-2026-07-26-rank-3-f87f13a7010f",
+            "fingerprint": "49b9b47e3211275d2ab63d0b409b07d71ad8442f820f3139cb12fbf693e0d2ae",
+            "cluster_id": "bigkinds-2026-07-26-rank-3",
+            "reviewer": "AgendaFrame agent-assisted evidence audit",
+            "reviewed_at": "2026-08-02T00:00:00+09:00",
+            "approved_urls_sha256": "5bad51a9594e6cf679cd775784227bf4bd41c6baad5e3cb36298f8031f057e8c"
+          }
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-flash-lite",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.5.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100101.20260726092625001",
+          "upstream_article_id": "01100101.20260726092625001",
+          "published_at": "2026-07-26T09:26:25+09:00",
+          "title_sha256": "410a95df67b1149177fcd3899c31647d97c59af073eea02dd1b5a0a767498ecf",
+          "body_sha256": "616f941b9a2970743a04e4c2a8e5a234cac1a481fe537a01aea9b303ea2d738e",
+          "body_character_count": 1648,
+          "body_word_count": 388,
+          "paragraph_count": 1,
+          "sentence_count": 52
+        },
+        "extraction": {
+          "text_scope": "transient_public_page_extract",
+          "analyzed_character_count": 1648,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "unknown",
+          "label": "자동 분류 안 함",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:6ac2a4d21d0b9f5723f466951d31cfa7d3ab77733ed0fa1ae2ee3aff1aaca80e",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "아파트 관리실 방화 사건으로 8명 사상자 발생",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 14
+                  },
+                  "sentence_sha256": "c12eb84345f34c1e0e9cc433af9af0aadd59711218507527a671f55c8ab0094c"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:8e46749a1ea349a9090692267af41060b4b85404c769b7277a7c64cc38b2ca06",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "피의자가 아파트 운영 문제로 관리실과 갈등을 겪고 고소당한 것에 대한 보복 범죄 가능성",
+                "voice": {
+                  "kind": "uncertain_quote",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 15
+                  },
+                  "sentence_sha256": "890c73c81ea4d7848699a2a0474ff0efa4b8cb79632e92bfbbc8bf168cc0663e"
+                }
+              },
+              {
+                "claim_id": "claim:8e46749a1ea349a9090692267af41060b4b85404c769b7277a7c64cc38b2ca06",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "피의자가 아파트 운영 문제로 관리실과 갈등을 겪고 고소당한 것에 대한 보복 범죄 가능성",
+                "voice": {
+                  "kind": "uncertain_quote",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 19
+                  },
+                  "sentence_sha256": "9b7d59cf24ac0ae3fc48fe4110346140845248a07fa0b896ce74c09e33ea7fb1"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:8c94bbc77078272aee2fb9cca6c8d23da99effda899342257e225f4dfddc2639",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "judiciary_law_enforcement",
+                "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
+                "public_paraphrase": "경찰은 피의자 A씨의 보복 범죄 가능성을 수사 중",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 20
+                  },
+                  "sentence_sha256": "5a5efdf880b9b707b2928603f6756abf080cd85142a179acb1842fef761cfd56"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:00ec9b595d918101dd534073e3eda88cc34fb00a12de92ec703406ad3da4cbbf",
+                "code": "semantic_moral_evaluation",
+                "frame_family": "safety_negative",
+                "variant_key": "semantic:moral_evaluation:family:safety_negative",
+                "public_paraphrase": "전신 화상을 입은 피의자 A씨의 생명에는 지장이 없으나 진술이 불가능한 상태",
+                "voice": {
+                  "kind": "direct_quote",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 22
+                  },
+                  "sentence_sha256": "a0602d83f51700e1a6132ea6500c34210fd44c2aa2591bdab8bfb7f9e220a980"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:3ca3bed052ff470364503332f4ba864484711d184153c7fd2982dc6ecbb58a41",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "피의자 A씨의 회복 후 대면 조사 진행 예정",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 22
+                  },
+                  "sentence_sha256": "a0602d83f51700e1a6132ea6500c34210fd44c2aa2591bdab8bfb7f9e220a980"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:592fe41a91aeae0846c2f65ab615b0dfa74734c0ec7632cf2c20fe782361a234",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 22
+                },
+                "sentence_sha256": "a0602d83f51700e1a6132ea6500c34210fd44c2aa2591bdab8bfb7f9e220a980"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "unknown"
+        },
+        "scope": {
+          "code": "unknown"
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [],
+          "controlled_associations": []
+        },
+        "framing_devices": [],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "5dcb3e787bf92f7c4703838fe714d16666ccc3ef2d41cc6afb43655bf0a29ce0",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "01100201.20260726074621001",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.5.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "semantic-rank*-2026-07-26",
+        "articleId": "01100201.20260726074621001",
+        "evidenceCount": 8,
+        "bodySha256": "32df9ae9b5bd1158edab11597e1400d2af11d726d893732398ff139bdc88b099",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "593f18bda9f520a1d3ada524b5f08d0b749c571dae6e550ce69c409b9474cce4"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "db93426751b317395664f3b6b53762a6ce62ba4405d4583e83bd6fe8bceb2291"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "9e92afd77609c0dd749e761b3693019d5c8005637fadb52abad2b8bd26c705e3"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 17
+          },
+          "sentenceSha256": "a59bb9adf09afefed89592330e487db925a0d2be8bd71f403e19d47675c0ef81"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 5
+          },
+          "sentenceSha256": "63beb10d083272cfaa5110b8df911e4c812aa161bb1483b90b0a525118b9e405"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 10
+          },
+          "sentenceSha256": "735f14de9842e1edac60ec6c67f166e497e608eef986ea98a3be3d7aebf539a7"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "8ce5d2b68ed8075a69d6b7b61cb6a6c2d61dc7340433fb073d6345c6edbe9632"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 20
+          },
+          "sentenceSha256": "256cc02cc34cccd580043669be3f15b7b4f897fe26b2cfb02879079e15c56d37"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-flash-lite",
+          "prompt_version": "2.5.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": {
+            "authorization_id": "bigkinds-2026-07-26-rank-3-f87f13a7010f",
+            "fingerprint": "49b9b47e3211275d2ab63d0b409b07d71ad8442f820f3139cb12fbf693e0d2ae",
+            "cluster_id": "bigkinds-2026-07-26-rank-3",
+            "reviewer": "AgendaFrame agent-assisted evidence audit",
+            "reviewed_at": "2026-08-02T00:00:00+09:00",
+            "approved_urls_sha256": "5bad51a9594e6cf679cd775784227bf4bd41c6baad5e3cb36298f8031f057e8c"
+          }
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-flash-lite",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.5.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100201.20260726074621001",
+          "upstream_article_id": "01100201.20260726074621001",
+          "published_at": "2026-07-26T07:46:21+09:00",
+          "title_sha256": "ad67d9175184c1fcc4976eafd032b213e261ae93be7ab9f61dfbb8d214c8bb61",
+          "body_sha256": "32df9ae9b5bd1158edab11597e1400d2af11d726d893732398ff139bdc88b099",
+          "body_character_count": 1747,
+          "body_word_count": 440,
+          "paragraph_count": 1,
+          "sentence_count": 21
+        },
+        "extraction": {
+          "text_scope": "transient_public_page_extract",
+          "analyzed_character_count": 1747,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "unknown",
+          "label": "자동 분류 안 함",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:9ff5ce158ead066378ee05fe79bfed0d89c05a25875d2b3e1d6c59e2b0927ce1",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "방화 사건으로 인한 인명 및 재산 피해 발생",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "593f18bda9f520a1d3ada524b5f08d0b749c571dae6e550ce69c409b9474cce4"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:80d0a15ac8f02c8a8b830e0603773e85156bd60cc9cd342c9afa103de36b44b5",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "피의자가 고소 사실을 인지하고 보복 목적으로 범행을 저질렀을 가능성",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "db93426751b317395664f3b6b53762a6ce62ba4405d4583e83bd6fe8bceb2291"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:bf1bc5dd2d01f8b21aa5133d91e66077ab5b6c81f941eb608a3279974f5b5b0c",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "피의자 개인의 행위에 대한 책임",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "9e92afd77609c0dd749e761b3693019d5c8005637fadb52abad2b8bd26c705e3"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:a386427f45b71bcfe7ac4c8832bfa61310279e4a47b7578ad3825eb9ed22434c",
+                "code": "semantic_moral_evaluation",
+                "frame_family": "safety_negative",
+                "variant_key": "semantic:moral_evaluation:family:safety_negative",
+                "public_paraphrase": "방화 사건으로 인한 사망자 발생 및 심각한 피해",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 17
+                  },
+                  "sentence_sha256": "a59bb9adf09afefed89592330e487db925a0d2be8bd71f403e19d47675c0ef81"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:211cc78f3e57de157548d3c123c00e0f1f0a0e7ac3d457b005932784313affa1",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "보복 범죄 여부 등 범행 동기 규명 및 관련 법 적용 검토",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 5
+                  },
+                  "sentence_sha256": "63beb10d083272cfaa5110b8df911e4c812aa161bb1483b90b0a525118b9e405"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:08e8701f83c3560b2b855e714a16e9c5a3f9f21b77e117fc5aa5dfa14bea23e4",
+            "role": "affected_person",
+            "role_label": "당사자·시민",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 10
+                },
+                "sentence_sha256": "735f14de9842e1edac60ec6c67f166e497e608eef986ea98a3be3d7aebf539a7"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 11
+                },
+                "sentence_sha256": "8ce5d2b68ed8075a69d6b7b61cb6a6c2d61dc7340433fb073d6345c6edbe9632"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:8234096339279f530abee5a9175da4570e207f9a5e1359da2652be692345eb4f",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "593f18bda9f520a1d3ada524b5f08d0b749c571dae6e550ce69c409b9474cce4"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 20
+                },
+                "sentence_sha256": "256cc02cc34cccd580043669be3f15b7b4f897fe26b2cfb02879079e15c56d37"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "unknown"
+        },
+        "scope": {
+          "code": "unknown"
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [],
+          "controlled_associations": []
+        },
+        "framing_devices": [],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "e6dbe028570c58ddf04134684ed059acc53ad49feac56b570efa14d8000943bc",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    }
+  ],
+  "ruleProfiles": [
+    {
+      "articleId": "01100611.20260726160027001",
+      "status": "succeeded",
+      "engine": {
+        "label": "rules_local",
+        "engineLabel": "rules_local",
+        "semanticAi": false,
+        "status": "succeeded",
+        "model": "korean-evidence-rules-v2",
+        "promptVersion": null,
+        "schemaVersion": "agendaframe.article-frame-profile.v1",
+        "source": "top5-2026-07-26.json",
+        "articleId": "01100611.20260726160027001",
+        "evidenceCount": 14,
+        "bodySha256": "e13ab862e0e50d0eab7620e7801b7761c6720f1c93095b24e57a7edb62331e19"
+      },
+      "evidence": [
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 9,
+            "sentence": 1
+          },
+          "sentenceSha256": "40342ea6297072037f061cf8bf2007dff19451fe8b9d9c01bbe8e1ed1f7adf4a"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 9,
+            "sentence": 2
+          },
+          "sentenceSha256": "3253f521a98641a61e4b1c25563f25d46381fa583276f95691b0cae428ae95aa"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "96d93df26cbe84ac1202a967a831261dab3f795c487f957b021870774624826c"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 8,
+            "sentence": 1
+          },
+          "sentenceSha256": "0bd5d3050a9860dc432b6ab6642b57374b0d5112804c2a7e54d6da7a8666d610"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 15,
+            "sentence": 1
+          },
+          "sentenceSha256": "b0e1b5c4615ff7dc5a9b85a556977267fc4dfe44ac0c46f7b7d79b9fb99e80ea"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 14,
+            "sentence": 2
+          },
+          "sentenceSha256": "771cea7d26f75a740259ab791fd220b4d9e214d140ea80f38bc82ad4db269b38"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 13,
+            "sentence": 2
+          },
+          "sentenceSha256": "398151a3c01528ddb7d72ff596e5e8247bdcf0d9712a60615cbbe777ea93c6b7"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 14,
+            "sentence": 3
+          },
+          "sentenceSha256": "5d91ef115b4e6ef816f0567492e4f4e30e12ac1fb8c1e62dc963247b185873f2"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 4,
+            "sentence": 1
+          },
+          "sentenceSha256": "c69be39e81a38754f216b8d87b5e790aa66d20fb6c6406fd39233cb2eef8539f"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 10,
+            "sentence": 1
+          },
+          "sentenceSha256": "898a938a951b082be3a7094827b5f357bb5e5ef5c3e3f07735e9b243b9fbc0fe"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 5,
+            "sentence": 1
+          },
+          "sentenceSha256": "6052537b4a22c9c8fc2721b8ba9c69d47b27deffe255e8cdf2ec7cae0ea9c4a3"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 11,
+            "sentence": 1
+          },
+          "sentenceSha256": "f2d61d304e85487bdb09ec25b433d7438016de271375d2e9648d2ba34f32c6ca"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 12,
+            "sentence": 1
+          },
+          "sentenceSha256": "8eeed9ba80a68d5977170df3ab55e6fe73da7f65ad028b7e147298538d387886"
+        },
+        {
+          "articleId": "01100611.20260726160027001",
+          "locator": {
+            "paragraph": 7,
+            "sentence": 1
+          },
+          "sentenceSha256": "9aac8240517ae3e2120b622f26e9351d7f94cd3468452b01e0b752c7ee82dcf6"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v1",
+        "engine": {
+          "name": "AgendaFrame Korean evidence rules",
+          "version": "korean-evidence-rules-v2",
+          "approach": "deterministic_extractive_rules",
+          "semantic_ai": false,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "이 결과는 한국어 어휘·구문 규칙에 따른 구조화 관측이며 사람의 의미 해석이나 LLM 판정이 아닙니다.",
+            "취재원에게 귀속된 발언은 언론사의 서술·입장으로 합산하지 않습니다.",
+            "확인되지 않음은 기사에 요소가 없다는 단정이 아니라 분석 가능한 본문에서 규칙으로 관측되지 않았다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100611.20260726160027001",
+          "published_at": "2026-07-26T16:00:27+09:00",
+          "title_sha256": "11b6a322788b0d04a76c40c4c1dfccbe39f50f29b6aa176ab12aa97d71aa57f4",
+          "body_sha256": "e13ab862e0e50d0eab7620e7801b7761c6720f1c93095b24e57a7edb62331e19",
+          "body_character_count": 1099,
+          "body_word_count": 269,
+          "paragraph_count": 17,
+          "sentence_count": 31
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": "스트레이트 기사",
+          "basis": "명시적인 의견·해설 장르 표지가 없음",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "source-1",
+            "name": "26일 경찰 등",
+            "role": "judiciary_law_enforcement",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1,
+            "role_label": "법조·수사기관",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 9,
+                  "sentence": 1
+                },
+                "sentence_sha256": "40342ea6297072037f061cf8bf2007dff19451fe8b9d9c01bbe8e1ed1f7adf4a"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "deep",
+          "score": 72,
+          "signals": [
+            {
+              "code": "historical_context",
+              "label": "과거 경과",
+              "sentence_count": 1,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 9,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "3253f521a98641a61e4b1c25563f25d46381fa583276f95691b0cae428ae95aa"
+                }
+              ]
+            },
+            {
+              "code": "statistics",
+              "label": "수치·통계",
+              "sentence_count": 4,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "96d93df26cbe84ac1202a967a831261dab3f795c487f957b021870774624826c"
+                },
+                {
+                  "locator": {
+                    "paragraph": 8,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "0bd5d3050a9860dc432b6ab6642b57374b0d5112804c2a7e54d6da7a8666d610"
+                }
+              ]
+            },
+            {
+              "code": "institutional_context",
+              "label": "법·제도 맥락",
+              "sentence_count": 1,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 15,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "b0e1b5c4615ff7dc5a9b85a556977267fc4dfe44ac0c46f7b7d79b9fb99e80ea"
+                }
+              ]
+            },
+            {
+              "code": "causal_context",
+              "label": "원인·배경 설명",
+              "sentence_count": 2,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 9,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "40342ea6297072037f061cf8bf2007dff19451fe8b9d9c01bbe8e1ed1f7adf4a"
+                },
+                {
+                  "locator": {
+                    "paragraph": 14,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "771cea7d26f75a740259ab791fd220b4d9e214d140ea80f38bc82ad4db269b38"
+                }
+              ]
+            },
+            {
+              "code": "counter_position",
+              "label": "반론·대안 관점",
+              "sentence_count": 2,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 13,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "398151a3c01528ddb7d72ff596e5e8247bdcf0d9712a60615cbbe777ea93c6b7"
+                },
+                {
+                  "locator": {
+                    "paragraph": 14,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "5d91ef115b4e6ef816f0567492e4f4e30e12ac1fb8c1e62dc963247b185873f2"
+                }
+              ]
+            }
+          ],
+          "caution": "맥락 깊이는 관측 가능한 배경·통계·제도·반론 표지의 범위를 나타내며 기사 품질 점수가 아닙니다."
+        },
+        "scope": {
+          "code": "episodic",
+          "label": "사례·사건 중심",
+          "episodic_sentence_count": 9,
+          "thematic_sentence_count": 1,
+          "evidence": {
+            "episodic": [
+              {
+                "locator": {
+                  "paragraph": 4,
+                  "sentence": 1
+                },
+                "sentence_sha256": "c69be39e81a38754f216b8d87b5e790aa66d20fb6c6406fd39233cb2eef8539f"
+              },
+              {
+                "locator": {
+                  "paragraph": 6,
+                  "sentence": 1
+                },
+                "sentence_sha256": "f8fc4cdd0447203ddd967c44f4694633322d80fa37316d029cce3cc907ccdda4"
+              }
+            ],
+            "thematic": [
+              {
+                "locator": {
+                  "paragraph": 15,
+                  "sentence": 1
+                },
+                "sentence_sha256": "b0e1b5c4615ff7dc5a9b85a556977267fc4dfe44ac0c46f7b7d79b9fb99e80ea"
+              }
+            ]
+          },
+          "caution": "기사의 설명 범위를 나타내는 보조 분류이며 보도의 우열을 뜻하지 않습니다."
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "human_interest",
+              "label": "인간적 관심",
+              "sentence_count": 4,
+              "share_of_sentences": 0.129,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 4,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "c69be39e81a38754f216b8d87b5e790aa66d20fb6c6406fd39233cb2eef8539f"
+                },
+                {
+                  "locator": {
+                    "paragraph": 9,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "40342ea6297072037f061cf8bf2007dff19451fe8b9d9c01bbe8e1ed1f7adf4a"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "conflict",
+              "label": "갈등",
+              "sentence_count": 2,
+              "share_of_sentences": 0.065,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 4,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "c69be39e81a38754f216b8d87b5e790aa66d20fb6c6406fd39233cb2eef8539f"
+                },
+                {
+                  "locator": {
+                    "paragraph": 10,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "898a938a951b082be3a7094827b5f357bb5e5ef5c3e3f07735e9b243b9fbc0fe"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "crime_punishment",
+              "label": "범죄·처벌",
+              "sentence_count": 11,
+              "share_of_sentences": 0.355,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 4,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "c69be39e81a38754f216b8d87b5e790aa66d20fb6c6406fd39233cb2eef8539f"
+                },
+                {
+                  "locator": {
+                    "paragraph": 5,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "6052537b4a22c9c8fc2721b8ba9c69d47b27deffe255e8cdf2ec7cae0ea9c4a3"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "health_safety",
+              "label": "건강·안전",
+              "sentence_count": 2,
+              "share_of_sentences": 0.065,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 11,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "f2d61d304e85487bdb09ec25b433d7438016de271375d2e9648d2ba34f32c6ca"
+                },
+                {
+                  "locator": {
+                    "paragraph": 12,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "8eeed9ba80a68d5977170df3ab55e6fe73da7f65ad028b7e147298538d387886"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "quality_of_life",
+              "label": "삶의 질",
+              "sentence_count": 2,
+              "share_of_sentences": 0.065,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 7,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "9aac8240517ae3e2120b622f26e9351d7f94cd3468452b01e0b752c7ee82dcf6"
+                },
+                {
+                  "locator": {
+                    "paragraph": 14,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "771cea7d26f75a740259ab791fd220b4d9e214d140ea80f38bc82ad4db269b38"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "legality_constitutionality",
+              "label": "법·헌정",
+              "sentence_count": 1,
+              "share_of_sentences": 0.032,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 15,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "b0e1b5c4615ff7dc5a9b85a556977267fc4dfe44ac0c46f7b7d79b9fb99e80ea"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            }
+          ],
+          "controlled_associations": [
+            {
+              "source": "citizens",
+              "target": "law_justice",
+              "sentence_count": 3
+            },
+            {
+              "source": "citizens",
+              "target": "safety_health",
+              "sentence_count": 2
+            },
+            {
+              "source": "law_justice",
+              "target": "safety_health",
+              "sentence_count": 2
+            },
+            {
+              "source": "government",
+              "target": "safety_health",
+              "sentence_count": 1
+            },
+            {
+              "source": "law_justice",
+              "target": "welfare_livelihood",
+              "sentence_count": 1
+            }
+          ]
+        },
+        "framing_devices": [
+          {
+            "code": "statistics",
+            "label": "수치·통계",
+            "count": 4,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 3,
+                  "sentence": 1
+                },
+                "sentence_sha256": "96d93df26cbe84ac1202a967a831261dab3f795c487f957b021870774624826c"
+              },
+              {
+                "locator": {
+                  "paragraph": 8,
+                  "sentence": 1
+                },
+                "sentence_sha256": "0bd5d3050a9860dc432b6ab6642b57374b0d5112804c2a7e54d6da7a8666d610"
+              }
+            ]
+          },
+          {
+            "code": "contrast",
+            "label": "대조·반론",
+            "count": 2,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 13,
+                  "sentence": 2
+                },
+                "sentence_sha256": "398151a3c01528ddb7d72ff596e5e8247bdcf0d9712a60615cbbe777ea93c6b7"
+              },
+              {
+                "locator": {
+                  "paragraph": 14,
+                  "sentence": 3
+                },
+                "sentence_sha256": "5d91ef115b4e6ef816f0567492e4f4e30e12ac1fb8c1e62dc963247b185873f2"
+              }
+            ]
+          },
+          {
+            "code": "historical_reference",
+            "label": "과거 경과",
+            "count": 1,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 9,
+                  "sentence": 2
+                },
+                "sentence_sha256": "3253f521a98641a61e4b1c25563f25d46381fa583276f95691b0cae428ae95aa"
+              }
+            ]
+          },
+          {
+            "code": "personal_example",
+            "label": "개인·현장 사례",
+            "count": 5,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 4,
+                  "sentence": 1
+                },
+                "sentence_sha256": "c69be39e81a38754f216b8d87b5e790aa66d20fb6c6406fd39233cb2eef8539f"
+              },
+              {
+                "locator": {
+                  "paragraph": 9,
+                  "sentence": 1
+                },
+                "sentence_sha256": "40342ea6297072037f061cf8bf2007dff19451fe8b9d9c01bbe8e1ed1f7adf4a"
+              }
+            ]
+          },
+          {
+            "code": "source_attribution",
+            "label": "명시적 취재원 인용",
+            "count": 1,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 9,
+                  "sentence": 1
+                },
+                "sentence_sha256": "40342ea6297072037f061cf8bf2007dff19451fe8b9d9c01bbe8e1ed1f7adf4a"
+              }
+            ]
+          }
+        ],
+        "review": {
+          "status": "machine_observation_unreviewed",
+          "requires_human_review": true,
+          "publication_rule": "책임 귀속·규범적 평가·매체 간 차이는 사람 검토 전 확정 표현으로 공개하지 않습니다."
+        },
+        "extraction": {
+          "strategy": "bigkinds_workbook_body",
+          "quality": 1,
+          "extractor_version": "workbook-body-v1",
+          "text_scope": "article_body",
+          "body_character_count": 1099,
+          "body_fingerprint": "ba785c3cabb6ad283c3614259d1ddb5ff1f867ad351134811ddfc8fddee8b44c"
+        }
+      }
+    },
+    {
+      "articleId": "01101101.20260726143628001",
+      "status": "succeeded",
+      "engine": {
+        "label": "rules_local",
+        "engineLabel": "rules_local",
+        "semanticAi": false,
+        "status": "succeeded",
+        "model": "korean-evidence-rules-v2",
+        "promptVersion": null,
+        "schemaVersion": "agendaframe.article-frame-profile.v1",
+        "source": "top5-2026-07-26.json",
+        "articleId": "01101101.20260726143628001",
+        "evidenceCount": 11,
+        "bodySha256": "59e99dfccf17da48d3d7de22bd9ca10671a73b0658c0b81a384e334b751d4169"
+      },
+      "evidence": [
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 11,
+            "sentence": 1
+          },
+          "sentenceSha256": "cc33eea731fe3edcf5f79533413c5205ecd6b54c4e8bc5395a0fd522c16dd358"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 5,
+            "sentence": 1
+          },
+          "sentenceSha256": "793c175e94c4f2b070d247b319d3772748a288c3b75a4a7fe0f03c0ab064f13e"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 7,
+            "sentence": 2
+          },
+          "sentenceSha256": "4660a19acd6d4451b3b8101e6edf4838a738a251a9437a88dddf4d5fce2f16fb"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 6,
+            "sentence": 1
+          },
+          "sentenceSha256": "b00fcaaeee5c1f88386cc7330d4e95122b9a72f3e96fa44aae38fa3f2dd9825d"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 9,
+            "sentence": 2
+          },
+          "sentenceSha256": "6e8673db26fce0b20a711b32b380a7097494ced5b8311b38e7eaf9964b985593"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 8,
+            "sentence": 1
+          },
+          "sentenceSha256": "b64a2117308e1d987c5ae76915ec8e19cbd003cd29f7e4e4042c87966b1d676d"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 8,
+            "sentence": 3
+          },
+          "sentenceSha256": "ed23190848769cd0a1bc24a1b4df739c10ce0da80c48a7cec0fbe13bd241fa58"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "de802cd41554f3afd3df7c1660a8878eec79818e6fd83f41e6465dc3667a7638"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "ec9e4315177fc4946bcbd194c6632b2a253de7950e03a39a633f658659b3ff54"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 4,
+            "sentence": 1
+          },
+          "sentenceSha256": "9054ad45f1f426ff37cf21331b178138d7c1f455ae3954b2c8d2fbc3b8843ed4"
+        },
+        {
+          "articleId": "01101101.20260726143628001",
+          "locator": {
+            "paragraph": 5,
+            "sentence": 2
+          },
+          "sentenceSha256": "2425a816f75c8db25d66f910daa3e3117ed1938838a750245cc086eebe824746"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v1",
+        "engine": {
+          "name": "AgendaFrame Korean evidence rules",
+          "version": "korean-evidence-rules-v2",
+          "approach": "deterministic_extractive_rules",
+          "semantic_ai": false,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "이 결과는 한국어 어휘·구문 규칙에 따른 구조화 관측이며 사람의 의미 해석이나 LLM 판정이 아닙니다.",
+            "취재원에게 귀속된 발언은 언론사의 서술·입장으로 합산하지 않습니다.",
+            "확인되지 않음은 기사에 요소가 없다는 단정이 아니라 분석 가능한 본문에서 규칙으로 관측되지 않았다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01101101.20260726143628001",
+          "published_at": "2026-07-26T14:36:28+09:00",
+          "title_sha256": "ee95ed5a91993d0dbded156dd7e51810a2af1f2b7d727b07f5dfe2b0325aede7",
+          "body_sha256": "59e99dfccf17da48d3d7de22bd9ca10671a73b0658c0b81a384e334b751d4169",
+          "body_character_count": 1372,
+          "body_word_count": 335,
+          "paragraph_count": 11,
+          "sentence_count": 22
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": "스트레이트 기사",
+          "basis": "명시적인 의견·해설 장르 표지가 없음",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "code": "safety_harm_problem",
+                "public_paraphrase": "익명·비실명 관계자의 발언·설명에서 사람의 안전과 구체적 피해를 사건의 핵심 문제로 다룹니다.",
+                "voice": {
+                  "kind": "direct_quote",
+                  "speaker_name": "경찰 관계자",
+                  "speaker_role": "anonymous_official"
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 11,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "cc33eea731fe3edcf5f79533413c5205ecd6b54c4e8bc5395a0fd522c16dd358"
+                }
+              }
+            ],
+            "abstention_reason": null
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "source-1",
+            "name": "26일 경북경찰청 등",
+            "role": "judiciary_law_enforcement",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1,
+            "role_label": "법조·수사기관",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 1
+                },
+                "sentence_sha256": "793c175e94c4f2b070d247b319d3772748a288c3b75a4a7fe0f03c0ab064f13e"
+              }
+            ]
+          },
+          {
+            "actor_id": "source-2",
+            "name": "한 주민",
+            "role": "affected_person",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
+            "role_label": "당사자·시민",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 7,
+                  "sentence": 2
+                },
+                "sentence_sha256": "4660a19acd6d4451b3b8101e6edf4838a738a251a9437a88dddf4d5fce2f16fb"
+              }
+            ]
+          },
+          {
+            "actor_id": "source-3",
+            "name": "경찰 관계자",
+            "role": "anonymous_official",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
+            "role_label": "익명·비실명 관계자",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 11,
+                  "sentence": 1
+                },
+                "sentence_sha256": "cc33eea731fe3edcf5f79533413c5205ecd6b54c4e8bc5395a0fd522c16dd358"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "moderate",
+          "score": 48,
+          "signals": [
+            {
+              "code": "historical_context",
+              "label": "과거 경과",
+              "sentence_count": 2,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 5,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "793c175e94c4f2b070d247b319d3772748a288c3b75a4a7fe0f03c0ab064f13e"
+                },
+                {
+                  "locator": {
+                    "paragraph": 6,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "b00fcaaeee5c1f88386cc7330d4e95122b9a72f3e96fa44aae38fa3f2dd9825d"
+                }
+              ]
+            },
+            {
+              "code": "statistics",
+              "label": "수치·통계",
+              "sentence_count": 1,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 9,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "6e8673db26fce0b20a711b32b380a7097494ced5b8311b38e7eaf9964b985593"
+                }
+              ]
+            },
+            {
+              "code": "institutional_context",
+              "label": "법·제도 맥락",
+              "sentence_count": 1,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 8,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "b64a2117308e1d987c5ae76915ec8e19cbd003cd29f7e4e4042c87966b1d676d"
+                }
+              ]
+            },
+            {
+              "code": "comparative_context",
+              "label": "비교 맥락",
+              "sentence_count": 1,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 8,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "ed23190848769cd0a1bc24a1b4df739c10ce0da80c48a7cec0fbe13bd241fa58"
+                }
+              ]
+            },
+            {
+              "code": "counter_position",
+              "label": "반론·대안 관점",
+              "sentence_count": 1,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 7,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "4660a19acd6d4451b3b8101e6edf4838a738a251a9437a88dddf4d5fce2f16fb"
+                }
+              ]
+            }
+          ],
+          "caution": "맥락 깊이는 관측 가능한 배경·통계·제도·반론 표지의 범위를 나타내며 기사 품질 점수가 아닙니다."
+        },
+        "scope": {
+          "code": "episodic",
+          "label": "사례·사건 중심",
+          "episodic_sentence_count": 10,
+          "thematic_sentence_count": 1,
+          "evidence": {
+            "episodic": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "de802cd41554f3afd3df7c1660a8878eec79818e6fd83f41e6465dc3667a7638"
+              },
+              {
+                "locator": {
+                  "paragraph": 3,
+                  "sentence": 1
+                },
+                "sentence_sha256": "ec9e4315177fc4946bcbd194c6632b2a253de7950e03a39a633f658659b3ff54"
+              }
+            ],
+            "thematic": [
+              {
+                "locator": {
+                  "paragraph": 6,
+                  "sentence": 1
+                },
+                "sentence_sha256": "b00fcaaeee5c1f88386cc7330d4e95122b9a72f3e96fa44aae38fa3f2dd9825d"
+              }
+            ]
+          },
+          "caution": "기사의 설명 범위를 나타내는 보조 분류이며 보도의 우열을 뜻하지 않습니다."
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "human_interest",
+              "label": "인간적 관심",
+              "sentence_count": 5,
+              "share_of_sentences": 0.227,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "de802cd41554f3afd3df7c1660a8878eec79818e6fd83f41e6465dc3667a7638"
+                },
+                {
+                  "locator": {
+                    "paragraph": 5,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "793c175e94c4f2b070d247b319d3772748a288c3b75a4a7fe0f03c0ab064f13e"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "crime_punishment",
+              "label": "범죄·처벌",
+              "sentence_count": 13,
+              "share_of_sentences": 0.591,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "ec9e4315177fc4946bcbd194c6632b2a253de7950e03a39a633f658659b3ff54"
+                },
+                {
+                  "locator": {
+                    "paragraph": 4,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "9054ad45f1f426ff37cf21331b178138d7c1f455ae3954b2c8d2fbc3b8843ed4"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "quality_of_life",
+              "label": "삶의 질",
+              "sentence_count": 2,
+              "share_of_sentences": 0.091,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "ec9e4315177fc4946bcbd194c6632b2a253de7950e03a39a633f658659b3ff54"
+                },
+                {
+                  "locator": {
+                    "paragraph": 5,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "2425a816f75c8db25d66f910daa3e3117ed1938838a750245cc086eebe824746"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "health_safety",
+              "label": "건강·안전",
+              "sentence_count": 1,
+              "share_of_sentences": 0.045,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 9,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "6e8673db26fce0b20a711b32b380a7097494ced5b8311b38e7eaf9964b985593"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "legality_constitutionality",
+              "label": "법·헌정",
+              "sentence_count": 1,
+              "share_of_sentences": 0.045,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 8,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "b64a2117308e1d987c5ae76915ec8e19cbd003cd29f7e4e4042c87966b1d676d"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "security_defense",
+              "label": "안보·국방",
+              "sentence_count": 1,
+              "share_of_sentences": 0.045,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 8,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "ed23190848769cd0a1bc24a1b4df739c10ce0da80c48a7cec0fbe13bd241fa58"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            }
+          ],
+          "controlled_associations": [
+            {
+              "source": "citizens",
+              "target": "safety_health",
+              "sentence_count": 2
+            },
+            {
+              "source": "law_justice",
+              "target": "welfare_livelihood",
+              "sentence_count": 2
+            },
+            {
+              "source": "citizens",
+              "target": "law_justice",
+              "sentence_count": 1
+            },
+            {
+              "source": "law_justice",
+              "target": "safety_health",
+              "sentence_count": 1
+            }
+          ]
+        },
+        "framing_devices": [
+          {
+            "code": "statistics",
+            "label": "수치·통계",
+            "count": 1,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 9,
+                  "sentence": 2
+                },
+                "sentence_sha256": "6e8673db26fce0b20a711b32b380a7097494ced5b8311b38e7eaf9964b985593"
+              }
+            ]
+          },
+          {
+            "code": "contrast",
+            "label": "대조·반론",
+            "count": 1,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 7,
+                  "sentence": 2
+                },
+                "sentence_sha256": "4660a19acd6d4451b3b8101e6edf4838a738a251a9437a88dddf4d5fce2f16fb"
+              }
+            ]
+          },
+          {
+            "code": "historical_reference",
+            "label": "과거 경과",
+            "count": 2,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 1
+                },
+                "sentence_sha256": "793c175e94c4f2b070d247b319d3772748a288c3b75a4a7fe0f03c0ab064f13e"
+              },
+              {
+                "locator": {
+                  "paragraph": 6,
+                  "sentence": 1
+                },
+                "sentence_sha256": "b00fcaaeee5c1f88386cc7330d4e95122b9a72f3e96fa44aae38fa3f2dd9825d"
+              }
+            ]
+          },
+          {
+            "code": "personal_example",
+            "label": "개인·현장 사례",
+            "count": 5,
+            "appears_in_lead": true,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "de802cd41554f3afd3df7c1660a8878eec79818e6fd83f41e6465dc3667a7638"
+              },
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 1
+                },
+                "sentence_sha256": "793c175e94c4f2b070d247b319d3772748a288c3b75a4a7fe0f03c0ab064f13e"
+              }
+            ]
+          },
+          {
+            "code": "source_attribution",
+            "label": "명시적 취재원 인용",
+            "count": 3,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 1
+                },
+                "sentence_sha256": "793c175e94c4f2b070d247b319d3772748a288c3b75a4a7fe0f03c0ab064f13e"
+              },
+              {
+                "locator": {
+                  "paragraph": 7,
+                  "sentence": 2
+                },
+                "sentence_sha256": "4660a19acd6d4451b3b8101e6edf4838a738a251a9437a88dddf4d5fce2f16fb"
+              },
+              {
+                "locator": {
+                  "paragraph": 11,
+                  "sentence": 1
+                },
+                "sentence_sha256": "cc33eea731fe3edcf5f79533413c5205ecd6b54c4e8bc5395a0fd522c16dd358"
+              }
+            ]
+          }
+        ],
+        "review": {
+          "status": "machine_observation_unreviewed",
+          "requires_human_review": true,
+          "publication_rule": "책임 귀속·규범적 평가·매체 간 차이는 사람 검토 전 확정 표현으로 공개하지 않습니다."
+        },
+        "extraction": {
+          "strategy": "bigkinds_workbook_body",
+          "quality": 1,
+          "extractor_version": "workbook-body-v1",
+          "text_scope": "article_body",
+          "body_character_count": 1372,
+          "body_fingerprint": "734813213b41745aca26b8b0d09332af453c3cd813bafff16049bf0853c0000d"
+        }
+      }
+    },
+    {
+      "articleId": "01100101.20260726092625001",
+      "status": "succeeded",
+      "engine": {
+        "label": "rules_local",
+        "engineLabel": "rules_local",
+        "semanticAi": false,
+        "status": "succeeded",
+        "model": "korean-evidence-rules-v2",
+        "promptVersion": null,
+        "schemaVersion": "agendaframe.article-frame-profile.v1",
+        "source": "top5-2026-07-26.json",
+        "articleId": "01100101.20260726092625001",
+        "evidenceCount": 12,
+        "bodySha256": "8cb9025724c314e7140a497968c9dd49a85158ca3accec0e481c22605769055b"
+      },
+      "evidence": [
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 14,
+            "sentence": 1
+          },
+          "sentenceSha256": "60d76aacb6a5d4735ea60a3223451fd8cd2f8d88b919bd6f0fe9f7a18fedb5fd"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 18,
+            "sentence": 1
+          },
+          "sentenceSha256": "73db504025b67baedcb55776da52e002c2df4dc879694c6f3837369474c746ad"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 20,
+            "sentence": 1
+          },
+          "sentenceSha256": "e37089e40d0f08f2cd2a30f7fd39536b15cfddb518c75eaafd2c3b5f40883af3"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 13,
+            "sentence": 1
+          },
+          "sentenceSha256": "9d42e5f0c26279e06d1f7b56bfcfe98db104efdf767264b8d85d7e3cfc9db1c6"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 22,
+            "sentence": 1
+          },
+          "sentenceSha256": "d4909a050c84acb32653b30585edf557970dc7625c47e130c072d6113593d31d"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 17,
+            "sentence": 2
+          },
+          "sentenceSha256": "81d1894e5ca098d3bfaf12dd19cbd70ed9c689a26ae056a21ca960f3bdf2c892"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 15,
+            "sentence": 2
+          },
+          "sentenceSha256": "c92868079aa8e0b8feaf8455483d315f55a4fa7cb1901676d1d637795646d83a"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 16,
+            "sentence": 1
+          },
+          "sentenceSha256": "570f5359162e47264937be83e9827cdd65cf2e879570069541f0c0796a1bc8f1"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "ea3421b4dc0463d0f82d5f34888a31c925e5749539429dc1a5465f0a086d707b"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 25,
+            "sentence": 1
+          },
+          "sentenceSha256": "676a1024e80c2c5e51fa2224f1f05405f52b6a6d50bf9cfab47e1ad4eea08788"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 2
+          },
+          "sentenceSha256": "af0c5c84c6f8b3110d4c05449df820e4c1767f899fd2f86f6c7d1ed9d807dc97"
+        },
+        {
+          "articleId": "01100101.20260726092625001",
+          "locator": {
+            "paragraph": 22,
+            "sentence": 2
+          },
+          "sentenceSha256": "f21388a19d95165031a19fce041494a7d8c80e8964fbf2560e656b535a51fa89"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v1",
+        "engine": {
+          "name": "AgendaFrame Korean evidence rules",
+          "version": "korean-evidence-rules-v2",
+          "approach": "deterministic_extractive_rules",
+          "semantic_ai": false,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "이 결과는 한국어 어휘·구문 규칙에 따른 구조화 관측이며 사람의 의미 해석이나 LLM 판정이 아닙니다.",
+            "취재원에게 귀속된 발언은 언론사의 서술·입장으로 합산하지 않습니다.",
+            "확인되지 않음은 기사에 요소가 없다는 단정이 아니라 분석 가능한 본문에서 규칙으로 관측되지 않았다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100101.20260726092625001",
+          "published_at": "2026-07-26T09:26:25+09:00",
+          "title_sha256": "e9638bb5be82f6187ae8580a265c0d68ac0ac6665a00693e4066161e597900fa",
+          "body_sha256": "8cb9025724c314e7140a497968c9dd49a85158ca3accec0e481c22605769055b",
+          "body_character_count": 1648,
+          "body_word_count": 388,
+          "paragraph_count": 39,
+          "sentence_count": 59
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": "스트레이트 기사",
+          "basis": "명시적인 의견·해설 장르 표지가 없음",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "source-1",
+            "name": "26일 경찰 등",
+            "role": "judiciary_law_enforcement",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1,
+            "role_label": "법조·수사기관",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 14,
+                  "sentence": 1
+                },
+                "sentence_sha256": "60d76aacb6a5d4735ea60a3223451fd8cd2f8d88b919bd6f0fe9f7a18fedb5fd"
+              }
+            ]
+          },
+          {
+            "actor_id": "source-2",
+            "name": "경찰 관계자",
+            "role": "anonymous_official",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
+            "role_label": "익명·비실명 관계자",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 18,
+                  "sentence": 1
+                },
+                "sentence_sha256": "73db504025b67baedcb55776da52e002c2df4dc879694c6f3837369474c746ad"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "moderate",
+          "score": 48,
+          "signals": [
+            {
+              "code": "historical_context",
+              "label": "과거 경과",
+              "sentence_count": 2,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 18,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "73db504025b67baedcb55776da52e002c2df4dc879694c6f3837369474c746ad"
+                },
+                {
+                  "locator": {
+                    "paragraph": 20,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "e37089e40d0f08f2cd2a30f7fd39536b15cfddb518c75eaafd2c3b5f40883af3"
+                }
+              ]
+            },
+            {
+              "code": "statistics",
+              "label": "수치·통계",
+              "sentence_count": 8,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 13,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "9d42e5f0c26279e06d1f7b56bfcfe98db104efdf767264b8d85d7e3cfc9db1c6"
+                },
+                {
+                  "locator": {
+                    "paragraph": 22,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "d4909a050c84acb32653b30585edf557970dc7625c47e130c072d6113593d31d"
+                }
+              ]
+            },
+            {
+              "code": "counter_position",
+              "label": "반론·대안 관점",
+              "sentence_count": 1,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 17,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "81d1894e5ca098d3bfaf12dd19cbd70ed9c689a26ae056a21ca960f3bdf2c892"
+                }
+              ]
+            }
+          ],
+          "caution": "맥락 깊이는 관측 가능한 배경·통계·제도·반론 표지의 범위를 나타내며 기사 품질 점수가 아닙니다."
+        },
+        "scope": {
+          "code": "episodic",
+          "label": "사례·사건 중심",
+          "episodic_sentence_count": 9,
+          "thematic_sentence_count": 1,
+          "evidence": {
+            "episodic": [
+              {
+                "locator": {
+                  "paragraph": 13,
+                  "sentence": 1
+                },
+                "sentence_sha256": "9d42e5f0c26279e06d1f7b56bfcfe98db104efdf767264b8d85d7e3cfc9db1c6"
+              },
+              {
+                "locator": {
+                  "paragraph": 15,
+                  "sentence": 1
+                },
+                "sentence_sha256": "6ea70ce33e61ab81cbaa43052ede78a5eb93084d064d1fa33ebc5704ebf9fabd"
+              }
+            ],
+            "thematic": [
+              {
+                "locator": {
+                  "paragraph": 28,
+                  "sentence": 1
+                },
+                "sentence_sha256": "ca10812ea6847673d84f0ca7e42924a33c6c93f9b7fa2230899a267929b42485"
+              }
+            ]
+          },
+          "caution": "기사의 설명 범위를 나타내는 보조 분류이며 보도의 우열을 뜻하지 않습니다."
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "human_interest",
+              "label": "인간적 관심",
+              "sentence_count": 4,
+              "share_of_sentences": 0.068,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 15,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "c92868079aa8e0b8feaf8455483d315f55a4fa7cb1901676d1d637795646d83a"
+                },
+                {
+                  "locator": {
+                    "paragraph": 16,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "570f5359162e47264937be83e9827cdd65cf2e879570069541f0c0796a1bc8f1"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "conflict",
+              "label": "갈등",
+              "sentence_count": 2,
+              "share_of_sentences": 0.034,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "ea3421b4dc0463d0f82d5f34888a31c925e5749539429dc1a5465f0a086d707b"
+                },
+                {
+                  "locator": {
+                    "paragraph": 25,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "676a1024e80c2c5e51fa2224f1f05405f52b6a6d50bf9cfab47e1ad4eea08788"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "crime_punishment",
+              "label": "범죄·처벌",
+              "sentence_count": 12,
+              "share_of_sentences": 0.203,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "af0c5c84c6f8b3110d4c05449df820e4c1767f899fd2f86f6c7d1ed9d807dc97"
+                },
+                {
+                  "locator": {
+                    "paragraph": 13,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "9d42e5f0c26279e06d1f7b56bfcfe98db104efdf767264b8d85d7e3cfc9db1c6"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "health_safety",
+              "label": "건강·안전",
+              "sentence_count": 1,
+              "share_of_sentences": 0.017,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 22,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "f21388a19d95165031a19fce041494a7d8c80e8964fbf2560e656b535a51fa89"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            }
+          ],
+          "controlled_associations": [
+            {
+              "source": "citizens",
+              "target": "law_justice",
+              "sentence_count": 2
+            },
+            {
+              "source": "citizens",
+              "target": "safety_health",
+              "sentence_count": 1
+            },
+            {
+              "source": "law_justice",
+              "target": "safety_health",
+              "sentence_count": 1
+            }
+          ]
+        },
+        "framing_devices": [
+          {
+            "code": "statistics",
+            "label": "수치·통계",
+            "count": 8,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 13,
+                  "sentence": 1
+                },
+                "sentence_sha256": "9d42e5f0c26279e06d1f7b56bfcfe98db104efdf767264b8d85d7e3cfc9db1c6"
+              },
+              {
+                "locator": {
+                  "paragraph": 22,
+                  "sentence": 1
+                },
+                "sentence_sha256": "d4909a050c84acb32653b30585edf557970dc7625c47e130c072d6113593d31d"
+              }
+            ]
+          },
+          {
+            "code": "contrast",
+            "label": "대조·반론",
+            "count": 1,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 17,
+                  "sentence": 2
+                },
+                "sentence_sha256": "81d1894e5ca098d3bfaf12dd19cbd70ed9c689a26ae056a21ca960f3bdf2c892"
+              }
+            ]
+          },
+          {
+            "code": "historical_reference",
+            "label": "과거 경과",
+            "count": 2,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 18,
+                  "sentence": 1
+                },
+                "sentence_sha256": "73db504025b67baedcb55776da52e002c2df4dc879694c6f3837369474c746ad"
+              },
+              {
+                "locator": {
+                  "paragraph": 20,
+                  "sentence": 1
+                },
+                "sentence_sha256": "e37089e40d0f08f2cd2a30f7fd39536b15cfddb518c75eaafd2c3b5f40883af3"
+              }
+            ]
+          },
+          {
+            "code": "personal_example",
+            "label": "개인·현장 사례",
+            "count": 5,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 15,
+                  "sentence": 2
+                },
+                "sentence_sha256": "c92868079aa8e0b8feaf8455483d315f55a4fa7cb1901676d1d637795646d83a"
+              },
+              {
+                "locator": {
+                  "paragraph": 16,
+                  "sentence": 1
+                },
+                "sentence_sha256": "570f5359162e47264937be83e9827cdd65cf2e879570069541f0c0796a1bc8f1"
+              }
+            ]
+          },
+          {
+            "code": "source_attribution",
+            "label": "명시적 취재원 인용",
+            "count": 2,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 14,
+                  "sentence": 1
+                },
+                "sentence_sha256": "60d76aacb6a5d4735ea60a3223451fd8cd2f8d88b919bd6f0fe9f7a18fedb5fd"
+              },
+              {
+                "locator": {
+                  "paragraph": 18,
+                  "sentence": 1
+                },
+                "sentence_sha256": "73db504025b67baedcb55776da52e002c2df4dc879694c6f3837369474c746ad"
+              }
+            ]
+          }
+        ],
+        "review": {
+          "status": "machine_observation_unreviewed",
+          "requires_human_review": true,
+          "publication_rule": "책임 귀속·규범적 평가·매체 간 차이는 사람 검토 전 확정 표현으로 공개하지 않습니다."
+        },
+        "extraction": {
+          "strategy": "bigkinds_workbook_body",
+          "quality": 1,
+          "extractor_version": "workbook-body-v1",
+          "text_scope": "article_body",
+          "body_character_count": 1648,
+          "body_fingerprint": "d182c2a0a10520ccf91ec678e55abb70657498a0cf34af020dc6dd6e18ad649b"
+        }
+      }
+    },
+    {
+      "articleId": "01100201.20260726074621001",
+      "status": "succeeded",
+      "engine": {
+        "label": "rules_local",
+        "engineLabel": "rules_local",
+        "semanticAi": false,
+        "status": "succeeded",
+        "model": "korean-evidence-rules-v2",
+        "promptVersion": null,
+        "schemaVersion": "agendaframe.article-frame-profile.v1",
+        "source": "top5-2026-07-26.json",
+        "articleId": "01100201.20260726074621001",
+        "evidenceCount": 14,
+        "bodySha256": "69e26cd05a0800933d27070c299592ee2c2c6a6ec285ec0bcab655b85a21c65d"
+      },
+      "evidence": [
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 5,
+            "sentence": 1
+          },
+          "sentenceSha256": "303837e7b4f0f959cce8838ceae192bbd30588fb2254fc4b213073fdd642c4d1"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 8,
+            "sentence": 1
+          },
+          "sentenceSha256": "dad88c88ab6eb943f94f12fd15c535c5226096ee8306a33798d7504ad4ea85b8"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 9,
+            "sentence": 1
+          },
+          "sentenceSha256": "992955a4581eec34146e022c3807995b067062f424deb01306ddae27f3e2eec4"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 11,
+            "sentence": 1
+          },
+          "sentenceSha256": "8c330f8f3fe11fab35c3f9cdc358242ea809960a5d7e675c481c138548f4a7d7"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 15,
+            "sentence": 1
+          },
+          "sentenceSha256": "aba6c203bacb390a0a352e806e8642a4155ffa497a72dc4dec8013a0f1f8c335"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 10,
+            "sentence": 2
+          },
+          "sentenceSha256": "78c6813c8a913cc80b9c12f0f176da1c6eab02e5ee30eebf41dc7aa7f22c2919"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "1f2251eccb16c2c5318cdd7f3ab45f85f2a1d3a6795bf05d5caf7535d94dee06"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 13,
+            "sentence": 1
+          },
+          "sentenceSha256": "f64948f3f63466f3af597a56851c1ab7c345ac05e62a42ed4877ab66c20da93b"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 4,
+            "sentence": 1
+          },
+          "sentenceSha256": "54951a7382353eca6ffe530d0886c84085adc6b45cd5205faefe586d289e8ace"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 7,
+            "sentence": 1
+          },
+          "sentenceSha256": "9e5a55bdad71668eb5248a8ecc36f4b2295117ad785576f656eaeb094b513ecd"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "c5a1517910c5ad596210e9aae56f3ba477ddbf184542086764628fbd607aec76"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 14,
+            "sentence": 2
+          },
+          "sentenceSha256": "aae49fd250c52d0db5dd23432082d8560d82d2b3ceb0e07bf80538e2b33152d8"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 14,
+            "sentence": 1
+          },
+          "sentenceSha256": "15515d4564d1ab4bee4d5917c78de93b13a57e7caa7719aa3818aa8c60437a0f"
+        },
+        {
+          "articleId": "01100201.20260726074621001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "369f00357e0138342de7e5341d2185e5f2895e87dadff760a69babee49d8cd2b"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v1",
+        "engine": {
+          "name": "AgendaFrame Korean evidence rules",
+          "version": "korean-evidence-rules-v2",
+          "approach": "deterministic_extractive_rules",
+          "semantic_ai": false,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "이 결과는 한국어 어휘·구문 규칙에 따른 구조화 관측이며 사람의 의미 해석이나 LLM 판정이 아닙니다.",
+            "취재원에게 귀속된 발언은 언론사의 서술·입장으로 합산하지 않습니다.",
+            "확인되지 않음은 기사에 요소가 없다는 단정이 아니라 분석 가능한 본문에서 규칙으로 관측되지 않았다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100201.20260726074621001",
+          "published_at": "2026-07-26T07:46:21+09:00",
+          "title_sha256": "96dc0ff34e75ddec6810f4f6a7d775b2522bfff31e1bdabb0b71c3462a0dfda3",
+          "body_sha256": "69e26cd05a0800933d27070c299592ee2c2c6a6ec285ec0bcab655b85a21c65d",
+          "body_character_count": 1747,
+          "body_word_count": 440,
+          "paragraph_count": 16,
+          "sentence_count": 23
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": "스트레이트 기사",
+          "basis": "명시적인 의견·해설 장르 표지가 없음",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "source-1",
+            "name": "발생 아파트 주민 등",
+            "role": "affected_person",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1,
+            "role_label": "당사자·시민",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 1
+                },
+                "sentence_sha256": "303837e7b4f0f959cce8838ceae192bbd30588fb2254fc4b213073fdd642c4d1"
+              }
+            ]
+          },
+          {
+            "actor_id": "source-2",
+            "name": "제출에 동행했던 한 주민",
+            "role": "affected_person",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
+            "role_label": "당사자·시민",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 8,
+                  "sentence": 1
+                },
+                "sentence_sha256": "dad88c88ab6eb943f94f12fd15c535c5226096ee8306a33798d7504ad4ea85b8"
+              }
+            ]
+          },
+          {
+            "actor_id": "source-3",
+            "name": "또 다른 주민",
+            "role": "affected_person",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
+            "role_label": "당사자·시민",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 9,
+                  "sentence": 1
+                },
+                "sentence_sha256": "992955a4581eec34146e022c3807995b067062f424deb01306ddae27f3e2eec4"
+              }
+            ]
+          },
+          {
+            "actor_id": "source-4",
+            "name": "수사 당국 등",
+            "role": "government_official",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1,
+            "role_label": "정부·공공기관",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 11,
+                  "sentence": 1
+                },
+                "sentence_sha256": "8c330f8f3fe11fab35c3f9cdc358242ea809960a5d7e675c481c138548f4a7d7"
+              }
+            ]
+          },
+          {
+            "actor_id": "source-5",
+            "name": "경찰 관계자",
+            "role": "anonymous_official",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
+            "role_label": "익명·비실명 관계자",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 15,
+                  "sentence": 1
+                },
+                "sentence_sha256": "aba6c203bacb390a0a352e806e8642a4155ffa497a72dc4dec8013a0f1f8c335"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "deep",
+          "score": 96,
+          "signals": [
+            {
+              "code": "historical_context",
+              "label": "과거 경과",
+              "sentence_count": 2,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 5,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "303837e7b4f0f959cce8838ceae192bbd30588fb2254fc4b213073fdd642c4d1"
+                },
+                {
+                  "locator": {
+                    "paragraph": 10,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "78c6813c8a913cc80b9c12f0f176da1c6eab02e5ee30eebf41dc7aa7f22c2919"
+                }
+              ]
+            },
+            {
+              "code": "statistics",
+              "label": "수치·통계",
+              "sentence_count": 2,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "1f2251eccb16c2c5318cdd7f3ab45f85f2a1d3a6795bf05d5caf7535d94dee06"
+                },
+                {
+                  "locator": {
+                    "paragraph": 13,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "f64948f3f63466f3af597a56851c1ab7c345ac05e62a42ed4877ab66c20da93b"
+                }
+              ]
+            },
+            {
+              "code": "institutional_context",
+              "label": "법·제도 맥락",
+              "sentence_count": 4,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 4,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "54951a7382353eca6ffe530d0886c84085adc6b45cd5205faefe586d289e8ace"
+                },
+                {
+                  "locator": {
+                    "paragraph": 7,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "9e5a55bdad71668eb5248a8ecc36f4b2295117ad785576f656eaeb094b513ecd"
+                }
+              ]
+            },
+            {
+              "code": "comparative_context",
+              "label": "비교 맥락",
+              "sentence_count": 2,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 4,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "54951a7382353eca6ffe530d0886c84085adc6b45cd5205faefe586d289e8ace"
+                },
+                {
+                  "locator": {
+                    "paragraph": 11,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "8c330f8f3fe11fab35c3f9cdc358242ea809960a5d7e675c481c138548f4a7d7"
+                }
+              ]
+            },
+            {
+              "code": "causal_context",
+              "label": "원인·배경 설명",
+              "sentence_count": 1,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "c5a1517910c5ad596210e9aae56f3ba477ddbf184542086764628fbd607aec76"
+                }
+              ]
+            },
+            {
+              "code": "counter_position",
+              "label": "반론·대안 관점",
+              "sentence_count": 2,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 7,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "9e5a55bdad71668eb5248a8ecc36f4b2295117ad785576f656eaeb094b513ecd"
+                },
+                {
+                  "locator": {
+                    "paragraph": 14,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "aae49fd250c52d0db5dd23432082d8560d82d2b3ceb0e07bf80538e2b33152d8"
+                }
+              ]
+            }
+          ],
+          "caution": "맥락 깊이는 관측 가능한 배경·통계·제도·반론 표지의 범위를 나타내며 기사 품질 점수가 아닙니다."
+        },
+        "scope": {
+          "code": "episodic",
+          "label": "사례·사건 중심",
+          "episodic_sentence_count": 12,
+          "thematic_sentence_count": 2,
+          "evidence": {
+            "episodic": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "369f00357e0138342de7e5341d2185e5f2895e87dadff760a69babee49d8cd2b"
+              },
+              {
+                "locator": {
+                  "paragraph": 2,
+                  "sentence": 1
+                },
+                "sentence_sha256": "1f2251eccb16c2c5318cdd7f3ab45f85f2a1d3a6795bf05d5caf7535d94dee06"
+              }
+            ],
+            "thematic": [
+              {
+                "locator": {
+                  "paragraph": 4,
+                  "sentence": 1
+                },
+                "sentence_sha256": "54951a7382353eca6ffe530d0886c84085adc6b45cd5205faefe586d289e8ace"
+              },
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 1
+                },
+                "sentence_sha256": "303837e7b4f0f959cce8838ceae192bbd30588fb2254fc4b213073fdd642c4d1"
+              }
+            ]
+          },
+          "caution": "기사의 설명 범위를 나타내는 보조 분류이며 보도의 우열을 뜻하지 않습니다."
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "human_interest",
+              "label": "인간적 관심",
+              "sentence_count": 7,
+              "share_of_sentences": 0.304,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "c5a1517910c5ad596210e9aae56f3ba477ddbf184542086764628fbd607aec76"
+                },
+                {
+                  "locator": {
+                    "paragraph": 5,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "303837e7b4f0f959cce8838ceae192bbd30588fb2254fc4b213073fdd642c4d1"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "crime_punishment",
+              "label": "범죄·처벌",
+              "sentence_count": 13,
+              "share_of_sentences": 0.565,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "1f2251eccb16c2c5318cdd7f3ab45f85f2a1d3a6795bf05d5caf7535d94dee06"
+                },
+                {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "c5a1517910c5ad596210e9aae56f3ba477ddbf184542086764628fbd607aec76"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "legality_constitutionality",
+              "label": "법·헌정",
+              "sentence_count": 4,
+              "share_of_sentences": 0.174,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 4,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "54951a7382353eca6ffe530d0886c84085adc6b45cd5205faefe586d289e8ace"
+                },
+                {
+                  "locator": {
+                    "paragraph": 7,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "9e5a55bdad71668eb5248a8ecc36f4b2295117ad785576f656eaeb094b513ecd"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "health_safety",
+              "label": "건강·안전",
+              "sentence_count": 1,
+              "share_of_sentences": 0.043,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 13,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "f64948f3f63466f3af597a56851c1ab7c345ac05e62a42ed4877ab66c20da93b"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "quality_of_life",
+              "label": "삶의 질",
+              "sentence_count": 1,
+              "share_of_sentences": 0.043,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 14,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "15515d4564d1ab4bee4d5917c78de93b13a57e7caa7719aa3818aa8c60437a0f"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            }
+          ],
+          "controlled_associations": [
+            {
+              "source": "citizens",
+              "target": "law_justice",
+              "sentence_count": 5
+            },
+            {
+              "source": "government",
+              "target": "law_justice",
+              "sentence_count": 2
+            },
+            {
+              "source": "citizens",
+              "target": "government",
+              "sentence_count": 1
+            },
+            {
+              "source": "citizens",
+              "target": "safety_health",
+              "sentence_count": 1
+            },
+            {
+              "source": "law_justice",
+              "target": "welfare_livelihood",
+              "sentence_count": 1
+            }
+          ]
+        },
+        "framing_devices": [
+          {
+            "code": "statistics",
+            "label": "수치·통계",
+            "count": 2,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 2,
+                  "sentence": 1
+                },
+                "sentence_sha256": "1f2251eccb16c2c5318cdd7f3ab45f85f2a1d3a6795bf05d5caf7535d94dee06"
+              },
+              {
+                "locator": {
+                  "paragraph": 13,
+                  "sentence": 1
+                },
+                "sentence_sha256": "f64948f3f63466f3af597a56851c1ab7c345ac05e62a42ed4877ab66c20da93b"
+              }
+            ]
+          },
+          {
+            "code": "contrast",
+            "label": "대조·반론",
+            "count": 2,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 7,
+                  "sentence": 1
+                },
+                "sentence_sha256": "9e5a55bdad71668eb5248a8ecc36f4b2295117ad785576f656eaeb094b513ecd"
+              },
+              {
+                "locator": {
+                  "paragraph": 14,
+                  "sentence": 2
+                },
+                "sentence_sha256": "aae49fd250c52d0db5dd23432082d8560d82d2b3ceb0e07bf80538e2b33152d8"
+              }
+            ]
+          },
+          {
+            "code": "historical_reference",
+            "label": "과거 경과",
+            "count": 2,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 1
+                },
+                "sentence_sha256": "303837e7b4f0f959cce8838ceae192bbd30588fb2254fc4b213073fdd642c4d1"
+              },
+              {
+                "locator": {
+                  "paragraph": 10,
+                  "sentence": 2
+                },
+                "sentence_sha256": "78c6813c8a913cc80b9c12f0f176da1c6eab02e5ee30eebf41dc7aa7f22c2919"
+              }
+            ]
+          },
+          {
+            "code": "personal_example",
+            "label": "개인·현장 사례",
+            "count": 8,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 3,
+                  "sentence": 1
+                },
+                "sentence_sha256": "c5a1517910c5ad596210e9aae56f3ba477ddbf184542086764628fbd607aec76"
+              },
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 1
+                },
+                "sentence_sha256": "303837e7b4f0f959cce8838ceae192bbd30588fb2254fc4b213073fdd642c4d1"
+              }
+            ]
+          },
+          {
+            "code": "evaluative_headline",
+            "label": "평가적 제목",
+            "count": 1,
+            "appears_in_lead": true,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "369f00357e0138342de7e5341d2185e5f2895e87dadff760a69babee49d8cd2b"
+              }
+            ]
+          },
+          {
+            "code": "source_attribution",
+            "label": "명시적 취재원 인용",
+            "count": 5,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 1
+                },
+                "sentence_sha256": "303837e7b4f0f959cce8838ceae192bbd30588fb2254fc4b213073fdd642c4d1"
+              },
+              {
+                "locator": {
+                  "paragraph": 8,
+                  "sentence": 1
+                },
+                "sentence_sha256": "dad88c88ab6eb943f94f12fd15c535c5226096ee8306a33798d7504ad4ea85b8"
+              },
+              {
+                "locator": {
+                  "paragraph": 9,
+                  "sentence": 1
+                },
+                "sentence_sha256": "992955a4581eec34146e022c3807995b067062f424deb01306ddae27f3e2eec4"
+              }
+            ]
+          }
+        ],
+        "review": {
+          "status": "machine_observation_unreviewed",
+          "requires_human_review": true,
+          "publication_rule": "책임 귀속·규범적 평가·매체 간 차이는 사람 검토 전 확정 표현으로 공개하지 않습니다."
+        },
+        "extraction": {
+          "strategy": "bigkinds_workbook_body",
+          "quality": 1,
+          "extractor_version": "workbook-body-v1",
+          "text_scope": "article_body",
+          "body_character_count": 1747,
+          "body_fingerprint": "35554624367668b6574262acbb82a98bcf169f12d7dc63ba6c2d9815edc56594"
+        }
+      }
+    }
+  ],
+  "comparison": {
+    "engine": {
+      "label": "rules_local",
+      "engineLabel": "rules_local",
+      "semanticAi": false,
+      "status": "succeeded",
+      "model": "korean-evidence-rules-v2",
+      "promptVersion": null,
+      "schemaVersion": "agendaframe.issue-frame-comparison.v1",
+      "source": "top5-2026-07-26.json"
+    },
+    "data": {
+      "schema_version": "agendaframe.issue-frame-comparison.v1",
+      "issue": {
+        "issue_id": "bigkinds-2026-07-26-top-3",
+        "issue_title": "검경 수사팀 수사 진행"
+      },
+      "method": {
+        "article_first": true,
+        "comparison_unit": "same_event_articles",
+        "outlet_voice_separated_from_sources": true,
+        "source_dominance_check": {
+          "detected": true,
+          "attributed_item_count": 1,
+          "total_item_count": 1,
+          "attributed_share": 1
+        },
+        "secondary_taxonomies_are_descriptive_only": true,
+        "semantic_ai": false,
+        "caution": "동일 사건으로 검증된 기사끼리만 비교해야 하며, 관측되지 않은 요소를 의도적 누락으로 해석하지 않습니다.",
+        "engine_label": "rules_local"
+      },
+      "sample": {
+        "article_count": 4,
+        "outlet_count": 4,
+        "independent_media_group_count": 4,
+        "body_evidence_article_count": 4,
+        "short_body_article_count": 0,
+        "genres": {
+          "straight_news": 4
+        },
+        "context_depth": {
+          "deep": 2,
+          "moderate": 2
+        },
+        "scope": {
+          "episodic": 4
+        },
+        "article_ids": [
+          "01100611.20260726160027001",
+          "01101101.20260726143628001",
+          "01100101.20260726092625001",
+          "01100201.20260726074621001"
+        ]
+      },
+      "comparison_axes": [
+        {
+          "dimension": "problem_definition",
+          "label": "문제 정의",
+          "observed_article_count": 1,
+          "outlet_narration_article_count": 0,
+          "source_attributed_only_article_count": 1,
+          "not_observed_article_count": 3,
+          "patterns": [
+            {
+              "code": "safety_harm_problem",
+              "variant_key": "safety_harm_problem",
+              "public_paraphrase": "익명·비실명 관계자의 발언·설명에서 사람의 안전과 구체적 피해를 사건의 핵심 문제로 다룹니다.",
+              "voice_scope": "attributed_source",
+              "article_count": 1,
+              "outlets": [
+                "한국일보"
+              ],
+              "article_ids": [
+                "01101101.20260726143628001"
+              ],
+              "evidence": [
+                {
+                  "article_id": "01101101.20260726143628001",
+                  "source_id": "hankookilbo",
+                  "locator": {
+                    "paragraph": 11,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "cc33eea731fe3edcf5f79533413c5205ecd6b54c4e8bc5395a0fd522c16dd358"
+                }
+              ]
+            }
+          ],
+          "not_observed_statement": "3건에서는 분석 가능한 본문 안에서 문제 정의 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다."
+        },
+        {
+          "dimension": "causal_interpretation",
+          "label": "원인 해석",
+          "observed_article_count": 0,
+          "outlet_narration_article_count": 0,
+          "source_attributed_only_article_count": 0,
+          "not_observed_article_count": 4,
+          "patterns": [],
+          "not_observed_statement": "4건에서는 분석 가능한 본문 안에서 원인 해석 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다."
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "label": "책임 귀속",
+          "observed_article_count": 0,
+          "outlet_narration_article_count": 0,
+          "source_attributed_only_article_count": 0,
+          "not_observed_article_count": 4,
+          "patterns": [],
+          "not_observed_statement": "4건에서는 분석 가능한 본문 안에서 책임 귀속 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다."
+        },
+        {
+          "dimension": "moral_evaluation",
+          "label": "규범적 평가",
+          "observed_article_count": 0,
+          "outlet_narration_article_count": 0,
+          "source_attributed_only_article_count": 0,
+          "not_observed_article_count": 4,
+          "patterns": [],
+          "not_observed_statement": "4건에서는 분석 가능한 본문 안에서 규범적 평가 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다."
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "label": "해법·처방",
+          "observed_article_count": 0,
+          "outlet_narration_article_count": 0,
+          "source_attributed_only_article_count": 0,
+          "not_observed_article_count": 4,
+          "patterns": [],
+          "not_observed_statement": "4건에서는 분석 가능한 본문 안에서 해법·처방 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다."
+        }
+      ],
+      "source_lens": {
+        "roles": [
+          {
+            "role": "affected_person",
+            "role_label": "당사자·시민",
+            "article_count": 2,
+            "outlet_count": 2,
+            "direct_quote_count": 3,
+            "indirect_attribution_count": 1
+          },
+          {
+            "role": "judiciary_law_enforcement",
+            "role_label": "법조·수사기관",
+            "article_count": 3,
+            "outlet_count": 3,
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 3
+          },
+          {
+            "role": "anonymous_official",
+            "role_label": "익명·비실명 관계자",
+            "article_count": 3,
+            "outlet_count": 3,
+            "direct_quote_count": 3,
+            "indirect_attribution_count": 0
+          },
+          {
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "article_count": 1,
+            "outlet_count": 1,
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1
+          }
+        ],
+        "by_outlet": [
+          {
+            "outlet": "서울신문",
+            "roles": [
+              {
+                "role": "judiciary_law_enforcement",
+                "role_label": "법조·수사기관",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "outlet": "한국일보",
+            "roles": [
+              {
+                "role": "judiciary_law_enforcement",
+                "role_label": "법조·수사기관",
+                "count": 1
+              },
+              {
+                "role": "affected_person",
+                "role_label": "당사자·시민",
+                "count": 1
+              },
+              {
+                "role": "anonymous_official",
+                "role_label": "익명·비실명 관계자",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "outlet": "경향신문",
+            "roles": [
+              {
+                "role": "judiciary_law_enforcement",
+                "role_label": "법조·수사기관",
+                "count": 1
+              },
+              {
+                "role": "anonymous_official",
+                "role_label": "익명·비실명 관계자",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "outlet": "국민일보",
+            "roles": [
+              {
+                "role": "affected_person",
+                "role_label": "당사자·시민",
+                "count": 3
+              },
+              {
+                "role": "government_official",
+                "role_label": "정부·공공기관",
+                "count": 1
+              },
+              {
+                "role": "anonymous_official",
+                "role_label": "익명·비실명 관계자",
+                "count": 1
+              }
+            ]
+          }
+        ],
+        "caution": "인용 횟수는 목소리의 가시성을 나타내는 관측치이며, 취재원의 신뢰도나 매체의 지지 여부를 뜻하지 않습니다."
+      },
+      "secondary_descriptors": {
+        "generic_frames": [
+          {
+            "code": "human_interest",
+            "label": "인간적 관심",
+            "article_count": 4
+          },
+          {
+            "code": "conflict",
+            "label": "갈등",
+            "article_count": 2
+          }
+        ],
+        "policy_frames": [
+          {
+            "code": "crime_punishment",
+            "label": "범죄·처벌",
+            "article_count": 4
+          },
+          {
+            "code": "health_safety",
+            "label": "건강·안전",
+            "article_count": 4
+          },
+          {
+            "code": "legality_constitutionality",
+            "label": "법·헌정",
+            "article_count": 3
+          },
+          {
+            "code": "quality_of_life",
+            "label": "삶의 질",
+            "article_count": 3
+          },
+          {
+            "code": "security_defense",
+            "label": "안보·국방",
+            "article_count": 1
+          }
+        ]
+      },
+      "not_observed_statements": [
+        "3건에서는 분석 가능한 본문 안에서 문제 정의 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다.",
+        "4건에서는 분석 가능한 본문 안에서 원인 해석 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다.",
+        "4건에서는 분석 가능한 본문 안에서 책임 귀속 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다.",
+        "4건에서는 분석 가능한 본문 안에서 규범적 평가 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다.",
+        "4건에서는 분석 가능한 본문 안에서 해법·처방 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다."
+      ],
+      "summary_30_seconds": {
+        "sample": "4개 매체의 4건을 본문 근거 위치와 함께 비교했습니다.",
+        "common_ground": "비교 표본에서 관측된 핵심 문제·원인·평가 표현의 대부분은 취재원 발언에 귀속됩니다.",
+        "main_difference": "취재원 발언이 설명을 지배해, 표현 차이를 매체 자체의 프레임 차이로 확정하지 않았습니다.",
+        "divergence_detected": false,
+        "source_context": "분석 항목의 100%가 직접·간접인용 또는 인용 경계의 표현으로 분류됐습니다. 같은 발언을 어느 위치에 배치했는지는 비교할 수 있지만, 이를 매체의 동의로 해석하면 안 됩니다.",
+        "limit": "이 요약은 규칙 기반 관측 결과입니다. 5개 비교 축에서 일부 미관측이 있으며, 사람 검토 전에는 매체의 의도·편향·사실성 판정으로 사용하면 안 됩니다."
+      },
+      "review": {
+        "status": "machine_comparison_unreviewed",
+        "requires_human_review": true,
+        "cluster_status": "not_reviewed",
+        "cluster_reviewed_at": null
+      }
+    },
+    "evidence": [
+      {
+        "articleId": "01101101.20260726143628001",
+        "sourceId": "hankookilbo",
+        "locator": {
+          "paragraph": 11,
+          "sentence": 1
+        },
+        "sentenceSha256": "cc33eea731fe3edcf5f79533413c5205ecd6b54c4e8bc5395a0fd522c16dd358"
+      }
+    ]
+  },
+  "lineage": {
+    "contractVersion": "agendaframe.initial-five.public.v1",
+    "basisDate": "2026-07-26",
+    "source": {
+      "top5SchemaVersion": "agendaframe.top5-framing-pilot.v1",
+      "top5GeneratedAt": "2026-07-31T17:12:31.662Z",
+      "metadataSchemaVersion": "agendaframe.metadata-issue-cluster.v1",
+      "metadataGeneratedAt": "2026-08-02T14:33:45.855490+00:00",
+      "semanticDirectory": "semantic-rank3-2026-07-26",
+      "semanticFileCount": 4
+    },
+    "issueId": "bigkinds-2026-07-26-top-3"
+  }
+}

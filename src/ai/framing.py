@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 import unicodedata
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+from backend.analysis_state import AnalysisState, analysis_idempotency_fingerprint
 from backend.config import RuntimeConfig
 from crawler.models import ArticleDocument
 from crawler.text import evidence_fits_sentence
@@ -88,6 +90,7 @@ SOURCE_ROLES = {
 MAX_PUBLIC_PARAPHRASE_CHARACTERS = 160
 MAX_VERBATIM_BODY_MATCH_CHARACTERS = 24
 VERTEX_RETRY_BACKOFF_SECONDS = (2.0, 4.0)
+MAX_VERTEX_ATTEMPTS = 3
 
 
 @dataclass(frozen=True)
@@ -106,6 +109,11 @@ class FrameResult:
     input_truncated: bool | None = None
     approval_lineage: dict[str, str] | None = None
     fallback_reason: str | None = None
+    analysis_state: str | None = None
+    attempt_count: int = 0
+    idempotency_fingerprint: str | None = None
+    error_code: str | None = None
+    retryable_failure: bool = False
 
 
 class FrameAnalyzer(Protocol):
@@ -132,10 +140,7 @@ def _unsafe_public_value_reason(body: str, value: str) -> str | None:
         normalized_value[start : start + match_length] in normalized_body
         for start in range(len(normalized_value) - match_length + 1)
     ):
-        return (
-            "Frame values must not reproduce long contiguous passages from "
-            "the article body."
-        )
+        return "Frame values must not reproduce long contiguous passages from the article body."
     return None
 
 
@@ -168,6 +173,32 @@ def validate_frame_result(article: ArticleDocument, result: FrameResult) -> None
         raise ValueError("Frame result article ID does not match its input.")
     if result.decision not in {"analyze", "review_needed", "defer"}:
         raise ValueError("Invalid framing decision.")
+    if result.analysis_state is not None:
+        try:
+            analysis_state = AnalysisState(result.analysis_state)
+        except ValueError as error:
+            raise ValueError("Invalid durable analysis state.") from error
+        if result.decision == "analyze" and analysis_state is not AnalysisState.SUCCEEDED:
+            raise ValueError("Successful framing decisions must have succeeded state.")
+        if result.decision != "analyze" and analysis_state is AnalysisState.SUCCEEDED:
+            raise ValueError("Non-analyze framing decisions cannot have succeeded state.")
+    if (
+        not isinstance(result.attempt_count, int)
+        or isinstance(result.attempt_count, bool)
+        or result.attempt_count < 0
+    ):
+        raise ValueError("Invalid framing attempt count.")
+    if result.idempotency_fingerprint is not None:
+        if (
+            not isinstance(result.idempotency_fingerprint, str)
+            or len(result.idempotency_fingerprint) != 64
+            or any(
+                character not in "0123456789abcdef" for character in result.idempotency_fingerprint
+            )
+        ):
+            raise ValueError("Invalid analysis idempotency fingerprint.")
+    if not isinstance(result.retryable_failure, bool):
+        raise ValueError("Invalid retryable failure marker.")
     seen: set[str] = set()
     text = article.body_text or ""
     if result.text_scope is not None and result.text_scope != article.text_scope:
@@ -200,6 +231,7 @@ def validate_frame_result(article: ArticleDocument, result: FrameResult) -> None
         for key, value in result.approval_lineage.items():
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"Frame result approval lineage contains an invalid {key}.")
+    observed_dimensions = 0
     for dimension in result.dimensions:
         name = dimension.get("dimension")
         if name not in FRAME_DIMENSIONS or name in seen:
@@ -216,6 +248,7 @@ def validate_frame_result(article: ArticleDocument, result: FrameResult) -> None
             continue
         if status not in {"supported", "conflicting"}:
             raise ValueError("Invalid dimension status.")
+        observed_dimensions += 1
         if voice_kind not in {
             "journalist_narration",
             "direct_quote",
@@ -235,6 +268,11 @@ def validate_frame_result(article: ArticleDocument, result: FrameResult) -> None
         _validate_evidence_spans(article, result, evidence)
     if seen != FRAME_DIMENSIONS:
         raise ValueError("Frame result must contain every frame dimension exactly once.")
+    if result.decision == "analyze" and observed_dimensions == 0:
+        raise ValueError(
+            "Analyze decision requires at least one supported or conflicting dimension "
+            "with aligned evidence."
+        )
     for actor in result.actors:
         if actor.get("role") not in SOURCE_ROLES:
             raise ValueError("Actor observation has an invalid source role.")
@@ -248,8 +286,9 @@ def validate_frame_result(article: ArticleDocument, result: FrameResult) -> None
 
 
 class VertexFrameAnalyzer:
-    def __init__(self, config: RuntimeConfig) -> None:
+    def __init__(self, config: RuntimeConfig, client_factory: Any | None = None) -> None:
         self.config = config
+        self.client_factory = client_factory
 
     def analyze(self, article: ArticleDocument) -> FrameResult:
         if not article.body_text:
@@ -279,10 +318,14 @@ class VertexFrameAnalyzer:
             from google import genai
             from google.genai import types
 
-            client = genai.Client(
-                vertexai=True,
-                project=self.config.project_id,
-                location=self.config.vertex.location,
+            client = (
+                self.client_factory(self.config)
+                if self.client_factory is not None
+                else genai.Client(
+                    vertexai=True,
+                    project=self.config.project_id,
+                    location=self.config.vertex.location,
+                )
             )
         except Exception as error:
             return _review_needed_result(
@@ -290,11 +333,20 @@ class VertexFrameAnalyzer:
                 self.config,
                 body,
                 f"Vertex AI client is unavailable ({type(error).__name__}).",
+                attempt_count=0,
+                error_code="client_unavailable",
+                retryable_failure=False,
             )
 
-        prompt = _build_prompt(article.article_id, article.title, body)
+        base_prompt = _build_prompt(article.article_id, article.title, body)
+        prompt = base_prompt
         last_error: Exception | None = None
-        for attempt in range(self.config.vertex.max_attempts):
+        all_dimensions_unobserved = False
+        attempts_made = 0
+        attempt_limit = max(1, min(int(self.config.vertex.max_attempts), MAX_VERTEX_ATTEMPTS))
+        for attempt in range(attempt_limit):
+            call_attempt = attempt + 1
+            attempts_made = call_attempt
             try:
                 response = client.models.generate_content(
                     model=self.config.vertex.model,
@@ -309,10 +361,13 @@ class VertexFrameAnalyzer:
                         ),
                     ),
                 )
+                payload = json.loads(response.text)
+                if not isinstance(payload, dict):
+                    raise ValueError("Vertex AI response must be a JSON object.")
                 payload = _align_payload_evidence(
                     article.article_id,
                     body,
-                    json.loads(response.text),
+                    payload,
                 )
                 usage = getattr(response, "usage_metadata", None)
                 result = FrameResult(
@@ -328,11 +383,28 @@ class VertexFrameAnalyzer:
                     text_scope=article.text_scope,
                     analyzed_character_count=len(body),
                     input_truncated=len(body) < len(article.body_text),
+                    analysis_state=AnalysisState.SUCCEEDED.value,
+                    attempt_count=call_attempt,
+                    idempotency_fingerprint=analysis_idempotency_fingerprint(
+                        article,
+                        model_id=self.config.vertex.model,
+                        prompt_version=self.config.vertex.prompt_version,
+                        schema_version=self.config.vertex.schema_version,
+                    ),
                 )
                 validate_frame_result(article, result)
                 return result
             except (TypeError, ValueError) as error:
                 last_error = error
+                if "requires at least one supported or conflicting dimension" in str(error):
+                    all_dimensions_unobserved = True
+                feedback = re.sub(r"\s+", " ", str(error)).strip()[:400]
+                prompt = (
+                    f"{base_prompt}\n\n"
+                    "이전 응답은 아래 검증 오류를 통과하지 못했습니다. 기사에 없는 내용을 "
+                    "추가하지 말고 JSON 스키마와 근거 위치만 바로잡아 전체 객체를 다시 반환하세요.\n"
+                    f"검증 오류: {feedback or 'output_validation_error'}"
+                )
             except Exception as error:
                 last_error = error
             # A failed model call must not discard the article or abort the
@@ -343,11 +415,10 @@ class VertexFrameAnalyzer:
                 and last_error is not None
                 and _is_retryable_vertex_error(last_error)
             ):
-                time.sleep(VERTEX_RETRY_BACKOFF_SECONDS[attempt])
+                time.sleep(_retry_delay_seconds(last_error, attempt))
                 continue
-            if (
-                attempt < self.config.vertex.max_attempts - 1
-                and isinstance(last_error, (TypeError, ValueError))
+            if attempt < self.config.vertex.max_attempts - 1 and isinstance(
+                last_error, (TypeError, ValueError)
             ):
                 # Model JSON/evidence validation can be nondeterministic even
                 # at temperature 0. Retry malformed output without a delay;
@@ -355,12 +426,37 @@ class VertexFrameAnalyzer:
                 continue
             break
 
-        reason = (
-            "Vertex AI output failed evidence validation; human review is required."
-            if last_error is None
-            else f"Vertex AI output failed validation ({type(last_error).__name__}); human review is required."
+        if all_dimensions_unobserved:
+            reason = (
+                "Vertex AI returned no supported or conflicting frame dimension after bounded "
+                "validation retries; human review is required."
+            )
+        else:
+            reason = (
+                "Vertex AI output failed evidence validation; human review is required."
+                if last_error is None
+                else f"Vertex AI output failed validation ({type(last_error).__name__}); human review is required."
+            )
+        return _review_needed_result(
+            article,
+            self.config,
+            body,
+            reason,
+            attempt_count=attempts_made,
+            error_code=(
+                "all_dimensions_unobserved"
+                if all_dimensions_unobserved
+                else _failure_code(last_error)
+            ),
+            retryable_failure=bool(
+                last_error
+                and not all_dimensions_unobserved
+                and (
+                    _is_retryable_vertex_error(last_error)
+                    or isinstance(last_error, (TypeError, ValueError))
+                )
+            ),
         )
-        return _review_needed_result(article, self.config, body, reason)
 
 
 def _review_needed_result(
@@ -368,6 +464,10 @@ def _review_needed_result(
     config: RuntimeConfig,
     body: str,
     reason: str,
+    *,
+    attempt_count: int,
+    error_code: str,
+    retryable_failure: bool,
 ) -> FrameResult:
     """Return a safe, persistable result when semantic analysis is unavailable.
 
@@ -397,6 +497,16 @@ def _review_needed_result(
         analyzed_character_count=len(body),
         input_truncated=len(body) < len(article.body_text or ""),
         fallback_reason=reason,
+        analysis_state=AnalysisState.REVIEW_NEEDED.value,
+        attempt_count=attempt_count,
+        idempotency_fingerprint=analysis_idempotency_fingerprint(
+            article,
+            model_id=config.vertex.model,
+            prompt_version=config.vertex.prompt_version,
+            schema_version=config.vertex.schema_version,
+        ),
+        error_code=error_code,
+        retryable_failure=retryable_failure,
     )
 
 
@@ -404,6 +514,10 @@ def _is_retryable_vertex_error(error: Exception) -> bool:
     status_code = getattr(error, "status_code", None)
     if status_code is None:
         status_code = getattr(error, "code", None)
+    try:
+        status_code = int(status_code)
+    except (TypeError, ValueError):
+        status_code = None
     if status_code in {408, 429, 500, 502, 503, 504}:
         return True
     message = str(error).upper()
@@ -416,6 +530,54 @@ def _is_retryable_vertex_error(error: Exception) -> bool:
             "DEADLINE EXCEEDED",
         )
     )
+
+
+def _retry_delay_seconds(error: Exception, attempt: int) -> float:
+    retry_after = getattr(error, "retry_after", None)
+    if retry_after is None:
+        headers = getattr(error, "headers", None)
+        if isinstance(headers, dict):
+            retry_after = headers.get("retry-after") or headers.get("Retry-After")
+    try:
+        if retry_after is not None:
+            return min(max(float(retry_after), 0.0), 30.0)
+    except (TypeError, ValueError):
+        pass
+    return VERTEX_RETRY_BACKOFF_SECONDS[min(attempt, len(VERTEX_RETRY_BACKOFF_SECONDS) - 1)]
+
+
+def _failure_code(error: Exception | None) -> str:
+    if error is None:
+        return "unknown_failure"
+    status_code = getattr(error, "status_code", None) or getattr(error, "code", None)
+    try:
+        normalized_status = int(status_code)
+    except (TypeError, ValueError):
+        normalized_status = None
+    if normalized_status:
+        return f"vertex_http_{normalized_status}"
+    if isinstance(error, json.JSONDecodeError):
+        return "malformed_json"
+    if isinstance(error, (TypeError, ValueError)):
+        message = str(error).lower()
+        validation_codes = (
+            ("not a verbatim article substring", "evidence_not_verbatim"),
+            ("exact article excerpt", "evidence_excerpt_missing"),
+            ("fit inside one article sentence", "evidence_crosses_sentence"),
+            ("not reproduce long contiguous", "public_paraphrase_too_verbatim"),
+            ("concise public paraphrases", "public_paraphrase_too_long"),
+            ("valid frame family", "frame_family_invalid"),
+            ("frame family is incompatible", "frame_family_invalid"),
+            ("unstated dimensions cannot", "unstated_dimension_has_value"),
+            ("valid voice kind", "voice_kind_invalid"),
+            ("requires a value and evidence", "supported_dimension_invalid"),
+            ("at least one supported", "all_dimensions_unobserved"),
+        )
+        for marker, code in validation_codes:
+            if marker in message:
+                return code
+        return "output_validation_error"
+    return "vertex_call_error"
 
 
 def _build_prompt(article_id: str, title: str, body: str) -> str:
@@ -507,9 +669,7 @@ def _align_payload_evidence(
                     normalized_excerpt = _normalized_match_text(excerpt)
                     normalized_cursor = 0
                     while normalized_excerpt:
-                        position = normalized_body.find(
-                            normalized_excerpt, normalized_cursor
-                        )
+                        position = normalized_body.find(normalized_excerpt, normalized_cursor)
                         if position < 0:
                             break
                         end_position = position + len(normalized_excerpt)
@@ -585,7 +745,16 @@ def _response_schema() -> dict[str, Any]:
             "status": {"type": "string"},
             "value": {"type": ["string", "null"]},
             "frame_family": {"type": ["string", "null"]},
-            "voice_kind": {"type": ["string", "null"]},
+            "voice_kind": {
+                "type": ["string", "null"],
+                "enum": [
+                    "journalist_narration",
+                    "direct_quote",
+                    "indirect_source",
+                    "uncertain_quote",
+                    None,
+                ],
+            },
             "evidence": {"type": "array", "items": evidence},
             "reason": {"type": ["string", "null"]},
         },
@@ -603,7 +772,10 @@ def _response_schema() -> dict[str, Any]:
         "type": "object",
         "properties": {
             "role": {"type": "string"},
-            "voice_kind": {"type": "string"},
+            "voice_kind": {
+                "type": "string",
+                "enum": ["direct_quote", "indirect_source", "uncertain_quote"],
+            },
             "evidence": {"type": "array", "items": evidence},
         },
         "required": ["role", "voice_kind", "evidence"],

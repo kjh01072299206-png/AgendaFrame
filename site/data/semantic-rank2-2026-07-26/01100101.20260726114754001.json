@@ -1,0 +1,276 @@
+{
+  "articleId": "01100101.20260726114754001",
+  "profile": {
+    "schema_version": "agendaframe.article-frame-profile.v2",
+    "lineage": {
+      "model_id": "gemini-2.5-flash-lite",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "model_output_schema_version": 3,
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "approval": {
+        "authorization_id": "bigkinds-2026-07-26-rank-2-bd61980687cd",
+        "fingerprint": "ab93e3b58284e40bc01ccd710260787313a2b52613309a639a8d2b092aac5ade",
+        "cluster_id": "bigkinds-2026-07-26-rank-2",
+        "reviewer": "AgendaFrame agent-assisted evidence audit",
+        "reviewed_at": "2026-08-02T00:00:00+09:00",
+        "approved_urls_sha256": "15d2662921b661b9b34f1238e00abe9fc16b3e2a6de0be94b975c255808e52dc"
+      }
+    },
+    "engine": {
+      "name": "AgendaFrame Vertex evidence coder",
+      "version": "gemini-2.5-flash-lite",
+      "approach": "semantic_evidence_bounded",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": 3,
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ]
+    },
+    "article": {
+      "article_id": "01100101.20260726114754001",
+      "upstream_article_id": "01100101.20260726114754001",
+      "published_at": "2026-07-26T11:47:54+09:00",
+      "title_sha256": "e6db07b08c9b6951fc3442273594eee992b7d15cf2be667499a513356b95a1cd",
+      "body_sha256": "9577b311c219c593646322e4e7dd103d6b0708ea4f61b62d262db99f8a818aba",
+      "body_character_count": 1150,
+      "body_word_count": 270,
+      "paragraph_count": 1,
+      "sentence_count": 13,
+      "raw_body_retained": false
+    },
+    "extraction": {
+      "text_scope": "transient_public_page_extract",
+      "analyzed_character_count": 1150,
+      "input_truncated": false
+    },
+    "genre": {
+      "code": "unknown",
+      "label": "자동 분류 안 함",
+      "evidence": []
+    },
+    "dimensions": {
+      "problem_definition": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:35e20a25b95f244831f89bc592763622aef376db6dcf66e16d4ed205dd175db8",
+            "code": "semantic_problem_definition",
+            "frame_family": "political_conflict",
+            "variant_key": "semantic:problem_definition:family:political_conflict",
+            "public_paraphrase": "국회의원의 폭력 행위는 공당의 일원으로서 있을 수 없는 일이다.",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "03eea14249cdacfb3a8d21324b7bbeae96f449003f1995fcf26d50112aaca443"
+            }
+          }
+        ]
+      },
+      "causal_interpretation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:40787c577a3822b5c2355c9e9cbadc018fc74bb05a597ab06791341503c487ce",
+            "code": "semantic_causal_interpretation",
+            "frame_family": "individual_action",
+            "variant_key": "semantic:causal_interpretation:family:individual_action",
+            "public_paraphrase": "상임위원회 배정 결과에 대한 불만으로 인한 개인의 행동이 원인이다.",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "2b4c5503ffbe1085564a0ec4b7575d911e154eb52f31181c6d7999cfb64e8b96"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "claim_id": "claim:d923899942c10486d1c2da22442129c4ed7048074765045e92c0e22500b3c42b",
+            "code": "semantic_responsibility_attribution",
+            "frame_family": "individual_actor",
+            "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+            "public_paraphrase": "권영진 의원 스스로 거취를 정해야 한다.",
+            "voice": {
+              "kind": "direct_quote",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "7db70f136329c8ae7b6c70857a327d58af3ee7412c92d49388daf7565df4dde8"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "claim_id": "claim:7fbb85b913860297376869507b7b577c89c9addf8d0928a6f205ef1acc7c7489",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "effectiveness_negative",
+            "variant_key": "semantic:moral_evaluation:family:effectiveness_negative",
+            "public_paraphrase": "폭력적인 행위는 조폭의 행태와 다를 바 없으며 재발 방지를 위해 강력한 조치가 필요하다.",
+            "voice": {
+              "kind": "direct_quote",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 7
+              },
+              "sentence_sha256": "5a2eab0e637e2c03c04ab65003813962a7d5449affffa7059f43cd5cf42ce08a"
+            }
+          },
+          {
+            "claim_id": "claim:7fbb85b913860297376869507b7b577c89c9addf8d0928a6f205ef1acc7c7489",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "effectiveness_negative",
+            "variant_key": "semantic:moral_evaluation:family:effectiveness_negative",
+            "public_paraphrase": "폭력적인 행위는 조폭의 행태와 다를 바 없으며 재발 방지를 위해 강력한 조치가 필요하다.",
+            "voice": {
+              "kind": "direct_quote",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "cf939017579da11e1043742d9875da0fa75b5bbdbb9e7a73e00fff77af885bc4"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:3eff6ca8208cfcb20306db68a1206d669a907cebc21751b6cbde6a9b8c76d605",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "investigation_accountability",
+            "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+            "public_paraphrase": "당 최고위원회에서 이번 사건에 대한 조치를 논의하고 결정해야 한다.",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 11
+              },
+              "sentence_sha256": "8f5b66237efd18b1ca9a63a62f7ee548b74b4f33bbecbd785bb4306993a5c488"
+            }
+          },
+          {
+            "claim_id": "claim:3eff6ca8208cfcb20306db68a1206d669a907cebc21751b6cbde6a9b8c76d605",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "investigation_accountability",
+            "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+            "public_paraphrase": "당 최고위원회에서 이번 사건에 대한 조치를 논의하고 결정해야 한다.",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 11
+              },
+              "sentence_sha256": "8f5b66237efd18b1ca9a63a62f7ee548b74b4f33bbecbd785bb4306993a5c488"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:649b6c4fd105de5699e73d39b72e42b7b713b31533c867bada1637cb75e915e7",
+        "role": "political_actor",
+        "role_label": "정당·정치권",
+        "direct_quote_count": 4,
+        "indirect_attribution_count": 0,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 5
+            },
+            "sentence_sha256": "7db70f136329c8ae7b6c70857a327d58af3ee7412c92d49388daf7565df4dde8"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 8
+            },
+            "sentence_sha256": "03eea14249cdacfb3a8d21324b7bbeae96f449003f1995fcf26d50112aaca443"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 11
+            },
+            "sentence_sha256": "8f5b66237efd18b1ca9a63a62f7ee548b74b4f33bbecbd785bb4306993a5c488"
+          }
+        ]
+      }
+    ],
+    "context_depth": {
+      "level": "unknown"
+    },
+    "scope": {
+      "code": "unknown"
+    },
+    "secondary_descriptors": {
+      "generic_frames": [],
+      "policy_frames": [],
+      "controlled_associations": []
+    },
+    "framing_devices": [],
+    "review": {
+      "status": "automatic_draft",
+      "analysis_decision": "analyze",
+      "analysis_state": "succeeded",
+      "attempt_count": 1,
+      "idempotency_fingerprint": "9cf3fc7e49c682a7a1c49e55cfebbab7dfcd6f13494c6bb68944bdc8255bb758",
+      "error_code": null,
+      "fallback_reason": null,
+      "requires_human_review": true,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+    }
+  }
+}

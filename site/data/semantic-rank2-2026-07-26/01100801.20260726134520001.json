@@ -1,0 +1,251 @@
+{
+  "articleId": "01100801.20260726134520001",
+  "profile": {
+    "schema_version": "agendaframe.article-frame-profile.v2",
+    "lineage": {
+      "model_id": "gemini-2.5-flash-lite",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+      "model_output_schema_version": 3,
+      "comparison_engine_version": "korean-evidence-rules-v2",
+      "approval": {
+        "authorization_id": "bigkinds-2026-07-26-rank-2-bd61980687cd",
+        "fingerprint": "ab93e3b58284e40bc01ccd710260787313a2b52613309a639a8d2b092aac5ade",
+        "cluster_id": "bigkinds-2026-07-26-rank-2",
+        "reviewer": "AgendaFrame agent-assisted evidence audit",
+        "reviewed_at": "2026-08-02T00:00:00+09:00",
+        "approved_urls_sha256": "15d2662921b661b9b34f1238e00abe9fc16b3e2a6de0be94b975c255808e52dc"
+      }
+    },
+    "engine": {
+      "name": "AgendaFrame Vertex evidence coder",
+      "version": "gemini-2.5-flash-lite",
+      "approach": "semantic_evidence_bounded",
+      "semantic_ai": true,
+      "status": "semantic_draft",
+      "prompt_version": "2.5.0",
+      "analysis_schema_version": 3,
+      "evidence_storage": "locator_and_salted_sha256_only",
+      "limitations": [
+        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+      ]
+    },
+    "article": {
+      "article_id": "01100801.20260726134520001",
+      "upstream_article_id": "01100801.20260726134520001",
+      "published_at": "2026-07-26T13:45:20+09:00",
+      "title_sha256": "2f63d57b985892a32b38d4d7857389e605937b1447d10e4ef6f1c6f198e1d4dd",
+      "body_sha256": "c19bd074aea2f3ccbf2375a8e0b39f8a086f208d0102aa5df58bd8a2f0d9a84d",
+      "body_character_count": 825,
+      "body_word_count": 201,
+      "paragraph_count": 1,
+      "sentence_count": 13,
+      "raw_body_retained": false
+    },
+    "extraction": {
+      "text_scope": "transient_public_page_extract",
+      "analyzed_character_count": 825,
+      "input_truncated": false
+    },
+    "genre": {
+      "code": "unknown",
+      "label": "자동 분류 안 함",
+      "evidence": []
+    },
+    "dimensions": {
+      "problem_definition": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:b7f06baa712a9bb1559afe891b193640836d142fba4113b602c57556cbca8bf1",
+            "code": "semantic_problem_definition",
+            "frame_family": "political_conflict",
+            "variant_key": "semantic:problem_definition:family:political_conflict",
+            "public_paraphrase": "국회 상임위 배정 결과에 불만을 품은 의원이 원내대표의 멱살을 잡는 사건 발생",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "b5c3652db4fe58d4a51e78c7282da6ae2b308e4042b3671a08103ba4fa3c0795"
+            }
+          }
+        ]
+      },
+      "causal_interpretation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:57d3243e2cad0528632a3d53d8dc075289388a37cdf9b3987274c01302697583",
+            "code": "semantic_causal_interpretation",
+            "frame_family": "individual_action",
+            "variant_key": "semantic:causal_interpretation:family:individual_action",
+            "public_paraphrase": "권영진 의원이 원하는 상임위 간사직을 배정받지 못한 개인적인 불만",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "94adddf82b7effdfdd3d7a49508b8b7dd2f3c46c7c491593b451d69515c0f863"
+            }
+          }
+        ]
+      },
+      "responsibility_attribution": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "claim_id": "claim:d3bd86753483d919c4f1b4ee58bf8478aec35369b57b9aff1314fc0987d23f2d",
+            "code": "semantic_responsibility_attribution",
+            "frame_family": "legislature_politics",
+            "variant_key": "semantic:responsibility_attribution:family:legislature_politics",
+            "public_paraphrase": "권영진 의원 스스로 거취를 정해야 한다는 당 지도부의 입장",
+            "voice": {
+              "kind": "direct_quote",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "89eb281e7b62f98d5e95ddae0fa945d1139014454d096533f5cf48ed64d1ca0c"
+            }
+          }
+        ]
+      },
+      "moral_evaluation": {
+        "status": "source_attributed",
+        "model_status": "supported",
+        "outlet_narration_observed": false,
+        "items": [
+          {
+            "claim_id": "claim:7e2a11836c7802d093984433e4de67278ab87d88b5039ce87989b5fc3b91d63d",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "effectiveness_negative",
+            "variant_key": "semantic:moral_evaluation:family:effectiveness_negative",
+            "public_paraphrase": "폭력적인 행위에 대한 강력한 조치와 재발 방지 필요성 강조",
+            "voice": {
+              "kind": "direct_quote",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "0d1cfab36b9748b15f44cdbb0c4f752dabc3278c963c5062379d04f38f57542d"
+            }
+          },
+          {
+            "claim_id": "claim:7e2a11836c7802d093984433e4de67278ab87d88b5039ce87989b5fc3b91d63d",
+            "code": "semantic_moral_evaluation",
+            "frame_family": "effectiveness_negative",
+            "variant_key": "semantic:moral_evaluation:family:effectiveness_negative",
+            "public_paraphrase": "폭력적인 행위에 대한 강력한 조치와 재발 방지 필요성 강조",
+            "voice": {
+              "kind": "direct_quote",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "2f48ee31755cac2842129ba01916856951a0167f724a66777d3ff73d1d25924c"
+            }
+          }
+        ]
+      },
+      "treatment_recommendation": {
+        "status": "observed",
+        "model_status": "supported",
+        "outlet_narration_observed": true,
+        "items": [
+          {
+            "claim_id": "claim:5f1ebc696e6e194882fa2fc0c0bc37a6dd4856479c4c924aa2c4da819e940c18",
+            "code": "semantic_treatment_recommendation",
+            "frame_family": "institutional_check",
+            "variant_key": "semantic:treatment_recommendation:family:institutional_check",
+            "public_paraphrase": "권영진 의원의 징계 및 거취 문제에 대한 의원총회 결정",
+            "voice": {
+              "kind": "journalist_narration",
+              "speaker_role": null
+            },
+            "evidence": {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 12
+              },
+              "sentence_sha256": "a5e2184d420e772712acf7112d25fb833b0cd8da7eefe7c072c2cba79eff73b3"
+            }
+          }
+        ]
+      }
+    },
+    "actors_and_sources": [
+      {
+        "actor_id": "actor:7a05962bb32d35e35fb1e4c0c1dc31c830c1f805e3376833305b73cca5b81720",
+        "role": "government_official",
+        "role_label": "정부·공공기관",
+        "direct_quote_count": 2,
+        "indirect_attribution_count": 0,
+        "evidence": [
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 4
+            },
+            "sentence_sha256": "89eb281e7b62f98d5e95ddae0fa945d1139014454d096533f5cf48ed64d1ca0c"
+          },
+          {
+            "locator": {
+              "paragraph": 1,
+              "sentence": 5
+            },
+            "sentence_sha256": "0d1cfab36b9748b15f44cdbb0c4f752dabc3278c963c5062379d04f38f57542d"
+          }
+        ]
+      }
+    ],
+    "context_depth": {
+      "level": "unknown"
+    },
+    "scope": {
+      "code": "unknown"
+    },
+    "secondary_descriptors": {
+      "generic_frames": [],
+      "policy_frames": [],
+      "controlled_associations": []
+    },
+    "framing_devices": [],
+    "review": {
+      "status": "automatic_draft",
+      "analysis_decision": "analyze",
+      "analysis_state": "succeeded",
+      "attempt_count": 2,
+      "idempotency_fingerprint": "00f91b1c986fe63099912e1ddd55ddeda102bdae1e251fcfd942938f76c41f69",
+      "error_code": null,
+      "fallback_reason": null,
+      "requires_human_review": true,
+      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+    }
+  }
+}

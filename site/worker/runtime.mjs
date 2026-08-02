@@ -13,6 +13,7 @@ import {
 import publicApiSchema from "../docs/public-api.schema.json" with { type: "json" };
 import { handleCommunityRequest } from "./community.mjs";
 import { handleEvidenceChat } from "./evidence-chat.mjs";
+import { handleInitialFiveRequest } from "./initial-five-api.mjs";
 import { handleReleaseAdminRequest } from "./release-admin.mjs";
 
 const analysisProvider = getAnalysisProvider();
@@ -853,16 +854,13 @@ export function validateStructuredImportRows(inputRows, panel = sourcePanel, now
     const input = inputRows[index];
     const excerpt = normalizeArticleBody(input.excerpt ?? input.body_excerpt);
     const textScope = String(input.textScope ?? input.text_scope ?? "provider_excerpt").trim();
-    if (!["provider_excerpt", "article_body"].includes(textScope)) {
-      throw new Error(`${index + 1}행: 본문 범위는 provider_excerpt 또는 article_body여야 합니다.`);
+    if (!["provider_excerpt", "article_body", "transient_public_page_extract"].includes(textScope)) {
+      throw new Error(`${index + 1}행: 본문 범위는 provider_excerpt 또는 article_body여야 합니다. 호환 입력으로 transient_public_page_extract도 지원합니다.`);
     }
-    const maximumCharacters = textScope === "article_body" ? 200_000 : 5_000;
+    const isFullBody = textScope === "article_body" || textScope === "transient_public_page_extract";
+    const maximumCharacters = isFullBody ? 200_000 : 5_000;
     if (excerpt.length < 40 || excerpt.length > maximumCharacters) {
-      throw new Error(`${index + 1}행: ${textScope === "article_body" ? "분석용 기사 본문" : "분석용 본문 발췌"}은 40~${maximumCharacters.toLocaleString("ko-KR")}자여야 합니다.`);
-    }
-    const textScope = String(input.text_scope ?? input.textScope ?? "provider_excerpt").trim();
-    if (!["provider_excerpt", "transient_public_page_extract"].includes(textScope)) {
-      throw new Error(`${index + 1}행: 본문 처리 범위를 확인해 주세요.`);
+      throw new Error(`${index + 1}행: ${isFullBody ? "분석용 기사 본문" : "분석용 본문 발췌"}은 40~${maximumCharacters.toLocaleString("ko-KR")}자여야 합니다.`);
     }
     return {
       ...metadata,
@@ -1929,6 +1927,7 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
       return [evidence];
     });
   };
+  const publicEvidenceRefs = publicEvidenceList;
   const publicAnchor = (anchor) => anchor ? {
     groupId: anchor.group_id,
     label: anchor.label,
@@ -3861,6 +3860,8 @@ export async function handleApiRequest(request, env = {}) {
   const url = new URL(request.url);
   if (!url.pathname.startsWith("/api/")) return null;
 
+  const initialFiveResponse = await handleInitialFiveRequest(request);
+  if (initialFiveResponse) return initialFiveResponse;
   if (url.pathname === "/api/chat") return handleEvidenceChat(request, env);
   if (url.pathname.startsWith("/api/issues/") && url.pathname.endsWith("/community")) return handleCommunityRequest(request, env);
   if (url.pathname.startsWith("/api/comments/") && url.pathname.endsWith("/report")) return handleCommunityRequest(request, env);
