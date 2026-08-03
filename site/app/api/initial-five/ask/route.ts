@@ -176,9 +176,9 @@ export async function POST(request: Request) {
   return Response.json({
     ...result,
     issueId,
-    provider: "gemini_analysis_grounded_retrieval_v1",
+    provider: "claude_analysis_grounded_retrieval_v1",
     limitations: [
-      "새 사실을 생성하지 않고 성공한 Gemini 본문 분석의 공개 paraphrase만 검색합니다.",
+      "새 사실을 생성하지 않고 성공한 Claude 본문 분석의 공개 paraphrase만 검색합니다.",
       "기사 전문·원문 문장은 답변에 포함하지 않습니다.",
     ],
   }, { headers: { "Cache-Control": "no-store" } });

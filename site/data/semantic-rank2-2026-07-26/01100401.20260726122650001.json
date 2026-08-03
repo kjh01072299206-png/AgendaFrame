@@ -1,294 +1,335 @@
 {
-  "articleId": "01100401.20260726122650001",
-  "profile": {
-    "schema_version": "agendaframe.article-frame-profile.v2",
-    "lineage": {
-      "model_id": "gemini-2.5-flash-lite",
-      "prompt_version": "2.5.0",
-      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
-      "model_output_schema_version": 3,
-      "comparison_engine_version": "korean-evidence-rules-v2",
-      "approval": {
-        "authorization_id": "bigkinds-2026-07-26-rank-2-bd61980687cd",
-        "fingerprint": "ab93e3b58284e40bc01ccd710260787313a2b52613309a639a8d2b092aac5ade",
-        "cluster_id": "bigkinds-2026-07-26-rank-2",
-        "reviewer": "AgendaFrame agent-assisted evidence audit",
-        "reviewed_at": "2026-08-02T00:00:00+09:00",
-        "approved_urls_sha256": "15d2662921b661b9b34f1238e00abe9fc16b3e2a6de0be94b975c255808e52dc"
+ "articleId": "01100401.20260726122650001",
+ "profile": {
+  "schema_version": "agendaframe.article-frame-profile.v2",
+  "lineage": {
+   "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+   "model_output_schema_version": 3,
+   "comparison_engine_version": "korean-evidence-rules-v2",
+   "approval": {
+    "authorization_id": "bigkinds-2026-07-26-rank-2-bd61980687cd",
+    "fingerprint": "ab93e3b58284e40bc01ccd710260787313a2b52613309a639a8d2b092aac5ade",
+    "cluster_id": "bigkinds-2026-07-26-rank-2",
+    "reviewer": "AgendaFrame agent-assisted evidence audit",
+    "reviewed_at": "2026-08-02T00:00:00+09:00",
+    "approved_urls_sha256": "15d2662921b661b9b34f1238e00abe9fc16b3e2a6de0be94b975c255808e52dc"
+   }
+  },
+  "engine": {
+   "name": "AgendaFrame Claude evidence coder",
+   "version": "claude-sonnet-5x2-opus-5-adjudicated",
+   "approach": "semantic_evidence_bounded",
+   "semantic_ai": true,
+   "status": "semantic_draft",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": 3,
+   "evidence_storage": "locator_and_salted_sha256_only",
+   "limitations": [
+    "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+    "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+    "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+   ]
+  },
+  "article": {
+   "article_id": "01100401.20260726122650001",
+   "upstream_article_id": "01100401.20260726122650001",
+   "published_at": "2026-07-26T12:26:50+09:00",
+   "title_sha256": "02174e832d7e903008be48a8a09d809455516ee834d6aa92c6144a664d19799a",
+   "body_sha256": "6af068e021bdd76e8c0074fb9dc7dc8327840d02212da3834ca0855f9f8aef11",
+   "body_character_count": 1313,
+   "body_word_count": 314,
+   "paragraph_count": 1,
+   "sentence_count": 17,
+   "raw_body_retained": false
+  },
+  "extraction": {
+   "text_scope": "transient_public_page_extract",
+   "analyzed_character_count": 1313,
+   "input_truncated": false
+  },
+  "genre": {
+   "code": "unknown",
+   "label": "자동 분류 안 함",
+   "evidence": []
+  },
+  "dimensions": {
+   "problem_definition": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:caa2871a657588fea1737366978aadc44b0964e3789d56295e3434e8acb3b782",
+      "code": "semantic_problem_definition",
+      "frame_family": "political_conflict",
+      "variant_key": "semantic:problem_definition:family:political_conflict",
+      "public_paraphrase": "위원회 자리 배분을 둘러싼 당내 다툼이 몸싸움으로 번지고, 해당 의원의 자리 유지 여부가 당의 현안으로 부상한 사안으로 규정된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 3
+       },
+       "sentence_sha256": "3153912bbbb9d02acb47dd44e54f64e037706fb36a666653ba7201fe6cbefc55"
       }
-    },
-    "engine": {
-      "name": "AgendaFrame Vertex evidence coder",
-      "version": "gemini-2.5-flash-lite",
-      "approach": "semantic_evidence_bounded",
-      "semantic_ai": true,
-      "status": "semantic_draft",
-      "prompt_version": "2.5.0",
-      "analysis_schema_version": 3,
-      "evidence_storage": "locator_and_salted_sha256_only",
-      "limitations": [
-        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
-        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
-        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
-      ]
-    },
-    "article": {
-      "article_id": "01100401.20260726122650001",
-      "upstream_article_id": "01100401.20260726122650001",
-      "published_at": "2026-07-26T12:26:50+09:00",
-      "title_sha256": "02174e832d7e903008be48a8a09d809455516ee834d6aa92c6144a664d19799a",
-      "body_sha256": "6af068e021bdd76e8c0074fb9dc7dc8327840d02212da3834ca0855f9f8aef11",
-      "body_character_count": 1313,
-      "body_word_count": 314,
-      "paragraph_count": 1,
-      "sentence_count": 17,
-      "raw_body_retained": false
-    },
-    "extraction": {
-      "text_scope": "transient_public_page_extract",
-      "analyzed_character_count": 1313,
-      "input_truncated": false
-    },
-    "genre": {
-      "code": "unknown",
-      "label": "자동 분류 안 함",
-      "evidence": []
-    },
-    "dimensions": {
-      "problem_definition": {
-        "status": "observed",
-        "model_status": "supported",
-        "outlet_narration_observed": true,
-        "items": [
-          {
-            "claim_id": "claim:caa2871a657588fea1737366978aadc44b0964e3789d56295e3434e8acb3b782",
-            "code": "semantic_problem_definition",
-            "frame_family": "political_conflict",
-            "variant_key": "semantic:problem_definition:family:political_conflict",
-            "public_paraphrase": "국회의원의 폭력 행위로 인한 당내 갈등 및 윤리적 문제",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 3
-              },
-              "sentence_sha256": "3153912bbbb9d02acb47dd44e54f64e037706fb36a666653ba7201fe6cbefc55"
-            }
-          }
-        ]
+     }
+    ]
+   },
+   "causal_interpretation": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:d34dcdd73e23e88c9a357c83f5d5b3246e4651bfc8fd5f59d0ffff91feb30482",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "individual_action",
+      "variant_key": "semantic:causal_interpretation:family:individual_action",
+      "public_paraphrase": "해당 의원이 지도부의 자리 배분 결정에 불만을 품고 직접 물리적 행동에 나선 것이 이번 소동의 출발점으로 서술된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
       },
-      "causal_interpretation": {
-        "status": "observed",
-        "model_status": "supported",
-        "outlet_narration_observed": true,
-        "items": [
-          {
-            "claim_id": "claim:d34dcdd73e23e88c9a357c83f5d5b3246e4651bfc8fd5f59d0ffff91feb30482",
-            "code": "semantic_causal_interpretation",
-            "frame_family": "individual_action",
-            "variant_key": "semantic:causal_interpretation:family:individual_action",
-            "public_paraphrase": "국회의원의 개인적인 행동으로 인한 폭력 사태 발생",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 8
-              },
-              "sentence_sha256": "490b6a2623496668365f5f5e17a79cb4ce64f49cf92acf188b864f51e1e612b4"
-            }
-          }
-        ]
-      },
-      "responsibility_attribution": {
-        "status": "observed",
-        "model_status": "supported",
-        "outlet_narration_observed": true,
-        "items": [
-          {
-            "claim_id": "claim:f45ff0d48b6d976f387c895bac246c7f5a94e166f29c4aea1fd72a985da936d9",
-            "code": "semantic_responsibility_attribution",
-            "frame_family": "individual_actor",
-            "variant_key": "semantic:responsibility_attribution:family:individual_actor",
-            "public_paraphrase": "개인 의원의 잘못된 행동에 대한 책임 추궁",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 3
-              },
-              "sentence_sha256": "3153912bbbb9d02acb47dd44e54f64e037706fb36a666653ba7201fe6cbefc55"
-            }
-          },
-          {
-            "claim_id": "claim:f45ff0d48b6d976f387c895bac246c7f5a94e166f29c4aea1fd72a985da936d9",
-            "code": "semantic_responsibility_attribution",
-            "frame_family": "individual_actor",
-            "variant_key": "semantic:responsibility_attribution:family:individual_actor",
-            "public_paraphrase": "개인 의원의 잘못된 행동에 대한 책임 추궁",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 11
-              },
-              "sentence_sha256": "feae351d3ffa363dd2556c7e8199072745699a38b1ccffc1a97bcedd5097c6a9"
-            }
-          }
-        ]
-      },
-      "moral_evaluation": {
-        "status": "observed",
-        "model_status": "supported",
-        "outlet_narration_observed": true,
-        "items": [
-          {
-            "claim_id": "claim:467d256ac4ac2a88fa43d29100cbe407e8640219b8b23c1a89101b21369a6694",
-            "code": "semantic_moral_evaluation",
-            "frame_family": "effectiveness_negative",
-            "variant_key": "semantic:moral_evaluation:family:effectiveness_negative",
-            "public_paraphrase": "국회의원의 폭력 행위에 대한 부정적 평가 및 비판",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 9
-              },
-              "sentence_sha256": "b06722b27e19848e355e85ebe076103a32cac10aae497fa7a8c81f3901bfee8f"
-            }
-          },
-          {
-            "claim_id": "claim:467d256ac4ac2a88fa43d29100cbe407e8640219b8b23c1a89101b21369a6694",
-            "code": "semantic_moral_evaluation",
-            "frame_family": "effectiveness_negative",
-            "variant_key": "semantic:moral_evaluation:family:effectiveness_negative",
-            "public_paraphrase": "국회의원의 폭력 행위에 대한 부정적 평가 및 비판",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 14
-              },
-              "sentence_sha256": "5d67b4f09368db93b87c2e3791fa9e1ce5dba7b6b25ebbe61350e509b7b2e7b6"
-            }
-          }
-        ]
-      },
-      "treatment_recommendation": {
-        "status": "observed",
-        "model_status": "supported",
-        "outlet_narration_observed": true,
-        "items": [
-          {
-            "claim_id": "claim:e8a4145851ea1f967e3b122c2cc8a060717539459902a1d8df400a88a3a62461",
-            "code": "semantic_treatment_recommendation",
-            "frame_family": "strengthen_policy",
-            "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
-            "public_paraphrase": "당 차원의 중징계 및 추가 조치를 통한 재발 방지",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 10
-              },
-              "sentence_sha256": "c6191a93e5e912833616ff5007b996464d4203c5b7aa80a1884a0a104d15cc76"
-            }
-          },
-          {
-            "claim_id": "claim:e8a4145851ea1f967e3b122c2cc8a060717539459902a1d8df400a88a3a62461",
-            "code": "semantic_treatment_recommendation",
-            "frame_family": "strengthen_policy",
-            "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
-            "public_paraphrase": "당 차원의 중징계 및 추가 조치를 통한 재발 방지",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 16
-              },
-              "sentence_sha256": "a48b2f7774e1939aa791680780ccb29e00f44b2b0d290529ff41ba4b15412932"
-            }
-          }
-        ]
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 7
+       },
+       "sentence_sha256": "ce6b39325a49907ab8667bdb2da338c81d6f96ff7d19540e6ce5ee56a123450e"
       }
-    },
-    "actors_and_sources": [
-      {
-        "actor_id": "actor:7f8e3e5d45981b8fa9ef437228fc27685834eb853aa87b465bff8db18d53386e",
-        "role": "government_official",
-        "role_label": "정부·공공기관",
-        "direct_quote_count": 3,
-        "indirect_attribution_count": 0,
-        "evidence": [
-          {
-            "locator": {
-              "paragraph": 1,
-              "sentence": 5
-            },
-            "sentence_sha256": "f3aab131c74b962b9c9463c3014fbb80e65ebee1c0c5e0630f50d906d21dfd00"
-          },
-          {
-            "locator": {
-              "paragraph": 1,
-              "sentence": 12
-            },
-            "sentence_sha256": "5d34c24b2408ce358db5127547f9859daed228e7635cc1d72a829383be9023df"
-          },
-          {
-            "locator": {
-              "paragraph": 1,
-              "sentence": 13
-            },
-            "sentence_sha256": "429f022cbe3b5d6f8034ffa6c43d2f6a65e7b437f285172de993dacaf944e4ec"
-          }
-        ]
+     },
+     {
+      "claim_id": "claim:d34dcdd73e23e88c9a357c83f5d5b3246e4651bfc8fd5f59d0ffff91feb30482",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "individual_action",
+      "variant_key": "semantic:causal_interpretation:family:individual_action",
+      "public_paraphrase": "해당 의원이 지도부의 자리 배분 결정에 불만을 품고 직접 물리적 행동에 나선 것이 이번 소동의 출발점으로 서술된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 8
+       },
+       "sentence_sha256": "490b6a2623496668365f5f5e17a79cb4ce64f49cf92acf188b864f51e1e612b4"
       }
-    ],
-    "context_depth": {
-      "level": "unknown"
-    },
-    "scope": {
-      "code": "unknown"
-    },
-    "secondary_descriptors": {
-      "generic_frames": [],
-      "policy_frames": [],
-      "controlled_associations": []
-    },
-    "framing_devices": [],
-    "review": {
-      "status": "automatic_draft",
-      "analysis_decision": "analyze",
-      "analysis_state": "succeeded",
-      "attempt_count": 1,
-      "idempotency_fingerprint": "45297808be8bb7d982b10db0358c9d05c583af6168d853ca4d6410f686a1992f",
-      "error_code": null,
-      "fallback_reason": null,
-      "requires_human_review": true,
-      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
-    }
+     }
+    ]
+   },
+   "responsibility_attribution": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:b3f1431ac90e2b92165ef8d158f79be5e276f6de2173efc46eb9854c36aff57d",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "individual_actor",
+      "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+      "public_paraphrase": "당 지도부는 수습의 몫을 당사자 개인에게 넘기며 진퇴를 직접 결정하라고 요구한다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 5
+       },
+       "sentence_sha256": "f3aab131c74b962b9c9463c3014fbb80e65ebee1c0c5e0630f50d906d21dfd00"
+      }
+     },
+     {
+      "claim_id": "claim:b3f1431ac90e2b92165ef8d158f79be5e276f6de2173efc46eb9854c36aff57d",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "individual_actor",
+      "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+      "public_paraphrase": "당 지도부는 수습의 몫을 당사자 개인에게 넘기며 진퇴를 직접 결정하라고 요구한다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 17
+       },
+       "sentence_sha256": "ac514c4fdb2fdb65f18916559ace39a89d05d887eab18d9b9b0d066149245eb5"
+      }
+     }
+    ]
+   },
+   "moral_evaluation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:31d5473fe70b31b9b1b1b36388793441cf66ce977caeb585129c94ea04b5e25c",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "safety_negative",
+      "variant_key": "semantic:moral_evaluation:family:safety_negative",
+      "public_paraphrase": "당 지도부는 이번 행위를 당에서 용납될 수 없는 폭력으로 못 박으며 강하게 부정적으로 평가한다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 9
+       },
+       "sentence_sha256": "b06722b27e19848e355e85ebe076103a32cac10aae497fa7a8c81f3901bfee8f"
+      }
+     },
+     {
+      "claim_id": "claim:31d5473fe70b31b9b1b1b36388793441cf66ce977caeb585129c94ea04b5e25c",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "safety_negative",
+      "variant_key": "semantic:moral_evaluation:family:safety_negative",
+      "public_paraphrase": "당 지도부는 이번 행위를 당에서 용납될 수 없는 폭력으로 못 박으며 강하게 부정적으로 평가한다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 9
+       },
+       "sentence_sha256": "b06722b27e19848e355e85ebe076103a32cac10aae497fa7a8c81f3901bfee8f"
+      }
+     }
+    ]
+   },
+   "treatment_recommendation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:8e4bcc494e7980011127b966c392df5d04f614d680dbeb92cd59ba3bf26ca56d",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "investigation_accountability",
+      "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+      "public_paraphrase": "같은 일이 되풀이되지 않도록 중징계와 책임 추궁 절차를 강하게 밀어붙여야 한다는 요구가 제시된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 10
+       },
+       "sentence_sha256": "c6191a93e5e912833616ff5007b996464d4203c5b7aa80a1884a0a104d15cc76"
+      }
+     },
+     {
+      "claim_id": "claim:8e4bcc494e7980011127b966c392df5d04f614d680dbeb92cd59ba3bf26ca56d",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "investigation_accountability",
+      "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+      "public_paraphrase": "같은 일이 되풀이되지 않도록 중징계와 책임 추궁 절차를 강하게 밀어붙여야 한다는 요구가 제시된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 17
+       },
+       "sentence_sha256": "ac514c4fdb2fdb65f18916559ace39a89d05d887eab18d9b9b0d066149245eb5"
+      }
+     }
+    ]
+   }
+  },
+  "actors_and_sources": [
+   {
+    "actor_id": "actor:d7d0160368e07f48e180643ffab20c8f3d3d8d5c15834246bc064152fa385e36",
+    "role": "civil_society",
+    "role_label": "시민사회·이익집단",
+    "direct_quote_count": 0,
+    "indirect_attribution_count": 1,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 6
+      },
+      "sentence_sha256": "11f7957303db2c330a233f2fc35b16eafe6592e5906ed604f670d39b79f136e6"
+     }
+    ]
+   },
+   {
+    "actor_id": "actor:5e677c58349a2090b3c6d7b50a23fbb8757ddf81fd5d2227a8ada331ef18893e",
+    "role": "political_actor",
+    "role_label": "정당·정치권",
+    "direct_quote_count": 3,
+    "indirect_attribution_count": 1,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 9
+      },
+      "sentence_sha256": "b06722b27e19848e355e85ebe076103a32cac10aae497fa7a8c81f3901bfee8f"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 11
+      },
+      "sentence_sha256": "feae351d3ffa363dd2556c7e8199072745699a38b1ccffc1a97bcedd5097c6a9"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 12
+      },
+      "sentence_sha256": "5d34c24b2408ce358db5127547f9859daed228e7635cc1d72a829383be9023df"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 17
+      },
+      "sentence_sha256": "ac514c4fdb2fdb65f18916559ace39a89d05d887eab18d9b9b0d066149245eb5"
+     }
+    ]
+   }
+  ],
+  "context_depth": {
+   "level": "unknown"
+  },
+  "scope": {
+   "code": "unknown"
+  },
+  "secondary_descriptors": {
+   "generic_frames": [],
+   "policy_frames": [],
+   "controlled_associations": []
+  },
+  "framing_devices": [],
+  "review": {
+   "status": "automatic_draft",
+   "analysis_decision": "analyze",
+   "analysis_state": "succeeded",
+   "attempt_count": 1,
+   "idempotency_fingerprint": "9e3d5bf98d6b63f440b58a0f14592d73828c736c90d4dda60f7bb14bc8c71507",
+   "error_code": null,
+   "fallback_reason": null,
+   "requires_human_review": true,
+   "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
   }
+ }
 }

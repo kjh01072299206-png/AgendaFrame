@@ -68,8 +68,8 @@
       "engineLabel": "ai_semantic",
       "semanticAi": true,
       "status": "succeeded",
-      "model": "gemini-2.5-flash-lite",
-      "promptVersion": "2.5.0",
+      "model": "claude-sonnet-5x2-opus-5-adjudicated",
+      "promptVersion": "claude-framing-v1.0.0",
       "schemaVersion": "agendaframe.article-frame-profile.v2",
       "source": "semantic-rank*-2026-07-26",
       "articleCount": 4,
@@ -147,12 +147,12 @@
           "engineLabel": "ai_semantic",
           "semanticAi": true,
           "status": "succeeded",
-          "model": "gemini-2.5-flash-lite",
-          "promptVersion": "2.5.0",
+          "model": "claude-sonnet-5x2-opus-5-adjudicated",
+          "promptVersion": "claude-framing-v1.0.0",
           "schemaVersion": "agendaframe.article-frame-profile.v2",
           "source": "semantic-rank*-2026-07-26",
           "articleId": "01100611.20260726132449001",
-          "evidenceCount": 5,
+          "evidenceCount": 7,
           "bodySha256": "2474bdd4e3380abba2ea0af4b0928d7c1b0b55606101dc7658d123a2480c78ed",
           "reviewRequired": true,
           "fallbackReason": null
@@ -190,12 +190,12 @@
           "engineLabel": "ai_semantic",
           "semanticAi": true,
           "status": "succeeded",
-          "model": "gemini-2.5-flash-lite",
-          "promptVersion": "2.5.0",
+          "model": "claude-sonnet-5x2-opus-5-adjudicated",
+          "promptVersion": "claude-framing-v1.0.0",
           "schemaVersion": "agendaframe.article-frame-profile.v2",
           "source": "semantic-rank*-2026-07-26",
           "articleId": "01100501.20260726131922001",
-          "evidenceCount": 5,
+          "evidenceCount": 7,
           "bodySha256": "5dd409f2026a9707a80657c44bbf68219198fea758f64da4ae96a0bb288d4395",
           "reviewRequired": true,
           "fallbackReason": null
@@ -233,8 +233,8 @@
           "engineLabel": "ai_semantic",
           "semanticAi": true,
           "status": "succeeded",
-          "model": "gemini-2.5-flash-lite",
-          "promptVersion": "2.5.0",
+          "model": "claude-sonnet-5x2-opus-5-adjudicated",
+          "promptVersion": "claude-framing-v1.0.0",
           "schemaVersion": "agendaframe.article-frame-profile.v2",
           "source": "semantic-rank*-2026-07-26",
           "articleId": "01100701.20260726130444001",
@@ -276,8 +276,8 @@
           "engineLabel": "ai_semantic",
           "semanticAi": true,
           "status": "succeeded",
-          "model": "gemini-2.5-flash-lite",
-          "promptVersion": "2.5.0",
+          "model": "claude-sonnet-5x2-opus-5-adjudicated",
+          "promptVersion": "claude-framing-v1.0.0",
           "schemaVersion": "agendaframe.article-frame-profile.v2",
           "source": "semantic-rank*-2026-07-26",
           "articleId": "01100201.20260726112314001",
@@ -312,12 +312,12 @@
         "engineLabel": "ai_semantic",
         "semanticAi": true,
         "status": "succeeded",
-        "model": "gemini-2.5-flash-lite",
-        "promptVersion": "2.5.0",
+        "model": "claude-sonnet-5x2-opus-5-adjudicated",
+        "promptVersion": "claude-framing-v1.0.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
         "source": "semantic-rank*-2026-07-26",
         "articleId": "01100611.20260726132449001",
-        "evidenceCount": 5,
+        "evidenceCount": 7,
         "bodySha256": "2474bdd4e3380abba2ea0af4b0928d7c1b0b55606101dc7658d123a2480c78ed",
         "reviewRequired": true,
         "fallbackReason": null
@@ -343,6 +343,30 @@
           "articleId": "01100611.20260726132449001",
           "locator": {
             "paragraph": 1,
+            "sentence": 8
+          },
+          "sentenceSha256": "8f201bbab90ea2e033fa29c365ed9599dc58dbbb35eafc3142f99ed2476ce3a1"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "baacba6cda583c8a073e4370d5b139034e4e40a317a6affb616436a9cd614de5"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "b19c2bd0d869187203076f1a6bade79f9babf8efa3a07562278d7a46361ae81f"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 1,
             "sentence": 7
           },
           "sentenceSha256": "4de073458724b578dd7212a0fcc71bc6bac6acbf0d69969602afb0ed8c57098a"
@@ -354,21 +378,13 @@
             "sentence": 10
           },
           "sentenceSha256": "ba0f89e438719edeec4168b32c29d4592cccbc82ed1a6f038fdfb81159389863"
-        },
-        {
-          "articleId": "01100611.20260726132449001",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 12
-          },
-          "sentenceSha256": "baacba6cda583c8a073e4370d5b139034e4e40a317a6affb616436a9cd614de5"
         }
       ],
       "profile": {
         "schema_version": "agendaframe.article-frame-profile.v2",
         "lineage": {
-          "model_id": "gemini-2.5-flash-lite",
-          "prompt_version": "2.5.0",
+          "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+          "prompt_version": "claude-framing-v1.0.0",
           "analysis_schema_version": "agendaframe.article-frame-profile.v2",
           "model_output_schema_version": 3,
           "comparison_engine_version": "korean-evidence-rules-v2",
@@ -382,12 +398,12 @@
           }
         },
         "engine": {
-          "name": "AgendaFrame Vertex evidence coder",
-          "version": "gemini-2.5-flash-lite",
+          "name": "AgendaFrame Claude evidence coder",
+          "version": "claude-sonnet-5x2-opus-5-adjudicated",
           "approach": "semantic_evidence_bounded",
           "semantic_ai": true,
           "status": "semantic_draft",
-          "prompt_version": "2.5.0",
+          "prompt_version": "claude-framing-v1.0.0",
           "analysis_schema_version": 3,
           "evidence_storage": "locator_and_salted_sha256_only",
           "limitations": [
@@ -428,7 +444,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "safety_harm",
                 "variant_key": "semantic:problem_definition:family:safety_harm",
-                "public_paraphrase": "외국인 집단 패싸움 중 흉기 사용으로 인한 살인 사건 발생",
+                "public_paraphrase": "외국인 일행끼리 벌인 거리 집단 다툼에서 흉기가 사용돼 사망자와 부상자가 나온 강력범죄 사건으로 규정된다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -444,36 +460,18 @@
             ]
           },
           "causal_interpretation": {
-            "status": "observed",
+            "status": "source_attributed",
             "model_status": "supported",
-            "outlet_narration_observed": true,
+            "outlet_narration_observed": false,
             "items": [
               {
-                "claim_id": "claim:bfaabd52715a95159032b1b050d64b3e81d6a0c380072ed4726d081deb7bf05e",
+                "claim_id": "claim:b5dfc65e08b731e84b261681c37ba9fcbe09daa24bf35cd9db525708a46e64bf",
                 "code": "semantic_causal_interpretation",
                 "frame_family": "individual_action",
                 "variant_key": "semantic:causal_interpretation:family:individual_action",
-                "public_paraphrase": "집단 패싸움 중 흉기 사용으로 인한 살인 발생",
+                "public_paraphrase": "다수가 뒤엉킨 싸움 도중 피의자 한 명이 흉기를 빼 들어 휘두른 개인 행위가 사망의 직접 원인으로 전해진다.",
                 "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 6
-                  },
-                  "sentence_sha256": "59e4f36a1b81df4c01758b0fadc143c6281dec03a6c578501896caf459cf724b"
-                }
-              },
-              {
-                "claim_id": "claim:bfaabd52715a95159032b1b050d64b3e81d6a0c380072ed4726d081deb7bf05e",
-                "code": "semantic_causal_interpretation",
-                "frame_family": "individual_action",
-                "variant_key": "semantic:causal_interpretation:family:individual_action",
-                "public_paraphrase": "집단 패싸움 중 흉기 사용으로 인한 살인 발생",
-                "voice": {
-                  "kind": "journalist_narration",
+                  "kind": "uncertain_quote",
                   "speaker_role": null
                 },
                 "evidence": {
@@ -487,90 +485,35 @@
             ]
           },
           "responsibility_attribution": {
-            "status": "observed",
+            "status": "source_attributed",
             "model_status": "supported",
-            "outlet_narration_observed": true,
+            "outlet_narration_observed": false,
             "items": [
               {
-                "claim_id": "claim:2a02eb22da0e9f24461c17b7ebad81e503249af28193520a053fb816dfc20740",
+                "claim_id": "claim:1d9185200d1a1cb02e7475f494937ab08db292728076581ae35b6e43c21fd472",
                 "code": "semantic_responsibility_attribution",
                 "frame_family": "individual_actor",
                 "variant_key": "semantic:responsibility_attribution:family:individual_actor",
-                "public_paraphrase": "가해자 개인에게 살인 혐의 책임 부여",
+                "public_paraphrase": "경찰 설명을 통해 살인 혐의의 책임 주체가 40대 남성 피의자 개인으로 특정된다.",
                 "voice": {
-                  "kind": "journalist_narration",
+                  "kind": "indirect_source",
                   "speaker_role": null
                 },
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 6
+                    "sentence": 8
                   },
-                  "sentence_sha256": "59e4f36a1b81df4c01758b0fadc143c6281dec03a6c578501896caf459cf724b"
-                }
-              },
-              {
-                "claim_id": "claim:2a02eb22da0e9f24461c17b7ebad81e503249af28193520a053fb816dfc20740",
-                "code": "semantic_responsibility_attribution",
-                "frame_family": "individual_actor",
-                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
-                "public_paraphrase": "가해자 개인에게 살인 혐의 책임 부여",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 7
-                  },
-                  "sentence_sha256": "4de073458724b578dd7212a0fcc71bc6bac6acbf0d69969602afb0ed8c57098a"
+                  "sentence_sha256": "8f201bbab90ea2e033fa29c365ed9599dc58dbbb35eafc3142f99ed2476ce3a1"
                 }
               }
             ]
           },
           "moral_evaluation": {
-            "status": "observed",
-            "model_status": "supported",
-            "outlet_narration_observed": true,
-            "items": [
-              {
-                "claim_id": "claim:9262766974ec228e3861e57a747f92faee7d0d409824b5ca0ad4b7f79c524edb",
-                "code": "semantic_moral_evaluation",
-                "frame_family": "safety_negative",
-                "variant_key": "semantic:moral_evaluation:family:safety_negative",
-                "public_paraphrase": "흉기 사용으로 인한 사망 및 부상 발생",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 6
-                  },
-                  "sentence_sha256": "59e4f36a1b81df4c01758b0fadc143c6281dec03a6c578501896caf459cf724b"
-                }
-              },
-              {
-                "claim_id": "claim:9262766974ec228e3861e57a747f92faee7d0d409824b5ca0ad4b7f79c524edb",
-                "code": "semantic_moral_evaluation",
-                "frame_family": "safety_negative",
-                "variant_key": "semantic:moral_evaluation:family:safety_negative",
-                "public_paraphrase": "흉기 사용으로 인한 사망 및 부상 발생",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 10
-                  },
-                  "sentence_sha256": "ba0f89e438719edeec4168b32c29d4592cccbc82ed1a6f038fdfb81159389863"
-                }
-              }
-            ]
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
           },
           "treatment_recommendation": {
             "status": "observed",
@@ -582,7 +525,7 @@
                 "code": "semantic_treatment_recommendation",
                 "frame_family": "investigation_accountability",
                 "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
-                "public_paraphrase": "정확한 사건 경위 조사를 통한 후속 조치",
+                "public_paraphrase": "달아난 피의자를 검거한 데 이어 관련자들을 조사해 사건 경위를 규명하는 수사 절차가 후속 조치로 제시된다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -594,24 +537,42 @@
                   },
                   "sentence_sha256": "baacba6cda583c8a073e4370d5b139034e4e40a317a6affb616436a9cd614de5"
                 }
+              },
+              {
+                "claim_id": "claim:a4cce9e42c35cc10caac50c643ee6b9c019f470615252dd48d827e745bf55c7b",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "달아난 피의자를 검거한 데 이어 관련자들을 조사해 사건 경위를 규명하는 수사 절차가 후속 조치로 제시된다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "b19c2bd0d869187203076f1a6bade79f9babf8efa3a07562278d7a46361ae81f"
+                }
               }
             ]
           }
         },
         "actors_and_sources": [
           {
-            "actor_id": "actor:402eb49ae91d20fd54eaf0a6d9665649ebdbd15fcde5c3ce04c6f09746063e8c",
-            "role": "other",
-            "role_label": "기타 취재원",
+            "actor_id": "actor:b97ad7d9e2039a563b146a3af1396103ffade8a8540a2f3e624cc1b208215949",
+            "role": "judiciary_law_enforcement",
+            "role_label": "법조·수사기관",
             "direct_quote_count": 0,
-            "indirect_attribution_count": 3,
+            "indirect_attribution_count": 2,
             "evidence": [
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 6
+                  "sentence": 8
                 },
-                "sentence_sha256": "59e4f36a1b81df4c01758b0fadc143c6281dec03a6c578501896caf459cf724b"
+                "sentence_sha256": "8f201bbab90ea2e033fa29c365ed9599dc58dbbb35eafc3142f99ed2476ce3a1"
               },
               {
                 "locator": {
@@ -619,13 +580,29 @@
                   "sentence": 7
                 },
                 "sentence_sha256": "4de073458724b578dd7212a0fcc71bc6bac6acbf0d69969602afb0ed8c57098a"
-              },
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:402eb49ae91d20fd54eaf0a6d9665649ebdbd15fcde5c3ce04c6f09746063e8c",
+            "role": "other",
+            "role_label": "기타 취재원",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
               {
                 "locator": {
                   "paragraph": 1,
                   "sentence": 9
                 },
                 "sentence_sha256": "70434e47f44989a665dfd8c08a858c897d997a2635956496721259017661fc99"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 10
+                },
+                "sentence_sha256": "ba0f89e438719edeec4168b32c29d4592cccbc82ed1a6f038fdfb81159389863"
               }
             ]
           }
@@ -647,7 +624,7 @@
           "analysis_decision": "analyze",
           "analysis_state": "succeeded",
           "attempt_count": 1,
-          "idempotency_fingerprint": "7986999478fb456b25cb129b5b5c9c03aae89e4e97f768824d6ed83e520468d5",
+          "idempotency_fingerprint": "18550456cd233e806921b05f47dd4836ba946cc73fa522ec90ac3c319066ff5c",
           "error_code": null,
           "fallback_reason": null,
           "requires_human_review": true,
@@ -663,12 +640,12 @@
         "engineLabel": "ai_semantic",
         "semanticAi": true,
         "status": "succeeded",
-        "model": "gemini-2.5-flash-lite",
-        "promptVersion": "2.5.0",
+        "model": "claude-sonnet-5x2-opus-5-adjudicated",
+        "promptVersion": "claude-framing-v1.0.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
         "source": "semantic-rank*-2026-07-26",
         "articleId": "01100501.20260726131922001",
-        "evidenceCount": 5,
+        "evidenceCount": 7,
         "bodySha256": "5dd409f2026a9707a80657c44bbf68219198fea758f64da4ae96a0bb288d4395",
         "reviewRequired": true,
         "fallbackReason": null
@@ -686,17 +663,25 @@
           "articleId": "01100501.20260726131922001",
           "locator": {
             "paragraph": 1,
-            "sentence": 9
+            "sentence": 8
           },
-          "sentenceSha256": "969a264bf78ccec37b5fe57595d7fe19431a47f40112a7c36e70874e971b4bea"
+          "sentenceSha256": "55c04f6ed1503a2962041461e2120ca552eb34b80dbf6f5a318e519867982ded"
         },
         {
           "articleId": "01100501.20260726131922001",
           "locator": {
             "paragraph": 1,
-            "sentence": 8
+            "sentence": 6
           },
-          "sentenceSha256": "55c04f6ed1503a2962041461e2120ca552eb34b80dbf6f5a318e519867982ded"
+          "sentenceSha256": "18cfadc4de37b95f026cad3006a7ef3b0098ecc4fb8c2641534b5ed1567162d3"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "8b0ff5e167083f35c4d1394abf09d08199e0cf1bfddccf487e7336979fa22141"
         },
         {
           "articleId": "01100501.20260726131922001",
@@ -710,16 +695,24 @@
           "articleId": "01100501.20260726131922001",
           "locator": {
             "paragraph": 1,
-            "sentence": 11
+            "sentence": 5
           },
-          "sentenceSha256": "8b0ff5e167083f35c4d1394abf09d08199e0cf1bfddccf487e7336979fa22141"
+          "sentenceSha256": "9de2292bf6844835869f760a2e9158d6a1405def339ab947f5675499400d078c"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 7
+          },
+          "sentenceSha256": "8c7be4cc407ea454382ab17d4052258acb03f97a9b4b15b0ea66c2cefd164074"
         }
       ],
       "profile": {
         "schema_version": "agendaframe.article-frame-profile.v2",
         "lineage": {
-          "model_id": "gemini-2.5-flash-lite",
-          "prompt_version": "2.5.0",
+          "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+          "prompt_version": "claude-framing-v1.0.0",
           "analysis_schema_version": "agendaframe.article-frame-profile.v2",
           "model_output_schema_version": 3,
           "comparison_engine_version": "korean-evidence-rules-v2",
@@ -733,12 +726,12 @@
           }
         },
         "engine": {
-          "name": "AgendaFrame Vertex evidence coder",
-          "version": "gemini-2.5-flash-lite",
+          "name": "AgendaFrame Claude evidence coder",
+          "version": "claude-sonnet-5x2-opus-5-adjudicated",
           "approach": "semantic_evidence_bounded",
           "semantic_ai": true,
           "status": "semantic_draft",
-          "prompt_version": "2.5.0",
+          "prompt_version": "claude-framing-v1.0.0",
           "analysis_schema_version": 3,
           "evidence_storage": "locator_and_salted_sha256_only",
           "limitations": [
@@ -779,7 +772,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "safety_harm",
                 "variant_key": "semantic:problem_definition:family:safety_harm",
-                "public_paraphrase": "외국인 집단 패싸움 중 흉기 사용으로 인한 사망 및 중상 사건 발생",
+                "public_paraphrase": "새벽 시간 길거리에서 벌어진 외국인 무리 간 집단 다툼이 흉기 살인으로 번진 사건으로 규정된다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -791,24 +784,6 @@
                   },
                   "sentence_sha256": "5c6f792c8172bc010a639c3295f8222ddce0c920feca135244ac4a3d3f740f6c"
                 }
-              },
-              {
-                "claim_id": "claim:9971bac0d59e524fd00fff4e5a12a206012f7438c416fac57236036f3c1ea9e8",
-                "code": "semantic_problem_definition",
-                "frame_family": "safety_harm",
-                "variant_key": "semantic:problem_definition:family:safety_harm",
-                "public_paraphrase": "외국인 집단 패싸움 중 흉기 사용으로 인한 사망 및 중상 사건 발생",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 9
-                  },
-                  "sentence_sha256": "969a264bf78ccec37b5fe57595d7fe19431a47f40112a7c36e70874e971b4bea"
-                }
               }
             ]
           },
@@ -818,13 +793,13 @@
             "outlet_narration_observed": false,
             "items": [
               {
-                "claim_id": "claim:cdbbd0870dd0eb07602bba8c0559417a1edfea871d628c050efb03a2cbcc8ccb",
+                "claim_id": "claim:81bfc7c67406f2462aba464cd8a27ddf302352f50305658fc10d9c83cee01c56",
                 "code": "semantic_causal_interpretation",
                 "frame_family": "individual_action",
                 "variant_key": "semantic:causal_interpretation:family:individual_action",
-                "public_paraphrase": "과거부터 좋지 않았던 관계에서 비롯된 집단 패싸움",
+                "public_paraphrase": "이전부터 관계가 나빴던 두 무리가 이날 서로 만나 싸우기로 정한 점이 사건의 직접 배경으로 전해진다고 서술된다.",
                 "voice": {
-                  "kind": "indirect_source",
+                  "kind": "uncertain_quote",
                   "speaker_role": null
                 },
                 "evidence": {
@@ -847,7 +822,7 @@
                 "code": "semantic_responsibility_attribution",
                 "frame_family": "individual_actor",
                 "variant_key": "semantic:responsibility_attribution:family:individual_actor",
-                "public_paraphrase": "패싸움 가담자 및 가담 정도에 따른 신병 처리 결정",
+                "public_paraphrase": "검거된 40대 피의자 개인이 흉기로 상대를 살해한 혐의를 지는 구도로 책임이 귀속된다.",
                 "voice": {
                   "kind": "indirect_source",
                   "speaker_role": null
@@ -855,55 +830,18 @@
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 12
+                    "sentence": 6
                   },
-                  "sentence_sha256": "8c80adaf8f4448ea7c5bc606cad18467476d23cde21c73e24b6eca0fcccf1ab8"
+                  "sentence_sha256": "18cfadc4de37b95f026cad3006a7ef3b0098ecc4fb8c2641534b5ed1567162d3"
                 }
               }
             ]
           },
           "moral_evaluation": {
-            "status": "observed",
-            "model_status": "supported",
-            "outlet_narration_observed": true,
-            "items": [
-              {
-                "claim_id": "claim:ccad27cf9192e3cf9f7904d8762ad7e389e17b52787e663d309b7ac99ef99c07",
-                "code": "semantic_moral_evaluation",
-                "frame_family": "safety_negative",
-                "variant_key": "semantic:moral_evaluation:family:safety_negative",
-                "public_paraphrase": "흉기 사용으로 인한 사망 및 중상 발생으로 인한 부정적 평가",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 4
-                  },
-                  "sentence_sha256": "5c6f792c8172bc010a639c3295f8222ddce0c920feca135244ac4a3d3f740f6c"
-                }
-              },
-              {
-                "claim_id": "claim:ccad27cf9192e3cf9f7904d8762ad7e389e17b52787e663d309b7ac99ef99c07",
-                "code": "semantic_moral_evaluation",
-                "frame_family": "safety_negative",
-                "variant_key": "semantic:moral_evaluation:family:safety_negative",
-                "public_paraphrase": "흉기 사용으로 인한 사망 및 중상 발생으로 인한 부정적 평가",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 9
-                  },
-                  "sentence_sha256": "969a264bf78ccec37b5fe57595d7fe19431a47f40112a7c36e70874e971b4bea"
-                }
-              }
-            ]
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
           },
           "treatment_recommendation": {
             "status": "source_attributed",
@@ -915,7 +853,7 @@
                 "code": "semantic_treatment_recommendation",
                 "frame_family": "investigation_accountability",
                 "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
-                "public_paraphrase": "정확한 사건 경위 조사 후 구속영장 신청 및 가담자 신병 처리 결정",
+                "public_paraphrase": "경찰이 경위 조사를 마친 뒤 신병 확보를 위한 영장을 청구하고 나머지 가담자 처리도 추후 결정하겠다는 방침을 제시한다.",
                 "voice": {
                   "kind": "indirect_source",
                   "speaker_role": null
@@ -933,7 +871,7 @@
                 "code": "semantic_treatment_recommendation",
                 "frame_family": "investigation_accountability",
                 "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
-                "public_paraphrase": "정확한 사건 경위 조사 후 구속영장 신청 및 가담자 신병 처리 결정",
+                "public_paraphrase": "경찰이 경위 조사를 마친 뒤 신병 확보를 위한 영장을 청구하고 나머지 가담자 처리도 추후 결정하겠다는 방침을 제시한다.",
                 "voice": {
                   "kind": "indirect_source",
                   "speaker_role": null
@@ -954,9 +892,23 @@
             "actor_id": "actor:54978fbf58e59823785f6e4154987a5263da42c1e0ee0160308297b4e68a6011",
             "role": "government_official",
             "role_label": "정부·공공기관",
-            "direct_quote_count": 0,
-            "indirect_attribution_count": 1,
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
             "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 5
+                },
+                "sentence_sha256": "9de2292bf6844835869f760a2e9158d6a1405def339ab947f5675499400d078c"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 7
+                },
+                "sentence_sha256": "8c7be4cc407ea454382ab17d4052258acb03f97a9b4b15b0ea66c2cefd164074"
+              },
               {
                 "locator": {
                   "paragraph": 1,
@@ -983,8 +935,8 @@
           "status": "automatic_draft",
           "analysis_decision": "analyze",
           "analysis_state": "succeeded",
-          "attempt_count": 2,
-          "idempotency_fingerprint": "dd933324c83d8fd256a9ab8e4ea531328b9a442a36d27c67f85702c72e3764ce",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "3f140cacb8402ced642ccd36facef49dedc095eb74c7005f259441d6c4d4d9ef",
           "error_code": null,
           "fallback_reason": null,
           "requires_human_review": true,
@@ -1000,8 +952,8 @@
         "engineLabel": "ai_semantic",
         "semanticAi": true,
         "status": "succeeded",
-        "model": "gemini-2.5-flash-lite",
-        "promptVersion": "2.5.0",
+        "model": "claude-sonnet-5x2-opus-5-adjudicated",
+        "promptVersion": "claude-framing-v1.0.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
         "source": "semantic-rank*-2026-07-26",
         "articleId": "01100701.20260726130444001",
@@ -1031,25 +983,9 @@
           "articleId": "01100701.20260726130444001",
           "locator": {
             "paragraph": 1,
-            "sentence": 7
+            "sentence": 6
           },
-          "sentenceSha256": "45c21f361274b9b630fe8e7139e0310a042bd728db9d5844de49a7a22744c3e0"
-        },
-        {
-          "articleId": "01100701.20260726130444001",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 8
-          },
-          "sentenceSha256": "e8e3209eafe0c3a200e1b5c9b83aff62574c787bb0c947d94a45e2b80668f593"
-        },
-        {
-          "articleId": "01100701.20260726130444001",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 3
-          },
-          "sentenceSha256": "67a6c09d1f1c50d48aae110ebfba14c5a3b7d9ec89983a3c73138df99961c4df"
+          "sentenceSha256": "f9a56158801afcf18493a0b3f58d3eef3a304f301ec4f8690f85438d080357b7"
         },
         {
           "articleId": "01100701.20260726130444001",
@@ -1063,16 +999,32 @@
           "articleId": "01100701.20260726130444001",
           "locator": {
             "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "67a6c09d1f1c50d48aae110ebfba14c5a3b7d9ec89983a3c73138df99961c4df"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 1,
             "sentence": 12
           },
           "sentenceSha256": "c3fff3b8747c6067534881ee6f6246d8098d2dd654c2619627ac773e5371337f"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "04a97e81586aa952046714789be3d75e08d53dd16381e3a3e3c66f54e5ed8c98"
         }
       ],
       "profile": {
         "schema_version": "agendaframe.article-frame-profile.v2",
         "lineage": {
-          "model_id": "gemini-2.5-flash-lite",
-          "prompt_version": "2.5.0",
+          "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+          "prompt_version": "claude-framing-v1.0.0",
           "analysis_schema_version": "agendaframe.article-frame-profile.v2",
           "model_output_schema_version": 3,
           "comparison_engine_version": "korean-evidence-rules-v2",
@@ -1086,12 +1038,12 @@
           }
         },
         "engine": {
-          "name": "AgendaFrame Vertex evidence coder",
-          "version": "gemini-2.5-flash-lite",
+          "name": "AgendaFrame Claude evidence coder",
+          "version": "claude-sonnet-5x2-opus-5-adjudicated",
           "approach": "semantic_evidence_bounded",
           "semantic_ai": true,
           "status": "semantic_draft",
-          "prompt_version": "2.5.0",
+          "prompt_version": "claude-framing-v1.0.0",
           "analysis_schema_version": 3,
           "evidence_storage": "locator_and_salted_sha256_only",
           "limitations": [
@@ -1132,7 +1084,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "safety_harm",
                 "variant_key": "semantic:problem_definition:family:safety_harm",
-                "public_paraphrase": "외국인 간의 폭력 사건으로 인한 사상자 발생",
+                "public_paraphrase": "외국인 무리 사이의 길거리 충돌이 흉기 사용으로 번져 사망자와 부상자가 생긴 사건이 문제로 제시된다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1150,7 +1102,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "safety_harm",
                 "variant_key": "semantic:problem_definition:family:safety_harm",
-                "public_paraphrase": "외국인 간의 폭력 사건으로 인한 사상자 발생",
+                "public_paraphrase": "외국인 무리 사이의 길거리 충돌이 흉기 사용으로 번져 사망자와 부상자가 생긴 사건이 문제로 제시된다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1166,61 +1118,61 @@
             ]
           },
           "causal_interpretation": {
-            "status": "observed",
+            "status": "source_attributed",
             "model_status": "supported",
-            "outlet_narration_observed": true,
+            "outlet_narration_observed": false,
             "items": [
               {
-                "claim_id": "claim:0de6f6722821175f3a627db58eb34f1e348b5b13116cd4adfc42bd9420308aea",
+                "claim_id": "claim:5d61fefd4d7a9a316bcbd28618908a9132625a5a6cdb1ddc39a7095b218721d7",
                 "code": "semantic_causal_interpretation",
                 "frame_family": "individual_action",
                 "variant_key": "semantic:causal_interpretation:family:individual_action",
-                "public_paraphrase": "시비가 격화되어 발생한 집단 싸움",
+                "public_paraphrase": "말다툼에서 시작된 충돌이 격해지는 과정에서 피의자가 흉기를 꺼내 든 개별 행위가 사망의 직접 원인으로 지목된다.",
                 "voice": {
-                  "kind": "journalist_narration",
+                  "kind": "indirect_source",
                   "speaker_role": null
                 },
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 7
+                    "sentence": 6
                   },
-                  "sentence_sha256": "45c21f361274b9b630fe8e7139e0310a042bd728db9d5844de49a7a22744c3e0"
+                  "sentence_sha256": "f9a56158801afcf18493a0b3f58d3eef3a304f301ec4f8690f85438d080357b7"
                 }
               },
               {
-                "claim_id": "claim:0de6f6722821175f3a627db58eb34f1e348b5b13116cd4adfc42bd9420308aea",
+                "claim_id": "claim:5d61fefd4d7a9a316bcbd28618908a9132625a5a6cdb1ddc39a7095b218721d7",
                 "code": "semantic_causal_interpretation",
                 "frame_family": "individual_action",
                 "variant_key": "semantic:causal_interpretation:family:individual_action",
-                "public_paraphrase": "시비가 격화되어 발생한 집단 싸움",
+                "public_paraphrase": "말다툼에서 시작된 충돌이 격해지는 과정에서 피의자가 흉기를 꺼내 든 개별 행위가 사망의 직접 원인으로 지목된다.",
                 "voice": {
-                  "kind": "journalist_narration",
+                  "kind": "indirect_source",
                   "speaker_role": null
                 },
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 8
+                    "sentence": 9
                   },
-                  "sentence_sha256": "e8e3209eafe0c3a200e1b5c9b83aff62574c787bb0c947d94a45e2b80668f593"
+                  "sentence_sha256": "90c2c3535c5fa5135809cc61160b9868f58f5c410e9f776461412c97c1f79241"
                 }
               }
             ]
           },
           "responsibility_attribution": {
-            "status": "observed",
+            "status": "source_attributed",
             "model_status": "supported",
-            "outlet_narration_observed": true,
+            "outlet_narration_observed": false,
             "items": [
               {
-                "claim_id": "claim:60de4992474e82279658d14c765b0a4fac18737b6c31ad2f4c6bb54506a77be0",
+                "claim_id": "claim:c184ebe2eaebee2003e8191e59933d538d9cb5ef3c5c56be7a6c4dcbed5916cc",
                 "code": "semantic_responsibility_attribution",
                 "frame_family": "individual_actor",
                 "variant_key": "semantic:responsibility_attribution:family:individual_actor",
-                "public_paraphrase": "가해 외국인 및 관련자",
+                "public_paraphrase": "흉기를 사용해 상대를 숨지게 한 혐의로 붙잡힌 개인 피의자에게 책임이 돌아간다.",
                 "voice": {
-                  "kind": "journalist_narration",
+                  "kind": "indirect_source",
                   "speaker_role": null
                 },
                 "evidence": {
@@ -1232,81 +1184,44 @@
                 }
               },
               {
-                "claim_id": "claim:60de4992474e82279658d14c765b0a4fac18737b6c31ad2f4c6bb54506a77be0",
+                "claim_id": "claim:c184ebe2eaebee2003e8191e59933d538d9cb5ef3c5c56be7a6c4dcbed5916cc",
                 "code": "semantic_responsibility_attribution",
                 "frame_family": "individual_actor",
                 "variant_key": "semantic:responsibility_attribution:family:individual_actor",
-                "public_paraphrase": "가해 외국인 및 관련자",
+                "public_paraphrase": "흉기를 사용해 상대를 숨지게 한 혐의로 붙잡힌 개인 피의자에게 책임이 돌아간다.",
                 "voice": {
-                  "kind": "journalist_narration",
+                  "kind": "indirect_source",
                   "speaker_role": null
                 },
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 9
+                    "sentence": 6
                   },
-                  "sentence_sha256": "90c2c3535c5fa5135809cc61160b9868f58f5c410e9f776461412c97c1f79241"
+                  "sentence_sha256": "f9a56158801afcf18493a0b3f58d3eef3a304f301ec4f8690f85438d080357b7"
                 }
               }
             ]
           },
           "moral_evaluation": {
-            "status": "observed",
-            "model_status": "supported",
-            "outlet_narration_observed": true,
-            "items": [
-              {
-                "claim_id": "claim:6ba16eba6dee3896ca6d26c7515cfebe202aeb1539f2e7e4d6ba8284aa9e425c",
-                "code": "semantic_moral_evaluation",
-                "frame_family": "safety_negative",
-                "variant_key": "semantic:moral_evaluation:family:safety_negative",
-                "public_paraphrase": "폭력 사건으로 인한 부정적 결과",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 2
-                  },
-                  "sentence_sha256": "88475447bd69b476e03e4957bbb391f3d5104b900739a97539bab4d0fc37cced"
-                }
-              },
-              {
-                "claim_id": "claim:6ba16eba6dee3896ca6d26c7515cfebe202aeb1539f2e7e4d6ba8284aa9e425c",
-                "code": "semantic_moral_evaluation",
-                "frame_family": "safety_negative",
-                "variant_key": "semantic:moral_evaluation:family:safety_negative",
-                "public_paraphrase": "폭력 사건으로 인한 부정적 결과",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 9
-                  },
-                  "sentence_sha256": "90c2c3535c5fa5135809cc61160b9868f58f5c410e9f776461412c97c1f79241"
-                }
-              }
-            ]
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
           },
           "treatment_recommendation": {
-            "status": "observed",
+            "status": "source_attributed",
             "model_status": "supported",
-            "outlet_narration_observed": true,
+            "outlet_narration_observed": false,
             "items": [
               {
-                "claim_id": "claim:e2c9acad02665666f3fb7de748f6601596348f6547000334e2c5e8fcbe6bd00c",
+                "claim_id": "claim:73269a8e55e05536cc20a4ae1116aefdd73ee502dc032665776ec7e12bd931a8",
                 "code": "semantic_treatment_recommendation",
                 "frame_family": "investigation_accountability",
                 "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
-                "public_paraphrase": "정확한 사건 경위 및 범행 동기 조사",
+                "public_paraphrase": "피의자를 긴급 체포한 뒤 양측 관계자를 상대로 경위와 동기를 규명하는 수사를 이어가는 것이 대응으로 제시된다.",
                 "voice": {
-                  "kind": "journalist_narration",
+                  "kind": "indirect_source",
                   "speaker_role": null
                 },
                 "evidence": {
@@ -1316,33 +1231,35 @@
                   },
                   "sentence_sha256": "c3fff3b8747c6067534881ee6f6246d8098d2dd654c2619627ac773e5371337f"
                 }
+              },
+              {
+                "claim_id": "claim:73269a8e55e05536cc20a4ae1116aefdd73ee502dc032665776ec7e12bd931a8",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "피의자를 긴급 체포한 뒤 양측 관계자를 상대로 경위와 동기를 규명하는 수사를 이어가는 것이 대응으로 제시된다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "04a97e81586aa952046714789be3d75e08d53dd16381e3a3e3c66f54e5ed8c98"
+                }
               }
             ]
           }
         },
         "actors_and_sources": [
           {
-            "actor_id": "actor:d4a742d41a2b6519052306b4734c2f02ec8c39c7423c741f74516de4a83c58bd",
-            "role": "affected_person",
-            "role_label": "당사자·시민",
+            "actor_id": "actor:a2b7f2b5a7b996770ab77a169fd5d314bd7bd96c1449c5151f8863fbf98e6ac1",
+            "role": "judiciary_law_enforcement",
+            "role_label": "법조·수사기관",
             "direct_quote_count": 0,
-            "indirect_attribution_count": 1,
-            "evidence": [
-              {
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 7
-                },
-                "sentence_sha256": "45c21f361274b9b630fe8e7139e0310a042bd728db9d5844de49a7a22744c3e0"
-              }
-            ]
-          },
-          {
-            "actor_id": "actor:db3d4de2bd311ba7a3804158fbec3b427e730c5c9838fae90e7887ebacbb0244",
-            "role": "government_official",
-            "role_label": "정부·공공기관",
-            "direct_quote_count": 0,
-            "indirect_attribution_count": 1,
+            "indirect_attribution_count": 3,
             "evidence": [
               {
                 "locator": {
@@ -1350,6 +1267,20 @@
                   "sentence": 3
                 },
                 "sentence_sha256": "67a6c09d1f1c50d48aae110ebfba14c5a3b7d9ec89983a3c73138df99961c4df"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "f9a56158801afcf18493a0b3f58d3eef3a304f301ec4f8690f85438d080357b7"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 12
+                },
+                "sentence_sha256": "c3fff3b8747c6067534881ee6f6246d8098d2dd654c2619627ac773e5371337f"
               }
             ]
           }
@@ -1370,8 +1301,8 @@
           "status": "automatic_draft",
           "analysis_decision": "analyze",
           "analysis_state": "succeeded",
-          "attempt_count": 2,
-          "idempotency_fingerprint": "4335d1543ef9f4abf9726f3a70195ae19be901644b88aa5307d070773276faf0",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "9276d1c544370b8ea01e16d83f1bf262d472ae4198e392dc4cb6ee79033f8a3f",
           "error_code": null,
           "fallback_reason": null,
           "requires_human_review": true,
@@ -1387,8 +1318,8 @@
         "engineLabel": "ai_semantic",
         "semanticAi": true,
         "status": "succeeded",
-        "model": "gemini-2.5-flash-lite",
-        "promptVersion": "2.5.0",
+        "model": "claude-sonnet-5x2-opus-5-adjudicated",
+        "promptVersion": "claude-framing-v1.0.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
         "source": "semantic-rank*-2026-07-26",
         "articleId": "01100201.20260726112314001",
@@ -1410,14 +1341,6 @@
           "articleId": "01100201.20260726112314001",
           "locator": {
             "paragraph": 1,
-            "sentence": 3
-          },
-          "sentenceSha256": "b5e6ed80dc8dc6ca30f644b0ad88bb2d378f7d080f1749236712968313acbbcc"
-        },
-        {
-          "articleId": "01100201.20260726112314001",
-          "locator": {
-            "paragraph": 1,
             "sentence": 4
           },
           "sentenceSha256": "9aba231c8f01e237344c3ecd75ca9041091b29b39cbdc23422f1d0af897978f1"
@@ -1426,9 +1349,9 @@
           "articleId": "01100201.20260726112314001",
           "locator": {
             "paragraph": 1,
-            "sentence": 6
+            "sentence": 3
           },
-          "sentenceSha256": "9c629baffdff8be182cb394f22944553a9cd3bfdabedfd96d14bca89b3d7e81d"
+          "sentenceSha256": "b5e6ed80dc8dc6ca30f644b0ad88bb2d378f7d080f1749236712968313acbbcc"
         },
         {
           "articleId": "01100201.20260726112314001",
@@ -1437,13 +1360,21 @@
             "sentence": 8
           },
           "sentenceSha256": "ecbca660ebcf770fd2a87ddcd3cc5d05b4ed1d4e37ce98abe0974e2ede112a65"
+        },
+        {
+          "articleId": "01100201.20260726112314001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "b2efa8090704104ad92b41bdf75046aef060cc88b3a5d33f55421707b3d077ec"
         }
       ],
       "profile": {
         "schema_version": "agendaframe.article-frame-profile.v2",
         "lineage": {
-          "model_id": "gemini-2.5-flash-lite",
-          "prompt_version": "2.5.0",
+          "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+          "prompt_version": "claude-framing-v1.0.0",
           "analysis_schema_version": "agendaframe.article-frame-profile.v2",
           "model_output_schema_version": 3,
           "comparison_engine_version": "korean-evidence-rules-v2",
@@ -1457,12 +1388,12 @@
           }
         },
         "engine": {
-          "name": "AgendaFrame Vertex evidence coder",
-          "version": "gemini-2.5-flash-lite",
+          "name": "AgendaFrame Claude evidence coder",
+          "version": "claude-sonnet-5x2-opus-5-adjudicated",
           "approach": "semantic_evidence_bounded",
           "semantic_ai": true,
           "status": "semantic_draft",
-          "prompt_version": "2.5.0",
+          "prompt_version": "claude-framing-v1.0.0",
           "analysis_schema_version": 3,
           "evidence_storage": "locator_and_salted_sha256_only",
           "limitations": [
@@ -1503,7 +1434,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "safety_harm",
                 "variant_key": "semantic:problem_definition:family:safety_harm",
-                "public_paraphrase": "외국인 집단 패싸움 중 흉기 사용으로 인한 사망 및 부상 사건 발생",
+                "public_paraphrase": "거리에서 벌어진 외국인 다수의 물리적 충돌이 사망자를 낳은 강력범죄 사안으로 규정된다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1519,36 +1450,18 @@
             ]
           },
           "causal_interpretation": {
-            "status": "observed",
+            "status": "source_attributed",
             "model_status": "supported",
-            "outlet_narration_observed": true,
+            "outlet_narration_observed": false,
             "items": [
               {
-                "claim_id": "claim:d51f8c22016a26a4b1ae5d35a6a3c182da05d6ac6047335fd7f431f4fcd7885e",
+                "claim_id": "claim:3d88deea0d542cda5cca56834d7de4e356035dbeb6b3860174dec5926d1b92e9",
                 "code": "semantic_causal_interpretation",
                 "frame_family": "individual_action",
                 "variant_key": "semantic:causal_interpretation:family:individual_action",
-                "public_paraphrase": "패싸움 중 흉기 사용으로 인한 살인 및 상해 발생",
+                "public_paraphrase": "충돌에 가담한 피의자가 흉기를 꺼내 사용한 개인적 행위가 사망을 초래한 것으로 수사 결과가 전해진다.",
                 "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 3
-                  },
-                  "sentence_sha256": "b5e6ed80dc8dc6ca30f644b0ad88bb2d378f7d080f1749236712968313acbbcc"
-                }
-              },
-              {
-                "claim_id": "claim:d51f8c22016a26a4b1ae5d35a6a3c182da05d6ac6047335fd7f431f4fcd7885e",
-                "code": "semantic_causal_interpretation",
-                "frame_family": "individual_action",
-                "variant_key": "semantic:causal_interpretation:family:individual_action",
-                "public_paraphrase": "패싸움 중 흉기 사용으로 인한 살인 및 상해 발생",
-                "voice": {
-                  "kind": "journalist_narration",
+                  "kind": "indirect_source",
                   "speaker_role": null
                 },
                 "evidence": {
@@ -1571,25 +1484,7 @@
                 "code": "semantic_responsibility_attribution",
                 "frame_family": "individual_actor",
                 "variant_key": "semantic:responsibility_attribution:family:individual_actor",
-                "public_paraphrase": "가해 외국인 남성 A씨에게 살인 및 상해 혐의 책임 부여",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 1
-                  },
-                  "sentence_sha256": "6590ed479d03b2a4a96e477f82b3a5bba81f1d9a65b1cb77e4593c0cead760e7"
-                }
-              },
-              {
-                "claim_id": "claim:db81362d667f14348a3e36d060d461f73b901b750bae44bca6d39c70e8020877",
-                "code": "semantic_responsibility_attribution",
-                "frame_family": "individual_actor",
-                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
-                "public_paraphrase": "가해 외국인 남성 A씨에게 살인 및 상해 혐의 책임 부여",
+                "public_paraphrase": "체포된 40대 외국인 남성 개인이 살인 혐의 당사자로 지목돼 책임이 귀속된다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1605,47 +1500,10 @@
             ]
           },
           "moral_evaluation": {
-            "status": "observed",
-            "model_status": "supported",
-            "outlet_narration_observed": true,
-            "items": [
-              {
-                "claim_id": "claim:4380fe76d4245a7dab96f7cbaa4ab69b472df878dc0288285cd3ea2599074f17",
-                "code": "semantic_moral_evaluation",
-                "frame_family": "safety_negative",
-                "variant_key": "semantic:moral_evaluation:family:safety_negative",
-                "public_paraphrase": "외국인 집단 패싸움 및 흉기 사용으로 인한 인명 피해 발생",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 1
-                  },
-                  "sentence_sha256": "6590ed479d03b2a4a96e477f82b3a5bba81f1d9a65b1cb77e4593c0cead760e7"
-                }
-              },
-              {
-                "claim_id": "claim:4380fe76d4245a7dab96f7cbaa4ab69b472df878dc0288285cd3ea2599074f17",
-                "code": "semantic_moral_evaluation",
-                "frame_family": "safety_negative",
-                "variant_key": "semantic:moral_evaluation:family:safety_negative",
-                "public_paraphrase": "외국인 집단 패싸움 및 흉기 사용으로 인한 인명 피해 발생",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 6
-                  },
-                  "sentence_sha256": "9c629baffdff8be182cb394f22944553a9cd3bfdabedfd96d14bca89b3d7e81d"
-                }
-              }
-            ]
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
           },
           "treatment_recommendation": {
             "status": "observed",
@@ -1657,7 +1515,7 @@
                 "code": "semantic_treatment_recommendation",
                 "frame_family": "investigation_accountability",
                 "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
-                "public_paraphrase": "정확한 사건 경위 조사를 통한 철저한 수사 진행",
+                "public_paraphrase": "수사기관이 피의자와 관련자를 상대로 사건 경과를 규명하는 조사가 후속 대응으로 제시된다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1675,32 +1533,25 @@
         },
         "actors_and_sources": [
           {
-            "actor_id": "actor:5445298772aecd30c96390d50cbec230fd885d93b5fbfe53a4da7927af168f2d",
-            "role": "other",
-            "role_label": "기타 취재원",
+            "actor_id": "actor:bbdee90069e8a87129848cf5caf085e10fee587bf9eaa17ef116a9bcc0c91708",
+            "role": "judiciary_law_enforcement",
+            "role_label": "법조·수사기관",
             "direct_quote_count": 0,
-            "indirect_attribution_count": 3,
+            "indirect_attribution_count": 2,
             "evidence": [
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 1
+                  "sentence": 2
                 },
-                "sentence_sha256": "6590ed479d03b2a4a96e477f82b3a5bba81f1d9a65b1cb77e4593c0cead760e7"
+                "sentence_sha256": "b2efa8090704104ad92b41bdf75046aef060cc88b3a5d33f55421707b3d077ec"
               },
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 3
+                  "sentence": 4
                 },
-                "sentence_sha256": "b5e6ed80dc8dc6ca30f644b0ad88bb2d378f7d080f1749236712968313acbbcc"
-              },
-              {
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 8
-                },
-                "sentence_sha256": "ecbca660ebcf770fd2a87ddcd3cc5d05b4ed1d4e37ce98abe0974e2ede112a65"
+                "sentence_sha256": "9aba231c8f01e237344c3ecd75ca9041091b29b39cbdc23422f1d0af897978f1"
               }
             ]
           }
@@ -1722,7 +1573,7 @@
           "analysis_decision": "analyze",
           "analysis_state": "succeeded",
           "attempt_count": 1,
-          "idempotency_fingerprint": "c57ccce5e402dd7817da6ce4610b9b302782998079d1be91147e01b657567cf3",
+          "idempotency_fingerprint": "c85f9a6d61dd045a9db51366b18beb853ce8027d19041a92dc845086d9b9f030",
           "error_code": null,
           "fallback_reason": null,
           "requires_human_review": true,

@@ -1,280 +1,366 @@
 {
-  "articleId": "01101101.20260726104709001",
-  "profile": {
-    "schema_version": "agendaframe.article-frame-profile.v2",
-    "lineage": {
-      "model_id": "gemini-2.5-flash-lite",
-      "prompt_version": "2.5.0",
-      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
-      "model_output_schema_version": 3,
-      "comparison_engine_version": "korean-evidence-rules-v2",
-      "approval": {
-        "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
-        "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
-        "cluster_id": "bigkinds-2026-07-26-rank-1",
-        "reviewer": "AgendaFrame agent-assisted evidence audit",
-        "reviewed_at": "2026-07-31T00:00:00+09:00",
-        "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753"
+ "articleId": "01101101.20260726104709001",
+ "profile": {
+  "schema_version": "agendaframe.article-frame-profile.v2",
+  "lineage": {
+   "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+   "model_output_schema_version": 3,
+   "comparison_engine_version": "korean-evidence-rules-v2",
+   "approval": {
+    "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
+    "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
+    "cluster_id": "bigkinds-2026-07-26-rank-1",
+    "reviewer": "AgendaFrame agent-assisted evidence audit",
+    "reviewed_at": "2026-07-31T00:00:00+09:00",
+    "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753"
+   }
+  },
+  "engine": {
+   "name": "AgendaFrame Claude evidence coder",
+   "version": "claude-sonnet-5x2-opus-5-adjudicated",
+   "approach": "semantic_evidence_bounded",
+   "semantic_ai": true,
+   "status": "semantic_draft",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": 3,
+   "evidence_storage": "locator_and_salted_sha256_only",
+   "limitations": [
+    "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+    "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+    "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+   ]
+  },
+  "article": {
+   "article_id": "01101101.20260726104709001",
+   "upstream_article_id": "01101101.20260726104709001",
+   "published_at": "2026-07-26T10:47:09+09:00",
+   "title_sha256": "68297f804ac5361454a15add9be93b4422e76b6f0d40fa65fd4386e503944db4",
+   "body_sha256": "d3d11f7debee31df1d17e10176ddfeff309f514d7d7de8dce5cf5f70d57ce30c",
+   "body_character_count": 918,
+   "body_word_count": 200,
+   "paragraph_count": 1,
+   "sentence_count": 8,
+   "raw_body_retained": false
+  },
+  "extraction": {
+   "text_scope": "transient_public_page_extract",
+   "analyzed_character_count": 918,
+   "input_truncated": false
+  },
+  "genre": {
+   "code": "unknown",
+   "label": "자동 분류 안 함",
+   "evidence": []
+  },
+  "dimensions": {
+   "problem_definition": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:8f4a0ac8ec602b63c63521032272afd06fa0ca9cc15575f21033ff881f1783a0",
+      "code": "semantic_problem_definition",
+      "frame_family": "political_conflict",
+      "variant_key": "semantic:problem_definition:family:political_conflict",
+      "public_paraphrase": "여당이 보완수사권 폐지를 당론으로 정한 뒤에도 대통령이 아무 입장을 내놓지 않는 태도 자체가 문제로 지목된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 5
+       },
+       "sentence_sha256": "d94a9a2ba67a99b59d072ce9c2ce456199bdba0649c49a5ae724c87f1a9620bf"
       }
-    },
-    "engine": {
-      "name": "AgendaFrame Vertex evidence coder",
-      "version": "gemini-2.5-flash-lite",
-      "approach": "semantic_evidence_bounded",
-      "semantic_ai": true,
-      "status": "semantic_draft",
-      "prompt_version": "2.5.0",
-      "analysis_schema_version": 3,
-      "evidence_storage": "locator_and_salted_sha256_only",
-      "limitations": [
-        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
-        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
-        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
-      ]
-    },
-    "article": {
-      "article_id": "01101101.20260726104709001",
-      "upstream_article_id": "01101101.20260726104709001",
-      "published_at": "2026-07-26T10:47:09+09:00",
-      "title_sha256": "68297f804ac5361454a15add9be93b4422e76b6f0d40fa65fd4386e503944db4",
-      "body_sha256": "d3d11f7debee31df1d17e10176ddfeff309f514d7d7de8dce5cf5f70d57ce30c",
-      "body_character_count": 918,
-      "body_word_count": 200,
-      "paragraph_count": 1,
-      "sentence_count": 8,
-      "raw_body_retained": false
-    },
-    "extraction": {
-      "text_scope": "transient_public_page_extract",
-      "analyzed_character_count": 918,
-      "input_truncated": false
-    },
-    "genre": {
-      "code": "unknown",
-      "label": "자동 분류 안 함",
-      "evidence": []
-    },
-    "dimensions": {
-      "problem_definition": {
-        "status": "observed",
-        "model_status": "supported",
-        "outlet_narration_observed": true,
-        "items": [
-          {
-            "claim_id": "claim:8c15a6cba3460d8fa06dcaf296dad2fc808de2625e31572474eec9b0c718e76f",
-            "code": "semantic_problem_definition",
-            "frame_family": "political_conflict",
-            "variant_key": "semantic:problem_definition:family:political_conflict",
-            "public_paraphrase": "검찰 보완수사권 폐지를 둘러싼 정치적 갈등",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 3
-              },
-              "sentence_sha256": "c9f06fccdef2b5c742b15d8619acc3e94de504e012a1527e94acbfa8986a3aed"
-            }
-          }
-        ]
+     },
+     {
+      "claim_id": "claim:8f4a0ac8ec602b63c63521032272afd06fa0ca9cc15575f21033ff881f1783a0",
+      "code": "semantic_problem_definition",
+      "frame_family": "political_conflict",
+      "variant_key": "semantic:problem_definition:family:political_conflict",
+      "public_paraphrase": "여당이 보완수사권 폐지를 당론으로 정한 뒤에도 대통령이 아무 입장을 내놓지 않는 태도 자체가 문제로 지목된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
       },
-      "causal_interpretation": {
-        "status": "source_attributed",
-        "model_status": "supported",
-        "outlet_narration_observed": false,
-        "items": [
-          {
-            "claim_id": "claim:a38485c6b1742bc07a9d912ebd807f4ea04b0da37e908ab6d1b32a663e462d11",
-            "code": "semantic_causal_interpretation",
-            "frame_family": "political_incentive",
-            "variant_key": "semantic:causal_interpretation:family:political_incentive",
-            "public_paraphrase": "정치적 이해관계에 따른 정책 결정",
-            "voice": {
-              "kind": "uncertain_quote",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 6
-              },
-              "sentence_sha256": "f3f77a5a0f0ff646fc4d2903cc84ce08de16707378e9107432c5d4db0a0d787a"
-            }
-          },
-          {
-            "claim_id": "claim:a38485c6b1742bc07a9d912ebd807f4ea04b0da37e908ab6d1b32a663e462d11",
-            "code": "semantic_causal_interpretation",
-            "frame_family": "political_incentive",
-            "variant_key": "semantic:causal_interpretation:family:political_incentive",
-            "public_paraphrase": "정치적 이해관계에 따른 정책 결정",
-            "voice": {
-              "kind": "uncertain_quote",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 6
-              },
-              "sentence_sha256": "f3f77a5a0f0ff646fc4d2903cc84ce08de16707378e9107432c5d4db0a0d787a"
-            }
-          }
-        ]
-      },
-      "responsibility_attribution": {
-        "status": "source_attributed",
-        "model_status": "supported",
-        "outlet_narration_observed": false,
-        "items": [
-          {
-            "claim_id": "claim:ef5b49c458de51cc4fa3a43ee7a8f134b69d16733e1f35ae1d253c81b108cffe",
-            "code": "semantic_responsibility_attribution",
-            "frame_family": "government",
-            "variant_key": "semantic:responsibility_attribution:family:government",
-            "public_paraphrase": "정부와 여당의 책임",
-            "voice": {
-              "kind": "uncertain_quote",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 6
-              },
-              "sentence_sha256": "f3f77a5a0f0ff646fc4d2903cc84ce08de16707378e9107432c5d4db0a0d787a"
-            }
-          },
-          {
-            "claim_id": "claim:ef5b49c458de51cc4fa3a43ee7a8f134b69d16733e1f35ae1d253c81b108cffe",
-            "code": "semantic_responsibility_attribution",
-            "frame_family": "government",
-            "variant_key": "semantic:responsibility_attribution:family:government",
-            "public_paraphrase": "정부와 여당의 책임",
-            "voice": {
-              "kind": "uncertain_quote",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 8
-              },
-              "sentence_sha256": "1e6c1c575c4d68923fb4c964f7296a9fd02c31bd0c8d40574b4b01599fd2e85c"
-            }
-          }
-        ]
-      },
-      "moral_evaluation": {
-        "status": "source_attributed",
-        "model_status": "supported",
-        "outlet_narration_observed": false,
-        "items": [
-          {
-            "claim_id": "claim:1ce6e6a8bc269db11cbb90206918ae880770e9d63279b19eff7a9735837c2b82",
-            "code": "semantic_moral_evaluation",
-            "frame_family": "legitimacy_negative",
-            "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
-            "public_paraphrase": "정치적 비겁함과 추악한 거래에 대한 부정적 평가",
-            "voice": {
-              "kind": "uncertain_quote",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 3
-              },
-              "sentence_sha256": "c9f06fccdef2b5c742b15d8619acc3e94de504e012a1527e94acbfa8986a3aed"
-            }
-          },
-          {
-            "claim_id": "claim:1ce6e6a8bc269db11cbb90206918ae880770e9d63279b19eff7a9735837c2b82",
-            "code": "semantic_moral_evaluation",
-            "frame_family": "legitimacy_negative",
-            "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
-            "public_paraphrase": "정치적 비겁함과 추악한 거래에 대한 부정적 평가",
-            "voice": {
-              "kind": "uncertain_quote",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 4
-              },
-              "sentence_sha256": "0c36fd0c078ffce5e2eea5ebfe1386c52cd8d3da98ef54ec7c9efbb3fecd4cea"
-            }
-          }
-        ]
-      },
-      "treatment_recommendation": {
-        "status": "source_attributed",
-        "model_status": "supported",
-        "outlet_narration_observed": false,
-        "items": [
-          {
-            "claim_id": "claim:65b1fb67dd4a7f7e29ccc7d86d78b348bc45bb8f2bcd4cab27892b11c343e2fd",
-            "code": "semantic_treatment_recommendation",
-            "frame_family": "institutional_check",
-            "variant_key": "semantic:treatment_recommendation:family:institutional_check",
-            "public_paraphrase": "대통령의 재의요구권(거부권) 행사 촉구",
-            "voice": {
-              "kind": "uncertain_quote",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 8
-              },
-              "sentence_sha256": "1e6c1c575c4d68923fb4c964f7296a9fd02c31bd0c8d40574b4b01599fd2e85c"
-            }
-          }
-        ]
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 5
+       },
+       "sentence_sha256": "d94a9a2ba67a99b59d072ce9c2ce456199bdba0649c49a5ae724c87f1a9620bf"
       }
-    },
-    "actors_and_sources": [
-      {
-        "actor_id": "actor:3b6ade3968f15e95da2f76fa67d72f4da08a779f38b728f79e5c5dc10cd78694",
-        "role": "political_actor",
-        "role_label": "정당·정치권",
-        "direct_quote_count": 1,
-        "indirect_attribution_count": 0,
-        "evidence": [
-          {
-            "locator": {
-              "paragraph": 1,
-              "sentence": 3
-            },
-            "sentence_sha256": "c9f06fccdef2b5c742b15d8619acc3e94de504e012a1527e94acbfa8986a3aed"
-          }
-        ]
+     }
+    ]
+   },
+   "causal_interpretation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:975dd6314615b159acb7f243cbf4995cbb0625cadfc3791bd0019178704ae3bd",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "political_incentive",
+      "variant_key": "semantic:causal_interpretation:family:political_incentive",
+      "public_paraphrase": "폐지를 지지하면 치안 불안과 여론 반발이, 반대하면 강경 지지 세력과의 이면 합의 파기가 두려워 대통령이 입을 닫았다는 정치적 셈법이 원인으로 제시된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 6
+       },
+       "sentence_sha256": "f3f77a5a0f0ff646fc4d2903cc84ce08de16707378e9107432c5d4db0a0d787a"
       }
-    ],
-    "context_depth": {
-      "level": "unknown"
-    },
-    "scope": {
-      "code": "unknown"
-    },
-    "secondary_descriptors": {
-      "generic_frames": [],
-      "policy_frames": [],
-      "controlled_associations": []
-    },
-    "framing_devices": [],
-    "review": {
-      "status": "automatic_draft",
-      "analysis_decision": "analyze",
-      "analysis_state": "succeeded",
-      "attempt_count": 1,
-      "idempotency_fingerprint": "38ba3d0813994ffa8e33e4904366a7f563d91c477e1fb8acb49091e2daf71484",
-      "error_code": null,
-      "fallback_reason": null,
-      "requires_human_review": true,
-      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
-    }
+     },
+     {
+      "claim_id": "claim:975dd6314615b159acb7f243cbf4995cbb0625cadfc3791bd0019178704ae3bd",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "political_incentive",
+      "variant_key": "semantic:causal_interpretation:family:political_incentive",
+      "public_paraphrase": "폐지를 지지하면 치안 불안과 여론 반발이, 반대하면 강경 지지 세력과의 이면 합의 파기가 두려워 대통령이 입을 닫았다는 정치적 셈법이 원인으로 제시된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 6
+       },
+       "sentence_sha256": "f3f77a5a0f0ff646fc4d2903cc84ce08de16707378e9107432c5d4db0a0d787a"
+      }
+     }
+    ]
+   },
+   "responsibility_attribution": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:55f730dcee9d5d81c976dd1404e94038a4dcf7c70275e7fd4e5671b3f4a0845e",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "shared_responsibility",
+      "variant_key": "semantic:responsibility_attribution:family:shared_responsibility",
+      "public_paraphrase": "대통령과 여당 의원 양쪽 모두가 지지층 눈치와 선거 계산에 따라 움직인다며 책임을 함께 묻는다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 4
+       },
+       "sentence_sha256": "0c36fd0c078ffce5e2eea5ebfe1386c52cd8d3da98ef54ec7c9efbb3fecd4cea"
+      }
+     },
+     {
+      "claim_id": "claim:55f730dcee9d5d81c976dd1404e94038a4dcf7c70275e7fd4e5671b3f4a0845e",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "shared_responsibility",
+      "variant_key": "semantic:responsibility_attribution:family:shared_responsibility",
+      "public_paraphrase": "대통령과 여당 의원 양쪽 모두가 지지층 눈치와 선거 계산에 따라 움직인다며 책임을 함께 묻는다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 7
+       },
+       "sentence_sha256": "95b0f07d637f3fc4fa5889d4143764a39edb1f633ebc26090ebe202fde6604bb"
+      }
+     },
+     {
+      "claim_id": "claim:55f730dcee9d5d81c976dd1404e94038a4dcf7c70275e7fd4e5671b3f4a0845e",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "shared_responsibility",
+      "variant_key": "semantic:responsibility_attribution:family:shared_responsibility",
+      "public_paraphrase": "대통령과 여당 의원 양쪽 모두가 지지층 눈치와 선거 계산에 따라 움직인다며 책임을 함께 묻는다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 7
+       },
+       "sentence_sha256": "95b0f07d637f3fc4fa5889d4143764a39edb1f633ebc26090ebe202fde6604bb"
+      }
+     }
+    ]
+   },
+   "moral_evaluation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:3222040bc5ebe9d06acbf10ab9069759ec87a63a58ac49728f6e7586679a9148",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "법치의 토대를 흔드는 사안 앞에서 책임을 피하고 개인의 안전만 챙긴다는 강한 부정적 평가가 내려진다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 6
+       },
+       "sentence_sha256": "f3f77a5a0f0ff646fc4d2903cc84ce08de16707378e9107432c5d4db0a0d787a"
+      }
+     },
+     {
+      "claim_id": "claim:3222040bc5ebe9d06acbf10ab9069759ec87a63a58ac49728f6e7586679a9148",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "법치의 토대를 흔드는 사안 앞에서 책임을 피하고 개인의 안전만 챙긴다는 강한 부정적 평가가 내려진다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 3
+       },
+       "sentence_sha256": "c9f06fccdef2b5c742b15d8619acc3e94de504e012a1527e94acbfa8986a3aed"
+      }
+     },
+     {
+      "claim_id": "claim:3222040bc5ebe9d06acbf10ab9069759ec87a63a58ac49728f6e7586679a9148",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "법치의 토대를 흔드는 사안 앞에서 책임을 피하고 개인의 안전만 챙긴다는 강한 부정적 평가가 내려진다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 6
+       },
+       "sentence_sha256": "f3f77a5a0f0ff646fc4d2903cc84ce08de16707378e9107432c5d4db0a0d787a"
+      }
+     }
+    ]
+   },
+   "treatment_recommendation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:42a4b1a7d7d6bd3cbd1896af094294b060048e9bb00bddd01b374a19f03294c7",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "institutional_check",
+      "variant_key": "semantic:treatment_recommendation:family:institutional_check",
+      "public_paraphrase": "본회의를 통과하더라도 대통령이 거부권을 행사해 폐지 입법을 막아야 한다는 요구가 제기된다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 8
+       },
+       "sentence_sha256": "1e6c1c575c4d68923fb4c964f7296a9fd02c31bd0c8d40574b4b01599fd2e85c"
+      }
+     },
+     {
+      "claim_id": "claim:42a4b1a7d7d6bd3cbd1896af094294b060048e9bb00bddd01b374a19f03294c7",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "institutional_check",
+      "variant_key": "semantic:treatment_recommendation:family:institutional_check",
+      "public_paraphrase": "본회의를 통과하더라도 대통령이 거부권을 행사해 폐지 입법을 막아야 한다는 요구가 제기된다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 8
+       },
+       "sentence_sha256": "1e6c1c575c4d68923fb4c964f7296a9fd02c31bd0c8d40574b4b01599fd2e85c"
+      }
+     }
+    ]
+   }
+  },
+  "actors_and_sources": [
+   {
+    "actor_id": "actor:3b6ade3968f15e95da2f76fa67d72f4da08a779f38b728f79e5c5dc10cd78694",
+    "role": "political_actor",
+    "role_label": "정당·정치권",
+    "direct_quote_count": 3,
+    "indirect_attribution_count": 0,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 3
+      },
+      "sentence_sha256": "c9f06fccdef2b5c742b15d8619acc3e94de504e012a1527e94acbfa8986a3aed"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 8
+      },
+      "sentence_sha256": "1e6c1c575c4d68923fb4c964f7296a9fd02c31bd0c8d40574b4b01599fd2e85c"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 7
+      },
+      "sentence_sha256": "95b0f07d637f3fc4fa5889d4143764a39edb1f633ebc26090ebe202fde6604bb"
+     }
+    ]
+   }
+  ],
+  "context_depth": {
+   "level": "unknown"
+  },
+  "scope": {
+   "code": "unknown"
+  },
+  "secondary_descriptors": {
+   "generic_frames": [],
+   "policy_frames": [],
+   "controlled_associations": []
+  },
+  "framing_devices": [],
+  "review": {
+   "status": "automatic_draft",
+   "analysis_decision": "analyze",
+   "analysis_state": "succeeded",
+   "attempt_count": 1,
+   "idempotency_fingerprint": "7ca9107f31f6c86b8f0c893dead247511d3add0d5b3862aea98249b9569d5122",
+   "error_code": null,
+   "fallback_reason": null,
+   "requires_human_review": true,
+   "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
   }
+ }
 }

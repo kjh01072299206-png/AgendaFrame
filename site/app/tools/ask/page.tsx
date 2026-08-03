@@ -85,7 +85,7 @@ export default function AskToolPage() {
       <SiteHeader active="tools" />
       <div className="af-tool-shell">
         <Link className="af-back-link" href="/tools">← 도구로 돌아가기</Link>
-        <header className="af-tool-intro"><span className="af-section-label">AI 분석에서 묻기</span><h1>근거가 있는 범위에서만 답합니다.</h1><p>초기 5개 의제의 성공한 Gemini 본문 분석에서 공개 paraphrase와 근거 위치를 찾아 답합니다. 새 사실을 추측하지 않습니다.</p></header>
+        <header className="af-tool-intro"><span className="af-section-label">AI 분석에서 묻기</span><h1>근거가 있는 범위에서만 답합니다.</h1><p>초기 5개 의제의 성공한 Claude 본문 분석에서 공개 paraphrase와 근거 위치를 찾아 답합니다. 새 사실을 추측하지 않습니다.</p></header>
         <div className="af-chip-row" aria-label="추천 질문">{suggestions.map((item) => <button type="button" key={item} onClick={() => void ask(undefined, item)} disabled={!issueId || loading}>{item}</button>)}</div>
         <form className="af-tool-form" onSubmit={ask}>
           <label>의제<select value={issueId} onChange={(event) => { setIssueId(event.target.value); setResult(null); }} disabled={!manifest}>{manifest?.issues.map((issue) => <option value={issue.issueId} key={issue.issueId}>{issue.rank}. {issue.title}</option>)}</select></label>

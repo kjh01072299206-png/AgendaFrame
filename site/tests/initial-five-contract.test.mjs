@@ -83,8 +83,8 @@ test("loads one issue payload with article metadata, lineage, statuses, and evid
   assert.ok(rankOne.lineage.source.semanticDirectory.includes("semantic-rank1"));
   assert.equal(rankOne.semanticProfiles.length, 7);
   assert.ok(rankOne.semanticProfiles.every((entry) => entry.status === "succeeded"));
-  assert.ok(rankOne.semanticProfiles.every((entry) => entry.engine.model === "gemini-2.5-flash-lite"));
-  assert.ok(rankOne.semanticProfiles.every((entry) => entry.engine.promptVersion === "2.5.0"));
+  assert.ok(rankOne.semanticProfiles.every((entry) => entry.engine.model === "claude-sonnet-5x2-opus-5-adjudicated"));
+  assert.ok(rankOne.semanticProfiles.every((entry) => entry.engine.promptVersion === "claude-framing-v1.0.0"));
   assert.ok(rankOne.semanticProfiles.every((entry) => entry.engine.schemaVersion === "agendaframe.article-frame-profile.v2"));
   const evidence = allEvidence(rankOne);
   assert.ok(evidence.length > 0);
@@ -184,7 +184,7 @@ test("answers initial-five questions only from published Gemini evidence", async
   assert.equal(response.headers.get("cache-control"), "no-store");
   const answer = await response.json();
   assert.equal(answer.status, "answered");
-  assert.equal(answer.provider, "gemini_analysis_grounded_retrieval_v1");
+  assert.equal(answer.provider, "claude_analysis_grounded_retrieval_v1");
   assert.ok(answer.evidence.length > 0);
   assert.ok(answer.evidence.every((entry) => entry.sourceUrl && entry.evidenceHash));
   assert.deepEqual(walkKeys(answer), []);

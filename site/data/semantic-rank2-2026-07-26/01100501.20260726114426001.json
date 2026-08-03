@@ -1,263 +1,282 @@
 {
-  "articleId": "01100501.20260726114426001",
-  "profile": {
-    "schema_version": "agendaframe.article-frame-profile.v2",
-    "lineage": {
-      "model_id": "gemini-2.5-flash-lite",
-      "prompt_version": "2.5.0",
-      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
-      "model_output_schema_version": 3,
-      "comparison_engine_version": "korean-evidence-rules-v2",
-      "approval": {
-        "authorization_id": "bigkinds-2026-07-26-rank-2-bd61980687cd",
-        "fingerprint": "ab93e3b58284e40bc01ccd710260787313a2b52613309a639a8d2b092aac5ade",
-        "cluster_id": "bigkinds-2026-07-26-rank-2",
-        "reviewer": "AgendaFrame agent-assisted evidence audit",
-        "reviewed_at": "2026-08-02T00:00:00+09:00",
-        "approved_urls_sha256": "15d2662921b661b9b34f1238e00abe9fc16b3e2a6de0be94b975c255808e52dc"
+ "articleId": "01100501.20260726114426001",
+ "profile": {
+  "schema_version": "agendaframe.article-frame-profile.v2",
+  "lineage": {
+   "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+   "model_output_schema_version": 3,
+   "comparison_engine_version": "korean-evidence-rules-v2",
+   "approval": {
+    "authorization_id": "bigkinds-2026-07-26-rank-2-bd61980687cd",
+    "fingerprint": "ab93e3b58284e40bc01ccd710260787313a2b52613309a639a8d2b092aac5ade",
+    "cluster_id": "bigkinds-2026-07-26-rank-2",
+    "reviewer": "AgendaFrame agent-assisted evidence audit",
+    "reviewed_at": "2026-08-02T00:00:00+09:00",
+    "approved_urls_sha256": "15d2662921b661b9b34f1238e00abe9fc16b3e2a6de0be94b975c255808e52dc"
+   }
+  },
+  "engine": {
+   "name": "AgendaFrame Claude evidence coder",
+   "version": "claude-sonnet-5x2-opus-5-adjudicated",
+   "approach": "semantic_evidence_bounded",
+   "semantic_ai": true,
+   "status": "semantic_draft",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": 3,
+   "evidence_storage": "locator_and_salted_sha256_only",
+   "limitations": [
+    "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+    "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+    "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+   ]
+  },
+  "article": {
+   "article_id": "01100501.20260726114426001",
+   "upstream_article_id": "01100501.20260726114426001",
+   "published_at": "2026-07-26T11:44:26+09:00",
+   "title_sha256": "07cbe8031d2f7bc4ca9db0e164f504f4034e6774fb7ff44a38f21237354af6d3",
+   "body_sha256": "dd4a12720f5fb08f5eb2cd155bdb71b76c3c4b0715f8e588ecad1b561c9e2c03",
+   "body_character_count": 1450,
+   "body_word_count": 349,
+   "paragraph_count": 1,
+   "sentence_count": 58,
+   "raw_body_retained": false
+  },
+  "extraction": {
+   "text_scope": "transient_public_page_extract",
+   "analyzed_character_count": 1450,
+   "input_truncated": false
+  },
+  "genre": {
+   "code": "unknown",
+   "label": "자동 분류 안 함",
+   "evidence": []
+  },
+  "dimensions": {
+   "problem_definition": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:ecc0efb667291887c7fff6d6bc4f538914f4569f43ab67fe0931812681c05b49",
+      "code": "semantic_problem_definition",
+      "frame_family": "political_conflict",
+      "variant_key": "semantic:problem_definition:family:political_conflict",
+      "public_paraphrase": "여당 원내지도부가 소속 의원의 멱살 항의를 당내 갈등이자 품위 훼손 사안으로 규정하고 거취 정리를 요구한 상황을 문제로 제시한다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 4
+       },
+       "sentence_sha256": "c6dbd138408c894571cb5826fc330bfb45b8178960635ac0d0b21c9445647a72"
       }
-    },
-    "engine": {
-      "name": "AgendaFrame Vertex evidence coder",
-      "version": "gemini-2.5-flash-lite",
-      "approach": "semantic_evidence_bounded",
-      "semantic_ai": true,
-      "status": "semantic_draft",
-      "prompt_version": "2.5.0",
-      "analysis_schema_version": 3,
-      "evidence_storage": "locator_and_salted_sha256_only",
-      "limitations": [
-        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
-        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
-        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
-      ]
-    },
-    "article": {
-      "article_id": "01100501.20260726114426001",
-      "upstream_article_id": "01100501.20260726114426001",
-      "published_at": "2026-07-26T11:44:26+09:00",
-      "title_sha256": "07cbe8031d2f7bc4ca9db0e164f504f4034e6774fb7ff44a38f21237354af6d3",
-      "body_sha256": "dd4a12720f5fb08f5eb2cd155bdb71b76c3c4b0715f8e588ecad1b561c9e2c03",
-      "body_character_count": 1450,
-      "body_word_count": 349,
-      "paragraph_count": 1,
-      "sentence_count": 58,
-      "raw_body_retained": false
-    },
-    "extraction": {
-      "text_scope": "transient_public_page_extract",
-      "analyzed_character_count": 1450,
-      "input_truncated": false
-    },
-    "genre": {
-      "code": "unknown",
-      "label": "자동 분류 안 함",
-      "evidence": []
-    },
-    "dimensions": {
-      "problem_definition": {
-        "status": "observed",
-        "model_status": "supported",
-        "outlet_narration_observed": true,
-        "items": [
-          {
-            "claim_id": "claim:29b7bf349bed66ca30275b5680068540946f826aba46f0c5cc4235c7f05b8dce",
-            "code": "semantic_problem_definition",
-            "frame_family": "safety_harm",
-            "variant_key": "semantic:problem_definition:family:safety_harm",
-            "public_paraphrase": "국민의힘 의원의 국회 내 물리적 충돌 발생",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 4
-              },
-              "sentence_sha256": "c6dbd138408c894571cb5826fc330bfb45b8178960635ac0d0b21c9445647a72"
-            }
-          }
-        ]
+     },
+     {
+      "claim_id": "claim:ecc0efb667291887c7fff6d6bc4f538914f4569f43ab67fe0931812681c05b49",
+      "code": "semantic_problem_definition",
+      "frame_family": "political_conflict",
+      "variant_key": "semantic:problem_definition:family:political_conflict",
+      "public_paraphrase": "여당 원내지도부가 소속 의원의 멱살 항의를 당내 갈등이자 품위 훼손 사안으로 규정하고 거취 정리를 요구한 상황을 문제로 제시한다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
       },
-      "causal_interpretation": {
-        "status": "observed",
-        "model_status": "supported",
-        "outlet_narration_observed": true,
-        "items": [
-          {
-            "claim_id": "claim:2b09fd39503970a2a92dc354f223db89b84b5ce14f956bdd320df4b0de023398",
-            "code": "semantic_causal_interpretation",
-            "frame_family": "policy_design",
-            "variant_key": "semantic:causal_interpretation:family:policy_design",
-            "public_paraphrase": "상임위원회 배치에 대한 불만으로 인한 갈등",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 4
-              },
-              "sentence_sha256": "c6dbd138408c894571cb5826fc330bfb45b8178960635ac0d0b21c9445647a72"
-            }
-          }
-        ]
-      },
-      "responsibility_attribution": {
-        "status": "source_attributed",
-        "model_status": "supported",
-        "outlet_narration_observed": false,
-        "items": [
-          {
-            "claim_id": "claim:a2dc0fdac9fe3aae1437950b9ef86bc2f65b159af7f0a9b836307af3bf3c46c2",
-            "code": "semantic_responsibility_attribution",
-            "frame_family": "government",
-            "variant_key": "semantic:responsibility_attribution:family:government",
-            "public_paraphrase": "권영진 의원에게 책임이 있다는 당 지도부의 입장",
-            "voice": {
-              "kind": "indirect_source",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 4
-              },
-              "sentence_sha256": "c6dbd138408c894571cb5826fc330bfb45b8178960635ac0d0b21c9445647a72"
-            }
-          }
-        ]
-      },
-      "moral_evaluation": {
-        "status": "observed",
-        "model_status": "supported",
-        "outlet_narration_observed": true,
-        "items": [
-          {
-            "claim_id": "claim:fc745ddd4944b30a08da2b9ba086fcdef807497c3e9259f4faea2ec03f9ebdc1",
-            "code": "semantic_moral_evaluation",
-            "frame_family": "legitimacy_negative",
-            "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
-            "public_paraphrase": "국민의힘 의원의 행동에 대한 부정적 평가",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 5
-              },
-              "sentence_sha256": "34c2a2a5cf32d58d3aca202c4e9446d95a8e9c3beba84a57db2b4551ab3bf1c5"
-            }
-          }
-        ]
-      },
-      "treatment_recommendation": {
-        "status": "source_attributed",
-        "model_status": "supported",
-        "outlet_narration_observed": false,
-        "items": [
-          {
-            "claim_id": "claim:a9f0311274a24c94338d25f2aee7d1158be0a808ac70b0e3a1f8d7691a623e01",
-            "code": "semantic_treatment_recommendation",
-            "frame_family": "investigation_accountability",
-            "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
-            "public_paraphrase": "권영진 의원의 자진 거취 결정 촉구",
-            "voice": {
-              "kind": "indirect_source",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 4
-              },
-              "sentence_sha256": "c6dbd138408c894571cb5826fc330bfb45b8178960635ac0d0b21c9445647a72"
-            }
-          }
-        ]
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 9
+       },
+       "sentence_sha256": "9b5c96cad5f33a04e845ff24ad0e19024dac79cb3420cc993810449dd077dece"
       }
-    },
-    "actors_and_sources": [
-      {
-        "actor_id": "actor:052daa4c69fc3c8996b287f24bee50021c1a101556fd776c499c3ac6cf571eab",
-        "role": "civil_society",
-        "role_label": "시민사회·이익집단",
-        "direct_quote_count": 0,
-        "indirect_attribution_count": 1,
-        "evidence": [
-          {
-            "locator": {
-              "paragraph": 1,
-              "sentence": 13
-            },
-            "sentence_sha256": "ef11ca33b59d29562f1051a46cf61610d88cdc243b96808c70d89857c470dffa"
-          }
-        ]
+     }
+    ]
+   },
+   "causal_interpretation": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:97fa0ed3b216897ae563c0d881848d46819af0e4521cde77253389447ae14e54",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "individual_action",
+      "variant_key": "semantic:causal_interpretation:family:individual_action",
+      "public_paraphrase": "기사는 해당 의원 개인이 상임위 배치 결과에 품은 불만이 곧바로 물리적 항의 행동으로 이어졌다고 서술한다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
       },
-      {
-        "actor_id": "actor:abf154ced8fca12d9be21a7dbb613eb9ce10e5609e984f3e074138bc0fb96f46",
-        "role": "government_official",
-        "role_label": "정부·공공기관",
-        "direct_quote_count": 1,
-        "indirect_attribution_count": 3,
-        "evidence": [
-          {
-            "locator": {
-              "paragraph": 1,
-              "sentence": 4
-            },
-            "sentence_sha256": "c6dbd138408c894571cb5826fc330bfb45b8178960635ac0d0b21c9445647a72"
-          },
-          {
-            "locator": {
-              "paragraph": 1,
-              "sentence": 5
-            },
-            "sentence_sha256": "34c2a2a5cf32d58d3aca202c4e9446d95a8e9c3beba84a57db2b4551ab3bf1c5"
-          },
-          {
-            "locator": {
-              "paragraph": 1,
-              "sentence": 11
-            },
-            "sentence_sha256": "cf748490fd2e9a13c0b42e3b1237a7d9c9982998e5433816ee09dea435767e3a"
-          },
-          {
-            "locator": {
-              "paragraph": 1,
-              "sentence": 12
-            },
-            "sentence_sha256": "21c0951f5225e3aee07751aed893dae09e023604c24bfbdae304834293c7ccfb"
-          }
-        ]
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 7
+       },
+       "sentence_sha256": "d3e4a53d8c432903fcdcb4a4d24e488a79f318582910fb84ab11ca7f97728df8"
       }
-    ],
-    "context_depth": {
-      "level": "unknown"
-    },
-    "scope": {
-      "code": "unknown"
-    },
-    "secondary_descriptors": {
-      "generic_frames": [],
-      "policy_frames": [],
-      "controlled_associations": []
-    },
-    "framing_devices": [],
-    "review": {
-      "status": "automatic_draft",
-      "analysis_decision": "analyze",
-      "analysis_state": "succeeded",
-      "attempt_count": 2,
-      "idempotency_fingerprint": "02ec1af62b2a53afa9b7ba677dd21f27f5c3908cb7cded309867397f0b14920c",
-      "error_code": null,
-      "fallback_reason": null,
-      "requires_human_review": true,
-      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
-    }
+     }
+    ]
+   },
+   "responsibility_attribution": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:afe2eb7cdfd2a422b7eeb6c2dd224b3c18aa7b1380e15683a5f2c9b9ea2666bb",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "individual_actor",
+      "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+      "public_paraphrase": "당 원내지도부는 사태의 책임을 행위 당사자인 의원 개인에게 돌리며 본인이 직접 거취를 정리하라고 요구한다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 4
+       },
+       "sentence_sha256": "c6dbd138408c894571cb5826fc330bfb45b8178960635ac0d0b21c9445647a72"
+      }
+     },
+     {
+      "claim_id": "claim:afe2eb7cdfd2a422b7eeb6c2dd224b3c18aa7b1380e15683a5f2c9b9ea2666bb",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "individual_actor",
+      "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+      "public_paraphrase": "당 원내지도부는 사태의 책임을 행위 당사자인 의원 개인에게 돌리며 본인이 직접 거취를 정리하라고 요구한다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 5
+       },
+       "sentence_sha256": "34c2a2a5cf32d58d3aca202c4e9446d95a8e9c3beba84a57db2b4551ab3bf1c5"
+      }
+     }
+    ]
+   },
+   "moral_evaluation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:b249ce2ef3d5f30138639c00de9492394b729d6d66343fdc6ec8540ac55d0d78",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "당 지도부 인사들은 이번 행동을 이유를 떠나 있을 수 없는 일이자 당의 위신을 떨어뜨린 부정적 사건으로 평가한다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 11
+       },
+       "sentence_sha256": "cf748490fd2e9a13c0b42e3b1237a7d9c9982998e5433816ee09dea435767e3a"
+      }
+     },
+     {
+      "claim_id": "claim:b249ce2ef3d5f30138639c00de9492394b729d6d66343fdc6ec8540ac55d0d78",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "당 지도부 인사들은 이번 행동을 이유를 떠나 있을 수 없는 일이자 당의 위신을 떨어뜨린 부정적 사건으로 평가한다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 5
+       },
+       "sentence_sha256": "34c2a2a5cf32d58d3aca202c4e9446d95a8e9c3beba84a57db2b4551ab3bf1c5"
+      }
+     }
+    ]
+   },
+   "treatment_recommendation": {
+    "status": "not_observed",
+    "model_status": "explicit_not_stated",
+    "outlet_narration_observed": false,
+    "items": []
+   }
+  },
+  "actors_and_sources": [
+   {
+    "actor_id": "actor:a6dcba90f8a8334cbf751891fa1ba10efd2ec6b3bdaf3ed5d142365ea3aaf2bd",
+    "role": "political_actor",
+    "role_label": "정당·정치권",
+    "direct_quote_count": 3,
+    "indirect_attribution_count": 1,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 5
+      },
+      "sentence_sha256": "34c2a2a5cf32d58d3aca202c4e9446d95a8e9c3beba84a57db2b4551ab3bf1c5"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 11
+      },
+      "sentence_sha256": "cf748490fd2e9a13c0b42e3b1237a7d9c9982998e5433816ee09dea435767e3a"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 12
+      },
+      "sentence_sha256": "21c0951f5225e3aee07751aed893dae09e023604c24bfbdae304834293c7ccfb"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 10
+      },
+      "sentence_sha256": "fb86eb5ac11397904d81c93fe605e3655aae9c7a65be0ace9d4e8cafe4a1f79e"
+     }
+    ]
+   }
+  ],
+  "context_depth": {
+   "level": "unknown"
+  },
+  "scope": {
+   "code": "unknown"
+  },
+  "secondary_descriptors": {
+   "generic_frames": [],
+   "policy_frames": [],
+   "controlled_associations": []
+  },
+  "framing_devices": [],
+  "review": {
+   "status": "automatic_draft",
+   "analysis_decision": "analyze",
+   "analysis_state": "succeeded",
+   "attempt_count": 1,
+   "idempotency_fingerprint": "49fe44c83843306658f26d984db08294536de8d37f44a28263116e9eca2c4164",
+   "error_code": null,
+   "fallback_reason": null,
+   "requires_human_review": true,
+   "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
   }
+ }
 }

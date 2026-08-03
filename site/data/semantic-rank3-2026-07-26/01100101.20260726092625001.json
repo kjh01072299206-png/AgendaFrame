@@ -1,244 +1,289 @@
 {
-  "articleId": "01100101.20260726092625001",
-  "profile": {
-    "schema_version": "agendaframe.article-frame-profile.v2",
-    "lineage": {
-      "model_id": "gemini-2.5-flash-lite",
-      "prompt_version": "2.5.0",
-      "analysis_schema_version": "agendaframe.article-frame-profile.v2",
-      "model_output_schema_version": 3,
-      "comparison_engine_version": "korean-evidence-rules-v2",
-      "approval": {
-        "authorization_id": "bigkinds-2026-07-26-rank-3-f87f13a7010f",
-        "fingerprint": "49b9b47e3211275d2ab63d0b409b07d71ad8442f820f3139cb12fbf693e0d2ae",
-        "cluster_id": "bigkinds-2026-07-26-rank-3",
-        "reviewer": "AgendaFrame agent-assisted evidence audit",
-        "reviewed_at": "2026-08-02T00:00:00+09:00",
-        "approved_urls_sha256": "5bad51a9594e6cf679cd775784227bf4bd41c6baad5e3cb36298f8031f057e8c"
+ "articleId": "01100101.20260726092625001",
+ "profile": {
+  "schema_version": "agendaframe.article-frame-profile.v2",
+  "lineage": {
+   "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+   "model_output_schema_version": 3,
+   "comparison_engine_version": "korean-evidence-rules-v2",
+   "approval": {
+    "authorization_id": "bigkinds-2026-07-26-rank-3-f87f13a7010f",
+    "fingerprint": "49b9b47e3211275d2ab63d0b409b07d71ad8442f820f3139cb12fbf693e0d2ae",
+    "cluster_id": "bigkinds-2026-07-26-rank-3",
+    "reviewer": "AgendaFrame agent-assisted evidence audit",
+    "reviewed_at": "2026-08-02T00:00:00+09:00",
+    "approved_urls_sha256": "5bad51a9594e6cf679cd775784227bf4bd41c6baad5e3cb36298f8031f057e8c"
+   }
+  },
+  "engine": {
+   "name": "AgendaFrame Claude evidence coder",
+   "version": "claude-sonnet-5x2-opus-5-adjudicated",
+   "approach": "semantic_evidence_bounded",
+   "semantic_ai": true,
+   "status": "semantic_draft",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": 3,
+   "evidence_storage": "locator_and_salted_sha256_only",
+   "limitations": [
+    "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+    "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+    "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+   ]
+  },
+  "article": {
+   "article_id": "01100101.20260726092625001",
+   "upstream_article_id": "01100101.20260726092625001",
+   "published_at": "2026-07-26T09:26:25+09:00",
+   "title_sha256": "410a95df67b1149177fcd3899c31647d97c59af073eea02dd1b5a0a767498ecf",
+   "body_sha256": "616f941b9a2970743a04e4c2a8e5a234cac1a481fe537a01aea9b303ea2d738e",
+   "body_character_count": 1648,
+   "body_word_count": 388,
+   "paragraph_count": 1,
+   "sentence_count": 52,
+   "raw_body_retained": false
+  },
+  "extraction": {
+   "text_scope": "transient_public_page_extract",
+   "analyzed_character_count": 1648,
+   "input_truncated": false
+  },
+  "genre": {
+   "code": "unknown",
+   "label": "자동 분류 안 함",
+   "evidence": []
+  },
+  "dimensions": {
+   "problem_definition": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:6ac2a4d21d0b9f5723f466951d31cfa7d3ab77733ed0fa1ae2ee3aff1aaca80e",
+      "code": "semantic_problem_definition",
+      "frame_family": "safety_harm",
+      "variant_key": "semantic:problem_definition:family:safety_harm",
+      "public_paraphrase": "경찰이 다수 사상자를 낳은 아파트 관리동 화재를 방화로 보고 그 범행 동기를 밝히는 일을 핵심 과제로 다루는 상황이 문제로 제시된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 14
+       },
+       "sentence_sha256": "c12eb84345f34c1e0e9cc433af9af0aadd59711218507527a671f55c8ab0094c"
       }
-    },
-    "engine": {
-      "name": "AgendaFrame Vertex evidence coder",
-      "version": "gemini-2.5-flash-lite",
-      "approach": "semantic_evidence_bounded",
-      "semantic_ai": true,
-      "status": "semantic_draft",
-      "prompt_version": "2.5.0",
-      "analysis_schema_version": 3,
-      "evidence_storage": "locator_and_salted_sha256_only",
-      "limitations": [
-        "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
-        "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
-        "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
-      ]
-    },
-    "article": {
-      "article_id": "01100101.20260726092625001",
-      "upstream_article_id": "01100101.20260726092625001",
-      "published_at": "2026-07-26T09:26:25+09:00",
-      "title_sha256": "410a95df67b1149177fcd3899c31647d97c59af073eea02dd1b5a0a767498ecf",
-      "body_sha256": "616f941b9a2970743a04e4c2a8e5a234cac1a481fe537a01aea9b303ea2d738e",
-      "body_character_count": 1648,
-      "body_word_count": 388,
-      "paragraph_count": 1,
-      "sentence_count": 52,
-      "raw_body_retained": false
-    },
-    "extraction": {
-      "text_scope": "transient_public_page_extract",
-      "analyzed_character_count": 1648,
-      "input_truncated": false
-    },
-    "genre": {
-      "code": "unknown",
-      "label": "자동 분류 안 함",
-      "evidence": []
-    },
-    "dimensions": {
-      "problem_definition": {
-        "status": "observed",
-        "model_status": "supported",
-        "outlet_narration_observed": true,
-        "items": [
-          {
-            "claim_id": "claim:6ac2a4d21d0b9f5723f466951d31cfa7d3ab77733ed0fa1ae2ee3aff1aaca80e",
-            "code": "semantic_problem_definition",
-            "frame_family": "safety_harm",
-            "variant_key": "semantic:problem_definition:family:safety_harm",
-            "public_paraphrase": "아파트 관리실 방화 사건으로 8명 사상자 발생",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 14
-              },
-              "sentence_sha256": "c12eb84345f34c1e0e9cc433af9af0aadd59711218507527a671f55c8ab0094c"
-            }
-          }
-        ]
+     }
+    ]
+   },
+   "causal_interpretation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:cc4e6493ac28fe4c21857f41d5a7929049772006d830c5fe39661ba21d8f505f",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "individual_action",
+      "variant_key": "semantic:causal_interpretation:family:individual_action",
+      "public_paraphrase": "고소를 당한 데 대한 앙갚음 심리가 범행을 촉발했을 가능성이 입주민들의 전언 형태로 제기된다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
       },
-      "causal_interpretation": {
-        "status": "source_attributed",
-        "model_status": "supported",
-        "outlet_narration_observed": false,
-        "items": [
-          {
-            "claim_id": "claim:8e46749a1ea349a9090692267af41060b4b85404c769b7277a7c64cc38b2ca06",
-            "code": "semantic_causal_interpretation",
-            "frame_family": "individual_action",
-            "variant_key": "semantic:causal_interpretation:family:individual_action",
-            "public_paraphrase": "피의자가 아파트 운영 문제로 관리실과 갈등을 겪고 고소당한 것에 대한 보복 범죄 가능성",
-            "voice": {
-              "kind": "uncertain_quote",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 15
-              },
-              "sentence_sha256": "890c73c81ea4d7848699a2a0474ff0efa4b8cb79632e92bfbbc8bf168cc0663e"
-            }
-          },
-          {
-            "claim_id": "claim:8e46749a1ea349a9090692267af41060b4b85404c769b7277a7c64cc38b2ca06",
-            "code": "semantic_causal_interpretation",
-            "frame_family": "individual_action",
-            "variant_key": "semantic:causal_interpretation:family:individual_action",
-            "public_paraphrase": "피의자가 아파트 운영 문제로 관리실과 갈등을 겪고 고소당한 것에 대한 보복 범죄 가능성",
-            "voice": {
-              "kind": "uncertain_quote",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 19
-              },
-              "sentence_sha256": "9b7d59cf24ac0ae3fc48fe4110346140845248a07fa0b896ce74c09e33ea7fb1"
-            }
-          }
-        ]
-      },
-      "responsibility_attribution": {
-        "status": "observed",
-        "model_status": "supported",
-        "outlet_narration_observed": true,
-        "items": [
-          {
-            "claim_id": "claim:8c94bbc77078272aee2fb9cca6c8d23da99effda899342257e225f4dfddc2639",
-            "code": "semantic_responsibility_attribution",
-            "frame_family": "judiciary_law_enforcement",
-            "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
-            "public_paraphrase": "경찰은 피의자 A씨의 보복 범죄 가능성을 수사 중",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 20
-              },
-              "sentence_sha256": "5a5efdf880b9b707b2928603f6756abf080cd85142a179acb1842fef761cfd56"
-            }
-          }
-        ]
-      },
-      "moral_evaluation": {
-        "status": "source_attributed",
-        "model_status": "supported",
-        "outlet_narration_observed": false,
-        "items": [
-          {
-            "claim_id": "claim:00ec9b595d918101dd534073e3eda88cc34fb00a12de92ec703406ad3da4cbbf",
-            "code": "semantic_moral_evaluation",
-            "frame_family": "safety_negative",
-            "variant_key": "semantic:moral_evaluation:family:safety_negative",
-            "public_paraphrase": "전신 화상을 입은 피의자 A씨의 생명에는 지장이 없으나 진술이 불가능한 상태",
-            "voice": {
-              "kind": "direct_quote",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 22
-              },
-              "sentence_sha256": "a0602d83f51700e1a6132ea6500c34210fd44c2aa2591bdab8bfb7f9e220a980"
-            }
-          }
-        ]
-      },
-      "treatment_recommendation": {
-        "status": "observed",
-        "model_status": "supported",
-        "outlet_narration_observed": true,
-        "items": [
-          {
-            "claim_id": "claim:3ca3bed052ff470364503332f4ba864484711d184153c7fd2982dc6ecbb58a41",
-            "code": "semantic_treatment_recommendation",
-            "frame_family": "investigation_accountability",
-            "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
-            "public_paraphrase": "피의자 A씨의 회복 후 대면 조사 진행 예정",
-            "voice": {
-              "kind": "journalist_narration",
-              "speaker_role": null
-            },
-            "evidence": {
-              "locator": {
-                "paragraph": 1,
-                "sentence": 22
-              },
-              "sentence_sha256": "a0602d83f51700e1a6132ea6500c34210fd44c2aa2591bdab8bfb7f9e220a980"
-            }
-          }
-        ]
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 19
+       },
+       "sentence_sha256": "9b7d59cf24ac0ae3fc48fe4110346140845248a07fa0b896ce74c09e33ea7fb1"
       }
-    },
-    "actors_and_sources": [
-      {
-        "actor_id": "actor:592fe41a91aeae0846c2f65ab615b0dfa74734c0ec7632cf2c20fe782361a234",
-        "role": "government_official",
-        "role_label": "정부·공공기관",
-        "direct_quote_count": 1,
-        "indirect_attribution_count": 0,
-        "evidence": [
-          {
-            "locator": {
-              "paragraph": 1,
-              "sentence": 22
-            },
-            "sentence_sha256": "a0602d83f51700e1a6132ea6500c34210fd44c2aa2591bdab8bfb7f9e220a980"
-          }
-        ]
+     },
+     {
+      "claim_id": "claim:cc4e6493ac28fe4c21857f41d5a7929049772006d830c5fe39661ba21d8f505f",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "individual_action",
+      "variant_key": "semantic:causal_interpretation:family:individual_action",
+      "public_paraphrase": "고소를 당한 데 대한 앙갚음 심리가 범행을 촉발했을 가능성이 입주민들의 전언 형태로 제기된다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 18
+       },
+       "sentence_sha256": "37b5fa2f25dc03032db6860c1fc5952afcb6402cfc9b8322ed4223c3cd99ab55"
       }
-    ],
-    "context_depth": {
-      "level": "unknown"
-    },
-    "scope": {
-      "code": "unknown"
-    },
-    "secondary_descriptors": {
-      "generic_frames": [],
-      "policy_frames": [],
-      "controlled_associations": []
-    },
-    "framing_devices": [],
-    "review": {
-      "status": "automatic_draft",
-      "analysis_decision": "analyze",
-      "analysis_state": "succeeded",
-      "attempt_count": 1,
-      "idempotency_fingerprint": "5dcb3e787bf92f7c4703838fe714d16666ccc3ef2d41cc6afb43655bf0a29ce0",
-      "error_code": null,
-      "fallback_reason": null,
-      "requires_human_review": true,
-      "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
-    }
+     }
+    ]
+   },
+   "responsibility_attribution": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:aecb444f1f823d38bebee9b4ceaa08c8601dd77d5d0041156de0e17dc48f0fa8",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "individual_actor",
+      "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+      "public_paraphrase": "아파트 운영을 둘러싼 불만으로 관리실 측과 거듭 부딪치고 소란으로 여러 차례 신고까지 당한 70대 피의자 개인에게 사건의 책임이 돌려진다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 15
+       },
+       "sentence_sha256": "890c73c81ea4d7848699a2a0474ff0efa4b8cb79632e92bfbbc8bf168cc0663e"
+      }
+     }
+    ]
+   },
+   "moral_evaluation": {
+    "status": "not_observed",
+    "model_status": "explicit_not_stated",
+    "outlet_narration_observed": false,
+    "items": []
+   },
+   "treatment_recommendation": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:3ca3bed052ff470364503332f4ba864484711d184153c7fd2982dc6ecbb58a41",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "investigation_accountability",
+      "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+      "public_paraphrase": "경찰이 감시 화면이 꺼진 경위와 사건의 연관성을 규명하고 참고인 조사·압수물 분석·부검으로 진상을 확인하는 대응이 제시된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 24
+       },
+       "sentence_sha256": "48f467a412422c792a774fd8610971b59140948b7242b7b08efa4de276f34141"
+      }
+     },
+     {
+      "claim_id": "claim:3ca3bed052ff470364503332f4ba864484711d184153c7fd2982dc6ecbb58a41",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "investigation_accountability",
+      "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+      "public_paraphrase": "경찰이 감시 화면이 꺼진 경위와 사건의 연관성을 규명하고 참고인 조사·압수물 분석·부검으로 진상을 확인하는 대응이 제시된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 28
+       },
+       "sentence_sha256": "fdc2da2a004667e060a2bc4b52b66ec16b35fe735d5b69fbe5246b2663fe3fe5"
+      }
+     }
+    ]
+   }
+  },
+  "actors_and_sources": [
+   {
+    "actor_id": "actor:c66b8a403a113adf3b2a483d0da122fbe0bb6411b90a76cb2d8d3239ecb2dc7c",
+    "role": "affected_person",
+    "role_label": "당사자·시민",
+    "direct_quote_count": 0,
+    "indirect_attribution_count": 2,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 18
+      },
+      "sentence_sha256": "37b5fa2f25dc03032db6860c1fc5952afcb6402cfc9b8322ed4223c3cd99ab55"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 19
+      },
+      "sentence_sha256": "9b7d59cf24ac0ae3fc48fe4110346140845248a07fa0b896ce74c09e33ea7fb1"
+     }
+    ]
+   },
+   {
+    "actor_id": "actor:b78a6b7d59e8932cacfc3a3e749efe2e7522401826cd4bba00c45e852427f8f4",
+    "role": "anonymous_official",
+    "role_label": "익명·비실명 관계자",
+    "direct_quote_count": 0,
+    "indirect_attribution_count": 1,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 23
+      },
+      "sentence_sha256": "6fbe7e673a657302b2bdb4baf45fea92ad09d244d543e7f8f7be7c7516ca8c81"
+     }
+    ]
+   },
+   {
+    "actor_id": "actor:592fe41a91aeae0846c2f65ab615b0dfa74734c0ec7632cf2c20fe782361a234",
+    "role": "government_official",
+    "role_label": "정부·공공기관",
+    "direct_quote_count": 2,
+    "indirect_attribution_count": 0,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 22
+      },
+      "sentence_sha256": "a0602d83f51700e1a6132ea6500c34210fd44c2aa2591bdab8bfb7f9e220a980"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 15
+      },
+      "sentence_sha256": "890c73c81ea4d7848699a2a0474ff0efa4b8cb79632e92bfbbc8bf168cc0663e"
+     }
+    ]
+   }
+  ],
+  "context_depth": {
+   "level": "unknown"
+  },
+  "scope": {
+   "code": "unknown"
+  },
+  "secondary_descriptors": {
+   "generic_frames": [],
+   "policy_frames": [],
+   "controlled_associations": []
+  },
+  "framing_devices": [],
+  "review": {
+   "status": "automatic_draft",
+   "analysis_decision": "analyze",
+   "analysis_state": "succeeded",
+   "attempt_count": 1,
+   "idempotency_fingerprint": "a425969326c18a458a9f002e80acb960e7c43bb4471053d0bf35a221de994b93",
+   "error_code": null,
+   "fallback_reason": null,
+   "requires_human_review": true,
+   "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
   }
+ }
 }
