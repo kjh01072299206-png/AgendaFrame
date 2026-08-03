@@ -130,21 +130,64 @@ function groundedAnswer(bundle: IssueAnalysisBundle, question: string) {
     };
   }
 
-  const claims = semanticClaims(bundle);
+  // 공통 사실 질문은 층위 항목이 아니라 묶음 요약에서 답한다. 이 분기가 없으면
+  // 화면이 추천하는 "모든 매체가 같게 쓴 사실은?"이 항상 보류로 떨어진다.
+  if (/공통|같게|같은 사실|합의된|공통점/.test(question)) {
+    const ground = bundle.comparison.data.summary_30_seconds?.common_ground?.trim();
+    const subjects = bundle.clusterAi.commonSubjects ?? [];
+    if (ground || subjects.length) {
+      const parts = [ground];
+      if (subjects.length) {
+        parts.push(
+          `모든 기사에 공통으로 나타난 표현은 ${subjects.slice(0, 8).join(", ")}입니다. 인물·기관·날짜와 평가 어휘가 함께 들어 있어, 공통이라는 것이 사실 합의를 뜻하지는 않습니다.`,
+        );
+      }
+      return {
+        status: "answered",
+        answer: parts.filter(Boolean).join(" "),
+        evidence: (bundle.comparison.evidence ?? [])
+          .slice(0, 3)
+          .map((item) => answerEvidence(articleFor(bundle, item.articleId ?? ""), item))
+          .filter((item): item is AnswerEvidence => Boolean(item)),
+      };
+    }
+  }
+
+  // 질문이 층위를 지목하면 그 층위 안에서만 답한다. 안 하면 차이 질문의 순위가
+  // 겹침 0 에서 임의로 정해져 "책임 귀속" 질문에 문제 정의 항목이 돌아온다.
+  const namedDimension = (
+    [
+      [/책임|귀속/, "responsibility_attribution"],
+      [/원인|왜 그렇|배경/, "causal_interpretation"],
+      [/해법|처방|대책|해결/, "treatment_recommendation"],
+      [/평가|옳|잘못|규범|도덕/, "moral_evaluation"],
+      [/문제|규정|쟁점/, "problem_definition"],
+    ] as Array<[RegExp, string]>
+  ).find(([pattern]) => pattern.test(question))?.[1];
+
+  const allClaims = semanticClaims(bundle);
+  const scoped = namedDimension ? allClaims.filter((claim) => claim.dimension === namedDimension) : allClaims;
+  const claims = scoped.length ? scoped : allClaims;
   const questionTokens = tokens(question);
   const ranked = claims.map((claim) => {
     const claimTokens = new Set(tokens(claim.text));
     const overlap = questionTokens.filter((token) => claimTokens.has(token)).length;
     return { ...claim, overlap };
   }).sort((left, right) => right.overlap - left.overlap);
-  const differenceQuestion = /차이|다르|갈린|비교|초점/.test(question);
+  const differenceQuestion = /차이|다르|달라|달랐|갈린|갈렸|비교|초점/.test(question);
+  const pickDistinct = (limit: number) =>
+    ranked.reduce<typeof ranked>((items, claim) => {
+      if (items.length >= limit) return items;
+      if (!items.some((candidate) => candidate.articleId === claim.articleId || candidate.text === claim.text)) items.push(claim);
+      return items;
+    }, []);
+  // 질문이 층위를 지목했으면 토큰 겹침을 요구하지 않는다. 의역 문장에 층위 이름이
+  // 들어 있을 이유가 없어서, 겹침을 요구하면 "해법·처방은?" 같은 질문이 늘 보류된다.
   const selected = differenceQuestion
-    ? ranked.reduce<typeof ranked>((items, claim) => {
-        if (items.length >= 2) return items;
-        if (!items.some((candidate) => candidate.articleId === claim.articleId || candidate.text === claim.text)) items.push(claim);
-        return items;
-      }, [])
-    : ranked.filter((claim) => claim.overlap > 0).slice(0, 3);
+    ? pickDistinct(2)
+    : namedDimension && scoped.length
+      ? pickDistinct(3)
+      : ranked.filter((claim) => claim.overlap > 0).slice(0, 3);
   if (!selected.length || (differenceQuestion && selected.length < 2)) {
     return { status: "withheld", answer: "연결된 AI 본문 근거만으로는 이 질문에 답할 수 없습니다.", evidence: [] as AnswerEvidence[] };
   }

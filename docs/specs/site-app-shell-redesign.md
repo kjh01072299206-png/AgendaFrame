@@ -23,8 +23,13 @@
 - `/api/initial-five/{ask,issues/[id]}` 는 **Vercel 자체 라우트 핸들러로 잡힌다**
   (빌드 결과 `ƒ`). `next.config.ts` 의 fallback rewrite 는 매칭되는 라우트가 없을 때만
   발동하므로, 워커로 프록시되는 것은 `/api/chat` `/api/analyze` 같은 나머지 레거시
-  경로다. 즉 **AI 대화는 Vercel 환경변수에 의존한다** — 프리뷰에서 실제로 답이 오는지
-  확인해야 하며, 안 오면 그 원인은 이번 변경이 아니라 배포 환경이다.
+  경로다.
+- **AI 대화는 외부 모델을 호출하지 않는다.** `app/api/initial-five/ask/route.ts` 는
+  환경변수도 외부 fetch 도 쓰지 않고, 정적 아티팩트에 이미 코딩된 항목에서 질문에
+  맞는 것을 골라 근거 위치와 함께 돌려준다(`provider:
+  claude_analysis_grounded_retrieval_v1`). 같은 질문에 항상 같은 답이 오고, API 장애나
+  키 만료로 죽지 않으며, 없는 사실을 만들 수 없다. 프로덕션에서 추천 질문 4개 중 3개가
+  근거 2건과 함께 답하는 것을 확인했다(나머지 하나는 공통 사실 분기를 추가해 해결).
 - 데이터는 빌드 시 `scripts/build-initial-five.mjs` 가 `public/initial-five/` 로
   구워 넣는다(매니페스트 + 의제 5개 JSON). 런타임 DB 의존이 없다.
 
