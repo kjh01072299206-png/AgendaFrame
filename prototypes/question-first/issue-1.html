@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이 기사에서 말하는 사람은 누구인가? — 검찰 보완수사권 폐지 추진에 야당 반발</title>
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:light;
+ --paper:#f6f5f2; --card:#fff; --ink:#15181c; --ink2:#4a5158; --ink3:#767e86;
+ --rule:#e0ddd6; --rule2:#c8c4ba; --mark:#1d4a6e; --wash:#eceae4;
+ --g1:#1d4a6e; --g2:#1c6b5f; --g3:#8a4b1e; --g4:#5c3d84;
+ --sans:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+ --mono:ui-monospace,"SF Mono",Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;
+ --paper:#12141a; --card:#191d24; --ink:#e8eaee; --ink2:#a7b0ba; --ink3:#828b95;
+ --rule:#262c35; --rule2:#3b444f; --mark:#8fbadd; --wash:#1e242d;
+ --g1:#8fbadd; --g2:#5fc0ae; --g3:#d59a5f; --g4:#b49ae0}}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+ font-size:16px;line-height:1.72;word-break:keep-all;-webkit-font-smoothing:antialiased}
+a{color:var(--mark)}
+.wrap{max-width:760px;margin:0 auto;padding:0 22px 96px}
+.wide{max-width:960px;margin:0 auto;padding:0 22px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:14px;
+ padding:18px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.top a{color:var(--ink2);text-decoration:none;font-weight:600}
+.top a:hover{color:var(--mark)}
+.kicker{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:38px 0 10px}
+h1{margin:0;font-size:clamp(23px,3.4vw,31px);line-height:1.34;letter-spacing:-.032em;font-weight:800}
+.what{margin:18px 0 0;font-size:16.5px;line-height:1.8;color:var(--ink)}
+details.gloss{margin:20px 0 0;border-top:1px solid var(--rule);padding-top:14px}
+details.gloss summary{cursor:pointer;font-size:13.5px;font-weight:700;color:var(--ink2);list-style:none}
+details.gloss summary::-webkit-details-marker{display:none}
+details.gloss summary::before{content:"＋ ";color:var(--ink3)}
+details.gloss[open] summary::before{content:"− "}
+details.gloss dl{margin:12px 0 0;display:grid;gap:10px}
+details.gloss dt{font-size:14.5px;font-weight:700}
+details.gloss dd{margin:2px 0 0;font-size:14px;color:var(--ink2)}
+
+section{margin:52px 0 0}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:0 0 12px}
+h2{margin:0 0 8px;font-size:20px;font-weight:800;letter-spacing:-.028em}
+.lead{margin:0 0 20px;font-size:15px;color:var(--ink2);max-width:44em}
+
+.frame{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.frame{grid-template-columns:1fr}}
+.pane{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.pane.gone{background:transparent;border-style:dashed}
+.pane h3{margin:0 0 12px;font-size:13.5px;font-weight:800;letter-spacing:.02em;color:var(--ink2)}
+.pane ul{margin:0;padding:0;list-style:none;display:grid;gap:11px}
+.pane li{font-size:14.5px;line-height:1.65}
+.pane li b{display:block;font-size:12.5px;font-weight:700;color:var(--ink3);letter-spacing:.02em}
+.pane.gone li{color:var(--ink2)}
+
+.qbox{margin:56px 0 0;padding:34px 0 0;border-top:2px solid var(--ink)}
+.qbox .q{margin:0;font-size:clamp(26px,4.6vw,40px);line-height:1.28;letter-spacing:-.04em;font-weight:800}
+.qbox .qs{margin:16px 0 0;font-size:16px;line-height:1.78;color:var(--ink2);max-width:40em}
+
+.banner{margin:26px 0 0;display:grid;gap:10px}
+.brow{display:flex;gap:16px;align-items:baseline;background:var(--card);
+ border:1px solid var(--rule);border-left:4px solid var(--mark);border-radius:8px;padding:14px 18px}
+.brow b{flex:0 0 auto;font-family:var(--mono);font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--mark)}
+.brow span{font-size:14.5px;line-height:1.62}
+@media (max-width:560px){.brow{flex-direction:column;gap:4px}}
+
+.cards{margin:26px 0 0;display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:16px 18px}
+.card.on{border-color:var(--mark);box-shadow:0 0 0 1px var(--mark) inset}
+.card .ch{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.card .ch b{font-size:15.5px;font-weight:800;letter-spacing:-.02em}
+.card .ch .tag{font-size:12.5px;font-weight:700;color:var(--mark);background:var(--wash);
+ border-radius:4px;padding:1px 8px}
+.card .ttl{margin:8px 0 0;font-size:13.5px;color:var(--ink3);line-height:1.55}
+.card .said{margin:9px 0 0;font-size:15px;line-height:1.7}
+.card .meta{margin:10px 0 0;font-size:13px;color:var(--ink3)}
+.card .go{margin:11px 0 0;font-size:13.5px;font-weight:700;display:inline-block}
+.words{margin:9px 0 0;display:flex;flex-wrap:wrap;gap:6px}
+.w{font-size:14px;font-weight:700;background:var(--wash);border-radius:5px;padding:2px 9px}
+.w.q{font-style:normal}
+
+.cols{margin:26px 0 0;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.col{border:1px solid var(--rule);border-top:4px solid var(--cc);border-radius:10px;background:var(--card);
+ padding:16px 18px}
+.col h3{margin:0 0 4px;font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--cc)}
+.col .who{font-size:13px;color:var(--ink3);margin:0 0 14px}
+.col .item{padding:12px 0 0;border-top:1px solid var(--rule);margin-top:12px}
+.col .item:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.col .item b{font-size:14.5px;font-weight:800}
+.col .item .ttl{margin:5px 0 0;font-size:13px;color:var(--ink3);line-height:1.55}
+.col .item .row{margin:7px 0 0;font-size:13.5px;color:var(--ink2)}
+.col .item .row i{font-style:normal;color:var(--ink3)}
+.col .item .go{margin:8px 0 0;font-size:13px;font-weight:700;display:inline-block}
+.col .item.on{background:var(--wash);border-radius:8px;padding:12px 12px 12px;margin-left:-12px;margin-right:-12px}
+.col .item.on b::after{content:" — 내가 읽은 기사";font-size:12px;font-weight:700;color:var(--mark)}
+.card.on .ch b::after{content:" — 내가 읽은 기사";font-size:12px;font-weight:700;color:var(--mark)}
+
+.spot{margin:22px 0 0;padding:16px 20px;background:var(--wash);border-radius:10px;
+ font-size:15px;line-height:1.72}
+.sent{margin:26px 0 0;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.sent h3{margin:0 0 6px;font-size:16px;font-weight:800;letter-spacing:-.025em}
+.sent p.l{margin:0 0 16px;font-size:14.5px;color:var(--ink2)}
+.sent .s{padding:12px 0;border-top:1px solid var(--rule)}
+.sent .s b{font-size:14px;font-weight:800}
+.sent .s p{margin:4px 0 0;font-size:15px;line-height:1.7}
+.sent .s em{font-style:normal;font-size:12.5px;color:var(--ink3)}
+.sent .f{margin:14px 0 0;font-size:13px;color:var(--ink3)}
+
+ol.asked{margin:22px 0 0;padding:0 0 0 1.4em;display:grid;gap:12px}
+ol.asked li{font-size:15.5px;line-height:1.72}
+.rec{margin:26px 0 0;background:var(--card);border:1px solid var(--rule2);border-radius:10px;padding:20px 22px}
+.rec .h{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:0 0 8px}
+.rec b.n{font-size:19px;font-weight:800;letter-spacing:-.02em}
+.rec p{margin:8px 0 0;font-size:15px;line-height:1.72}
+.rec .cav{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--rule);font-size:14px;color:var(--ink2)}
+.rec.none{border-style:dashed}
+.pick{margin:22px 0 0;display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.pick .pl{font-size:13px;color:var(--ink3);margin-right:4px}
+.pick button{font:inherit;font-size:13.5px;font-weight:700;color:var(--ink2);background:var(--card);
+ border:1px solid var(--rule2);border-radius:20px;padding:5px 14px;cursor:pointer}
+.pick button[aria-pressed=true]{background:var(--mark);border-color:var(--mark);color:var(--paper)}
+
+.how{margin:56px 0 0;padding-top:22px;border-top:1px solid var(--rule);font-size:13.5px;color:var(--ink2)}
+.how h2{font-size:15px;margin-bottom:10px}
+.how ul{margin:0;padding-left:1.2em;display:grid;gap:8px}
+.nav{margin:46px 0 0;display:flex;justify-content:space-between;gap:14px;font-size:14px;
+ border-top:1px solid var(--rule);padding-top:20px}
+.nav a{font-weight:700;text-decoration:none}
+:focus-visible{outline:2px solid var(--mark);outline-offset:3px}
+
+.ilist{margin:34px 0 0;display:grid;gap:12px}
+.irow{display:block;background:var(--card);border:1px solid var(--rule);border-radius:10px;
+ padding:18px 20px;text-decoration:none;color:inherit}
+.irow:hover{border-color:var(--rule2)}
+.irow .n{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink3)}
+.irow .q{margin:4px 0 0;font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--mark)}
+.irow .e{margin:5px 0 0;font-size:14.5px;color:var(--ink)}
+.irow .m{margin:8px 0 0;font-size:13px;color:var(--ink3)}
+</style>
+</head>
+<body>
+<div class="wide"><div class="top"><a href="index.html">← 다섯 사안 목록</a><span style="color:var(--ink3)">1번 사안</span></div></div><div class="wrap"><p class="kicker">2026년 7월 26일 보도 · 기사 7건 · 매체 6곳</p><h1>검찰 보완수사권 폐지 추진에 야당 반발</h1><p class="what">더불어민주당이 검찰의 보완수사권을 전면 없애는 법 개정을 추진하면서 여야가 맞붙었다. 정점식 국민의힘 원내대표는 7월 26일 페이스북에 글을 올려, 이재명 대통령이 이 문제에 침묵하고 있다며 입장을 밝히라고 요구했다. 그는 폐지안이 본회의를 통과한 뒤 대통령이 재의요구권까지 포기하면 정부와 여당이 함께 무너질 것이라고 경고했다.</p><details class="gloss"><summary>모르는 낱말 풀이</summary><dl><dt>보완수사권</dt><dd>경찰이 넘긴 사건을 검찰이 더 파고들어 확인할 수 있는 권한으로, 이를 없애면 수사가 부실해도 바로잡을 통로가 줄어든다는 점이 쟁점이다.</dd><dt>재의요구권(거부권)</dt><dd>국회를 통과한 법안을 대통령이 국회로 돌려보내 다시 표결하게 하는 권한으로, 야당이 이번 법 개정을 멈출 수단으로 대통령에게 요구하는 카드다.</dd><dt>필리버스터</dt><dd>의원들이 국회에서 발언을 길게 이어가 표결을 늦추는 방식으로, 수적으로 밀리는 쪽이 법안 처리를 미루려 할 때 쓴다.</dd></dl></details><section><p class="eyebrow">함께 만든 틀</p><h2>기사 7건이 같게 전한 것, 그리고 어디에도 없는 것</h2><p class="lead">기사가 무엇을 보이게 하는지와 무엇을 안 보이게 하는지가 함께 사건의 인상을 만듭니다. 그래서 두 목록을 나란히 둡니다. 왼쪽은 모두 같게 전한 것이고, 오른쪽은 이 기사들에 없는 것입니다.</p><div class="frame"><div class="pane"><h3>모두 같게 전했습니다</h3><ul><li><b>왜 이렇게 됐다고 했나</b>여론 역풍과 강경파와의 뒷거래를 함께 저울질한 정치 계산</li><li><b>누구 책임이라고 했나</b>대통령 개인과 여당 의원들 모두에게 책임을 돌린다</li><li><b>어떻게 평가했나</b>법치를 흔드는 사안 앞에서 책임을 피한다는 부정 평가를 실었다</li></ul></div><div class="pane gone"><h3>이 기사들에 없습니다</h3><ul><li>구조·제도 설명으로 쓴 기사 — 없습니다(개별 사건 4건, 절반쯤 섞인 기사 3건)</li></ul></div></div></section></div><div class="wide"><div class="qbox"><h2 class="q">이 기사에서 말하는 사람은 누구인가?</h2><p class="qs">일곱 기사 모두 야당 쪽 발언을 중심으로 채워집니다. 그래서 이 사안에서 갈린 것은 사건에 대한 해석이 아니라, 같은 사람의 말을 어디까지 옮겼는지입니다.</p></div><div class="banner"><div class="brow"><b>7건 / 7건</b><span>비판 대상이 된 대통령·여당의 반론이 어느 기사에도 실리지 않았습니다.</span></div><div class="brow"><b>6건 / 7건</b><span>인용된 취재원이 정당·정치권 한 종류뿐입니다. 남은 1건(중앙일보)에만 정부 관계자의 전언이 하나 더 있습니다.</span></div><div class="brow"><b>2건</b><span>야당 원내대표가 소셜미디어에 올린 글 한 편이 기사 전체를 채웁니다.</span></div></div><p class="lead" style="margin:26px 0 0">각 기사가 같은 발언에서 무엇까지 옮겼는지</p><div class="cards"><article class="card" data-outlet="세계일보 ①"><div class="ch"><b>세계일보 ①</b><span class="tag">요구 없이 경고만 전달</span></div><p class="ttl">정점식 &quot;보완수사권 폐지하면 정부 여당 동반 몰락&quot; <span style="opacity:.7">· 10:13</span></p><p class="said">야당 원내대표 한 명의 발언만 인용되어 기사 전체의 목소리를 단독으로 구성하며 비판 대상 측의 반론은 등장하지 않는다.</p><p class="meta">인용된 취재원 유형: 정당·정치권</p><a class="go" href="https://www.segye.com/newsView/20260726503036" target="_blank" rel="noopener">원문 보기 ↗</a></article><article class="card" data-outlet="동아일보"><div class="ch"><b>동아일보</b><span class="tag">거부권을 쓰라고 요구</span></div><p class="ttl">정점식 “李, 뒷거래 깨질까 걱정하나 보완수사권 추악한 흥정” <span style="opacity:.7">· 10:19</span></p><p class="said">야당 원내대표 한 명의 발언이 기사 전체를 채우고, 비판 대상 측 반론 취재원은 등장하지 않는다.</p><p class="meta">인용된 취재원 유형: 정당·정치권</p><a class="go" href="https://www.donga.com/news/Politics/article/all/20260726/134364287/1" target="_blank" rel="noopener">원문 보기 ↗</a></article><article class="card" data-outlet="중앙일보"><div class="ch"><b>중앙일보</b><span class="tag">거부권을 쓰라고 요구</span></div><p class="ttl">국힘, 與 보완수사권 폐지 당론에 “국민 팔아먹은 것도 매국” <span style="opacity:.7">· 10:38</span></p><p class="said">인용된 발언이 야당 원내대표와 대변인단으로만 채워져, 비판 대상인 집권당 측의 반론은 거의 노출되지 않는다.</p><p class="meta">인용된 취재원 유형: 정당·정치권 · 정부·공공기관</p><a class="go" href="https://www.joongang.co.kr/article/25448158" target="_blank" rel="noopener">원문 보기 ↗</a></article><article class="card" data-outlet="한국일보"><div class="ch"><b>한국일보</b><span class="tag">거부권을 쓰라고 요구</span></div><p class="ttl">정점식 &quot;대통령, 왜 이리 비겁 보완수사권 폐지하면 정부 여당 동반 몰락&quot; <span style="opacity:.7">· 10:47</span></p><p class="said">야당 원내대표 한 명이 소셜미디어에 올린 글에만 의존해 기사 전체가 구성된 단일 취재원 구조다.</p><p class="meta">인용된 취재원 유형: 정당·정치권</p><a class="go" href="https://www.hankookilbo.com/news/article/A2026072610430004556" target="_blank" rel="noopener">원문 보기 ↗</a></article><article class="card" data-outlet="세계일보 ②"><div class="ch"><b>세계일보 ②</b><span class="tag">요구 없이 경고만 전달</span></div><p class="ttl">국힘, 李대통령 ‘침묵’ 맹공 “보완수사권 폐지 땐 정부 여당 몰락” <span style="opacity:.7">· 11:07</span></p><p class="said">제1야당 원내 지도부와 대변인의 발언만으로 기사가 채워지며, 비판 대상이 된 쪽이나 제3자의 목소리는 전혀 실리지 않는다.</p><p class="meta">인용된 취재원 유형: 정당·정치권</p><a class="go" href="https://www.segye.com/newsView/20260726503694" target="_blank" rel="noopener">원문 보기 ↗</a></article><article class="card" data-outlet="국민일보"><div class="ch"><b>국민일보</b><span class="tag">거부권을 쓰라고 요구</span></div><p class="ttl">“李대통령, 보완수사권 침묵 왜 이리 비겁” 정점식 비판 <span style="opacity:.7">· 11:31</span></p><p class="said">기사 전체가 야당 원내대표 한 명의 페이스북 글과 발언으로 채워지고, 비판 대상인 대통령이나 집권당의 반론은 실리지 않는다.</p><p class="meta">인용된 취재원 유형: 정당·정치권</p><a class="go" href="https://www.kmib.co.kr/article/view.asp?arcid=0030163070&amp;code=61111511&amp;cp=kd" target="_blank" rel="noopener">원문 보기 ↗</a></article><article class="card" data-outlet="조선일보"><div class="ch"><b>조선일보</b><span class="tag">거부권을 쓰라고 요구</span></div><p class="ttl">정점식 “보완수사권 폐지하면 정부 여당 동반 몰락할 것” <span style="opacity:.7">· 13:09</span></p><p class="said">야당 원내대표와 수석대변인 두 정치인의 비판 발언만 직접 인용으로 전면 배치되고, 반론 주체의 목소리는 등장하지 않는다.</p><p class="meta">인용된 취재원 유형: 정당·정치권</p><a class="go" href="https://www.chosun.com/politics/assembly/2026/07/26/C5BGFKVOZNEOHIIZGKTJ7HOXUE" target="_blank" rel="noopener">원문 보기 ↗</a></article></div></div><div class="wrap"><section><p class="eyebrow">아무도 묻지 않은 것</p><h2>이 기사 7건에 없는 질문</h2><ol class="asked"><li>보완수사권을 없애면 실제 수사에서 무엇이 달라지는지 — 7건에 수사 실무자나 법학자의 설명은 없습니다.</li><li>폐지를 추진하는 쪽은 왜 그렇게 하는지 — 추진 측의 설명은 7건에 없습니다.</li></ol></section><section><p class="eyebrow">더 읽을 가치가 있나</p><h2>하나만 더 읽는다면</h2><div class="rec"><p class="h">추천</p><b class="n">중앙일보</b><p>일곱 건 가운데 이 일을 '정치 싸움'이 아니라 '제도가 무너지는 문제'로 규정한 유일한 기사이고, 정치권 밖 취재원도 한 명 들어 있습니다.</p><p class="cav">다만 폐지를 추진하는 쪽의 설명은 7건 어디에도 없습니다. 반대편 설명은 이 사안 밖에서 따로 찾아야 합니다.</p></div></section><div class="how"><h2>이 페이지가 만들어진 방법</h2><ul>
+<li>기사 25건을 <b>AI 코더 2개</b>가 각각 여섯 항목으로 라벨링하고, 다른 모델이 불일치 항목만 다시 보고 확정했습니다.
+사람 코더의 이중 코딩은 아직 하지 않았습니다. 그래서 이 결과는 검증을 마친 연구 결과가 아니라 초안입니다.</li>
+<li>매체별 답은 <b>코딩된 요약 문장과 기사 제목</b>에서 왔습니다. 기사 본문 문장은 이 화면에 옮기지 않습니다.
+확인은 각 기사의 원문 링크로 하십시오.</li>
+<li><b>‘없습니다’는 그 기사에 해당 서술이 없다는 뜻</b>이고, 매체가 일부러 뺐다는 뜻이 아닙니다.</li>
+<li>표본은 2026년 7월 26일 빅카인즈 상위 이슈에 묶인 <b>전국 종합일간지 기사</b>입니다.
+방송·통신·경제지·지역지는 들어 있지 않아, 언론 전체의 경향으로 읽을 수 없습니다.</li>
+<li>질문 한 줄, 회색 바탕 문단, ‘아무도 묻지 않은 것’은 위 코딩 결과를 근거로 <b>편집이 쓴 문장</b>입니다.
+매체 수·기사 수·기사 제목·인용된 취재원 유형·지칭어·코딩 요약 문장은 <b>데이터에서 그대로</b> 옮겼습니다.</li>
+</ul></div><div class="nav"><span></span><a href="issue-2.html">2번 사안 →</a></div></div>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이 일을 뭐라고 부르나? — 권경애 변호사 손해배상, 화해 무산돼 판결로</title>
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:light;
+ --paper:#f6f5f2; --card:#fff; --ink:#15181c; --ink2:#4a5158; --ink3:#767e86;
+ --rule:#e0ddd6; --rule2:#c8c4ba; --mark:#1d4a6e; --wash:#eceae4;
+ --g1:#1d4a6e; --g2:#1c6b5f; --g3:#8a4b1e; --g4:#5c3d84;
+ --sans:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+ --mono:ui-monospace,"SF Mono",Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;
+ --paper:#12141a; --card:#191d24; --ink:#e8eaee; --ink2:#a7b0ba; --ink3:#828b95;
+ --rule:#262c35; --rule2:#3b444f; --mark:#8fbadd; --wash:#1e242d;
+ --g1:#8fbadd; --g2:#5fc0ae; --g3:#d59a5f; --g4:#b49ae0}}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+ font-size:16px;line-height:1.72;word-break:keep-all;-webkit-font-smoothing:antialiased}
+a{color:var(--mark)}
+.wrap{max-width:760px;margin:0 auto;padding:0 22px 96px}
+.wide{max-width:960px;margin:0 auto;padding:0 22px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:14px;
+ padding:18px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.top a{color:var(--ink2);text-decoration:none;font-weight:600}
+.top a:hover{color:var(--mark)}
+.kicker{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:38px 0 10px}
+h1{margin:0;font-size:clamp(23px,3.4vw,31px);line-height:1.34;letter-spacing:-.032em;font-weight:800}
+.what{margin:18px 0 0;font-size:16.5px;line-height:1.8;color:var(--ink)}
+details.gloss{margin:20px 0 0;border-top:1px solid var(--rule);padding-top:14px}
+details.gloss summary{cursor:pointer;font-size:13.5px;font-weight:700;color:var(--ink2);list-style:none}
+details.gloss summary::-webkit-details-marker{display:none}
+details.gloss summary::before{content:"＋ ";color:var(--ink3)}
+details.gloss[open] summary::before{content:"− "}
+details.gloss dl{margin:12px 0 0;display:grid;gap:10px}
+details.gloss dt{font-size:14.5px;font-weight:700}
+details.gloss dd{margin:2px 0 0;font-size:14px;color:var(--ink2)}
+
+section{margin:52px 0 0}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:0 0 12px}
+h2{margin:0 0 8px;font-size:20px;font-weight:800;letter-spacing:-.028em}
+.lead{margin:0 0 20px;font-size:15px;color:var(--ink2);max-width:44em}
+
+.frame{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.frame{grid-template-columns:1fr}}
+.pane{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.pane.gone{background:transparent;border-style:dashed}
+.pane h3{margin:0 0 12px;font-size:13.5px;font-weight:800;letter-spacing:.02em;color:var(--ink2)}
+.pane ul{margin:0;padding:0;list-style:none;display:grid;gap:11px}
+.pane li{font-size:14.5px;line-height:1.65}
+.pane li b{display:block;font-size:12.5px;font-weight:700;color:var(--ink3);letter-spacing:.02em}
+.pane.gone li{color:var(--ink2)}
+
+.qbox{margin:56px 0 0;padding:34px 0 0;border-top:2px solid var(--ink)}
+.qbox .q{margin:0;font-size:clamp(26px,4.6vw,40px);line-height:1.28;letter-spacing:-.04em;font-weight:800}
+.qbox .qs{margin:16px 0 0;font-size:16px;line-height:1.78;color:var(--ink2);max-width:40em}
+
+.banner{margin:26px 0 0;display:grid;gap:10px}
+.brow{display:flex;gap:16px;align-items:baseline;background:var(--card);
+ border:1px solid var(--rule);border-left:4px solid var(--mark);border-radius:8px;padding:14px 18px}
+.brow b{flex:0 0 auto;font-family:var(--mono);font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--mark)}
+.brow span{font-size:14.5px;line-height:1.62}
+@media (max-width:560px){.brow{flex-direction:column;gap:4px}}
+
+.cards{margin:26px 0 0;display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:16px 18px}
+.card.on{border-color:var(--mark);box-shadow:0 0 0 1px var(--mark) inset}
+.card .ch{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.card .ch b{font-size:15.5px;font-weight:800;letter-spacing:-.02em}
+.card .ch .tag{font-size:12.5px;font-weight:700;color:var(--mark);background:var(--wash);
+ border-radius:4px;padding:1px 8px}
+.card .ttl{margin:8px 0 0;font-size:13.5px;color:var(--ink3);line-height:1.55}
+.card .said{margin:9px 0 0;font-size:15px;line-height:1.7}
+.card .meta{margin:10px 0 0;font-size:13px;color:var(--ink3)}
+.card .go{margin:11px 0 0;font-size:13.5px;font-weight:700;display:inline-block}
+.words{margin:9px 0 0;display:flex;flex-wrap:wrap;gap:6px}
+.w{font-size:14px;font-weight:700;background:var(--wash);border-radius:5px;padding:2px 9px}
+.w.q{font-style:normal}
+
+.cols{margin:26px 0 0;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.col{border:1px solid var(--rule);border-top:4px solid var(--cc);border-radius:10px;background:var(--card);
+ padding:16px 18px}
+.col h3{margin:0 0 4px;font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--cc)}
+.col .who{font-size:13px;color:var(--ink3);margin:0 0 14px}
+.col .item{padding:12px 0 0;border-top:1px solid var(--rule);margin-top:12px}
+.col .item:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.col .item b{font-size:14.5px;font-weight:800}
+.col .item .ttl{margin:5px 0 0;font-size:13px;color:var(--ink3);line-height:1.55}
+.col .item .row{margin:7px 0 0;font-size:13.5px;color:var(--ink2)}
+.col .item .row i{font-style:normal;color:var(--ink3)}
+.col .item .go{margin:8px 0 0;font-size:13px;font-weight:700;display:inline-block}
+.col .item.on{background:var(--wash);border-radius:8px;padding:12px 12px 12px;margin-left:-12px;margin-right:-12px}
+.col .item.on b::after{content:" — 내가 읽은 기사";font-size:12px;font-weight:700;color:var(--mark)}
+.card.on .ch b::after{content:" — 내가 읽은 기사";font-size:12px;font-weight:700;color:var(--mark)}
+
+.spot{margin:22px 0 0;padding:16px 20px;background:var(--wash);border-radius:10px;
+ font-size:15px;line-height:1.72}
+.sent{margin:26px 0 0;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.sent h3{margin:0 0 6px;font-size:16px;font-weight:800;letter-spacing:-.025em}
+.sent p.l{margin:0 0 16px;font-size:14.5px;color:var(--ink2)}
+.sent .s{padding:12px 0;border-top:1px solid var(--rule)}
+.sent .s b{font-size:14px;font-weight:800}
+.sent .s p{margin:4px 0 0;font-size:15px;line-height:1.7}
+.sent .s em{font-style:normal;font-size:12.5px;color:var(--ink3)}
+.sent .f{margin:14px 0 0;font-size:13px;color:var(--ink3)}
+
+ol.asked{margin:22px 0 0;padding:0 0 0 1.4em;display:grid;gap:12px}
+ol.asked li{font-size:15.5px;line-height:1.72}
+.rec{margin:26px 0 0;background:var(--card);border:1px solid var(--rule2);border-radius:10px;padding:20px 22px}
+.rec .h{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:0 0 8px}
+.rec b.n{font-size:19px;font-weight:800;letter-spacing:-.02em}
+.rec p{margin:8px 0 0;font-size:15px;line-height:1.72}
+.rec .cav{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--rule);font-size:14px;color:var(--ink2)}
+.rec.none{border-style:dashed}
+.pick{margin:22px 0 0;display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.pick .pl{font-size:13px;color:var(--ink3);margin-right:4px}
+.pick button{font:inherit;font-size:13.5px;font-weight:700;color:var(--ink2);background:var(--card);
+ border:1px solid var(--rule2);border-radius:20px;padding:5px 14px;cursor:pointer}
+.pick button[aria-pressed=true]{background:var(--mark);border-color:var(--mark);color:var(--paper)}
+
+.how{margin:56px 0 0;padding-top:22px;border-top:1px solid var(--rule);font-size:13.5px;color:var(--ink2)}
+.how h2{font-size:15px;margin-bottom:10px}
+.how ul{margin:0;padding-left:1.2em;display:grid;gap:8px}
+.nav{margin:46px 0 0;display:flex;justify-content:space-between;gap:14px;font-size:14px;
+ border-top:1px solid var(--rule);padding-top:20px}
+.nav a{font-weight:700;text-decoration:none}
+:focus-visible{outline:2px solid var(--mark);outline-offset:3px}
+
+.ilist{margin:34px 0 0;display:grid;gap:12px}
+.irow{display:block;background:var(--card);border:1px solid var(--rule);border-radius:10px;
+ padding:18px 20px;text-decoration:none;color:inherit}
+.irow:hover{border-color:var(--rule2)}
+.irow .n{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink3)}
+.irow .q{margin:4px 0 0;font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--mark)}
+.irow .e{margin:5px 0 0;font-size:14.5px;color:var(--ink)}
+.irow .m{margin:8px 0 0;font-size:13px;color:var(--ink3)}
+</style>
+</head>
+<body>
+<div class="wide"><div class="top"><a href="index.html">← 다섯 사안 목록</a><span style="color:var(--ink3)">4번 사안</span></div></div><div class="wrap"><p class="kicker">2026년 7월 26일 보도 · 기사 4건 · 매체 4곳</p><h1>권경애 변호사 손해배상, 화해 무산돼 판결로</h1><p class="what">권경애 변호사는 2022년 9~11월 학교폭력으로 숨진 학생 유족을 대리한 항소심 재판에 세 차례 연속 나오지 않았다. 항소는 취하된 것으로 처리돼 유족은 패소했고, 권 변호사는 그 사실을 약 5개월 동안 유족에게 알리지 않았다. 유족이 낸 손해배상 소송에서 법원은 7월 14일 약정금 9000만원 등을 지급하라는 화해권고 결정을 내렸으나, 권 변호사가 24일, 유족 측이 25일 각각 이의를 신청하면서 사건은 판결로 결론이 나게 됐다.</p><details class="gloss"><summary>모르는 낱말 풀이</summary><dl><dt>항소심</dt><dd>1심 판결에 불복해 다시 판단을 받는 두 번째 재판이다.</dd><dt>항소 취하 간주</dt><dd>당사자가 변론기일에 세 차례 나오지 않으면 항소를 거둬들인 것으로 처리하는 민사소송법 규정이다.</dd><dt>화해권고 결정</dt><dd>법원이 양측에 합의 조건을 제시하는 결정으로, 2주 안에 이의가 없으면 확정판결과 같은 효력을 갖는다.</dd><dt>이의신청</dt><dd>법원의 결정을 받아들이지 않겠다고 밝히는 절차로, 한쪽이라도 내면 그 결정은 효력을 잃는다.</dd><dt>약정금</dt><dd>권 변호사가 각서를 써서 유족에게 주기로 한 9000만원이다.</dd><dt>파기환송심</dt><dd>대법원이 다시 판단하라며 돌려보낸 사건을 아래 법원이 다시 여는 재판이다.</dd></dl></details><section><p class="eyebrow">함께 만든 틀</p><h2>기사 4건이 같게 전한 것, 그리고 어디에도 없는 것</h2><p class="lead">기사가 무엇을 보이게 하는지와 무엇을 안 보이게 하는지가 함께 사건의 인상을 만듭니다. 그래서 두 목록을 나란히 둡니다. 왼쪽은 모두 같게 전한 것이고, 오른쪽은 이 기사들에 없는 것입니다.</p><div class="frame"><div class="pane"><h3>모두 같게 전했습니다</h3><ul><li><b>무엇이 문제라고 했나</b>화해 무산, 배상은 판결로</li><li><b>왜 이렇게 됐다고 했나</b>변호사가 재판에 세 번 불출석</li><li><b>누구 책임이라고 했나</b>권 변호사와 소속 법무법인</li><li><b>어떻게 하자고 했나</b>사기 고소하고 청구액 늘린다</li></ul></div><div class="pane gone"><h3>이 기사들에 없습니다</h3><ul><li>구조·제도 설명 — 4건 모두 개별 사건으로만 다룹니다</li></ul></div></div></section></div><div class="wide"><div class="qbox"><h2 class="q">이 일을 뭐라고 부르나?</h2><p class="qs">네 기사 모두 제목에 ‘노쇼’를 썼습니다. 그런데 본문에서 같은 일을 가리키는 말은 갈립니다. 그리고 누구의 불복으로 이 일을 여는지도 둘로 나뉩니다.</p></div><div class="cols"><section class="col" style="--cc:var(--g1)"><h3>변호사의 잘못으로 여는 곳</h3><p class="who">조선일보 · 국민일보</p><div class="item" data-outlet="조선일보"><b>조선일보</b><p class="ttl">[단독] ‘학폭 재판 노쇼’ 권경애 변호사, 법원의 화해권고에 불복</p><p class="row"><i>제목이 부른 이름</i> 학폭 재판 노쇼</p><p class="row"><i>본문이 부른 이름</i> ‘불출석’</p><a class="go" href="https://www.chosun.com/national/court_law/2026/07/26/YYM4D6SQHFAHVOWUALUE4XXNXU" target="_blank" rel="noopener">원문 보기 ↗</a></div><div class="item" data-outlet="국민일보"><b>국민일보</b><p class="ttl">‘학폭 소송 노쇼’ 권경애 손배소, 화해 불발 법원 판결로 결론</p><p class="row"><i>제목이 부른 이름</i> 학폭 소송 노쇼</p><p class="row"><i>본문이 부른 이름</i> ‘불성실한 소송 수행’</p><a class="go" href="https://www.kmib.co.kr/article/view.asp?arcid=0030163832&amp;code=61121111&amp;cp=kd" target="_blank" rel="noopener">원문 보기 ↗</a></div></section><section class="col" style="--cc:var(--g2)"><h3>양측이 모두 거부해 재판으로 갔다고 여는 곳</h3><p class="who">중앙일보 · 한국일보</p><div class="item" data-outlet="중앙일보"><b>중앙일보</b><p class="ttl">권경애, ‘학폭 재판 노쇼’ 손배소 화해권고 불복 유족도 이의신청</p><p class="row"><i>제목이 부른 이름</i> 학폭 재판 노쇼</p><p class="row"><i>본문이 부른 이름</i> ‘재판 노쇼’</p><a class="go" href="https://www.joongang.co.kr/article/25448208" target="_blank" rel="noopener">원문 보기 ↗</a></div><div class="item" data-outlet="한국일보"><b>한국일보</b><p class="ttl">'재판 노쇼' 권경애, 화해권고 불복 손배소 판결로 간다</p><p class="row"><i>제목이 부른 이름</i> 재판 노쇼</p><p class="row"><i>본문이 부른 이름</i> ‘재판 노쇼’</p><a class="go" href="https://www.hankookilbo.com/news/article/A2026072614520005279" target="_blank" rel="noopener">원문 보기 ↗</a></div></section></div><div class="spot">제목은 네 곳 모두 구어인 ‘노쇼’를 씁니다. 본문에서는 ‘불출석’(조선일보), ‘불성실한 소송 수행’(국민일보), ‘재판 노쇼’(중앙일보·한국일보)로 갈립니다. 제목이 같아 보여도 본문의 무게는 다릅니다.</div></div><div class="wrap"><section><p class="eyebrow">아무도 묻지 않은 것</p><h2>이 기사 4건에 없는 질문</h2><ol class="asked"><li>같은 일이 다시 생기지 않게 하는 장치 — 변호사 징계·감독 절차를 다룬 기사는 네 건에 없습니다.</li><li>변호사 본인의 말 — 네 건 어디에도 직접 발언은 없습니다.</li></ol></section><section><p class="eyebrow">더 읽을 가치가 있나</p><h2>하나만 더 읽는다면</h2><p class="lead">읽은 기사를 고르면, 같은 사건을 다른 이름으로 쓴 기사 한 건을 지목합니다.</p><div class="pick"><span class="pl">내가 읽은 기사</span><button type="button" aria-pressed="false" data-o="조선일보">조선일보</button><button type="button" aria-pressed="false" data-o="국민일보">국민일보</button><button type="button" aria-pressed="false" data-o="중앙일보">중앙일보</button><button type="button" aria-pressed="false" data-o="한국일보">한국일보</button></div><div class="rec" id="rec"><p class="h">추천</p><b class="n" id="recName">위에서 읽은 기사를 골라 주세요</b><p id="recWhy">고르면 그 기사와 다른 쪽에 선 기사를 한 건만 지목합니다.</p></div><script>var PAIRS={"조선일보": {"pick": "중앙일보", "group": "양측이 모두 거부해 재판으로 갔다고 여는 곳"}, "국민일보": {"pick": "중앙일보", "group": "양측이 모두 거부해 재판으로 갔다고 여는 곳"}, "중앙일보": {"pick": "조선일보", "group": "변호사의 잘못으로 여는 곳"}, "한국일보": {"pick": "조선일보", "group": "변호사의 잘못으로 여는 곳"}};document.querySelectorAll('.pick button').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.pick button').forEach(function(x){x.setAttribute('aria-pressed','false')});b.setAttribute('aria-pressed','true');var o=b.dataset.o,p=PAIRS[o];document.getElementById('recName').textContent=p.pick;document.getElementById('recWhy').textContent='\u2018'+o+'\u2019와 다른 쪽에 선 기사입니다. '+p.group+'에 속합니다. 같은 사실을 다른 이름으로 쓴 기사를 한 건만 읽으면, 내가 읽은 기사가 고른 이름이 보입니다.';document.querySelectorAll('[data-outlet]').forEach(function(c){c.classList.toggle('on',c.dataset.outlet===o||c.dataset.outlet.indexOf(o)===0)});})});</script></section><div class="how"><h2>이 페이지가 만들어진 방법</h2><ul>
+<li>기사 25건을 <b>AI 코더 2개</b>가 각각 여섯 항목으로 라벨링하고, 다른 모델이 불일치 항목만 다시 보고 확정했습니다.
+사람 코더의 이중 코딩은 아직 하지 않았습니다. 그래서 이 결과는 검증을 마친 연구 결과가 아니라 초안입니다.</li>
+<li>매체별 답은 <b>코딩된 요약 문장과 기사 제목</b>에서 왔습니다. 기사 본문 문장은 이 화면에 옮기지 않습니다.
+확인은 각 기사의 원문 링크로 하십시오.</li>
+<li><b>‘없습니다’는 그 기사에 해당 서술이 없다는 뜻</b>이고, 매체가 일부러 뺐다는 뜻이 아닙니다.</li>
+<li>표본은 2026년 7월 26일 빅카인즈 상위 이슈에 묶인 <b>전국 종합일간지 기사</b>입니다.
+방송·통신·경제지·지역지는 들어 있지 않아, 언론 전체의 경향으로 읽을 수 없습니다.</li>
+<li>질문 한 줄, 회색 바탕 문단, ‘아무도 묻지 않은 것’은 위 코딩 결과를 근거로 <b>편집이 쓴 문장</b>입니다.
+매체 수·기사 수·기사 제목·인용된 취재원 유형·지칭어·코딩 요약 문장은 <b>데이터에서 그대로</b> 옮겼습니다.</li>
+</ul></div><div class="nav"><a href="issue-3.html">← 3번 사안</a><a href="issue-5.html">5번 사안 →</a></div></div>
+</body>
+</html>

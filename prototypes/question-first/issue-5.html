@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이 정보는 어디서 나왔나? — 충북 음성 길거리 집단 싸움에서 흉기 사용 — 1명 사망, 1명 부상</title>
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:light;
+ --paper:#f6f5f2; --card:#fff; --ink:#15181c; --ink2:#4a5158; --ink3:#767e86;
+ --rule:#e0ddd6; --rule2:#c8c4ba; --mark:#1d4a6e; --wash:#eceae4;
+ --g1:#1d4a6e; --g2:#1c6b5f; --g3:#8a4b1e; --g4:#5c3d84;
+ --sans:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+ --mono:ui-monospace,"SF Mono",Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;
+ --paper:#12141a; --card:#191d24; --ink:#e8eaee; --ink2:#a7b0ba; --ink3:#828b95;
+ --rule:#262c35; --rule2:#3b444f; --mark:#8fbadd; --wash:#1e242d;
+ --g1:#8fbadd; --g2:#5fc0ae; --g3:#d59a5f; --g4:#b49ae0}}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+ font-size:16px;line-height:1.72;word-break:keep-all;-webkit-font-smoothing:antialiased}
+a{color:var(--mark)}
+.wrap{max-width:760px;margin:0 auto;padding:0 22px 96px}
+.wide{max-width:960px;margin:0 auto;padding:0 22px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:14px;
+ padding:18px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.top a{color:var(--ink2);text-decoration:none;font-weight:600}
+.top a:hover{color:var(--mark)}
+.kicker{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:38px 0 10px}
+h1{margin:0;font-size:clamp(23px,3.4vw,31px);line-height:1.34;letter-spacing:-.032em;font-weight:800}
+.what{margin:18px 0 0;font-size:16.5px;line-height:1.8;color:var(--ink)}
+details.gloss{margin:20px 0 0;border-top:1px solid var(--rule);padding-top:14px}
+details.gloss summary{cursor:pointer;font-size:13.5px;font-weight:700;color:var(--ink2);list-style:none}
+details.gloss summary::-webkit-details-marker{display:none}
+details.gloss summary::before{content:"＋ ";color:var(--ink3)}
+details.gloss[open] summary::before{content:"− "}
+details.gloss dl{margin:12px 0 0;display:grid;gap:10px}
+details.gloss dt{font-size:14.5px;font-weight:700}
+details.gloss dd{margin:2px 0 0;font-size:14px;color:var(--ink2)}
+
+section{margin:52px 0 0}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:0 0 12px}
+h2{margin:0 0 8px;font-size:20px;font-weight:800;letter-spacing:-.028em}
+.lead{margin:0 0 20px;font-size:15px;color:var(--ink2);max-width:44em}
+
+.frame{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.frame{grid-template-columns:1fr}}
+.pane{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.pane.gone{background:transparent;border-style:dashed}
+.pane h3{margin:0 0 12px;font-size:13.5px;font-weight:800;letter-spacing:.02em;color:var(--ink2)}
+.pane ul{margin:0;padding:0;list-style:none;display:grid;gap:11px}
+.pane li{font-size:14.5px;line-height:1.65}
+.pane li b{display:block;font-size:12.5px;font-weight:700;color:var(--ink3);letter-spacing:.02em}
+.pane.gone li{color:var(--ink2)}
+
+.qbox{margin:56px 0 0;padding:34px 0 0;border-top:2px solid var(--ink)}
+.qbox .q{margin:0;font-size:clamp(26px,4.6vw,40px);line-height:1.28;letter-spacing:-.04em;font-weight:800}
+.qbox .qs{margin:16px 0 0;font-size:16px;line-height:1.78;color:var(--ink2);max-width:40em}
+
+.banner{margin:26px 0 0;display:grid;gap:10px}
+.brow{display:flex;gap:16px;align-items:baseline;background:var(--card);
+ border:1px solid var(--rule);border-left:4px solid var(--mark);border-radius:8px;padding:14px 18px}
+.brow b{flex:0 0 auto;font-family:var(--mono);font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--mark)}
+.brow span{font-size:14.5px;line-height:1.62}
+@media (max-width:560px){.brow{flex-direction:column;gap:4px}}
+
+.cards{margin:26px 0 0;display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:16px 18px}
+.card.on{border-color:var(--mark);box-shadow:0 0 0 1px var(--mark) inset}
+.card .ch{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.card .ch b{font-size:15.5px;font-weight:800;letter-spacing:-.02em}
+.card .ch .tag{font-size:12.5px;font-weight:700;color:var(--mark);background:var(--wash);
+ border-radius:4px;padding:1px 8px}
+.card .ttl{margin:8px 0 0;font-size:13.5px;color:var(--ink3);line-height:1.55}
+.card .said{margin:9px 0 0;font-size:15px;line-height:1.7}
+.card .meta{margin:10px 0 0;font-size:13px;color:var(--ink3)}
+.card .go{margin:11px 0 0;font-size:13.5px;font-weight:700;display:inline-block}
+.words{margin:9px 0 0;display:flex;flex-wrap:wrap;gap:6px}
+.w{font-size:14px;font-weight:700;background:var(--wash);border-radius:5px;padding:2px 9px}
+.w.q{font-style:normal}
+
+.cols{margin:26px 0 0;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.col{border:1px solid var(--rule);border-top:4px solid var(--cc);border-radius:10px;background:var(--card);
+ padding:16px 18px}
+.col h3{margin:0 0 4px;font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--cc)}
+.col .who{font-size:13px;color:var(--ink3);margin:0 0 14px}
+.col .item{padding:12px 0 0;border-top:1px solid var(--rule);margin-top:12px}
+.col .item:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.col .item b{font-size:14.5px;font-weight:800}
+.col .item .ttl{margin:5px 0 0;font-size:13px;color:var(--ink3);line-height:1.55}
+.col .item .row{margin:7px 0 0;font-size:13.5px;color:var(--ink2)}
+.col .item .row i{font-style:normal;color:var(--ink3)}
+.col .item .go{margin:8px 0 0;font-size:13px;font-weight:700;display:inline-block}
+.col .item.on{background:var(--wash);border-radius:8px;padding:12px 12px 12px;margin-left:-12px;margin-right:-12px}
+.col .item.on b::after{content:" — 내가 읽은 기사";font-size:12px;font-weight:700;color:var(--mark)}
+.card.on .ch b::after{content:" — 내가 읽은 기사";font-size:12px;font-weight:700;color:var(--mark)}
+
+.spot{margin:22px 0 0;padding:16px 20px;background:var(--wash);border-radius:10px;
+ font-size:15px;line-height:1.72}
+.sent{margin:26px 0 0;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.sent h3{margin:0 0 6px;font-size:16px;font-weight:800;letter-spacing:-.025em}
+.sent p.l{margin:0 0 16px;font-size:14.5px;color:var(--ink2)}
+.sent .s{padding:12px 0;border-top:1px solid var(--rule)}
+.sent .s b{font-size:14px;font-weight:800}
+.sent .s p{margin:4px 0 0;font-size:15px;line-height:1.7}
+.sent .s em{font-style:normal;font-size:12.5px;color:var(--ink3)}
+.sent .f{margin:14px 0 0;font-size:13px;color:var(--ink3)}
+
+ol.asked{margin:22px 0 0;padding:0 0 0 1.4em;display:grid;gap:12px}
+ol.asked li{font-size:15.5px;line-height:1.72}
+.rec{margin:26px 0 0;background:var(--card);border:1px solid var(--rule2);border-radius:10px;padding:20px 22px}
+.rec .h{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:0 0 8px}
+.rec b.n{font-size:19px;font-weight:800;letter-spacing:-.02em}
+.rec p{margin:8px 0 0;font-size:15px;line-height:1.72}
+.rec .cav{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--rule);font-size:14px;color:var(--ink2)}
+.rec.none{border-style:dashed}
+.pick{margin:22px 0 0;display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.pick .pl{font-size:13px;color:var(--ink3);margin-right:4px}
+.pick button{font:inherit;font-size:13.5px;font-weight:700;color:var(--ink2);background:var(--card);
+ border:1px solid var(--rule2);border-radius:20px;padding:5px 14px;cursor:pointer}
+.pick button[aria-pressed=true]{background:var(--mark);border-color:var(--mark);color:var(--paper)}
+
+.how{margin:56px 0 0;padding-top:22px;border-top:1px solid var(--rule);font-size:13.5px;color:var(--ink2)}
+.how h2{font-size:15px;margin-bottom:10px}
+.how ul{margin:0;padding-left:1.2em;display:grid;gap:8px}
+.nav{margin:46px 0 0;display:flex;justify-content:space-between;gap:14px;font-size:14px;
+ border-top:1px solid var(--rule);padding-top:20px}
+.nav a{font-weight:700;text-decoration:none}
+:focus-visible{outline:2px solid var(--mark);outline-offset:3px}
+
+.ilist{margin:34px 0 0;display:grid;gap:12px}
+.irow{display:block;background:var(--card);border:1px solid var(--rule);border-radius:10px;
+ padding:18px 20px;text-decoration:none;color:inherit}
+.irow:hover{border-color:var(--rule2)}
+.irow .n{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink3)}
+.irow .q{margin:4px 0 0;font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--mark)}
+.irow .e{margin:5px 0 0;font-size:14.5px;color:var(--ink)}
+.irow .m{margin:8px 0 0;font-size:13px;color:var(--ink3)}
+</style>
+</head>
+<body>
+<div class="wide"><div class="top"><a href="index.html">← 다섯 사안 목록</a><span style="color:var(--ink3)">5번 사안</span></div></div><div class="wrap"><p class="kicker">2026년 7월 26일 보도 · 기사 4건 · 매체 4곳</p><h1>충북 음성 길거리 집단 싸움에서 흉기 사용 — 1명 사망, 1명 부상</h1><p class="what">7월 26일 오전 3시쯤 충북 음성군 대소읍 길거리에서 10여 명이 뒤엉켜 싸웠다. 이 과정에서 40대 남성이 흉기를 휘둘러 20대 남성이 숨졌고, 다른 1명도 다쳐 병원으로 옮겨졌다. 40대 남성은 인근 주거지로 달아났다가 1시간여 만에 붙잡혀 살인 등 혐의로 음성경찰서 조사를 받고 있다. 숨진 사람과 붙잡힌 사람은 같은 나라에서 온 외국인이다 — 네 기사는 모두 이 사실을 제목에 올렸고, 그 선택은 아래에서 따로 본다.</p><details class="gloss"><summary>모르는 낱말 풀이</summary><dl><dt>혐의</dt><dd>수사기관이 범죄를 저질렀다고 의심해 조사하는 단계의 내용으로, 유죄 여부는 재판에서 가려진다.</dd><dt>긴급 체포</dt><dd>달아날 우려가 큰 사람을 영장 없이 먼저 붙잡은 뒤 이어서 절차를 밟는 체포 방식이다.</dd><dt>신병 처리</dt><dd>붙잡은 사람을 구속할지 풀어줄지 수사기관이 정하는 절차다.</dd></dl></details><section><p class="eyebrow">함께 만든 틀</p><h2>기사 4건이 같게 전한 것, 그리고 어디에도 없는 것</h2><p class="lead">기사가 무엇을 보이게 하는지와 무엇을 안 보이게 하는지가 함께 사건의 인상을 만듭니다. 그래서 두 목록을 나란히 둡니다. 왼쪽은 모두 같게 전한 것이고, 오른쪽은 이 기사들에 없는 것입니다.</p><div class="frame"><div class="pane"><h3>모두 같게 전했습니다</h3><ul><li><b>무엇이 문제라고 했나</b>길거리 다툼이 부른 흉기 살인</li><li><b>왜 이렇게 됐다고 했나</b>싸움 도중 개인이 흉기를 꺼냄 <i style="font-style:normal;color:var(--mark)">← 분류로는 같지만 문장은 갈립니다. 아래에서 봅니다.</i></li><li><b>누구 책임이라고 했나</b>붙잡힌 40대 남성 개인</li><li><b>어떻게 하자고 했나</b>경찰의 경위 규명 조사</li></ul></div><div class="pane gone"><h3>이 기사들에 없습니다</h3><ul><li>어떻게 평가했나 — 이 사안 기사 전부에 해당 서술이 없습니다</li><li>구조·제도 설명 — 4건 모두 개별 사건으로만 다룹니다</li></ul></div></div></section></div><div class="wide"><div class="qbox"><h2 class="q">이 정보는 어디서 나왔나?</h2><p class="qs">네 기사는 사실상 같은 기사입니다. 정보가 한 곳에서 나왔고, 제목이 고른 단어도 같습니다. 그래서 이 사안의 발견은 차이가 아니라 수렴입니다.</p></div><div class="banner"><div class="brow"><b>4건 / 4건</b><span>정보 출처가 경찰입니다. 당사자·목격자·주민의 목소리는 어느 기사에도 없습니다.</span></div><div class="brow"><b>4건 / 4건</b><span>제목에 ‘외국인’이 들어갑니다. 서울신문은 제목 한 줄에 두 번 씁니다.</span></div><div class="brow"><b>4건 / 4건</b><span>제목에 ‘패싸움’을 씁니다. 이 단어를 고르지 않은 기사는 없습니다.</span></div></div><div class="sent"><h3>분류로는 ‘네 곳이 같음’, 문장으로는 갈립니다</h3><p class="l">여섯 항목 가운데 ‘왜 이렇게 됐다고 했나’는 네 기사가 모두 같은 갈래로 묶입니다. 그런데 실제로 쓴 문장은 이렇게 다릅니다. 우발이냐 계획이냐가 갈립니다.</p><div class="s"><b>국민일보</b><p>충돌에 가담한 피의자가 흉기를 꺼내 사용한 개인적 행위가 사망을 초래한 것으로 수사 결과가 전해진다.<br><em>(간접 인용)</em></p></div><div class="s"><b>세계일보</b><p>말다툼에서 시작된 충돌이 격해지는 과정에서 피의자가 흉기를 꺼내 든 개별 행위가 사망의 직접 원인으로 지목된다.<br><em>(간접 인용)</em></p></div><div class="s"><b>문화일보</b><p>이전부터 관계가 나빴던 두 무리가 이날 서로 만나 싸우기로 정한 점이 사건의 직접 배경으로 전해진다고 서술된다.<br><em>(출처를 밝히지 않은 전언)</em></p></div><div class="s"><b>서울신문</b><p>다수가 뒤엉킨 싸움 도중 피의자 한 명이 흉기를 빼 들어 휘두른 개인 행위가 사망의 직접 원인으로 전해진다.<br><em>(출처를 밝히지 않은 전언)</em></p></div><p class="f">괄호 안은 그 서술의 출처 처리 방식입니다. 두 기사는 출처를 밝히지 않은 ‘전해졌다’로 처리했습니다.</p></div><div class="cards"><article class="card" data-outlet="국민일보"><div class="ch"><b>국민일보</b></div><p class="ttl">음성서 외국인 10여명 집단 패싸움 2명 사상 <span style="opacity:.7">· 11:23</span></p><p class="said">사건 정보의 주된 출처로 수사 당국의 검거·조사 내용이 부각된다.</p><p class="meta">인용된 취재원 유형: 사법·수사기관 · 기타</p><a class="go" href="https://www.kmib.co.kr/article/view.asp?arcid=0030163038&amp;code=61121211&amp;cp=kd" target="_blank" rel="noopener">원문 보기 ↗</a></article><article class="card" data-outlet="세계일보"><div class="ch"><b>세계일보</b></div><p class="ttl">충북 음성서 외국인 지인 간 ‘패싸움’ 2명 사상 <span style="opacity:.7">· 13:04</span></p><p class="said">사건 정보가 대부분 지역 경찰관서의 발표와 설명에 기대어 전달되며 당사자나 다른 취재원의 목소리는 나타나지 않는다.</p><p class="meta">인용된 취재원 유형: 사법·수사기관</p><a class="go" href="https://www.segye.com/newsView/20260726504423" target="_blank" rel="noopener">원문 보기 ↗</a></article><article class="card" data-outlet="문화일보"><div class="ch"><b>문화일보</b></div><p class="ttl">음성서 외국인 10여명 패싸움 2명 사상 <span style="opacity:.7">· 13:19</span></p><p class="said">수사를 맡은 지역 경찰서가 사건 사실과 향후 방침을 알리는 사실상 유일한 취재원으로 등장한다.</p><p class="meta">인용된 취재원 유형: 정부·공공기관</p><a class="go" href="https://www.munhwa.com/article/11605030" target="_blank" rel="noopener">원문 보기 ↗</a></article><article class="card" data-outlet="서울신문"><div class="ch"><b>서울신문</b></div><p class="ttl">충북 음성서 외국인 패싸움 2명 사상 40대 외국인 살인 혐의 입건 <span style="opacity:.7">· 13:24</span></p><p class="said">수사를 맡은 경찰이 사건 내용을 설명하는 유일한 명시적 취재원으로 등장한다.</p><p class="meta">인용된 취재원 유형: 사법·수사기관 · 기타</p><a class="go" href="https://www.seoul.co.kr/news/newsView.php?id=20260726500053" target="_blank" rel="noopener">원문 보기 ↗</a></article></div></div><div class="wrap"><section><p class="eyebrow">아무도 묻지 않은 것</p><h2>이 기사 4건에 없는 질문</h2><ol class="asked"><li>왜 그 지역에서 이런 일이 생기는지 — 네 건 모두 이번 사건만 다룹니다. 분석 기록에도 “외국인 범죄나 치안 정책 등 구조적 맥락은 다루지 않는다”고 적혀 있습니다.</li><li>국적이 이 사건의 원인과 어떤 관계인지 — 설명한 기사는 없는데, 네 곳 모두 제목 앞자리에 국적을 놓았습니다.</li></ol></section><section><p class="eyebrow">더 읽을 가치가 있나</p><h2>없습니다</h2><div class="rec none"><p>네 기사는 사실상 같은 기사입니다. 하나 더 읽어도 관점이 늘지 않습니다. 지금 알려진 내용이 경찰 발표 한 곳에서 나왔으니, 후속 수사 결과를 기다리는 편이 낫습니다.</p></div></section><div class="how"><h2>이 페이지가 만들어진 방법</h2><ul>
+<li>기사 25건을 <b>AI 코더 2개</b>가 각각 여섯 항목으로 라벨링하고, 다른 모델이 불일치 항목만 다시 보고 확정했습니다.
+사람 코더의 이중 코딩은 아직 하지 않았습니다. 그래서 이 결과는 검증을 마친 연구 결과가 아니라 초안입니다.</li>
+<li>매체별 답은 <b>코딩된 요약 문장과 기사 제목</b>에서 왔습니다. 기사 본문 문장은 이 화면에 옮기지 않습니다.
+확인은 각 기사의 원문 링크로 하십시오.</li>
+<li><b>‘없습니다’는 그 기사에 해당 서술이 없다는 뜻</b>이고, 매체가 일부러 뺐다는 뜻이 아닙니다.</li>
+<li>표본은 2026년 7월 26일 빅카인즈 상위 이슈에 묶인 <b>전국 종합일간지 기사</b>입니다.
+방송·통신·경제지·지역지는 들어 있지 않아, 언론 전체의 경향으로 읽을 수 없습니다.</li>
+<li>질문 한 줄, 회색 바탕 문단, ‘아무도 묻지 않은 것’은 위 코딩 결과를 근거로 <b>편집이 쓴 문장</b>입니다.
+매체 수·기사 수·기사 제목·인용된 취재원 유형·지칭어·코딩 요약 문장은 <b>데이터에서 그대로</b> 옮겼습니다.</li>
+</ul></div><div class="nav"><a href="issue-4.html">← 4번 사안</a><span></span></div></div>
+</body>
+</html>

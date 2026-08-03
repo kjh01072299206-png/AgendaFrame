@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>같은 날 같은 사건 — 2026년 7월 26일</title>
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:light;
+ --paper:#f6f5f2; --card:#fff; --ink:#15181c; --ink2:#4a5158; --ink3:#767e86;
+ --rule:#e0ddd6; --rule2:#c8c4ba; --mark:#1d4a6e; --wash:#eceae4;
+ --g1:#1d4a6e; --g2:#1c6b5f; --g3:#8a4b1e; --g4:#5c3d84;
+ --sans:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+ --mono:ui-monospace,"SF Mono",Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;
+ --paper:#12141a; --card:#191d24; --ink:#e8eaee; --ink2:#a7b0ba; --ink3:#828b95;
+ --rule:#262c35; --rule2:#3b444f; --mark:#8fbadd; --wash:#1e242d;
+ --g1:#8fbadd; --g2:#5fc0ae; --g3:#d59a5f; --g4:#b49ae0}}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+ font-size:16px;line-height:1.72;word-break:keep-all;-webkit-font-smoothing:antialiased}
+a{color:var(--mark)}
+.wrap{max-width:760px;margin:0 auto;padding:0 22px 96px}
+.wide{max-width:960px;margin:0 auto;padding:0 22px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:14px;
+ padding:18px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.top a{color:var(--ink2);text-decoration:none;font-weight:600}
+.top a:hover{color:var(--mark)}
+.kicker{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:38px 0 10px}
+h1{margin:0;font-size:clamp(23px,3.4vw,31px);line-height:1.34;letter-spacing:-.032em;font-weight:800}
+.what{margin:18px 0 0;font-size:16.5px;line-height:1.8;color:var(--ink)}
+details.gloss{margin:20px 0 0;border-top:1px solid var(--rule);padding-top:14px}
+details.gloss summary{cursor:pointer;font-size:13.5px;font-weight:700;color:var(--ink2);list-style:none}
+details.gloss summary::-webkit-details-marker{display:none}
+details.gloss summary::before{content:"＋ ";color:var(--ink3)}
+details.gloss[open] summary::before{content:"− "}
+details.gloss dl{margin:12px 0 0;display:grid;gap:10px}
+details.gloss dt{font-size:14.5px;font-weight:700}
+details.gloss dd{margin:2px 0 0;font-size:14px;color:var(--ink2)}
+
+section{margin:52px 0 0}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:0 0 12px}
+h2{margin:0 0 8px;font-size:20px;font-weight:800;letter-spacing:-.028em}
+.lead{margin:0 0 20px;font-size:15px;color:var(--ink2);max-width:44em}
+
+.frame{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.frame{grid-template-columns:1fr}}
+.pane{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.pane.gone{background:transparent;border-style:dashed}
+.pane h3{margin:0 0 12px;font-size:13.5px;font-weight:800;letter-spacing:.02em;color:var(--ink2)}
+.pane ul{margin:0;padding:0;list-style:none;display:grid;gap:11px}
+.pane li{font-size:14.5px;line-height:1.65}
+.pane li b{display:block;font-size:12.5px;font-weight:700;color:var(--ink3);letter-spacing:.02em}
+.pane.gone li{color:var(--ink2)}
+
+.qbox{margin:56px 0 0;padding:34px 0 0;border-top:2px solid var(--ink)}
+.qbox .q{margin:0;font-size:clamp(26px,4.6vw,40px);line-height:1.28;letter-spacing:-.04em;font-weight:800}
+.qbox .qs{margin:16px 0 0;font-size:16px;line-height:1.78;color:var(--ink2);max-width:40em}
+
+.banner{margin:26px 0 0;display:grid;gap:10px}
+.brow{display:flex;gap:16px;align-items:baseline;background:var(--card);
+ border:1px solid var(--rule);border-left:4px solid var(--mark);border-radius:8px;padding:14px 18px}
+.brow b{flex:0 0 auto;font-family:var(--mono);font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--mark)}
+.brow span{font-size:14.5px;line-height:1.62}
+@media (max-width:560px){.brow{flex-direction:column;gap:4px}}
+
+.cards{margin:26px 0 0;display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:16px 18px}
+.card.on{border-color:var(--mark);box-shadow:0 0 0 1px var(--mark) inset}
+.card .ch{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.card .ch b{font-size:15.5px;font-weight:800;letter-spacing:-.02em}
+.card .ch .tag{font-size:12.5px;font-weight:700;color:var(--mark);background:var(--wash);
+ border-radius:4px;padding:1px 8px}
+.card .ttl{margin:8px 0 0;font-size:13.5px;color:var(--ink3);line-height:1.55}
+.card .said{margin:9px 0 0;font-size:15px;line-height:1.7}
+.card .meta{margin:10px 0 0;font-size:13px;color:var(--ink3)}
+.card .go{margin:11px 0 0;font-size:13.5px;font-weight:700;display:inline-block}
+.words{margin:9px 0 0;display:flex;flex-wrap:wrap;gap:6px}
+.w{font-size:14px;font-weight:700;background:var(--wash);border-radius:5px;padding:2px 9px}
+.w.q{font-style:normal}
+
+.cols{margin:26px 0 0;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.col{border:1px solid var(--rule);border-top:4px solid var(--cc);border-radius:10px;background:var(--card);
+ padding:16px 18px}
+.col h3{margin:0 0 4px;font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--cc)}
+.col .who{font-size:13px;color:var(--ink3);margin:0 0 14px}
+.col .item{padding:12px 0 0;border-top:1px solid var(--rule);margin-top:12px}
+.col .item:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.col .item b{font-size:14.5px;font-weight:800}
+.col .item .ttl{margin:5px 0 0;font-size:13px;color:var(--ink3);line-height:1.55}
+.col .item .row{margin:7px 0 0;font-size:13.5px;color:var(--ink2)}
+.col .item .row i{font-style:normal;color:var(--ink3)}
+.col .item .go{margin:8px 0 0;font-size:13px;font-weight:700;display:inline-block}
+.col .item.on{background:var(--wash);border-radius:8px;padding:12px 12px 12px;margin-left:-12px;margin-right:-12px}
+.col .item.on b::after{content:" — 내가 읽은 기사";font-size:12px;font-weight:700;color:var(--mark)}
+.card.on .ch b::after{content:" — 내가 읽은 기사";font-size:12px;font-weight:700;color:var(--mark)}
+
+.spot{margin:22px 0 0;padding:16px 20px;background:var(--wash);border-radius:10px;
+ font-size:15px;line-height:1.72}
+.sent{margin:26px 0 0;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.sent h3{margin:0 0 6px;font-size:16px;font-weight:800;letter-spacing:-.025em}
+.sent p.l{margin:0 0 16px;font-size:14.5px;color:var(--ink2)}
+.sent .s{padding:12px 0;border-top:1px solid var(--rule)}
+.sent .s b{font-size:14px;font-weight:800}
+.sent .s p{margin:4px 0 0;font-size:15px;line-height:1.7}
+.sent .s em{font-style:normal;font-size:12.5px;color:var(--ink3)}
+.sent .f{margin:14px 0 0;font-size:13px;color:var(--ink3)}
+
+ol.asked{margin:22px 0 0;padding:0 0 0 1.4em;display:grid;gap:12px}
+ol.asked li{font-size:15.5px;line-height:1.72}
+.rec{margin:26px 0 0;background:var(--card);border:1px solid var(--rule2);border-radius:10px;padding:20px 22px}
+.rec .h{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:0 0 8px}
+.rec b.n{font-size:19px;font-weight:800;letter-spacing:-.02em}
+.rec p{margin:8px 0 0;font-size:15px;line-height:1.72}
+.rec .cav{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--rule);font-size:14px;color:var(--ink2)}
+.rec.none{border-style:dashed}
+.pick{margin:22px 0 0;display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.pick .pl{font-size:13px;color:var(--ink3);margin-right:4px}
+.pick button{font:inherit;font-size:13.5px;font-weight:700;color:var(--ink2);background:var(--card);
+ border:1px solid var(--rule2);border-radius:20px;padding:5px 14px;cursor:pointer}
+.pick button[aria-pressed=true]{background:var(--mark);border-color:var(--mark);color:var(--paper)}
+
+.how{margin:56px 0 0;padding-top:22px;border-top:1px solid var(--rule);font-size:13.5px;color:var(--ink2)}
+.how h2{font-size:15px;margin-bottom:10px}
+.how ul{margin:0;padding-left:1.2em;display:grid;gap:8px}
+.nav{margin:46px 0 0;display:flex;justify-content:space-between;gap:14px;font-size:14px;
+ border-top:1px solid var(--rule);padding-top:20px}
+.nav a{font-weight:700;text-decoration:none}
+:focus-visible{outline:2px solid var(--mark);outline-offset:3px}
+
+.ilist{margin:34px 0 0;display:grid;gap:12px}
+.irow{display:block;background:var(--card);border:1px solid var(--rule);border-radius:10px;
+ padding:18px 20px;text-decoration:none;color:inherit}
+.irow:hover{border-color:var(--rule2)}
+.irow .n{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink3)}
+.irow .q{margin:4px 0 0;font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--mark)}
+.irow .e{margin:5px 0 0;font-size:14.5px;color:var(--ink)}
+.irow .m{margin:8px 0 0;font-size:13px;color:var(--ink3)}
+</style>
+</head>
+<body>
+<div class="wrap"><p class="kicker">2026년 7월 26일 보도 · 기사 25건 · 전국 종합일간지</p><h1>한 기사만 읽으면 무엇을 놓치나</h1><p class="what">그날 가장 많이 보도된 다섯 사안을 골라, 사안마다 질문 하나씩을 뽑았습니다. 질문은 기사별 분석 결과에서 실제로 갈린 지점, 또는 예외 없이 같았던 지점에서 나왔습니다. 사안마다 발견의 종류가 달라서 화면 모양도 다릅니다.</p><div class="ilist"><a class="irow" href="issue-1.html"><span class="n">1번 사안</span><p class="q">이 기사에서 말하는 사람은 누구인가?</p><p class="e">기사 7건에 실린 발언이 모두 한 진영에서 나왔습니다.</p><p class="m">검찰 보완수사권 폐지 추진에 야당 반발 · 기사 7건 · 매체 6곳</p></a><a class="irow" href="issue-2.html"><span class="n">2번 사안</span><p class="q">같은 행동을 뭐라고 불렀나?</p><p class="e">‘폭력’과 ‘신체 접촉’ 사이에서 갈립니다.</p><p class="m">국민의힘 권영진 의원이 원내대표 멱살을 잡았다 — 당은 거취 정리 요구 · 기사 6건 · 매체 6곳</p></a><a class="irow" href="issue-3.html"><span class="n">3번 사안</span><p class="q">이 사건을 무엇의 사건으로 부르나?</p><p class="e">8명이 죽거나 다친 피해냐, 보복이었는지 가리는 문제냐.</p><p class="m">경산 아파트 관리사무소 화재로 8명 사상 — 경찰, 방화로 보고 수사 · 기사 4건 · 매체 4곳</p></a><a class="irow" href="issue-4.html"><span class="n">4번 사안</span><p class="q">이 일을 뭐라고 부르나?</p><p class="e">제목은 네 곳 모두 ‘노쇼’, 본문은 갈립니다.</p><p class="m">권경애 변호사 손해배상, 화해 무산돼 판결로 · 기사 4건 · 매체 4곳</p></a><a class="irow" href="issue-5.html"><span class="n">5번 사안</span><p class="q">이 정보는 어디서 나왔나?</p><p class="e">네 기사 모두 경찰 한 곳에서 나왔습니다.</p><p class="m">충북 음성 길거리 집단 싸움에서 흉기 사용 — 1명 사망, 1명 부상 · 기사 4건 · 매체 4곳</p></a></div><div class="how"><h2>읽는 법</h2><ul><li>각 사안은 <b>질문 하나</b>로 되어 있습니다. 분석 방법 이름은 알 필요가 없습니다.</li><li>먼저 <b>기사들이 같게 전한 것과 어디에도 없는 것</b>을 봅니다. 기사가 다루지 않은 쪽이 사건의 인상을 절반쯤 만듭니다.</li><li>마지막 칸은 <b>하나만 더 읽는다면 무엇을 읽을지</b>입니다. 더 읽어도 늘지 않는 사안은 그렇다고 말합니다.</li><li>방법별 상세 결과(기사 묶음 군집·정책 분류표·낱말 연결망·형태소 분석)는 이 화면에 넣지 않았습니다. 표본이 하루치라 사안별로 안정적이지 않아 연구자용 화면으로 분리했습니다.</li></ul></div></div>
+</body>
+</html>
