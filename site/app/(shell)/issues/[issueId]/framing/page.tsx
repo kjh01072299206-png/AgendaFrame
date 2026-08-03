@@ -93,6 +93,10 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
                 </p>
               ) : null}
 
+              <p className="afs-caption">
+                항목마다 붙은 문단·문장 위치와 지문으로 원문에서 확인할 수 있습니다. 라벨은 독립 코딩 2회 뒤 판정을 거친
+                자동 초안입니다{issue.provenance.model ? ` (${issue.provenance.model})` : ""}.
+              </p>
               {layer.patterns.length ? (
                 <p className="afs-caption">
                   규칙 기반 비교축이 잡은 패턴 {layer.patterns.length}개
@@ -115,8 +119,8 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
           </h3>
           <div className="afs-in">
             <HBars
-              caption="다섯 층위에서 관측된 계열별 건수"
-              rows={issue.families.map((family) => ({ label: family.label, value: family.count }))}
+              caption={`관측된 프레임 항목 ${issue.familyItems.reduce((s, f) => s + f.count, 0)}건 기준`}
+              rows={issue.familyItems.map((family) => ({ label: family.label, value: family.count }))}
             />
           </div>
         </section>
@@ -141,15 +145,27 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
           <section className="afs-card">
             <h3>
               정책 프레임
-              <small>기사 수</small>
+              <small>기사 {issue.articleCount}건 중</small>
             </h3>
             <div className="afs-in">
-              <p className="afs-note">한 기사가 여러 정책 프레임을 함께 쓸 수 있어 합이 기사 수보다 큽니다.</p>
-              <HBars
-                caption="정책 프레임이 나타난 기사 수"
-                rows={issue.policyFrames.map((frame) => ({ label: frame.label, value: frame.count }))}
-              />
+              {issue.policySaturated ? (
+                <p className="afs-note">
+                  정책 프레임 {issue.policyFrames.length}종이 기사 {issue.articleCount}건 <b>전부</b>에 부여됐습니다. 이 표본에서는
+                  정책 프레임으로 매체를 변별할 수 없습니다 — 분류기가 포화된 상태이며, 이 라벨은 기술적 표기로만 씁니다.
+                </p>
+              ) : (
+                <>
+                  <p className="afs-note">한 기사가 여러 정책 프레임을 함께 쓸 수 있어 합이 기사 수보다 큽니다.</p>
+                  <HBars
+                    caption={`정책 프레임이 나타난 기사 수 (전체 ${issue.articleCount}건)`}
+                    rows={issue.policyFrames.map((frame) => ({ label: frame.label, value: frame.count }))}
+                  />
+                </>
+              )}
             </div>
+            {issue.comparisonEngine.secondaryDescriptiveOnly ? (
+              <p className="afs-foot">부차 분류(정책·일반 프레임)는 기술적 라벨이며 검증 대상이 아닙니다.</p>
+            ) : null}
           </section>
         ) : null}
       </div>

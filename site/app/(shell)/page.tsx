@@ -60,8 +60,12 @@ export default function HomePage() {
             )}
           </p>
           <p className="afs-finding-sub">
-            반대로 가장 잘 갈린 층위는 <b>{topLayer?.label}</b>({topLayer?.split}/{topLayer?.total})입니다. 매체 차이는 찬반이
-            아니라 <b>누구의 말을 통해 사건을 설명하기로 했는가</b>에서 먼저 벌어졌습니다.
+            반대로 가장 잘 갈린 지표는 <b>{topLayer?.label}</b>({topLayer?.split}/{topLayer?.total})입니다
+            {topLayer && day.sideLayers.some((l) => l.key === topLayer.key)
+              ? " — 프레이밍 다섯 층위가 아니라 취재원·인용 방식 쪽입니다."
+              : "."}{" "}
+            이 사건에서 매체 차이는 찬반이 아니라 <b>누구의 말을 통해 설명하기로 했는가</b>에서 먼저 벌어졌습니다. 다만 범주
+            수가 다른 지표끼리는 갈림 횟수를 그대로 견줄 수 없습니다.
           </p>
 
           {contrast.length === 2 ? (
@@ -244,17 +248,34 @@ export default function HomePage() {
 
         <section className="afs-card">
           <h3>
-            이날 가장 많이 쓰인 설명 틀
-            <small>프레임 계열</small>
+            사건을 어떤 시야로 썼나
+            <small>Iyengar 일화적 · 주제적</small>
           </h3>
           <div className="afs-in">
             <p className="afs-note">
-              다섯 층위에서 관측된 설명을 계열로 묶은 것입니다. 하루의 보도가 사건을 주로 어떤 틀로 옮겼는지 보여 줍니다.
+              일화적 보도는 사건을 개별 사례로 전하고, 주제적 보도는 구조·맥락 안에 놓습니다. Iyengar(1991)는 일화적 보도가
+              많으면 책임이 개인에게 귀속되는 쪽으로 읽힌다고 봤습니다.
             </p>
-            <HBars caption="계열별 관측 건수" rows={day.families.slice(0, 8).map((f) => ({ label: f.label, value: f.count }))} />
+            <HBars caption="시야별 기사 수" rows={day.scope.map((s) => ({ label: s.label, value: s.count }))} />
+            {day.genres.length ? (
+              <>
+                <h3 className="afs-layer-head">
+                  장르
+                  <b>비교 범위를 규정합니다</b>
+                </h3>
+                <HBars caption="장르별 기사 수" rows={day.genres.map((g) => ({ label: g.label, value: g.count }))} />
+              </>
+            ) : null}
           </div>
           <p className="afs-foot">
-            {day.families[0] ? `가장 많이 쓰인 틀은 ‘${day.families[0].label}’(${day.families[0].count}건)입니다.` : ""}
+            {(() => {
+              const ep = day.scope.find((s) => s.key === "episodic")?.count ?? 0;
+              const th = day.scope.find((s) => s.key === "thematic")?.count ?? 0;
+              if (!ep && !th) return "시야 코딩이 관측되지 않았습니다.";
+              return ep > th
+                ? `일화적 ${ep}건 대 주제적 ${th}건입니다. 이날 표본에서 책임 귀속 최다 패턴이 개인 책임인 것과 함께 읽을 수 있습니다.`
+                : `주제적 ${th}건 대 일화적 ${ep}건입니다.`;
+            })()}
           </p>
         </section>
       </div>

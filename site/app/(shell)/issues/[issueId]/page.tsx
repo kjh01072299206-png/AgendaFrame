@@ -140,6 +140,50 @@ export default async function IssueOverviewPage({ params }: { params: Promise<{ 
       </div>
 
       <section className="afs-card">
+        <h3>
+          이 표본은 어떤 기사들인가
+          <small>시야 · 맥락 · 장르</small>
+        </h3>
+        <div className="afs-in">
+          <div className="afs-cards">
+            {issue.sample.scope.length ? (
+              <article className="afs-mini">
+                <h3>시야 (Iyengar)</h3>
+                <p>
+                  {issue.sample.scope.map((s) => `${s.label} ${s.count}`).join(" · ")}건. 일화적 보도는 사건을 개별 사례로,
+                  주제적 보도는 구조 안에 놓습니다.
+                </p>
+              </article>
+            ) : null}
+            {issue.sample.contextDepth.length ? (
+              <article className="afs-mini">
+                <h3>맥락 깊이</h3>
+                <p>{issue.sample.contextDepth.map((s) => `${s.label} ${s.count}`).join(" · ")}건.</p>
+              </article>
+            ) : null}
+            {issue.sample.genres.length ? (
+              <article className="afs-mini">
+                <h3>장르</h3>
+                <p>
+                  {issue.sample.genres.map((s) => `${s.label} ${s.count}`).join(" · ")}건. 사설·칼럼이 섞이면 비교 기준이
+                  달라지므로 장르를 함께 밝힙니다.
+                </p>
+              </article>
+            ) : null}
+            {issue.sample.independentGroupCount !== null ? (
+              <article className="afs-mini">
+                <h3>독립 매체군</h3>
+                <p>
+                  매체 {issue.outletCount}곳이 {issue.sample.independentGroupCount}개 독립 그룹입니다. 같은 그룹의 매체는 서로
+                  독립된 관측으로 보기 어렵습니다.
+                </p>
+              </article>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
+      <section className="afs-card">
         <h2>
           이 의제의 기사
           <small>{issue.articles.length}건</small>

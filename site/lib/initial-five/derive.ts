@@ -132,8 +132,10 @@ export interface ArticleView {
   publishedAt: string | null;
   url: string | null;
   evidenceCount: number;
-  /** 차원별 지배 프레임 계열 (없으면 undefined) */
+  /** 차원별 지배 프레임 계열 = 그 층위 첫 항목 (없으면 undefined) */
   families: Record<string, string | undefined>;
+  /** 관측된 모든 항목의 계열 — 층위별 첫 항목만 세는 families 와 분모가 다르다 */
+  familyItems: string[];
   /** 차원별 관측 상태 */
   statuses: Record<string, string | undefined>;
   voices: Counter;
@@ -151,11 +153,15 @@ function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
     const families: Record<string, string | undefined> = {};
     const statuses: Record<string, string | undefined> = {};
     const voiceKinds: Array<string | undefined> = [];
+    const familyItems: string[] = [];
     for (const dim of DIM_ORDER) {
       const node = dims[dim];
       statuses[dim] = node?.status;
       families[dim] = node?.items?.[0]?.frame_family;
-      for (const item of node?.items ?? []) voiceKinds.push(item.voice?.kind);
+      for (const item of node?.items ?? []) {
+        voiceKinds.push(item.voice?.kind);
+        if (item.frame_family) familyItems.push(item.frame_family);
+      }
     }
     const actors = profile?.actors_and_sources ?? [];
     return {
@@ -167,6 +173,7 @@ function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
       url: article.canonicalUrl,
       evidenceCount: entry?.engine.evidenceCount ?? 0,
       families,
+      familyItems,
       statuses,
       voices: tally(voiceKinds, VOICE_LABEL),
       roles: tally(actors.map((a) => a.role_label ?? a.role), {}),
@@ -473,8 +480,12 @@ export interface IssueView {
   voices: Counter;
   families: Counter;
   policyFrames: Counter;
+  /** 정책 프레임 전 코드가 기사 전수에 부여됐다 = 이 표본에서 변별하지 못한다 */
+  policySaturated: boolean;
   genericFrames: Counter;
   statuses: Counter;
+  /** 항목 전수 기준 계열 분포 — 캡션에 분모를 밝혀 families 와 섞이지 않게 한다 */
+  familyItems: Counter;
   sourceCaution: string | null;
   notObservedStatements: string[];
   /** 매체 간 값이 갈린 차원 수 */
@@ -605,7 +616,12 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
     spectra,
     voices: tally(articles.flatMap((a) => a.voices.flatMap((v) => Array(v.count).fill(v.key) as string[])), VOICE_LABEL),
     families: tally(articles.flatMap((a) => DIM_ORDER.map((d) => a.families[d])), FAMILY_LABEL),
+    familyItems: tally(articles.flatMap((a) => a.familyItems), FAMILY_LABEL),
     policyFrames: descriptorCounter(secondary.policy_frames),
+    policySaturated: (() => {
+      const rows = descriptorCounter(secondary.policy_frames);
+      return rows.length >= 2 && rows.every((r) => r.count === bundle.issue.articleCount);
+    })(),
     genericFrames: descriptorCounter(secondary.generic_frames),
     statuses: tally(articles.flatMap((a) => DIM_ORDER.map((d) => a.statuses[d])), STATUS_LABEL),
     sourceCaution: data.source_lens?.caution ?? null,
