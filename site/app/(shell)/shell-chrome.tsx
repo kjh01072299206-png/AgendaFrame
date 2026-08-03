@@ -1,0 +1,156 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { setTheme, useTheme } from "./client-store";
+
+export interface ShellIssue {
+  issueId: string;
+  rank: number;
+  title: string;
+  category: string | null;
+}
+
+const ICON: Record<string, string> = {
+  home: "M3 10.4 12 3l9 7.4V21H3zM9 21v-7h6v7",
+  compass: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18m3.5 5.5-2.1 5.4-5.4 2.1 2.1-5.4z",
+  outlets: "M4 5h6v14H4zM14 5h6v6h-6zM14 13h6v6h-6z",
+  layers: "M12 3 3 8l9 5 9-5zM3 13l9 5 9-5",
+  check: "M9 12.5 11.5 15 16 9.5M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18",
+  chat: "M4 5h16v10H9l-5 4z",
+  people: "M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6m9 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5M2.5 19v-1.5C2.5 15 5 13.5 8 13.5s5.5 1.5 5.5 4V19m4 0v-1.2c0-1.7-1.2-3-3-3.4",
+  report: "M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5",
+  book: "M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5C4.7 20 4 19.3 4 18.5zM20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5c.8 0 1.5-.7 1.5-1.5z",
+  sun: "M12 5.5v-2m0 17v-2m6.5-6.5h2m-17 0h2m11.1-4.6 1.4-1.4M6 18l1.4-1.4m9.2 0L18 18M6 6l1.4 1.4M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7",
+  moon: "M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5",
+};
+
+function Icon({ name }: { name: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={ICON[name]} />
+    </svg>
+  );
+}
+
+function currentIssueId(pathname: string, issues: ShellIssue[]) {
+  const match = pathname.match(/\/issues\/([^/?#]+)/);
+  const decoded = match ? decodeURIComponent(match[1]) : null;
+  if (decoded && issues.some((issue) => issue.issueId === decoded)) return decoded;
+  return issues[0]?.issueId ?? "";
+}
+
+/** 화면 안에서 의제를 바꿀 때 같은 화면에 머무르게 하려고 경로 꼬리를 보존한다. */
+function issueTail(pathname: string) {
+  const match = pathname.match(/\/issues\/[^/?#]+\/([a-z-]+)/);
+  return match ? `/${match[1]}` : "";
+}
+
+export function ShellSide({
+  issues,
+  meta,
+}: {
+  issues: ShellIssue[];
+  meta: { basisDate: string; articleCount: number; outletCount: number; issueCount: number };
+}) {
+  const pathname = usePathname() ?? "/";
+  const issueId = currentIssueId(pathname, issues);
+  const scoped = (tail: string) => `/issues/${encodeURIComponent(issueId)}${tail}`;
+
+  const groups: Array<{ label: string | null; items: Array<{ href: string; label: string; icon: string; match: (p: string) => boolean }> }> = [
+    {
+      label: null,
+      items: [
+        { href: "/", label: "홈", icon: "home", match: (p) => p === "/" },
+        { href: "/issues", label: "이슈 탐색", icon: "compass", match: (p) => p === "/issues" },
+      ],
+    },
+    {
+      label: "이 의제 안에서",
+      items: [
+        { href: scoped(""), label: "사안 개요", icon: "layers", match: (p) => /^\/issues\/[^/]+$/.test(p) },
+        { href: scoped("/outlets"), label: "언론사 비교", icon: "outlets", match: (p) => p.endsWith("/outlets") },
+        { href: scoped("/framing"), label: "프레이밍 분석", icon: "compass", match: (p) => p.endsWith("/framing") },
+      ],
+    },
+    {
+      label: "도구",
+      items: [
+        { href: "/tools/self-check", label: "자가점검", icon: "check", match: (p) => p.startsWith("/tools/self-check") },
+        { href: "/tools/ask", label: "AI 대화", icon: "chat", match: (p) => p.startsWith("/tools/ask") },
+        { href: "/tools/community", label: "커뮤니티", icon: "people", match: (p) => p.startsWith("/tools/community") },
+        { href: scoped("/report"), label: "리포트", icon: "report", match: (p) => p.endsWith("/report") },
+        { href: "/tools/method", label: "방법론", icon: "book", match: (p) => p.startsWith("/tools/method") },
+      ],
+    },
+  ];
+
+  return (
+    <aside className="afs-side">
+      <Link className="afs-brand" href="/">
+        <i aria-hidden="true">AF</i>
+        <b>
+          AgendaFrame
+          <small>같은 사건, 다른 설명</small>
+        </b>
+      </Link>
+      <nav className="afs-nav" aria-label="주요 화면">
+        {groups.map((group, gi) => (
+          <div key={group.label ?? `g${gi}`} className="afs-nav" style={{ gap: 2 }}>
+            {group.label ? <p className="afs-nav-group">{group.label}</p> : null}
+            {group.items.map((item) => (
+              <Link key={item.href + item.label} href={item.href} aria-current={item.match(pathname) ? "page" : undefined}>
+                <Icon name={item.icon} />
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        ))}
+      </nav>
+      <div className="afs-side-foot">
+        <dl>
+          <dt>기준일</dt>
+          <dd className="afs-num">{meta.basisDate}</dd>
+          <dt>의제</dt>
+          <dd className="afs-num">{meta.issueCount}건</dd>
+          <dt>기사</dt>
+          <dd className="afs-num">{meta.articleCount}건</dd>
+          <dt>매체</dt>
+          <dd className="afs-num">{meta.outletCount}곳</dd>
+        </dl>
+      </div>
+    </aside>
+  );
+}
+
+export function ShellTop({ issues }: { issues: ShellIssue[] }) {
+  const pathname = usePathname() ?? "/";
+  const router = useRouter();
+  const issueId = currentIssueId(pathname, issues);
+  const tail = issueTail(pathname);
+  const theme = useTheme();
+  const flip = () => setTheme(theme === "dark" ? "light" : "dark");
+
+  return (
+    <div className="afs-top">
+      <label className="afs-top-label" htmlFor="afs-issue">
+        의제
+      </label>
+      <select
+        id="afs-issue"
+        value={issueId}
+        onChange={(event) => router.push(`/issues/${encodeURIComponent(event.target.value)}${tail}`)}
+      >
+        {issues.map((issue) => (
+          <option key={issue.issueId} value={issue.issueId}>
+            {issue.rank}위 · {issue.title}
+          </option>
+        ))}
+      </select>
+      <button type="button" className="afs-pill" onClick={flip} aria-pressed={theme === "dark"}>
+        <Icon name={theme === "dark" ? "sun" : "moon"} />
+        {theme === "dark" ? "밝게" : "어둡게"}
+      </button>
+    </div>
+  );
+}

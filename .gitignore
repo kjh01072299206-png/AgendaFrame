@@ -65,3 +65,6 @@ Thumbs.db
 
 # Tool debug logs (contain account identifiers)
 error.log
+
+# TypeScript incremental build cache
+site/tsconfig.tsbuildinfo
