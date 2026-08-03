@@ -63,11 +63,17 @@ export default async function IssueOverviewPage({ params }: { params: Promise<{ 
         <section className="afs-card">
           <h2>
             기사들이 연결한 서사
+            <span className="afs-chip">AI 요약 · 참고</span>
             <small>묶음 {issue.clusters.length}개</small>
           </h2>
           <div className="afs-in">
             <p className="afs-note">
-              같은 사건을 다룬 기사들이 실제로 어떤 이야기 줄기로 갈라졌는지, 본문 요소 조합으로 묶은 것입니다.
+              아래는 클러스터링 모델이 붙인 이야기 줄기 이름이며, 다섯 층위 코딩과는 별도 산출물입니다. 코딩 결과 자체에서
+              나온 프레임 군집은{" "}
+              <a className="afs-link" href={`/issues/${encodeURIComponent(issue.issueId)}/framing`}>
+                프레이밍 분석의 ‘요소 조합으로 묶은 프레임’
+              </a>
+              에 있습니다 — 이 사안에서는 {issue.frameClusters.length}종입니다.
             </p>
             <div className="afs-cards">
               {issue.clusters.map((cluster) => (

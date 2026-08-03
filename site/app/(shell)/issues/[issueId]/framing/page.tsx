@@ -1,5 +1,5 @@
 import { HBars } from "../../../../charts";
-import { DIM_LABEL, familyLabel, SCOPE_LABEL, VOICE_LABEL, type LayerItem } from "../../../../../lib/initial-five/derive";
+import { DIM_LABEL, DIM_ORDER, familyLabel, SCOPE_LABEL, VOICE_LABEL, type LayerItem } from "../../../../../lib/initial-five/derive";
 import { loadIssue } from "../load";
 
 function ItemList({ items, kind }: { items: LayerItem[]; kind: "narrated" | "attributed" }) {
@@ -42,6 +42,67 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
             붙어 있어 원문에서 확인할 수 있습니다.
           </p>
         </div>
+      </section>
+
+      <section className="afs-card">
+        <h2>
+          요소 조합으로 묶은 프레임
+          <span className="afs-chip afs-chip-brand">
+            {issue.frameClusters.length}종
+          </span>
+          <small>Matthes &amp; Kohring 귀납 도출</small>
+        </h2>
+        <div className="afs-in">
+          <p className="afs-note">
+            프레임을 통째로 판정하지 않고 다섯 층위를 따로 코딩한 뒤, <b>조합이 같은 기사</b>를 묶은 것입니다. 별도 요약
+            모델이 아니라 위 코딩 결과 자체에서 나옵니다. 가장 큰 묶음과 다른 칸에 표시가 붙습니다.
+          </p>
+          <div className="afs-scroll">
+            <table className="afs-table">
+              <thead>
+                <tr>
+                  <th scope="col">묶음</th>
+                  {DIM_ORDER.map((dim) => (
+                    <th scope="col" key={dim}>
+                      {DIM_LABEL[dim]}
+                    </th>
+                  ))}
+                  <th scope="col">기사</th>
+                  <th scope="col">매체</th>
+                </tr>
+              </thead>
+              <tbody>
+                {issue.frameClusters.map((cluster, index) => (
+                  <tr key={cluster.key}>
+                    <th scope="row">
+                      {index === 0 ? "기본형" : `변이 ${index}`}
+                    </th>
+                    {DIM_ORDER.map((dim) => (
+                      <td key={dim}>
+                        {cluster.differsAt.includes(dim) ? (
+                          <span className="afs-chip afs-chip-brand">{familyLabel(cluster.signature[dim]) }</span>
+                        ) : (
+                          <span className="afs-cell-same">{cluster.signature[dim] ? familyLabel(cluster.signature[dim]) : "미관측"}</span>
+                        )}
+                      </td>
+                    ))}
+                    <td className="afs-num">{cluster.count}건</td>
+                    <td>{cluster.outlets.join(" · ")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p className="afs-foot">
+          {issue.frameClusters.length === 1
+            ? `기사 ${issue.articleCount}건이 모두 같은 조합입니다 — 이 사안에서는 프레임이 하나이고 변이가 없습니다.`
+            : `기본형 ${issue.frameClusters[0]?.count ?? 0}건에 변이 ${issue.frameClusters.length - 1}종입니다. 변이가 다른 층위는 ${[
+                ...new Set(issue.frameClusters.slice(1).flatMap((c) => c.differsAt)),
+              ]
+                .map((d) => DIM_LABEL[d])
+                .join(" · ")}입니다.`}
+        </p>
       </section>
 
       {issue.layers.map((layer) => {

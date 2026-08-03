@@ -339,3 +339,8 @@
 .afs-explore-poles b::before {
   display: none;
 }
+
+/* 군집 표: 기본형과 같은 칸은 물러나게 */
+.afs-cell-same {
+  color: var(--afs-ink-3);
+}

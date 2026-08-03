@@ -414,6 +414,46 @@ function layerViews(bundle: IssueAnalysisBundle, articles: ArticleView[], axes: 
   });
 }
 
+// ── 귀납 프레임 군집 (Matthes & Kohring 2008) ───────────────────────────────
+//
+// 프레임을 통째로 코딩하지 않고 요소(문제·원인·책임·평가·해법)를 따로 코딩한 뒤,
+// 요소 조합이 같은 기사를 묶어 프레임을 귀납적으로 도출한다. 여기서는 기사마다
+// 다섯 층위의 지배 계열을 5-튜플로 만들어 그대로 묶는다 — 별도 요약 모델이 아니라
+// 코딩 결과 자체에서 나온 군집이다.
+
+export interface FrameCluster {
+  key: string;
+  /** 층위 → 계열 코드 (미관측이면 undefined) */
+  signature: Record<string, string | undefined>;
+  articleIds: string[];
+  outlets: string[];
+  count: number;
+  /** 가장 큰 군집과 값이 다른 층위 */
+  differsAt: string[];
+}
+
+function frameClusters(articles: ArticleView[]): FrameCluster[] {
+  const groups = new Map<string, FrameCluster>();
+  for (const article of articles) {
+    const signature: Record<string, string | undefined> = {};
+    for (const dim of DIM_ORDER) signature[dim] = article.families[dim];
+    const key = DIM_ORDER.map((dim) => signature[dim] ?? "-").join("|");
+    const slot = groups.get(key) ?? { key, signature, articleIds: [], outlets: [], count: 0, differsAt: [] };
+    slot.articleIds.push(article.articleId);
+    if (!slot.outlets.includes(article.outlet)) slot.outlets.push(article.outlet);
+    slot.count += 1;
+    groups.set(key, slot);
+  }
+  const sorted = [...groups.values()].sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
+  const base = sorted[0];
+  for (const cluster of sorted) {
+    cluster.differsAt = base
+      ? DIM_ORDER.filter((dim) => cluster.signature[dim] !== base.signature[dim])
+      : [];
+  }
+  return sorted;
+}
+
 // ── 의제 단위 ──────────────────────────────────────────────────────────────
 
 export interface AxisView {
@@ -439,6 +479,8 @@ export interface IssueView {
   sourceContext: string | null;
   commonSubjects: string[];
   clusters: Array<{ label: string; description: string; articleCount: number; outlets: string[] }>;
+  /** 5-튜플로 귀납 도출한 프레임 군집. clusters(별도 요약)와 출처가 다르다. */
+  frameClusters: FrameCluster[];
   articles: ArticleView[];
   outlets: OutletView[];
   axes: AxisView[];
@@ -536,6 +578,7 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
   }));
 
   const layers = layerViews(bundle, articles, axes);
+  const clusters = frameClusters(articles);
   const method = (data.method ?? {}) as Record<string, unknown>;
   const dominance = (method.source_dominance_check ?? {}) as Record<string, unknown>;
   const sampleRaw = (data.sample ?? {}) as Record<string, unknown>;
@@ -606,6 +649,7 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
     })),
     articles,
     outlets,
+    frameClusters: clusters,
     axes,
     layers,
     mostSplit,
