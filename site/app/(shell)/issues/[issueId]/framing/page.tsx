@@ -1,71 +1,107 @@
-import { Donut, HBars } from "../../../../charts";
-import { DIM_LABEL, DIM_QUESTION, familyLabel } from "../../../../../lib/initial-five/derive";
+import { HBars } from "../../../../charts";
+import { DIM_LABEL, familyLabel, SCOPE_LABEL, VOICE_LABEL, type LayerItem } from "../../../../../lib/initial-five/derive";
 import { loadIssue } from "../load";
+
+function ItemList({ items, kind }: { items: LayerItem[]; kind: "narrated" | "attributed" }) {
+  return (
+    <ol className="afs-patterns">
+      {items.map((item, index) => (
+        <li key={`${item.articleId}-${index}`}>
+          <span className={`afs-patterns-no${kind === "attributed" ? " afs-patterns-no-src" : ""}`}>{index + 1}</span>
+          <div>
+            <p>{item.paraphrase}</p>
+            <p className="afs-patterns-meta">
+              <span className="afs-chip">{item.outlet}</span>
+              {item.family ? <span className="afs-chip afs-chip-brand">{familyLabel(item.family)}</span> : null}
+              {item.voiceKind ? <span className="afs-chip">{VOICE_LABEL[item.voiceKind] ?? item.voiceKind}</span> : null}
+              {item.locator ? <span className="afs-chip afs-chip-src afs-num">{item.locator}</span> : null}
+              {item.hash ? <span className="afs-chip afs-chip-src afs-num">{item.hash.slice(0, 10)}…</span> : null}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
 
 export default async function FramingPage({ params }: { params: Promise<{ issueId: string }> }) {
   const issue = await loadIssue(params);
-  const splitOf = (dimension: string) =>
-    new Set(issue.outlets.map((outlet) => outlet.families[dimension]?.[0]).filter(Boolean)).size;
 
   return (
     <>
-      <section className="afs-card">
+      <section className="afs-card afs-card-lead">
         <h2>다섯 층위를 하나씩 봅니다</h2>
         <div className="afs-in afs-prose">
           <p>
             프레이밍은 찬반이 아닙니다. 같은 사건을 두고 <b>무엇을 문제로 볼 것인가</b>부터 갈리고, 그 다음에 원인·책임·평가·해법이
-            따라옵니다. 아래는 그 다섯 단계를 본문 근거로 나눠 놓은 것입니다.
+            따라옵니다.
           </p>
           <p>
-            각 층위마다 매체별 대표 계열이 몇 종류인지 함께 적었습니다. 한 종류면 매체들이 같은 방식으로 설명한 것이고, 두
-            종류 이상이면 그 층위가 이 사건에서 매체를 가른 지점입니다.
+            각 층위의 설명을 <b>매체가 직접 쓴 것</b>과 <b>취재원의 말로 실린 것</b>으로 나눠 놓았습니다. 둘을 합치지 않는 것이
+            이 분석의 원칙입니다 — 취재원의 발언은 그 매체의 입장이 아니기 때문입니다. 항목마다 근거 문단·문장 위치와 지문이
+            붙어 있어 원문에서 확인할 수 있습니다.
           </p>
         </div>
       </section>
 
-      {issue.axes.map((axis) => {
-        const kinds = splitOf(axis.dimension);
+      {issue.layers.map((layer) => {
+        const total = layer.narrated.length + layer.attributed.length;
         return (
-          <section className="afs-card" key={axis.dimension} id={axis.dimension}>
+          <section className={`afs-card${layer.outletKinds >= 2 ? " afs-card-split" : ""}`} key={layer.dimension} id={layer.dimension}>
             <h2>
-              {axis.label}
+              {layer.label}
+              {layer.outletKinds >= 2 ? (
+                <span className="afs-chip afs-chip-brand">갈림 · 대표 계열 {layer.outletKinds}종</span>
+              ) : (
+                <span className="afs-chip">매체 간 동일</span>
+              )}
               <small>
-                관측 {axis.observed}건 · 미관측 {axis.notObserved}건
+                매체 서술 {layer.narrated.length} · 취재원 발언 {layer.attributed.length} · 미관측 기사 {layer.notObserved}
               </small>
             </h2>
             <div className="afs-in">
-              <p className="afs-note">
-                {DIM_QUESTION[axis.dimension] ?? axis.question}
-                {" — "}
-                {kinds >= 2 ? (
-                  <b style={{ color: "var(--afs-brand)" }}>매체별 대표 계열 {kinds}종, 이 층위에서 갈렸습니다.</b>
-                ) : (
-                  <span>매체별 대표 계열 1종, 이 층위에서는 갈리지 않았습니다.</span>
-                )}
-              </p>
-              {axis.patterns.length ? (
-                <ol className="afs-patterns">
-                  {axis.patterns.map((pattern, index) => (
-                    <li key={pattern.label}>
-                      <span className="afs-patterns-no afs-num">{index + 1}</span>
-                      <div>
-                        <p>{pattern.label}</p>
-                        <p className="afs-patterns-meta">
-                          <span className="afs-chip afs-num">기사 {pattern.articleCount}건</span>
-                          {pattern.outlets.map((outlet) => (
-                            <span className="afs-chip" key={outlet}>
-                              {outlet}
-                            </span>
-                          ))}
-                          {pattern.voiceScope ? <span className="afs-chip">{pattern.voiceScope}</span> : null}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <p className="afs-note">이 층위에서는 본문 근거로 확인된 설명이 없습니다.</p>
-              )}
+              <p className="afs-note">{layer.question}</p>
+
+              {layer.narrated.length ? (
+                <>
+                  <h3 className="afs-layer-head">
+                    매체가 직접 쓴 설명
+                    <b className="afs-num">{layer.narrated.length}건</b>
+                  </h3>
+                  <ItemList items={layer.narrated} kind="narrated" />
+                </>
+              ) : null}
+
+              {layer.attributed.length ? (
+                <>
+                  <h3 className="afs-layer-head">
+                    취재원의 말로 실린 설명
+                    <b className="afs-num">{layer.attributed.length}건</b>
+                  </h3>
+                  <p className="afs-note">
+                    아래 설명은 인용된 발언입니다. 매체의 서술로 합산하지 않으므로 비교축 집계(매체 서술 기준)에는 들어가지
+                    않습니다.
+                  </p>
+                  <ItemList items={layer.attributed} kind="attributed" />
+                </>
+              ) : null}
+
+              {total === 0 ? (
+                <p className="afs-note">
+                  이 층위에서는 매체 서술도 취재원 발언도 본문 근거로 확인되지 않았습니다. 기사 {layer.notObserved}건 모두
+                  미관측입니다.
+                </p>
+              ) : null}
+
+              {layer.patterns.length ? (
+                <p className="afs-caption">
+                  규칙 기반 비교축이 잡은 패턴 {layer.patterns.length}개
+                  {layer.patterns[0]?.voiceScope
+                    ? ` (${SCOPE_LABEL[layer.patterns[0].voiceScope] ?? layer.patterns[0].voiceScope})`
+                    : ""}
+                  : {layer.patterns.map((p) => `${p.label.slice(0, 40)}… ${p.articleCount}건`).join(" / ")}
+                </p>
+              ) : null}
             </div>
           </section>
         );
@@ -75,11 +111,11 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
         <section className="afs-card">
           <h3>
             프레임 계열 분포
-            <small>다섯 층위 합계</small>
+            <small>관측 건수</small>
           </h3>
           <div className="afs-in">
             <HBars
-              caption="계열별 관측 건수"
+              caption="다섯 층위에서 관측된 계열별 건수"
               rows={issue.families.map((family) => ({ label: family.label, value: family.count }))}
             />
           </div>
@@ -89,12 +125,12 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
           <section className="afs-card">
             <h3>
               일반 프레임
-              <small>Semetko·Valkenburg 5종</small>
+              <small>기사 수</small>
             </h3>
             <div className="afs-in">
               <p className="afs-note">사안의 내용과 무관하게 뉴스가 반복적으로 쓰는 틀입니다.</p>
               <HBars
-                caption="일반 프레임별 기사 수"
+                caption="일반 프레임이 나타난 기사 수"
                 rows={issue.genericFrames.map((frame) => ({ label: frame.label, value: frame.count }))}
               />
             </div>
@@ -105,14 +141,13 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
           <section className="afs-card">
             <h3>
               정책 프레임
-              <small>Boydstun 계열</small>
+              <small>기사 수</small>
             </h3>
             <div className="afs-in">
-              <Donut
-                items={issue.policyFrames.map((frame) => ({ label: frame.label, count: frame.count }))}
-                center={issue.policyFrames.length}
-                sub="종"
-                caption="정책 프레임 구성"
+              <p className="afs-note">한 기사가 여러 정책 프레임을 함께 쓸 수 있어 합이 기사 수보다 큽니다.</p>
+              <HBars
+                caption="정책 프레임이 나타난 기사 수"
+                rows={issue.policyFrames.map((frame) => ({ label: frame.label, value: frame.count }))}
               />
             </div>
           </section>
@@ -122,16 +157,19 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
       <section className="afs-card">
         <h2>
           기사별 층위 코딩
-          <small>{issue.articles.length}건</small>
+          <small>{issue.articles.length}건 · 첫 항목의 계열</small>
         </h2>
         <div className="afs-scroll">
           <table className="afs-table">
+            <caption>
+              한 칸에는 그 기사에서 해당 층위의 첫 항목 계열을 적었습니다. 취재원 발언으로 실린 것도 포함합니다.
+            </caption>
             <thead>
               <tr>
                 <th scope="col">매체</th>
-                {Object.keys(DIM_LABEL).map((dim) => (
-                  <th scope="col" key={dim}>
-                    {DIM_LABEL[dim]}
+                {issue.layers.map((layer) => (
+                  <th scope="col" key={layer.dimension}>
+                    {DIM_LABEL[layer.dimension]}
                   </th>
                 ))}
                 <th scope="col">근거</th>
@@ -141,8 +179,10 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
               {issue.articles.map((article) => (
                 <tr key={article.articleId}>
                   <th scope="row">{article.outlet}</th>
-                  {Object.keys(DIM_LABEL).map((dim) => (
-                    <td key={dim}>{article.families[dim] ? familyLabel(article.families[dim]) : "미관측"}</td>
+                  {issue.layers.map((layer) => (
+                    <td key={layer.dimension}>
+                      {article.families[layer.dimension] ? familyLabel(article.families[layer.dimension]) : "미관측"}
+                    </td>
                   ))}
                   <td className="afs-num">{article.evidenceCount}건</td>
                 </tr>

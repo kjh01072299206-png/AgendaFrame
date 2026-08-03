@@ -1,4 +1,4 @@
-import { Donut } from "../../../charts";
+import { Donut, HBars } from "../../../charts";
 import { loadIssue } from "./load";
 
 export default async function IssueOverviewPage({ params }: { params: Promise<{ issueId: string }> }) {
@@ -12,14 +12,20 @@ export default async function IssueOverviewPage({ params }: { params: Promise<{ 
   return (
     <>
       <div className="afs-grid-2">
-        <section className="afs-card">
+        <section className="afs-card afs-card-lead">
           <h2>무슨 일이 있었나</h2>
           <div className="afs-in afs-prose">
             {issue.commonGround ? <p>{issue.commonGround}</p> : null}
             {issue.commonSubjects.length ? (
               <>
-                <h3 style={{ margin: "14px 0 8px", fontSize: 13, fontWeight: 750 }}>모든 기사가 같게 쓴 것</h3>
-                <ul className="afs-facts">
+                <h3 style={{ margin: "14px 0 8px", fontSize: 13, fontWeight: 750 }}>
+                  모든 기사에 공통으로 나타난 표현
+                </h3>
+                <p className="afs-note">
+                  인물·기관·날짜 같은 사실 항목과 평가 어휘가 함께 들어 있습니다. 평가 어휘가 공통이라는 것은 사실이 합의됐다는
+                  뜻이 아니라, 같은 표현이 반복 인용됐다는 뜻입니다.
+                </p>
+                <ul className="afs-facts afs-facts-inline">
                   {issue.commonSubjects.map((subject) => (
                     <li key={subject}>
                       <span>{subject}</span>
@@ -91,8 +97,9 @@ export default async function IssueOverviewPage({ params }: { params: Promise<{ 
           </h3>
           <div className="afs-in">
             <p className="afs-note">
-              ‘취재원 발언’은 인용된 말이고 ‘매체 서술’은 기자가 직접 쓴 문장입니다. 취재원 발언이 많다는 것은 매체가 자기
-              설명을 아꼈다는 뜻이며, 그 자체가 편집 선택입니다.
+              ‘취재원 발언’은 인용된 말이고 ‘매체 서술’은 기자가 직접 쓴 문장입니다. 취재원 발언 비중이 높으면 이 표본에서는
+              매체 자체 서술을 근거로 프레임을 비교하기 어렵습니다 — 어느 말을 어디에 배치했는지는 비교할 수 있지만, 그것을
+              매체의 동의로 읽어서는 안 됩니다.
             </p>
             <Donut
               items={issue.statuses.map((s) => ({ label: s.label, count: s.count }))}
@@ -106,14 +113,12 @@ export default async function IssueOverviewPage({ params }: { params: Promise<{ 
         <section className="afs-card">
           <h3>
             어떤 프레임 계열이 쓰였나
-            <small>상위 {Math.min(4, issue.families.length)}종</small>
+            <small>관측 건수 · 상위 {Math.min(6, issue.families.length)}종</small>
           </h3>
           <div className="afs-in">
-            <Donut
-              items={issue.families.map((f) => ({ label: f.label, count: f.count }))}
-              center={issue.families.length}
-              sub="계열"
-              caption="프레임 계열 구성"
+            <HBars
+              caption="계열별 관측 건수"
+              rows={issue.families.slice(0, 6).map((f) => ({ label: f.label, value: f.count }))}
             />
           </div>
         </section>
@@ -122,14 +127,12 @@ export default async function IssueOverviewPage({ params }: { params: Promise<{ 
           <section className="afs-card">
             <h3>
               정책 프레임
-              <small>의제 단위</small>
+              <small>기사 수</small>
             </h3>
             <div className="afs-in">
-              <Donut
-                items={issue.policyFrames.map((f) => ({ label: f.label, count: f.count }))}
-                center={issue.policyFrames[0]?.count ?? 0}
-                sub="최다"
-                caption="정책 프레임별 기사 수"
+              <HBars
+                caption="정책 프레임이 나타난 기사 수"
+                rows={issue.policyFrames.map((f) => ({ label: f.label, value: f.count }))}
               />
             </div>
           </section>

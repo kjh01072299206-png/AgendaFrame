@@ -36,9 +36,15 @@ export function HBars({
   unit?: string;
   caption?: string;
 }) {
-  const max = Math.max(1, ...rows.map((r) => r.value));
+  const max = Math.max(1, ...rows.map((r) => Number(r.value) || 0));
+  // 링크가 있으면 role="img" 를 붙이지 않는다 — 하위 요소가 접근성 트리에서 사라진다
+  const hasLink = rows.some((r) => r.href);
   return (
-    <div className="afs-hb" role="img" aria-label={`${caption ?? "막대 그래프"}: ${rows.map((r) => `${r.label} ${r.value}${unit}`).join(", ")}`}>
+    <div
+      className="afs-hb"
+      role={hasLink ? undefined : "img"}
+      aria-label={hasLink ? undefined : `${caption ?? "막대 그래프"}: ${rows.map((r) => `${r.label} ${r.value}${unit}`).join(", ")}`}
+    >
       {rows.map((row) => (
         <div className="afs-hb-row" key={row.label}>
           <span className="afs-hb-label">{row.href ? <Link href={row.href}>{row.label}</Link> : row.label}</span>
@@ -130,11 +136,14 @@ export function HeatTable({
   rows,
   caption,
   rowHead = "매체",
+  colorFrom = 1,
 }: {
   columns: string[];
   rows: Array<{ label: string; cells: Array<{ value: number; text?: string }> }>;
   caption?: string;
   rowHead?: string;
+  /** 이 값 미만은 칠하지 않는다. 갈림을 찾는 표에서 "1"(=전원 동일)에 색을 주면 합의가 강조된다. */
+  colorFrom?: number;
 }) {
   const max = Math.max(1, ...rows.flatMap((r) => r.cells.map((c) => c.value)));
   return (
@@ -159,7 +168,12 @@ export function HeatTable({
                 <td
                   key={columns[i] ?? i}
                   // 농도 상한을 낮게 잡는다 — 진한 칸에서 다크 모드 글자가 배경에 묻는다
-                  style={cell.value ? { background: `color-mix(in srgb, var(--n1) ${Math.min(52, (cell.value / max) * 52)}%, transparent)` } : undefined}
+                  // 농도 상한은 테마별 토큰이다 — 다크에서 52%는 배경에 묻힌다
+                  style={
+                    cell.value >= colorFrom
+                      ? { background: `color-mix(in srgb, var(--n1) calc(var(--afs-heat-max) * ${(cell.value / max).toFixed(3)}), transparent)` }
+                      : undefined
+                  }
                 >
                   {cell.text ?? (cell.value || "·")}
                 </td>

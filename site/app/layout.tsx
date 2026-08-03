@@ -3,6 +3,7 @@ import "./globals.css";
 import "./admin.css";
 import "./app-shell.css";
 import "./app-components.css";
+import "./app-round2.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://agendaframe-capstone.kjh01072299206.chatgpt.site";
 const title = "AgendaFrame | 같은 사건, 다른 설명을 근거로 비교";

@@ -48,7 +48,7 @@ const POSTS: Post[] = [
     body: "‘해법·처방’ 층위가 거의 비어 있는 게 인상적입니다. 사건은 크게 다뤘는데 무엇을 해야 하는지는 아무 매체도 안 썼어요. 갈린 게 아니라 아예 질문이 없었던 층위네요.",
     agrees: 41,
     replies: [
-      { nick: "느린독자", type: "BDCP", body: "미관측이 곧 부재는 아니지만, 다섯 매체가 모두 안 썼다면 그건 편집 관심의 위치를 보여 준다고 생각해요." },
+      { nick: "느린독자", type: "BDCP", body: "미관측이 곧 부재는 아니지만, 네 매체가 모두 안 썼다면 그건 편집 관심의 위치를 보여 준다고 생각해요." },
     ],
   },
   {
@@ -102,6 +102,7 @@ export function CommunityFeed() {
       <section className="afs-card">
         <h2>
           글 쓰기
+          <span className="afs-badge-ex">예시</span>
           <small>근거를 본 화면과 함께 올립니다</small>
         </h2>
         <div className="afs-in">
@@ -124,7 +125,14 @@ export function CommunityFeed() {
                 </>
               )}
             </p>
-            <textarea rows={3} placeholder="어느 화면에서 무엇을 봤는지 함께 적으면 다른 사람이 확인할 수 있습니다." />
+            <label className="afs-sr" htmlFor="afs-compose">
+              글 내용
+            </label>
+            <textarea
+              id="afs-compose"
+              rows={3}
+              placeholder="어느 화면에서 무엇을 봤는지 함께 적으면 다른 사람이 확인할 수 있습니다."
+            />
             <div className="afs-compose-foot">
               <span>글에는 내가 본 의제와 화면이 자동으로 붙습니다.</span>
               <button type="button" className="afs-pill" disabled>
@@ -143,6 +151,7 @@ export function CommunityFeed() {
       <section className="afs-card">
         <h2>
           최근 이야기
+          <span className="afs-badge-ex">예시</span>
           <small>{POSTS.length}개</small>
         </h2>
         <div className="afs-in">
@@ -187,8 +196,10 @@ export function CommunityFeed() {
             ))}
           </ul>
         </div>
-        <p className="afs-foot">
-          같은 유형끼리 모이면 사각지대도 같아집니다. 다른 유형의 글을 하나씩 읽어 보는 것이 이 탭의 목적입니다.
+        <p className="afs-foot afs-foot-ex">
+          <b>이 글과 공감 수는 예시입니다.</b> 실제 이용자 글이 아니라, 닉네임 옆에 읽기 유형이 붙고 본 화면이 함께 표시되는
+          구조를 보여 주기 위한 것입니다. 같은 유형끼리 모이면 사각지대도 같아지므로, 다른 유형의 글을 하나씩 읽는 것이 이 탭의
+          목적입니다.
         </p>
       </section>
     </>

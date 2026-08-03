@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { writeLocal } from "../../client-store";
+import { clearLocal, writeLocal } from "../../client-store";
 
 /* 네 축으로 읽기 습관을 가른다. 각 축의 세 문항 중 많이 고른 쪽이 그 축의 글자가 된다
    (문항이 홀수라 무승부가 없다). 16유형은 아래 TYPES 에 전부 적어 둔다. */
@@ -195,6 +195,7 @@ export function ReaderTypeQuiz() {
 
   useEffect(() => {
     if (result) writeLocal("afs-reader-type", result.code);
+    else clearLocal("afs-reader-type");
   }, [result]);
 
   return (
@@ -212,17 +213,18 @@ export function ReaderTypeQuiz() {
           </p>
           <ol className="afs-quiz">
             {QUESTIONS.map((question, index) => (
-              <li key={question.text} className={picks[index] ? "done" : ""}>
-                <p className="afs-quiz-q">
+              <li key={`q${index}`} className={picks[index] ? "done" : ""}>
+                <p className="afs-quiz-q" id={`afs-q${index}`}>
                   <span className="afs-quiz-no afs-num">{index + 1}</span>
                   {question.text}
                 </p>
-                <div className="afs-quiz-opts">
+                <div className="afs-quiz-opts" role="radiogroup" aria-labelledby={`afs-q${index}`}>
                   {(["a", "b"] as const).map((side) => (
                     <button
                       type="button"
                       key={side}
-                      aria-pressed={picks[index] === side}
+                      role="radio"
+                      aria-checked={picks[index] === side}
                       onClick={() =>
                         setPicks((current) => current.map((value, i) => (i === index ? (value === side ? null : side) : value)))
                       }
@@ -252,13 +254,14 @@ export function ReaderTypeQuiz() {
               {AXES.map((axis) => {
                 const score = scores[axis.id];
                 const leaning = score.a >= score.b;
-                const pct = (Math.max(score.a, score.b) / 3) * 100;
+                const perAxis = QUESTIONS.filter((q) => q.axis === axis.id).length;
+                const pct = (Math.max(score.a, score.b) / Math.max(1, perAxis)) * 100;
                 return (
                   <div className="afs-result-axis" key={axis.id}>
                     <p>
                       <b>{axis.question}</b>
                       <span>
-                        {leaning ? axis.aLabel : axis.bLabel} {Math.max(score.a, score.b)}/3
+                        {leaning ? axis.aLabel : axis.bLabel} {Math.max(score.a, score.b)}/{perAxis}
                       </span>
                     </p>
                     <div className="afs-result-bar">

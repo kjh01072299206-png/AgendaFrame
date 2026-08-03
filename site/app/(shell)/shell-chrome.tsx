@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { safeDecode } from "../../lib/initial-five/derive";
 import { setTheme, useTheme } from "./client-store";
 
 export interface ShellIssue {
@@ -35,7 +37,7 @@ function Icon({ name }: { name: string }) {
 
 function currentIssueId(pathname: string, issues: ShellIssue[]) {
   const match = pathname.match(/\/issues\/([^/?#]+)/);
-  const decoded = match ? decodeURIComponent(match[1]) : null;
+  const decoded = match ? safeDecode(match[1]) : null;
   if (decoded && issues.some((issue) => issue.issueId === decoded)) return decoded;
   return issues[0]?.issueId ?? "";
 }
@@ -96,8 +98,17 @@ export function ShellSide({
       </Link>
       <nav className="afs-nav" aria-label="주요 화면">
         {groups.map((group, gi) => (
-          <div key={group.label ?? `g${gi}`} className="afs-nav" style={{ gap: 2 }}>
-            {group.label ? <p className="afs-nav-group">{group.label}</p> : null}
+          <div
+            key={group.label ?? `g${gi}`}
+            className="afs-nav-sec"
+            role="group"
+            aria-labelledby={group.label ? `afs-grp-${gi}` : undefined}
+          >
+            {group.label ? (
+              <h2 className="afs-nav-group" id={`afs-grp-${gi}`}>
+                {group.label}
+              </h2>
+            ) : null}
             {group.items.map((item) => (
               <Link key={item.href + item.label} href={item.href} aria-current={item.match(pathname) ? "page" : undefined}>
                 <Icon name={item.icon} />
@@ -129,6 +140,7 @@ export function ShellTop({ issues }: { issues: ShellIssue[] }) {
   const issueId = currentIssueId(pathname, issues);
   const tail = issueTail(pathname);
   const theme = useTheme();
+  const [picked, setPicked] = useState(issueId);
   const flip = () => setTheme(theme === "dark" ? "light" : "dark");
 
   return (
@@ -136,20 +148,24 @@ export function ShellTop({ issues }: { issues: ShellIssue[] }) {
       <label className="afs-top-label" htmlFor="afs-issue">
         의제
       </label>
-      <select
-        id="afs-issue"
-        value={issueId}
-        onChange={(event) => router.push(`/issues/${encodeURIComponent(event.target.value)}${tail}`)}
-      >
+      <select id="afs-issue" value={picked} onChange={(event) => setPicked(event.target.value)}>
         {issues.map((issue) => (
           <option key={issue.issueId} value={issue.issueId}>
             {issue.rank}위 · {issue.title}
           </option>
         ))}
       </select>
-      <button type="button" className="afs-pill" onClick={flip} aria-pressed={theme === "dark"}>
+      <button
+        type="button"
+        className="afs-pill"
+        disabled={picked === issueId}
+        onClick={() => router.push(`/issues/${encodeURIComponent(picked)}${tail}`)}
+      >
+        이 의제 보기
+      </button>
+      <button type="button" className="afs-pill" onClick={flip}>
         <Icon name={theme === "dark" ? "sun" : "moon"} />
-        {theme === "dark" ? "밝게" : "어둡게"}
+        {theme === "dark" ? "밝게 보기" : "어둡게 보기"}
       </button>
     </div>
   );

@@ -1,0 +1,341 @@
+/* 2차 수정: 표면 위계, 출처 표시, 예시 표시, 다크 파임 방향, 히트맵 칸 분리.
+   app-shell.css 의 토큰을 그대로 쓰고 값만 덧붙인다. */
+
+/* ── 표면 3단계 ──────────────────────────────────────────────────────────── */
+/* 화면마다 결론 카드 하나만 lead 를 쓴다. 카드 스킨이 하나뿐이면 8~9개가 같은
+   무게로 나열돼 어느 것이 결론인지 표면으로 구분되지 않는다. */
+
+.afs-card-lead {
+  border: 0;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--afs-ink) 7%, transparent), 0 10px 28px color-mix(in srgb, var(--afs-ink) 6%, transparent);
+}
+.afs-card-lead > h2 {
+  padding-top: 18px;
+  font-size: 18px;
+}
+:root[data-theme="dark"] .afs-card-lead,
+.afs-card-lead {
+  background: var(--afs-card);
+}
+@media (prefers-color-scheme: dark) {
+  .afs-card-lead {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+}
+:root[data-theme="dark"] .afs-card-lead {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+/* 이 층위에서 매체가 갈렸다는 사실을 표면으로도 드러낸다 */
+.afs-card-split {
+  border-left: 3px solid var(--afs-brand);
+}
+
+/* ── 다크에서 파임 방향 ──────────────────────────────────────────────────── */
+/* 라이트는 흰 카드보다 어두운 면이 "파임"이다. 다크에서 sunk 을 더 밝게 잡으면
+   파임이 오히려 솟아 보여 각주 상자가 카드와 구별되지 않는다. */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --afs-card: #151c28;
+    --afs-sunk: #0f1520;
+    --afs-rule: #2b3542;
+    --afs-heat-max: 74%;
+  }
+  .afs-card {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  }
+}
+:root[data-theme="dark"] {
+  --afs-card: #151c28;
+  --afs-sunk: #0f1520;
+  --afs-rule: #2b3542;
+  --afs-heat-max: 74%;
+}
+:root[data-theme="dark"] .afs-card {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+:root {
+  --afs-heat-max: 52%;
+}
+:root[data-theme="light"] {
+  --afs-heat-max: 52%;
+}
+
+/* ── 히트맵 칸 분리 ──────────────────────────────────────────────────────── */
+/* collapse + 배경색만으로는 같은 값이 나란히 오면 한 칸처럼 붙어 보여 열을 세로로
+   추적할 수 없다. */
+
+.afs-heat {
+  border-collapse: separate;
+  border-spacing: 3px 2px;
+}
+.afs-heat th,
+.afs-heat td {
+  border-bottom: 0;
+}
+.afs-heat td {
+  border-radius: 4px;
+  background-clip: padding-box;
+}
+.afs-heat thead th,
+.afs-heat tbody th {
+  border-bottom: 1px solid var(--afs-rule);
+}
+.afs-heat tbody tr:hover {
+  background: none;
+}
+.afs-heat tbody tr:hover th {
+  color: var(--afs-brand);
+}
+
+/* ── 출처 스트립 ─────────────────────────────────────────────────────────── */
+
+.afs-prov {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: -4px 0 0;
+  padding: 9px 14px;
+  border: 1px dashed var(--afs-rule-2);
+  border-radius: var(--afs-r-btn);
+  background: var(--afs-sunk);
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+}
+.afs-prov b {
+  padding: 1px 9px;
+  border: 1px solid color-mix(in srgb, var(--afs-warn) 40%, transparent);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--afs-warn-soft) 70%, var(--afs-card));
+  color: var(--afs-warn);
+  font-weight: 750;
+}
+
+/* ── 예시 표시 ───────────────────────────────────────────────────────────── */
+
+.afs-badge-ex {
+  padding: 1px 9px;
+  border: 1px solid color-mix(in srgb, var(--afs-warn) 40%, transparent);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--afs-warn-soft) 70%, var(--afs-card));
+  color: var(--afs-warn);
+  font-size: 11px;
+  font-weight: 750;
+}
+.afs-foot-ex {
+  border-top: 1px dashed color-mix(in srgb, var(--afs-warn) 40%, var(--afs-rule));
+  background: color-mix(in srgb, var(--afs-warn-soft) 34%, var(--afs-card));
+}
+.afs-foot-ex b {
+  color: var(--afs-warn);
+}
+
+/* ── 층위 카드 안쪽 ──────────────────────────────────────────────────────── */
+
+.afs-layer-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 16px 0 9px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--afs-rule);
+  font-size: 12.5px;
+  font-weight: 750;
+}
+.afs-layer-head:first-of-type {
+  margin-top: 4px;
+}
+.afs-layer-head b {
+  margin-left: auto;
+  color: var(--afs-ink-3);
+  font-weight: 700;
+}
+/* 취재원 발언 묶음은 번호까지 다르게 — 매체 서술과 합산하지 않는다는 표시 */
+.afs-patterns-no-src {
+  border: 1px dashed color-mix(in srgb, var(--afs-ink-3) 55%, transparent);
+  background: transparent;
+  color: var(--afs-ink-3);
+}
+.afs-chip-src {
+  border-style: dashed;
+  background: transparent;
+  color: var(--afs-ink-3);
+}
+
+/* ── 쟁점 축: 극의 색을 칩까지 잇는다 ────────────────────────────────────── */
+
+.afs-spectrum-lane-l li {
+  border-color: color-mix(in srgb, var(--n1) 48%, transparent);
+  background: color-mix(in srgb, var(--n1) 9%, var(--afs-card));
+}
+.afs-spectrum-lane-right li {
+  border-color: color-mix(in srgb, var(--n3) 48%, transparent);
+  background: color-mix(in srgb, var(--n3) 9%, var(--afs-card));
+}
+.afs-spectrum-lane-mid li {
+  border-color: color-mix(in srgb, var(--n0) 55%, transparent);
+  background: color-mix(in srgb, var(--n0) 10%, var(--afs-card));
+}
+.afs-spectrum-lane li.afs-spectrum-empty {
+  border-color: var(--afs-rule-2) !important;
+  background: transparent !important;
+}
+
+/* ── 목록을 옆으로 흘리는 변형 ───────────────────────────────────────────── */
+/* 한 단어짜리 항목 열 개를 세로로 쌓으면 카드 오른쪽 1000px 가 빈다. */
+
+.afs-facts-inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.afs-facts-inline li {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0;
+  padding: 3px 10px;
+  border: 1px solid var(--afs-rule);
+  border-radius: 20px;
+  background: var(--afs-sunk);
+  font-size: 12.5px;
+}
+.afs-facts-inline li::before {
+  display: none;
+}
+
+/* ── 격자가 서로 다른 방향으로 늘어나지 않게 ─────────────────────────────── */
+
+.afs-grid {
+  align-items: start;
+}
+@media (max-width: 1080px) {
+  .afs-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ── 카드 제목 안의 배지 정렬 ────────────────────────────────────────────── */
+
+.afs-card > h2 > .afs-chip,
+.afs-card > h2 > .afs-badge-ex {
+  align-self: center;
+}
+
+/* ── 스킵 링크 · 스크린리더 전용 ─────────────────────────────────────────── */
+
+.afs-skip {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 100;
+  padding: 10px 14px;
+  border-radius: var(--afs-r-btn);
+  background: var(--afs-brand);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  transform: translateY(-180%);
+  transition: transform 0.15s;
+}
+.afs-skip:focus-visible {
+  transform: translateY(0);
+}
+.afs-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.afs-nav-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ── 홈: 발견 문장과 제목 대비 ───────────────────────────────────────────── */
+
+.afs-finding {
+  margin: 0;
+  font-size: clamp(16px, 1.9vw, 20px);
+  font-weight: 700;
+  line-height: 1.55;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.afs-finding b {
+  color: var(--afs-brand);
+  font-weight: 800;
+}
+.afs-finding-sub {
+  margin: 9px 0 0;
+  max-width: 74ch;
+  color: var(--afs-ink-2);
+  font-size: 13.5px;
+}
+.afs-contrast {
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid var(--afs-rule);
+}
+.afs-contrast-q {
+  margin: 0 0 10px;
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.afs-contrast-pair {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+.afs-contrast-pair blockquote {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 13px 15px;
+  border-left: 3px solid var(--n0);
+  border-radius: 0 10px 10px 0;
+  background: var(--afs-sunk);
+}
+.afs-contrast-pair blockquote.l {
+  border-left-color: var(--n1);
+}
+.afs-contrast-pair blockquote.r {
+  border-left-color: var(--n3);
+}
+.afs-contrast-pair cite {
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+  font-style: normal;
+  font-weight: 750;
+}
+.afs-contrast-pair p {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 650;
+  line-height: 1.55;
+}
+.afs-contrast-foot {
+  margin: 11px 0 0;
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+}
+.afs-explore-poles b {
+  display: block;
+  margin-bottom: 3px;
+  padding-left: 0;
+  color: var(--afs-ink-3);
+  font-size: 11px;
+  font-weight: 750;
+}
+.afs-explore-poles b::before {
+  display: none;
+}

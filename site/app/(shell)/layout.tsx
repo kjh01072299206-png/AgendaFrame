@@ -11,6 +11,9 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="afs-shell">
+      <a className="afs-skip" href="#afs-main">
+        본문으로 건너뛰기
+      </a>
       <ShellSide
         issues={issues}
         meta={{
@@ -22,7 +25,9 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
       />
       <div className="afs-main">
         <ShellTop issues={issues} />
-        <div className="afs-body">{children}</div>
+        <main id="afs-main" className="afs-body">
+          {children}
+        </main>
       </div>
     </div>
   );

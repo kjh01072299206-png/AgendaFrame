@@ -1,4 +1,4 @@
-import { DIM_LABEL } from "../../../../../lib/initial-five/derive";
+import { DIM_LABEL, particle } from "../../../../../lib/initial-five/derive";
 import { loadIssue } from "../load";
 
 export default async function ReportPage({ params }: { params: Promise<{ issueId: string }> }) {
@@ -15,7 +15,7 @@ export default async function ReportPage({ params }: { params: Promise<{ issueId
 
   return (
     <article className="afs-report">
-      <section className="afs-card">
+      <section className="afs-card afs-card-lead">
         <h2>리드</h2>
         <div className="afs-in afs-prose">
           {issue.lead ? <p>{issue.lead}</p> : null}
@@ -32,7 +32,7 @@ export default async function ReportPage({ params }: { params: Promise<{ issueId
         <div className="afs-in">
           {issue.commonGround ? <p className="afs-prose">{issue.commonGround}</p> : null}
           {issue.commonSubjects.length ? (
-            <ul className="afs-facts" style={{ marginTop: 10 }}>
+            <ul className="afs-facts afs-facts-inline" style={{ marginTop: 10 }}>
               {issue.commonSubjects.map((subject) => (
                 <li key={subject}>
                   <span>{subject}</span>
@@ -47,11 +47,21 @@ export default async function ReportPage({ params }: { params: Promise<{ issueId
         <h2>쟁점 구도</h2>
         <div className="afs-in afs-prose">
           {issue.mainDifference ? <p>{issue.mainDifference}</p> : null}
+          {issue.mostSplit ? (
+            <p>
+              매체가 가장 많이 갈린 층위는 <b>{DIM_LABEL[issue.mostSplit.dimension]}</b>
+              {particle(DIM_LABEL[issue.mostSplit.dimension], "이", "가")} 매체별 최빈 계열 {issue.mostSplit.kinds}종으로
+              나뉘었다.
+            </p>
+          ) : (
+            <p>매체별 최빈 계열로 보면 다섯 층위 어디에서도 매체가 갈리지 않았다.</p>
+          )}
           {issue.spectrum ? (
             <p>
-              가장 크게 갈린 층위는 <b>{DIM_LABEL[issue.spectrum.dimension]}</b>이다. 한쪽은 “{issue.spectrum.left.label}”로
+              대표 축으로 세운 <b>{DIM_LABEL[issue.spectrum.dimension]}</b>에서 한쪽은 “{issue.spectrum.left.label}”로
               설명했고({issue.spectrum.left.articleCount}건), 다른 쪽은 “{issue.spectrum.right.label}”로 설명했다(
               {issue.spectrum.right.articleCount}건).
+              {issue.spectrum.nested ? " 다만 한쪽 극이 모든 매체를 포함하므로 이 축은 대립이 아니라 포함 관계다." : ""}
             </p>
           ) : null}
           {splitAxes.length ? (
@@ -120,9 +130,11 @@ export default async function ReportPage({ params }: { params: Promise<{ issueId
       <section className="afs-card">
         <h2>이 분석의 범위</h2>
         <div className="afs-in afs-prose">
+          {issue.comparisonEngine.limitNote ? <p>{issue.comparisonEngine.limitNote}</p> : null}
           <p>
-            이 리포트는 {issue.articleCount}건의 기사 본문에서 자동으로 뽑은 설명 요소를 정리한 것이다. 매체의 의도나 이념을
-            판정하지 않고, 본문에 나타난 서술만 다룬다.
+            이 리포트는 {issue.articleCount}건의 기사 본문에서 자동으로 뽑은 설명 요소를 정리한 것이다. 층위별 코딩은 AI 이중
+            코딩 뒤 판정을 거쳤고, 의제 단위 비교(쟁점 축·패턴)는{" "}
+            {issue.comparisonEngine.semanticAi ? "AI" : "규칙 기반"} 집계다. 매체의 의도나 이념을 판정하지 않는다.
           </p>
           <p>
             ‘미관측’은 분석 가능한 본문에서 해당 설명을 찾지 못했다는 뜻이다. 취재원의 발언은 그 매체의 입장이 아니다. 본문

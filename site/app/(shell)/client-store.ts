@@ -11,14 +11,40 @@ const emit = () => listeners.forEach((listener) => listener());
 function subscribe(onChange: () => void) {
   listeners.add(onChange);
   window.addEventListener("storage", onChange);
+  // 저장값이 없으면 OS 설정을 따르므로 그 변화도 구독해야 버튼 라벨이 맞는다
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  media.addEventListener("change", onChange);
   return () => {
     listeners.delete(onChange);
     window.removeEventListener("storage", onChange);
+    media.removeEventListener("change", onChange);
   };
 }
 
+/** 사이트 데이터 차단·프라이빗 모드에서는 게터 자체가 던진다. 렌더 중 호출되므로 반드시 감싼다. */
+function readLocal(key: string) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
 export function writeLocal(key: string, value: string) {
-  window.localStorage.setItem(key, value);
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    /* 저장이 막혀도 화면 상태는 갱신한다 */
+  }
+  emit();
+}
+
+export function clearLocal(key: string) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    /* 무시 */
+  }
   emit();
 }
 
@@ -26,7 +52,7 @@ export function writeLocal(key: string, value: string) {
 export function useLocal(key: string) {
   return useSyncExternalStore(
     subscribe,
-    () => window.localStorage.getItem(key),
+    () => readLocal(key),
     () => null,
   );
 }
@@ -37,15 +63,20 @@ export function useTheme(): Theme | null {
   return useSyncExternalStore(
     subscribe,
     () => {
-      const stored = window.localStorage.getItem("afs-theme");
+      const stored = readLocal("afs-theme");
       if (stored === "light" || stored === "dark") return stored;
-      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      try {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      } catch {
+        return "light";
+      }
     },
     () => null,
   );
 }
 
 export function setTheme(next: Theme) {
-  document.documentElement.dataset.theme = next;
+  // writeLocal 이 emit 까지 하므로 먼저 부른다 — 순서가 뒤면 저장 실패 때 화면만 바뀌고 상태가 안 바뀐다
   writeLocal("afs-theme", next);
+  document.documentElement.dataset.theme = next;
 }

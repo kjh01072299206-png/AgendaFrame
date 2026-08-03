@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { Donut, HBars, RankList, SplitMeter, StackBars } from "../charts";
-import { deriveDay } from "../../lib/initial-five/derive";
+import { deriveDay, DIM_LABEL, particle, VOICE_LABEL } from "../../lib/initial-five/derive";
 
 const formatDate = (iso: string) => {
   const [y, m, d] = iso.split("-");
@@ -8,21 +9,89 @@ const formatDate = (iso: string) => {
 
 export default function HomePage() {
   const day = deriveDay();
-  const topLayer = day.layers[0];
-  const flatLayer = day.layers[day.layers.length - 1];
-  const voiceKeys = day.voices.slice(0, 3).map((v) => ({ key: v.key, label: v.label }));
+  const topLayer = [...day.layers, ...day.sideLayers].sort((a, b) => b.split - a.split)[0];
+  // 어느 의제에서도 매체가 갈리지 않은 층위 — "무엇을 말하지 않았나"가 이 서비스의 발견이다
+  const silent = day.layers.filter((layer) => layer.split === 0);
+  // 네 범주를 다 넘긴다. 잘라내면 막대에 인쇄되는 합계가 실제보다 작아진다.
+  const voiceKeys = ["direct_quote", "journalist_narration", "indirect_source", "uncertain_quote"].map((key) => ({
+    key,
+    label: VOICE_LABEL[key],
+  }));
   const widest = day.spread.slice().sort((a, b) => b.outletCount - a.outletCount)[0];
+  // 같은 사건을 다르게 제목 붙인 기사 두 건 — 홈에 실물 대비를 하나 둔다
+  const contrastIssue = day.issues[0];
+  const contrast = (() => {
+    if (!contrastIssue) return [];
+    const seen = new Set<string>();
+    const picked: typeof contrastIssue.articles = [];
+    for (const article of contrastIssue.articles) {
+      const key = article.families.problem_definition ?? "none";
+      if (seen.has(key) || picked.some((p) => p.outlet === article.outlet)) continue;
+      seen.add(key);
+      picked.push(article);
+      if (picked.length === 2) break;
+    }
+    return picked.length === 2 ? picked : contrastIssue.articles.slice(0, 2);
+  })();
 
   return (
     <>
       <header className="afs-head">
         <span className="afs-eyebrow">{formatDate(day.basisDate)} · 하루의 보도 지형</span>
-        <h1>이날 언론은 무엇을 얼마나, 그리고 어떻게 갈라져 다뤘나</h1>
+        <h1>성향 라벨이 아니라, 설명의 구조를 비교합니다</h1>
         <p>
-          가장 많이 보도된 의제 {day.issueCount}건, 기사 {day.articleCount}건, 매체 {day.outletCount}곳을 본문 근거로
-          비교했습니다. 개별 사안 설명은 순위를 눌러 들어가고, 이 화면에서는 하루 전체의 모양을 봅니다.
+          같은 사건을 다룬 기사 {day.articleCount}건을 매체 {day.outletCount}곳에 걸쳐 다섯 층위로 쪼갰습니다 — 무엇을 문제로
+          봤나, 왜 그렇게 됐다고 했나, 누구의 책임이라 했나, 옳고 그름을 어떻게 봤나, 무엇을 해야 한다고 했나. 각 항목은 기사
+          본문의 문단·문장 위치에 묶여 있어 원문에서 확인할 수 있습니다.
         </p>
       </header>
+
+      <section className="afs-card afs-card-lead">
+        <h2>이날의 발견</h2>
+        <div className="afs-in">
+          <p className="afs-finding">
+            {silent.length ? (
+              <>
+                이날 한국 언론은 <b>{silent.map((l) => l.label).join(" · ")}</b>에서 매체 사이에 아무 차이도 남기지 않았습니다 —
+                의제 {day.issueCount}건 전부입니다.
+              </>
+            ) : (
+              <>다섯 층위 모두에서 매체 간 차이가 관측되었습니다.</>
+            )}
+          </p>
+          <p className="afs-finding-sub">
+            반대로 가장 잘 갈린 층위는 <b>{topLayer?.label}</b>({topLayer?.split}/{topLayer?.total})입니다. 매체 차이는 찬반이
+            아니라 <b>누구의 말을 통해 사건을 설명하기로 했는가</b>에서 먼저 벌어졌습니다.
+          </p>
+
+          {contrast.length === 2 ? (
+            <div className="afs-contrast">
+              <p className="afs-contrast-q">
+                {contrastIssue?.rank}위 · {contrastIssue?.title} — 같은 사건, 다른 제목
+              </p>
+              <div className="afs-contrast-pair">
+                {contrast.map((article, index) => (
+                  <blockquote key={article.articleId} className={index === 0 ? "l" : "r"}>
+                    <cite>{article.outlet}</cite>
+                    <p>{article.title}</p>
+                  </blockquote>
+                ))}
+              </div>
+              <p className="afs-contrast-foot">
+                제목은 편집의 결과입니다. 이 서비스는 제목이 아니라 본문의 설명 구조를 비교하지만, 차이가 이미 제목에서
+                시작된다는 점은 읽기 전에 알아 둘 만합니다.
+              </p>
+            </div>
+          ) : null}
+        </div>
+        <p className="afs-foot">
+          {contrastIssue ? (
+            <Link className="afs-link" href={`/issues/${encodeURIComponent(contrastIssue.issueId)}/outlets`}>
+              이 사안에서 매체가 어디에서 갈라지는지 보기 →
+            </Link>
+          ) : null}
+        </p>
+      </section>
 
       <dl className="afs-kpis">
         <div className="afs-kpi">
@@ -98,10 +167,26 @@ export default function HomePage() {
                   total: layer.total,
                 }))}
               />
+              <h3 className="afs-layer-head">
+                프레이밍 층위가 아닌 지표
+                <b>범주 수가 달라 위와 같은 자로 재지 않습니다</b>
+              </h3>
+              <SplitMeter
+                rows={day.sideLayers.map((layer) => ({
+                  label: layer.label,
+                  note: layer.note,
+                  split: layer.split,
+                  total: layer.total,
+                }))}
+              />
             </div>
             <p className="afs-foot">
-              {topLayer ? `‘${topLayer.label}’가 가장 잘 가릅니다(${topLayer.split}/${topLayer.total}).` : ""}
-              {flatLayer && flatLayer.split === 0 ? ` ‘${flatLayer.label}’는 이날 어느 의제에서도 매체를 가르지 않았습니다.` : ""}
+              {topLayer
+                ? `이날 표본에서 가장 많이 갈린 지표는 ‘${topLayer.label}’${particle(topLayer.label, "이", "가")} ${topLayer.split}/${topLayer.total}입니다.`
+                : ""}
+              {silent.length
+                ? ` ${silent.map((l) => `‘${l.label}’`).join(" · ")}${particle(silent[silent.length - 1].label, "은", "는")} 어느 의제에서도 갈리지 않았습니다.`
+                : ""}
             </p>
           </section>
 
@@ -144,11 +229,11 @@ export default function HomePage() {
           </h3>
           <div className="afs-in">
             <p className="afs-note">
-              본문 근거를 누가 말했는지로 나눈 것입니다. 기자 서술 비중이 높으면 매체 자신의 설명이 많다는 뜻입니다.
+              프레임 항목을 누가 말했는지로 나눈 것입니다. 기자 서술 비중이 높으면 매체 자신의 설명이 많다는 뜻입니다.
             </p>
             <StackBars
               keys={voiceKeys}
-              caption="의제별 인용 방식 구성"
+              caption="의제별 인용 방식 (프레임 항목 기준)"
               rows={day.issues.map((issue) => ({
                 label: `${issue.rank}위`,
                 parts: Object.fromEntries(issue.voices.map((v) => [v.key, v.count])),
@@ -181,9 +266,9 @@ export default function HomePage() {
             순위는 보도량입니다. 많이 보도된 것이 중요한 것과 같지는 않지만, 하루의 편집 관심이 어디로 쏠렸는지를 보여줍니다.
           </p>
           <p>
-            층위별 변별력은 이 서비스의 출발점입니다. 매체 차이는 찬반 이전에 <b>무엇을 문제로 볼 것인가</b> 단계에서
-            시작되고, 어떤 층위에서는 아예 갈리지 않습니다. 갈리지 않은 층위는 비교할 것이 없다는 뜻이므로, 그 사실 자체가
-            정보입니다.
+            프레이밍 이론(Entman 1993)은 매체 차이가 찬반 이전에 <b>무엇을 문제로 볼 것인가</b> 단계에서 시작된다고 봅니다.
+            이날 표본에서 실제로 관측된 순서는 위 계기에 있는 그대로이며, 이론이 예측한 순서와 같지 않을 수 있습니다. 갈리지
+            않은 층위는 비교할 것이 없다는 뜻이므로, 그 사실 자체가 정보입니다.
           </p>
           <p>
             모든 수치는 기사 본문에서 뽑은 근거 위치(문단·문장)에 묶여 있습니다. 각 의제 화면에서 근거 건수와 원문 링크를
