@@ -62,3 +62,6 @@ tmp_*/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Tool debug logs (contain account identifiers)
+error.log
