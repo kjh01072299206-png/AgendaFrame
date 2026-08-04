@@ -1,5 +1,10 @@
 "use client";
 
+/* 커뮤니티·자가점검 API 는 워커(+D1) 쪽에 있다. 그 오리진이 아직 새 경로를 모르는
+   배포에서는 요청이 전부 404 로 떨어져 콘솔 오류만 남기므로, 배포에서 켜 줄 때만
+   호출한다. 워커를 올린 뒤 NEXT_PUBLIC_COMMUNITY_API=1 을 넣으면 실데이터로 붙는다. */
+export const COMMUNITY_API_ENABLED = process.env.NEXT_PUBLIC_COMMUNITY_API === "1";
+
 let sessionReady: Promise<void> | null = null;
 
 function localSessionId() {

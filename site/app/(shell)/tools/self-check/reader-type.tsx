@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { clearLocal, useLocal, writeLocal } from "../../client-store";
-import { communityFetch } from "../../community-session";
+import { COMMUNITY_API_ENABLED, communityFetch } from "../../community-session";
 
 /* 네 축으로 읽기 습관을 가른다. 각 축의 세 문항 중 많이 고른 쪽이 그 축의 글자가 된다
    (문항이 홀수라 무승부가 없다). 16유형은 아래 TYPES 에 전부 적어 둔다. */
@@ -182,7 +182,7 @@ export function ReaderTypeQuiz() {
       return QUESTIONS.map(() => null);
     }
   });
-  const [syncState, setSyncState] = useState<"loading" | "saved" | "offline">("loading");
+  const [syncState, setSyncState] = useState<"loading" | "saved" | "offline">(COMMUNITY_API_ENABLED ? "loading" : "offline");
   const answered = picks.filter(Boolean).length;
   const done = answered === QUESTIONS.length;
 
@@ -204,6 +204,7 @@ export function ReaderTypeQuiz() {
   const result = done ? TYPES[code] : null;
 
   useEffect(() => {
+    if (!COMMUNITY_API_ENABLED) return;
     let cancelled = false;
     void communityFetch("/api/self-check", { cache: "no-store" })
       .then(async (response) => {
@@ -230,6 +231,7 @@ export function ReaderTypeQuiz() {
     const answers = picks as Array<"a" | "b">;
     writeLocal("afs-reader-type", result.code);
     writeLocal("afs-reader-answers", JSON.stringify(answers));
+    if (!COMMUNITY_API_ENABLED) return;
     let cancelled = false;
     void communityFetch("/api/self-check", { method: "POST", body: JSON.stringify({ answers }) })
       .then(async (response) => {
@@ -339,7 +341,7 @@ export function ReaderTypeQuiz() {
             </p>
           </div>
           <p className="afs-foot">
-            {syncState === "saved" ? "자가점검 결과가 익명 세션에 저장되어 커뮤니티 배지에 사용됩니다." : syncState === "offline" ? "현재 저장소와 연결되지 않았습니다. 연결되면 자동으로 저장됩니다." : "자가점검 결과를 저장하는 중입니다."}
+            {syncState === "saved" ? "자가점검 결과가 익명 세션에 저장되어 커뮤니티 배지에 사용됩니다." : syncState === "offline" ? "결과는 이 브라우저에 저장되어 커뮤니티 배지에 바로 쓰입니다. 공용 저장소가 연결되면 그쪽으로 함께 옮겨집니다." : "자가점검 결과를 저장하는 중입니다."}
           </p>
         </section>
       ) : (

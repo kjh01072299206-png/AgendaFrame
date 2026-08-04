@@ -357,6 +357,25 @@
   gap: 6px;
   margin: 0;
 }
+/* 라벨을 위로 올려야 좁은 화면에서 입력칸이 세로로 눌리지 않는다 (WCAG 2.5.8 터치 대상) */
+.afs-compose label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+}
+.afs-compose input,
+.afs-compose select {
+  min-height: 38px;
+  padding: 8px 11px;
+  border: 1px solid var(--afs-rule-2);
+  border-radius: var(--afs-r-btn);
+  background: var(--afs-card);
+  color: var(--afs-ink);
+  font: inherit;
+  font-size: 13.5px;
+}
 .afs-compose textarea,
 .afs-askform textarea {
   width: 100%;

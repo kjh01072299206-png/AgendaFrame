@@ -345,3 +345,9 @@
 .afs-cell-same {
   color: var(--afs-ink-3);
 }
+
+/* 글 시각은 11px 이라 --muted(2.9:1) 로는 본문 대비 기준에 못 미친다 */
+.afs-feed-head time,
+.afs-feed-replies time {
+  color: var(--afs-ink-3);
+}
