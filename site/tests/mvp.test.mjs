@@ -156,22 +156,30 @@ test("keeps the public dashboard focused on date, issue, and outlet exploration"
   assert.match(styles, /min-height: 44px/);
 });
 
+/* 화면 구성은 (shell) 라우트 그룹으로 옮겼다(홈 = 하루 단위 지형, 도구 = /tools/*).
+   단일 페이지 리더(InitialFiveExperience)는 /top5-2026-07-26 에 그대로 남아 있다.
+   이 테스트가 지키려는 것은 파일 경로가 아니라 그 분리다. */
 test("keeps the initial-five reader surface separate from site-wide tools", async () => {
-  const home = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const home = await readFile(new URL("../app/(shell)/page.tsx", import.meta.url), "utf8");
   const reader = await readFile(new URL("../app/initial-five.tsx", import.meta.url), "utf8");
-  const method = await readFile(new URL("../app/tools/method/page.tsx", import.meta.url), "utf8");
-  const selfCheck = await readFile(new URL("../app/tools/self-check/page.tsx", import.meta.url), "utf8");
-  const community = await readFile(new URL("../app/tools/community/page.tsx", import.meta.url), "utf8");
+  const legacyReaderRoute = await readFile(new URL("../app/top5-2026-07-26/page.tsx", import.meta.url), "utf8");
+  const method = await readFile(new URL("../app/(shell)/tools/method/page.tsx", import.meta.url), "utf8");
+  const selfCheck = await readFile(new URL("../app/(shell)/tools/self-check/page.tsx", import.meta.url), "utf8");
+  const community = await readFile(new URL("../app/(shell)/tools/community/page.tsx", import.meta.url), "utf8");
 
-  assert.match(home, /InitialFiveExperience/);
+  // 홈은 사안 하나를 설명하지 않고 그날 전체를 집계한다
+  assert.match(home, /deriveDay/);
+  assert.doesNotMatch(home, /InitialFiveExperience/);
+  // 단일 페이지 리더는 자기 라우트에만 남는다
+  assert.match(legacyReaderRoute, /InitialFiveExperience/);
   assert.match(reader, /role="tablist"/);
   assert.match(reader, /role="tabpanel"/);
-  assert.match(reader, /상세 분석 보기/);
-  assert.match(reader, /AI 본문 분석/);
-  assert.match(reader, /규칙 기반 보조 지표/);
-  assert.match(method, /AI는 근거를 대신하지 않습니다/);
-  assert.match(selfCheck, /SelfCheck/);
-  assert.match(community, /CommunityHub/);
+  // 도구 화면은 각자의 컴포넌트를 쓴다
+  assert.match(selfCheck, /ReaderTypeQuiz/);
+  assert.match(community, /CommunityFeed/);
+  // 방법론 화면은 코더 간 일치율을 공개한다 (내용분석 공개 계약)
+  assert.match(method, /두 코더가 얼마나 같게 판정했나/);
+  assert.match(method, /coderAgreement/);
 });
 
 test("packages Sites hosting metadata and database migrations", async () => {
