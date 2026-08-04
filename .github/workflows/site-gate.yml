@@ -1,6 +1,8 @@
-# 실배포 관문. 누가 push 하든 같은 검사를 통과해야 프로덕션에 나간다.
+# 실배포 관문. 배포 자체는 Vercel Git 연결이 하고(누가 push 하든 자동), 이 워크플로는
+# 같은 커밋에 대해 타입·린트·계약 테스트·next build·렌더 채점기를 돌려 품질을 보고한다.
+# 빨간불이 뜨면 그 커밋은 배포됐지만 검사에 걸렸다는 뜻이므로 즉시 되돌리면 된다.
 #
-# 필요한 저장소 설정 (한 번만, 저장소 소유자가):
+# 관문을 통과한 커밋만 배포하고 싶으면(선택 ②) 아래 시크릿을 넣으면 된다:
 #   Settings → Secrets and variables → Actions
 #     Secrets   VERCEL_TOKEN        Vercel → Account Settings → Tokens 에서 발급
 #     Variables VERCEL_ORG_ID       site/.vercel/project.json 의 orgId
@@ -9,28 +11,33 @@
 # 이렇게 두면 팀원은 Vercel 계정도, 토큰도 필요 없다 — main 에 push 하거나
 # Actions 탭에서 "Run workflow" 를 누르면 된다. 토큰은 로그에 찍히지 않는다.
 
-name: Site Deploy
+name: Site Gate
 
 on:
   push:
     branches: [main]
     paths:
       - "site/**"
-      - ".github/workflows/site-deploy.yml"
+      - ".github/workflows/site-gate.yml"
+  pull_request:
+    paths:
+      - "site/**"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: site-deploy-${{ github.ref }}
+  group: site-gate-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   gate-and-deploy:
-    name: 검사 통과 후 프로덕션 배포
+    name: 렌더 관문 (+토큰이 있으면 배포)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      HAS_VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
     defaults:
       run:
         working-directory: site
@@ -84,23 +91,23 @@ jobs:
           AF_PW: ${{ github.workspace }}/site/node_modules/playwright-core/index.js
         run: node scripts/audit-site.mjs --url http://127.0.0.1:3000
 
-      # 여기까지 통과하지 못하면 배포는 실행되지 않는다.
-      - name: Deploy to production
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      # 배포는 Vercel Git 연결이 담당한다. 이 워크플로는 같은 커밋의 품질 보고서다.
+      # VERCEL_TOKEN 시크릿을 넣어 두면 관문을 통과한 커밋만 이 워크플로가 직접
+      # 배포하는 방식(선택 ②)으로 전환된다 — 없으면 이 단계는 조용히 건너뛴다.
+      - name: Deploy to production (토큰이 있을 때만)
+        if: env.HAS_VERCEL_TOKEN == 'true' && github.event_name != 'pull_request'
         env:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          if [ -z "$VERCEL_DEPLOY_TOKEN" ]; then
-            echo "VERCEL_TOKEN 시크릿이 없습니다. 저장소 Settings → Secrets 에 추가하세요."
-            exit 1
-          fi
-          npx --yes vercel@58 deploy --prod --yes --token "$VERCEL_DEPLOY_TOKEN"
+        run: npx --yes vercel@58 deploy --prod --yes --token "$VERCEL_DEPLOY_TOKEN"
 
+      # Vercel 이 배포하든 이 워크플로가 배포하든, 라이브가 실제로 뜨는지는 확인한다.
       - name: Verify the live deployment
+        if: github.event_name != 'pull_request'
         run: |
           set -e
+          sleep 45
           for path in "/" "/issues" "/issues/bigkinds-2026-07-26-top-1/framing" "/tools/method"; do
             code=$(curl -s -o /dev/null -w "%{http_code}" "https://agendaframe-capstone.vercel.app$path")
             echo "$code $path"
