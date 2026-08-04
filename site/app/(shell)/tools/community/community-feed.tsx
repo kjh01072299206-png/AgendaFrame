@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useLocal } from "../../client-store";
-import { COMMUNITY_API_ENABLED, communityFetch } from "../../community-session";
+import { communityFetch } from "../../community-session";
 import { TYPES } from "../self-check/reader-type";
 
 type Reply = { id: string; displayName: string; readerType: string | null; body: string; createdAt: number; reactionCount: number };
@@ -85,6 +85,7 @@ function seedPosts(issues: CommunityIssue[]): Post[] {
       : [],
   }));
 }
+type ApiComment = Partial<Post> & { parentId?: string | null };
 
 const badge = (code: string | null) => {
   if (!code) return <span className="afs-chip">자가점검 전</span>;
@@ -94,6 +95,45 @@ const badge = (code: string | null) => {
 
 function dateLabel(value: number) { return new Date(value).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" }); }
 
+function issueCommentsToPosts(comments: ApiComment[], issue: CommunityIssue | undefined): Post[] {
+  const normalized = comments.map((comment) => ({
+    id: String(comment.id ?? crypto.randomUUID()),
+    issueId: String(comment.issueId ?? issue?.id ?? ""),
+    issueTitle: comment.issueTitle ?? issue?.title ?? null,
+    issueRank: comment.issueRank == null ? (issue?.rank ?? null) : Number(comment.issueRank),
+    parentId: comment.parentId ?? null,
+    displayName: String(comment.displayName ?? "익명 독자"),
+    readerType: comment.readerType ?? null,
+    screen: comment.screen ?? null,
+    body: String(comment.body ?? ""),
+    reactionCount: Number(comment.reactionCount ?? 0),
+    reactedByMe: Boolean(comment.reactedByMe),
+    replyCount: Number(comment.replyCount ?? 0),
+    createdAt: Number(comment.createdAt ?? Date.now()),
+  }));
+  const repliesByParent = new Map<string, Reply[]>();
+  normalized.filter((comment) => comment.parentId).forEach((comment) => {
+    const replies = repliesByParent.get(comment.parentId!) ?? [];
+    replies.push({ id: comment.id, displayName: comment.displayName, readerType: comment.readerType, body: comment.body, createdAt: comment.createdAt, reactionCount: comment.reactionCount });
+    repliesByParent.set(comment.parentId!, replies);
+  });
+  return normalized.filter((comment) => !comment.parentId).map((comment) => ({
+    id: comment.id,
+    issueId: comment.issueId,
+    issueTitle: comment.issueTitle,
+    issueRank: comment.issueRank,
+    displayName: comment.displayName,
+    readerType: comment.readerType,
+    screen: comment.screen,
+    body: comment.body,
+    reactionCount: comment.reactionCount,
+    reactedByMe: comment.reactedByMe,
+    replyCount: comment.replyCount || (repliesByParent.get(comment.id)?.length ?? 0),
+    createdAt: comment.createdAt,
+    replies: repliesByParent.get(comment.id) ?? [],
+  }));
+}
+
 function sortPosts(posts: Post[], sort: "hot" | "new") {
   return posts.slice().sort((a, b) => (sort === "hot" ? b.reactionCount - a.reactionCount || b.createdAt - a.createdAt : b.createdAt - a.createdAt));
 }
@@ -102,7 +142,7 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
   const mine = useLocal("afs-reader-type");
   const [selectedIssue, setSelectedIssue] = useState(issues[0]?.id ?? "");
   const [posts, setPosts] = useState<Post[]>([]);
-  const [mode, setMode] = useState<Mode>(COMMUNITY_API_ENABLED ? "checking" : "local");
+  const [mode, setMode] = useState<Mode>("checking");
   const [sort, setSort] = useState<"hot" | "new">("new");
   const [cursor, setCursor] = useState<string | null>(null);
   const [body, setBody] = useState("");
@@ -126,11 +166,24 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
       if (nextCursor) query.set("cursor", nextCursor);
       const response = await communityFetch(`/api/community?${query.toString()}`, { cache: "no-store" });
       const payload = await response.json();
-      if (!response.ok) throw new Error("unreachable");
+      if (response.ok) {
+        setMode("server");
+        setPosts((current) => append ? [...current, ...(payload.posts ?? [])] : (payload.posts ?? [])); setCursor(payload.nextCursor ?? null); return;
+      }
+      // The current Vercel project can be linked to the older worker while the
+      // global community route is being rolled out. Its issue-scoped route is
+      // durable and already available, so use it as a backwards-compatible
+      // fallback instead of leaving the feed unusable.
+      if (response.status !== 404 || !selectedIssue) throw new Error(payload?.error?.message ?? "커뮤니티 글을 불러오지 못했습니다.");
+      const issueResponse = await communityFetch(`/api/issues/${encodeURIComponent(selectedIssue)}/community`, { cache: "no-store" });
+      const issuePayload = await issueResponse.json();
+      if (!issueResponse.ok) throw new Error(issuePayload?.error?.message ?? "커뮤니티 글을 불러오지 못했습니다.");
+      const fallbackPosts = issueCommentsToPosts(Array.isArray(issuePayload.comments) ? issuePayload.comments : [], issues.find((issue) => issue.id === selectedIssue));
       setMode("server");
-      setPosts((current) => append ? [...current, ...(payload.posts ?? [])] : (payload.posts ?? [])); setCursor(payload.nextCursor ?? null);
+      setPosts(fallbackPosts); setCursor(null);
+      setNotice("현재 배포 환경에서는 선택한 의제의 글을 표시합니다.");
     } catch { setMode("local"); loadLocal(nextSort); }
-  }, [sort, mode, loadLocal]);
+  }, [issues, selectedIssue, sort, mode, loadLocal]);
 
   // These effects synchronize the client with durable API state.
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -155,8 +208,13 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
       setBody(""); setNotice("이 브라우저에 저장했습니다."); setBusy(false); return;
     }
     try {
-      const response = await communityFetch("/api/community", { method: "POST", body: JSON.stringify({ issueId: selectedIssue, body, displayName, readerType: mineType, screen: "커뮤니티" }) });
-      const payload = await response.json(); if (!response.ok) throw new Error(payload?.error?.message ?? "글을 등록하지 못했습니다.");
+      let response = await communityFetch("/api/community", { method: "POST", body: JSON.stringify({ issueId: selectedIssue, body, displayName, readerType: mineType, screen: "커뮤니티" }) });
+      let payload = await response.json();
+      if (response.status === 404) {
+        response = await communityFetch(`/api/issues/${encodeURIComponent(selectedIssue)}/community`, { method: "POST", body: JSON.stringify({ body, displayName, readerType: mineType, screen: "커뮤니티" }) });
+        payload = await response.json();
+      }
+      if (!response.ok) throw new Error(payload?.error?.message ?? "글을 등록하지 못했습니다.");
       setBody(""); setNotice(payload.notice ?? "글이 등록되었습니다."); await loadPosts(sort);
     } catch (error) { setNotice(error instanceof Error ? error.message : "글을 등록하지 못했습니다."); }
     finally { setBusy(false); }
@@ -173,8 +231,13 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
       setReplyBody(""); setReplyingTo(null); setNotice("이 브라우저에 저장했습니다."); setBusy(false); return;
     }
     try {
-      const response = await communityFetch(`/api/community/${encodeURIComponent(post.id)}/replies`, { method: "POST", body: JSON.stringify({ body: replyBody, displayName, readerType: mineType, screen: "커뮤니티 답글" }) });
-      const payload = await response.json(); if (!response.ok) throw new Error(payload?.error?.message ?? "답글을 등록하지 못했습니다.");
+      let response = await communityFetch(`/api/community/${encodeURIComponent(post.id)}/replies`, { method: "POST", body: JSON.stringify({ body: replyBody, displayName, readerType: mineType, screen: "커뮤니티 답글" }) });
+      let payload = await response.json();
+      if (response.status === 404) {
+        response = await communityFetch(`/api/issues/${encodeURIComponent(post.issueId)}/community`, { method: "POST", body: JSON.stringify({ parentId: post.id, body: replyBody, displayName, readerType: mineType, screen: "커뮤니티 답글" }) });
+        payload = await response.json();
+      }
+      if (!response.ok) throw new Error(payload?.error?.message ?? "답글을 등록하지 못했습니다.");
       setReplyBody(""); setReplyingTo(null); setNotice(payload.notice ?? "답글이 등록되었습니다."); await loadPosts(sort);
     } catch (error) { setNotice(error instanceof Error ? error.message : "답글을 등록하지 못했습니다."); }
     finally { setBusy(false); }
