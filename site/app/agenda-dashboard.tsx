@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import top5PilotData from "../data/top5-2026-07-26.json";
+import { summarizeKoreanMorphology } from "../worker/korean-morphology.mjs";
 
 type Health = {
   status: string;
@@ -437,6 +438,101 @@ function findTop5PilotIssue(detail: IssueDetail): Top5PilotIssue | null {
   return best && best.overlap >= 2 ? best.candidate : null;
 }
 
+/**
+ * The public 7/26 snapshot intentionally contains metadata, not article bodies.
+ * Keep the morphology screen useful in that fallback by running the same
+ * deterministic analyzer over headlines and marking the limitation explicitly.
+ * When the live API returns body-backed aggregates, applyTop5Pilot preserves
+ * those values instead of replacing them with this preview.
+ */
+function pilotHeadlineMorphology(pilotIssue: Top5PilotIssue): NonNullable<Comparison["analysisModules"]>["morphology"] {
+  const documentTerms = new Map<string, Set<string>>();
+  const mediaGroupTerms = new Map<string, Set<string>>();
+  const byOutlet = new Map<string, {
+    source: string;
+    analyzedArticles: number;
+    tokenCount: number;
+    contentTokenCount: number;
+    negationCount: number;
+    posCounts: Record<string, number>;
+    terms: Map<string, { term: string; pos: string; count: number; documents: Set<string>; evidenceRefs: ComparisonSource[] }>;
+  }>();
+
+  for (const article of pilotIssue.articleMetadata) {
+    const summary = summarizeKoreanMorphology([{ text: article.title ?? "" }]);
+    const outlet = byOutlet.get(article.source) ?? {
+      source: article.source,
+      analyzedArticles: 0,
+      tokenCount: 0,
+      contentTokenCount: 0,
+      negationCount: 0,
+      posCounts: {},
+      terms: new Map(),
+    };
+    outlet.analyzedArticles += 1;
+    outlet.tokenCount += Number(summary.token_count ?? 0);
+    outlet.contentTokenCount += Number(summary.content_token_count ?? 0);
+    outlet.negationCount += Number(summary.negation_count ?? 0);
+    const posCounts = (summary.pos_counts ?? {}) as Record<string, number>;
+    const outletPosCounts = outlet.posCounts as Record<string, number>;
+    for (const [pos, count] of Object.entries(posCounts)) outletPosCounts[pos] = (outletPosCounts[pos] ?? 0) + Number(count ?? 0);
+    for (const term of summary.term_frequencies ?? []) {
+      const key = `${term.pos}:${term.term}`;
+      const documents = documentTerms.get(key) ?? new Set<string>();
+      documents.add(article.articleId);
+      documentTerms.set(key, documents);
+      const mediaGroups = mediaGroupTerms.get(key) ?? new Set<string>();
+      mediaGroups.add(article.mediaGroupId ?? article.sourceId ?? article.source);
+      mediaGroupTerms.set(key, mediaGroups);
+      const current = outlet.terms.get(key) ?? { term: term.term, pos: term.pos, count: 0, documents: new Set<string>(), evidenceRefs: [] };
+      current.count += Number(term.count ?? 0);
+      current.documents.add(article.articleId);
+      if (!current.evidenceRefs.length) current.evidenceRefs.push({ source: article.source, articleId: article.articleId, sourceUrl: article.canonicalUrl, claimId: `headline-morphology:${key}` });
+      outlet.terms.set(key, current);
+    }
+    byOutlet.set(article.source, outlet);
+  }
+
+  const allowed = new Set([...documentTerms.keys()].filter((key) => (documentTerms.get(key)?.size ?? 0) >= 2 && (mediaGroupTerms.get(key)?.size ?? 0) >= 2));
+  return {
+    status: "partial",
+    analyzer: {
+      name: "AgendaFrame Korean controlled morphology",
+      mode: "controlled_lexicon_fallback",
+      version: "ko-controlled-morph-v1",
+      dictionaryVersion: "agendaframe-lexicon-2026-08-02",
+      posTagset: "agendaframe-lite-v1",
+    },
+    minimumDocumentFrequency: 2,
+    minimumMediaGroupFrequency: 2,
+    byOutlet: [...byOutlet.values()].map((outlet) => ({
+      source: outlet.source,
+      analyzedArticles: outlet.analyzedArticles,
+      tokenCount: outlet.tokenCount,
+      contentTokenCount: outlet.contentTokenCount,
+      negationCount: outlet.negationCount,
+      posCounts: outlet.posCounts,
+      terms: [...outlet.terms.entries()]
+        .filter(([key]) => allowed.has(key))
+        .map(([, term]) => ({
+          term: term.term,
+          pos: term.pos,
+          count: term.count,
+          documentCount: term.documents.size,
+          perThousand: outlet.contentTokenCount ? Math.round((term.count / outlet.contentTokenCount) * 1_000_000) / 1000 : 0,
+          evidenceRefs: term.evidenceRefs,
+        }))
+        .sort((left, right) => right.perThousand - left.perThousand || right.documentCount - left.documentCount || left.term.localeCompare(right.term, "ko"))
+        .slice(0, 15),
+    })),
+    limitations: [
+      "현재 공개 스냅샷의 제목 메타데이터를 대상으로 한 폴백입니다. 기사 본문이 연결된 라이브 분석에서는 본문 집계가 우선 표시됩니다.",
+      "공개 핵심어는 같은 이슈의 2개 이상 기사와 2개 이상 독립 미디어그룹에 반복된 항목만 표시합니다.",
+      "조사·일부 활용을 정규화하는 경량 규칙형 분석이며, 빅카인즈의 상용 엔진이나 Kiwi·MeCab 수준의 완전한 품사 판정과 동일하지 않습니다.",
+    ],
+  };
+}
+
 function pilotComparisonToPublic(pilotIssue: Top5PilotIssue, articles: Article[]): Comparison {
   const pilot = pilotIssue.comparison;
   const metadataById = new Map(pilotIssue.articleMetadata.map((article) => [article.articleId, article]));
@@ -554,6 +650,24 @@ function pilotComparisonToPublic(pilotIssue: Top5PilotIssue, articles: Article[]
       excludedArticles: pilot.sample.short_body_article_count,
       inputTruncatedArticles: 0,
     },
+    analysisModules: {
+      frameComposition: {
+        status: "partial",
+        methodVersion: "headline-fallback",
+        taxonomyVersion: "not-computed",
+        unit: "article_presence",
+        multiLabel: true,
+        byOutlet: [],
+        caution: "공개 스냅샷에서는 형태소 폴백만 계산했습니다.",
+      },
+      reportingStyle: {
+        status: "partial",
+        methodVersion: "headline-fallback",
+        byOutlet: [],
+        caution: "공개 스냅샷에서는 형태소 폴백만 계산했습니다.",
+      },
+      morphology: pilotHeadlineMorphology(pilotIssue),
+    },
     axes,
     sourceLens,
     limitations: [
@@ -572,6 +686,7 @@ function applyTop5Pilot(detail: IssueDetail): IssueDetail {
     ...article,
     contentAvailable: pilotUrls.has(normalizedArticleUrl(article.url)) ? 1 : article.contentAvailable,
   }));
+  const pilotComparison = pilotComparisonToPublic(pilotIssue, articles);
   return {
     ...detail,
     issue: {
@@ -583,7 +698,12 @@ function applyTop5Pilot(detail: IssueDetail): IssueDetail {
       provider: "structured_extractive",
     },
     articles,
-    comparison: pilotComparisonToPublic(pilotIssue, articles),
+    // Keep server-side aggregate modules (including morphology) when the
+    // pilot comparison is used to improve the public framing copy.
+    comparison: {
+      ...pilotComparison,
+      analysisModules: detail.comparison.analysisModules ?? pilotComparison.analysisModules,
+    },
   };
 }
 
@@ -943,21 +1063,107 @@ function ReportingStyleByOutlet({ module }: { module: NonNullable<Comparison["an
   );
 }
 
+const morphologyPosLabels: Record<string, string> = {
+  noun: "명사형",
+  predicate: "서술어형",
+  particle: "조사",
+  number: "수치",
+  foreign: "외국어",
+};
+const morphologyPosColors: Record<string, string> = {
+  noun: "#31588c",
+  predicate: "#0f6c62",
+  particle: "#6b7280",
+  number: "#8a5412",
+  foreign: "#65478b",
+};
+
+function MorphologyPanel({ module }: { module: NonNullable<Comparison["analysisModules"]>["morphology"] }) {
+  const [selected, setSelected] = useState<{ source: string; term: string } | null>(null);
+  const selectedTerm = selected
+    ? module.byOutlet.find((entry) => entry.source === selected.source)?.terms.find((term) => term.term === selected.term)
+    : null;
+  const posKeys = [...new Set(module.byOutlet.flatMap((entry) => Object.keys(entry.posCounts)))];
+  const analyzedArticles = module.byOutlet.reduce((sum, entry) => sum + entry.analyzedArticles, 0);
+  const tokenCount = module.byOutlet.reduce((sum, entry) => sum + entry.tokenCount, 0);
+  const negationCount = module.byOutlet.reduce((sum, entry) => sum + entry.negationCount, 0);
+
+  return (
+    <div className="morphology-panel">
+      <p className="viz-caption">빅카인즈 형태소 분석처럼 어절을 형태 단위로 나누고, 조사·일부 활용형을 표제어에 가깝게 정규화합니다. 이슈 안에서 여러 기사와 독립 미디어그룹에 반복된 어휘만 공개합니다.</p>
+      <div className="morphology-sample">
+        <span><strong>{analyzedArticles.toLocaleString("ko-KR")}</strong> 분석 기사</span>
+        <span><strong>{tokenCount.toLocaleString("ko-KR")}</strong> 형태 단위</span>
+        <span><strong>{negationCount.toLocaleString("ko-KR")}</strong> 부정 표지</span>
+        <span><strong>DF {module.minimumDocumentFrequency}+ · MG {module.minimumMediaGroupFrequency}+</strong> 공개 기준</span>
+      </div>
+      {module.byOutlet.length ? (
+        <>
+          <div className="morphology-pos-bars" aria-label="매체별 형태 단위 구성">
+            {module.byOutlet.map((entry) => {
+              const total = Object.values(entry.posCounts).reduce((sum, count) => sum + count, 0);
+              return (
+                <div className="viz-bar-row" key={entry.source}>
+                  <span className="viz-bar-label">{entry.source}</span>
+                  <div className="viz-bar-track" role="img" aria-label={`${entry.source}: ${posKeys.map((pos) => `${morphologyPosLabels[pos] ?? pos} ${entry.posCounts[pos] ?? 0}`).join(", ")}`}>
+                    {posKeys.map((pos) => {
+                      const count = entry.posCounts[pos] ?? 0;
+                      return count > 0 ? <i key={pos} style={{ flexGrow: count, background: morphologyPosColors[pos] ?? "#59636f" }}>{count / Math.max(1, total) >= 0.08 ? count : <span className="sr-only">{count}</span>}</i> : null;
+                    })}
+                  </div>
+                  <b className="viz-bar-total">{total.toLocaleString("ko-KR")}</b>
+                </div>
+              );
+            })}
+          </div>
+          <div className="viz-legend">{posKeys.map((pos) => <span key={pos}><i style={{ background: morphologyPosColors[pos] ?? "#59636f" }} aria-hidden="true" />{morphologyPosLabels[pos] ?? pos}</span>)}</div>
+          <div className="morphology-term-grid">
+            {module.byOutlet.map((entry) => (
+              <section key={entry.source}>
+                <h5>{entry.source}<small>내용어 {entry.contentTokenCount.toLocaleString("ko-KR")} · 부정 표지 {entry.negationCount.toLocaleString("ko-KR")}</small></h5>
+                {entry.terms.length ? <ol>{entry.terms.slice(0, 10).map((term) => (
+                  <li key={`${term.pos}-${term.term}`}>
+                    <button type="button" className={selected?.source === entry.source && selected?.term === term.term ? "active" : ""} onClick={() => setSelected(selected?.source === entry.source && selected?.term === term.term ? null : { source: entry.source, term: term.term })}>
+                      <span>{term.term}<small>{morphologyPosLabels[term.pos] ?? term.pos}</small></span>
+                      <b>{term.perThousand.toFixed(1)}</b>
+                    </button>
+                  </li>
+                ))}</ol> : <p className="not-observed">공개 빈도 기준을 충족한 반복 어휘가 없습니다.</p>}
+              </section>
+            ))}
+          </div>
+          {selected && selectedTerm && (
+            <div className="frame-evidence-detail" role="status">
+              <h5>{selected.source} · {selectedTerm.term}</h5>
+              <p>내용어 1,000개당 {selectedTerm.perThousand.toFixed(1)}회 · {selectedTerm.documentCount}개 기사에서 {selectedTerm.count}회 관측</p>
+              {selectedTerm.evidenceRefs.length ? <ComparisonSourceLinks outlets={selectedTerm.evidenceRefs} /> : <p>공개 가능한 근거 위치가 없습니다.</p>}
+            </div>
+          )}
+        </>
+      ) : <p className="withheld">형태소 집계가 아직 공개 기준을 충족하지 않았습니다.</p>}
+      <p className="viz-method-note"><strong>{module.analyzer.mode === "controlled_lexicon_fallback" ? "경량 규칙형 분석" : module.analyzer.name}</strong> · {module.limitations.join(" ")}</p>
+    </div>
+  );
+}
+
 function ExtendedAnalysisView({ comparison }: { comparison: Comparison }) {
   const axes = comparison.axes ?? [];
   const modules = comparison.analysisModules;
   const frameComposition = modules?.frameComposition;
   const reportingStyle = modules?.reportingStyle;
+  const morphology = modules?.morphology;
   const hasEntmanMatrix = axes.length >= 2 && new Set(axes.flatMap((axis) => axis.variants.flatMap((variant) => variant.outlets.map((outlet) => outlet.source)))).size >= 2;
   const hasFrameComposition = Boolean(frameComposition?.byOutlet.some((entry) => entry.labels.some((label) => label.articleCount > 0)));
   const hasReportingStyle = Boolean(reportingStyle?.byOutlet.some((entry) => entry.evaluation.status === "observed" || entry.scope.status === "observed"));
-  if (!hasEntmanMatrix && !hasFrameComposition && !hasReportingStyle) return null;
+  const hasMorphology = Boolean(morphology?.byOutlet.length);
+  if (!hasEntmanMatrix && !hasFrameComposition && !hasReportingStyle && !hasMorphology) return null;
   return (
     <section className="framing-report" aria-labelledby="extended-analysis-title">
       <header><p className="context-label">확장 분석</p><h3 id="extended-analysis-title">같은 근거를 매체별로 다시 배열했습니다</h3><p>본문 근거가 충분한 항목만 분석축·프레임 구성·보도 방식으로 나눠 보여줍니다.</p></header>
       {hasEntmanMatrix && <div className="framing-report-section"><h4>분석축별 매체 비교</h4><EntmanMatrix axes={axes} embedded /></div>}
       {hasFrameComposition && frameComposition && <div className="framing-report-section"><h4>매체별 프레임 구성</h4><FrameCompositionByOutlet module={frameComposition} embedded /></div>}
       {hasReportingStyle && reportingStyle && <div className="framing-report-section"><h4>보도 방식 관측</h4><ReportingStyleByOutlet module={reportingStyle} /></div>}
+      {hasMorphology && morphology && <div className="framing-report-section"><h4>형태소·어휘 신호</h4><MorphologyPanel module={morphology} /></div>}
     </section>
   );
 }
