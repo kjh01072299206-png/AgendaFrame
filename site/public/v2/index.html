@@ -207,6 +207,10 @@ p.note{margin:8px 0 0;font-size:12px;color:var(--afs-ink-3);line-height:1.6}
 .conc .meta .chip{white-space:normal;text-align:left;line-height:1.5}
 
 /* 층위 레일 */
+.legend{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:9px 12px;margin-bottom:14px;
+  background:var(--afs-sunk);border:1px solid var(--afs-rule);border-radius:var(--afs-r-btn);font-size:11px;color:var(--afs-ink-3)}
+.legend b{font-weight:800;color:var(--afs-ink-2)}
+
 .rail{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:54px;z-index:15;padding:9px 0;background:linear-gradient(var(--afs-paper) 74%,transparent)}
 .rail a{display:flex;flex-direction:column;gap:2px;min-width:118px;flex:1 1 118px;padding:8px 10px;border:1px solid var(--afs-rule);border-radius:var(--afs-r-btn);background:var(--afs-card);text-decoration:none;color:inherit}
 .rail a:hover{border-color:var(--afs-rule-2);background:var(--afs-sunk)}
@@ -681,6 +685,13 @@ section[data-screen].on{display:block}
           <p>프레이밍 분석 — 다섯 층위에서 각 매체가 무엇을 어떻게 규정했는지 문장 근거와 함께 봅니다.</p>
         </header>
 
+        <div class="legend">
+          <b>이 화면의 숫자 출처</b>
+          <button class="prov p-code" data-book="p-code">AI가 두 번 채점</button>
+          <button class="prov p-rule" data-book="p-rule">단어 규칙 자동 분류</button>
+          <button class="prov p-derive" data-book="p-derive">위 결과를 합친 계산</button>
+          <span>배지가 다르면 신뢰 수준이 다릅니다 — 눌러 보세요</span>
+        </div>
         <div class="conc">
           <p class="lead">이 사안에서 매체는 <b>무엇이 문제인지</b>부터 갈렸습니다. 3곳은 제도 설계 문제로, 2곳은 정치 갈등으로 규정했습니다.</p>
           <p class="why">문제 정의가 갈린 뒤 원인 해석도 따라 갈렸지만, <b>해법</b>에서는 6곳 중 4곳이 같은 계열(제도적 견제)로 모였습니다.
@@ -951,6 +962,13 @@ section[data-screen].on{display:block}
           <p>언론사 비교 — 대립하는 두 문제 정의를 축의 양 끝에 놓고, 각 매체가 어디에 서 있는지 봅니다.</p>
         </header>
 
+        <div class="legend">
+          <b>이 화면의 숫자 출처</b>
+          <button class="prov p-code" data-book="p-code">AI가 두 번 채점</button>
+          <button class="prov p-rule" data-book="p-rule">단어 규칙 자동 분류</button>
+          <button class="prov p-derive" data-book="p-derive">위 결과를 합친 계산</button>
+          <span>배지가 다르면 신뢰 수준이 다릅니다 — 눌러 보세요</span>
+        </div>
         <h2 class="sec">쟁점 축 — 문제 정의 <button class="prov p-code" data-book="p-code">AI가 두 번 채점</button></h2>
         <div class="axis">
           <div class="axis-grid">
@@ -1020,6 +1038,32 @@ section[data-screen].on{display:block}
           </table>
         </div>
         <p class="note"><b>이 표에서 읽을 것:</b> D신문은 시민사회·전문가를 함께 실었고, F신문은 정치 행위자 발언만으로 기사를 구성했습니다. 취재원 구성은 기자가 문장을 쓰지 않아도 드러나는 편집 선택입니다.</p>
+
+        <h2 class="sec">문장을 쓰지 않고 프레임을 실은 경우 <button class="prov p-code" data-book="p-code">AI가 두 번 채점</button></h2>
+        <div class="tscroll">
+          <table class="t">
+            <caption><b>이 표가 이 분석의 반론 답변입니다.</b> &ldquo;누구를 인용할지 고르는 것 자체가 프레이밍&rdquo;이라는 반론은 옳습니다.
+            그래서 인용을 버리지 않고 <b>별도 지표로 셉니다</b> — 인용이 어느 계열의 프레임을 실었는지, 그것이 그 매체의 기자 문장과 같은 방향인지.</caption>
+            <thead><tr><th>매체</th><th>기자 문장 계열</th><th>인용의 최빈 계열</th><th>방향</th><th>반대 계열 인용에 반박이 붙었나</th></tr></thead>
+            <tbody>
+              <tr><th>A일보</th><td>법·제도</td><td>법·제도</td><td><span class="chip">일치</span></td><td>반대 계열 인용 1건 — 반박 서술 있음</td></tr>
+              <tr><th>B일보</th><td>법·제도</td><td>법·제도</td><td><span class="chip">일치</span></td><td>반대 계열 인용 없음</td></tr>
+              <tr><th>C일보</th><td>법·제도</td><td>정치 갈등</td><td><span class="chip warn">불일치</span></td><td>반대 계열 인용 2건 — 반박 없이 병치</td></tr>
+              <tr><th>D신문</th><td>정치 갈등</td><td>정치 갈등</td><td><span class="chip">일치</span></td><td>반대 계열 인용 1건 — 반박 없이 병치</td></tr>
+              <tr><th>E일보</th><td>정치 갈등</td><td>정치 갈등</td><td><span class="chip">일치</span></td><td>반대 계열 인용 없음</td></tr>
+              <tr style="background:var(--afs-warn-soft)"><th>F신문</th><td>—<br /><span style="font-size:11px">기자 문장 0건</span></td><td>정치 갈등</td><td><span class="chip warn">비교 불가</span></td><td>반대 계열 인용 없음 — 한쪽 계열만 인용</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          <b>F신문을 보십시오.</b> 기자가 직접 쓴 문장이 하나도 없어 앞의 축에는 놓을 수 없었지만,
+          <b>인용한 발언은 한쪽 계열로만 모였습니다.</b> 즉 자기 문장을 쓰지 않고도 한 프레임만 실은 것입니다.
+          이것이 &ldquo;기자 문장만 세면 인용 편집을 놓친다&rdquo;는 반론에 대한 답입니다 — 놓치지 않고, 다른 열로 셉니다.
+        </p>
+        <p class="note" style="margin-top:7px;color:var(--afs-warn)">
+          <b>다만 이 열은 아직 비교 지표에 포함되지 않았습니다.</b> 포함하려면 &ldquo;인용으로 프레임을 실었다&rdquo;를
+          판정하는 규칙(반박 서술의 정의, 병치와 증폭의 구분)을 코드북에 먼저 써야 합니다.
+        </p>
 
         <div class="next">
           <a href="#/framing"><i>더 깊이</i><b>프레이밍 분석</b><span>이 위치가 어느 문장에서 나왔는지</span></a>
@@ -1583,13 +1627,13 @@ section[data-screen].on{display:block}
             (<code style="font-family:var(--afs-mono);font-size:10.5px">causal_attribution</code> ↔ 원인 해석,
             <code style="font-family:var(--afs-mono);font-size:10.5px">evaluation</code> ↔ 규범적 평가).
             두 이름의 대응은 사람이 판단한 것이며 <b>코드로 검증되지 않았습니다.</b></caption>
-            <thead><tr><th>층위</th><th class="n">일치</th><th class="n">비율</th><th class="n">최빈 계열 비율</th><th class="n">기자 문장 항목</th><th>읽는 법</th></tr></thead>
+            <thead><tr><th>층위</th><th class="n">일치</th><th class="n">원 일치율 p<sub>o</sub></th><th class="n">κ</th><th class="n">최빈 계열 비율</th><th class="n">기자 문장 항목</th><th>읽는 법</th></tr></thead>
             <tbody>
-              <tr><th>문제 정의</th><td class="n">19/25</td><td class="n"><b>0.76</b></td><td class="n">48%</td><td class="n">28</td><td><span class="chip warn">코더가 갈린 층위 — 결론이 이 층위에 서 있습니다</span></td></tr>
-              <tr><th>원인 해석</th><td class="n">25/25</td><td class="n">1.00</td><td class="n"><b>92%</b></td><td class="n">16</td><td><span class="chip warn">계열이 한쪽으로 몰려 변별할 것이 거의 없었습니다 — "완벽한 일치"로 읽으면 안 됩니다</span></td></tr>
-              <tr><th>책임 귀속</th><td class="n">23/25</td><td class="n">0.92</td><td class="n">61%</td><td class="n">5</td><td>대체로 같게 봤습니다</td></tr>
-              <tr><th>규범적 평가</th><td class="n">22/25</td><td class="n">0.88</td><td class="n">70%</td><td class="n"><b>0</b></td><td><span class="chip warn">기자 문장 0건 · 계열이 거의 한 값이라 이 일치율은 해석하기 어렵습니다</span></td></tr>
-              <tr><th>해법·처방</th><td class="n">22/25</td><td class="n">0.88</td><td class="n">55%</td><td class="n">6</td><td>대체로 같게 봤습니다</td></tr>
+              <tr><th>문제 정의</th><td class="n">19/25</td><td class="n"><b>0.76</b></td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n">48%</td><td class="n">28</td><td><span class="chip warn">코더가 갈린 층위 — 결론이 이 층위에 서 있습니다</span></td></tr>
+              <tr><th>원인 해석</th><td class="n">25/25</td><td class="n">1.00</td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n"><b>92%</b></td><td class="n">16</td><td><span class="chip warn">계열이 한쪽으로 몰려 변별할 것이 거의 없었습니다 — "완벽한 일치"로 읽으면 안 됩니다</span></td></tr>
+              <tr><th>책임 귀속</th><td class="n">23/25</td><td class="n">0.92</td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n">61%</td><td class="n">5</td><td>대체로 같게 봤습니다</td></tr>
+              <tr><th>규범적 평가</th><td class="n">22/25</td><td class="n">0.88</td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n">70%</td><td class="n"><b>0</b></td><td><span class="chip warn">기자 문장 0건 · 계열이 거의 한 값이라 이 일치율은 해석하기 어렵습니다</span></td></tr>
+              <tr><th>해법·처방</th><td class="n">22/25</td><td class="n">0.88</td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n">55%</td><td class="n">6</td><td>대체로 같게 봤습니다</td></tr>
             </tbody>
           </table>
         </div>
@@ -1598,6 +1642,12 @@ section[data-screen].on{display:block}
           쓴 통계는 <b>단순 일치율</b>이며, 우연 일치를 보정한 카파 계열 계수는 아직 산출하지 않았습니다 —
           계열 분포가 편중된 층위에서는 단순 일치율이 <b>과대평가됩니다.</b>
           그래서 <b>최빈 계열 비율</b> 열을 같이 뒀습니다. 원인 해석은 92%가 한 계열이었으므로 1.00은 "변별할 것이 없었다"에 가깝습니다.
+        </p>
+        <p class="note" style="margin-top:9px;padding:11px 13px;background:var(--afs-warn-soft);border-radius:var(--afs-r-btn);color:var(--afs-warn)">
+          <b>κ를 왜 &ldquo;산출 불가&rdquo;로 적었나:</b> 편중된 분포에서 카파가 필요하다는 것은 맞습니다. 그런데 지금 공개 파일에는
+          <b>코더별 라벨이 없고 일치 여부(참/거짓)만</b> 저장돼 있습니다. 카파는 두 코더의 <b>분류표(confusion matrix)</b>가 있어야 계산됩니다.
+          즉 이것은 통계를 안 쓴 것이 아니라 <b>데이터 구조가 그 계산을 허용하지 않는 것</b>입니다.
+          다음 코딩 회차에서 코더별 계열 라벨을 함께 저장하면 카파와 크리펜도르프 α를 이 표에 채웁니다.
         </p>
 
         <h2 class="sec">아직 성립하지 않은 조건</h2>
