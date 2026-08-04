@@ -80,18 +80,40 @@ async function loadChromium() {
   throw new Error("playwright-core 를 못 찾았습니다. AF_PW=<경로/index.js> 로 지정하세요.");
 }
 
+/* 브라우저를 찾는 곳은 OS 마다 다르다. 이 관문을 팀원 PC 와 CI(우분투)에서도
+   돌려야 하므로 세 곳을 모두 본다:
+     PLAYWRIGHT_BROWSERS_PATH (명시) · %LOCALAPPDATA%/ms-playwright (윈도) ·
+     ~/.cache/ms-playwright (리눅스·맥, npx playwright install 기본 위치) */
 function chromePath() {
   if (process.env.AF_CHROME) return process.env.AF_CHROME;
-  const root = path.join(process.env.LOCALAPPDATA || "", "ms-playwright");
-  const dirs = fs.existsSync(root)
-    ? fs.readdirSync(root).filter((d) => d.startsWith("chromium-")).sort((a, b) => Number(b.split("-")[1]) - Number(a.split("-")[1]))
-    : [];
-  for (const d of dirs)
-    for (const rel of ["chrome-win64/chrome.exe", "chrome-linux/chrome"]) {
-      const p = path.join(root, d, rel);
-      if (fs.existsSync(p)) return p;
-    }
-  throw new Error(`chromium 실행 파일을 못 찾았습니다 (${root}).`);
+  const roots = [
+    process.env.PLAYWRIGHT_BROWSERS_PATH,
+    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, "ms-playwright"),
+    process.env.HOME && path.join(process.env.HOME, ".cache", "ms-playwright"),
+    process.env.USERPROFILE && path.join(process.env.USERPROFILE, ".cache", "ms-playwright"),
+  ].filter(Boolean);
+  const rels = [
+    "chrome-win64/chrome.exe",
+    "chrome-linux/chrome",
+    "chrome-linux64/chrome",
+    "chrome-mac/Chromium.app/Contents/MacOS/Chromium",
+  ];
+  for (const root of roots) {
+    if (!fs.existsSync(root)) continue;
+    const dirs = fs
+      .readdirSync(root)
+      .filter((d) => d.startsWith("chromium-"))
+      .sort((a, b) => Number(b.split("-")[1]) - Number(a.split("-")[1]));
+    for (const d of dirs)
+      for (const rel of rels) {
+        const p = path.join(root, d, rel);
+        if (fs.existsSync(p)) return p;
+      }
+  }
+  throw new Error(
+    `chromium 실행 파일을 못 찾았습니다. 찾아본 곳: ${roots.join(" · ") || "(없음)"}\n` +
+      "npx playwright install chromium 을 실행하거나 AF_CHROME=<실행 파일 경로> 로 지정하세요.",
+  );
 }
 
 // 페이지 안에서 도는 수집기. 판정 임계값이 전부 여기 있어서 한 곳만 읽으면 된다.

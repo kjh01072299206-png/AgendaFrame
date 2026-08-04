@@ -1,0 +1,108 @@
+# 실배포 관문. 누가 push 하든 같은 검사를 통과해야 프로덕션에 나간다.
+#
+# 필요한 저장소 설정 (한 번만, 저장소 소유자가):
+#   Settings → Secrets and variables → Actions
+#     Secrets   VERCEL_TOKEN        Vercel → Account Settings → Tokens 에서 발급
+#     Variables VERCEL_ORG_ID       site/.vercel/project.json 의 orgId
+#     Variables VERCEL_PROJECT_ID   site/.vercel/project.json 의 projectId
+#
+# 이렇게 두면 팀원은 Vercel 계정도, 토큰도 필요 없다 — main 에 push 하거나
+# Actions 탭에서 "Run workflow" 를 누르면 된다. 토큰은 로그에 찍히지 않는다.
+
+name: Site Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - ".github/workflows/site-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  gate-and-deploy:
+    name: 검사 통과 후 프로덕션 배포
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: site
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Contract tests
+        run: node --test --test-isolation=none tests/initial-five-contract.test.mjs tests/community.test.mjs
+
+      - name: Build (Next)
+        run: npx next build
+
+      # 렌더 관문(audit-site.mjs)은 실제 브라우저가 필요하다. playwright-core 는
+      # 저장소 의존성이 아니므로 CI 에서만 임시로 설치하고 경로를 넘긴다.
+      - name: Install browser for the render gate
+        run: |
+          npm i --no-save playwright@1.56.0
+          npx playwright install --with-deps chromium
+
+      - name: Start production server
+        run: |
+          npx next start -p 3000 > /tmp/next.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -sf -o /dev/null http://127.0.0.1:3000/; then echo "up"; exit 0; fi
+            sleep 2
+          done
+          echo "서버가 뜨지 않았습니다"; cat /tmp/next.log; exit 1
+
+      - name: Render gate (18 rules × 14 routes × 5 viewports)
+        env:
+          AF_PW: ${{ github.workspace }}/site/node_modules/playwright-core/index.js
+        run: node scripts/audit-site.mjs --url http://127.0.0.1:3000
+
+      # 여기까지 통과하지 못하면 배포는 실행되지 않는다.
+      - name: Deploy to production
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_TOKEN" ]; then
+            echo "VERCEL_TOKEN 시크릿이 없습니다. 저장소 Settings → Secrets 에 추가하세요."
+            exit 1
+          fi
+          npx --yes vercel@58 deploy --prod --yes --token "$VERCEL_DEPLOY_TOKEN"
+
+      - name: Verify the live deployment
+        run: |
+          set -e
+          for path in "/" "/issues" "/issues/bigkinds-2026-07-26-top-1/framing" "/tools/method"; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "https://agendaframe-capstone.vercel.app$path")
+            echo "$code $path"
+            [ "$code" = "200" ] || { echo "실배포 확인 실패: $path"; exit 1; }
+          done
