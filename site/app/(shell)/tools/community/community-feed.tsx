@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useLocal } from "../../client-store";
-import { communityFetch } from "../../community-session";
+import { COMMUNITY_API_ENABLED, communityFetch } from "../../community-session";
 import { TYPES } from "../self-check/reader-type";
 
 type Reply = { id: string; displayName: string; readerType: string | null; body: string; createdAt: number; reactionCount: number };
@@ -164,17 +164,24 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
     try {
       const query = new URLSearchParams({ sort: nextSort, limit: "20" });
       if (nextCursor) query.set("cursor", nextCursor);
-      const response = await communityFetch(`/api/community?${query.toString()}`, { cache: "no-store" });
-      const payload = await response.json();
-      if (response.ok) {
-        setMode("server");
-        setPosts((current) => append ? [...current, ...(payload.posts ?? [])] : (payload.posts ?? [])); setCursor(payload.nextCursor ?? null); return;
+      /* 전역 라우트가 아직 배포되지 않은 환경에서는 요청 자체를 보내지 않는다.
+         보내면 404 가 콘솔 오류로 남아 렌더 점검(JS-ERROR)에 걸리고, 사용자에게도
+         내부 오류가 스쳐 지나간다. 의제 단위 라우트는 지금 배포에 이미 있다. */
+      let response: Response | null = null;
+      let payload: { posts?: Post[]; nextCursor?: string | null; error?: { message?: string } } | null = null;
+      if (COMMUNITY_API_ENABLED) {
+        response = await communityFetch(`/api/community?${query.toString()}`, { cache: "no-store" });
+        payload = await response.json();
+        if (response.ok) {
+          setMode("server");
+          setPosts((current) => append ? [...current, ...(payload?.posts ?? [])] : (payload?.posts ?? [])); setCursor(payload?.nextCursor ?? null); return;
+        }
       }
       // The current Vercel project can be linked to the older worker while the
       // global community route is being rolled out. Its issue-scoped route is
       // durable and already available, so use it as a backwards-compatible
       // fallback instead of leaving the feed unusable.
-      if (response.status !== 404 || !selectedIssue) throw new Error(payload?.error?.message ?? "커뮤니티 글을 불러오지 못했습니다.");
+      if ((response && response.status !== 404) || !selectedIssue) throw new Error(payload?.error?.message ?? "커뮤니티 글을 불러오지 못했습니다.");
       const issueResponse = await communityFetch(`/api/issues/${encodeURIComponent(selectedIssue)}/community`, { cache: "no-store" });
       const issuePayload = await issueResponse.json();
       if (!issueResponse.ok) throw new Error(issuePayload?.error?.message ?? "커뮤니티 글을 불러오지 못했습니다.");
@@ -208,7 +215,9 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
       setBody(""); setNotice("이 브라우저에 저장했습니다."); setBusy(false); return;
     }
     try {
-      let response = await communityFetch("/api/community", { method: "POST", body: JSON.stringify({ issueId: selectedIssue, body, displayName, readerType: mineType, screen: "커뮤니티" }) });
+      let response = COMMUNITY_API_ENABLED
+        ? await communityFetch("/api/community", { method: "POST", body: JSON.stringify({ issueId: selectedIssue, body, displayName, readerType: mineType, screen: "커뮤니티" }) })
+        : new Response(JSON.stringify({}), { status: 404 });
       let payload = await response.json();
       if (response.status === 404) {
         response = await communityFetch(`/api/issues/${encodeURIComponent(selectedIssue)}/community`, { method: "POST", body: JSON.stringify({ body, displayName, readerType: mineType, screen: "커뮤니티" }) });
