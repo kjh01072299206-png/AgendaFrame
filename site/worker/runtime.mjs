@@ -3863,6 +3863,7 @@ export async function handleApiRequest(request, env = {}) {
   const initialFiveResponse = await handleInitialFiveRequest(request);
   if (initialFiveResponse) return initialFiveResponse;
   if (url.pathname === "/api/chat") return handleEvidenceChat(request, env);
+  if (url.pathname === "/api/community" || url.pathname === "/api/community/session" || url.pathname === "/api/self-check" || url.pathname.startsWith("/api/community/") && (url.pathname.endsWith("/replies") || url.pathname.endsWith("/react") || url.pathname.endsWith("/report"))) return handleCommunityRequest(request, env);
   if (url.pathname.startsWith("/api/issues/") && url.pathname.endsWith("/community")) return handleCommunityRequest(request, env);
   if (url.pathname.startsWith("/api/comments/") && url.pathname.endsWith("/report")) return handleCommunityRequest(request, env);
   if (url.pathname.startsWith("/api/admin/community/")) {

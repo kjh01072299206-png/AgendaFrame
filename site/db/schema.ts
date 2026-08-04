@@ -606,6 +606,8 @@ export const communityComments = sqliteTable(
     actorHash: text("actor_hash").notNull(),
     displayName: text("display_name").notNull(),
     body: text("body").notNull(),
+    readerType: text("reader_type"),
+    screen: text("screen"),
     status: text("status", { enum: ["published", "pending", "hidden"] }).notNull().default("published"),
     reportCount: integer("report_count").notNull().default(0),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
@@ -637,7 +639,34 @@ export const communityRateLimits = sqliteTable(
     windowStart: integer("window_start", { mode: "timestamp_ms" }).notNull(),
     commentCount: integer("comment_count").notNull().default(0),
     reportCount: integer("report_count").notNull().default(0),
+    reactionCount: integer("reaction_count").notNull().default(0),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
   },
   (table) => [uniqueIndex("community_rate_limits_actor_window_uq").on(table.actorHash, table.windowStart), index("community_rate_limits_updated_idx").on(table.updatedAt)],
+);
+
+export const communityReactions = sqliteTable(
+  "community_reactions",
+  {
+    commentId: text("comment_id").notNull().references(() => communityComments.id, { onDelete: "cascade" }),
+    actorHash: text("actor_hash").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("community_reactions_comment_actor_uq").on(table.commentId, table.actorHash),
+    index("community_reactions_comment_idx").on(table.commentId),
+  ],
+);
+
+export const selfCheckResults = sqliteTable(
+  "self_check_results",
+  {
+    actorHash: text("actor_hash").primaryKey(),
+    answersJson: text("answers_json").notNull(),
+    typeCode: text("type_code").notNull(),
+    scoresJson: text("scores_json").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [index("self_check_results_updated_idx").on(table.updatedAt)],
 );

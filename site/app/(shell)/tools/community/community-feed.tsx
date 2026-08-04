@@ -1,207 +1,133 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useLocal } from "../../client-store";
+import { communityFetch } from "../../community-session";
 import { TYPES } from "../self-check/reader-type";
 
-/* 예시 화면. 닉네임 옆에 자가점검에서 나온 읽기 유형이 붙는 구조를 보여 준다.
-   내 유형은 localStorage 에 저장된 값을 읽어 상단 작성칸에 표시한다. */
+type Reply = { id: string; displayName: string; readerType: string | null; body: string; createdAt: number; reactionCount: number };
+type Post = { id: string; issueId: string; issueTitle: string | null; issueRank: number | null; displayName: string; readerType: string | null; screen: string | null; body: string; reactionCount: number; reactedByMe: boolean; replyCount: number; createdAt: number; replies: Reply[] };
+type Issue = { id: string; title: string; issueDate: string; agendaScore?: number };
 
-interface Post {
-  id: string;
-  nick: string;
-  type: string;
-  issueRank: number;
-  issueId: string;
-  issueTitle: string;
-  screen: string;
-  body: string;
-  agrees: number;
-  replies: Array<{ nick: string; type: string; body: string }>;
-}
-
-const POSTS: Post[] = [
-  {
-    id: "p1",
-    nick: "느린독자",
-    type: "BDCP",
-    issueRank: 1,
-    issueId: "bigkinds-2026-07-26-top-1",
-    issueTitle: "정점식 의원의 특검 보완수사권 주장",
-    screen: "언론사 비교",
-    body: "쟁점 축에서 왼쪽에 붙은 매체들은 이걸 ‘정치적 갈등’으로 정의했고, 오른쪽은 ‘제도적 견제’로 봤어요. 찬반이 아니라 문제 정의가 다른 거라 같은 기사를 읽어도 결론이 달라질 수밖에 없네요.",
-    agrees: 24,
-    replies: [
-      { nick: "출근길뉴스", type: "HDCR", body: "제목만 봤을 때는 그냥 여야 공방으로 읽혔는데, 본문 층위로 나눠 보니 다르게 보입니다." },
-      { nick: "기록자", type: "BDOR", body: "저는 한 매체만 봤어서 이 축의 반대편 설명을 아예 몰랐습니다." },
-    ],
-  },
-  {
-    id: "p2",
-    nick: "세줄요약",
-    type: "BMCR",
-    issueRank: 3,
-    issueId: "bigkinds-2026-07-26-top-3",
-    issueTitle: "경산 아파트 방화·보복범죄 수사",
-    screen: "프레이밍 분석",
-    body: "‘해법·처방’ 층위가 거의 비어 있는 게 인상적입니다. 사건은 크게 다뤘는데 무엇을 해야 하는지는 아무 매체도 안 썼어요. 갈린 게 아니라 아예 질문이 없었던 층위네요.",
-    agrees: 41,
-    replies: [
-      { nick: "느린독자", type: "BDCP", body: "미관측이 곧 부재는 아니지만, 네 매체가 모두 안 썼다면 그건 편집 관심의 위치를 보여 준다고 생각해요." },
-    ],
-  },
-  {
-    id: "p3",
-    nick: "헤드라인러",
-    type: "HMOR",
-    issueRank: 2,
-    issueId: "bigkinds-2026-07-26-top-2",
-    issueTitle: "권영진 의원의 정점식 의원 멱살 논란",
-    screen: "리포트",
-    body: "자가점검 해 보니 제 유형이 제일 사각지대가 넓다고 나왔습니다. 실제로 이 사안은 제목만 보고 판단했었는데, 취재원 구성 보니까 한쪽 정당 관계자 인용이 압도적이었네요.",
-    agrees: 58,
-    replies: [
-      { nick: "교차확인", type: "BDCR", body: "저도 같은 경험이요. 직접 인용/간접 전언 비교 화면이 제일 도움이 됐습니다." },
-      { nick: "세줄요약", type: "BMCR", body: "유형 결과를 그냥 재미로 봤는데 ‘요약하면 갈린 지점이 지워진다’는 문장이 정확했어요." },
-    ],
-  },
-  {
-    id: "p4",
-    nick: "야근중",
-    type: "HDCP",
-    issueRank: 5,
-    issueId: "bigkinds-2026-07-26-top-5",
-    issueTitle: "음성 외국인 집단 난투 사건",
-    screen: "언론사 비교",
-    body: "매체별 취재원 표에서 ‘당사자·시민’이 한 명도 없는 매체가 있습니다. 사건 당사자 없이 수사기관 발표만으로 쓴 기사와, 주변 시민 말을 넣은 기사는 같은 사건인데 온도가 다릅니다.",
-    agrees: 33,
-    replies: [],
-  },
-];
-
-const badge = (code: string) => {
+const badge = (code: string | null) => {
+  if (!code) return <span className="afs-chip">자가점검 전</span>;
   const type = TYPES[code];
-  return (
-    <span className="afs-badge-type" title={type ? type.line : code}>
-      <b className="afs-num">{code}</b>
-      {type ? type.name : "유형 미상"}
-    </span>
-  );
+  return <span className="afs-badge-type" title={type?.line ?? code}><b className="afs-num">{code}</b>{type?.name ?? "읽기 유형"}</span>;
 };
+
+function dateLabel(value: number) { return new Date(value).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" }); }
 
 export function CommunityFeed() {
   const mine = useLocal("afs-reader-type");
-  const [sort, setSort] = useState<"hot" | "new">("hot");
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [selectedIssue, setSelectedIssue] = useState("");
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [sort, setSort] = useState<"hot" | "new">("new");
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [body, setBody] = useState("");
+  const [displayName, setDisplayName] = useState("익명 독자");
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyBody, setReplyBody] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+  const mineType = useMemo(() => (mine && TYPES[mine] ? mine : null), [mine]);
 
-  const posts = sort === "hot" ? POSTS.slice().sort((a, b) => b.agrees - a.agrees) : POSTS;
-  const mineType = mine ? TYPES[mine] : null;
+  const loadIssues = useCallback(async () => {
+    try {
+      const response = await fetch("/api/issues?date=2026-07-26&limit=10", { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error?.message ?? "의제를 불러오지 못했습니다.");
+      const next = Array.isArray(payload.issues) ? payload.issues : [];
+      setIssues(next); setSelectedIssue((current) => current || next[0]?.id || "");
+    } catch (error) { setNotice(error instanceof Error ? error.message : "의제를 불러오지 못했습니다."); }
+  }, []);
+
+  const loadPosts = useCallback(async (nextSort = sort, nextCursor: string | null = null, append = false) => {
+    try {
+      const query = new URLSearchParams({ sort: nextSort, limit: "20" });
+      if (nextCursor) query.set("cursor", nextCursor);
+      const response = await communityFetch(`/api/community?${query.toString()}`, { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error?.message ?? "커뮤니티 글을 불러오지 못했습니다.");
+      setPosts((current) => append ? [...current, ...(payload.posts ?? [])] : (payload.posts ?? [])); setCursor(payload.nextCursor ?? null);
+    } catch (error) { setNotice(error instanceof Error ? error.message : "커뮤니티 글을 불러오지 못했습니다."); }
+  }, [sort]);
+
+  // These effects synchronize the client with durable API state.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { void loadIssues(); }, [loadIssues]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { void loadPosts(sort); }, [loadPosts, sort]);
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault(); if (!selectedIssue || !body.trim() || busy) return;
+    setBusy(true); setNotice("");
+    try {
+      const response = await communityFetch("/api/community", { method: "POST", body: JSON.stringify({ issueId: selectedIssue, body, displayName, readerType: mineType, screen: "커뮤니티" }) });
+      const payload = await response.json(); if (!response.ok) throw new Error(payload?.error?.message ?? "글을 등록하지 못했습니다.");
+      setBody(""); setNotice(payload.notice ?? "글이 등록되었습니다."); await loadPosts(sort);
+    } catch (error) { setNotice(error instanceof Error ? error.message : "글을 등록하지 못했습니다."); }
+    finally { setBusy(false); }
+  };
+
+  const submitReply = async (post: Post) => {
+    if (!replyBody.trim() || busy) return;
+    setBusy(true); setNotice("");
+    try {
+      const response = await communityFetch(`/api/community/${encodeURIComponent(post.id)}/replies`, { method: "POST", body: JSON.stringify({ body: replyBody, displayName, readerType: mineType, screen: "커뮤니티 답글" }) });
+      const payload = await response.json(); if (!response.ok) throw new Error(payload?.error?.message ?? "답글을 등록하지 못했습니다.");
+      setReplyBody(""); setReplyingTo(null); setNotice(payload.notice ?? "답글이 등록되었습니다."); await loadPosts(sort);
+    } catch (error) { setNotice(error instanceof Error ? error.message : "답글을 등록하지 못했습니다."); }
+    finally { setBusy(false); }
+  };
+
+  const react = async (postId: string) => {
+    try {
+      const response = await communityFetch(`/api/community/${encodeURIComponent(postId)}/react`, { method: "POST" });
+      const payload = await response.json(); if (!response.ok) throw new Error(payload?.error?.message ?? "공감을 처리하지 못했습니다.");
+      setPosts((current) => current.map((post) => post.id === postId ? { ...post, reactedByMe: payload.reacted, reactionCount: payload.reactionCount } : post));
+    } catch (error) { setNotice(error instanceof Error ? error.message : "공감을 처리하지 못했습니다."); }
+  };
+
+  const report = async (postId: string) => {
+    try {
+      const response = await communityFetch(`/api/community/${encodeURIComponent(postId)}/report`, { method: "POST", body: JSON.stringify({}) });
+      const payload = await response.json(); setNotice(response.ok ? "신고가 접수되었습니다. 운영 검토 후 조치합니다." : payload?.error?.message ?? "신고를 접수하지 못했습니다.");
+    } catch { setNotice("신고를 접수하지 못했습니다."); }
+  };
 
   return (
     <>
       <section className="afs-card">
-        <h2>
-          글 쓰기
-          <span className="afs-badge-ex">예시</span>
-          <small>근거를 본 화면과 함께 올립니다</small>
-        </h2>
+        <h2>글 쓰기 <small>근거를 본 의제와 함께 저장됩니다</small></h2>
         <div className="afs-in">
-          <div className="afs-compose">
-            <p className="afs-compose-who">
-              {mineType ? (
-                <>
-                  <span className="afs-chip">닉네임 미설정</span>
-                  {badge(mineType.code)}
-                </>
-              ) : (
-                <>
-                  <span className="afs-chip">닉네임 미설정</span>
-                  <span className="afs-chip">
-                    읽기 유형 없음 ·{" "}
-                    <Link className="afs-link" href="/tools/self-check">
-                      자가점검하기
-                    </Link>
-                  </span>
-                </>
-              )}
-            </p>
-            <label className="afs-sr" htmlFor="afs-compose">
-              글 내용
-            </label>
-            <textarea
-              id="afs-compose"
-              rows={3}
-              placeholder="어느 화면에서 무엇을 봤는지 함께 적으면 다른 사람이 확인할 수 있습니다."
-            />
-            <div className="afs-compose-foot">
-              <span>글에는 내가 본 의제와 화면이 자동으로 붙습니다.</span>
-              <button type="button" className="afs-pill" disabled>
-                올리기
-              </button>
-            </div>
-          </div>
+          <form className="afs-compose" onSubmit={submit}>
+            <p className="afs-compose-who"><span className="afs-chip">{displayName || "익명 독자"}</span>{badge(mineType)}</p>
+            <label>표시 이름<input maxLength={40} value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label>
+            <label>의제<select value={selectedIssue} onChange={(event) => setSelectedIssue(event.target.value)} disabled={!issues.length}><option value="">의제를 선택하세요</option>{issues.map((issue) => <option key={issue.id} value={issue.id}>{issue.title}</option>)}</select></label>
+            <label>글 내용<textarea id="afs-compose" rows={4} maxLength={1000} value={body} onChange={(event) => setBody(event.target.value)} placeholder="어느 분석 화면에서 무엇을 확인했는지 근거와 함께 적어 주세요." /></label>
+            <div className="afs-compose-foot"><span>{mineType ? `${mineType} 유형이 글에 함께 표시됩니다.` : "자가점검을 완료하면 읽기 유형이 함께 표시됩니다."}</span><button type="submit" className="afs-pill" disabled={busy || !selectedIssue || !body.trim()}>{busy ? "등록 중…" : "올리기"}</button></div>
+          </form>
         </div>
-        <p className="afs-foot">
-          {mineType
-            ? `내 유형은 ${mineType.code} ${mineType.name}입니다. 닉네임 옆에 이렇게 붙습니다.`
-            : "자가점검을 먼저 하면 닉네임 옆에 읽기 유형이 붙습니다."}
-        </p>
       </section>
 
       <section className="afs-card">
-        <h2>
-          최근 이야기
-          <span className="afs-badge-ex">예시</span>
-          <small>{POSTS.length}개</small>
-        </h2>
+        <h2>최근 이야기 <small>{posts.length}개 표시</small></h2>
         <div className="afs-in">
-          <div className="afs-sortbar">
-            <button type="button" className="afs-pill" aria-pressed={sort === "hot"} onClick={() => setSort("hot")}>
-              공감순
-            </button>
-            <button type="button" className="afs-pill" aria-pressed={sort === "new"} onClick={() => setSort("new")}>
-              최신순
-            </button>
-          </div>
-          <ul className="afs-feed">
-            {posts.map((post) => (
-              <li key={post.id}>
-                <div className="afs-feed-head">
-                  <b>{post.nick}</b>
-                  {badge(post.type)}
-                  <Link className="afs-chip afs-chip-brand" href={`/issues/${encodeURIComponent(post.issueId)}`}>
-                    {post.issueRank}위 {post.issueTitle}
-                  </Link>
-                  <span className="afs-chip">{post.screen}</span>
-                </div>
-                <p className="afs-feed-body">{post.body}</p>
-                <div className="afs-feed-foot">
-                  <span className="afs-num">공감 {post.agrees}</span>
-                  <span className="afs-num">답글 {post.replies.length}</span>
-                </div>
-                {post.replies.length ? (
-                  <ul className="afs-feed-replies">
-                    {post.replies.map((reply, index) => (
-                      <li key={`${post.id}-${index}`}>
-                        <div className="afs-feed-head">
-                          <b>{reply.nick}</b>
-                          {badge(reply.type)}
-                        </div>
-                        <p className="afs-feed-body">{reply.body}</p>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </li>
-            ))}
-          </ul>
+          <div className="afs-sortbar"><button type="button" className="afs-pill" aria-pressed={sort === "hot"} onClick={() => setSort("hot")}>공감순</button><button type="button" className="afs-pill" aria-pressed={sort === "new"} onClick={() => setSort("new")}>최신순</button></div>
+          {posts.length ? <ul className="afs-feed">{posts.map((post) => <li key={post.id}>
+            <div className="afs-feed-head"><b>{post.displayName}</b>{badge(post.readerType)}{post.issueTitle && <Link className="afs-chip afs-chip-brand" href={`/issues/${encodeURIComponent(post.issueId)}`}>{post.issueRank ? `${post.issueRank}위 · ` : ""}{post.issueTitle}</Link>}<span className="afs-chip">{post.screen ?? "커뮤니티"}</span><time dateTime={new Date(post.createdAt).toISOString()}>{dateLabel(post.createdAt)}</time></div>
+            <p className="afs-feed-body">{post.body}</p>
+            <div className="afs-feed-foot"><button type="button" className="afs-pill" aria-pressed={post.reactedByMe} onClick={() => void react(post.id)}>공감 {post.reactionCount}</button><button type="button" className="afs-pill" onClick={() => setReplyingTo((current) => current === post.id ? null : post.id)}>답글 {post.replyCount}</button><button type="button" className="afs-pill" onClick={() => void report(post.id)}>신고</button></div>
+            {replyingTo === post.id && <div className="afs-reply-form"><textarea rows={2} maxLength={1000} value={replyBody} onChange={(event) => setReplyBody(event.target.value)} placeholder="이 글의 근거에 답해 주세요." /><button type="button" className="afs-pill" disabled={busy || !replyBody.trim()} onClick={() => void submitReply(post)}>답글 등록</button></div>}
+            {post.replies.length ? <ul className="afs-feed-replies">{post.replies.map((reply) => <li key={reply.id}><div className="afs-feed-head"><b>{reply.displayName}</b>{badge(reply.readerType)}<time dateTime={new Date(reply.createdAt).toISOString()}>{dateLabel(reply.createdAt)}</time></div><p className="afs-feed-body">{reply.body}</p></li>)}</ul> : null}
+          </li>)}</ul> : <p className="afs-note">아직 공개된 글이 없습니다. 첫 글을 남겨 보세요.</p>}
+          {cursor && sort === "new" ? <button type="button" className="afs-pill" onClick={() => void loadPosts(sort, cursor, true)}>더 불러오기</button> : null}
         </div>
-        <p className="afs-foot afs-foot-ex">
-          <b>이 글과 공감 수는 예시입니다.</b> 실제 이용자 글이 아니라, 닉네임 옆에 읽기 유형이 붙고 본 화면이 함께 표시되는
-          구조를 보여 주기 위한 것입니다. 같은 유형끼리 모이면 사각지대도 같아지므로, 다른 유형의 글을 하나씩 읽는 것이 이 탭의
-          목적입니다.
-        </p>
+        <p className="afs-foot">모든 글은 D1에 저장되며, 개인정보로 보일 수 있는 내용은 검토 전까지 공개되지 않습니다. 신고 3회 누적 글은 자동 숨김 처리됩니다.</p>
       </section>
+      {notice && <p className="trust-notice" role="status">{notice}</p>}
     </>
   );
 }

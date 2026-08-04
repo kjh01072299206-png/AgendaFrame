@@ -855,6 +855,10 @@ body > footer { gap: 24px; padding: 22px max(24px, calc((100vw - 1440px) / 2)); 
 .self-check li { padding: 9px 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
 .self-check label { display: flex; gap: 8px; align-items: flex-start; color: #334055; font-size: 12px; line-height: 1.55; cursor: pointer; }
 .self-check input { margin-top: 2px; accent-color: var(--accent); }
+.afs-reply-form { display: flex; gap: 8px; align-items: flex-end; margin: 12px 0 4px 18px; padding: 10px; border-left: 2px solid var(--line); background: var(--paper); }
+.afs-reply-form textarea { flex: 1; min-height: 54px; resize: vertical; }
+.afs-feed-head time { color: var(--muted); font-size: 11px; }
+.afs-feed-foot .afs-pill[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 .trust-success, .trust-notice { margin: 12px 0 0; color: #14725c; font-size: 12px; line-height: 1.55; }
 .chat-suggestions { display: flex; flex-wrap: wrap; gap: 7px; margin: 14px 0 10px; }
 .chat-suggestions button { border: 1px solid var(--line-strong); border-radius: 99px; padding: 6px 9px; background: #fff; color: #40506a; font-size: 11px; cursor: pointer; }
