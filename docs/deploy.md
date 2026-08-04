@@ -53,13 +53,33 @@ push 한 번에 두 번 배포된다.
 ### 둘 다 없는 동안 (현재 상태)
 
 워크플로는 검사만 하고 배포·라이브 확인을 건너뛴다(실패가 아니다). 프로덕션 배포는
-소유자가 로컬에서 `cd site && npx vercel deploy --prod --yes` 로 한다.
+소유자가 로컬에서 한다 — **저장소 루트에서** 실행한다.
+
+```bash
+npx vercel deploy --prod --yes    # 저장소 루트. site/ 에서 실행하면 실패한다.
+```
 
 Vercel 프로젝트 설정(이미 적용됨):
 
-- Root Directory `site` — 저장소 루트가 아니라 앱 디렉터리에서 빌드한다
+- Root Directory `site` — 저장소 루트를 받아 `site/` 에서 빌드한다
 - Framework `nextjs`
 - Ignored Build Step `git diff --quiet HEAD^ HEAD ./` — `site/` 밖만 바뀐 커밋은 빌드 생략
+
+Root Directory 가 `site` 이므로 CLI 도 저장소 루트에서 실행해야 한다(`site/` 에서
+실행하면 Vercel 이 `site/site` 를 찾는다). 그러면 저장소 전체가 업로드 대상이 되어
+`tmp/` 만으로 파일 한도 15,000 개를 넘기므로, 루트 `.vercelignore` 가 업로드를
+`site/` 로 좁힌다(317개). 워크플로의 배포 단계도 같은 이유로 루트에서 돈다.
+
+## 지금 실배포에 뜬 커밋 확인하기
+
+```bash
+curl -s https://agendaframe-capstone.vercel.app/version
+# {"commit":"f9fe952…","shortCommit":"f9fe952","ref":"…","buildEnv":"production"}
+```
+
+`site/app/version/route.ts` 가 빌드 환경의 `VERCEL_GIT_COMMIT_SHA` 를 그대로
+돌려준다. 배포 확인이 "200 이 떴다" 에서 멈추면 Vercel 이 아직 빌드하는 동안
+이전 빌드를 초록불로 오인하기 때문에, 워크플로는 이 값을 `github.sha` 와 대조한다.
 
 ## 배포 전에 로컬에서 같은 검사 돌리기
 

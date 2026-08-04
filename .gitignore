@@ -68,3 +68,7 @@ error.log
 
 # TypeScript incremental build cache
 site/tsconfig.tsbuildinfo
+
+# Vercel 프로젝트 링크. Root Directory 가 site 이므로 CLI 배포는 저장소 루트에서
+# 실행해야 하고, 그때 이 디렉터리가 생긴다.
+.vercel
