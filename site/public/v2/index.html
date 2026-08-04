@@ -150,6 +150,7 @@ p.note{margin:8px 0 0;font-size:12px;color:var(--afs-ink-3);line-height:1.6}
 .g4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 
 .chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:var(--afs-r-chip);font-size:10.5px;font-weight:750;background:var(--afs-sunk);color:var(--afs-ink-2);border:1px solid var(--afs-rule);white-space:nowrap}
+.chip.wrap{white-space:normal;text-align:left;line-height:1.5}
 .chip.brand{background:var(--afs-soft);color:var(--afs-brand-2);border-color:color-mix(in srgb,var(--afs-brand) 26%,transparent)}
 .chip.warn{background:var(--afs-warn-soft);color:var(--afs-warn);border-color:color-mix(in srgb,var(--afs-warn) 30%,transparent)}
 .chip.good{background:color-mix(in srgb,var(--afs-good) 12%,transparent);color:var(--afs-good);border-color:color-mix(in srgb,var(--afs-good) 30%,transparent)}
@@ -528,10 +529,10 @@ section[data-screen].on{display:block}
       <label for="issueSel" style="margin-left:6px">의제</label>
       <select id="issueSel" aria-label="의제 선택 — 고르면 바로 이동합니다">
         <option value="1">1위 · 특검 보완수사권 부여 논쟁</option>
-        <option value="2">2위 · 여당 지도부 내부 충돌 논란</option>
-        <option value="3">3위 · 아파트 방화 보복범죄 수사</option>
-        <option value="4">4위 · 소송 대리인 불출석 손해배상 조정</option>
-        <option value="5">5위 · 외국인 집단 난투 사건</option>
+        <option value="2">2위 · 여당 지도부 내부 충돌 논란 (시안에서는 준비 중)</option>
+        <option value="3">3위 · 아파트 방화 보복범죄 수사 (시안에서는 준비 중)</option>
+        <option value="4">4위 · 소송 대리인 불출석 손해배상 조정 (시안에서는 준비 중)</option>
+        <option value="5">5위 · 외국인 집단 난투 사건 (시안에서는 준비 중)</option>
       </select>
       <span class="chip">2026-07-26</span>
       <span class="spacer"></span>
@@ -695,7 +696,7 @@ section[data-screen].on{display:block}
         <div class="rail" aria-label="다섯 층위로 이동">
           <a href="#L1" data-st="split"><b>문제 정의</b><span>● 갈림 3:2</span></a>
           <a href="#L2" data-st="split"><b>원인 해석</b><span>● 갈림 2:2</span></a>
-          <a href="#L3" data-st="src"><b>책임 귀속</b><span>○ 취재원만</span></a>
+          <a href="#L3" data-st="src"><b>책임 귀속</b><span>○ 인용만</span></a>
           <a href="#L4" data-st="none"><b>규범적 평가</b><span>기자 문장 0</span></a>
           <a href="#L5" data-st="same"><b>해법·처방</b><span>● 4곳 동일</span></a>
         </div>
@@ -707,6 +708,13 @@ section[data-screen].on{display:block}
             <button type="button" id="basisAll" aria-pressed="false">취재원 발언까지</button>
           </span>
           <span class="chip" id="basisHint">비교 지표의 기본값입니다</span>
+        </div>
+        <div class="card" style="margin-top:8px;padding:12px 14px">
+          <p style="margin:0;font-size:12.5px;line-height:1.6">
+            <b>갈린 층위 <span id="basisCount">2개</span></b> · <span id="basisDelta" style="color:var(--afs-ink-3)">기자가 직접 쓴 문장만 셀 때</span>
+          </p>
+          <p class="note" style="margin-top:6px">이 토글은 <b>결론이 채점 규칙에 얼마나 의존하는지</b> 보여줍니다.
+          기준을 바꿔도 갈림이 유지되는 층위는 견고하고, 기준에 따라 뒤집히는 층위는 그렇지 않습니다.</p>
         </div>
 
         <!-- 층위 1 -->
@@ -802,7 +810,9 @@ section[data-screen].on{display:block}
             <div class="who"><span class="chip">D신문</span><span class="chip">E일보</span></div>
           </div>
         </div>
-        <p class="note" style="margin-top:9px">2곳(B일보·F신문)은 이 층위에 기자가 직접 쓴 문장이 없었습니다. 취재원 발언까지 세면 <b>3:3</b>이 됩니다 — 위 "세는 기준"을 바꿔 확인할 수 있습니다.</p>
+        <p class="note" style="margin-top:9px" data-basis
+           data-narr="2곳(B일보·F신문)은 이 층위에 기자가 직접 쓴 문장이 없었습니다. 인용된 발언까지 세면 &lt;b&gt;3:3&lt;/b&gt;이 됩니다 — 위 토글을 바꿔 확인할 수 있습니다."
+           data-all="인용된 발언까지 세면 &lt;b&gt;3:3&lt;/b&gt;입니다. B일보·F신문이 인용한 발언이 각각 한쪽으로 붙어 갈림이 2:2에서 3:3으로 늘어납니다 — 매체의 입장이 아니라 인용 분포입니다.">2곳(B일보·F신문)은 이 층위에 기자가 직접 쓴 문장이 없었습니다. 인용된 발언까지 세면 <b>3:3</b>이 됩니다 — 위 토글을 바꿔 확인할 수 있습니다.</p>
 
         <!-- 층위 3 -->
         <h2 class="sec layer" id="L3">
@@ -810,7 +820,9 @@ section[data-screen].on{display:block}
           <span class="chip warn">취재원 발언만 관측</span><span class="chip">기자 문장 0건 / 관측 9건</span><button class="prov p-code" data-book="p-code">AI가 두 번 채점</button>
         </h2>
         <div class="card">
-          <p style="margin:0 0 10px;font-size:13.5px"><b>6곳 모두 기자가 직접 책임을 지목하지 않았습니다.</b> 관측된 책임 귀속 9개 항목은 전부 취재원 발언 인용입니다.</p>
+          <p style="margin:0 0 10px;font-size:13.5px" data-basis
+             data-narr="&lt;b&gt;6곳 모두 기자가 직접 책임을 지목하지 않았습니다.&lt;/b&gt; 관측된 책임 귀속 9개 항목은 전부 취재원 발언 인용입니다. 그래서 기자 문장 기준으로는 이 층위를 비교할 수 없습니다."
+             data-all="&lt;b&gt;인용된 발언까지 세면 3:2로 갈립니다.&lt;/b&gt; 3곳은 입법·정치권을, 2곳은 정부·여당을 책임 주체로 인용했습니다. 단 이것은 &lt;b&gt;매체의 판단이 아니라 인용된 발언의 분포&lt;/b&gt;입니다."><b>6곳 모두 기자가 직접 책임을 지목하지 않았습니다.</b> 관측된 책임 귀속 9개 항목은 전부 취재원 발언 인용입니다. 그래서 기자 문장 기준으로는 이 층위를 비교할 수 없습니다.</p>
           <div class="tscroll">
             <table class="t">
               <caption>취재원이 지목한 책임 주체 — 매체의 판단이 아니라 인용된 발언의 분포입니다</caption>
@@ -891,19 +903,22 @@ section[data-screen].on{display:block}
         <h2 class="sec">층위 조합 표</h2>
         <div class="tscroll">
           <table class="t">
-            <caption>매체 × 다섯 층위. <span class="diff" style="padding:1px 4px">파란 칸</span>은 다수와 다른 계열, <span class="part" style="padding:1px 4px">노란 칸</span>은 취재원 발언만 관측된 칸입니다.</caption>
-            <thead><tr><th>매체</th><th>문제 정의</th><th>원인</th><th>책임</th><th>평가</th><th>해법</th></tr></thead>
+            <caption>매체 × 세 층위. <span class="diff" style="padding:1px 4px">파란 칸</span>은 다수와 다른 계열, &ldquo;—&rdquo;는 기자가 직접 쓴 문장이 없어 관측되지 않은 칸입니다.
+            <b>책임·평가 두 층위는 6곳 전부 &lsquo;인용만&rsquo;이라 열을 뺐습니다</b> — 6줄이 같은 값이면 표로 볼 이유가 없습니다.</caption>
+            <thead><tr><th>매체</th><th>문제 정의</th><th>원인</th><th>해법</th><th class="n">기자 문장 비중</th></tr></thead>
             <tbody>
-              <tr><th>A일보</th><td>법·제도</td><td>제도 설계</td><td class="part">취재원만</td><td class="part">취재원만</td><td>제도적 견제</td></tr>
-              <tr><th>B일보</th><td>법·제도</td><td>—</td><td class="part">취재원만</td><td class="part">취재원만</td><td>제도적 견제</td></tr>
-              <tr><th>C일보</th><td>법·제도</td><td>제도 설계</td><td class="part">취재원만</td><td class="part">취재원만</td><td>제도적 견제</td></tr>
-              <tr><th>D신문</th><td class="diff">정치 갈등</td><td class="diff">정치적 이해</td><td class="part">취재원만</td><td class="part">취재원만</td><td>제도적 견제</td></tr>
-              <tr><th>E일보</th><td class="diff">정치 갈등</td><td class="diff">정치적 이해</td><td class="part">취재원만</td><td class="part">취재원만</td><td>—</td></tr>
-              <tr><th>F신문</th><td>—</td><td>—</td><td class="part">취재원만</td><td class="part">취재원만</td><td>—</td></tr>
+              <tr><th>A일보</th><td>법·제도</td><td>제도 설계</td><td>제도적 견제</td><td class="n">42%</td></tr>
+              <tr><th>B일보</th><td>법·제도</td><td>—</td><td>제도적 견제</td><td class="n">31%</td></tr>
+              <tr><th>C일보</th><td>법·제도</td><td>제도 설계</td><td>제도적 견제</td><td class="n">38%</td></tr>
+              <tr><th>D신문</th><td class="diff">정치 갈등</td><td class="diff">정치적 이해</td><td>제도적 견제</td><td class="n">35%</td></tr>
+              <tr><th>E일보</th><td class="diff">정치 갈등</td><td class="diff">정치적 이해</td><td>—</td><td class="n">22%</td></tr>
+              <tr><th>F신문</th><td>—</td><td>—</td><td>—</td><td class="n"><b>0%</b></td></tr>
             </tbody>
           </table>
         </div>
-        <p class="note">"—"는 <b>미관측</b>입니다. 그 매체가 그렇게 보지 않았다는 뜻이 아니라, 분석 가능한 본문에서 그 설명을 찾지 못했다는 뜻입니다.</p>
+        <p class="note">&ldquo;—&rdquo;는 <b>미관측</b>입니다. 그 매체가 그렇게 보지 않았다는 뜻이 아니라, 분석 가능한 본문에서 그 설명을 찾지 못했다는 뜻입니다.<br />
+        <b>맨 오른쪽 열이 분모입니다.</b> F신문은 기자 문장 비중이 0%라 모든 칸이 &ldquo;—&rdquo;입니다 — 프레임이 없는 매체가 아니라
+        <b>인용으로 기사를 구성하는 매체</b>입니다. 그 문체 자체가 편집 선택입니다.</p>
 
         <details class="fold" style="margin-top:16px">
           <summary>이 화면에 쓰지 않은 지표 <span class="chip warn">변별력 없음</span></summary>
@@ -1289,7 +1304,7 @@ section[data-screen].on{display:block}
               <div class="grid g2" style="margin-top:11px">
                 <div style="background:var(--afs-sunk);border-radius:var(--afs-r-btn);padding:11px 12px">
                   <b style="font-size:11.5px;color:var(--afs-good)">강점</b>
-                  <p style="margin:3px 0 0;font-size:12.5px;line-height:1.6">취재원 발언을 매체의 입장으로 오인하지 않습니다. 이 사이트의 비교 기준과 잘 맞습니다.</p>
+                  <p style="margin:3px 0 0;font-size:12.5px;line-height:1.6">인용된 발언을 그 신문의 입장으로 오인하지 않습니다. 그래서 정치 기사에서 &ldquo;누가 한 말인지&rdquo;에 잘 속지 않습니다.</p>
                 </div>
                 <div style="background:var(--afs-warn-soft);border-radius:var(--afs-r-btn);padding:11px 12px">
                   <b style="font-size:11.5px;color:var(--afs-warn)">놓치기 쉬운 것</b>
@@ -1324,7 +1339,12 @@ section[data-screen].on{display:block}
                 </tbody>
               </table>
             </div>
-            <p class="note">네 축: 본문/제목(B·H) · 발언 구분/통합(M·D) · 구조/사례(O·C) · 유보/결론(R·P)</p>
+            <div class="grid g2" style="margin-top:9px">
+              <div style="background:var(--afs-sunk);border-radius:var(--afs-r-btn);padding:10px 12px;font-size:12px;line-height:1.6"><b>B</b> 제목만 보지 않고 <b>본문까지</b> 읽는 편 &nbsp;↔&nbsp; <b>H</b> 제목에서 대체로 판단하는 편</div>
+              <div style="background:var(--afs-sunk);border-radius:var(--afs-r-btn);padding:10px 12px;font-size:12px;line-height:1.6"><b>M</b> 인용된 말과 기자 말을 <b>구분</b>하는 편 &nbsp;↔&nbsp; <b>D</b> 기사 전체를 한 목소리로 읽는 편</div>
+              <div style="background:var(--afs-sunk);border-radius:var(--afs-r-btn);padding:10px 12px;font-size:12px;line-height:1.6"><b>O</b> 사례보다 <b>구조·배경</b>을 보는 편 &nbsp;↔&nbsp; <b>C</b> 구체적 사례에서 이해하는 편</div>
+              <div style="background:var(--afs-sunk);border-radius:var(--afs-r-btn);padding:10px 12px;font-size:12px;line-height:1.6"><b>R</b> 결론을 <b>미루는</b> 편 &nbsp;↔&nbsp; <b>P</b> 읽고 나서 입장을 정하는 편</div>
+            </div>
           </div>
         </details>
       </section>
@@ -1342,10 +1362,10 @@ section[data-screen].on{display:block}
             <span class="chip brand">밑줄</span><span class="chip">BMOR · 정밀 대조가</span>
             <a href="#/settings" style="font-size:11.5px;color:var(--afs-brand);text-decoration:none;font-weight:700;margin-left:auto">이름·유형 바꾸기 →</a>
           </div>
-          <label class="field"><span>이 의제에 대해</span><textarea placeholder="해법 층위에서 4곳이 같았다는 게 의외였습니다. 진단이 갈리면 처방도 갈릴 거라 생각했는데…"></textarea></label>
+          <label class="field"><span>이 이슈에 대해 — <b>한 줄이면 됩니다</b></span><textarea placeholder="예: 나는 이 사건을 정치 싸움으로만 봤는데, 제도 얘기로 쓴 기사가 있는 게 의외였다."></textarea></label>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <button class="btn">등록</button>
-            <span class="chip">근거를 본 의제와 함께 저장됩니다</span>
+            <span class="chip wrap">내가 어느 화면을 보고 썼는지 함께 표시됩니다 (다른 사람이 근거를 확인할 수 있게)</span>
           </div>
         </div>
 
@@ -1531,6 +1551,13 @@ section[data-screen].on{display:block}
 
         <h2 class="sec" id="agree">두 코더가 얼마나 같게 판정했나</h2>
         <div class="grid g2">
+          <div class="card" style="border-left:3px solid var(--afs-warn)">
+            <div style="display:flex;align-items:baseline;gap:9px"><span style="font-size:34px;font-weight:850;letter-spacing:-.04em;color:var(--afs-warn)">미측정</span></div>
+            <p style="margin:8px 0 0;font-size:12.5px;color:var(--afs-ink-2);line-height:1.65">
+              <b>사람 코더 간 신뢰도</b>입니다. 내용분석에서 요구되는 값은 이것이며, 아직 측정하지 않았습니다.
+              오른쪽 0.89는 사람 코더 간 신뢰도로 읽을 수 없습니다 — 두 코더가 공유하는 것은 프롬프트가 아니라 같은 사전학습입니다.
+            </p>
+          </div>
           <div class="card">
             <div style="display:flex;align-items:baseline;gap:9px"><span style="font-size:34px;font-weight:850;letter-spacing:-.04em;color:var(--afs-brand)">0.89</span><span style="font-size:12.5px;font-weight:750">프롬프트 변형 간 원 일치율 (p<sub>o</sub>)</span></div>
             <p style="margin:8px 0 0;font-size:12.5px;color:var(--afs-ink-2);line-height:1.65">
@@ -1546,13 +1573,6 @@ section[data-screen].on{display:block}
             <p style="margin:8px 0 0;font-size:11.5px;color:var(--afs-ink-3);line-height:1.6;padding-top:8px;border-top:1px dashed var(--afs-rule)">
               <b>판정 단위</b> 기사 25건 × 5층위 = 125칸. <b>주의:</b> 이 값은 취재원 인용 항목까지 포함해 계산했습니다.
               비교 지표에 실제로 쓰는 <b>기자가 직접 쓴 문장만으로 계산한 일치율은 아직 산출하지 않았습니다.</b>
-            </p>
-          </div>
-          <div class="card" style="border-left:3px solid var(--afs-warn)">
-            <div style="display:flex;align-items:baseline;gap:9px"><span style="font-size:34px;font-weight:850;letter-spacing:-.04em;color:var(--afs-warn)">미측정</span></div>
-            <p style="margin:8px 0 0;font-size:12.5px;color:var(--afs-ink-2);line-height:1.65">
-              <b>사람 코더 간 신뢰도</b>입니다. 내용분석에서 요구되는 값은 이것이며, 아직 측정하지 않았습니다.
-              왼쪽 0.89는 사람 코더 간 신뢰도로 읽을 수 없습니다 — 두 코더가 공유하는 것은 프롬프트가 아니라 같은 사전학습입니다.
             </p>
           </div>
         </div>
@@ -1795,15 +1815,26 @@ var bN = document.getElementById('basisNarr'), bA = document.getElementById('bas
 function setBasis(narr){
   bN.setAttribute('aria-pressed', String(narr));
   bA.setAttribute('aria-pressed', String(!narr));
-  bH.textContent = narr ? '비교 지표의 기본값입니다' : '취재원 발언까지 세면 갈림이 늘어납니다 — 매체 입장은 아닙니다';
+  bH.textContent = narr ? '비교 지표의 기본값입니다' : '인용된 발언까지 세면 갈림이 늘어납니다 — 매체 입장은 아닙니다';
   bH.className = narr ? 'chip' : 'chip warn';
-  document.querySelectorAll('#L2 + .duel, [data-screen="framing"] .rail a').forEach(function(){});
   var r2 = document.querySelector('.rail a[href="#L2"] span');
   var r3 = document.querySelector('.rail a[href="#L3"] span');
   var r5 = document.querySelector('.rail a[href="#L5"] span');
   if (r2) r2.textContent = narr ? '● 갈림 2:2' : '● 갈림 3:3';
-  if (r3) r3.textContent = narr ? '○ 취재원만' : '● 갈림 3:2';
+  if (r3) r3.textContent = narr ? '○ 인용만' : '● 갈림 3:2';
   if (r5) r5.textContent = narr ? '● 4곳 동일' : '● 갈림 4:1';
+  var r3a = document.querySelector('.rail a[href="#L3"]');
+  if (r3a) r3a.setAttribute('data-st', narr ? 'src' : 'split');
+  // 레일만 바꾸면 본문과 서로 다른 말을 한다. 같은 기준으로 본문도 갱신한다.
+  document.querySelectorAll('[data-basis]').forEach(function(el){
+    el.innerHTML = narr ? el.dataset.narr : el.dataset.all;
+  });
+  var c = document.getElementById('basisCount'), d = document.getElementById('basisDelta');
+  if (c) c.textContent = narr ? '2개' : '4개';
+  if (d){
+    d.textContent = narr ? '기자가 직접 쓴 문장만 셀 때' : '인용된 발언까지 셀 때 (+2)';
+    d.style.color = narr ? 'var(--afs-ink-3)' : 'var(--afs-warn)';
+  }
 }
 if (bN){ bN.addEventListener('click', function(){ setBasis(true); }); bA.addEventListener('click', function(){ setBasis(false); }); }
 
