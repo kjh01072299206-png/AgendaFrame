@@ -21,6 +21,9 @@ function localSessionId() {
 }
 
 async function ensureSession() {
+  /* 세션 쿠키는 전역 커뮤니티 라우트가 배포된 환경에서만 의미가 있다. 없는 환경에서
+     부르면 404 가 콘솔 오류로 남고, 의제 단위 라우트는 아래 x-af-session 헤더만 쓴다. */
+  if (!COMMUNITY_API_ENABLED) return;
   if (!sessionReady) {
     sessionReady = fetch("/api/community/session", { credentials: "same-origin", cache: "no-store" })
       .then(() => undefined)
