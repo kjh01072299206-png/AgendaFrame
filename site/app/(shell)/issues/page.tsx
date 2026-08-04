@@ -4,8 +4,11 @@ import { DIM_LABEL, DIM_ORDER, deriveDay, type IssueView } from "../../../lib/in
 
 export const metadata = { title: "이슈 탐색 | AgendaFrame" };
 
+/* 매체가 직접 쓴 서술 기준. 취재원 발언까지 합치면 인용을 매체 입장으로 귀속시키게 된다. */
 const kindsOf = (issue: IssueView, dimension: string) =>
-  new Set(issue.outlets.map((outlet) => outlet.lead[dimension]?.family).filter(Boolean)).size;
+  new Set(issue.outlets.map((outlet) => outlet.leadNarrated[dimension]?.family).filter(Boolean)).size;
+const basisOf = (issue: IssueView, dimension: string) =>
+  issue.dimensionBasis.find((row) => row.dimension === dimension) ?? null;
 
 export default function IssueExplorerPage() {
   const day = deriveDay();
@@ -25,18 +28,19 @@ export default function IssueExplorerPage() {
       <section className="afs-card">
         <h2>
           어느 의제가 어느 층위에서 갈렸나
-          <small>칸의 숫자 = 매체별 최빈 계열 종류</small>
+          <small>칸의 숫자 = 매체 서술 기준 최빈 계열 종류</small>
         </h2>
         <div className="afs-in">
           <p className="afs-note">
-            1이면 매체들이 같은 방식으로 설명했고, 2 이상이면 그 층위가 매체를 가른 지점입니다. 빈 칸은 본문에서 그 층위가
-            관측되지 않은 경우입니다.
+            1이면 매체들이 같은 방식으로 설명했고, 2 이상이면 그 층위가 매체를 가른 지점입니다. <b>빈 칸은 매체 자체 서술이
+            관측되지 않은 층위</b>입니다 — 그 층위의 설명이 전부 취재원의 말로 실렸다는 뜻이며, 본문에 아무 설명이 없다는 뜻은
+            아닙니다.
           </p>
           <HeatTable
             rowHead="의제"
             colorFrom={2}
             columns={DIM_ORDER.map((dim) => DIM_LABEL[dim])}
-            caption="의제 × 층위 갈림 정도 — 2 이상만 칠합니다(1은 매체가 모두 같게 설명한 층위)"
+            caption="의제 × 층위 갈림 정도(매체 서술 기준) — 2 이상만 칠합니다(1은 매체가 모두 같게 설명한 층위)"
             rows={day.issues.map((issue) => ({
               label: `${issue.rank}위 ${issue.title}`,
               cells: DIM_ORDER.map((dim) => ({ value: kindsOf(issue, dim) })),
@@ -47,10 +51,16 @@ export default function IssueExplorerPage() {
           {(() => {
             const top = Math.max(...day.issues.map((i) => i.splitDimensions));
             const tied = day.issues.filter((i) => i.splitDimensions === top);
-            if (top === 0) return "이날은 어느 사안에서도 층위별 최빈 계열이 갈리지 않았습니다.";
+            const attributedOnly = day.issues
+              .flatMap((issue) => DIM_ORDER.map((dim) => ({ issue, dim, basis: basisOf(issue, dim) })))
+              .filter((row) => row.basis && row.basis.narratedItems === 0 && row.basis.attributedItems > 0).length;
+            const tail = attributedOnly
+              ? ` 빈 칸 ${attributedOnly}개는 그 층위의 설명이 전부 취재원 발언으로 실린 경우입니다.`
+              : "";
+            if (top === 0) return `이날은 어느 사안에서도 매체 자체 서술이 층위별로 갈리지 않았습니다.${tail}`;
             return tied.length > 1
-              ? `갈린 층위 수가 가장 많은 사안은 ${top}곳으로 ${tied.length}건 동률입니다 — ${tied.map((i) => `${i.rank}위`).join(" · ")}. 이 표만으로는 우열을 정할 수 없습니다.`
-              : `갈린 층위가 가장 많은 사안은 ${tied[0].rank}위(${top}곳)입니다.`;
+              ? `갈린 층위 수가 가장 많은 사안은 ${top}곳으로 ${tied.length}건 동률입니다 — ${tied.map((i) => `${i.rank}위`).join(" · ")}. 이 표만으로는 우열을 정할 수 없습니다.${tail}`
+              : `갈린 층위가 가장 많은 사안은 ${tied[0].rank}위(${top}곳)입니다.${tail}`;
           })()}
         </p>
       </section>

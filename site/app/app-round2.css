@@ -346,8 +346,197 @@
   color: var(--afs-ink-3);
 }
 
+/* 취재원 발언까지 합쳐 셌을 때 늘어나는 몫 — 채우지 않고 테두리로만 둔다 */
+.afs-meter-dots i.ghost {
+  background: transparent;
+  border: 1px dashed var(--afs-ink-3);
+}
+.afs-ghost-num {
+  color: var(--afs-ink-3);
+  font-weight: 500;
+}
+
+/* 출처 줄의 링크는 좁은 화면에서도 24px 이상이어야 한다 (WCAG 2.5.8) */
+.afs-prov a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+}
+
 /* 글 시각은 11px 이라 --muted(2.9:1) 로는 본문 대비 기준에 못 미친다 */
 .afs-feed-head time,
 .afs-feed-replies time {
   color: var(--afs-ink-3);
+}
+
+/* ── 프레이밍 화면 결론 배너 ────────────────────────────────────────────────
+   6,000px 을 스크롤해서 얻던 결론을 페이지 최대 타입으로 맨 위에 올린다.
+   가장 큰 글자가 가장 중요한 정보여야 한다. */
+.afs-conc {
+  padding: 18px 20px 14px;
+}
+.afs-conc-eyebrow {
+  margin: 0 0 6px;
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.afs-conc-h {
+  margin: 0;
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+.afs-conc-h-sub {
+  color: var(--afs-ink-2);
+  font-size: 16px;
+  font-weight: 650;
+}
+.afs-conc-sub {
+  margin: 8px 0 0;
+  color: var(--afs-ink-2);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.afs-conc-chip {
+  display: inline-block;
+  margin: 0 3px;
+  padding: 2px 9px;
+  border: 1px solid var(--afs-brand);
+  border-radius: 999px;
+  color: var(--afs-brand);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.afs-conc-chip:hover {
+  background: var(--afs-soft);
+}
+
+/* 다섯 층위 레일 — 앵커가 있는데 링크가 없어 죽어 있던 이동 장치를 살린다 */
+.afs-rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 6px;
+  margin: 14px 0 2px;
+}
+.afs-rail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid var(--afs-rule);
+  border-radius: var(--afs-r-btn);
+  background: var(--afs-card);
+  color: var(--afs-ink);
+  text-decoration: none;
+}
+.afs-rail-item:hover {
+  border-color: var(--afs-brand);
+}
+.afs-rail-item b {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.afs-rail-item small {
+  color: var(--afs-ink-3);
+  font-size: 11px;
+}
+.afs-rail-item.on {
+  border-left: 3px solid var(--afs-brand);
+  background: var(--afs-soft);
+}
+.afs-rail-item.on small {
+  color: var(--afs-brand);
+  font-weight: 650;
+}
+
+/* 층위 카드로 점프할 때 고정 바(59px) 뒤로 제목이 숨지 않게 한다 */
+.afs-card[id] {
+  scroll-margin-top: 76px;
+}
+
+/* 접기 — "차이가 없음"을 증명하는 3,500px 을 요약 한 줄로 줄인다 */
+.afs-fold {
+  margin-top: 10px;
+}
+.afs-fold > summary {
+  cursor: pointer;
+  padding: 7px 10px;
+  border: 1px solid var(--afs-rule);
+  border-radius: var(--afs-r-btn);
+  background: var(--afs-sunk);
+  color: var(--afs-ink-2);
+  font-size: 12px;
+  font-weight: 650;
+  list-style: none;
+}
+.afs-fold > summary::marker,
+.afs-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.afs-fold > summary::before {
+  content: "▸ ";
+  color: var(--afs-ink-3);
+}
+.afs-fold[open] > summary::before {
+  content: "▾ ";
+}
+.afs-fold > summary:hover {
+  border-color: var(--afs-brand);
+  color: var(--afs-brand);
+}
+
+/* 조합 표 — 산출(시그니처)이 밝고 매체 목록이 물러나야 한다. 이전에는 반대였다. */
+.afs-table-sig td b {
+  font-weight: 650;
+}
+.afs-table-sig .afs-sig-diff {
+  background: var(--afs-soft);
+}
+.afs-table-sig .afs-sig-diff b {
+  color: var(--afs-brand);
+  font-weight: 800;
+}
+.afs-table-sig .afs-sig-diff small {
+  display: block;
+  color: var(--afs-brand);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.afs-table-sig .afs-sig-outlets {
+  color: var(--afs-ink-3);
+  font-size: 12px;
+}
+.afs-cell-sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--afs-ink-3);
+  font-size: 11px;
+  font-weight: 400;
+}
+.afs-chip-link {
+  border-color: var(--afs-brand);
+  color: var(--afs-brand);
+  text-decoration: none;
+}
+
+/* 관측 범위만 다른 칸 — 판단 차이와 구별한다 */
+.afs-table-sig .afs-sig-part b {
+  color: var(--afs-ink-3);
+}
+.afs-table-sig .afs-sig-part small {
+  display: block;
+  color: var(--afs-ink-3);
+  font-size: 10.5px;
+  font-weight: 650;
+}
+/* 상단 이동 버튼은 첫 화면의 유일한 액션이므로 눌릴 수 있게 보여야 한다 */
+.afs-pill-go {
+  border-color: var(--afs-brand);
+  color: var(--afs-brand);
+  font-weight: 700;
 }

@@ -21,6 +21,7 @@ const LIBRARY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 
 export const DEFAULT_SITE_ROOT = LIBRARY_ROOT;
 export const TOP5_FILE_NAME = "top5-2026-07-26.json";
 export const METADATA_CLUSTER_FILE_NAME = "metadata-clusters-2026-07-26.json";
+export const CODER_AGREEMENT_FILE_NAME = "coder-agreement-2026-07-26.json";
 
 function assertObject(value, label) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -281,6 +282,88 @@ function mapRuleProfiles(top5Issue) {
   );
 }
 
+/* ── 코더 간 일치율 ────────────────────────────────────────────────────────
+   내용분석에서 라벨을 공개할 때 함께 물어보는 첫 수치다. 판정 전 두 코더의
+   계열 일치 여부를 그대로 싣고, 코더가 사람이 아니라는 사실도 같이 싣는다. */
+
+function validateCoderAgreement(agreement, articleIds) {
+  const summary = assertObject(agreement.summary, "coder agreement summary");
+  const rows = Array.isArray(agreement.articles) ? agreement.articles : null;
+  if (!rows) throw new Error("coder agreement source must contain an articles array");
+  const rate = summary.mean_dimension_agreement;
+  if (typeof rate !== "number" || rate < 0 || rate > 1) {
+    throw new Error(`coder agreement mean must be a rate between 0 and 1, got ${String(rate)}`);
+  }
+  const covered = new Set(rows.map((row) => row.article_id));
+  const missing = articleIds.filter((articleId) => !covered.has(articleId));
+  if (missing.length) {
+    throw new Error(`coder agreement missing ${missing.length} article(s): ${missing.slice(0, 3).join(", ")}`);
+  }
+  const duplicates = rows.length - covered.size;
+  if (duplicates > 0) throw new Error(`coder agreement has ${duplicates} duplicate article row(s)`);
+}
+
+function coderAgreementMethod(agreement) {
+  const method = agreement.method ?? {};
+  return {
+    schemaVersion: agreement.schema_version ?? null,
+    design: method.design ?? null,
+    coderCount: method.coder_count ?? null,
+    coderKind: method.coder_kind ?? null,
+    coderNote: method.coder_note ?? null,
+    coderLimit: method.coder_limit ?? null,
+    measuredOn: method.measured_on ?? null,
+    adjudication: method.adjudication ?? null,
+    statistic: method.statistic ?? null,
+    dimensions: Array.isArray(method.dimensions) ? [...method.dimensions] : [],
+  };
+}
+
+function coderAgreementSummary(agreement) {
+  const summary = agreement.summary ?? {};
+  return {
+    articleCount: summary.articles_total ?? null,
+    validProfileCount: summary.profiles_valid ?? null,
+    failureCount: summary.failures ?? null,
+    meanDimensionAgreement: summary.mean_dimension_agreement ?? null,
+    perDimensionAgreement: { ...(summary.per_dimension_family_agreement ?? {}) },
+    dominantPolicyFrameAgreement: summary.dominant_policy_frame_agreement ?? null,
+    scopeAgreement: summary.scope_agreement ?? null,
+  };
+}
+
+/** 의제 단위 일치율은 그 의제 기사 행에서 다시 센다. 전체 값을 그대로 재사용하지 않는다. */
+function publicCoderAgreement(agreement, articleIds) {
+  const rows = (agreement.articles ?? []).filter((row) => articleIds.includes(row.article_id));
+  const dimensions = coderAgreementMethod(agreement).dimensions;
+  const perDimension = {};
+  for (const dimension of dimensions) {
+    const scored = rows.filter((row) => typeof row.per_dimension?.[dimension] === "boolean");
+    perDimension[dimension] = scored.length
+      ? Number((scored.filter((row) => row.per_dimension[dimension]).length / scored.length).toFixed(3))
+      : null;
+  }
+  const agreedCounts = rows.map((row) => row.agreed_dimensions ?? 0);
+  const mean = dimensions.length && rows.length
+    ? Number((agreedCounts.reduce((sum, value) => sum + value, 0) / (rows.length * dimensions.length)).toFixed(3))
+    : null;
+  return {
+    method: coderAgreementMethod(agreement),
+    articleCount: rows.length,
+    dimensionCount: dimensions.length,
+    meanDimensionAgreement: mean,
+    perDimensionAgreement: perDimension,
+    fullAgreementArticleCount: rows.filter((row) => (row.agreed_dimensions ?? 0) === dimensions.length).length,
+    articles: rows.map((row) => ({
+      articleId: row.article_id,
+      agreedDimensions: row.agreed_dimensions ?? null,
+      perDimension: { ...(row.per_dimension ?? {}) },
+      policyFrameAgree: row.policy_frame_agree ?? null,
+      scopeAgree: row.scope_agree ?? null,
+    })),
+  };
+}
+
 function publicComparison(top5Issue) {
   const projected = projectPublicValue(top5Issue.comparison ?? {});
   if (projected.method && typeof projected.method === "object") {
@@ -302,7 +385,7 @@ function publicComparison(top5Issue) {
   };
 }
 
-export function buildIssueAnalysisBundle({ top5, metadata, top5Issue, semanticProfiles = [] }) {
+export function buildIssueAnalysisBundle({ top5, metadata, top5Issue, semanticProfiles = [], coderAgreement = null }) {
   assertObject(top5, "top5 source");
   assertObject(metadata, "metadata source");
   assertObject(top5Issue, "top5 issue");
@@ -359,6 +442,7 @@ export function buildIssueAnalysisBundle({ top5, metadata, top5Issue, semanticPr
     semanticProfiles: semanticEntries,
     ruleProfiles: ruleEntries,
     comparison: publicComparison(top5Issue),
+    coderAgreement: coderAgreement ? publicCoderAgreement(coderAgreement, articleIds) : null,
     lineage: sourceLineage({
       top5,
       metadata,
@@ -415,16 +499,26 @@ export function readSemanticProfilesSync(siteRoot, rank) {
 
 export function readInitialFiveSourcesSync({ siteRoot = DEFAULT_SITE_ROOT } = {}) {
   const dataRoot = path.join(siteRoot, "data");
+  const agreementPath = path.join(dataRoot, CODER_AGREEMENT_FILE_NAME);
   return {
     siteRoot,
     top5: readJsonSync(path.join(dataRoot, TOP5_FILE_NAME), TOP5_FILE_NAME),
     metadata: readJsonSync(path.join(dataRoot, METADATA_CLUSTER_FILE_NAME), METADATA_CLUSTER_FILE_NAME),
+    coderAgreement: existsSync(agreementPath) ? readJsonSync(agreementPath, CODER_AGREEMENT_FILE_NAME) : null,
   };
 }
 
-function buildManifestFromSources({ top5, metadata, semanticByRank }) {
+function buildManifestFromSources({ top5, metadata, semanticByRank, coderAgreement = null }) {
   validateTop5(top5);
   validateMetadata(metadata);
+  if (coderAgreement) {
+    const allArticleIds = top5.issues
+      .slice()
+      .sort((left, right) => left.rank - right.rank)
+      .slice(0, 5)
+      .flatMap((issue) => (issue.articleMetadata ?? []).map((article) => article.articleId ?? article.id));
+    validateCoderAgreement(coderAgreement, allArticleIds);
+  }
   const issues = top5.issues
     .slice()
     .sort((left, right) => left.rank - right.rank)
@@ -474,16 +568,20 @@ function buildManifestFromSources({ top5, metadata, semanticByRank }) {
     issueCount: issues.length,
     articleCount: issues.reduce((sum, issue) => sum + issue.articleCount, 0),
     issues,
+    coderAgreement: coderAgreement
+      ? { method: coderAgreementMethod(coderAgreement), summary: coderAgreementSummary(coderAgreement) }
+      : null,
     lineage: {
       top5SchemaVersion: top5.schemaVersion ?? null,
       metadataSchemaVersion: metadata.schema_version ?? null,
       metadataGeneratedAt: metadata.generated_at ?? null,
+      coderAgreementSchemaVersion: coderAgreement?.schema_version ?? null,
     },
   };
 }
 
-export function buildInitialFiveManifest({ top5, metadata, semanticByRank = new Map() }) {
-  const manifest = buildManifestFromSources({ top5, metadata, semanticByRank });
+export function buildInitialFiveManifest({ top5, metadata, semanticByRank = new Map(), coderAgreement = null }) {
+  const manifest = buildManifestFromSources({ top5, metadata, semanticByRank, coderAgreement });
   assertNoForbiddenPublicKeys(manifest);
   return manifest;
 }
@@ -500,6 +598,7 @@ export function buildInitialFive({ siteRoot = DEFAULT_SITE_ROOT } = {}) {
     top5: sources.top5,
     metadata: sources.metadata,
     semanticByRank,
+    coderAgreement: sources.coderAgreement,
   });
   const issuesById = new Map(sources.top5.issues.map((issue) => [issue.issueId, issue]));
   const getIssue = (issueId) => {
@@ -510,6 +609,7 @@ export function buildInitialFive({ siteRoot = DEFAULT_SITE_ROOT } = {}) {
       metadata: sources.metadata,
       top5Issue,
       semanticProfiles: semanticByRank.get(top5Issue.rank) ?? [],
+      coderAgreement: sources.coderAgreement,
     });
   };
   return {
@@ -535,6 +635,7 @@ export function createInitialFiveReader({ siteRoot = DEFAULT_SITE_ROOT } = {}) {
     top5: sources.top5,
     metadata: sources.metadata,
     semanticByRank: new Map(sources.top5.issues.slice(0, 5).map((issue) => [issue.rank, getSemanticProfiles(issue.rank)])),
+    coderAgreement: sources.coderAgreement,
   });
   const issuesById = new Map(sources.top5.issues.map((issue) => [issue.issueId, issue]));
   const getIssue = (issueId) => {
@@ -545,6 +646,7 @@ export function createInitialFiveReader({ siteRoot = DEFAULT_SITE_ROOT } = {}) {
       metadata: sources.metadata,
       top5Issue,
       semanticProfiles: getSemanticProfiles(top5Issue.rank),
+      coderAgreement: sources.coderAgreement,
     });
   };
 

@@ -21,6 +21,7 @@ export {
 } from "./public.mjs";
 
 export {
+  CODER_AGREEMENT_FILE_NAME,
   DEFAULT_SITE_ROOT,
   METADATA_CLUSTER_FILE_NAME,
   TOP5_FILE_NAME,

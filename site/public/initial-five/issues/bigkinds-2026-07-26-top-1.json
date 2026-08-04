@@ -9114,6 +9114,139 @@
       }
     ]
   },
+  "coderAgreement": {
+    "method": {
+      "schemaVersion": "agendaframe.coder-agreement.v1",
+      "design": "독립 이중 코딩 후 판정(adjudication)",
+      "coderCount": 2,
+      "coderKind": "ai",
+      "coderNote": "기사마다 두 코더가 서로 다른 순서로 라벨을 붙였다. 한 코더는 코드북 순서대로, 다른 코더는 근거 문장을 먼저 고르고 라벨을 붙였다.",
+      "coderLimit": "두 코더는 사람이 아니라 서로 다른 프롬프트 각도의 모델 코더다. 사람 코더 간 신뢰도와 같은 값으로 읽을 수 없다.",
+      "measuredOn": "판정 전 두 코더의 frame_family 일치 여부",
+      "adjudication": "불일치한 층위만 판정 단계에서 다시 보고 확정한 뒤, 근거 문장이 본문에 실재하고 라벨을 지지하는지 반박 검증을 거쳤다",
+      "statistic": "단순 일치율(percent agreement). 우연 일치를 보정한 카파 계열 계수는 계열 분포가 편중돼 산출하지 않았다.",
+      "dimensions": [
+        "problem_definition",
+        "causal_attribution",
+        "responsibility_attribution",
+        "evaluation",
+        "treatment_recommendation",
+        "actor_visibility"
+      ]
+    },
+    "articleCount": 7,
+    "dimensionCount": 6,
+    "meanDimensionAgreement": 0.81,
+    "perDimensionAgreement": {
+      "problem_definition": 0.571,
+      "causal_attribution": 1,
+      "responsibility_attribution": 0.714,
+      "evaluation": 1,
+      "treatment_recommendation": 0.571,
+      "actor_visibility": 1
+    },
+    "fullAgreementArticleCount": 1,
+    "articles": [
+      {
+        "articleId": "01100201.20260726113123001",
+        "agreedDimensions": 5,
+        "perDimension": {
+          "problem_definition": true,
+          "causal_attribution": true,
+          "responsibility_attribution": false,
+          "evaluation": true,
+          "treatment_recommendation": true,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": false
+      },
+      {
+        "articleId": "01100401.20260726101915001",
+        "agreedDimensions": 5,
+        "perDimension": {
+          "problem_definition": true,
+          "causal_attribution": true,
+          "responsibility_attribution": true,
+          "evaluation": true,
+          "treatment_recommendation": false,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": true
+      },
+      {
+        "articleId": "01100701.20260726101351001",
+        "agreedDimensions": 5,
+        "perDimension": {
+          "problem_definition": true,
+          "causal_attribution": true,
+          "responsibility_attribution": false,
+          "evaluation": true,
+          "treatment_recommendation": true,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": false
+      },
+      {
+        "articleId": "01100701.20260726110741001",
+        "agreedDimensions": 4,
+        "perDimension": {
+          "problem_definition": false,
+          "causal_attribution": true,
+          "responsibility_attribution": true,
+          "evaluation": true,
+          "treatment_recommendation": false,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": false
+      },
+      {
+        "articleId": "01100801.20260726130958001",
+        "agreedDimensions": 4,
+        "perDimension": {
+          "problem_definition": false,
+          "causal_attribution": true,
+          "responsibility_attribution": true,
+          "evaluation": true,
+          "treatment_recommendation": false,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": true
+      },
+      {
+        "articleId": "01100901.20260726103800001",
+        "agreedDimensions": 5,
+        "perDimension": {
+          "problem_definition": false,
+          "causal_attribution": true,
+          "responsibility_attribution": true,
+          "evaluation": true,
+          "treatment_recommendation": true,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": false
+      },
+      {
+        "articleId": "01101101.20260726104709001",
+        "agreedDimensions": 6,
+        "perDimension": {
+          "problem_definition": true,
+          "causal_attribution": true,
+          "responsibility_attribution": true,
+          "evaluation": true,
+          "treatment_recommendation": true,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": true
+      }
+    ]
+  },
   "lineage": {
     "contractVersion": "agendaframe.initial-five.public.v1",
     "basisDate": "2026-07-26",

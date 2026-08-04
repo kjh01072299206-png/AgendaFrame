@@ -263,7 +263,7 @@ export function Spectrum({
   question: string;
   left: { label: string; articleCount: number };
   right: { label: string; articleCount: number };
-  marks: Array<{ outlet: string; position: number; articleCount: number; both: boolean }>;
+  marks: Array<{ outlet: string; position: number; articleCount: number; both: boolean; narrated?: boolean }>;
   unobserved: string[];
 }) {
   const lane = (test: (p: number) => boolean) => marks.filter((m) => test(m.position));
@@ -294,9 +294,10 @@ export function Spectrum({
         {lanes.map((l) => (
           <ul className={`afs-spectrum-lane afs-spectrum-lane-${l.key}`} key={l.key}>
             {l.items.map((m) => (
-              <li key={m.outlet}>
+              <li key={m.outlet} className={m.narrated === false ? "afs-spectrum-src" : undefined}>
                 {m.outlet}
                 <b className="afs-num">{m.articleCount}</b>
+                {m.narrated === false ? <small title="이 층위에서 매체 자체 서술 없이 취재원 발언으로만 관측">인용</small> : null}
               </li>
             ))}
             {l.items.length === 0 ? <li className="afs-spectrum-empty">해당 매체 없음</li> : null}
@@ -304,7 +305,8 @@ export function Spectrum({
         ))}
       </div>
       <p className="afs-spectrum-foot">
-        가운데는 두 설명을 모두 실은 매체입니다.
+        숫자는 그 매체의 기사 수이고, 가운데는 두 계열을 모두 실은 매체입니다. ‘인용’ 표시는 그 층위에서 매체 자체 서술 없이
+        취재원 발언으로만 관측된 매체입니다.
         {unobserved.length ? ` 본문에서 이 축이 관측되지 않은 매체: ${unobserved.join(" · ")}.` : ""}
       </p>
     </div>
@@ -317,7 +319,8 @@ export function SplitMeter({
   rows,
   caption,
 }: {
-  rows: Array<{ label: string; note?: string; split: number; total: number }>;
+  /** ghost = 취재원 발언까지 합쳐 셌을 때의 값. split 을 넘는 만큼 점선 점으로 덧붙는다. */
+  rows: Array<{ label: string; note?: string; split: number; total: number; ghost?: number }>;
   caption?: string;
 }) {
   return (
@@ -331,15 +334,20 @@ export function SplitMeter({
           <span
             className="afs-meter-dots"
             role="img"
-            aria-label={`${row.total}개 의제 중 ${row.split}개에서 매체가 갈렸습니다`}
+            aria-label={
+              row.ghost != null && row.ghost > row.split
+                ? `${row.total}개 의제 중 매체 서술 기준 ${row.split}개에서 갈렸고, 취재원 발언까지 합치면 ${row.ghost}개입니다`
+                : `${row.total}개 의제 중 ${row.split}개에서 매체가 갈렸습니다`
+            }
           >
             {Array.from({ length: row.total }, (_, i) => (
-              <i key={i} className={i < row.split ? "on" : ""} />
+              <i key={i} className={i < row.split ? "on" : i < (row.ghost ?? 0) ? "ghost" : ""} />
             ))}
           </span>
           <b className="afs-num">
             {row.split}
             <small>/{row.total}</small>
+            {row.ghost != null && row.ghost > row.split ? <small className="afs-ghost-num"> (+{row.ghost - row.split})</small> : null}
           </b>
         </div>
       ))}

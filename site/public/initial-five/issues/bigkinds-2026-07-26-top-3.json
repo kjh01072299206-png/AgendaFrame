@@ -4432,6 +4432,97 @@
       }
     ]
   },
+  "coderAgreement": {
+    "method": {
+      "schemaVersion": "agendaframe.coder-agreement.v1",
+      "design": "독립 이중 코딩 후 판정(adjudication)",
+      "coderCount": 2,
+      "coderKind": "ai",
+      "coderNote": "기사마다 두 코더가 서로 다른 순서로 라벨을 붙였다. 한 코더는 코드북 순서대로, 다른 코더는 근거 문장을 먼저 고르고 라벨을 붙였다.",
+      "coderLimit": "두 코더는 사람이 아니라 서로 다른 프롬프트 각도의 모델 코더다. 사람 코더 간 신뢰도와 같은 값으로 읽을 수 없다.",
+      "measuredOn": "판정 전 두 코더의 frame_family 일치 여부",
+      "adjudication": "불일치한 층위만 판정 단계에서 다시 보고 확정한 뒤, 근거 문장이 본문에 실재하고 라벨을 지지하는지 반박 검증을 거쳤다",
+      "statistic": "단순 일치율(percent agreement). 우연 일치를 보정한 카파 계열 계수는 계열 분포가 편중돼 산출하지 않았다.",
+      "dimensions": [
+        "problem_definition",
+        "causal_attribution",
+        "responsibility_attribution",
+        "evaluation",
+        "treatment_recommendation",
+        "actor_visibility"
+      ]
+    },
+    "articleCount": 4,
+    "dimensionCount": 6,
+    "meanDimensionAgreement": 0.875,
+    "perDimensionAgreement": {
+      "problem_definition": 0.75,
+      "causal_attribution": 1,
+      "responsibility_attribution": 1,
+      "evaluation": 0.5,
+      "treatment_recommendation": 1,
+      "actor_visibility": 1
+    },
+    "fullAgreementArticleCount": 2,
+    "articles": [
+      {
+        "articleId": "01100101.20260726092625001",
+        "agreedDimensions": 4,
+        "perDimension": {
+          "problem_definition": false,
+          "causal_attribution": true,
+          "responsibility_attribution": true,
+          "evaluation": false,
+          "treatment_recommendation": true,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": true
+      },
+      {
+        "articleId": "01100201.20260726074621001",
+        "agreedDimensions": 5,
+        "perDimension": {
+          "problem_definition": true,
+          "causal_attribution": true,
+          "responsibility_attribution": true,
+          "evaluation": false,
+          "treatment_recommendation": true,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": true
+      },
+      {
+        "articleId": "01100611.20260726160027001",
+        "agreedDimensions": 6,
+        "perDimension": {
+          "problem_definition": true,
+          "causal_attribution": true,
+          "responsibility_attribution": true,
+          "evaluation": true,
+          "treatment_recommendation": true,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": true
+      },
+      {
+        "articleId": "01101101.20260726143628001",
+        "agreedDimensions": 6,
+        "perDimension": {
+          "problem_definition": true,
+          "causal_attribution": true,
+          "responsibility_attribution": true,
+          "evaluation": true,
+          "treatment_recommendation": true,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": true
+      }
+    ]
+  },
   "lineage": {
     "contractVersion": "agendaframe.initial-five.public.v1",
     "basisDate": "2026-07-26",

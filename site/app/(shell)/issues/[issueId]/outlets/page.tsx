@@ -1,5 +1,5 @@
 import { HBars, HeatTable, Spectrum, StackBars } from "../../../../charts";
-import { DIM_LABEL, DIM_ORDER, familyLabel, SCOPE_LABEL, VOICE_LABEL } from "../../../../../lib/initial-five/derive";
+import { DIM_LABEL, DIM_ORDER, familyLabel, VOICE_LABEL } from "../../../../../lib/initial-five/derive";
 import { loadIssue } from "../load";
 
 export default async function OutletsPage({ params }: { params: Promise<{ issueId: string }> }) {
@@ -30,13 +30,11 @@ export default async function OutletsPage({ params }: { params: Promise<{ issueI
             />
           </div>
           <p className="afs-foot">
-            축의 양 끝은 표본에서 가장 많이 관측된 두 설명 코드입니다. 매체 위치는 그 매체 기사가 두 코드에 어떻게 배분됐는지의
+            축의 양 끝은 이 층위에서 가장 많이 관측된 두 <b>계열</b>이고, 기사마다 지배 계열이 하나이므로 두 극은 겹치지
+            않습니다(양 극 기사 수의 합 = 이 축에서 관측된 기사 수). 매체 위치는 그 매체 기사가 두 계열에 어떻게 배분됐는지의
             비율이며, 매체의 정치 성향이 아니라 이 사건에서의 서술입니다.
-            {issue.spectrum.nested
-              ? " 한쪽 극이 모든 매체를 포함하므로 이 축은 대립이 아니라 공통 설명 + 추가 설명의 포함 관계입니다."
-              : ""}
-            {issue.spectrum.scopes.length
-              ? ` 축의 패턴 출처: ${issue.spectrum.scopes.map((scope) => SCOPE_LABEL[scope] ?? scope).join(" · ")}.`
+            {issue.spectrum.marks.length
+              ? ` 이 축에서 매체 자체 서술이 확인된 매체는 ${issue.spectrum.narratedOutlets}/${issue.spectrum.marks.length}곳입니다.`
               : ""}
           </p>
         </section>
@@ -114,16 +112,18 @@ export default async function OutletsPage({ params }: { params: Promise<{ issueI
       <div className="afs-grid-2">
         <section className="afs-card">
           <h2>
-            어떤 방식으로 말했나
-            <small>인용 방식 구성</small>
+            설명을 어떤 방식으로 실었나
+            <small>주장 수 기준 · 위 카드와 분모가 다릅니다</small>
           </h2>
           <div className="afs-in">
             <p className="afs-note">
-              직접 인용이 많으면 취재원의 말로 사건을 옮긴 것이고, 기자 서술이 많으면 매체가 직접 설명한 것입니다.
+              직접 인용이 많으면 취재원의 말로 사건을 옮긴 것이고, 기자 서술이 많으면 매체가 직접 설명한 것입니다.{" "}
+              <b>여기 숫자는 다섯 층위에서 코딩된 주장 수</b>이고, 위 ‘취재원의 말을 몇 번 실었나’는 취재원별 인용·전언
+              횟수입니다 — 분모가 달라 두 숫자는 일치하지 않습니다.
             </p>
             <StackBars
               keys={voiceKeys}
-              caption="매체별 인용 방식 (본문 근거 건수)"
+              caption="매체별 인용 방식 — 분모는 프레임 항목(주장) 수이며 본문 근거 문장 수와 다르다"
               rows={issue.outlets.map((outlet) => ({
                 label: outlet.outlet,
                 parts: Object.fromEntries(outlet.voices.map((voice) => [voice.key, voice.count])),
@@ -135,7 +135,7 @@ export default async function OutletsPage({ params }: { params: Promise<{ issueI
         <section className="afs-card">
           <h3>
             직접 인용 대 간접 전언
-            <small>회</small>
+            <small>취재원 인용 횟수 기준</small>
           </h3>
           <div className="afs-in">
             <StackBars

@@ -1,5 +1,6 @@
 import { initialFiveManifest } from "../../lib/initial-five/artifacts";
 import { deriveDay } from "../../lib/initial-five/derive";
+import { ScrollTop } from "./scroll-top";
 import { ShellSide, ShellTop, type ShellIssue } from "./shell-chrome";
 
 export default function ShellLayout({ children }: { children: React.ReactNode }) {
@@ -11,6 +12,7 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="afs-shell">
+      <ScrollTop />
       <a className="afs-skip" href="#afs-main">
         본문으로 건너뛰기
       </a>

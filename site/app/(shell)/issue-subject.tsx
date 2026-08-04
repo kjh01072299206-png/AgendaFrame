@@ -49,7 +49,9 @@ export function IssueSubject({
           <span className="afs-chip afs-num">기사 {articleCount}건</span>
           <span className="afs-chip afs-num">매체 {outletCount}곳</span>
           <span className="afs-chip afs-num">본문 근거 {evidenceCount}건</span>
-          <span className="afs-chip afs-chip-good afs-num">다섯 층위 중 {splitDimensions}곳에서 갈림</span>
+          <span className="afs-chip afs-chip-good afs-num">
+            매체 서술 기준 다섯 층위 중 {splitDimensions}곳에서 갈림
+          </span>
         </div>
       </section>
 

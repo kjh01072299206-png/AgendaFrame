@@ -122,26 +122,38 @@ function tally(source: Iterable<string | undefined>, labels: Record<string, stri
     .map(([key, count]) => ({ key, label: labels[key] ?? key, count }));
 }
 
-/** 같은 기사·같은 층위 안에서 문장·위치·지문까지 동일한 항목은 한 번만 센다.
- *  코딩 병합 단계가 남긴 완전 중복(전체 항목의 9.5%, 1위 의제 23%)이
- *  '취재원 발언 N건'·'직접 인용 N건' 같은 집계를 전부 부풀리는 것을 막는다. */
-function dedupItems<T extends { public_paraphrase?: string; evidence?: { locator?: { paragraph?: number; sentence?: number }; sentence_sha256?: string } }>(
-  items: T[],
-): T[] {
-  const seen = new Set<string>();
-  return items.filter((item) => {
-    const claimId = (item as { claim_id?: string }).claim_id ?? "";
-    const key = [
-      claimId,
-      item.public_paraphrase ?? "",
-      item.evidence?.locator?.paragraph ?? "",
-      item.evidence?.locator?.sentence ?? "",
-      item.evidence?.sentence_sha256 ?? "",
-    ].join("|");
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+/** 분석의 단위는 '주장(claim)'이고, 한 주장에는 근거 문장이 여러 개 붙을 수 있다.
+ *  원본 JSON 은 그것을 문장마다 한 행으로 펼쳐 담기 때문에, 행을 그대로 세면
+ *  '설명 N건'이 근거 문장 수만큼 부풀어 오른다(이 표본에서 171행 → 실제 주장 115개).
+ *  주장 단위로 접고, 근거 문장 수와 문장 번호를 그 주장에 딸린 정보로 남긴다.
+ *  같은 주장이 같은 문장까지 그대로 중복된 완전 중복(9.5%)도 여기서 함께 사라진다. */
+type ClaimSource = {
+  claim_id?: string;
+  public_paraphrase?: string;
+  evidence?: { locator?: { paragraph?: number; sentence?: number }; sentence_sha256?: string };
+};
+type ClaimItem<T> = T & { evidenceSentences: number; sentences: number[] };
+
+function claimItems<T extends ClaimSource>(items: T[]): Array<ClaimItem<T>> {
+  const order: string[] = [];
+  const map = new Map<string, ClaimItem<T>>();
+  for (const item of items) {
+    const key = item.claim_id ?? `paraphrase:${item.public_paraphrase ?? ""}`;
+    const sentence = item.evidence?.locator?.sentence;
+    const slot = map.get(key);
+    if (!slot) {
+      order.push(key);
+      map.set(key, {
+        ...item,
+        evidenceSentences: 1,
+        sentences: typeof sentence === "number" ? [sentence] : [],
+      });
+      continue;
+    }
+    slot.evidenceSentences += 1;
+    if (typeof sentence === "number" && !slot.sentences.includes(sentence)) slot.sentences.push(sentence);
+  }
+  return order.map((key) => map.get(key) as ClaimItem<T>);
 }
 
 // ── 기사 단위 ──────────────────────────────────────────────────────────────
@@ -158,6 +170,10 @@ export interface ArticleView {
   families: Record<string, string | undefined>;
   /** 관측된 모든 항목의 계열 — 층위별 첫 항목만 세는 families 와 분모가 다르다 */
   familyItems: string[];
+  /** voice.kind = journalist_narration 항목만으로 뽑은 계열. 매체가 직접 쓴 설명이다. */
+  narratedFamilies: Record<string, string | undefined>;
+  /** 층위별 기자 서술 항목 수와 취재원 발언 항목 수 */
+  voiceBasis: Record<string, { narrated: number; attributed: number }>;
   /** 차원별 관측 상태 */
   statuses: Record<string, string | undefined>;
   voices: Counter;
@@ -176,11 +192,18 @@ function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
     const statuses: Record<string, string | undefined> = {};
     const voiceKinds: Array<string | undefined> = [];
     const familyItems: string[] = [];
+    const narratedFamilies: Record<string, string | undefined> = {};
+    const voiceBasis: Record<string, { narrated: number; attributed: number }> = {};
     for (const dim of DIM_ORDER) {
       const node = dims[dim];
-      const items = dedupItems(node?.items ?? []);
+      const items = claimItems(node?.items ?? []);
       statuses[dim] = node?.status;
       families[dim] = items[0]?.frame_family;
+      // 취재원의 말로 실린 설명을 매체의 서술로 합산하지 않는다 — 프레이밍 화면과 같은 규칙을
+      // 대표 계열에도 적용한다. 이 분리 없이 세면 인용을 매체 입장으로 귀속시키게 된다.
+      const narrated = items.filter((item) => item.voice?.kind === "journalist_narration");
+      narratedFamilies[dim] = narrated[0]?.frame_family;
+      voiceBasis[dim] = { narrated: narrated.length, attributed: items.length - narrated.length };
       for (const item of items) {
         voiceKinds.push(item.voice?.kind);
         if (item.frame_family) familyItems.push(item.frame_family);
@@ -197,6 +220,8 @@ function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
       evidenceCount: entry?.engine.evidenceCount ?? 0,
       families,
       familyItems,
+      narratedFamilies,
+      voiceBasis,
       statuses,
       voices: tally(voiceKinds, VOICE_LABEL),
       roles: (() => {
@@ -225,6 +250,8 @@ export interface OutletView {
   families: Record<string, string[]>;
   /** 차원별 최빈 계열. 기사가 1건이면 그 값이고, 동률이면 tied 가 참이다. */
   lead: Record<string, { family?: string; tied: boolean }>;
+  /** 매체 서술만으로 본 대표 계열 — 매체 간 비교에 쓰는 값이다 */
+  leadNarrated: Record<string, { family?: string; tied: boolean }>;
   roles: Counter;
   voices: Counter;
   directQuotes: number;
@@ -255,9 +282,11 @@ function outletViews(articles: ArticleView[]): OutletView[] {
     .map(([outlet, list]) => {
       const families: Record<string, string[]> = {};
       const lead: Record<string, { family?: string; tied: boolean }> = {};
+      const leadNarrated: Record<string, { family?: string; tied: boolean }> = {};
       for (const dim of DIM_ORDER) {
         families[dim] = [...new Set(list.map((a) => a.families[dim]).filter(Boolean) as string[])];
         lead[dim] = modeFamily(list.map((a) => a.families[dim]));
+        leadNarrated[dim] = modeFamily(list.map((a) => a.narratedFamilies[dim]));
       }
       const byRole = new Map<string, number>();
       for (const a of list) for (const r of a.roles) byRole.set(r.label, (byRole.get(r.label) ?? 0) + r.count);
@@ -270,6 +299,7 @@ function outletViews(articles: ArticleView[]): OutletView[] {
         articleCount: list.length,
         families,
         lead,
+        leadNarrated,
         roles,
         voices: tally(list.flatMap((a) => a.voices.flatMap((v) => Array(v.count).fill(v.key) as string[])), VOICE_LABEL),
         directQuotes: list.reduce((s, a) => s + a.directQuotes, 0),
@@ -294,98 +324,83 @@ export interface SpectrumView {
   left: SpectrumPole;
   right: SpectrumPole;
   /** 0(왼쪽 극) ~ 1(오른쪽 극) */
-  marks: Array<{ outlet: string; position: number; articleCount: number; both: boolean }>;
+  marks: Array<{ outlet: string; position: number; articleCount: number; both: boolean; narrated: boolean }>;
   unobserved: string[];
   patternCount: number;
   /** 한쪽 극이 모든 매체를 포함한다 = 대립이 아니라 포함 관계 */
   nested: boolean;
   scopes: string[];
-}
-
-/** 규칙 기반 축의 패턴 행. code 는 타입 선언에 없어 여기서 좁힌다. */
-interface RawPattern {
-  code?: string;
-  public_paraphrase?: string;
-  article_count?: number;
-  article_ids?: string[];
-  voice_scope?: string;
+  /** 이 축에서 매체가 직접 쓴 서술이 있는 매체 수 / 전체 매체 수 */
+  narratedOutlets: number;
 }
 
 function spectrum(bundle: IssueAnalysisBundle, articles: ArticleView[], dimension: string): SpectrumView | null {
-  const axis = (bundle.comparison.data.comparison_axes ?? []).find((a) => a.dimension === dimension);
-  const raw = ((axis?.patterns ?? []) as RawPattern[]).filter((p) => (p.article_ids ?? []).length > 0);
-
-  // 같은 code 가 voice_scope 만 달라 여러 행으로 들어온다. 병합하지 않으면
-  //  · 동일 프레임이 축의 양 끝에 놓이고,
-  //  · 상위 2행만 극으로 쓰는 탓에 3번째 행의 매체가 반대편에 그려진다.
-  const merged = new Map<
-    string,
-    { code: string; label: string; ids: Set<string>; scopes: Set<string>; bestCount: number; bestNarration: boolean }
-  >();
-  for (const p of raw) {
-    const code = p.code ?? p.public_paraphrase ?? "";
-    const slot =
-      merged.get(code) ??
-      { code, label: p.public_paraphrase ?? "설명", ids: new Set<string>(), scopes: new Set<string>(), bestCount: -1, bestNarration: false };
-    for (const id of p.article_ids ?? []) slot.ids.add(id);
-    if (p.voice_scope) slot.scopes.add(p.voice_scope);
-    // 라벨은 가장 많은 기사를 대표하는 행의 의역으로 고른다(동수면 매체 서술 우선).
-    // 길이로 고르면 '기타 취재원의 발언…' 접두어가 붙은 취재원 행이 항상 이겨서,
-    // 기자 서술이 다수인 극에도 취재원 발언 문구가 라벨로 남는다.
-    const rowCount = (p.article_ids ?? []).length;
-    const rowNarration = p.voice_scope === "outlet_narration";
-    if (rowCount > slot.bestCount || (rowCount === slot.bestCount && rowNarration && !slot.bestNarration)) {
-      slot.label = p.public_paraphrase ?? slot.label;
-      slot.bestCount = rowCount;
-      slot.bestNarration = rowNarration;
+  /* 축은 이 분석(claude 판정본)에서만 만든다. 공개 JSON 의 comparison_axes 는 다른 세대라
+     라벨('기타 취재원의 발언·설명에서…')이 이 분석의 취재원 표와 어긋나고, 한 기사가 양쪽
+     패턴에 동시에 들어가 극별 기사 수 합이 기사 수를 넘는 문제가 있었다.
+     여기서는 기사마다 지배 계열이 하나이므로 두 극이 겹치지 않는다. */
+  const byFamily = new Map<string, { articles: ArticleView[]; paraphrase: string | null }>();
+  const paraphraseOf = new Map<string, string>();
+  for (const entry of bundle.semanticProfiles) {
+    for (const item of claimItems(entry.profile?.dimensions?.[dimension]?.items ?? [])) {
+      const family = item.frame_family;
+      if (!family || paraphraseOf.has(family)) continue;
+      if (item.public_paraphrase) paraphraseOf.set(family, item.public_paraphrase);
     }
-    merged.set(code, slot);
   }
-  // code 가 한 종류면 대립이 아니라 공통점이다 — 축을 세우지 않는다.
-  if (merged.size < 2) return null;
+  for (const article of articles) {
+    const family = article.families[dimension];
+    if (!family) continue;
+    const slot = byFamily.get(family) ?? { articles: [], paraphrase: paraphraseOf.get(family) ?? null };
+    slot.articles.push(article);
+    byFamily.set(family, slot);
+  }
+  // 계열이 한 종류면 대립이 아니라 공통점이다 — 축을 세우지 않는다.
+  if (byFamily.size < 2) return null;
 
-  const outletOf = new Map(articles.map((a) => [a.articleId, a.outlet]));
-  const ranked = [...merged.values()].sort((a, b) => b.ids.size - a.ids.size);
-  const [a, b] = ranked;
-  const outletsOf = (ids: Set<string>) => [...new Set([...ids].map((id) => outletOf.get(id)).filter(Boolean) as string[])];
-  const leftOutlets = outletsOf(a.ids);
-  const rightOutlets = outletsOf(b.ids);
-  const allOutlets = [...new Set(articles.map((x) => x.outlet))];
+  const ranked = [...byFamily].sort((x, y) => y[1].articles.length - x[1].articles.length || x[0].localeCompare(y[0]));
+  const [[leftFamily, leftSlot], [rightFamily, rightSlot]] = ranked;
+  const label = (family: string, slot: { paraphrase: string | null }) =>
+    slot.paraphrase ? `${familyLabel(family)} — ${slot.paraphrase}` : familyLabel(family);
+  const outletsOf = (rows: ArticleView[]) => [...new Set(rows.map((row) => row.outlet))];
+  const allOutlets = [...new Set(articles.map((row) => row.outlet))];
 
   const marks: SpectrumView["marks"] = [];
   for (const outlet of allOutlets) {
-    const own = articles.filter((x) => x.outlet === outlet).map((x) => x.articleId);
-    const l = own.filter((id) => a.ids.has(id)).length;
-    const r = own.filter((id) => b.ids.has(id)).length;
+    const own = articles.filter((row) => row.outlet === outlet);
+    const l = own.filter((row) => row.families[dimension] === leftFamily).length;
+    const r = own.filter((row) => row.families[dimension] === rightFamily).length;
     if (!l && !r) continue;
     marks.push({
       outlet,
-      // 실제 기사 배분으로 위치를 낸다 — 고정 3지점은 없는 정도를 암시한다
-      position: l + r === 0 ? 0.5 : r / (l + r),
+      position: r / (l + r),
       articleCount: l + r,
       both: l > 0 && r > 0,
+      narrated: own.some((row) => (row.voiceBasis[dimension]?.narrated ?? 0) > 0),
     });
   }
-  const covered = new Set(marks.map((m) => m.outlet));
+  const covered = new Set(marks.map((mark) => mark.outlet));
 
   return {
     dimension,
     question: DIM_QUESTION[dimension] ?? DIM_LABEL[dimension] ?? dimension,
-    left: { label: a.label, articleCount: a.ids.size, outlets: leftOutlets },
-    right: { label: b.label, articleCount: b.ids.size, outlets: rightOutlets },
+    left: { label: label(leftFamily, leftSlot), articleCount: leftSlot.articles.length, outlets: outletsOf(leftSlot.articles) },
+    right: { label: label(rightFamily, rightSlot), articleCount: rightSlot.articles.length, outlets: outletsOf(rightSlot.articles) },
     marks: marks.sort((x, y) => x.position - y.position || x.outlet.localeCompare(y.outlet)),
-    unobserved: allOutlets.filter((o) => !covered.has(o)),
-    patternCount: merged.size,
-    // 한쪽 극이 매체 전부를 포함하면 대립이 아니라 포함 관계다
-    nested: leftOutlets.length === allOutlets.length || rightOutlets.length === allOutlets.length,
-    scopes: [...new Set([...a.scopes, ...b.scopes])],
+    unobserved: allOutlets.filter((outlet) => !covered.has(outlet)),
+    patternCount: byFamily.size,
+    // 기사마다 지배 계열이 하나이므로 두 극은 겹치지 않는다
+    nested: false,
+    scopes: [],
+    narratedOutlets: marks.filter((mark) => mark.narrated).length,
   };
 }
 
-// ── 층위 단위 ──────────────────────────────────────────────────────────────
 
 export interface LayerItem {
   paraphrase: string;
+  /** 이 주장에 붙은 근거 문장 수 */
+  evidenceSentences?: number;
   family?: string;
   voiceKind?: string;
   outlet: string;
@@ -404,8 +419,14 @@ export interface LayerView {
   attributed: LayerItem[];
   /** status = not_observed 인 기사 수 */
   notObserved: number;
-  /** 매체별 대표 계열 종류 수. 2 이상이면 이 층위에서 매체가 갈렸다. */
+  /** 매체 서술만으로 본 매체별 대표 계열 종류 수. 2 이상이면 이 층위에서 매체가 갈렸다. */
   outletKinds: number;
+  /** 취재원 발언까지 합쳐 세면 몇 종인지 */
+  outletKindsWithSources: number;
+  /** 이 층위에서 매체 자체 서술이 확인된 매체 수 */
+  narratedOutletCount: number;
+  /** 이 의제 참여 매체 수 (분모) */
+  outletCount: number;
   /** 규칙 기반 비교축이 잡은 패턴 (매체 서술만 집계하므로 위 두 묶음과 수가 다르다) */
   patterns: AxisView["patterns"];
 }
@@ -426,27 +447,35 @@ function layerViews(bundle: IssueAnalysisBundle, articles: ArticleView[], axes: 
         continue;
       }
       const bucket = node.status === "source_attributed" ? attributed : narrated;
-      for (const item of dedupItems(node.items ?? [])) {
-        const locator = item.evidence?.locator;
+      for (const item of claimItems(node.items ?? [])) {
         bucket.push({
           paraphrase: item.public_paraphrase ?? "",
           family: item.frame_family,
           voiceKind: item.voice?.kind,
           outlet: outletOf.get(entry.articleId) ?? "미상",
           articleId: entry.articleId,
-          locator:
-            locator?.paragraph !== undefined
-              ? `문단 ${locator.paragraph}${locator.sentence !== undefined ? ` · 문장 ${locator.sentence}` : ""}`
-              : null,
+          // 문단 번호는 이 세대 산출물에서 전 항목 1이라 싣지 않는다. 문장 번호만 근거가 된다.
+          locator: item.sentences.length
+            ? `문장 ${item.sentences.join("·")}`
+            : null,
+          evidenceSentences: item.evidenceSentences,
           hash: item.evidence?.sentence_sha256 ?? null,
         });
       }
     }
+    /* 대표 지표는 매체가 직접 쓴 서술만으로 센다. 혼합 기준으로 세면 취재원 인용이
+       매체의 입장으로 귀속돼, 같은 빌드의 개요·리포트와 반대되는 배지가 붙는다. */
     const kinds = new Set(
+      outletList
+        .map((outlet) => modeFamily(narrated.filter((i) => i.outlet === outlet).map((i) => i.family)).family)
+        .filter(Boolean) as string[],
+    );
+    const kindsWithSources = new Set(
       outletList
         .map((outlet) => modeFamily([...narrated, ...attributed].filter((i) => i.outlet === outlet).map((i) => i.family)).family)
         .filter(Boolean) as string[],
     );
+    const narratedOutletCount = outletList.filter((outlet) => narrated.some((i) => i.outlet === outlet)).length;
     return {
       dimension: dim,
       label: DIM_LABEL[dim],
@@ -455,6 +484,9 @@ function layerViews(bundle: IssueAnalysisBundle, articles: ArticleView[], axes: 
       attributed,
       notObserved,
       outletKinds: kinds.size,
+      outletKindsWithSources: kindsWithSources.size,
+      narratedOutletCount,
+      outletCount: outletList.length,
       patterns: axes.find((axis) => axis.dimension === dim)?.patterns ?? [],
     };
   });
@@ -474,17 +506,20 @@ export interface FrameCluster {
   articleIds: string[];
   outlets: string[];
   count: number;
-  /** 가장 큰 군집과 값이 다른 층위 */
+  /** 가장 큰 군집과 값이 다른 층위 (양쪽 모두 관측된 경우만) */
   differsAt: string[];
+  /** 한쪽만 관측된 층위 — 판단 차이가 아니라 관측 차이다 */
+  partialAt: string[];
 }
 
-function frameClusters(articles: ArticleView[]): FrameCluster[] {
+function frameClusters(articles: ArticleView[], basis: "all" | "narrated" = "all"): FrameCluster[] {
   const groups = new Map<string, FrameCluster>();
   for (const article of articles) {
     const signature: Record<string, string | undefined> = {};
-    for (const dim of DIM_ORDER) signature[dim] = article.families[dim];
+    for (const dim of DIM_ORDER)
+      signature[dim] = basis === "narrated" ? article.narratedFamilies[dim] : article.families[dim];
     const key = DIM_ORDER.map((dim) => signature[dim] ?? "-").join("|");
-    const slot = groups.get(key) ?? { key, signature, articleIds: [], outlets: [], count: 0, differsAt: [] };
+    const slot = groups.get(key) ?? { key, signature, articleIds: [], outlets: [], count: 0, differsAt: [], partialAt: [] };
     slot.articleIds.push(article.articleId);
     if (!slot.outlets.includes(article.outlet)) slot.outlets.push(article.outlet);
     slot.count += 1;
@@ -493,8 +528,21 @@ function frameClusters(articles: ArticleView[]): FrameCluster[] {
   const sorted = [...groups.values()].sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
   const base = sorted[0];
   for (const cluster of sorted) {
+    // 양쪽 모두 관측된 층위에서만 '다르다'고 센다. 한쪽이 미관측인 칸은 판단이 달랐다는
+    // 증거가 아니라 근거를 찾지 못한 칸이므로, 별도로 partialAt 에 모은다.
     cluster.differsAt = base
-      ? DIM_ORDER.filter((dim) => cluster.signature[dim] !== base.signature[dim])
+      ? DIM_ORDER.filter(
+          (dim) =>
+            base.signature[dim] !== undefined &&
+            cluster.signature[dim] !== undefined &&
+            cluster.signature[dim] !== base.signature[dim],
+        )
+      : [];
+    cluster.partialAt = base
+      ? DIM_ORDER.filter(
+          (dim) =>
+            (base.signature[dim] === undefined) !== (cluster.signature[dim] === undefined),
+        )
       : [];
   }
   return sorted;
@@ -525,8 +573,10 @@ export interface IssueView {
   sourceContext: string | null;
   commonSubjects: string[];
   clusters: Array<{ label: string; description: string; articleCount: number; outlets: string[] }>;
-  /** 5-튜플로 귀납 도출한 프레임 군집. clusters(별도 요약)와 출처가 다르다. */
+  /** 5-튜플로 귀납 도출한 조합. 취재원 발언까지 포함한 지배 계열 기준. */
   frameClusters: FrameCluster[];
+  /** 매체가 직접 쓴 서술만으로 다시 묶은 조합 — 매체 간 비교에 쓸 수 있는 기준 */
+  narratedClusters: FrameCluster[];
   articles: ArticleView[];
   outlets: OutletView[];
   axes: AxisView[];
@@ -562,6 +612,17 @@ export interface IssueView {
     evidenceStorage: string | null;
     limitations: string[];
   };
+  /** 판정 전 두 코더의 계열 일치율. 이 의제 기사에서 다시 센 값이다. */
+  agreement: {
+    articleCount: number;
+    dimensionCount: number;
+    mean: number | null;
+    perDimension: Array<{ dimension: string; rate: number | null }>;
+    fullAgreementArticleCount: number;
+    coderKind: string | null;
+    coderLimit: string | null;
+    statistic: string | null;
+  } | null;
   spectrum: SpectrumView | null;
   /** 다섯 층위 각각의 쟁점 축. 패턴이 하나뿐이면 축이 서지 않으므로 빠진다. */
   spectra: SpectrumView[];
@@ -577,7 +638,18 @@ export interface IssueView {
   sourceCaution: string | null;
   notObservedStatements: string[];
   /** 매체 간 값이 갈린 차원 수 */
+  /** 매체 서술 기준으로 갈린 층위 수. 화면의 대표 지표. */
   splitDimensions: number;
+  /** 취재원 발언까지 합쳐 세면 몇 곳인지 — 분리해서 함께 보여 준다 */
+  splitDimensionsWithSources: number;
+  /** 층위별 근거 성질: 기자 서술 항목 수 / 취재원 발언 항목 수 / 매체 대표 계열 종류 */
+  dimensionBasis: Array<{
+    dimension: string;
+    narratedItems: number;
+    attributedItems: number;
+    narratedKinds: number;
+    allKinds: number;
+  }>;
   sections: Counter;
   evidenceTotal: number;
   succeeded: number;
@@ -625,6 +697,7 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
 
   const layers = layerViews(bundle, articles, axes);
   const clusters = frameClusters(articles);
+  const narratedClusters = frameClusters(articles, "narrated");
   const method = (data.method ?? {}) as Record<string, unknown>;
   const dominance = (method.source_dominance_check ?? {}) as Record<string, unknown>;
   const sampleRaw = (data.sample ?? {}) as Record<string, unknown>;
@@ -677,18 +750,39 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
     limitations: Array.isArray(engine.limitations) ? (engine.limitations as string[]) : [],
   };
 
+  const rawAgreement = bundle.coderAgreement ?? null;
+  const agreement = rawAgreement
+    ? {
+        articleCount: rawAgreement.articleCount ?? 0,
+        dimensionCount: rawAgreement.dimensionCount ?? 0,
+        mean: rawAgreement.meanDimensionAgreement ?? null,
+        perDimension: Object.entries(rawAgreement.perDimensionAgreement ?? {}).map(([dimension, rate]) => ({
+          dimension,
+          rate: typeof rate === "number" ? rate : null,
+        })),
+        fullAgreementArticleCount: rawAgreement.fullAgreementArticleCount ?? 0,
+        coderKind: rawAgreement.method?.coderKind ?? null,
+        coderLimit: rawAgreement.method?.coderLimit ?? null,
+        statistic: rawAgreement.method?.statistic ?? null,
+      }
+    : null;
+
   const spectra = DIM_ORDER.map((dim) => spectrum(bundle, articles, dim)).filter(Boolean) as SpectrumView[];
-  const kindsPerDim = DIM_ORDER.map((dim) => ({
+  const dimensionBasis = DIM_ORDER.map((dim) => ({
     dimension: dim,
-    kinds: new Set(outlets.map((o) => o.lead[dim]?.family).filter(Boolean)).size,
-  })).sort((a, b) => b.kinds - a.kinds);
+    narratedItems: articles.reduce((sum, a) => sum + (a.voiceBasis[dim]?.narrated ?? 0), 0),
+    attributedItems: articles.reduce((sum, a) => sum + (a.voiceBasis[dim]?.attributed ?? 0), 0),
+    narratedKinds: new Set(outlets.map((o) => o.leadNarrated[dim]?.family).filter(Boolean)).size,
+    allKinds: new Set(outlets.map((o) => o.lead[dim]?.family).filter(Boolean)).size,
+  }));
+  // 대표 지표는 매체 서술 기준이다. 취재원 발언만 있는 층위는 매체를 갈랐다고 말할 수 없다.
+  const kindsPerDim = dimensionBasis
+    .map((row) => ({ dimension: row.dimension, kinds: row.narratedKinds }))
+    .sort((a, b) => b.kinds - a.kinds);
   const mostSplit = kindsPerDim[0]?.kinds >= 2 ? kindsPerDim[0] : null;
 
-  let splitDimensions = 0;
-  for (const dim of DIM_ORDER) {
-    const seen = new Set(outlets.map((o) => o.lead[dim]?.family).filter(Boolean));
-    if (seen.size >= 2) splitDimensions += 1;
-  }
+  const splitDimensions = dimensionBasis.filter((row) => row.narratedKinds >= 2).length;
+  const splitDimensionsWithSources = dimensionBasis.filter((row) => row.allKinds >= 2).length;
 
   return {
     issueId: bundle.issue.issueId,
@@ -711,12 +805,14 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
     articles,
     outlets,
     frameClusters: clusters,
+    narratedClusters,
     axes,
     layers,
     mostSplit,
     comparisonEngine,
     sample,
     provenance,
+    agreement,
     spectrum:
       spectra.find((s) => s.dimension === mostSplit?.dimension) ??
       spectra.find((s) => s.dimension === "problem_definition") ??
@@ -736,6 +832,8 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
     sourceCaution: data.source_lens?.caution ?? null,
     notObservedStatements: data.not_observed_statements ?? [],
     splitDimensions,
+    splitDimensionsWithSources,
+    dimensionBasis,
     sections: tally(articles.map((a) => a.section ?? undefined), {}),
     evidenceTotal: articles.reduce((s, a) => s + a.evidenceCount, 0),
     succeeded: bundle.analysisStatus?.semantic?.succeededArticleCount ?? 0,
@@ -747,10 +845,16 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
 export interface LayerPower {
   key: string;
   label: string;
-  /** 매체 간 값이 갈린 의제 수 (0~5) */
+  /** 매체 서술 기준으로 값이 갈린 의제 수 (0~5) — 대표 지표 */
   split: number;
+  /** 취재원 발언까지 합쳐 세면 몇 개 의제인지 */
+  splitWithSources: number;
   total: number;
   note: string;
+  /** 이 층위에서 매체가 직접 쓴 항목 수 (하루 전체) */
+  narratedItems: number;
+  /** 이 층위에서 취재원의 말로 실린 항목 수 (하루 전체) */
+  attributedItems: number;
 }
 
 export interface DayView {
@@ -799,40 +903,60 @@ export function deriveDay(): DayView {
 
   // 층위별 변별력 — 각 층위가 5개 의제 중 몇 개에서 매체를 갈랐는가.
   // "갈랐다" = 그 층위에서 매체별 대표값이 2종 이상 관측됐다.
-  const layerDefs: Array<{ key: string; label: string; note: string; pick: (issue: IssueView) => Set<string> }> = [
+  type LayerDef = {
+    key: string;
+    label: string;
+    note: string;
+    /** 대표 지표 — 매체가 직접 쓴 서술만 */
+    pick: (issue: IssueView) => Set<string>;
+    /** 취재원 발언까지 합친 값 */
+    pickAll: (issue: IssueView) => Set<string>;
+    basis?: (issue: IssueView) => { narrated: number; attributed: number };
+  };
+  const layerDefs: LayerDef[] = [
     ...DIM_ORDER.map((dim) => ({
       key: dim,
       label: DIM_LABEL[dim],
       note: DIM_QUESTION[dim],
-      pick: (issue: IssueView) => new Set(issue.outlets.map((o) => o.families[dim]?.[0]).filter(Boolean) as string[]),
+      pick: (issue: IssueView) => new Set(issue.outlets.map((o) => o.leadNarrated[dim]?.family).filter(Boolean) as string[]),
+      pickAll: (issue: IssueView) => new Set(issue.outlets.map((o) => o.lead[dim]?.family).filter(Boolean) as string[]),
+      basis: (issue: IssueView) => {
+        const row = issue.dimensionBasis.find((entry) => entry.dimension === dim);
+        return { narrated: row?.narratedItems ?? 0, attributed: row?.attributedItems ?? 0 };
+      },
     })),
   ];
 
   // 프레이밍 층위가 아닌 지표는 따로 센다 (범주 수가 달라 같은 자로 재면 안 된다)
-  const sideDefs: Array<{ key: string; label: string; note: string; pick: (issue: IssueView) => Set<string> }> = [
+  const sideDefs: LayerDef[] = [
     {
       key: "source_roles",
       label: "취재원 구성",
       note: "역할 7종 · 누구를 인용했는가",
       pick: (issue: IssueView) => new Set(issue.outlets.map((o) => o.roles[0]?.label).filter(Boolean) as string[]),
+      pickAll: (issue: IssueView) => new Set(issue.outlets.map((o) => o.roles[0]?.label).filter(Boolean) as string[]),
     },
     {
       key: "voice_mix",
       label: "인용 방식",
       note: "방식 4종 · 직접 인용인가 기자 서술인가",
       pick: (issue: IssueView) => new Set(issue.outlets.map((o) => o.voices[0]?.key).filter(Boolean) as string[]),
+      pickAll: (issue: IssueView) => new Set(issue.outlets.map((o) => o.voices[0]?.key).filter(Boolean) as string[]),
     },
   ];
 
-  const power = (defs: typeof layerDefs): LayerPower[] => defs
+  const power = (defs: LayerDef[]): LayerPower[] => defs
     .map((def) => ({
       key: def.key,
       label: def.label,
       note: def.note,
       total: issues.length,
       split: issues.filter((issue) => def.pick(issue).size >= 2).length,
+      splitWithSources: issues.filter((issue) => def.pickAll(issue).size >= 2).length,
+      narratedItems: def.basis ? issues.reduce((sum, issue) => sum + def.basis!(issue).narrated, 0) : 0,
+      attributedItems: def.basis ? issues.reduce((sum, issue) => sum + def.basis!(issue).attributed, 0) : 0,
     }))
-    .sort((a, b) => b.split - a.split || a.label.localeCompare(b.label));
+    .sort((a, b) => b.split - a.split || b.splitWithSources - a.splitWithSources || a.label.localeCompare(b.label));
   const layers = power(layerDefs);
   const sideLayers = power(sideDefs);
 

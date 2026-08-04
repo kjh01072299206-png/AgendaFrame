@@ -44,7 +44,14 @@ export default async function IssueLayout({
             {issue.provenance.analyzedChars.max.toLocaleString("ko-KR")}자)
           </span>
         ) : null}
-        <span>근거는 문단·문장 위치와 지문만 저장</span>
+        {issue.agreement?.mean != null ? (
+          <a className="afs-link" href="/tools/method#일치율">
+            <span className="afs-num">
+              두 코더 일치율 {Math.round(issue.agreement.mean * 100)}% ({issue.agreement.articleCount}건 기준)
+            </span>
+          </a>
+        ) : null}
+        <span>근거는 문장 위치와 지문만 저장</span>
       </p>
       {children}
     </>

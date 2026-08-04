@@ -55,11 +55,53 @@ export interface InitialFiveManifest {
   issueCount: number;
   articleCount: number;
   issues: InitialFiveManifestIssue[];
+  coderAgreement: { method: CoderAgreementMethod; summary: CoderAgreementSummary } | null;
   lineage: {
     top5SchemaVersion: string | null;
     metadataSchemaVersion: string | null;
     metadataGeneratedAt: string | null;
+    coderAgreementSchemaVersion?: string | null;
   };
+}
+
+/** 판정 전 두 코더의 계열 일치. 내용분석 신뢰도 공개용. */
+export interface CoderAgreementMethod {
+  schemaVersion: string | null;
+  design: string | null;
+  coderCount: number | null;
+  coderKind: string | null;
+  coderNote: string | null;
+  coderLimit: string | null;
+  measuredOn: string | null;
+  adjudication: string | null;
+  statistic: string | null;
+  dimensions: string[];
+}
+
+export interface CoderAgreementSummary {
+  articleCount: number | null;
+  validProfileCount: number | null;
+  failureCount: number | null;
+  meanDimensionAgreement: number | null;
+  perDimensionAgreement: Record<string, number | null>;
+  dominantPolicyFrameAgreement: number | null;
+  scopeAgreement: number | null;
+}
+
+export interface IssueCoderAgreement {
+  method: CoderAgreementMethod;
+  articleCount: number;
+  dimensionCount: number;
+  meanDimensionAgreement: number | null;
+  perDimensionAgreement: Record<string, number | null>;
+  fullAgreementArticleCount: number;
+  articles: Array<{
+    articleId: string;
+    agreedDimensions: number | null;
+    perDimension: Record<string, boolean>;
+    policyFrameAgree: boolean | null;
+    scopeAgree: boolean | null;
+  }>;
 }
 
 export interface PublicEvidence {
@@ -262,6 +304,7 @@ export interface IssueAnalysisBundle {
     data: RuleComparisonData;
     evidence: PublicEvidence[];
   };
+  coderAgreement: IssueCoderAgreement | null;
   lineage: {
     contractVersion: string;
     basisDate: string | null;

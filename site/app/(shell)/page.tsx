@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Donut, HBars, RankList, SplitMeter, StackBars } from "../charts";
-import { deriveDay, DIM_LABEL, particle, VOICE_LABEL } from "../../lib/initial-five/derive";
+import { deriveDay, particle, VOICE_LABEL } from "../../lib/initial-five/derive";
 
 const formatDate = (iso: string) => {
   const [y, m, d] = iso.split("-");
@@ -10,8 +10,17 @@ const formatDate = (iso: string) => {
 export default function HomePage() {
   const day = deriveDay();
   const topLayer = [...day.layers, ...day.sideLayers].sort((a, b) => b.split - a.split)[0];
-  // 어느 의제에서도 매체가 갈리지 않은 층위 — "무엇을 말하지 않았나"가 이 서비스의 발견이다
+  // 어느 의제에서도 매체 서술이 갈리지 않은 층위 — "무엇을 말하지 않았나"가 이 서비스의 발견이다
   const silent = day.layers.filter((layer) => layer.split === 0);
+  /* 매체가 직접 쓴 설명과 취재원의 말로 실린 설명을 나눠 센다. 이 분리가 이날의 가장 큰 관측이다 —
+     층위 대부분이 매체 서술이 아니라 인용으로 채워져 있으면, 매체 간 프레임 비교 자체가 좁아진다. */
+  const narratedItems = day.layers.reduce((sum, layer) => sum + layer.narratedItems, 0);
+  const attributedItems = day.layers.reduce((sum, layer) => sum + layer.attributedItems, 0);
+  const observedItems = narratedItems + attributedItems;
+  const narratedShare = observedItems ? Math.round((narratedItems / observedItems) * 100) : 0;
+  const voiceless = day.layers.filter((layer) => layer.narratedItems === 0 && layer.attributedItems > 0);
+  const splitByNarration = day.layers.filter((layer) => layer.split > 0);
+  const splitOnlyWithSources = day.layers.filter((layer) => layer.split === 0 && layer.splitWithSources > 0);
   // 네 범주를 다 넘긴다. 잘라내면 막대에 인쇄되는 합계가 실제보다 작아진다.
   const voiceKeys = ["direct_quote", "journalist_narration", "indirect_source", "uncertain_quote"].map((key) => ({
     key,
@@ -38,11 +47,11 @@ export default function HomePage() {
     <>
       <header className="afs-head">
         <span className="afs-eyebrow">{formatDate(day.basisDate)} · 하루의 보도 지형</span>
-        <h1>성향 라벨이 아니라, 설명의 구조를 비교합니다</h1>
+        <h1>같은 사건을 신문 {day.outletCount}곳이 어떻게 다르게 설명했는지, 문장 단위로 비교합니다</h1>
         <p>
           같은 사건을 다룬 기사 {day.articleCount}건을 매체 {day.outletCount}곳에 걸쳐 다섯 층위로 쪼갰습니다 — 무엇을 문제로
           봤나, 왜 그렇게 됐다고 했나, 누구의 책임이라 했나, 옳고 그름을 어떻게 봤나, 무엇을 해야 한다고 했나. 각 항목은 기사
-          본문의 문단·문장 위치에 묶여 있어 원문에서 확인할 수 있습니다.
+          본문의 문장 위치와 지문에 묶여 있어 원문에서 되짚을 수 있습니다.
         </p>
       </header>
 
@@ -50,23 +59,38 @@ export default function HomePage() {
         <h2>이날의 발견</h2>
         <div className="afs-in">
           <p className="afs-finding">
-            {silent.length ? (
+            이날 표본(종합지 {day.outletCount}곳 · 기사 {day.articleCount}건)에서 다섯 층위의 설명 {observedItems}건 중{" "}
+            <b>
+              매체가 직접 쓴 것은 {narratedItems}건({narratedShare}%)
+            </b>
+            입니다.
+            {voiceless.length ? (
               <>
-                이날 표본(종합지 {day.outletCount}곳 · 기사 {day.articleCount}건)에서는{" "}
-                <b>{silent.map((l) => l.label).join(" · ")}</b>의 매체별 대표 계열이 갈리지 않았습니다 — 의제{" "}
-                {day.issueCount}건 전부에서 그렇습니다.
+                {" "}
+                <b>{voiceless.map((l) => l.label).join(" · ")}</b>
+                {particle(voiceless[voiceless.length - 1].label, "은", "는")}{" "}
+                {voiceless.reduce((sum, l) => sum + l.attributedItems, 0)}건 전부가 취재원의 말로 실렸습니다 — 이 표본에서
+                그 층위는 매체가 아니라 인용된 사람이 말했습니다.
               </>
-            ) : (
-              <>다섯 층위 모두에서 매체 간 차이가 관측되었습니다.</>
-            )}
+            ) : null}
           </p>
           <p className="afs-finding-sub">
-            반대로 가장 잘 갈린 지표는 <b>{topLayer?.label}</b>({topLayer?.split}/{topLayer?.total})입니다
-            {topLayer && day.sideLayers.some((l) => l.key === topLayer.key)
-              ? " — 프레이밍 다섯 층위가 아니라 취재원·인용 방식 쪽입니다."
-              : "."}{" "}
-            이 사건에서 매체 차이는 찬반이 아니라 <b>누구의 말을 통해 설명하기로 했는가</b>에서 먼저 벌어졌습니다. 다만 범주
-            수가 다른 지표끼리는 갈림 횟수를 그대로 견줄 수 없습니다.
+            그래서 <b>매체 자체 서술</b>이 갈린 층위는{" "}
+            {splitByNarration.length ? (
+              <b>
+                {splitByNarration.map((l) => `${l.label}(의제 ${l.total}건 중 ${l.split}건)`).join(" · ")}
+              </b>
+            ) : (
+              <b>한 곳도 없습니다</b>
+            )}
+            {splitByNarration.length ? "뿐입니다" : ""}.{" "}
+            {splitOnlyWithSources.length
+              ? `취재원 발언까지 합쳐 세면 ${splitOnlyWithSources
+                  .map((l) => `‘${l.label}’(${l.splitWithSources}건)`)
+                  .join(" · ")}도 갈리지만, 인용을 매체의 입장으로 귀속시키는 계산이라 대표 지표에서는 빼고 점선으로만 표시합니다.`
+              : ""}{" "}
+            가장 잘 갈린 지표는 <b>{topLayer?.label}</b>({topLayer?.split}/{topLayer?.total})이며, 범주 수가 다른 지표끼리는
+            갈림 횟수를 그대로 견줄 수 없습니다.
           </p>
 
           {contrast.length === 2 ? (
@@ -162,13 +186,15 @@ export default function HomePage() {
             </h3>
             <div className="afs-in">
               <p className="afs-note">
-                각 층위에서 매체별 대표값이 두 종류 이상 관측된 의제 수입니다. 점이 많을수록 그 층위가 매체를 잘 가릅니다.
+                <b>매체가 직접 쓴 서술</b>만으로 셌을 때, 매체별 대표 계열이 두 종류 이상 관측된 의제 수입니다. 점선 점은
+                취재원 발언까지 합쳐 셌을 때 늘어나는 몫이며, 인용을 매체 입장으로 귀속시키는 계산이라 대표값에서 빼 둡니다.
               </p>
               <SplitMeter
                 rows={day.layers.map((layer) => ({
                   label: layer.label,
-                  note: layer.note,
+                  note: `${layer.note} · 기자 서술 ${layer.narratedItems}건 / 취재원 발언 ${layer.attributedItems}건`,
                   split: layer.split,
+                  ghost: layer.splitWithSources,
                   total: layer.total,
                 }))}
               />
@@ -190,7 +216,7 @@ export default function HomePage() {
                 ? `이날 표본에서 가장 많이 갈린 지표는 ‘${topLayer.label}’${particle(topLayer.label, "이", "가")} ${topLayer.split}/${topLayer.total}입니다.`
                 : ""}
               {silent.length
-                ? ` ${silent.map((l) => `‘${l.label}’`).join(" · ")}${particle(silent[silent.length - 1].label, "은", "는")} 어느 의제에서도 갈리지 않았습니다.`
+                ? ` ${silent.map((l) => `‘${l.label}’`).join(" · ")}${particle(silent[silent.length - 1].label, "은", "는")} 매체 서술 기준으로 어느 의제에서도 갈리지 않았습니다.`
                 : ""}
             </p>
           </section>

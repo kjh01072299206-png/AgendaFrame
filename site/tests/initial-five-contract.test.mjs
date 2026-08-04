@@ -7,8 +7,10 @@ import {
   INITIAL_FIVE_SCHEMA_VERSION,
   RULE_ENGINE_LABEL,
   buildInitialFive,
+  buildInitialFiveManifest,
   collectPublicEvidence,
   isSemanticProfileSuccess,
+  readInitialFiveSourcesSync,
 } from "../lib/initial-five/index.mjs";
 import { handleInitialFiveRequest } from "../worker/initial-five-api.mjs";
 
@@ -188,4 +190,44 @@ test("answers initial-five questions only from published Gemini evidence", async
   assert.ok(answer.evidence.length > 0);
   assert.ok(answer.evidence.every((entry) => entry.sourceUrl && entry.evidenceHash));
   assert.deepEqual(walkKeys(answer), []);
+});
+
+test("publishes coder agreement for every article and recomputes it per issue", () => {
+  const { manifest, getIssueByRank } = buildInitialFive({ siteRoot });
+  const published = manifest.coderAgreement;
+  assert.ok(published, "manifest must publish coder agreement");
+  assert.equal(published.summary.articleCount, 25);
+  assert.equal(published.summary.failureCount, 0);
+  assert.equal(published.method.coderKind, "ai", "코더가 사람이 아니라는 사실을 계약에 남긴다");
+  assert.ok(published.summary.meanDimensionAgreement > 0 && published.summary.meanDimensionAgreement <= 1);
+
+  const perIssue = [1, 2, 3, 4, 5].map((rank) => getIssueByRank(rank).coderAgreement);
+  assert.ok(perIssue.every((entry) => entry && entry.articles.length === entry.articleCount));
+  assert.equal(
+    perIssue.reduce((sum, entry) => sum + entry.articleCount, 0),
+    25,
+    "의제별 행을 합치면 기사 전수가 된다",
+  );
+  // 의제 값은 전체 값의 복사가 아니어야 한다 — 하나라도 다르면 다시 센 것이다
+  assert.ok(
+    perIssue.some((entry) => entry.meanDimensionAgreement !== published.summary.meanDimensionAgreement),
+    "per-issue agreement must be recomputed, not copied from the overall rate",
+  );
+});
+
+test("builder refuses coder agreement that does not cover every article", () => {
+  const sources = readInitialFiveSourcesSync({ siteRoot });
+  const short = {
+    ...sources.coderAgreement,
+    articles: sources.coderAgreement.articles.slice(1),
+  };
+  assert.throws(
+    () => buildInitialFiveManifest({ top5: sources.top5, metadata: sources.metadata, coderAgreement: short }),
+    /coder agreement missing 1 article/,
+  );
+  const badRate = { ...sources.coderAgreement, summary: { ...sources.coderAgreement.summary, mean_dimension_agreement: 89.3 } };
+  assert.throws(
+    () => buildInitialFiveManifest({ top5: sources.top5, metadata: sources.metadata, coderAgreement: badRate }),
+    /rate between 0 and 1/,
+  );
 });
