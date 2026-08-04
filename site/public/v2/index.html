@@ -157,15 +157,15 @@ nav.nav{display:flex;flex-direction:column;gap:2px}
 .head{margin:0 0 18px}
 .head .eyebrow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:7px}
 .head h1{margin:0 0 7px;font-size:clamp(20px,2.5vw,26px);font-weight:850;letter-spacing:-.025em;line-height:1.3;text-wrap:balance}
-.head p{margin:0;color:var(--afs-ink-2);font-size:13.5px;max-width:64ch}
-h2.sec{margin:26px 0 11px;font-size:15.5px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.head p{margin:0;color:var(--afs-ink-2);font-size:0.93em;max-width:64ch}
+h2.sec{margin:26px 0 11px;font-size:1.07em;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 /* 헤딩 안에 칩·버튼을 넣으면 헤딩 접근명이 오염돼 헤딩 탐색이 무력해진다 */
 .sec-row{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin:26px 0 11px}
 .sec-row h2.sec{margin:0;display:flex;flex-direction:column;gap:1px}
 .sec-row .n2{font-size:16px;font-weight:850;letter-spacing:-.02em}
 .sec-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding-top:2px}
-h3.sub{margin:0 0 8px;font-size:13.5px;font-weight:800;letter-spacing:-.01em}
-p.note{margin:8px 0 0;font-size:12px;color:var(--afs-ink-3);line-height:1.6}
+h3.sub{margin:0 0 8px;font-size:0.93em;font-weight:800;letter-spacing:-.01em}
+p.note{margin:8px 0 0;font-size:max(11.5px,0.83em);color:var(--afs-ink-3);line-height:1.6}
 .card{background:var(--afs-card);border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);padding:15px 16px}
 .card + .card{margin-top:10px}
 .grid{display:grid;gap:10px}
@@ -173,7 +173,7 @@ p.note{margin:8px 0 0;font-size:12px;color:var(--afs-ink-3);line-height:1.6}
 .g3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
 .g4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 
-.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:var(--afs-r-chip);font-size:10.5px;font-weight:750;background:var(--afs-sunk);color:var(--afs-ink-2);border:1px solid var(--afs-rule);white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:var(--afs-r-chip);font-size:max(11px,0.74em);font-weight:750;background:var(--afs-sunk);color:var(--afs-ink-2);border:1px solid var(--afs-rule);white-space:nowrap}
 .chip.wrap{white-space:normal;text-align:left;line-height:1.5}
 /* 터치 타깃 — 인라인 term 은 레이아웃을 깨지 않고 히트 영역만 넓힌다 */
 .term{position:relative}
@@ -188,7 +188,7 @@ table.t .chip{white-space:normal;text-align:left;line-height:1.45}
 .chip.bad{background:var(--afs-bad-soft);color:var(--afs-bad);border-color:color-mix(in srgb,var(--afs-bad) 30%,transparent)}
 
 /* 출처 배지 — 이 수치가 어느 파이프라인에서 왔는지 */
-.prov{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;cursor:pointer;border:1px solid;font-family:inherit;min-height:22px}
+.prov{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:max(11px,0.72em);font-weight:800;letter-spacing:-.01em;white-space:nowrap;cursor:pointer;border:1px solid;font-family:inherit;min-height:22px}
 .prov:hover{filter:brightness(.94)}
 .prov::after{content:"?";font-size:9px;opacity:.7;font-weight:900}
 .prov b{font-weight:800}
@@ -199,9 +199,9 @@ table.t .chip{white-space:normal;text-align:left;line-height:1.45}
 
 /* KPI */
 .kpi{background:var(--afs-card);border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);padding:13px 14px}
-.kpi .n{font-size:26px;font-weight:850;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.15}
-.kpi .l{font-size:11.5px;font-weight:750;color:var(--afs-ink-2);margin-top:2px}
-.kpi .h{font-size:11px;color:var(--afs-ink-3);margin-top:5px;line-height:1.5;padding-top:5px;border-top:1px dashed var(--afs-rule)}
+.kpi .n{font-size:1.79em;font-weight:850;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .l{font-size:max(11.5px,0.79em);font-weight:750;color:var(--afs-ink-2);margin-top:2px}
+.kpi .h{font-size:max(11px,0.76em);color:var(--afs-ink-3);margin-top:5px;line-height:1.5;padding-top:5px;border-top:1px dashed var(--afs-rule)}
 
 /* 갈림 한 장면 — 홈 히어로 */
 .scene{background:var(--afs-card);border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);overflow:hidden}
@@ -216,9 +216,9 @@ table.t .chip{white-space:normal;text-align:left;line-height:1.45}
 .scene-out b{font-size:12.5px;font-weight:800}
 /* 의역 문장에는 따옴표를 쓰지 않는다. 따옴표는 원문 인용을 뜻하고,
    이 서비스는 원문 문장을 저장하지도 표시하지도 않는다. 대신 왼쪽 괘선으로 묶는다. */
-.scene-q{margin:0 0 8px;font-size:15px;font-weight:700;line-height:1.62;letter-spacing:-.015em;
+.scene-q{margin:0 0 8px;font-size:1.03em;font-weight:700;line-height:1.62;letter-spacing:-.015em;
   padding-left:11px;border-left:2px solid var(--afs-rule-2)}
-.scene-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;color:var(--afs-ink-3);margin-bottom:9px;letter-spacing:.01em}
+.scene-tag{display:inline-flex;align-items:center;gap:3px;font-size:max(11px,0.72em);font-weight:800;color:var(--afs-ink-3);margin-bottom:9px;letter-spacing:.01em}
 .scene-tag::before{content:"↳";font-weight:400}
 .scene-m{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:11px;color:var(--afs-ink-3)}
 .scene-f{padding:11px 16px;border-top:1px solid var(--afs-rule);font-size:12px;color:var(--afs-ink-2);display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--afs-sunk)}
@@ -255,7 +255,7 @@ body.only-code [data-src]::before{
 .rail a{display:flex;flex-direction:column;gap:2px;min-width:118px;flex:1 1 118px;padding:8px 10px;border:1px solid var(--afs-rule);border-radius:var(--afs-r-btn);background:var(--afs-card);text-decoration:none;color:inherit}
 .rail a:hover{border-color:var(--afs-rule-2);background:var(--afs-sunk)}
 .rail a b{font-size:11.5px;font-weight:800}
-.rail a span{font-size:10px;font-weight:750}
+.rail a span{font-size:max(11px,0.72em);font-weight:750}
 .rail a[data-st="split"] span{color:var(--afs-brand)}
 .rail a[data-st="same"] span{color:var(--afs-good)}
 .rail a[data-st="src"] span{color:var(--afs-warn)}
@@ -288,7 +288,7 @@ body.only-code [data-src]::before{
 .duel .fam{display:inline-flex;align-items:center;gap:5px;margin-bottom:8px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:800}
 .duel .fam.a{background:color-mix(in srgb,var(--fam-a) 14%,transparent);color:var(--fam-a)}
 .duel .fam.b{background:color-mix(in srgb,var(--fam-b) 15%,transparent);color:var(--fam-b)}
-.duel .para{margin:0 0 9px;font-size:13.5px;line-height:1.66;font-weight:600}
+.duel .para{margin:0 0 9px;font-size:0.93em;line-height:1.66;font-weight:600}
 .duel .who{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--afs-ink-3)}
 
 /* 근거 항목 */
@@ -296,10 +296,11 @@ body.only-code [data-src]::before{
 .ev + .ev{margin-top:7px}
 .ev-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
 .ev-h b{font-size:12px;font-weight:800}
-.ev p{margin:0 0 7px;font-size:13px;line-height:1.64}
+.ev p{margin:0 0 7px;font-size:0.9em;line-height:1.64}
 .ev-f{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--afs-ink-3);font-family:var(--afs-mono)}
 .ev-f a{color:var(--afs-brand);text-decoration:none;font-family:var(--afs-sans);font-weight:700;min-height:26px;display:inline-flex;align-items:center;gap:3px}
 .ev-f a:hover{text-decoration:underline}
+a[aria-disabled="true"]{color:var(--afs-ink-3);text-decoration:line-through}
 .ev.narr{border-left:3px solid var(--afs-brand)}
 .ev.src{border-left:3px solid var(--afs-warn)}
 
@@ -309,7 +310,7 @@ dialog.book{border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);bac
 dialog.book::backdrop{background:rgba(10,15,22,.42)}
 .book-h{padding:13px 16px;border-bottom:1px solid var(--afs-rule);display:flex;align-items:center;gap:8px;justify-content:space-between}
 .book-h b{font-size:14px;font-weight:850}
-.book-b{padding:14px 16px;font-size:13px;line-height:1.66;overflow:auto;overscroll-behavior:contain}
+.book-b{padding:14px 16px;font-size:0.9em;line-height:1.66;overflow:auto;overscroll-behavior:contain}
 .book-b dt{font-size:11px;font-weight:800;color:var(--afs-ink-3);margin-top:11px}
 .book-b dd{margin:3px 0 0;padding-left:11px;border-left:2px solid var(--afs-rule)}
 .book-b dl{margin:0}
@@ -380,7 +381,7 @@ dialog.book::backdrop{background:rgba(10,15,22,.42)}
 .meter .vl{flex:0 0 auto;font-size:11.5px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--afs-ink-2)}
 
 /* 표 */
-table.t{width:100%;border-collapse:collapse;font-size:12.5px}
+table.t{width:100%;border-collapse:collapse;font-size:max(12px,0.86em)}
 table.t caption{text-align:left;font-size:11.5px;color:var(--afs-ink-3);padding-bottom:7px}
 table.t th,table.t td{padding:8px 9px;border-bottom:1px solid var(--afs-rule);text-align:left;vertical-align:top}
 table.t thead th{font-size:11px;font-weight:800;color:var(--afs-ink-3);background:var(--afs-sunk);white-space:nowrap}
@@ -410,7 +411,7 @@ details.fold .body{padding:0 14px 14px;border-top:1px solid var(--afs-rule);padd
 .find.discovery{border-left-color:var(--afs-good)}
 .find.discovery .big{color:var(--afs-good)}
 .find h3{margin:0 0 7px;font-size:14.5px;font-weight:850;letter-spacing:-.02em}
-.find p{margin:0;font-size:13px;color:var(--afs-ink-2);line-height:1.65}
+.find p{margin:0;font-size:0.9em;color:var(--afs-ink-2);line-height:1.65}
 /* 보류 상태의 값에 good/warn 색을 주지 않는다. 마크 크기는 확신의 표현이다. */
 .find .big{font-size:26px;font-weight:850;letter-spacing:-.04em;line-height:1;color:var(--afs-ink);font-variant-numeric:tabular-nums}
 
@@ -418,22 +419,22 @@ details.fold .body{padding:0 14px 14px;border-top:1px solid var(--afs-rule);padd
 .next{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));margin-top:26px;padding-top:18px;border-top:1px solid var(--afs-rule)}
 .next a{display:block;padding:12px 14px;border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);background:var(--afs-card);text-decoration:none;color:inherit}
 .next a:hover{border-color:var(--afs-brand);background:var(--afs-soft)}
-.next a b{display:block;font-size:13px;font-weight:800;margin-bottom:2px}
-.next a span{font-size:11.5px;color:var(--afs-ink-3)}
-.next a i{font-style:normal;font-size:10px;font-weight:800;color:var(--afs-brand);display:block;margin-bottom:5px}
+.next a b{display:block;font-size:0.9em;font-weight:800;margin-bottom:2px}
+.next a span{font-size:max(11.5px,0.79em);color:var(--afs-ink-3)}
+.next a i{font-style:normal;font-size:max(11px,0.72em);font-weight:800;color:var(--afs-brand);display:block;margin-bottom:5px}
 
 /* 폼 */
 .field{display:block;margin-bottom:13px}
-.field > span{display:block;font-size:12px;font-weight:750;margin-bottom:5px}
+.field > span,.field > label > span{display:block;font-size:max(11.5px,0.83em);font-weight:750;margin-bottom:5px}
 .field > small{display:block;font-size:11px;color:var(--afs-ink-3);margin-top:4px;line-height:1.55}
 input[type=text],input[type=email],textarea,select.fs{
-  width:100%;font-family:inherit;font-size:13px;color:var(--afs-ink);background:var(--afs-card);
+  width:100%;font-family:inherit;font-size:0.9em;color:var(--afs-ink);background:var(--afs-card);
   border:1px solid var(--afs-rule-2);border-radius:var(--afs-r-btn);padding:9px 11px;min-height:40px
 }
 textarea{min-height:88px;resize:vertical;line-height:1.6}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:9px 16px;
-  font-family:inherit;font-size:13px;font-weight:800;border-radius:var(--afs-r-btn);cursor:pointer;
+  font-family:inherit;font-size:0.9em;font-weight:800;border-radius:var(--afs-r-btn);cursor:pointer;
   background:var(--afs-brand);color:var(--n1-ink);border:1px solid var(--afs-brand)
 }
 .btn:hover{background:var(--afs-brand-2);border-color:var(--afs-brand-2)}
@@ -450,8 +451,8 @@ textarea{min-height:88px;resize:vertical;line-height:1.6}
 .seg button[aria-pressed="true"],.seg button[aria-checked="true"]{background:var(--afs-soft);color:var(--afs-brand-2);font-weight:800}
 .rowset{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--afs-rule);flex-wrap:wrap}
 .rowset:last-child{border-bottom:0}
-.rowset .lbl b{display:block;font-size:13px;font-weight:750}
-.rowset .lbl span{display:block;font-size:11.5px;color:var(--afs-ink-3);margin-top:2px;max-width:52ch}
+.rowset .lbl b{display:block;font-size:0.9em;font-weight:750}
+.rowset .lbl span{display:block;font-size:max(11.5px,0.79em);color:var(--afs-ink-3);margin-top:2px;max-width:52ch}
 .code{font-family:var(--afs-mono);font-size:15px;font-weight:700;letter-spacing:.14em;background:var(--afs-sunk);border:1px dashed var(--afs-rule-2);border-radius:var(--afs-r-btn);padding:11px 13px;display:inline-block}
 
 /* 자가점검 */
@@ -459,7 +460,7 @@ textarea{min-height:88px;resize:vertical;line-height:1.6}
 .qbar i{display:block;height:100%;background:var(--afs-brand);border-radius:3px;transition:width .2s}
 .qopt{display:grid;gap:8px;margin-top:14px}
 .qopt button{
-  text-align:left;font-family:inherit;font-size:13.5px;font-weight:650;line-height:1.6;
+  text-align:left;font-family:inherit;font-size:0.93em;font-weight:650;line-height:1.6;
   padding:13px 15px;border:1px solid var(--afs-rule-2);border-radius:var(--afs-r-card);
   background:var(--afs-card);color:var(--afs-ink);cursor:pointer;min-height:52px
 }
@@ -477,7 +478,7 @@ textarea{min-height:88px;resize:vertical;line-height:1.6}
 .post-h{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:7px}
 .post-h b{font-size:12.5px;font-weight:800}
 .post-h time{font-size:11px;color:var(--afs-ink-3);margin-left:auto}
-.post p{margin:0 0 9px;font-size:13px;line-height:1.65}
+.post p{margin:0 0 9px;font-size:0.9em;line-height:1.65}
 .post-f{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .tinybtn{border:1px solid var(--afs-rule-2);background:var(--afs-card);color:var(--afs-ink-2);font-family:inherit;font-size:11.5px;font-weight:750;padding:5px 10px;min-height:32px;border-radius:var(--afs-r-btn);cursor:pointer}
 .tinybtn:hover{background:var(--afs-sunk)}
@@ -531,7 +532,7 @@ section[data-screen].on{display:block}
     background:color-mix(in srgb,var(--afs-card) 96%,transparent);backdrop-filter:blur(10px);
     border-top:1px solid var(--afs-rule);padding:5px 4px calc(5px + env(safe-area-inset-bottom))
   }
-  .tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;min-height:48px;text-decoration:none;color:var(--afs-ink-3);font-size:10px;font-weight:750;border-radius:var(--afs-r-btn)}
+  .tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;min-height:48px;text-decoration:none;color:var(--afs-ink-3);font-size:max(10.5px,0.72em);font-weight:750;border-radius:var(--afs-r-btn)}
   .tabbar a svg{width:19px;height:19px}
   .tabbar a{position:relative}
   .tabbar a[aria-current]{color:var(--afs-brand);font-weight:850}
@@ -750,9 +751,9 @@ section[data-screen].on{display:block}
         <div class="card">
           <div class="tscroll" tabindex="0" role="region" aria-label="표 — 좌우로 스크롤할 수 있습니다"><table class="t">
             <caption>보도량·매체 참여·후속 보도를 가중한 순위입니다. 사안의 사회적 중요도가 아닙니다.</caption>
-            <thead><tr><th>순위</th><th>의제</th><th class="n">기사</th><th class="n">매체</th><th>갈린 층위</th><th>군집 품질</th></tr></thead>
+            <thead><tr><th scope="col">순위</th><th scope="col">의제</th><th scope="col" class="n">기사</th><th scope="col" class="n">매체</th><th scope="col">갈린 층위</th><th scope="col">군집 품질</th></tr></thead>
             <tbody>
-              <tr><th>1</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">특검 보완수사권 부여 논쟁</a></td><td class="n">7</td><td class="n">6</td><td><span class="chip brand">문제 정의</span> <span class="chip brand">원인</span></td><td><span class="chip warn">재검토 필요</span></td></tr>
+              <tr><th scope="row">1</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">특검 보완수사권 부여 논쟁</a></td><td class="n">7</td><td class="n">6</td><td><span class="chip brand">문제 정의</span> <span class="chip brand">원인</span></td><td><span class="chip warn">재검토 필요</span></td></tr>
               <tr><th>2</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">여당 지도부 내부 충돌 논란</a></td><td class="n">6</td><td class="n">6</td><td><span class="chip brand">문제 정의</span></td><td><span class="chip good">응집</span></td></tr>
               <tr><th>3</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">아파트 방화 보복범죄 수사</a></td><td class="n">4</td><td class="n">4</td><td><span class="chip brand">해법</span></td><td><span class="chip good">응집</span></td></tr>
               <tr><th>4</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">소송 대리인 불출석 손해배상 조정</a></td><td class="n">4</td><td class="n">4</td><td><span class="chip brand">책임</span></td><td><span class="chip warn">재검토 필요</span></td></tr>
@@ -852,17 +853,17 @@ section[data-screen].on{display:block}
             <div class="ev narr">
               <div class="ev-h"><b>A일보</b><span class="chip">기자가 쓴 문장</span><span class="chip brand"><button class="term" data-book="legal" style="font-weight:750">법·제도</button></span></div>
               <p>보완수사권을 특검에 주는 것은 수사와 기소를 한 기관에 몰아주는 구조 문제라고 짚었다.</p>
-              <div class="ev-f"><span>발췌본 문장 4·7·9</span><span>·</span><span>근거 3문장</span><span>·</span><span><button class="term" data-book="g-hash" style="font-family:var(--afs-mono)">지문 a3f19c40…</button></span><a href="#" onclick="return false">기사 원문 ↗</a></div>
+              <div class="ev-f"><span>발췌본 문장 4·7·9</span><span>·</span><span>근거 3문장</span><span>·</span><span><button class="term" data-book="g-hash" style="font-family:var(--afs-mono)">지문 a3f19c40…</button></span><a href="#" onclick="return false" aria-disabled="true">기사 원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></div>
             </div>
             <div class="ev narr">
               <div class="ev-h"><b>B일보</b><span class="chip">기자가 쓴 문장</span><span class="chip brand">법·제도</span></div>
               <p>수사권 조정이 반복되며 기관 간 권한 경계가 흐려진 상태를 사안의 배경으로 서술했다.</p>
-              <div class="ev-f"><span>발췌본 문장 6·11</span><span>·</span><span>근거 2문장</span><span>·</span><span>지문 7b2e04d1…</span><a href="#" onclick="return false">기사 원문 ↗</a></div>
+              <div class="ev-f"><span>발췌본 문장 6·11</span><span>·</span><span>근거 2문장</span><span>·</span><span>지문 7b2e04d1…</span><a href="#" onclick="return false" aria-disabled="true">기사 원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></div>
             </div>
             <div class="ev src">
               <div class="ev-h"><b>F신문</b><span class="chip warn">취재원 발언</span><span class="chip">역할: 정치 행위자</span></div>
               <p>여당 관계자는 특검의 권한 확대가 견제 없는 수사로 이어질 수 있다고 말한 것으로 전해졌다.</p>
-              <div class="ev-f"><span>발췌본 문장 3</span><span>·</span><span>간접 전언</span><span>·</span><span>지문 c81f9a22…</span><a href="#" onclick="return false">기사 원문 ↗</a></div>
+              <div class="ev-f"><span>발췌본 문장 3</span><span>·</span><span>간접 전언</span><span>·</span><span>지문 c81f9a22…</span><a href="#" onclick="return false" aria-disabled="true">기사 원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></div>
             </div>
             <p class="note">모든 문장은 <b>의역</b>입니다. 원문 문장을 그대로 옮기지 않으며, 위치(문장 번호)와 비복원 지문으로 대조합니다.</p>
           </div>
@@ -930,14 +931,14 @@ section[data-screen].on{display:block}
           <div class="tscroll">
             <table class="t">
               <caption>취재원이 지목한 책임 주체 — 매체의 판단이 아니라 인용된 발언의 분포입니다</caption>
-              <thead><tr><th>매체</th><th>인용된 책임 주체</th><th>발화 방식</th><th class="n">항목</th></tr></thead>
+              <thead><tr><th scope="col">매체</th><th scope="col">인용된 책임 주체</th><th scope="col">발화 방식</th><th scope="col" class="n">항목</th></tr></thead>
               <tbody>
-                <tr><th>A일보</th><td>입법부·정치권</td><td>직접 인용</td><td class="n">2</td></tr>
-                <tr><th>D신문</th><td>정부·여당</td><td>직접 인용</td><td class="n">2</td></tr>
-                <tr><th>E일보</th><td>정부·여당</td><td>간접 전언</td><td class="n">1</td></tr>
-                <tr><th>B일보</th><td>입법부·정치권</td><td>직접 인용</td><td class="n">2</td></tr>
-                <tr><th>C일보</th><td>사법·수사기관</td><td>직접 인용</td><td class="n">1</td></tr>
-                <tr><th>F신문</th><td>공동 책임</td><td>간접 전언</td><td class="n">1</td></tr>
+                <tr><th scope="row">A일보</th><td>입법부·정치권</td><td>직접 인용</td><td class="n">2</td></tr>
+                <tr><th scope="row">D신문</th><td>정부·여당</td><td>직접 인용</td><td class="n">2</td></tr>
+                <tr><th scope="row">E일보</th><td>정부·여당</td><td>간접 전언</td><td class="n">1</td></tr>
+                <tr><th scope="row">B일보</th><td>입법부·정치권</td><td>직접 인용</td><td class="n">2</td></tr>
+                <tr><th scope="row">C일보</th><td>사법·수사기관</td><td>직접 인용</td><td class="n">1</td></tr>
+                <tr><th scope="row">F신문</th><td>공동 책임</td><td>간접 전언</td><td class="n">1</td></tr>
               </tbody>
             </table>
           </div>
@@ -1009,14 +1010,14 @@ section[data-screen].on{display:block}
           <table class="t">
             <caption>매체 × 세 층위. <span class="diff" style="padding:1px 4px">파란 칸</span>은 다수와 다른 계열, &ldquo;—&rdquo;는 기자가 직접 쓴 문장이 없어 관측되지 않은 칸입니다.
             <b>책임·평가 두 층위는 6곳 전부 &lsquo;인용만&rsquo;이라 열을 뺐습니다</b> — 6줄이 같은 값이면 표로 볼 이유가 없습니다.</caption>
-            <thead><tr><th>매체</th><th>문제 정의</th><th>원인</th><th>해법</th><th class="n">기자 문장 / 관측 항목</th></tr></thead>
+            <thead><tr><th scope="col">매체</th><th scope="col">문제 정의</th><th scope="col">원인</th><th scope="col">해법</th><th scope="col" class="n">기자 문장 / 관측 항목</th></tr></thead>
             <tbody>
-              <tr><th>A일보</th><td>법·제도</td><td>제도 설계</td><td>제도적 견제</td><td class="n">5/12</td></tr>
-              <tr><th>B일보</th><td>법·제도</td><td>—</td><td>제도적 견제</td><td class="n">4/13</td></tr>
-              <tr><th>C일보</th><td>법·제도</td><td>제도 설계</td><td>제도적 견제</td><td class="n">3/8</td></tr>
-              <tr><th>D신문</th><td class="diff">정치 갈등</td><td class="diff">정치적 이해</td><td>제도적 견제</td><td class="n">4/11</td></tr>
-              <tr><th>E일보</th><td class="diff">정치 갈등</td><td class="diff">정치적 이해</td><td>—</td><td class="n">2/9</td></tr>
-              <tr><th>F신문</th><td>—</td><td>—</td><td>—</td><td class="n"><b>0/7</b></td></tr>
+              <tr><th scope="row">A일보</th><td>법·제도</td><td>제도 설계</td><td>제도적 견제</td><td class="n">5/12</td></tr>
+              <tr><th scope="row">B일보</th><td>법·제도</td><td>—</td><td>제도적 견제</td><td class="n">4/13</td></tr>
+              <tr><th scope="row">C일보</th><td>법·제도</td><td>제도 설계</td><td>제도적 견제</td><td class="n">3/8</td></tr>
+              <tr><th scope="row">D신문</th><td class="diff">정치 갈등</td><td class="diff">정치적 이해</td><td>제도적 견제</td><td class="n">4/11</td></tr>
+              <tr><th scope="row">E일보</th><td class="diff">정치 갈등</td><td class="diff">정치적 이해</td><td>—</td><td class="n">2/9</td></tr>
+              <tr><th scope="row">F신문</th><td>—</td><td>—</td><td>—</td><td class="n"><b>0/7</b></td></tr>
             </tbody>
           </table>
         </div>
@@ -1030,7 +1031,7 @@ section[data-screen].on{display:block}
             <p style="margin:0 0 10px;font-size:12.5px;color:var(--afs-ink-2)">아래 지표는 계산은 되지만 이 표본에서 <b>매체를 구분하지 못합니다.</b> 지우지 않고 접어 두는 이유는 다른 표본에서는 변별될 수 있기 때문입니다.</p>
             <div class="tscroll" tabindex="0" role="region" aria-label="쓰지 않은 지표 표 — 좌우로 스크롤할 수 있습니다">
             <table class="t">
-              <thead><tr><th>지표</th><th>출처</th><th>이 표본에서의 상태</th></tr></thead>
+              <thead><tr><th scope="col">지표</th><th scope="col">출처</th><th scope="col">이 표본에서의 상태</th></tr></thead>
               <tbody>
                 <tr><th>정책 프레임 5종</th><td><button class="prov p-rule" type="button" aria-haspopup="dialog" data-book="p-rule">단어 규칙 자동 분류</button></td><td>기사 7건 <b>전부</b>에 5종이 모두 부여됨 — 분류기 포화</td></tr>
                 <tr><th>일화적 / 주제적 (Iyengar)</th><td><button class="prov p-rule" type="button" aria-haspopup="dialog" data-book="p-rule">단어 규칙 자동 분류</button></td><td>어휘 정규식 판정. "사건·사고"가 일화적 신호라 사건 보도는 구조적으로 일화적으로 나옴</td></tr>
@@ -1122,14 +1123,14 @@ section[data-screen].on{display:block}
           <table class="t">
             <caption>매체 × 취재원 역할. 숫자는 인용된 발언 항목 수입니다(인원수가 아닙니다).
             코드북의 역할 9종 중 <b>이 표본에서 관측된 5종만</b> 표시했습니다 — 기업·피해 당사자·익명 관계자·기타는 0건입니다.</caption>
-            <thead><tr><th>매체</th><th class="n">정치 행위자</th><th class="n">정부 관계자</th><th class="n">사법·수사</th><th class="n">전문가</th><th class="n">시민사회</th><th class="n">합</th></tr></thead>
+            <thead><tr><th scope="col">매체</th><th scope="col" class="n">정치 행위자</th><th scope="col" class="n">정부 관계자</th><th scope="col" class="n">사법·수사</th><th scope="col" class="n">전문가</th><th scope="col" class="n">시민사회</th><th scope="col" class="n">합</th></tr></thead>
             <tbody>
-              <tr><th>A일보</th><td class="n">3</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td class="n">0</td><td class="n"><b>7</b></td></tr>
-              <tr><th>B일보</th><td class="n">4</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n"><b>5</b></td></tr>
-              <tr><th>C일보</th><td class="n">2</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td class="n">0</td><td class="n"><b>6</b></td></tr>
-              <tr><th>D신문</th><td class="n">3</td><td class="n">2</td><td class="n">0</td><td class="n">1</td><td class="n">2</td><td class="n"><b>8</b></td></tr>
-              <tr><th>E일보</th><td class="n">4</td><td class="n">1</td><td class="n">1</td><td class="n">0</td><td class="n">1</td><td class="n"><b>7</b></td></tr>
-              <tr><th>F신문</th><td class="n">5</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n"><b>5</b></td></tr>
+              <tr><th scope="row">A일보</th><td class="n">3</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td class="n">0</td><td class="n"><b>7</b></td></tr>
+              <tr><th scope="row">B일보</th><td class="n">4</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n"><b>5</b></td></tr>
+              <tr><th scope="row">C일보</th><td class="n">2</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td class="n">0</td><td class="n"><b>6</b></td></tr>
+              <tr><th scope="row">D신문</th><td class="n">3</td><td class="n">2</td><td class="n">0</td><td class="n">1</td><td class="n">2</td><td class="n"><b>8</b></td></tr>
+              <tr><th scope="row">E일보</th><td class="n">4</td><td class="n">1</td><td class="n">1</td><td class="n">0</td><td class="n">1</td><td class="n"><b>7</b></td></tr>
+              <tr><th scope="row">F신문</th><td class="n">5</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n"><b>5</b></td></tr>
             </tbody>
           </table>
         </div>
@@ -1156,13 +1157,13 @@ section[data-screen].on{display:block}
           <table class="t">
             <caption><b>이 표가 이 분석의 반론 답변입니다.</b> &ldquo;누구를 인용할지 고르는 것 자체가 프레이밍&rdquo;이라는 반론은 옳습니다.
             그래서 인용을 버리지 않고 <b>별도 지표로 셉니다</b> — 인용이 어느 계열의 프레임을 실었는지, 그것이 그 매체의 기자 문장과 같은 방향인지.</caption>
-            <thead><tr><th>매체</th><th>기자 문장 계열</th><th>인용의 최빈 계열</th><th>방향</th><th>반대 계열 인용에 반박이 붙었나</th></tr></thead>
+            <thead><tr><th scope="col">매체</th><th scope="col">기자 문장 계열</th><th scope="col">인용의 최빈 계열</th><th scope="col">방향</th><th scope="col">반대 계열 인용에 반박이 붙었나</th></tr></thead>
             <tbody>
-              <tr><th>A일보</th><td>법·제도</td><td>법·제도</td><td><span class="chip">일치</span></td><td>반대 계열 인용 1건 — 반박 서술 있음</td></tr>
-              <tr><th>B일보</th><td>법·제도</td><td>법·제도</td><td><span class="chip">일치</span></td><td>반대 계열 인용 없음</td></tr>
-              <tr><th>C일보</th><td>법·제도</td><td>정치 갈등</td><td><span class="chip warn">불일치</span></td><td>반대 계열 인용 2건 — 반박 없이 병치</td></tr>
-              <tr><th>D신문</th><td>정치 갈등</td><td>정치 갈등</td><td><span class="chip">일치</span></td><td>반대 계열 인용 1건 — 반박 없이 병치</td></tr>
-              <tr><th>E일보</th><td>정치 갈등</td><td>정치 갈등</td><td><span class="chip">일치</span></td><td>반대 계열 인용 없음</td></tr>
+              <tr><th scope="row">A일보</th><td>법·제도</td><td>법·제도</td><td><span class="chip">일치</span></td><td>반대 계열 인용 1건 — 반박 서술 있음</td></tr>
+              <tr><th scope="row">B일보</th><td>법·제도</td><td>법·제도</td><td><span class="chip">일치</span></td><td>반대 계열 인용 없음</td></tr>
+              <tr><th scope="row">C일보</th><td>법·제도</td><td>정치 갈등</td><td><span class="chip warn">불일치</span></td><td>반대 계열 인용 2건 — 반박 없이 병치</td></tr>
+              <tr><th scope="row">D신문</th><td>정치 갈등</td><td>정치 갈등</td><td><span class="chip">일치</span></td><td>반대 계열 인용 1건 — 반박 없이 병치</td></tr>
+              <tr><th scope="row">E일보</th><td>정치 갈등</td><td>정치 갈등</td><td><span class="chip">일치</span></td><td>반대 계열 인용 없음</td></tr>
               <tr style="background:var(--afs-warn-soft)"><th>F신문</th><td>—<br /><span style="font-size:11px">기자 문장 0건</span></td><td>정치 갈등</td><td><span class="chip warn">비교 불가</span></td><td>반대 계열 인용 없음 — 한쪽 계열만 인용</td></tr>
             </tbody>
           </table>
@@ -1228,15 +1229,15 @@ section[data-screen].on{display:block}
           <div class="body">
             <div class="tscroll">
               <table class="t">
-                <thead><tr><th>매체</th><th>발행</th><th>이 기사에서 관측된 층위</th><th></th></tr></thead>
+                <thead><tr><th scope="col">매체</th><th scope="col">발행</th><th scope="col">이 기사에서 관측된 층위</th><th scope="col"><span class="sr-only">원문 링크</span></th></tr></thead>
                 <tbody>
-                  <tr><th>A일보</th><td>07-26 11:31</td><td>문제 정의 · 원인 · 해법</td><td><a href="#" onclick="return false" style="color:var(--afs-brand);font-weight:700">원문 ↗</a></td></tr>
-                  <tr><th>A일보</th><td>07-26 16:02</td><td>문제 정의 · 해법</td><td><a href="#" onclick="return false" style="color:var(--afs-brand);font-weight:700">원문 ↗</a></td></tr>
-                  <tr><th>B일보</th><td>07-26 09:14</td><td>문제 정의 · 해법</td><td><a href="#" onclick="return false" style="color:var(--afs-brand);font-weight:700">원문 ↗</a></td></tr>
-                  <tr><th>C일보</th><td>07-26 14:47</td><td>문제 정의 · 원인 · 해법</td><td><a href="#" onclick="return false" style="color:var(--afs-brand);font-weight:700">원문 ↗</a></td></tr>
-                  <tr><th>D신문</th><td>07-26 10:08</td><td>문제 정의 · 원인 · 해법</td><td><a href="#" onclick="return false" style="color:var(--afs-brand);font-weight:700">원문 ↗</a></td></tr>
-                  <tr><th>E일보</th><td>07-26 13:22</td><td>문제 정의 · 원인</td><td><a href="#" onclick="return false" style="color:var(--afs-brand);font-weight:700">원문 ↗</a></td></tr>
-                  <tr><th>F신문</th><td>07-26 17:55</td><td>(취재원 발언만)</td><td><a href="#" onclick="return false" style="color:var(--afs-brand);font-weight:700">원문 ↗</a></td></tr>
+                  <tr><th scope="row">A일보</th><td>07-26 11:31</td><td>문제 정의 · 원인 · 해법</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
+                  <tr><th scope="row">A일보</th><td>07-26 16:02</td><td>문제 정의 · 해법</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
+                  <tr><th scope="row">B일보</th><td>07-26 09:14</td><td>문제 정의 · 해법</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
+                  <tr><th scope="row">C일보</th><td>07-26 14:47</td><td>문제 정의 · 원인 · 해법</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
+                  <tr><th scope="row">D신문</th><td>07-26 10:08</td><td>문제 정의 · 원인 · 해법</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
+                  <tr><th scope="row">E일보</th><td>07-26 13:22</td><td>문제 정의 · 원인</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
+                  <tr><th scope="row">F신문</th><td>07-26 17:55</td><td>(취재원 발언만)</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
                 </tbody>
               </table>
             </div>
@@ -1264,9 +1265,9 @@ section[data-screen].on{display:block}
             <caption>표시는 두 가지뿐입니다 — <span class="diff" style="padding:1px 5px">파란 칸</span> 매체가 갈린 층위,
             <span class="part" style="padding:1px 5px">빗금 칸</span> 기자가 직접 쓴 문장이 관측되지 않은 층위.
             <b>진하기 단계는 없습니다.</b> 갈린 정도는 칸 안의 숫자(3:2 등)가 나타냅니다.</caption>
-            <thead><tr><th>의제</th><th class="n">기사</th><th>문제 정의</th><th>원인</th><th>해법</th></tr></thead>
+            <thead><tr><th scope="col">의제</th><th scope="col" class="n">기사</th><th scope="col">문제 정의</th><th scope="col">원인</th><th scope="col">해법</th></tr></thead>
             <tbody>
-              <tr><th>1위 · 보완수사권</th><td class="n">7</td><td class="diff">3:2</td><td class="diff">2:2</td><td>4곳 동일</td></tr>
+              <tr><th scope="row">1위 · 보완수사권</th><td class="n">7</td><td class="diff">3:2</td><td class="diff">2:2</td><td>4곳 동일</td></tr>
               <tr><th>2위 · 지도부 충돌</th><td class="n">6</td><td class="diff">4:2</td><td>동일</td><td class="part">인용만</td></tr>
               <tr><th>3위 · 방화 보복범죄</th><td class="n">4</td><td>동일</td><td>동일</td><td class="diff">2:2</td></tr>
               <tr><th>4위 · 불출석 조정</th><td class="n">4</td><td class="diff">2:2</td><td class="part">인용만</td><td class="part">인용만</td></tr>
@@ -1388,10 +1389,11 @@ section[data-screen].on{display:block}
           </label>
           <label class="field"><span>질문</span><textarea placeholder="예: 이 의제에서 매체들이 가장 크게 갈린 지점은 무엇인가요?">이 의제에서 매체들은 어디에서 갈렸나요?</textarea></label>
           <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px">
-            <button class="tinybtn">어느 층위에서 갈렸나</button>
-            <button class="tinybtn">공통으로 전한 사실은</button>
-            <button class="tinybtn">누가 인용됐나</button>
-            <button class="tinybtn">해법은 갈렸나</button>
+            <button class="tinybtn" type="button">이 사건을 신문들이 뭐라고 규정했나</button>
+            <button class="tinybtn" type="button">6곳이 공통으로 전한 사실은</button>
+            <button class="tinybtn" type="button">누구 말을 실었나</button>
+            <button class="tinybtn" type="button">해법도 갈렸나</button>
+            <button class="tinybtn" type="button">기자가 직접 쓴 문장은 몇 개인가</button>
           </div>
           <button class="btn">근거 찾기</button>
         </div>
@@ -1407,12 +1409,12 @@ section[data-screen].on{display:block}
           <div class="ev narr">
             <div class="ev-h"><b>A일보</b><span class="chip">기자가 쓴 문장</span><span class="chip brand">법·제도</span></div>
             <p>보완수사권을 특검에 주는 것은 수사와 기소를 한 기관에 몰아주는 구조 문제라고 짚었다.</p>
-            <div class="ev-f"><span>발췌본 문장 4</span><span>·</span><span>지문 a3f19c40…</span><a href="#" onclick="return false">기사 원문 ↗</a></div>
+            <div class="ev-f"><span>발췌본 문장 4</span><span>·</span><span>지문 a3f19c40…</span><a href="#" onclick="return false" aria-disabled="true">기사 원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></div>
           </div>
           <div class="ev narr">
             <div class="ev-h"><b>D신문</b><span class="chip">기자가 쓴 문장</span><span class="chip" style="background:color-mix(in srgb,var(--fam-b) 15%,transparent);color:var(--fam-b)">정치 갈등</span></div>
             <p>여당의 반대가 특검 견제를 위한 정치 공세라는 점을 사안의 중심에 놓았다.</p>
-            <div class="ev-f"><span>발췌본 문장 7</span><span>·</span><span>지문 5c9d1b83…</span><a href="#" onclick="return false">기사 원문 ↗</a></div>
+            <div class="ev-f"><span>발췌본 문장 7</span><span>·</span><span>지문 5c9d1b83…</span><a href="#" onclick="return false" aria-disabled="true">기사 원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></div>
           </div>
           <p class="note">답변은 위 근거에서 조합한 것입니다. 근거 밖의 내용은 넣지 않습니다.</p>
         </div>
@@ -1421,9 +1423,9 @@ section[data-screen].on{display:block}
         <div class="tscroll">
           <table class="t">
             <caption>아래 유형은 근거를 찾지 못하는 것이 아니라, <b>이 표본으로는 답할 수 없는 질문</b>입니다. 규칙으로 보류합니다.</caption>
-            <thead><tr><th>유형</th><th>예시 질문</th><th>보류 이유</th></tr></thead>
+            <thead><tr><th scope="col">유형</th><th scope="col">예시 질문</th><th scope="col">보류 이유</th></tr></thead>
             <tbody>
-              <tr><th>매체 성향 추론</th><td>A일보가 정부에 비판적인가요?</td><td>하루치 기사 7건은 성향을 판정할 표본이 아닙니다</td></tr>
+              <tr><th scope="row">매체 성향 추론</th><td>A일보가 정부에 비판적인가요?</td><td>하루치 기사 7건은 성향을 판정할 표본이 아닙니다</td></tr>
               <tr><th>표본 밖 기간</th><td>이 사안이 지난달부터 어떻게 바뀌었나요?</td><td>2026-07-26 하루만 분석했습니다</td></tr>
               <tr><th>사실 판정</th><td>어느 기사가 맞나요?</td><td>이 분석은 설명 구조를 비교하며, 사실 여부를 판정하지 않습니다</td></tr>
               <tr><th>의도 추정</th><td>왜 그렇게 썼나요?</td><td>관측된 것은 문장이고, 편집 의도는 관측 대상이 아닙니다</td></tr>
@@ -1528,7 +1530,7 @@ section[data-screen].on{display:block}
           <div class="body">
             <div class="tscroll">
               <table class="t">
-                <thead><tr><th>코드</th><th>이름</th><th>한 줄</th></tr></thead>
+                <thead><tr><th scope="col">코드</th><th scope="col">이름</th><th scope="col">한 줄</th></tr></thead>
                 <tbody>
                   <tr><th>BMOR</th><td>정밀 대조가</td><td>본문·발언 구분·구조·유보</td></tr>
                   <tr><th>BDCP</th><td>결론 검증가</td><td>본문·발언 통합·사례·결론</td></tr>
@@ -1634,10 +1636,12 @@ section[data-screen].on{display:block}
 
         <h2 class="sec">나</h2>
         <div class="card">
-          <label class="field"><span>표시 이름</span><input type="text" value="밑줄" maxlength="40" />
-            <small>커뮤니티 글에 붙는 이름입니다. 여기서 한 번 정하면 글 쓸 때마다 다시 입력하지 않습니다.
+          <div class="field">
+            <label for="dispName"><span>표시 이름</span></label>
+            <input id="dispName" type="text" value="밑줄" maxlength="40" aria-describedby="dispNameHelp" />
+            <small id="dispNameHelp">커뮤니티 글에 붙는 이름입니다. 여기서 한 번 정하면 글 쓸 때마다 다시 입력하지 않습니다.
             같은 이름을 다른 사람도 쓸 수 있으므로, 이름만으로는 같은 사람임을 확인할 수 없습니다.</small>
-          </label>
+          </div>
           <div class="rowset">
             <span class="lbl"><b>읽기 유형 — BMOR 정밀 대조가</b><span>12문항 자가점검 결과입니다. 커뮤니티 글에 배지로 붙습니다.</span></span>
             <span style="display:flex;gap:6px;flex-wrap:wrap"><a href="#/self-check" class="btn ghost" style="min-height:34px;font-size:12px">다시 하기</a><button class="btn danger" style="min-height:34px;font-size:12px">지우기</button></span>
@@ -1655,9 +1659,11 @@ section[data-screen].on{display:block}
             <button class="btn ghost" style="min-height:38px;font-size:12px">복사</button>
             <button class="btn ghost" style="min-height:38px;font-size:12px">새로 만들기</button>
           </div>
-          <label class="field"><span>다른 기기의 코드를 여기 붙여넣기</span><input type="text" placeholder="AF-XXXX-XXXX" />
-            <small>코드를 잃으면 복구할 방법이 없습니다. 그래서 이메일을 받지 않는 대신 코드를 안전한 곳에 옮겨 두시길 권합니다.</small>
-          </label>
+          <div class="field">
+            <label for="recCode"><span>다른 기기의 코드를 여기 붙여넣기</span></label>
+            <input id="recCode" type="text" placeholder="AF-XXXX-XXXX" aria-describedby="recCodeHelp" />
+            <small id="recCodeHelp">코드를 잃으면 복구할 방법이 없습니다. 그래서 이메일을 받지 않는 대신 코드를 안전한 곳에 옮겨 두시길 권합니다.</small>
+          </div>
           <div class="rowset">
             <span class="lbl"><b>이 기기에서 신원 초기화</b><span>이 브라우저에 저장된 익명 세션을 지웁니다. 이미 올린 글은 남지만, 그 글이 내 것임을 확인할 수 없게 됩니다.</span></span>
             <button class="btn danger" style="min-height:34px;font-size:12px">초기화</button>
@@ -1685,7 +1691,7 @@ section[data-screen].on{display:block}
           <p style="margin:0 0 11px;font-size:13px">이 사이트가 저장하는 것 전부입니다.</p>
           <div class="tscroll">
             <table class="t">
-              <thead><tr><th>무엇</th><th>어디에</th><th>얼마나</th></tr></thead>
+              <thead><tr><th scope="col">무엇</th><th scope="col">어디에</th><th scope="col">얼마나</th></tr></thead>
               <tbody>
                 <tr><th>테마·글씨 크기</th><td>이 브라우저</td><td>지울 때까지</td></tr>
                 <tr><th>읽기 유형 · 12문항 응답</th><td>이 브라우저 + 익명 세션</td><td>지울 때까지</td></tr>
@@ -1741,9 +1747,9 @@ section[data-screen].on{display:block}
             <b>원인 진단을 기제(무엇이)와 행위자(누가)로 나눠</b> 다섯 층위로 운용합니다.
             이 분리는 Entman에 없고, 책임 귀속을 독립 변수로 다루는 Iyengar(1991)·Semetko &amp; Valkenburg(2000)를 따릅니다.
             층위 조합으로 서사를 도출하는 절차는 Matthes &amp; Kohring(2008)이지만, 그들은 책임 귀속을 원인 진단 안에 둡니다 — 이 점에서 다릅니다.</caption>
-            <thead><tr><th>층위</th><th>답하는 질문</th><th>계열 수</th><th>코드북</th></tr></thead>
+            <thead><tr><th scope="col">층위</th><th scope="col">답하는 질문</th><th scope="col">계열 수</th><th scope="col">코드북</th></tr></thead>
             <tbody>
-              <tr><th>문제 정의</th><td>무엇이 문제인가</td><td class="n">7</td><td><button class="term" data-book="legal">2개 작성됨</button></td></tr>
+              <tr><th scope="row">문제 정의</th><td>무엇이 문제인가</td><td class="n">7</td><td><button class="term" data-book="legal">2개 작성됨</button></td></tr>
               <tr><th>원인 해석</th><td>왜 그렇게 됐는가</td><td class="n">8</td><td><button class="term" data-book="design">2개 작성됨</button></td></tr>
               <tr><th>책임 귀속</th><td>누구의 책임인가</td><td class="n">8</td><td><button class="term" data-book="resp">층위 정의만</button></td></tr>
               <tr><th>규범적 평가</th><td>옳고 그름을 어떻게 봤는가</td><td class="n">8</td><td><button class="term" data-book="eval">층위 정의만</button></td></tr>
@@ -1787,9 +1793,9 @@ section[data-screen].on{display:block}
             (<code style="font-family:var(--afs-mono);font-size:10.5px">causal_attribution</code> ↔ 원인 해석,
             <code style="font-family:var(--afs-mono);font-size:10.5px">evaluation</code> ↔ 규범적 평가).
             두 이름의 대응은 사람이 판단한 것이며 <b>코드로 검증되지 않았습니다.</b></caption>
-            <thead><tr><th>층위</th><th class="n">일치</th><th class="n">원 일치율 p<sub>o</sub></th><th class="n">κ</th><th class="n">최빈 계열 비율</th><th class="n">기자 문장 항목</th><th>읽는 법</th></tr></thead>
+            <thead><tr><th scope="col">층위</th><th scope="col" class="n">일치</th><th scope="col" class="n">원 일치율 p<sub>o</sub></th><th scope="col" class="n">κ</th><th scope="col" class="n">최빈 계열 비율</th><th scope="col" class="n">기자 문장 항목</th><th scope="col">읽는 법</th></tr></thead>
             <tbody>
-              <tr><th>문제 정의</th><td class="n">19/25</td><td class="n"><b>0.76</b></td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n">48%</td><td class="n">28</td><td><span class="chip warn">코더가 갈린 층위 — 결론이 이 층위에 서 있습니다</span></td></tr>
+              <tr><th scope="row">문제 정의</th><td class="n">19/25</td><td class="n"><b>0.76</b></td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n">48%</td><td class="n">28</td><td><span class="chip warn">코더가 갈린 층위 — 결론이 이 층위에 서 있습니다</span></td></tr>
               <tr><th>원인 해석</th><td class="n">25/25</td><td class="n">1.00</td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n"><b>92%</b></td><td class="n">16</td><td><span class="chip warn">계열이 한쪽으로 몰려 변별할 것이 거의 없었습니다 — "완벽한 일치"로 읽으면 안 됩니다</span></td></tr>
               <tr><th>책임 귀속</th><td class="n">23/25</td><td class="n">0.92</td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n">61%</td><td class="n">5</td><td>대체로 같게 봤습니다</td></tr>
               <tr><th>규범적 평가</th><td class="n">22/25</td><td class="n">0.88</td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n">70%</td><td class="n"><b>0</b></td><td><span class="chip warn">기자 문장 0건 · 계열이 거의 한 값이라 이 일치율은 해석하기 어렵습니다</span></td></tr>
@@ -1815,7 +1821,7 @@ section[data-screen].on{display:block}
           <p style="margin:0 0 11px;font-size:13px">이 프로젝트에는 내부 릴리스 기준이 있고, <b>지금 산출은 그 기준을 충족하지 않습니다.</b> 조건 8개 중 <b>미충족 6개</b>를 그대로 적습니다.</p>
           <div class="tscroll">
             <table class="t">
-              <thead><tr><th>조건</th><th>상태</th></tr></thead>
+              <thead><tr><th scope="col">조건</th><th scope="col">상태</th></tr></thead>
               <tbody>
                 <tr><th>사람 이중코딩 + 판정된 홀드아웃</th><td><span class="chip bad">미충족</span> 27건 전부 라벨 없음</td></tr>
                 <tr><th>계열 코드북(정의문 + 경계 예시)</th><td><span class="chip bad">미충족</span> 작성 중</td></tr>
@@ -1876,9 +1882,9 @@ A source's statement is not the outlet's own position.</pre>
         <div class="tscroll">
           <table class="t">
             <caption>같은 문제를 다루는 서비스들과의 비교입니다. 우열이 아니라 <b>무엇을 관측 단위로 삼는가</b>의 차이입니다.</caption>
-            <thead><tr><th>서비스</th><th>무엇에 라벨을 붙이나</th><th>관측 단위</th><th>취재원 발언 처리</th><th>검증 공개</th></tr></thead>
+            <thead><tr><th scope="col">서비스</th><th scope="col">무엇에 라벨을 붙이나</th><th scope="col">관측 단위</th><th scope="col">취재원 발언 처리</th><th scope="col">검증 공개</th></tr></thead>
             <tbody>
-              <tr><th>AllSides</th><td>매체의 정치 성향(좌·중·우)</td><td>매체</td><td>구분 없음</td><td>편집진 검토 + 독자 투표</td></tr>
+              <tr><th scope="row">AllSides</th><td>매체의 정치 성향(좌·중·우)</td><td>매체</td><td>구분 없음</td><td>편집진 검토 + 독자 투표</td></tr>
               <tr><th>Ground News</th><td>기사의 성향 분포·보도 편중</td><td>기사 묶음</td><td>구분 없음</td><td>제3자 성향 평가 인용</td></tr>
               <tr><th>빅카인즈</th><td>키워드·연관어·보도량</td><td>기사</td><td>구분 없음</td><td>원문 제공</td></tr>
               <tr style="background:var(--afs-soft)"><th>AgendaFrame</th><td><b>사건별 설명 구조</b>(다섯 층위 계열)</td><td><b>문장에 묶인 주장</b></td><td><b>비교에서 제외</b> — 기자가 직접 쓴 문장만</td><td>층위별 일치율·판정 기록·미충족 조건</td></tr>
