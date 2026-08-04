@@ -37,8 +37,12 @@ export default async function IssueLayout({
       <p className="afs-prov">
         {issue.provenance.requiresHumanReview ? <b>자동 분석 초안 · 사람 검토 전</b> : <b>검토 완료</b>}
         {issue.provenance.model ? <span>코딩 {issue.provenance.model}</span> : null}
-        {issue.provenance.analyzedCharacters ? (
-          <span className="afs-num">기사당 분석 본문 {issue.provenance.analyzedCharacters.toLocaleString("ko-KR")}자</span>
+        {issue.provenance.analyzedChars ? (
+          <span className="afs-num">
+            분석 본문 기사당 평균 {issue.provenance.analyzedChars.mean.toLocaleString("ko-KR")}자 (
+            {issue.provenance.analyzedChars.min.toLocaleString("ko-KR")}–
+            {issue.provenance.analyzedChars.max.toLocaleString("ko-KR")}자)
+          </span>
         ) : null}
         <span>근거는 문단·문장 위치와 지문만 저장</span>
       </p>

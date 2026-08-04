@@ -138,6 +138,9 @@ body:has(.afs-shell) {
   font-family: var(--afs-sans);
   font-size: 14.5px;
   line-height: 1.65;
+  /* 한글은 어절 단위로 꺾는다 — 없으면 '지/표'처럼 음절 중간에서 갈라진다 */
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .afs-side {
@@ -415,7 +418,8 @@ body:has(.afs-shell) {
 .afs-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  /* 1280px(본문 약 980px)에서도 3열이 유지되게 340 → 300 */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
 }
 .afs-grid-2 {
   display: grid;
@@ -772,7 +776,9 @@ body:has(.afs-shell) {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 18px;
-  align-items: end;
+  /* end 로 맞추면 한쪽 극이 두 줄일 때 반대쪽 한 줄 극이 둘째 줄 높이에 붙어
+     어느 문장이 어느 극인지 헷갈린다 — 첫 줄을 맞춘다 */
+  align-items: start;
 }
 .afs-spectrum-pole {
   margin: 0;
@@ -784,7 +790,7 @@ body:has(.afs-shell) {
 }
 .afs-spectrum-pole b {
   font-weight: 700;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .afs-spectrum-pole span {
   color: var(--afs-ink-3);
@@ -1072,6 +1078,11 @@ body:has(.afs-shell) {
   }
   .afs-nav a {
     white-space: nowrap;
+  }
+  /* 그룹 상자를 해체해 링크가 가로 flex 로 직접 흐르게 — 아니면 그룹 3개가
+     들쭉날쭉한 세로 컬럼으로 서서 첫 화면 280px 를 차지한다 */
+  .afs-nav-sec {
+    display: contents;
   }
   .afs-nav-group,
   .afs-side-foot {

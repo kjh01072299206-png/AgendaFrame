@@ -96,7 +96,7 @@ export default async function ReportPage({ params }: { params: Promise<{ issueId
           {topVoice ? (
             <p>
               본문 근거를 발화 방식으로 나누면 <b>{topVoice.label}</b>이 {topVoice.count}건으로 가장 많다.
-              {leadRole ? ` 가장 많이 등장한 취재원 역할은 ${leadRole[0]}(${leadRole[1]}명)이다.` : ""}
+              {leadRole ? ` 가장 많이 등장한 취재원 역할은 ${leadRole[0]}(인용·전언 ${leadRole[1]}회)이다.` : ""}
             </p>
           ) : null}
           {issue.sourceCaution ? <p>{issue.sourceCaution}</p> : null}
@@ -140,9 +140,13 @@ export default async function ReportPage({ params }: { params: Promise<{ issueId
             ‘미관측’은 분석 가능한 본문에서 해당 설명을 찾지 못했다는 뜻이다. 취재원의 발언은 그 매체의 입장이 아니다. 본문
             전문은 저장하지 않고, 근거는 문단·문장 위치와 비복원 지문으로만 남는다.
           </p>
-          {issue.notObservedStatements.length ? (
+          {issue.layers.some((layer) => layer.notObserved > 0) ? (
             <p>
-              <b>이 의제에서 관측되지 않은 것</b> {issue.notObservedStatements.join(" ")}
+              <b>이 의제에서 관측되지 않은 것</b>{" "}
+              {issue.layers
+                .filter((layer) => layer.notObserved > 0)
+                .map((layer) => `${layer.label}${particle(layer.label, "은", "는")} 기사 ${layer.notObserved}건에서 관측되지 않았다.`)
+                .join(" ")}
             </p>
           ) : null}
         </div>

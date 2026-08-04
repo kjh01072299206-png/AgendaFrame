@@ -1,5 +1,5 @@
 import { HBars, HeatTable, Spectrum, StackBars } from "../../../../charts";
-import { DIM_LABEL, DIM_ORDER, familyLabel, VOICE_LABEL } from "../../../../../lib/initial-five/derive";
+import { DIM_LABEL, DIM_ORDER, familyLabel, SCOPE_LABEL, VOICE_LABEL } from "../../../../../lib/initial-five/derive";
 import { loadIssue } from "../load";
 
 export default async function OutletsPage({ params }: { params: Promise<{ issueId: string }> }) {
@@ -34,6 +34,9 @@ export default async function OutletsPage({ params }: { params: Promise<{ issueI
             비율이며, 매체의 정치 성향이 아니라 이 사건에서의 서술입니다.
             {issue.spectrum.nested
               ? " 한쪽 극이 모든 매체를 포함하므로 이 축은 대립이 아니라 공통 설명 + 추가 설명의 포함 관계입니다."
+              : ""}
+            {issue.spectrum.scopes.length
+              ? ` 축의 패턴 출처: ${issue.spectrum.scopes.map((scope) => SCOPE_LABEL[scope] ?? scope).join(" · ")}.`
               : ""}
           </p>
         </section>

@@ -122,6 +122,28 @@ function tally(source: Iterable<string | undefined>, labels: Record<string, stri
     .map(([key, count]) => ({ key, label: labels[key] ?? key, count }));
 }
 
+/** 같은 기사·같은 층위 안에서 문장·위치·지문까지 동일한 항목은 한 번만 센다.
+ *  코딩 병합 단계가 남긴 완전 중복(전체 항목의 9.5%, 1위 의제 23%)이
+ *  '취재원 발언 N건'·'직접 인용 N건' 같은 집계를 전부 부풀리는 것을 막는다. */
+function dedupItems<T extends { public_paraphrase?: string; evidence?: { locator?: { paragraph?: number; sentence?: number }; sentence_sha256?: string } }>(
+  items: T[],
+): T[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const claimId = (item as { claim_id?: string }).claim_id ?? "";
+    const key = [
+      claimId,
+      item.public_paraphrase ?? "",
+      item.evidence?.locator?.paragraph ?? "",
+      item.evidence?.locator?.sentence ?? "",
+      item.evidence?.sentence_sha256 ?? "",
+    ].join("|");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 // ── 기사 단위 ──────────────────────────────────────────────────────────────
 
 export interface ArticleView {
@@ -156,9 +178,10 @@ function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
     const familyItems: string[] = [];
     for (const dim of DIM_ORDER) {
       const node = dims[dim];
+      const items = dedupItems(node?.items ?? []);
       statuses[dim] = node?.status;
-      families[dim] = node?.items?.[0]?.frame_family;
-      for (const item of node?.items ?? []) {
+      families[dim] = items[0]?.frame_family;
+      for (const item of items) {
         voiceKinds.push(item.voice?.kind);
         if (item.frame_family) familyItems.push(item.frame_family);
       }
@@ -176,7 +199,16 @@ function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
       familyItems,
       statuses,
       voices: tally(voiceKinds, VOICE_LABEL),
-      roles: tally(actors.map((a) => a.role_label ?? a.role), {}),
+      roles: (() => {
+        const byRole = new Map<string, number>();
+        for (const actor of actors) {
+          const label = actor.role_label ?? (typeof actor.role === "string" ? actor.role : "기타 취재원");
+          byRole.set(label, (byRole.get(label) ?? 0) + (actor.direct_quote_count ?? 0) + (actor.indirect_attribution_count ?? 0));
+        }
+        return [...byRole]
+          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+          .map(([label, count]) => ({ key: label, label, count }));
+      })(),
       directQuotes: actors.reduce((sum, a) => sum + (a.direct_quote_count ?? 0), 0),
       indirectQuotes: actors.reduce((sum, a) => sum + (a.indirect_attribution_count ?? 0), 0),
     };
@@ -209,14 +241,10 @@ function modeFamily(values: Array<string | undefined>): { family?: string; tied:
   return { family: sorted[0][0], tied: sorted.length > 1 && sorted[1][1] === sorted[0][1] };
 }
 
-function outletViews(articles: ArticleView[], bundle: IssueAnalysisBundle): OutletView[] {
-  const lens = new Map<string, Counter>();
-  for (const row of bundle.comparison.data.source_lens?.by_outlet ?? []) {
-    lens.set(
-      row.outlet,
-      (row.roles ?? []).map((r) => ({ key: r.role ?? "other", label: r.role_label ?? r.role ?? "기타", count: Number(r.count) || 0 })),
-    );
-  }
+// 취재원 집계는 semanticProfiles 한 세대에서만 파생한다. comparison.data.source_lens 는
+// 다른 세대 산출물이라(조선일보 행 누락 등) 같은 줄 안에서 총횟수 < 직접 인용 같은
+// 모순을 만들었다.
+function outletViews(articles: ArticleView[]): OutletView[] {
   const groups = new Map<string, ArticleView[]>();
   for (const article of articles) {
     const list = groups.get(article.outlet) ?? [];
@@ -231,14 +259,18 @@ function outletViews(articles: ArticleView[], bundle: IssueAnalysisBundle): Outl
         families[dim] = [...new Set(list.map((a) => a.families[dim]).filter(Boolean) as string[])];
         lead[dim] = modeFamily(list.map((a) => a.families[dim]));
       }
-      const roles = lens.get(outlet) ?? tally(list.flatMap((a) => a.roles.map((r) => r.key)), {});
+      const byRole = new Map<string, number>();
+      for (const a of list) for (const r of a.roles) byRole.set(r.label, (byRole.get(r.label) ?? 0) + r.count);
+      const roles: Counter = [...byRole]
+        .sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))
+        .map(([label, count]) => ({ key: label, label, count }));
       return {
         outlet,
         articles: list,
         articleCount: list.length,
         families,
         lead,
-        roles: roles.slice().sort((a, b) => b.count - a.count || a.key.localeCompare(b.key)),
+        roles,
         voices: tally(list.flatMap((a) => a.voices.flatMap((v) => Array(v.count).fill(v.key) as string[])), VOICE_LABEL),
         directQuotes: list.reduce((s, a) => s + a.directQuotes, 0),
         indirectQuotes: list.reduce((s, a) => s + a.indirectQuotes, 0),
@@ -286,13 +318,27 @@ function spectrum(bundle: IssueAnalysisBundle, articles: ArticleView[], dimensio
   // 같은 code 가 voice_scope 만 달라 여러 행으로 들어온다. 병합하지 않으면
   //  · 동일 프레임이 축의 양 끝에 놓이고,
   //  · 상위 2행만 극으로 쓰는 탓에 3번째 행의 매체가 반대편에 그려진다.
-  const merged = new Map<string, { code: string; label: string; ids: Set<string>; scopes: Set<string> }>();
+  const merged = new Map<
+    string,
+    { code: string; label: string; ids: Set<string>; scopes: Set<string>; bestCount: number; bestNarration: boolean }
+  >();
   for (const p of raw) {
     const code = p.code ?? p.public_paraphrase ?? "";
-    const slot = merged.get(code) ?? { code, label: p.public_paraphrase ?? "설명", ids: new Set<string>(), scopes: new Set<string>() };
+    const slot =
+      merged.get(code) ??
+      { code, label: p.public_paraphrase ?? "설명", ids: new Set<string>(), scopes: new Set<string>(), bestCount: -1, bestNarration: false };
     for (const id of p.article_ids ?? []) slot.ids.add(id);
     if (p.voice_scope) slot.scopes.add(p.voice_scope);
-    if ((p.article_count ?? 0) > 0 && slot.label.length < (p.public_paraphrase ?? "").length) slot.label = p.public_paraphrase ?? slot.label;
+    // 라벨은 가장 많은 기사를 대표하는 행의 의역으로 고른다(동수면 매체 서술 우선).
+    // 길이로 고르면 '기타 취재원의 발언…' 접두어가 붙은 취재원 행이 항상 이겨서,
+    // 기자 서술이 다수인 극에도 취재원 발언 문구가 라벨로 남는다.
+    const rowCount = (p.article_ids ?? []).length;
+    const rowNarration = p.voice_scope === "outlet_narration";
+    if (rowCount > slot.bestCount || (rowCount === slot.bestCount && rowNarration && !slot.bestNarration)) {
+      slot.label = p.public_paraphrase ?? slot.label;
+      slot.bestCount = rowCount;
+      slot.bestNarration = rowNarration;
+    }
     merged.set(code, slot);
   }
   // code 가 한 종류면 대립이 아니라 공통점이다 — 축을 세우지 않는다.
@@ -380,7 +426,7 @@ function layerViews(bundle: IssueAnalysisBundle, articles: ArticleView[], axes: 
         continue;
       }
       const bucket = node.status === "source_attributed" ? attributed : narrated;
-      for (const item of node.items ?? []) {
+      for (const item of dedupItems(node.items ?? [])) {
         const locator = item.evidence?.locator;
         bucket.push({
           paraphrase: item.public_paraphrase ?? "",
@@ -511,7 +557,7 @@ export interface IssueView {
     promptVersion: string | null;
     reviewStatus: string | null;
     requiresHumanReview: boolean;
-    analyzedCharacters: number | null;
+    analyzedChars: { mean: number; min: number; max: number } | null;
     textScope: string | null;
     evidenceStorage: string | null;
     limitations: string[];
@@ -551,7 +597,7 @@ function descriptorCounter(list?: Array<{ code?: string; label?: string; article
 
 export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
   const articles = articleViews(bundle);
-  const outlets = outletViews(articles, bundle);
+  const outlets = outletViews(articles);
   const data = bundle.comparison.data;
   const brief = (data.summary_30_seconds ?? {}) as {
     common_ground?: string;
@@ -605,12 +651,27 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
   };
   const firstProfile = bundle.semanticProfiles[0]?.profile ?? null;
   const engine = (firstProfile?.engine ?? {}) as Record<string, unknown>;
+  // 첫 기사 하나의 값을 '기사당' 대표값처럼 쓰지 않는다 — 발췌 길이는 423~2,672자로 산포된다
+  const charCounts = bundle.semanticProfiles
+    .map((entry) => entry.profile?.extraction?.analyzed_character_count)
+    .filter((n): n is number => typeof n === "number");
+  const reviewStatuses = new Set(
+    bundle.semanticProfiles.map((entry) => entry.profile?.review?.status).filter(Boolean) as string[],
+  );
   const provenance = {
     model: bundle.analysisStatus.semantic.model ?? (engine.version as string) ?? null,
     promptVersion: bundle.analysisStatus.semantic.promptVersion ?? null,
-    reviewStatus: firstProfile?.review?.status ?? null,
-    requiresHumanReview: Boolean(firstProfile?.review?.requires_human_review),
-    analyzedCharacters: firstProfile?.extraction?.analyzed_character_count ?? null,
+    reviewStatus: reviewStatuses.size === 1 ? [...reviewStatuses][0] : reviewStatuses.size ? "mixed" : null,
+    requiresHumanReview:
+      bundle.analysisStatus?.semantic?.requiresHumanReview ??
+      bundle.semanticProfiles.some((entry) => Boolean(entry.profile?.review?.requires_human_review)),
+    analyzedChars: charCounts.length
+      ? {
+          mean: Math.round(charCounts.reduce((sum, n) => sum + n, 0) / charCounts.length),
+          min: Math.min(...charCounts),
+          max: Math.max(...charCounts),
+        }
+      : null,
     textScope: firstProfile?.extraction?.text_scope ?? null,
     evidenceStorage: (engine.evidence_storage as string) ?? null,
     limitations: Array.isArray(engine.limitations) ? (engine.limitations as string[]) : [],
@@ -656,7 +717,11 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
     comparisonEngine,
     sample,
     provenance,
-    spectrum: spectra.find((s) => s.dimension === "problem_definition") ?? spectra[0] ?? null,
+    spectrum:
+      spectra.find((s) => s.dimension === mostSplit?.dimension) ??
+      spectra.find((s) => s.dimension === "problem_definition") ??
+      spectra[0] ??
+      null,
     spectra,
     voices: tally(articles.flatMap((a) => a.voices.flatMap((v) => Array(v.count).fill(v.key) as string[])), VOICE_LABEL),
     families: tally(articles.flatMap((a) => DIM_ORDER.map((d) => a.families[d])), FAMILY_LABEL),

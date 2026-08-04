@@ -80,7 +80,11 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
                     {DIM_ORDER.map((dim) => (
                       <td key={dim}>
                         {cluster.differsAt.includes(dim) ? (
-                          <span className="afs-chip afs-chip-brand">{familyLabel(cluster.signature[dim]) }</span>
+                          cluster.signature[dim] ? (
+                            <span className="afs-chip afs-chip-brand">{familyLabel(cluster.signature[dim])}</span>
+                          ) : (
+                            <span className="afs-chip">미관측</span>
+                          )
                         ) : (
                           <span className="afs-cell-same">{cluster.signature[dim] ? familyLabel(cluster.signature[dim]) : "미관측"}</span>
                         )}
@@ -113,6 +117,8 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
               {layer.label}
               {layer.outletKinds >= 2 ? (
                 <span className="afs-chip afs-chip-brand">갈림 · 대표 계열 {layer.outletKinds}종</span>
+              ) : total === 0 ? (
+                <span className="afs-chip afs-chip-src">전 기사 미관측</span>
               ) : (
                 <span className="afs-chip">매체 간 동일</span>
               )}

@@ -1,4 +1,5 @@
 import { getInitialFiveIssueBundle } from "../../../../lib/initial-five/artifacts";
+import { DIM_LABEL, familyLabel } from "../../../../lib/initial-five/derive";
 import type {
   IssueAnalysisBundle,
   InitialFiveArticle,
@@ -87,7 +88,7 @@ function semanticClaims(bundle: IssueAnalysisBundle) {
           ...(item.evidence.locator ? { locator: item.evidence.locator } : {}),
           ...(item.evidence.sentence_sha256 ? { sentenceSha256: item.evidence.sentence_sha256 } : {}),
         } : undefined;
-        return [{ dimension, text, articleId: entry.articleId, evidence }];
+        return [{ dimension, family: item.frame_family ?? null, text, articleId: entry.articleId, evidence }];
       }),
     ),
   );
@@ -104,7 +105,19 @@ function groundedAnswer(bundle: IssueAnalysisBundle, question: string) {
     return { status: "withheld", answer: "이 의제에는 성공한 AI 본문 분석이 없어 답변을 보류합니다.", evidence: [] as AnswerEvidence[] };
   }
 
-  if (/취재원|화자|인용|누가|누구/.test(question)) {
+  // 질문이 층위를 지목하면 그 층위 안에서 답한다. 취재원 분기보다 먼저 판정해야
+  // '누구의 책임인가' 같은 층위 질문을 화자 질문으로 가로채지 않는다.
+  const namedDimension = (
+    [
+      [/책임|귀속/, "responsibility_attribution"],
+      [/원인|왜 그렇|배경/, "causal_interpretation"],
+      [/해법|처방|대책|해결/, "treatment_recommendation"],
+      [/평가|옳|잘못|규범|도덕/, "moral_evaluation"],
+      [/문제|규정|쟁점/, "problem_definition"],
+    ] as Array<[RegExp, string]>
+  ).find(([pattern]) => pattern.test(question))?.[1];
+
+  if (/취재원|화자|인용/.test(question) || (/누가|누구/.test(question) && !namedDimension)) {
     const actors = new Map<string, { count: number; articleId: string; evidence?: PublicEvidence }>();
     for (const entry of profiles) {
       for (const actor of entry.profile.actors_and_sources ?? []) {
@@ -153,19 +166,16 @@ function groundedAnswer(bundle: IssueAnalysisBundle, question: string) {
     }
   }
 
-  // 질문이 층위를 지목하면 그 층위 안에서만 답한다. 안 하면 차이 질문의 순위가
-  // 겹침 0 에서 임의로 정해져 "책임 귀속" 질문에 문제 정의 항목이 돌아온다.
-  const namedDimension = (
-    [
-      [/책임|귀속/, "responsibility_attribution"],
-      [/원인|왜 그렇|배경/, "causal_interpretation"],
-      [/해법|처방|대책|해결/, "treatment_recommendation"],
-      [/평가|옳|잘못|규범|도덕/, "moral_evaluation"],
-      [/문제|규정|쟁점/, "problem_definition"],
-    ] as Array<[RegExp, string]>
-  ).find(([pattern]) => pattern.test(question))?.[1];
-
-  const allClaims = semanticClaims(bundle);
+  // 코딩 병합 단계가 남긴 완전 중복 항목(동일 문장·위치·지문)이 답변에 두 번 나오지 않게 거른다
+  const allClaims = (() => {
+    const seen = new Set<string>();
+    return semanticClaims(bundle).filter((claim) => {
+      const key = `${claim.articleId}|${claim.dimension}|${claim.text}|${claim.evidence?.sentenceSha256 ?? ""}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  })();
   const scoped = namedDimension ? allClaims.filter((claim) => claim.dimension === namedDimension) : allClaims;
   const claims = scoped.length ? scoped : allClaims;
   const questionTokens = tokens(question);
@@ -175,28 +185,72 @@ function groundedAnswer(bundle: IssueAnalysisBundle, question: string) {
     return { ...claim, overlap };
   }).sort((left, right) => right.overlap - left.overlap);
   const differenceQuestion = /차이|다르|달라|달랐|갈린|갈렸|비교|초점/.test(question);
-  const pickDistinct = (limit: number) =>
-    ranked.reduce<typeof ranked>((items, claim) => {
-      if (items.length >= limit) return items;
-      if (!items.some((candidate) => candidate.articleId === claim.articleId || candidate.text === claim.text)) items.push(claim);
-      return items;
-    }, []);
+  const toEvidence = (claims: typeof ranked) =>
+    claims.map((claim) => answerEvidence(articleFor(bundle, claim.articleId), claim.evidence)).filter((item): item is AnswerEvidence => Boolean(item));
+
+  if (differenceQuestion) {
+    // '서로 다른 설명'은 같은 층위 안에서 계열(frame_family)이 다를 때만 그렇게 부른다.
+    // 기사만 다르고 계열이 같으면 프레이밍 화면의 '매체 간 동일' 판정과 모순되고,
+    // 층위를 넘나들며 비교하면 '해법' 항목과 '문제 정의' 항목이 대비되는데 그것은
+    // 갈림이 아니라 서로 다른 질문의 답이다.
+    const dimOrder = [
+      "problem_definition",
+      "causal_interpretation",
+      "responsibility_attribution",
+      "moral_evaluation",
+      "treatment_recommendation",
+    ];
+    const scopeDims = namedDimension ? [namedDimension] : dimOrder;
+    for (const dim of scopeDims) {
+      const inDim = ranked.filter((claim) => claim.dimension === dim);
+      const byFamily = new Map<string, typeof ranked>();
+      for (const claim of inDim) {
+        const family = claim.family ?? "unknown";
+        const list = byFamily.get(family) ?? [];
+        list.push(claim);
+        byFamily.set(family, list);
+      }
+      if (byFamily.size >= 2) {
+        const families = [...byFamily.entries()].sort((left, right) => right[1].length - left[1].length);
+        const pair = [families[0][1][0], families[1][1][0]];
+        return {
+          status: "answered",
+          answer: `‘${DIM_LABEL[dim] ?? dim}’ 층위에서 서로 다른 계열의 설명이 관측되었습니다: “${pair[0].text}”(${familyLabel(pair[0].family ?? undefined)})와 “${pair[1].text}”(${familyLabel(pair[1].family ?? undefined)})입니다.`,
+          evidence: toEvidence(pair),
+        };
+      }
+    }
+    const sample = ranked[0];
+    if (sample) {
+      const second = ranked.find((claim) => claim.articleId !== sample.articleId && claim.dimension === sample.dimension);
+      return {
+        status: "answered",
+        answer: `${namedDimension ? `‘${DIM_LABEL[namedDimension] ?? namedDimension}’ 층위에서는` : "이 의제에서는 다섯 층위 어디에서도"} 서로 다른 계열의 설명이 관측되지 않았습니다. 매체 간 차이는 표현 수준입니다. 예: “${sample.text}”(${familyLabel(sample.family ?? undefined)})`,
+        evidence: toEvidence(second ? [sample, second] : [sample]),
+      };
+    }
+    return { status: "withheld", answer: "연결된 AI 본문 근거만으로는 이 질문에 답할 수 없습니다.", evidence: [] as AnswerEvidence[] };
+  }
+
   // 질문이 층위를 지목했으면 토큰 겹침을 요구하지 않는다. 의역 문장에 층위 이름이
   // 들어 있을 이유가 없어서, 겹침을 요구하면 "해법·처방은?" 같은 질문이 늘 보류된다.
-  const selected = differenceQuestion
-    ? pickDistinct(2)
-    : namedDimension && scoped.length
-      ? pickDistinct(3)
-      : ranked.filter((claim) => claim.overlap > 0).slice(0, 3);
-  if (!selected.length || (differenceQuestion && selected.length < 2)) {
+  const selected = namedDimension && scoped.length
+    ? (() => {
+        const picked: typeof ranked = [];
+        for (const claim of ranked) {
+          if (picked.length >= 3) break;
+          if (!picked.some((candidate) => candidate.articleId === claim.articleId || candidate.text === claim.text)) picked.push(claim);
+        }
+        return picked;
+      })()
+    : ranked.filter((claim) => claim.overlap > 0).slice(0, 3);
+  if (!selected.length) {
     return { status: "withheld", answer: "연결된 AI 본문 근거만으로는 이 질문에 답할 수 없습니다.", evidence: [] as AnswerEvidence[] };
   }
   return {
     status: "answered",
-    answer: differenceQuestion
-      ? `AI 자동 초안에서 확인된 서로 다른 설명은 “${selected[0].text}”와 “${selected[1].text}”입니다.`
-      : selected.map((claim) => claim.text).join(" "),
-    evidence: selected.map((claim) => answerEvidence(articleFor(bundle, claim.articleId), claim.evidence)).filter((item): item is AnswerEvidence => Boolean(item)),
+    answer: selected.map((claim) => claim.text).join(" "),
+    evidence: toEvidence(selected),
   };
 }
 

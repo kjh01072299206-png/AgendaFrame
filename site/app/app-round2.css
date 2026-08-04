@@ -135,6 +135,7 @@
 
 .afs-layer-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 8px;
   margin: 16px 0 9px;

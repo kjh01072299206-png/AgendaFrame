@@ -141,6 +141,13 @@ export function ShellTop({ issues }: { issues: ShellIssue[] }) {
   const tail = issueTail(pathname);
   const theme = useTheme();
   const [picked, setPicked] = useState(issueId);
+  // 경로로 의제가 바뀌면 선택도 따라간다 — 초기값만 받으면 Link 이동 뒤 낡은 값이 남아
+  // '이 의제 보기'가 이전 의제로 되돌린다 (렌더 중 상태 재조정 패턴, useEffect 불필요)
+  const [prevIssueId, setPrevIssueId] = useState(issueId);
+  if (prevIssueId !== issueId) {
+    setPrevIssueId(issueId);
+    setPicked(issueId);
+  }
   const flip = () => setTheme(theme === "dark" ? "light" : "dark");
 
   return (

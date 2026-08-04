@@ -52,8 +52,9 @@ export default function HomePage() {
           <p className="afs-finding">
             {silent.length ? (
               <>
-                이날 한국 언론은 <b>{silent.map((l) => l.label).join(" · ")}</b>에서 매체 사이에 아무 차이도 남기지 않았습니다 —
-                의제 {day.issueCount}건 전부입니다.
+                이날 표본(종합지 {day.outletCount}곳 · 기사 {day.articleCount}건)에서는{" "}
+                <b>{silent.map((l) => l.label).join(" · ")}</b>의 매체별 대표 계열이 갈리지 않았습니다 — 의제{" "}
+                {day.issueCount}건 전부에서 그렇습니다.
               </>
             ) : (
               <>다섯 층위 모두에서 매체 간 차이가 관측되었습니다.</>
