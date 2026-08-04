@@ -133,7 +133,10 @@ nav.nav{display:flex;flex-direction:column;gap:2px}
 }
 .iconbtn:hover{background:var(--afs-sunk);color:var(--afs-ink)}
 .iconbtn svg{width:15px;height:15px}
-.wrap{padding:22px 20px 84px;max-width:1080px;width:100%}
+.wrap{padding:22px 20px 84px;max-width:1080px;width:100%;min-width:0}
+/* 긴 영문 토큰(해시 규칙 등)은 keep-all 때문에 줄바꿈되지 않아 화면을 넓힌다 */
+code,pre{overflow-wrap:anywhere;word-break:break-all}
+pre{white-space:pre-wrap}
 
 /* 본문 문맥의 링크는 색만으로 구분되지 않게 밑줄을 둔다 (SC 1.4.1) */
 .wrap p a,.wrap li a,.wrap caption a,table.t td a,table.t th a,.note a,.scene-f a{
@@ -383,7 +386,7 @@ dialog.book::backdrop{background:rgba(10,15,22,.42)}
 /* 표 */
 table.t{width:100%;border-collapse:collapse;font-size:max(12px,0.86em)}
 table.t caption{text-align:left;font-size:11.5px;color:var(--afs-ink-3);padding-bottom:7px}
-table.t th,table.t td{padding:8px 9px;border-bottom:1px solid var(--afs-rule);text-align:left;vertical-align:top}
+table.t th,table.t td{padding:8px 9px;border-bottom:1px solid var(--afs-rule);text-align:left;vertical-align:top;overflow-wrap:anywhere}
 table.t thead th{font-size:11px;font-weight:800;color:var(--afs-ink-3);background:var(--afs-sunk);white-space:nowrap}
 table.t tbody th{font-weight:750}
 table.t td.n{text-align:right;font-variant-numeric:tabular-nums}
@@ -671,7 +674,8 @@ section[data-screen].on{display:block}
             </div>
           </div>
           <div class="scene-f">
-            <span>두 기사는 같은 날 같은 사건을 다뤘지만 <b>무엇이 문제인지</b>부터 다르게 규정했습니다.</span>
+            <span>두 기사는 같은 날 같은 사건을 다뤘지만 <b>무엇이 문제인지</b>부터 다르게 규정했습니다.<br />
+            <span style="color:var(--afs-ink-3)">다른 서비스는 기사 전체를 세서 신문에 점수를 매깁니다. 여기서는 <b>기자가 직접 쓴 문장만</b> 세고, 사건마다 축을 새로 만듭니다.</span></span>
             <a href="#/framing" style="color:var(--afs-brand);font-weight:800;margin-left:auto">이 의제의 다섯 층위 전부 보기 →</a>
           </div>
         </div>
@@ -751,13 +755,13 @@ section[data-screen].on{display:block}
         <div class="card">
           <div class="tscroll" tabindex="0" role="region" aria-label="표 — 좌우로 스크롤할 수 있습니다"><table class="t">
             <caption>보도량·매체 참여·후속 보도를 가중한 순위입니다. 사안의 사회적 중요도가 아닙니다.</caption>
-            <thead><tr><th scope="col">순위</th><th scope="col">의제</th><th scope="col" class="n">기사</th><th scope="col" class="n">매체</th><th scope="col">갈린 층위</th><th scope="col">군집 품질</th></tr></thead>
+            <thead><tr><th scope="col">순위</th><th scope="col">의제</th><th scope="col" class="n">기사</th><th scope="col" class="n">매체</th><th scope="col">어떻게 갈렸나</th><th scope="col">군집 품질</th></tr></thead>
             <tbody>
-              <tr><th scope="row">1</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">특검 보완수사권 부여 논쟁</a></td><td class="n">7</td><td class="n">6</td><td><span class="chip brand">문제 정의</span> <span class="chip brand">원인</span></td><td><span class="chip warn">재검토 필요</span></td></tr>
-              <tr><th>2</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">여당 지도부 내부 충돌 논란</a></td><td class="n">6</td><td class="n">6</td><td><span class="chip brand">문제 정의</span></td><td><span class="chip good">응집</span></td></tr>
-              <tr><th>3</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">아파트 방화 보복범죄 수사</a></td><td class="n">4</td><td class="n">4</td><td><span class="chip brand">해법</span></td><td><span class="chip good">응집</span></td></tr>
-              <tr><th>4</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">소송 대리인 불출석 손해배상 조정</a></td><td class="n">4</td><td class="n">4</td><td><span class="chip brand">책임</span></td><td><span class="chip warn">재검토 필요</span></td></tr>
-              <tr><th>5</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">외국인 집단 난투 사건</a></td><td class="n">4</td><td class="n">4</td><td><span class="chip">동일</span></td><td><span class="chip good">응집</span></td></tr>
+              <tr><th scope="row">1</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">특검 보완수사권 부여 논쟁</a></td><td class="n">7</td><td class="n">6</td><td><b>제도 문제</b> vs <b>정치 싸움</b><br /><span style="font-size:11px;color:var(--afs-ink-3)">문제 정의·원인에서 갈림</span></td><td><span class="chip warn">재검토 필요</span></td></tr>
+              <tr><th>2</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">여당 지도부 내부 충돌 논란</a></td><td class="n">6</td><td class="n">6</td><td><b>개인 일탈</b> vs <b>정당 규율</b><br /><span style="font-size:11px;color:var(--afs-ink-3)">문제 정의에서 갈림</span></td><td><span class="chip good">응집</span></td></tr>
+              <tr><th>3</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">아파트 방화 보복범죄 수사</a></td><td class="n">4</td><td class="n">4</td><td><b>처벌 강화</b> vs <b>피해자 보호</b><br /><span style="font-size:11px;color:var(--afs-ink-3)">해법에서 갈림</span></td><td><span class="chip good">응집</span></td></tr>
+              <tr><th>4</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">소송 대리인 불출석 손해배상 조정</a></td><td class="n">4</td><td class="n">4</td><td><b>대리인 책임</b> vs <b>제도 미비</b><br /><span style="font-size:11px;color:var(--afs-ink-3)">책임에서 갈림</span></td><td><span class="chip warn">재검토 필요</span></td></tr>
+              <tr><th>5</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">외국인 집단 난투 사건</a></td><td class="n">4</td><td class="n">4</td><td>네 곳이 같은 방식으로 규정<br /><span style="font-size:11px;color:var(--afs-ink-3)">사실 전달에 가까움</span></td><td><span class="chip good">응집</span></td></tr>
             </tbody>
           </table></div>
           <p class="note"><b>군집 품질</b>을 같이 적는 이유: 1·4위는 규칙 군집이 "같은 사건"이라고 묶었지만 유사도가 임계값 아래였습니다. 그 의제의 비교는 조금 더 조심해서 읽어야 합니다.</p>
@@ -1492,39 +1496,6 @@ section[data-screen].on{display:block}
           </div>
         </div>
 
-        <h2 class="sec">결과는 이렇게 나옵니다 <span class="chip">예시</span></h2>
-        <div class="card">
-          <div class="type">
-            <div class="code4">BMOR<small>정밀 대조가</small></div>
-            <div>
-              <p style="margin:0 0 9px;font-size:13.5px;line-height:1.7">
-                당신은 <b>본문을 끝까지 읽고</b>, 인용된 발언을 그 사람의 말로 구분해 받아들이며, 사안을 <b>구조와 맥락</b>에서 이해하려 합니다.
-                결론을 서두르지 않는 편입니다.
-              </p>
-              <div class="grid g2" style="margin-top:11px">
-                <div style="background:var(--afs-sunk);border-radius:var(--afs-r-btn);padding:11px 12px">
-                  <b style="font-size:11.5px;color:var(--afs-good)">강점</b>
-                  <p style="margin:3px 0 0;font-size:12.5px;line-height:1.6">인용된 발언을 그 신문의 입장으로 오인하지 않습니다. 그래서 정치 기사에서 &ldquo;누가 한 말인지&rdquo;에 잘 속지 않습니다.</p>
-                </div>
-                <div style="background:var(--afs-warn-soft);border-radius:var(--afs-r-btn);padding:11px 12px">
-                  <b style="font-size:11.5px;color:var(--afs-warn)">놓치기 쉬운 것</b>
-                  <p style="margin:3px 0 0;font-size:12.5px;line-height:1.6">구조를 먼저 보다 보니 <b>해법·처방</b> 층위를 지나치기 쉽습니다. 진단이 달라도 처방이 같은 경우를 놓칩니다.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:14px;padding-top:13px;border-top:1px solid var(--afs-rule)">
-            <button class="btn">결과 이미지 저장</button>
-            <button class="btn ghost">링크 복사</button>
-            <span class="chip">공유해도 12문항 응답은 담기지 않습니다</span>
-          </div>
-          <div class="next" style="margin-top:14px;padding-top:14px">
-            <a href="#/framing#L5"><i>당신이 놓치는 층위</i><b>해법·처방 층위 보기</b><span>1위 의제 — 진단은 갈렸지만 처방은 모였습니다</span></a>
-            <a href="#/community"><i>같은 유형 12명</i><b>커뮤니티에서 이야기하기</b><span>BMOR 배지가 함께 붙습니다</span></a>
-            <a href="#/settings"><i>보관</i><b>다른 기기에서 이어보기</b><span>복구 코드로 결과를 옮깁니다</span></a>
-          </div>
-        </div>
-
         <details class="fold" style="margin-top:12px">
           <summary>16개 유형 전체 보기 <span class="chip">결과를 본 뒤에 펼치는 게 좋습니다</span></summary>
           <div class="body">
@@ -1574,8 +1545,11 @@ section[data-screen].on{display:block}
           </div>
           <label class="field"><span>이 이슈에 대해 — <b>한 줄이면 됩니다</b></span><textarea placeholder="예: 나는 이 사건을 정치 싸움으로만 봤는데, 제도 얘기로 쓴 기사가 있는 게 의외였다."></textarea></label>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <button class="btn">등록</button>
+            <button class="btn" type="button">등록</button>
             <span class="chip wrap">내가 어느 화면을 보고 썼는지 함께 표시됩니다 (다른 사람이 근거를 확인할 수 있게)</span>
+          </div>
+          <p class="note">등록하면 <b>바로 공개됩니다.</b> 다만 이메일·전화번호처럼 개인정보로 보이는 내용이 있으면
+          검토 전까지 공개되지 않고, 신고가 3번 쌓인 글은 자동으로 숨겨집니다. 이름은 위 설정에서 한 번만 정하면 됩니다.
           </div>
         </div>
 
@@ -1903,7 +1877,7 @@ A source's statement is not the outlet's own position.</pre>
             <p style="margin:0 0 8px;font-size:12.5px;line-height:1.65">2026-07-26 하루, 보도량 상위 5개 의제, 기사 25건.</p>
             <table class="t"><tbody>
               <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3);width:96px">대상 매체</th><td style="border:0;padding:3px 0">중앙 일간 22곳 (방송·통신사 제외)</td></tr>
-              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">이날 등장</th><td style="border:0;padding:3px 0"><b>9곳</b> — A일보·B일보·C일보·D신문·E일보·F신문·G일보·H일보·I신문</td></tr>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">이날 등장</th><td style="border:0;padding:3px 0"><b>9곳</b> — A일보 · B일보 · C일보 · D신문 · E일보 · F신문 · G일보 · H일보 · I신문</td></tr>
               <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">미등장</th><td style="border:0;padding:3px 0">13곳 — 표본에 없다는 뜻이며 보도하지 않았다는 뜻이 아닙니다</td></tr>
               <tr><th style="border:0;padding:6px 0 0;font-size:11px;color:var(--afs-ink-3)">커버리지</th><td style="border:0;padding:6px 0 0">
                 <span class="cov" role="img" aria-label="대상 22곳 중 9곳이 이 표본에 등장">
