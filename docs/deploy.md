@@ -4,27 +4,39 @@
 
 ## 누가 어떻게 배포하는가
 
-프로덕션은 **GitHub Actions 의 `Site Gate` 워크플로**가 소유한다. `main` 에 push 하면
-아래 관문을 전부 통과한 뒤에만 프로덕션에 나간다. 통과하지 못하면 배포되지 않는다.
+목표는 하나다: **팀원이 `main` 에 push 하면 실배포가 갱신된다. Vercel 계정도 토큰도
+필요 없다.** 그 상태를 만드는 경로가 두 개 있고, **둘 중 하나만 켠다.** 둘 다 켜면
+push 한 번에 두 번 배포된다.
+
+| | ① Vercel Git 연결이 배포 | ② Site Gate 워크플로가 배포 |
+| --- | --- | --- |
+| 소유자가 할 일 | GitHub 앱 설치 (클릭 4번) | 토큰 발급 + 시크릿 붙여넣기 |
+| 검사와의 관계 | 배포와 **나란히** 돈다 | 검사를 **통과해야** 배포된다 |
+| 빨간불의 뜻 | 배포됐지만 검사에 걸렸다 → 되돌린다 | 배포되지 않았다 |
+| 미리보기(PR·브랜치) | 생긴다 | 없다 |
+
+어느 쪽이든 워크플로는 같은 관문을 돌린다.
 
 ```
 타입검사 → 린트 → 계약·커뮤니티 테스트 → next build
 → 렌더 채점기 (규칙 18 × 라우트 14 × 뷰포트 5)
-→ 프로덕션 배포 → 라이브 4개 경로 200 확인
+→ (② 일 때) 프로덕션 배포
+→ 라이브에 이 커밋이 떴는지 확인 → 4개 경로 200 확인
 ```
 
-팀원은 **Vercel 계정도 토큰도 필요 없다.** `main` 에 push 하거나, 저장소 Actions 탭에서
-`Site Gate` → `Run workflow` 를 누르면 된다.
+마지막 확인은 `/version` 을 폴링해 **배포된 커밋 SHA** 를 대조한다(최대 10분).
+200 만 보면 Vercel 이 아직 빌드하는 동안 이전 빌드를 초록불로 오인하기 때문이다.
 
-Vercel Git 연결은 **미리보기 전용**이다. `main` 은 `site/vercel.json` 의
-`git.deploymentEnabled.main = false` 로 자동 배포를 끄고, 다른 브랜치와 PR 에서만
-미리보기 URL 을 만든다. 프로덕션 배포 경로를 하나로 유지해 push 한 번에 두 번
-배포되는 일을 막는다.
+### ① 을 켜는 방법 (권장 — 클릭이 가장 적다)
 
-> Git 연결이 프로덕션까지 담당하게 하려면 `site/vercel.json` 의 `git` 블록만 지우면
-> 된다. 그때는 관문을 통과하지 않은 커밋도 그대로 나간다는 점을 감수하는 것이다.
+1. <https://github.com/apps/vercel> → Install → `kjh01072299206-png` 계정 →
+   `AgendaFrame` 저장소 접근 허용
+2. `cd site && npx vercel git connect`
+3. `gh variable set AF_DEPLOY_OWNER --body vercel-git`
 
-## 한 번만 하는 설정
+끝나면 팀원의 push 가 곧바로 프로덕션에 나가고, PR 마다 미리보기 URL 이 생긴다.
+
+### ② 를 켜는 방법 (검사를 통과한 커밋만 배포)
 
 저장소 Settings → Secrets and variables → Actions
 
@@ -34,17 +46,20 @@ Vercel Git 연결은 **미리보기 전용**이다. `main` 은 `site/vercel.json
 | Variable | `VERCEL_PROJECT_ID` | `prj_PPcR6Fa5hsyK13daz9G1G9HyIIMX` | 등록됨 |
 | Secret | `VERCEL_TOKEN` | <https://vercel.com/account/tokens> 에서 발급 (Scope: 팀 `af`) | **소유자가 넣어야 함** |
 
-`VERCEL_TOKEN` 이 없으면 워크플로는 검사만 하고 배포 단계를 건너뛴다(실패가 아니다).
-그동안 프로덕션 배포는 소유자가 로컬에서 한다.
+토큰이 들어오면 `AF_DEPLOY_OWNER` 는 무시되고 워크플로가 배포를 맡는다.
+그때는 ① 을 껐다는 뜻이 되도록 Vercel 대시보드에서 Git 연결을 끊거나,
+`site/vercel.json` 에 `"git": { "deploymentEnabled": { "main": false } }` 를 넣는다.
+
+### 둘 다 없는 동안 (현재 상태)
+
+워크플로는 검사만 하고 배포·라이브 확인을 건너뛴다(실패가 아니다). 프로덕션 배포는
+소유자가 로컬에서 `cd site && npx vercel deploy --prod --yes` 로 한다.
 
 Vercel 프로젝트 설정(이미 적용됨):
 
 - Root Directory `site` — 저장소 루트가 아니라 앱 디렉터리에서 빌드한다
 - Framework `nextjs`
 - Ignored Build Step `git diff --quiet HEAD^ HEAD ./` — `site/` 밖만 바뀐 커밋은 빌드 생략
-
-Vercel Git 연결(미리보기)은 GitHub 앱 설치가 필요하다: <https://github.com/apps/vercel>
-설치 후 `npx vercel git connect` 로 연결한다.
 
 ## 배포 전에 로컬에서 같은 검사 돌리기
 

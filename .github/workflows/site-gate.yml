@@ -1,15 +1,20 @@
-# 실배포 관문. 배포 자체는 Vercel Git 연결이 하고(누가 push 하든 자동), 이 워크플로는
-# 같은 커밋에 대해 타입·린트·계약 테스트·next build·렌더 채점기를 돌려 품질을 보고한다.
-# 빨간불이 뜨면 그 커밋은 배포됐지만 검사에 걸렸다는 뜻이므로 즉시 되돌리면 된다.
+# 실배포 관문. 누가 push 하든 같은 검사를 돌리고, 라이브에 그 커밋이 실제로 떴는지까지
+# 확인한다. 팀원은 Vercel 계정도 토큰도 필요 없다 — main 에 push 하면 된다.
 #
-# 관문을 통과한 커밋만 배포하고 싶으면(선택 ②) 아래 시크릿을 넣으면 된다:
-#   Settings → Secrets and variables → Actions
-#     Secrets   VERCEL_TOKEN        Vercel → Account Settings → Tokens 에서 발급
-#     Variables VERCEL_ORG_ID       site/.vercel/project.json 의 orgId
-#     Variables VERCEL_PROJECT_ID   site/.vercel/project.json 의 projectId
+# 배포 경로는 둘 중 하나만 켠다(둘 다 켜면 push 한 번에 두 번 배포된다):
 #
-# 이렇게 두면 팀원은 Vercel 계정도, 토큰도 필요 없다 — main 에 push 하거나
-# Actions 탭에서 "Run workflow" 를 누르면 된다. 토큰은 로그에 찍히지 않는다.
+#   ① Vercel Git 연결이 배포    github.com/apps/vercel 설치 → vercel git connect
+#                              → gh variable set AF_DEPLOY_OWNER --body vercel-git
+#      검사는 배포와 나란히 돈다. 빨간불은 "배포됐지만 검사에 걸렸다" 는 뜻이다.
+#
+#   ② 이 워크플로가 배포        Settings → Secrets and variables → Actions 에
+#        Secret   VERCEL_TOKEN      vercel.com/account/tokens 에서 발급
+#        Variable VERCEL_ORG_ID     site/.vercel/project.json 의 orgId
+#        Variable VERCEL_PROJECT_ID site/.vercel/project.json 의 projectId
+#      검사를 통과한 커밋만 배포된다. 토큰은 로그에 찍히지 않는다.
+#
+# 둘 다 없으면(AF_DEPLOY_OWNER 미설정 + 토큰 없음) 검사만 하고 끝낸다 —
+# 배포된 것이 없으니 라이브 확인은 건너뛴다.
 
 name: Site Gate
 
@@ -38,6 +43,10 @@ jobs:
     timeout-minutes: 30
     env:
       HAS_VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
+      # 이 커밋을 누가 프로덕션에 올리는가. 토큰이 있으면 이 워크플로가,
+      # 없으면 저장소 변수 AF_DEPLOY_OWNER 가 정한다(vercel-git | none).
+      # none 이면 라이브 확인은 검사할 대상이 없으므로 건너뛴다.
+      DEPLOY_OWNER: ${{ secrets.VERCEL_TOKEN != '' && 'workflow' || (vars.AF_DEPLOY_OWNER || 'none') }}
     defaults:
       run:
         working-directory: site
@@ -102,14 +111,40 @@ jobs:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: npx --yes vercel@58 deploy --prod --yes --token "$VERCEL_DEPLOY_TOKEN"
 
-      # Vercel 이 배포하든 이 워크플로가 배포하든, 라이브가 실제로 뜨는지는 확인한다.
+      - name: 배포 주체 보고
+        run: |
+          echo "이 커밋의 배포 주체: $DEPLOY_OWNER"
+          if [ "$DEPLOY_OWNER" = "none" ]; then
+            echo "아무 배포 경로도 켜져 있지 않습니다. 검사만 하고 끝냅니다."
+            echo "  ① Vercel Git 연결 후  gh variable set AF_DEPLOY_OWNER --body vercel-git"
+            echo "  ② VERCEL_TOKEN 시크릿 추가 (이 워크플로가 직접 배포)"
+          fi
+
+      # Vercel 이 배포하든 이 워크플로가 배포하든, 라이브에 이 커밋이 떴는지 확인한다.
+      # 200 만 보면 Vercel 이 아직 빌드하는 동안 이전 빌드를 초록불로 오인한다.
+      # /version 은 배포된 커밋을 그대로 돌려주므로 그 오인을 막는다.
       - name: Verify the live deployment
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && env.DEPLOY_OWNER != 'none'
+        env:
+          LIVE: https://agendaframe-capstone.vercel.app
+          WANT: ${{ github.sha }}
         run: |
           set -e
-          sleep 45
+          echo "기다리는 커밋: ${WANT:0:7}"
+          live=""
+          for i in $(seq 1 40); do   # 최대 10분 (Vercel 빌드가 끝나기를 기다린다)
+            live=$(curl -s --max-time 20 "$LIVE/version" | sed -n 's/.*"commit":"\([^"]*\)".*/\1/p')
+            if [ "$live" = "$WANT" ]; then echo "라이브 = ${live:0:7} (일치)"; break; fi
+            echo "  [$i/40] 라이브 = ${live:-응답없음}"
+            sleep 15
+          done
+          if [ "$live" != "$WANT" ]; then
+            echo "실배포에 이 커밋이 뜨지 않았습니다 (라이브=${live:-응답없음}, 기대=${WANT:0:7})."
+            echo "Vercel Git 연결과 VERCEL_TOKEN 모두 없으면 아무도 배포하지 않은 상태입니다."
+            exit 1
+          fi
           for path in "/" "/issues" "/issues/bigkinds-2026-07-26-top-1/framing" "/tools/method"; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" "https://agendaframe-capstone.vercel.app$path")
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$LIVE$path")
             echo "$code $path"
             [ "$code" = "200" ] || { echo "실배포 확인 실패: $path"; exit 1; }
           done
