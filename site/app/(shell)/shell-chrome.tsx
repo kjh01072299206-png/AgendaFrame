@@ -25,6 +25,7 @@ const ICON: Record<string, string> = {
   book: "M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5C4.7 20 4 19.3 4 18.5zM20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5c.8 0 1.5-.7 1.5-1.5z",
   sun: "M12 5.5v-2m0 17v-2m6.5-6.5h2m-17 0h2m11.1-4.6 1.4-1.4M6 18l1.4-1.4m9.2 0L18 18M6 6l1.4 1.4M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7",
   moon: "M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5",
+  gear: "M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6m7.4 3c0-.5 0-1-.1-1.4l2-1.5-2-3.4-2.3 1a7.4 7.4 0 0 0-2.4-1.4L14.2 2.8H9.8l-.4 2.5c-.9.3-1.7.8-2.4 1.4l-2.3-1-2 3.4 2 1.5a8 8 0 0 0 0 2.8l-2 1.5 2 3.4 2.3-1c.7.6 1.5 1.1 2.4 1.4l.4 2.5h4.4l.4-2.5c.9-.3 1.7-.8 2.4-1.4l2.3 1 2-3.4-2-1.5c.1-.4.1-.9.1-1.4",
 };
 
 function Icon({ name }: { name: string }) {
@@ -64,19 +65,15 @@ export function ShellSide({
       label: null,
       items: [{ href: "/", label: "오늘의 의제", icon: "home", match: (p) => p === "/" || p === "/issues" }],
     },
-    /* 사안 개요 → 프레이밍 분석 → 리포트 는 한 의제를 읽는 순서다. 리포트가 '도구' 에 있었던 것은
-       주소는 의제별인데 묶음만 도구였던 오류다. 언론사 비교는 프레이밍 분석에 흡수했다 —
-       같은 행렬을 매체별로 한 번, 조합별로 한 번 그리던 중복이었다. */
+    /* 무슨 일이었나 → 언론사 비교 → 프레이밍 분석 → 리포트 는 한 의제를 읽는 순서다.
+       언론사 비교는 세는 것(인용원·인용 방식·형태소), 프레이밍 분석은 이론에 붙은 층위를 맡는다.
+       두 화면이 같아 보였던 것은 같은 행렬을 두 번 그렸기 때문이고, 이제 하는 일이 다르다. */
     {
       label: "이 의제 안에서",
       items: [
-        { href: scoped(""), label: "사안 개요", icon: "layers", match: (p) => /^\/issues\/[^/]+$/.test(p) },
-        {
-          href: scoped("/framing"),
-          label: "프레이밍 분석",
-          icon: "compass",
-          match: (p) => p.endsWith("/framing") || p.endsWith("/outlets"),
-        },
+        { href: scoped(""), label: "무슨 일이었나", icon: "layers", match: (p) => /^\/issues\/[^/]+$/.test(p) },
+        { href: scoped("/outlets"), label: "언론사 비교", icon: "outlets", match: (p) => p.endsWith("/outlets") },
+        { href: scoped("/framing"), label: "프레이밍 분석", icon: "compass", match: (p) => p.endsWith("/framing") },
         { href: scoped("/report"), label: "리포트", icon: "report", match: (p) => p.endsWith("/report") },
       ],
     },
@@ -87,6 +84,7 @@ export function ShellSide({
         { href: "/tools/ask", label: "AI 대화", icon: "chat", match: (p) => p.startsWith("/tools/ask") },
         { href: "/tools/community", label: "커뮤니티", icon: "people", match: (p) => p.startsWith("/tools/community") },
         { href: "/tools/method", label: "방법론", icon: "book", match: (p) => p.startsWith("/tools/method") },
+        { href: "/tools/settings", label: "설정", icon: "gear", match: (p) => p.startsWith("/tools/settings") },
       ],
     },
   ];

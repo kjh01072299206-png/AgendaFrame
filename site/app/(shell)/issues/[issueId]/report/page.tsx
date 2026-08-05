@@ -152,30 +152,20 @@ export default async function ReportPage({ params }: { params: Promise<{ issueId
         </div>
       </section>
 
-      <section className="afs-card">
-        <h2>이 리포트를 읽을 때</h2>
-        <div className="afs-in afs-prose">
-          {issue.comparisonEngine.limitNote ? <p>{issue.comparisonEngine.limitNote}</p> : null}
-          <p>
-            이 리포트는 {issue.articleCount}건의 기사 본문에서 자동으로 뽑은 설명 요소를 정리한 것이다. 층위별 코딩은 AI 이중
-            코딩 뒤 판정을 거쳤고, 의제 단위 비교(쟁점 축·패턴)는{" "}
-            {issue.comparisonEngine.semanticAi ? "AI" : "규칙 기반"} 집계다. 매체의 의도나 이념을 판정하지 않는다.
-          </p>
-          <p>
-            ‘미관측’은 분석 가능한 본문에서 해당 설명을 찾지 못했다는 뜻이다. 취재원의 발언은 그 매체의 입장이 아니다. 본문
-            전문은 저장하지 않고, 근거는 문장 위치와 비복원 지문으로만 남는다.
-          </p>
-          {issue.layers.some((layer) => layer.notObserved > 0) ? (
+      {/* 방법과 한계는 방법론 화면에 있다. 여기서는 이 사안에서만 성립하는 사실 하나만 남긴다. */}
+      {issue.layers.some((layer) => layer.notObserved > 0) ? (
+        <section className="afs-card">
+          <h2>관측되지 않은 것</h2>
+          <div className="afs-in afs-prose">
             <p>
-              <b>이 의제에서 관측되지 않은 것</b>{" "}
               {issue.layers
                 .filter((layer) => layer.notObserved > 0)
                 .map((layer) => `${layer.label}${particle(layer.label, "은", "는")} 기사 ${layer.notObserved}건에서 관측되지 않았다.`)
                 .join(" ")}
             </p>
-          ) : null}
-        </div>
-      </section>
+          </div>
+        </section>
+      ) : null}
     </article>
   );
 }

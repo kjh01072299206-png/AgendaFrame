@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { SaveIssueButton } from "./saved-issues";
 
 const SCREENS = [
-  { tail: "", label: "사안 개요", says: "무슨 일이 있었나" },
-  { tail: "/framing", label: "프레이밍 분석", says: "매체가 어디에서 갈라지는가" },
+  { tail: "", label: "무슨 일이었나", says: "사실과 갈린 지점" },
+  { tail: "/outlets", label: "언론사 비교", says: "인용원 · 낱말" },
+  { tail: "/framing", label: "프레이밍 분석", says: "프레임 이론 여섯 층위" },
   { tail: "/report", label: "리포트", says: "한 편의 글로 읽는다" },
 ];
 
@@ -18,7 +19,6 @@ export function IssueSubject({
   category,
   articleCount,
   outletCount,
-  evidenceCount,
   splitDimensions,
 }: {
   issueId: string;
@@ -28,7 +28,6 @@ export function IssueSubject({
   category: string | null;
   articleCount: number;
   outletCount: number;
-  evidenceCount: number;
   splitDimensions: number;
 }) {
   const pathname = usePathname() ?? "";
@@ -48,10 +47,7 @@ export function IssueSubject({
           {category ? <span className="afs-chip afs-chip-brand">{category}</span> : null}
           <span className="afs-chip afs-num">기사 {articleCount}건</span>
           <span className="afs-chip afs-num">매체 {outletCount}곳</span>
-          <span className="afs-chip afs-num">본문 근거 {evidenceCount}건</span>
-          <span className="afs-chip afs-chip-good afs-num">
-            매체 서술 기준 다섯 층위 중 {splitDimensions}곳에서 갈림
-          </span>
+          <span className="afs-chip afs-chip-good afs-num">다섯 층위 중 {splitDimensions}곳에서 갈림</span>
           <SaveIssueButton issueId={issueId} title={title} />
         </div>
       </section>

@@ -210,9 +210,12 @@ export function ReaderTypeQuiz() {
      계속 흔들린다. '결과 보기' 를 한 번 눌러 화면을 바꾼다. 답이 다시 미완이 되면 자동으로 문항으로
      돌아온다 — 결과 없이 결과 화면에 남아 있을 수 없게 한다. */
   const [revealed, setRevealed] = useState(false);
-  useEffect(() => {
+  // 렌더 중 상태 재조정 — 효과에서 setState 하면 렌더가 한 번 더 돌고, 그 사이 결과 화면이 한 프레임 남는다
+  const [wasDone, setWasDone] = useState(done);
+  if (wasDone !== done) {
+    setWasDone(done);
     if (!done) setRevealed(false);
-  }, [done]);
+  }
   const result = done ? TYPES[code] : null;
   const showResult = Boolean(result) && revealed;
 

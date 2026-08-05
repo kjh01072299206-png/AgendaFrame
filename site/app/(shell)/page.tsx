@@ -44,7 +44,6 @@ export default function HomePage() {
             }))}
           />
         </div>
-        <p className="afs-foot">막대 길이는 기사 수입니다. 보도량 순위이며 사안의 중요도 순위가 아닙니다.</p>
       </section>
 
       <section className="afs-card">
@@ -83,7 +82,7 @@ export default function HomePage() {
                   </p>
                   <p className="afs-explore-links">
                     <Link className="afs-link" href={`/issues/${encodeURIComponent(issue.issueId)}`}>
-                      사안 개요
+                      무슨 일이었나
                     </Link>
                     <Link className="afs-link" href={`/issues/${encodeURIComponent(issue.issueId)}/framing`}>
                       프레이밍 분석 →

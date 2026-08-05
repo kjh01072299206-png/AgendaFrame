@@ -672,3 +672,407 @@
 .afs-saved-list a:hover {
   text-decoration: underline;
 }
+
+/* ── 확장 분석 화면 (무슨 일이었나 · 언론사 비교 · 프레이밍 분석 · 설정) ─────────
+   규칙 세 개를 지킨다.
+    · 설명 문장을 화면에 두지 않는다 — 표와 값이 스스로 읽히게 한다.
+    · 굵은 글씨는 이름에만 쓴다. 값은 tabular-nums 로 자리를 맞춘다.
+    · 칸을 나누는 선은 표 안에만 둔다. 카드 안에서 또 나누지 않는다. */
+
+.afs-hold {
+  margin: 0;
+  padding: 18px 0;
+  color: var(--afs-ink-3);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.afs-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 11px 0 0;
+}
+
+.afs-bullets {
+  margin: 0;
+  padding-left: 17px;
+  display: grid;
+  gap: 7px;
+  color: var(--afs-ink-2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* 보도 흐름 — 하루치라 이 세로선이 유일한 시간 축이다 */
+.afs-flow,
+.afs-vline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 15px;
+  border-left: 1px solid var(--afs-rule);
+  display: grid;
+  gap: 14px;
+}
+.afs-flow > li,
+.afs-vline > li {
+  position: relative;
+}
+.afs-flow > li::before,
+.afs-vline > li::before {
+  content: "";
+  position: absolute;
+  left: -19px;
+  top: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--n1);
+}
+.afs-flow > li {
+  display: grid;
+  grid-template-columns: 3.6em minmax(0, 1fr);
+  gap: 11px;
+  align-items: baseline;
+}
+.afs-flow time {
+  color: var(--afs-ink-3);
+  font-size: 12px;
+}
+.afs-flow > li > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.afs-flow b {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--afs-ink-3);
+}
+.afs-flow a,
+.afs-flow > li > div > span {
+  font-size: 13.5px;
+  color: inherit;
+  text-decoration: none;
+}
+.afs-flow a:hover {
+  text-decoration: underline;
+}
+
+/* 세로선 비교 — 매체마다 같은 네 칸을 보여 다른 칸이 눈에 남게 한다 */
+.afs-vline > li > b {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 13.5px;
+  font-weight: 750;
+}
+/* 값이 짧아 두 열로 세우면 오른쪽이 텅 빈다. 네 칸을 가로로 늘어놓아 폭을 다 쓰고,
+   좁아지면 칸이 접혀 내려간다. */
+.afs-vline dl {
+  margin: 0;
+  display: grid;
+  gap: 9px 20px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 175px), 1fr));
+}
+.afs-vline dl > div {
+  min-width: 0;
+}
+.afs-vline dt {
+  margin-bottom: 3px;
+  color: var(--afs-ink-3);
+  font-size: 11px;
+}
+.afs-vline dd {
+  margin: 0;
+  font-size: 13px;
+}
+.afs-vline .afs-keys {
+  margin: 0;
+}
+
+/* 갈래 카드 — 계열색은 왼쪽 선으로만 쓴다 */
+.afs-camps {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr));
+  margin: 0 0 16px;
+}
+.afs-camps > section {
+  padding-left: 11px;
+  border-left: 2px solid var(--cc, var(--n1));
+}
+.afs-camps b {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 750;
+  color: var(--cc, var(--n1));
+}
+.afs-camps p {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--afs-ink-2);
+}
+.afs-camp-th {
+  color: var(--cc, var(--n1)) !important;
+}
+.afs-camp-th small {
+  display: block;
+  margin-top: 2px;
+  color: var(--afs-ink-3);
+  font-weight: 600;
+  white-space: normal;
+}
+
+.afs-agreed,
+.afs-gloss {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.afs-agreed dt,
+.afs-gloss dt {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--afs-ink-3);
+}
+.afs-agreed dd,
+.afs-gloss dd {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.afs-gloss dt {
+  font-size: 13px;
+  color: var(--afs-ink);
+}
+
+/* 요소 조합 군집 */
+.afs-clus {
+  display: grid;
+  gap: 14px;
+}
+.afs-clus > section {
+  padding-left: 11px;
+  border-left: 2px solid var(--cc, var(--n1));
+}
+.afs-clus h4 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 7px;
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--cc, var(--n1));
+}
+.afs-clus h4 small {
+  color: var(--afs-ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.afs-clus p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0 5px;
+}
+.afs-clus p > span:first-child {
+  margin-right: 3px;
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+}
+
+/* 의미 연결망 */
+.afs-nets {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 268px), 1fr));
+}
+.afs-nets > section {
+  padding-left: 11px;
+  border-left: 2px solid var(--cc, var(--n1));
+}
+.afs-nets h4 {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--cc, var(--n1));
+}
+.afs-nets h4 small {
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.afs-wnet {
+  width: 100%;
+  height: auto;
+}
+.afs-wnet-e line {
+  stroke: var(--afs-ink-3);
+}
+.afs-wnet-p rect {
+  fill: var(--afs-card);
+  opacity: 0.82;
+}
+.afs-wnet text {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  font-weight: 700;
+}
+.afs-wnet-sh {
+  fill: var(--afs-ink-3);
+}
+.afs-wnet-own {
+  fill: var(--n1);
+}
+
+/* 층위별 판정 */
+.afs-verdict {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 232px), 1fr));
+  column-gap: 20px;
+}
+.afs-verdict li {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--afs-rule);
+  font-size: 12.5px;
+}
+.afs-verdict li > span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.afs-verdict li > span:nth-child(2) {
+  color: var(--afs-ink-3);
+}
+
+/* 대화 */
+.afs-chat {
+  display: grid;
+  gap: 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 14px 16px;
+}
+.afs-turn {
+  display: flex;
+}
+.afs-turn > div,
+.afs-turn > p {
+  max-width: 88%;
+  margin: 0;
+  padding: 10px 13px;
+  border: 1px solid var(--afs-rule);
+  border-radius: var(--afs-r-card);
+  background: var(--afs-sunk);
+  font-size: 13.5px;
+  line-height: 1.68;
+}
+.afs-turn-me {
+  justify-content: flex-end;
+}
+.afs-turn-me > p {
+  border-color: color-mix(in srgb, var(--afs-brand) 26%, transparent);
+  background: var(--afs-soft);
+  color: var(--afs-brand);
+  font-weight: 650;
+}
+.afs-turn > div > p {
+  margin: 0 0 7px;
+  white-space: pre-line;
+}
+.afs-turn > div > p:last-child {
+  margin-bottom: 0;
+}
+.afs-cite-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid var(--afs-rule);
+}
+.afs-cite-chips a {
+  text-decoration: none;
+}
+.afs-cite-chips a:hover {
+  border-color: var(--afs-brand);
+  color: var(--afs-brand);
+}
+.afs-chat-issue {
+  margin-left: auto;
+  max-width: 58%;
+  padding: 3px 8px;
+  border: 1px solid var(--afs-rule);
+  border-radius: var(--afs-r-chip);
+  background: var(--afs-card);
+  color: var(--afs-ink-2);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 650;
+}
+.afs-chat-err {
+  margin: 0;
+  padding: 9px 16px;
+  border-top: 1px solid var(--afs-rule);
+  color: var(--afs-warn);
+  font-size: 12.5px;
+}
+
+/* 설정 */
+.afs-set-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  font-size: 13px;
+}
+.afs-set-row + .afs-set-row {
+  border-top: 1px solid var(--afs-rule);
+}
+.afs-set-row > span:nth-child(2) {
+  color: var(--afs-ink-3);
+  font-size: 12px;
+}
+
+/* 기사 원문 — 제목이 길어 칸으로 나누면 넉 줄씩 접힌다. 세로 목록으로 둔다. */
+.afs-articles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.afs-articles li {
+  display: grid;
+  grid-template-columns: minmax(0, 5.4em) minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 0;
+  font-size: 13.5px;
+}
+.afs-articles li + li {
+  border-top: 1px solid var(--afs-rule);
+}
+.afs-articles b {
+  color: var(--afs-ink-3);
+  font-size: 12px;
+  font-weight: 700;
+}
+.afs-articles a {
+  color: inherit;
+  text-decoration: none;
+}
+.afs-articles a:hover {
+  color: var(--afs-brand);
+  text-decoration: underline;
+}

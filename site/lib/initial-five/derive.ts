@@ -5,6 +5,8 @@
 // 담지 않는다 — 의역·건수·근거 위치만 지난다.
 
 import { getInitialFiveIssueBundle, initialFiveManifest } from "./artifacts";
+// 취재원 역할 좁히기 규칙은 워커 API 와 공유한다 (lib/initial-five/subjects.mjs)
+import { actorParaphrases, narrowSubject, paraphrasesByLocator, subjectsIn } from "./subjects.mjs";
 import type { IssueAnalysisBundle } from "./types";
 
 export const DIM_ORDER = [
@@ -179,59 +181,13 @@ export interface ArticleView {
   /** 층위별로 의역문에 등장한 주체 — "공동책임" 이 누구와 누구인지 */
   subjects: Record<string, string[]>;
   voices: Counter;
-  /** 단어 규칙으로 좁힌 취재원 역할 */
+  /** 이중코딩이 낸 취재원 역할 — 화자가 누구인지에 대한 유일한 코딩 값이다 */
   roles: Counter;
-  /** 이중코딩이 낸 원 역할 코드 */
-  coarseRoles: Counter;
+  /** 그 발언 문장이 다루는 주체(단어 규칙). 화자가 아니라 대상이다 */
+  passageSubjects: Counter;
   narrowedActorCount: number;
   directQuotes: number;
   indirectQuotes: number;
-}
-
-/* 취재원 역할 코드가 너무 굵어서 "정당·정치권 19회" 로는 아무것도 알 수 없었다. 여당인지
-   야당인지가 이 사안의 전부인데 한 통에 들어 있다. 코딩 지침이 실명 반환을 금지하므로
-   다시 코딩해도 이름은 못 얻지만, 직위·기관은 이미 의역문 안에 있다.
-
-   그래서 화자의 근거 문장 위치와 같은 위치의 프레임 의역문을 붙여, 그 문장이 누구를 가리키는지
-   단어 규칙으로 좁힌다. 원 역할 코드는 지우지 않고 함께 남긴다 — 좁힌 값은 규칙 산출이고
-   원 코드는 이중코딩 산출이라 신뢰 수준이 다르다. */
-const SUBJECT_RULES: Array<[RegExp, string]> = [
-  [/원내지도부|당 지도부|당 원내|지도부/, "당 지도부"],
-  [/여당|집권당|여권/, "여당 관계자"],
-  [/야당|제1야당|야권/, "야당 관계자"],
-  [/대통령/, "대통령·대통령실"],
-  [/법무부|정부|국무|부처|당국/, "정부 부처"],
-  [/검찰|경찰|수사기관|수사팀/, "검찰·경찰"],
-  [/법원|재판부|심급|판결/, "법원·재판부"],
-  [/변호사|대리인|법무법인|법인/, "변호사·소송대리인"],
-  [/유족|피해자|피해 당사자|입주민|주민/, "피해 당사자·유족"],
-  [/피의자|용의자|혐의자/, "피의자"],
-  [/의원/, "개별 의원"],
-  [/교수|전문가|학계|연구/, "학계 전문가"],
-  [/시민|단체|협회/, "시민사회"],
-  [/관리실|업체|기업|회사/, "기업·사업자"],
-];
-
-/** 의역문에서 화자·주체로 읽히는 서술을 좁힌다. 못 좁히면 null 을 준다 (원 코드를 그대로 쓴다). */
-function narrowSubject(texts: string[]): string | null {
-  const joined = texts.join(" ");
-  if (!joined) return null;
-  for (const [pattern, label] of SUBJECT_RULES) {
-    if (pattern.test(joined)) return label;
-  }
-  return null;
-}
-
-/** 한 층위의 의역문들에서 등장한 주체를 최대 3개까지 뽑는다 — "공동책임" 만으로는 누구인지 알 수 없다. */
-function subjectsIn(texts: string[]): string[] {
-  const joined = texts.join(" ");
-  if (!joined) return [];
-  const found: string[] = [];
-  for (const [pattern, label] of SUBJECT_RULES) {
-    if (pattern.test(joined) && !found.includes(label)) found.push(label);
-    if (found.length === 3) break;
-  }
-  return found;
 }
 
 function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
@@ -264,19 +220,8 @@ function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
     const actors = profile?.actors_and_sources ?? [];
     /* 근거 위치(문단·문장)를 열쇠로 화자 레코드와 프레임 의역문을 붙인다. 같은 문장에서 뽑힌
        것이므로 그 의역문이 그 화자를 서술한다. */
-    const paraAt = new Map<string, string[]>();
-    for (const dim of DIM_ORDER) {
-      for (const item of claimItems(dims[dim]?.items ?? [])) {
-        const loc = item.evidence?.locator;
-        if (!loc) continue;
-        const key = `${loc.paragraph ?? 0}:${loc.sentence ?? 0}`;
-        const list = paraAt.get(key) ?? [];
-        if (item.public_paraphrase) list.push(item.public_paraphrase);
-        paraAt.set(key, list);
-      }
-    }
-    const actorTexts = (actor: (typeof actors)[number]) =>
-      (actor.evidence ?? []).flatMap((e) => paraAt.get(`${e.locator?.paragraph ?? 0}:${e.locator?.sentence ?? 0}`) ?? []);
+    const paraAt = paraphrasesByLocator(dims);
+    const actorTexts = (actor: (typeof actors)[number]) => actorParaphrases(actor, paraAt);
     /** 층위별 주체 — 계열 이름만으로는 "누구의 공동책임"인지 알 수 없다. */
     const subjects: Record<string, string[]> = {};
     for (const dim of DIM_ORDER) {
@@ -301,26 +246,27 @@ function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
       voiceBasis,
       statuses,
       voices: tally(voiceKinds, VOICE_LABEL),
+      /* 화자는 역할 코드로만 말할 수 있다. 의역문에서 좁힌 값은 그 문장이 다루는 대상이라
+         화자와 다르다 — "법치를 흔드는 사안 앞에서 책임을 피한다" 는 대통령을 평가하는 문장이지
+         대통령이 한 말이 아니다. 그래서 두 값을 다른 이름으로 나눠 싣는다. */
       roles: (() => {
-        const byRole = new Map<string, number>();
-        for (const actor of actors) {
-          const coarse = actor.role_label ?? (typeof actor.role === "string" ? actor.role : "기타 취재원");
-          // 좁혀지면 좁힌 값을, 안 되면 원 코드를 쓴다. 좁힌 값은 아래 rolesRefined 로 구분해 표기한다.
-          const label = narrowSubject(actorTexts(actor)) ?? coarse;
-          byRole.set(label, (byRole.get(label) ?? 0) + (actor.direct_quote_count ?? 0) + (actor.indirect_attribution_count ?? 0));
-        }
-        return [...byRole]
-          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-          .map(([label, count]) => ({ key: label, label, count }));
-      })(),
-      /** 원 역할 코드로 센 값 — 좁힌 값과 견줄 수 있게 남긴다 */
-      coarseRoles: (() => {
         const byRole = new Map<string, number>();
         for (const actor of actors) {
           const label = actor.role_label ?? (typeof actor.role === "string" ? actor.role : "기타 취재원");
           byRole.set(label, (byRole.get(label) ?? 0) + (actor.direct_quote_count ?? 0) + (actor.indirect_attribution_count ?? 0));
         }
         return [...byRole]
+          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+          .map(([label, count]) => ({ key: label, label, count }));
+      })(),
+      passageSubjects: (() => {
+        const bySubject = new Map<string, number>();
+        for (const actor of actors) {
+          const label = narrowSubject(actorTexts(actor));
+          if (!label) continue;
+          bySubject.set(label, (bySubject.get(label) ?? 0) + (actor.direct_quote_count ?? 0) + (actor.indirect_attribution_count ?? 0));
+        }
+        return [...bySubject]
           .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
           .map(([label, count]) => ({ key: label, label, count }));
       })(),
@@ -346,7 +292,7 @@ export interface OutletView {
   /** 층위별로 이 매체 기사들의 의역문에 등장한 주체 — 계열 이름 아래에 붙인다 */
   subjects: Record<string, string[]>;
   roles: Counter;
-  coarseRoles: Counter;
+  passageSubjects: Counter;
   narrowedActorCount: number;
   voices: Counter;
   directQuotes: number;
@@ -401,9 +347,9 @@ function outletViews(articles: ArticleView[]): OutletView[] {
         leadNarrated,
         roles,
         subjects,
-        coarseRoles: (() => {
+        passageSubjects: (() => {
           const m = new Map<string, number>();
-          for (const a of list) for (const r of a.coarseRoles) m.set(r.label, (m.get(r.label) ?? 0) + r.count);
+          for (const a of list) for (const r of a.passageSubjects) m.set(r.label, (m.get(r.label) ?? 0) + r.count);
           return [...m].sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0])).map(([label, count]) => ({ key: label, label, count }));
         })(),
         narrowedActorCount: list.reduce((sum, a) => sum + a.narrowedActorCount, 0),

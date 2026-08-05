@@ -4,6 +4,8 @@ import issueTwo from "../public/initial-five/issues/bigkinds-2026-07-26-top-2.js
 import issueThree from "../public/initial-five/issues/bigkinds-2026-07-26-top-3.json" with { type: "json" };
 import issueFour from "../public/initial-five/issues/bigkinds-2026-07-26-top-4.json" with { type: "json" };
 import issueFive from "../public/initial-five/issues/bigkinds-2026-07-26-top-5.json" with { type: "json" };
+// 취재원 역할 좁히기 규칙은 화면(lib/initial-five/derive.ts)과 공유한다
+import { actorParaphrases, narrowSubject, paraphrasesByLocator } from "../lib/initial-five/subjects.mjs";
 
 const MAX_QUESTION_LENGTH = 500;
 const MAX_BODY_BYTES = 20_000;
@@ -105,10 +107,19 @@ function groundedAnswer(bundle, question) {
   if (/취재원|화자|인용|누가|누구/.test(question)) {
     const actors = new Map();
     for (const entry of profiles) {
+      /* 화자는 역할 코드로만 말할 수 있다. 의역문에서 좁힌 값은 그 문장이 다루는 대상이라
+         화자와 다르다 — 화면(derive.ts)과 같은 분리다. */
+      const byLocator = paraphrasesByLocator(entry.profile.dimensions);
       for (const actor of entry.profile.actors_and_sources ?? []) {
         const label = actor.role_label ?? actor.role ?? "기타 취재원";
-        const current = actors.get(label) ?? { count: 0, articleId: entry.articleId };
+        const texts = actorParaphrases(actor, byLocator);
+        const subject = narrowSubject(texts);
+        const current = actors.get(label) ?? { count: 0, articleId: entry.articleId, outlets: new Set(), subjects: new Set() };
+        if (subject) current.subjects.add(subject);
         current.count += (actor.direct_quote_count ?? 0) + (actor.indirect_attribution_count ?? 0);
+        const outlet = articleFor(bundle, entry.articleId)?.outlet;
+        if (outlet) current.outlets.add(outlet);
+        if (!current.said && texts[0]) current.said = texts[0];
         if (!current.evidence && actor.evidence?.[0]) {
           current.evidence = {
             articleId: entry.articleId,
@@ -123,9 +134,28 @@ function groundedAnswer(bundle, question) {
     if (!ranked.length) {
       return { status: "withheld", answer: "AI 분석에서 근거가 연결된 취재원·화자 정보를 찾지 못했습니다.", evidence: [] };
     }
+    const roster = ranked
+      .map(([label, item]) => {
+        const where = item.outlets.size ? ` — ${[...item.outlets].join(" · ")}` : "";
+        // 매체 목록 뒤에 같은 구분자로 이으면 대상이 매체처럼 읽힌다 — 줄을 내려 붙인다
+        const about = item.subjects.size ? `\n  겨눈 쪽 ${[...item.subjects].join(", ")}` : "";
+        return `${label} ${item.count}회${where}${about}`;
+      })
+      .join("\n");
+    const stances = ranked
+      .filter(([, item]) => item.said)
+      .slice(0, 3)
+      .map(([label, item]) => `${label}: ${item.said}`)
+      .join("\n");
     return {
       status: "answered",
-      answer: `근거가 연결된 취재원·화자 범주는 ${ranked.map(([label, item]) => `${label} ${item.count}회`).join(", ")}입니다. 횟수는 인용·귀속 관찰 수이며 영향력이나 신뢰도 점수가 아닙니다.`,
+      answer: [
+        `이 의제에서 근거가 연결된 화자는 다음과 같습니다.\n${roster}`,
+        stances ? `무엇을 실었는지는 이렇습니다.\n${stances}` : "",
+        "역할까지만 나옵니다. 코딩 지침이 실명 반환을 막고 있어 이름은 저장하지 않습니다. ‘겨눈 쪽’은 그 발언이 다룬 대상이며 말한 사람이 아닙니다.",
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
       evidence: ranked
         .map(([, item]) => publicEvidence(articleFor(bundle, item.articleId), item.evidence))
         .filter(Boolean),

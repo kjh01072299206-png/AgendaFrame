@@ -29,29 +29,17 @@ export default async function IssueLayout({
         category={issue.category}
         articleCount={issue.articleCount}
         outletCount={issue.outletCount}
-        evidenceCount={issue.evidenceTotal}
         splitDimensions={issue.splitDimensions}
       />
-      {/* 데이터가 요구하는 표시 규칙을 화면이 지킨다 — 아티팩트의 publication_rule 은
-          "사람 검토 전에는 자동 분석 초안으로만 표시합니다" 이다. */}
+      {/* 아티팩트의 publication_rule 이 요구하는 표시는 이 한 줄이다. 모델 이름·분석 글자 수·
+          지문 저장 방식은 방법론 화면에 한 번만 둔다 — 의제마다 다시 읽을 값이 아니다. */}
       <p className="afs-prov">
         {issue.provenance.requiresHumanReview ? <b>자동 분석 초안 · 사람 검토 전</b> : <b>검토 완료</b>}
-        {issue.provenance.model ? <span>코딩 {issue.provenance.model}</span> : null}
-        {issue.provenance.analyzedChars ? (
-          <span className="afs-num">
-            분석 본문 기사당 평균 {issue.provenance.analyzedChars.mean.toLocaleString("ko-KR")}자 (
-            {issue.provenance.analyzedChars.min.toLocaleString("ko-KR")}–
-            {issue.provenance.analyzedChars.max.toLocaleString("ko-KR")}자)
-          </span>
-        ) : null}
         {issue.agreement?.mean != null ? (
           <a className="afs-link" href="/tools/method#일치율">
-            <span className="afs-num">
-              두 코더 일치율 {Math.round(issue.agreement.mean * 100)}% ({issue.agreement.articleCount}건 기준)
-            </span>
+            <span className="afs-num">코더 일치 {Math.round(issue.agreement.mean * 100)}%</span>
           </a>
         ) : null}
-        <span>근거는 문장 위치와 지문만 저장</span>
       </p>
       {children}
     </>
