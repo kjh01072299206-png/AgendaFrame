@@ -27,14 +27,20 @@ push 한 번에 두 번 배포된다.
 마지막 확인은 `/version` 을 폴링해 **배포된 커밋 SHA** 를 대조한다(최대 10분).
 200 만 보면 Vercel 이 아직 빌드하는 동안 이전 빌드를 초록불로 오인하기 때문이다.
 
-### ① 을 켜는 방법 (권장 — 클릭이 가장 적다)
+### ① 이 켜져 있다 (2026-08-06 ~)
+
+**팀원은 `main` 에 push 만 하면 된다. Vercel 계정도 토큰도 필요 없다.**
+다른 브랜치에 push 하면 미리보기 URL 이 생긴다.
+
+켠 절차는 이랬다.
 
 1. <https://github.com/apps/vercel> → Install → `kjh01072299206-png` 계정 →
    `AgendaFrame` 저장소 접근 허용
-2. `cd site && npx vercel git connect`
+2. 저장소 루트에서 `npx vercel git connect`
 3. `gh variable set AF_DEPLOY_OWNER --body vercel-git`
 
-끝나면 팀원의 push 가 곧바로 프로덕션에 나가고, PR 마다 미리보기 URL 이 생긴다.
+확인은 `npx vercel ls agendaframe-capstone` 으로 한다. push 직후 Production 한 줄과
+(다른 브랜치도 밀었다면) Preview 한 줄이 새로 생기면 연결이 살아 있는 것이다.
 
 ### ② 를 켜는 방법 (검사를 통과한 커밋만 배포)
 
@@ -50,10 +56,15 @@ push 한 번에 두 번 배포된다.
 그때는 ① 을 껐다는 뜻이 되도록 Vercel 대시보드에서 Git 연결을 끊거나,
 `site/vercel.json` 에 `"git": { "deploymentEnabled": { "main": false } }` 를 넣는다.
 
-### 둘 다 없는 동안 (현재 상태)
+### 빌드가 몇 초 만에 Canceled 로 끝났다면
 
-워크플로는 검사만 하고 배포·라이브 확인을 건너뛴다(실패가 아니다). 프로덕션 배포는
-소유자가 로컬에서 한다 — **저장소 루트에서** 실행한다.
+대개 정상이다. 아래 Ignored Build Step 때문에 **`site/` 아래 파일이 하나도 바뀌지
+않은 커밋은 Vercel 이 건너뛴다.** 문서·워크플로만 고친 커밋, 빈 커밋이 그렇다.
+라이브는 이전 빌드 그대로 남는다. `site/` 를 고쳤는데도 Canceled 라면 그때가 문제다.
+
+### 손으로 배포해야 할 때
+
+**저장소 루트에서** 실행한다.
 
 ```bash
 npx vercel deploy --prod --yes    # 저장소 루트. site/ 에서 실행하면 실패한다.
