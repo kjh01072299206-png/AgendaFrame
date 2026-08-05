@@ -636,6 +636,50 @@ section[data-screen].on{display:block}
 .net.b .wnet .wn-h{fill:var(--fam-b)}
 .net.a .wnet .wn-e{stroke:var(--fam-a)}
 .net.b .wnet .wn-e{stroke:var(--fam-b)}
+
+/* ── 시안 패널 — 코드 · 제목 · 그림. 그 밖에는 아무것도 두지 않는다 ────── */
+.panel{margin:10px 0 0;padding:15px 17px 17px;border:1px solid var(--afs-rule);
+  border-radius:var(--afs-r-card);background:var(--afs-sunk)}
+.panel.ex{border-style:dashed;border-color:var(--afs-rule-2)}
+.panel-h{margin:0 0 13px}
+.panel-code{display:block;margin:0 0 4px;font-family:var(--afs-mono);font-size:10px;font-weight:700;
+  letter-spacing:.08em;color:var(--afs-ink-3)}
+.panel-h h3{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:0;
+  font-size:15px;font-weight:850;letter-spacing:-.02em}
+.panel-cite{font-family:var(--afs-mono);font-size:10.5px;font-weight:600;color:var(--afs-ink-3)}
+.panel-ex{padding:1px 7px;border-radius:999px;background:var(--afs-card);border:1px solid var(--afs-rule-2);
+  font-size:10px;font-weight:750;color:var(--afs-ink-3)}
+.panel-b{background:var(--afs-card);border:1px solid var(--afs-rule);border-radius:var(--afs-r-btn);padding:13px 14px}
+
+/* 패널 안 레전드 — 한 줄, 작은 글씨, 문장 없음 */
+.pkey{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px;padding:0;list-style:none;
+  font-size:11px;color:var(--afs-ink-3)}
+.panel-b .pkey:last-child{margin:10px 0 0}
+.pkey i{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px;vertical-align:-1px}
+.pkey i.f1,.comp .track i.f1{background:var(--fam-a)}
+.pkey i.f2,.comp .track i.f2{background:var(--fam-b)}
+.pkey i.f3,.comp .track i.f3{background:var(--afs-warn)}
+.pkey i.f4,.comp .track i.f4{background:var(--afs-brand)}
+.pkey i.f5,.comp .track i.f5{background:var(--afs-rule-3)}
+.pkey i.epi,.comp .track i.epi{background:var(--fam-b)}
+.pkey i.the,.comp .track i.the{background:var(--fam-a)}
+.pkey i.dq{background:var(--afs-sunk);border:1px solid var(--afs-rule-2)}
+.comp .track i.f1,.comp .track i.f2,.comp .track i.f3,.comp .track i.f4,.comp .track i.f5,
+.comp .track i.epi,.comp .track i.the{color:#fff}
+
+/* Entman 표 — 열 이름 아래 원어, 인용 칸은 회색 */
+.t-ent thead th i{display:block;margin-top:2px;font-family:var(--afs-mono);font-style:normal;
+  font-size:9.5px;font-weight:500;letter-spacing:0;color:var(--afs-ink-3);text-transform:none}
+.t-ent td.q{background:var(--afs-sunk)}
+
+/* 프레임 지형도 */
+.fmap{display:block;width:100%;max-width:560px;height:auto;margin:0 auto}
+.fmap .fr{fill:none;stroke:var(--afs-rule);stroke-width:1}
+.fmap .gl{stroke:var(--afs-rule-2);stroke-width:1;stroke-dasharray:3 4}
+.fmap .ax{font-size:10px;font-weight:700;fill:var(--afs-ink-3)}
+.fmap g.a circle{fill:var(--fam-a)}
+.fmap g.b circle{fill:var(--fam-b)}
+.fmap g text{font-size:11px;font-weight:750;fill:var(--afs-ink-2)}
 </style>
 </head>
 <body>
@@ -885,14 +929,6 @@ section[data-screen].on{display:block}
           <p>프레이밍 분석 — 기사가 답하는 <button class="term" data-book="g-layer">다섯 가지 질문</button>에서 각 신문이 어떤 이야기를 썼는지, 문장 근거와 함께 봅니다.</p>
         </header>
 
-        <div class="legend">
-          <b>이 화면의 숫자 출처</b>
-          <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button>
-          <button class="prov p-rule" type="button" aria-haspopup="dialog" data-book="p-rule">단어 규칙 자동 분류</button>
-          <button class="prov p-derive" type="button" aria-haspopup="dialog" data-book="p-derive">위 결과를 합친 계산</button>
-          <span>배지가 다르면 신뢰 수준이 다릅니다 — 눌러보세요</span>
-          <label class="sw"><input type="checkbox" class="onlyCode" /> AI 채점 산출만 보기</label>
-        </div>
         <div class="conc">
           <p class="lead">신문들은 이 사건에 찬성하거나 반대하기 전에, <b>이것이 무슨 사건인지부터</b> 다르게 정했습니다.
           3곳은 <b>&lsquo;권한이 한 손에 모인다&rsquo;</b>로, 2곳은 <b>&lsquo;누가 특검을 쥐느냐&rsquo;</b>로 썼습니다.</p>
@@ -903,8 +939,8 @@ section[data-screen].on{display:block}
           <div class="meta">
             <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button>
             <span class="chip">기자가 직접 쓴 문장 기준</span>
-            <span class="chip">주장 28개 · 근거 41문장</span>
-            <span class="chip">이 결론이 선 질문(무엇이 문제인가)의 판정 전 일치율 <b>0.76</b> — 다섯 중 가장 낮습니다</span>
+            <span class="chip">주장 28 · 근거 41문장</span>
+            <span class="chip">일치율 0.76</span>
           </div>
         </div>
 
@@ -928,8 +964,6 @@ section[data-screen].on{display:block}
           <p style="margin:0;font-size:12.5px;line-height:1.6">
             <b>갈린 층위 <span id="basisCount">2개</span></b> · <span id="basisDelta" style="color:var(--afs-ink-3)">기자가 직접 쓴 문장만 셀 때</span>
           </p>
-          <p class="note" style="margin-top:6px">이 토글은 <b>결론이 채점 규칙에 얼마나 의존하는지</b> 보여줍니다.
-          기준을 바꿔도 갈림이 유지되는 층위는 견고하고, 기준에 따라 뒤집히는 층위는 그렇지 않습니다.</p>
         </div>
 
         <!-- 층위 1 -->
@@ -960,12 +994,8 @@ section[data-screen].on{display:block}
             <i>기대는 원칙</i> &mdash; 수사는 정치에서 떨어져 있어야 한다</span>
           </div>
         </div>
-        <p class="note" style="margin-top:9px">나머지 1곳(F신문)은 이 대목을 <b>취재원의 말로만</b> 전했습니다 — 기자가 직접 쓴 규정 문장이 없습니다.
-        무엇을 인용할지 고른 것은 남아 있으므로, F신문은 <a href="#/outlets" style="color:var(--afs-brand);font-weight:750">언론사 비교 화면</a>의 인용 열에서 비교합니다.<br />
-        <b>이름 붙이기에 대하여</b> — 위의 &lsquo;권한이 한 손에 모인다&rsquo;·&lsquo;누가 특검을 쥐느냐&rsquo;는 이 25건에서 실제로 관측된 서술을 묶어 붙인 이름입니다.
-        미리 정해 둔 목록에 기사를 끼워 맞춘 것이 아니며, 의제가 바뀌면 이름도 바뀝니다.</p>
 
-        <details class="fold" open style="margin-top:11px">
+        <details class="fold" style="margin-top:11px">
           <summary>근거 항목 보기 — 관측 7개 중 3개 예시 <span class="chip">전부 의역 · 원문 아님</span></summary>
           <div class="body">
             <div class="ev narr">
@@ -1035,9 +1065,6 @@ section[data-screen].on{display:block}
             <div class="who"><span class="chip">D신문</span><span class="chip">E일보</span></div>
           </div>
         </div>
-        <p class="note" style="margin-top:9px" data-basis
-           data-narr="2곳(B일보·F신문)은 이 층위에 기자가 직접 쓴 문장이 없었습니다. 인용된 발언까지 세면 &lt;b&gt;3:3&lt;/b&gt;이 됩니다 — 위 토글을 바꿔 확인할 수 있습니다."
-           data-all="인용된 발언까지 세면 &lt;b&gt;3:3&lt;/b&gt;입니다. B일보·F신문이 인용한 발언이 각각 한쪽으로 붙어 갈림이 2:2에서 3:3으로 늘어납니다 — 매체의 입장이 아니라 인용 분포입니다.">2곳(B일보·F신문)은 이 층위에 기자가 직접 쓴 문장이 없었습니다. 인용된 발언까지 세면 <b>3:3</b>이 됩니다 — 위 토글을 바꿔 확인할 수 있습니다.</p>
 
         <!-- 층위 3 -->
         <div class="sec-row">
@@ -1050,7 +1077,7 @@ section[data-screen].on{display:block}
              data-all="&lt;b&gt;인용된 발언까지 세면 3:2로 갈립니다.&lt;/b&gt; 3곳은 입법·정치권을, 2곳은 정부·여당을 책임 주체로 인용했습니다. 단 이것은 &lt;b&gt;매체의 판단이 아니라 인용된 발언의 분포&lt;/b&gt;입니다."><b>6곳 모두 기자가 직접 책임을 지목하지 않았습니다.</b> 관측된 책임 귀속 9개 항목은 전부 취재원 발언 인용입니다. 그래서 기자 문장 기준으로는 이 층위를 비교할 수 없습니다.</p>
           <div class="tscroll">
             <table class="t">
-              <caption>취재원이 지목한 책임 주체 — 매체의 판단이 아니라 인용된 발언의 분포입니다</caption>
+              <caption>취재원이 지목한 책임 주체</caption>
               <thead><tr><th scope="col">매체</th><th scope="col">인용된 책임 주체</th><th scope="col">발화 방식</th><th scope="col" class="n">항목</th></tr></thead>
               <tbody>
                 <tr><th scope="row">A일보</th><td>입법부·정치권</td><td>직접 인용</td><td class="n">2</td></tr>
@@ -1062,7 +1089,6 @@ section[data-screen].on{display:block}
               </tbody>
             </table>
           </div>
-          <p class="note">이 표는 <b>매체의 판단이 아니라 매체의 선택</b>을 보여줍니다. 발언은 취재원의 것이지만, <b>누구를 부를지 고른 것은 기자</b>입니다. 그래서 비교 지표와 따로 두고 별도 열로 셉니다.</p>
         </div>
 
         <!-- 층위 4 -->
@@ -1078,7 +1104,6 @@ section[data-screen].on{display:block}
             그러므로 이 질문은 신문끼리 비교할 수 없는 빈 칸이 아니라, <b>비교의 대상이 옮겨간 자리</b>입니다.
             누구의 판단을 실었는지는 <a href="#/outlets" style="color:var(--afs-brand);font-weight:750">취재원 구성 표</a>에서 봅니다.
           </p>
-          <p class="note">이 표본에 사설·칼럼은 없습니다. 사설 10건을 같은 방식으로 코딩하면 지면 종류의 문제인지 취재 관행인지 갈립니다.</p>
         </div>
 
         <!-- 층위 5 -->
@@ -1091,7 +1116,6 @@ section[data-screen].on{display:block}
              data-narr="&lt;b&gt;문제 정의가 갈렸는데 해법은 모였습니다.&lt;/b&gt; 관측된 4곳이 모두 &lt;b&gt;제도적 견제&lt;/b&gt; 계열로 같았습니다 — 권한 범위를 법으로 정하거나 외부 통제 장치를 두자는 서술입니다."
              data-all="&lt;b&gt;인용된 발언까지 세면 4:1로 갈립니다.&lt;/b&gt; 기자 문장으로는 4곳이 모두 제도적 견제였지만, 인용에는 &lt;b&gt;수사·책임 추궁&lt;/b&gt; 처방이 한 곳 있었습니다. 다만 이것은 매체의 처방이 아니라 인용된 발언입니다."><b>문제 정의가 갈렸는데 해법은 모였습니다.</b> 관측된 4곳이 모두 <button class="term" data-book="check">제도적 견제</button> 계열로 같았습니다 — 권한 범위를 법으로 정하거나 외부 통제 장치를 두자는 서술입니다.</p>
           <div class="who" style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip">A일보</span><span class="chip">B일보</span><span class="chip">D신문</span><span class="chip">C일보</span><span class="chip unobs">E일보 — 미관측</span><span class="chip unobs">F신문 — 미관측</span></div>
-          <p class="note">이것이 이 사건에서 가장 말할 만한 지점입니다. 서로 다른 이야기를 쓴 신문들이 <b>같은 곳에서 만났습니다</b> — 무엇을 해야 하는지에 대해서는 이견이 적었다는 뜻입니다.</p>
         </div>
 
         <h2 class="sec" data-src="derive">이 사건에 대해 신문들이 쓴 이야기는 둘이었습니다 <button class="prov p-derive" type="button" aria-haspopup="dialog" data-book="p-derive">위 결과를 합친 계산</button></h2>
@@ -1111,7 +1135,6 @@ section[data-screen].on{display:block}
               <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">무엇을 해야 하나</th><td style="border:0;padding:3px 0"><b>법으로 범위를 자르거나 외부 통제를 둔다</b></td></tr>
               <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">기대는 원칙</th><td style="border:0;padding:3px 0">권력은 나뉘어 있어야 한다</td></tr>
             </tbody></table>
-            <p class="note">핵심어 <b>&ldquo;수사와 기소를 한 기관에&rdquo;</b>. 사건을 <b>사람의 이야기가 아니라 구조의 이야기</b>로 씁니다. 등장인물이 적고 제도 이름이 많습니다.</p>
           </div>
           <div class="card" style="border-left:3px solid var(--fam-b)">
             <b class="pkg b">누가 특검을 쥐느냐</b>
@@ -1123,7 +1146,6 @@ section[data-screen].on{display:block}
               <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">무엇을 해야 하나</th><td style="border:0;padding:3px 0">D신문 <b>제도적 견제</b> &middot; E일보는 쓰지 않음</td></tr>
               <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">기대는 원칙</th><td style="border:0;padding:3px 0">수사는 정치에서 떨어져 있어야 한다</td></tr>
             </tbody></table>
-            <p class="note">핵심어 <b>&ldquo;특검 견제&rdquo;</b>. 사건을 <b>승부의 이야기</b>로 씁니다. 등장인물이 많고 제도는 배경으로 물러납니다.</p>
           </div>
         </div>
         <div class="card" style="margin-top:10px">
@@ -1132,19 +1154,12 @@ section[data-screen].on{display:block}
             대립하는 진단이 같은 처방으로 수렴한다는 것은, 이 논쟁이 <b>목표 다툼이 아니라 진단 다툼</b>이라는 뜻입니다.
             찬반 구도로만 보면 보이지 않는 지점입니다.
           </p>
-          <p class="note" style="margin-top:9px;padding-top:9px;border-top:1px dashed var(--afs-rule)">
-            <b>왜 군집분석을 쓰지 않았나</b> — Matthes &amp; Kohring(2008)은 기사 1,522건을 위계적 군집분석으로 묶었습니다.
-            이 의제는 7건이라 통계적 군집이 성립하지 않으므로, 표본이 작을수록 적합한 <b>해석적 패키지 구성</b>(Gamson)을 썼습니다.
-            그래서 위 두 묶음은 개수·비율을 통계로 제시하지 않고 <b>근거 문장으로</b> 방어합니다.
-          </p>
         </div>
 
         <h2 class="sec">신문별 요약 표</h2>
         <div class="tscroll">
           <table class="t">
-            <caption>신문 × 세 질문. 굵은 글씨는 <b>계열 이름</b>, 아래 작은 글씨는 <b>그 신문이 실제로 쓴 말</b>(의역)입니다.
-            <span class="diff" style="padding:1px 4px">파란 칸</span>은 다수와 다른 계열, &ldquo;—&rdquo;는 기자가 직접 쓴 문장이 없어 관측되지 않은 칸입니다.
-            <b>책임·평가 두 질문은 6곳 전부 &lsquo;인용만&rsquo;이라 열을 뺐습니다</b> — 6줄이 같은 값이면 표로 볼 이유가 없습니다.</caption>
+            <caption>신문 × 세 질문 &middot; 아래 작은 글씨는 그 신문이 쓴 말</caption>
             <thead><tr><th scope="col">매체</th><th scope="col">문제 정의</th><th scope="col">원인</th><th scope="col">해법</th><th scope="col" class="n">기자 문장 / 관측 항목</th></tr></thead>
             <tbody>
               <tr><th scope="row">A일보</th>
@@ -1176,12 +1191,6 @@ section[data-screen].on{display:block}
             </tbody>
           </table>
         </div>
-        <p class="note"><b>계열 이름만 보면 문제 정의 칸이 &lsquo;법·제도&rsquo; 셋에 &lsquo;정치 갈등&rsquo; 둘입니다 — 앞의 세 신문이 같은 말을 한 것처럼 보입니다.</b>
-        아래 작은 글씨를 보면 A는 <b>권한 집중</b>을, B는 <b>경계의 소실</b>을, C는 <b>입법의 공백</b>을 문제로 짚었습니다. 같은 계열 안에서도 겨누는 곳이 다릅니다.
-        계열은 비교를 위한 묶음이고, 실제로 갈린 자리는 문장입니다.<br />
-        &ldquo;—&rdquo;는 <button class="term" data-book="g-unobs">미관측</button> — 분석한 본문에서 그 설명을 하는 <b>기자 문장을 찾지 못했다</b>는 뜻입니다. 그 대목은 대개 인용으로 처리돼 있습니다.<br />
-        <b>맨 오른쪽 열이 분모입니다.</b> F신문은 관측 항목 7개가 전부 인용이라 모든 칸이 &ldquo;—&rdquo;입니다 — 프레임이 없는 매체가 아니라
-        <b>인용으로 기사를 구성하는 매체</b>입니다. 그 문체 자체가 편집 선택입니다.</p>
 
         <details class="fold" style="margin-top:16px" data-src="rule">
           <summary>이 화면에 쓰지 않은 지표 <span class="chip warn">변별력 없음</span></summary>
@@ -1203,30 +1212,6 @@ section[data-screen].on{display:block}
           </div>
         </details>
 
-        <h2 class="sec" data-src="rule">시안의 정책 프레임 막대를 그려 보면 <button class="prov p-rule" type="button" aria-haspopup="dialog" data-book="p-rule">단어 규칙 자동 분류</button></h2>
-        <div class="card">
-          <p style="margin:0 0 11px;font-size:0.93em;line-height:1.68">
-            기획 시안은 매체마다 <b>정책 프레임 15차원의 비중</b>을 100% 누적 막대로 그렸습니다. 같은 형태로 이 표본을 그리면 이렇게 나옵니다.
-          </p>
-          <div class="comp" style="grid-template-columns:auto 1fr auto">
-            <span class="nm2">A일보</span><span class="track" role="img" aria-label="15차원 중 5개 부여"><i class="r1" style="flex:0 0 33.3%">5</i></span><span class="nm3">5 / 15</span>
-            <span class="nm2">B일보</span><span class="track" role="img" aria-label="15차원 중 5개 부여"><i class="r1" style="flex:0 0 33.3%">5</i></span><span class="nm3">5 / 15</span>
-            <span class="nm2">C일보</span><span class="track" role="img" aria-label="15차원 중 5개 부여"><i class="r1" style="flex:0 0 33.3%">5</i></span><span class="nm3">5 / 15</span>
-            <span class="nm2">D신문</span><span class="track" role="img" aria-label="15차원 중 5개 부여"><i class="r1" style="flex:0 0 33.3%">5</i></span><span class="nm3">5 / 15</span>
-            <span class="nm2">E일보</span><span class="track" role="img" aria-label="15차원 중 5개 부여"><i class="r1" style="flex:0 0 33.3%">5</i></span><span class="nm3">5 / 15</span>
-            <span class="nm2">F신문</span><span class="track" role="img" aria-label="15차원 중 5개 부여"><i class="r1" style="flex:0 0 33.3%">5</i></span><span class="nm3">5 / 15</span>
-          </div>
-          <p class="note" style="margin-top:11px">
-            <b>여섯 줄이 모두 같습니다.</b> 기사 7건 전부에 같은 5종(경제 · 법·헌법·사법 · 정치·정쟁 · 범죄·처벌 · 정책 처방·평가)이 부여됐습니다.
-            매체를 가르지 못하므로 이 막대는 비교 지표가 아닙니다. 지우지 않고 그려 두는 이유는, <b>같은 형태로 그려 봐야 못 쓰는 이유가 보이기</b> 때문입니다.
-          </p>
-          <p class="note" style="margin-top:8px;padding-top:9px;border-top:1px dashed var(--afs-rule)">
-            <b>시안처럼 %로 나누지 못하는 이유</b> — 시안의 &ldquo;경제 42%&rdquo;는 차원마다 무게가 다르다는 뜻이고, 그 무게는 <b>차원별 문장 수</b>에서 나옵니다.
-            우리 코딩은 차원의 <b>있음·없음</b>만 남깁니다. 부여된 5종을 균등하게 20%씩 나눠 그리면 없는 비율을 만들어 내는 것이므로,
-            막대 길이를 <b>부여된 차원 수</b>로만 둡니다. 비중 막대는 문장 단위 가중치를 코딩한 뒤에 그릴 수 있습니다.
-          </p>
-        </div>
-
         <h2 class="sec" data-src="rule">겹쳐 읽을 것 — 서술 방식과 책임 <button class="prov p-rule" type="button" aria-haspopup="dialog" data-book="p-rule">단어 규칙 자동 분류</button></h2>
         <div class="grid g2">
           <div class="card">
@@ -1236,25 +1221,6 @@ section[data-screen].on{display:block}
               Iyengar(1991)는 이런 서술을 <b>일화적 프레임</b>이라 불렀고,
               일화적으로 쓰인 기사를 읽은 사람은 사건의 책임을 <b>제도가 아니라 개인에게</b> 돌리는 경향을 보였습니다.
             </p>
-            <div class="comp" style="grid-template-columns:auto 1fr auto;margin:0 0 10px">
-              <span class="nm2">A일보</span><span class="track" role="img" aria-label="일화 2건, 주제 0건"><i class="r1" style="flex:0 0 100%">2</i></span><span class="nm3">일화 2 · 주제 0</span>
-              <span class="nm2">B일보</span><span class="track" role="img" aria-label="일화 1건, 주제 0건"><i class="r1" style="flex:0 0 100%">1</i></span><span class="nm3">일화 1 · 주제 0</span>
-              <span class="nm2">C일보</span><span class="track" role="img" aria-label="일화 1건, 주제 0건"><i class="r1" style="flex:0 0 100%">1</i></span><span class="nm3">일화 1 · 주제 0</span>
-              <span class="nm2">D신문</span><span class="track" role="img" aria-label="일화 1건, 주제 0건"><i class="r1" style="flex:0 0 100%">1</i></span><span class="nm3">일화 1 · 주제 0</span>
-              <span class="nm2">E일보</span><span class="track" role="img" aria-label="일화 1건, 주제 0건"><i class="r1" style="flex:0 0 100%">1</i></span><span class="nm3">일화 1 · 주제 0</span>
-              <span class="nm2">F신문</span><span class="track" role="img" aria-label="일화 1건, 주제 0건"><i class="r1" style="flex:0 0 100%">1</i></span><span class="nm3">일화 1 · 주제 0</span>
-            </div>
-            <p class="note" style="margin-bottom:9px">
-              시안은 이 막대로 매체를 갈랐습니다(&ldquo;일화 비중 순 정렬&rdquo;). <b>여기서는 여섯 줄이 모두 끝까지 채워집니다</b> —
-              주제적으로 쓴 기사가 한 건도 없어 정렬할 것이 없습니다. 비율(%) 대신 건수로 둔 이유는 매체당 기사가 1~2건이라
-              비율로 바꾸면 전부 100%로 같아지기 때문입니다.
-            </p>
-            <p class="note">
-              이 표본에서 기자가 직접 책임을 지목한 문장이 <b>0건</b>인 것과 겹쳐 읽으십시오.
-              책임을 한 문장도 쓰지 않으면서 책임을 개인 쪽으로 미는 서술이 가능합니다.<br />
-              다만 판정은 어휘 정규식입니다. &ldquo;사건&rdquo;·&ldquo;사고&rdquo;가 일화적 신호로 잡히므로,
-              사건 보도가 일화적으로 나오는 데는 분류기 자체의 기울기도 섞여 있습니다.
-            </p>
           </div>
           <div class="card">
             <h3 class="sub">갈등 7건, 사람 0건</h3>
@@ -1262,48 +1228,76 @@ section[data-screen].on{display:block}
               Semetko &amp; Valkenburg(2000)의 일반 프레임 5종으로 보면 이 7건은 전부 <b>갈등 프레임</b>이고,
               <b>인간적 흥미 프레임은 0건</b>입니다.
             </p>
-            <p class="note">
-              정치 기사에서 갈등이 지배적인 것은 여러 나라 연구에서 반복 확인된 결과라 놀랍지 않습니다.
-              눈에 띄는 것은 반대쪽입니다 — <b>사람이 등장하는 기사가 없습니다.</b>
-              <a href="#/issue" style="color:var(--afs-brand);font-weight:750">사안 개요 화면의 &lsquo;말하지 않은 것&rsquo;</a>과 같은 이야기를 다른 각도에서 합니다.
-            </p>
           </div>
         </div>
 
-        <h2 class="sec" data-src="rule">이야기마다 어떤 낱말이 뭉쳤나 <button class="prov p-rule" type="button" aria-haspopup="dialog" data-book="p-rule">단어 규칙 자동 분류</button></h2>
-        <div class="card">
-          <p style="margin:0 0 12px;font-size:0.93em;line-height:1.68">
-            프레임 목록을 미리 정하지 않고, <b>같은 문장에 함께 나온 낱말</b>을 세어 이야기마다 따로 그렸습니다.
-            원 크기는 그 이야기 안에서의 등장 횟수, 선 굵기는 중심 낱말과 함께 나온 횟수입니다.
-          </p>
-          <div class="netgrid">
-            <div class="net a">
-              <h3 class="net-h">권한이 한 손에 모인다<span>A일보 · B일보 · C일보 &middot; 중심 낱말 <b>권한</b></span></h3>
-              <svg class="wnet" viewBox="0 0 250 160" role="img" aria-label="권한이 한 손에 모인다 이야기의 핵심어 연결망. 중심은 권한(24회), 이어진 낱말은 수사·기소 18회, 경계 11회, 범위 9회, 입법 8회, 견제 장치 7회, 분리 5회."><g><line class="wn-e" x1="125.0" y1="80.0" x2="125.0" y2="28.0" stroke-width="1.90"><title>권한–수사·기소 14회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="177.0" y2="54.0" stroke-width="1.40"><title>권한–경계 9회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="177.0" y2="106.0" stroke-width="1.20"><title>권한–범위 7회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="125.0" y2="132.0" stroke-width="1.10"><title>권한–입법 6회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="73.0" y2="106.0" stroke-width="1.00"><title>권한–견제 장치 5회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="73.0" y2="54.0" stroke-width="0.90"><title>권한–분리 4회 동시출현</title></line></g><g><circle class="wn-n" cx="125.0" cy="28.0" r="10.8"><title>수사·기소 18회</title></circle><circle class="wn-n" cx="177.0" cy="54.0" r="7.8"><title>경계 11회</title></circle><circle class="wn-n" cx="177.0" cy="106.0" r="7.0"><title>범위 9회</title></circle><circle class="wn-n" cx="125.0" cy="132.0" r="6.6"><title>입법 8회</title></circle><circle class="wn-n" cx="73.0" cy="106.0" r="6.1"><title>견제 장치 7회</title></circle><circle class="wn-n" cx="73.0" cy="54.0" r="5.3"><title>분리 5회</title></circle></g><circle class="wn-h" cx="125" cy="80" r="13.3"><title>권한 24회</title></circle><text class="wn-hl" x="125" y="83.4" text-anchor="middle">권한</text><g><text class="wn-l" x="125.0" y="12.2" text-anchor="middle">수사·기소 <tspan class="wn-c">18</tspan></text><text class="wn-l" x="189.8" y="57.6" text-anchor="start">경계 <tspan class="wn-c">11</tspan></text><text class="wn-l" x="188.9" y="109.6" text-anchor="start">범위 <tspan class="wn-c">9</tspan></text><text class="wn-l" x="125.0" y="149.6" text-anchor="middle">입법 <tspan class="wn-c">8</tspan></text><text class="wn-l" x="61.9" y="109.6" text-anchor="end">견제 장치 <tspan class="wn-c">7</tspan></text><text class="wn-l" x="62.7" y="57.6" text-anchor="end">분리 <tspan class="wn-c">5</tspan></text></g></svg>
-            </div>
-            <div class="net b">
-              <h3 class="net-h">누가 특검을 쥐느냐<span>D신문 · E일보 &middot; 중심 낱말 <b>특검</b></span></h3>
-              <svg class="wnet" viewBox="0 0 250 160" role="img" aria-label="누가 특검을 쥐느냐 이야기의 핵심어 연결망. 중심은 특검(21회), 이어진 낱말은 견제 16회, 여당 12회, 공세 9회, 국면 7회, 통제 6회, 셈법 4회."><g><line class="wn-e" x1="125.0" y1="80.0" x2="125.0" y2="28.0" stroke-width="1.80"><title>특검–견제 13회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="177.0" y2="54.0" stroke-width="1.50"><title>특검–여당 10회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="177.0" y2="106.0" stroke-width="1.20"><title>특검–공세 7회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="125.0" y2="132.0" stroke-width="1.00"><title>특검–국면 5회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="73.0" y2="106.0" stroke-width="0.90"><title>특검–통제 4회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="73.0" y2="54.0" stroke-width="0.80"><title>특검–셈법 3회 동시출현</title></line></g><g><circle class="wn-n" cx="125.0" cy="28.0" r="9.9"><title>견제 16회</title></circle><circle class="wn-n" cx="177.0" cy="54.0" r="8.2"><title>여당 12회</title></circle><circle class="wn-n" cx="177.0" cy="106.0" r="7.0"><title>공세 9회</title></circle><circle class="wn-n" cx="125.0" cy="132.0" r="6.1"><title>국면 7회</title></circle><circle class="wn-n" cx="73.0" cy="106.0" r="5.7"><title>통제 6회</title></circle><circle class="wn-n" cx="73.0" cy="54.0" r="4.9"><title>셈법 4회</title></circle></g><circle class="wn-h" cx="125" cy="80" r="12.0"><title>특검 21회</title></circle><text class="wn-hl" x="125" y="83.4" text-anchor="middle">특검</text><g><text class="wn-l" x="125.0" y="13.1" text-anchor="middle">견제 <tspan class="wn-c">16</tspan></text><text class="wn-l" x="190.2" y="57.6" text-anchor="start">여당 <tspan class="wn-c">12</tspan></text><text class="wn-l" x="188.9" y="109.6" text-anchor="start">공세 <tspan class="wn-c">9</tspan></text><text class="wn-l" x="125.0" y="149.1" text-anchor="middle">국면 <tspan class="wn-c">7</tspan></text><text class="wn-l" x="62.3" y="109.6" text-anchor="end">통제 <tspan class="wn-c">6</tspan></text><text class="wn-l" x="63.2" y="57.6" text-anchor="end">셈법 <tspan class="wn-c">4</tspan></text></g></svg>
-            </div>
+        <h2 class="sec">방법론 층위</h2>
+        <section class="panel">
+          <div class="panel-h"><span class="panel-code">01 · ENTMAN 구조 분석</span>
+            <h3>프레임 4요소 비교<span class="panel-cite">Entman 1993</span></h3></div>
+          <div class="panel-b"><div class="tscroll"><table class="t t-ent">
+            <thead><tr><th scope="col">언론사</th>
+              <th scope="col">문제 정의<i>Problem definition</i></th>
+              <th scope="col">원인 진단<i>Causal attribution</i></th>
+              <th scope="col">도덕적 평가<i>Moral evaluation</i></th>
+              <th scope="col">해결책 제시<i>Treatment</i></th></tr></thead>
+            <tbody>
+              <tr><th scope="row">A일보</th><td><b>권한 집중</b><span class="said">수사와 기소를 한 기관에</span></td><td><b>입법 공백</b><span class="said">권한 범위를 정하지 않고 통과</span></td><td class="q"><b>법치 훼손</b><span class="said">근간을 흔드는 처사</span></td><td><b>범위 제한</b><span class="said">법으로 권한을 자른다</span></td></tr>
+              <tr><th scope="row">B일보</th><td><b>경계 소실</b><span class="said">기관 간 권한 경계가 흐려짐</span></td><td class="un">—</td><td class="q"><b>절차 무시</b><span class="said">절차를 건너뛴 입법</span></td><td><b>사후 통제</b><span class="said">국회가 통제 장치를 둔다</span></td></tr>
+              <tr><th scope="row">C일보</th><td><b>입법 공백</b><span class="said">법이 범위를 정하지 않음</span></td><td><b>조정 반복</b><span class="said">경계를 그을 기준이 없음</span></td><td class="q"><b>견제 부재</b><span class="said">견제 없는 권한은 위험</span></td><td><b>요건 명시</b><span class="said">행사 요건을 법에 쓴다</span></td></tr>
+              <tr><th scope="row">D신문</th><td><b>정치 공세</b><span class="said">여당 반대는 특검 견제</span></td><td><b>이해 계산</b><span class="said">유리한 수사 구도를 만들려 함</span></td><td class="q"><b>정치화</b><span class="said">수사를 정치에 끌어들임</span></td><td><b>견제 기구</b><span class="said">특검 견제 기구를 만든다</span></td></tr>
+              <tr><th scope="row">E일보</th><td><b>주도권 다툼</b><span class="said">누가 수사를 쥐느냐</span></td><td><b>이해 계산</b><span class="said">통제권에 양쪽 이해가 걸림</span></td><td class="q"><b>흔들기</b><span class="said">특검 흔들기라는 비판</span></td><td class="un">—</td></tr>
+              <tr><th scope="row">F신문</th><td class="un">—</td><td class="un">—</td><td class="q"><b>권한 우려</b><span class="said">견제 없는 수사로 이어질 우려</span></td><td class="un">—</td></tr>
+            </tbody></table></div>
+          <ul class="pkey"><li><i class="dq"></i>회색 칸 = 취재원 발언</li><li>— = 기자 문장 없음</li></ul></div>
+        </section>
+        <section class="panel ex">
+          <div class="panel-h"><span class="panel-code">02 · POLICY FRAMES</span>
+            <h3>프레임 구성 비교<span class="panel-cite">Boydstun et al. 2014</span><span class="panel-ex">예시 수치</span></h3></div>
+          <div class="panel-b"><ul class="pkey"><li><i class="f1"></i>법·제도</li><li><i class="f2"></i>정치·정쟁</li><li><i class="f3"></i>범죄·처벌</li><li><i class="f4"></i>정책 처방</li><li><i class="f5"></i>여론</li></ul>
+          <div class="comp" style="grid-template-columns:auto 1fr">
+            <span class="nm2">A일보</span><span class="track" role="img" aria-label="법·제도 42퍼센트, 정치·정쟁 22퍼센트, 범죄·처벌 16퍼센트, 정책 처방 14퍼센트, 여론 6퍼센트"><i class="f1" style="flex:0 0 42%">42</i><i class="f2" style="flex:0 0 22%">22</i><i class="f3" style="flex:0 0 16%">16</i><i class="f4" style="flex:0 0 14%">14</i><i class="f5" style="flex:0 0 6%">6</i></span>
+            <span class="nm2">B일보</span><span class="track" role="img" aria-label="법·제도 38퍼센트, 정치·정쟁 24퍼센트, 범죄·처벌 18퍼센트, 정책 처방 12퍼센트, 여론 8퍼센트"><i class="f1" style="flex:0 0 38%">38</i><i class="f2" style="flex:0 0 24%">24</i><i class="f3" style="flex:0 0 18%">18</i><i class="f4" style="flex:0 0 12%">12</i><i class="f5" style="flex:0 0 8%">8</i></span>
+            <span class="nm2">C일보</span><span class="track" role="img" aria-label="법·제도 35퍼센트, 정치·정쟁 28퍼센트, 범죄·처벌 15퍼센트, 정책 처방 16퍼센트, 여론 6퍼센트"><i class="f1" style="flex:0 0 35%">35</i><i class="f2" style="flex:0 0 28%">28</i><i class="f3" style="flex:0 0 15%">15</i><i class="f4" style="flex:0 0 16%">16</i><i class="f5" style="flex:0 0 6%">6</i></span>
+            <span class="nm2">D신문</span><span class="track" role="img" aria-label="법·제도 20퍼센트, 정치·정쟁 44퍼센트, 범죄·처벌 10퍼센트, 정책 처방 12퍼센트, 여론 14퍼센트"><i class="f1" style="flex:0 0 20%">20</i><i class="f2" style="flex:0 0 44%">44</i><i class="f3" style="flex:0 0 10%">10</i><i class="f4" style="flex:0 0 12%">12</i><i class="f5" style="flex:0 0 14%">14</i></span>
+            <span class="nm2">E일보</span><span class="track" role="img" aria-label="법·제도 18퍼센트, 정치·정쟁 48퍼센트, 범죄·처벌 8퍼센트, 정책 처방 10퍼센트, 여론 16퍼센트"><i class="f1" style="flex:0 0 18%">18</i><i class="f2" style="flex:0 0 48%">48</i><i class="f3" style="flex:0 0 8%">8</i><i class="f4" style="flex:0 0 10%">10</i><i class="f5" style="flex:0 0 16%">16</i></span>
+            <span class="nm2">F신문</span><span class="track" role="img" aria-label="법·제도 26퍼센트, 정치·정쟁 36퍼센트, 범죄·처벌 14퍼센트, 정책 처방 12퍼센트, 여론 12퍼센트"><i class="f1" style="flex:0 0 26%">26</i><i class="f2" style="flex:0 0 36%">36</i><i class="f3" style="flex:0 0 14%">14</i><i class="f4" style="flex:0 0 12%">12</i><i class="f5" style="flex:0 0 12%">12</i></span>
+          </div></div>
+        </section>
+        <section class="panel ex">
+          <div class="panel-h"><span class="panel-code">03 · FRAME MAP</span>
+            <h3>프레임 지형도 — 6개 언론사의 위치<span class="panel-cite">Iyengar 1991</span><span class="panel-ex">예시 수치</span></h3></div>
+          <div class="panel-b"><svg class="fmap" viewBox="0 0 420 300" role="img" aria-label="가로축은 책임 귀인, 세로축은 시야. 법·제도 계열 세 곳은 제도·주제 쪽에, 정치 갈등 계열 세 곳은 개인·일화 쪽에 모입니다.">
+            <line class="gl" x1="46" y1="150" x2="374" y2="150"/><line class="gl" x1="210" y1="46" x2="210" y2="254"/>
+            <rect class="fr" x="46" y="46" width="328" height="208"/>
+            <text class="ax" x="46" y="34">▲ 일화적 (사례 중심)</text>
+            <text class="ax" x="46" y="274">▼ 주제적 (구조 중심)</text>
+            <text class="ax" x="54" y="243">◀ 책임 · 개인</text>
+            <text class="ax" x="366" y="243" text-anchor="end">책임 · 제도 ▶</text>
+            <g class="a"><circle cx="282.2" cy="187.4" r="6.4"/><text x="271.2" y="191.2" text-anchor="end">A일보</text></g><g class="a"><circle cx="255.9" cy="150.0" r="6.4"/><text x="244.9" y="153.8" text-anchor="end">B일보</text></g><g class="a"><circle cx="308.4" cy="204.1" r="6.4"/><text x="297.4" y="207.9" text-anchor="end">C일보</text></g><g class="b"><circle cx="137.8" cy="100.1" r="6.4"/><text x="148.8" y="103.9" text-anchor="start">D신문</text></g><g class="b"><circle cx="105.0" cy="116.7" r="6.4"/><text x="116.0" y="120.5" text-anchor="start">E일보</text></g><g class="b"><circle cx="164.1" cy="75.1" r="6.4"/><text x="175.1" y="78.9" text-anchor="start">F신문</text></g></svg></div>
+        </section>
+        <section class="panel ex">
+          <div class="panel-h"><span class="panel-code">04 · IYENGAR 보도 시각</span>
+            <h3>일화적 ↔ 주제적 보도 비율<span class="panel-cite">일화 비중 순</span><span class="panel-ex">예시 수치</span></h3></div>
+          <div class="panel-b"><ul class="pkey"><li><i class="epi"></i>일화적 (사례 중심)</li><li><i class="the"></i>주제적 (구조 중심)</li></ul>
+          <div class="comp" style="grid-template-columns:auto 1fr">
+            <span class="nm2">F신문</span><span class="track" role="img" aria-label="일화 86퍼센트 주제 14퍼센트"><i class="epi" style="flex:0 0 86%">86</i><i class="the" style="flex:0 0 14%">14</i></span>
+            <span class="nm2">E일보</span><span class="track" role="img" aria-label="일화 78퍼센트 주제 22퍼센트"><i class="epi" style="flex:0 0 78%">78</i><i class="the" style="flex:0 0 22%">22</i></span>
+            <span class="nm2">D신문</span><span class="track" role="img" aria-label="일화 72퍼센트 주제 28퍼센트"><i class="epi" style="flex:0 0 72%">72</i><i class="the" style="flex:0 0 28%">28</i></span>
+            <span class="nm2">B일보</span><span class="track" role="img" aria-label="일화 54퍼센트 주제 46퍼센트"><i class="epi" style="flex:0 0 54%">54</i><i class="the" style="flex:0 0 46%">46</i></span>
+            <span class="nm2">A일보</span><span class="track" role="img" aria-label="일화 41퍼센트 주제 59퍼센트"><i class="epi" style="flex:0 0 41%">41</i><i class="the" style="flex:0 0 59%">59</i></span>
+            <span class="nm2">C일보</span><span class="track" role="img" aria-label="일화 35퍼센트 주제 65퍼센트"><i class="epi" style="flex:0 0 35%">35</i><i class="the" style="flex:0 0 65%">65</i></span>
+          </div></div>
+        </section>
+        <section class="panel">
+          <div class="panel-h"><span class="panel-code">05 · SEMANTIC NETWORK</span>
+            <h3>핵심 키워드 의미 연결망<span class="panel-cite">동시출현</span></h3></div>
+          <div class="panel-b"><div class="netgrid">
+            <div class="net a"><h4 class="net-h">권한이 한 손에 모인다<span>A · B · C일보</span></h4><svg class="wnet" viewBox="0 0 250 160" role="img" aria-label="권한이 한 손에 모인다 이야기의 핵심어 연결망. 중심은 권한(24회), 이어진 낱말은 수사·기소 18회, 경계 11회, 범위 9회, 입법 8회, 견제 장치 7회, 분리 5회."><g><line class="wn-e" x1="125.0" y1="80.0" x2="125.0" y2="28.0" stroke-width="1.90"><title>권한–수사·기소 14회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="177.0" y2="54.0" stroke-width="1.40"><title>권한–경계 9회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="177.0" y2="106.0" stroke-width="1.20"><title>권한–범위 7회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="125.0" y2="132.0" stroke-width="1.10"><title>권한–입법 6회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="73.0" y2="106.0" stroke-width="1.00"><title>권한–견제 장치 5회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="73.0" y2="54.0" stroke-width="0.90"><title>권한–분리 4회 동시출현</title></line></g><g><circle class="wn-n" cx="125.0" cy="28.0" r="10.8"><title>수사·기소 18회</title></circle><circle class="wn-n" cx="177.0" cy="54.0" r="7.8"><title>경계 11회</title></circle><circle class="wn-n" cx="177.0" cy="106.0" r="7.0"><title>범위 9회</title></circle><circle class="wn-n" cx="125.0" cy="132.0" r="6.6"><title>입법 8회</title></circle><circle class="wn-n" cx="73.0" cy="106.0" r="6.1"><title>견제 장치 7회</title></circle><circle class="wn-n" cx="73.0" cy="54.0" r="5.3"><title>분리 5회</title></circle></g><circle class="wn-h" cx="125" cy="80" r="13.3"><title>권한 24회</title></circle><text class="wn-hl" x="125" y="83.4" text-anchor="middle">권한</text><g><text class="wn-l" x="125.0" y="12.2" text-anchor="middle">수사·기소 <tspan class="wn-c">18</tspan></text><text class="wn-l" x="189.8" y="57.6" text-anchor="start">경계 <tspan class="wn-c">11</tspan></text><text class="wn-l" x="188.9" y="109.6" text-anchor="start">범위 <tspan class="wn-c">9</tspan></text><text class="wn-l" x="125.0" y="149.6" text-anchor="middle">입법 <tspan class="wn-c">8</tspan></text><text class="wn-l" x="61.9" y="109.6" text-anchor="end">견제 장치 <tspan class="wn-c">7</tspan></text><text class="wn-l" x="62.7" y="57.6" text-anchor="end">분리 <tspan class="wn-c">5</tspan></text></g></svg></div>
+            <div class="net b"><h4 class="net-h">누가 특검을 쥐느냐<span>D신문 · E일보</span></h4><svg class="wnet" viewBox="0 0 250 160" role="img" aria-label="누가 특검을 쥐느냐 이야기의 핵심어 연결망. 중심은 특검(21회), 이어진 낱말은 견제 16회, 여당 12회, 공세 9회, 국면 7회, 통제 6회, 셈법 4회."><g><line class="wn-e" x1="125.0" y1="80.0" x2="125.0" y2="28.0" stroke-width="1.80"><title>특검–견제 13회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="177.0" y2="54.0" stroke-width="1.50"><title>특검–여당 10회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="177.0" y2="106.0" stroke-width="1.20"><title>특검–공세 7회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="125.0" y2="132.0" stroke-width="1.00"><title>특검–국면 5회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="73.0" y2="106.0" stroke-width="0.90"><title>특검–통제 4회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="73.0" y2="54.0" stroke-width="0.80"><title>특검–셈법 3회 동시출현</title></line></g><g><circle class="wn-n" cx="125.0" cy="28.0" r="9.9"><title>견제 16회</title></circle><circle class="wn-n" cx="177.0" cy="54.0" r="8.2"><title>여당 12회</title></circle><circle class="wn-n" cx="177.0" cy="106.0" r="7.0"><title>공세 9회</title></circle><circle class="wn-n" cx="125.0" cy="132.0" r="6.1"><title>국면 7회</title></circle><circle class="wn-n" cx="73.0" cy="106.0" r="5.7"><title>통제 6회</title></circle><circle class="wn-n" cx="73.0" cy="54.0" r="4.9"><title>셈법 4회</title></circle></g><circle class="wn-h" cx="125" cy="80" r="12.0"><title>특검 21회</title></circle><text class="wn-hl" x="125" y="83.4" text-anchor="middle">특검</text><g><text class="wn-l" x="125.0" y="13.1" text-anchor="middle">견제 <tspan class="wn-c">16</tspan></text><text class="wn-l" x="190.2" y="57.6" text-anchor="start">여당 <tspan class="wn-c">12</tspan></text><text class="wn-l" x="188.9" y="109.6" text-anchor="start">공세 <tspan class="wn-c">9</tspan></text><text class="wn-l" x="125.0" y="149.1" text-anchor="middle">국면 <tspan class="wn-c">7</tspan></text><text class="wn-l" x="62.3" y="109.6" text-anchor="end">통제 <tspan class="wn-c">6</tspan></text><text class="wn-l" x="63.2" y="57.6" text-anchor="end">셈법 <tspan class="wn-c">4</tspan></text></g></svg></div>
           </div>
-          <p class="note" style="margin-top:11px">
-            <b>두 이야기가 함께 쓴 낱말은 뺐습니다</b> — 수사 41회 · 보완 33회 · 대통령 28회 · 국회 19회.
-            넣으면 이 넷이 두 그림에서 가장 크게 나와 <b>어느 쪽이 무엇 중심인지가 지워집니다.</b>
-            남은 낱말이 그 이야기만 쓴 말입니다.
-          </p>
-          <p class="note" style="margin-top:8px;padding-top:9px;border-top:1px dashed var(--afs-rule)">
-            중심 낱말은 그 이야기 안에서 다른 낱말과 가장 많이 이어진 것을 골랐습니다 — 이름을 사람이 붙인 것이 아니라 계산으로 뽑았습니다.
-            같은 문장 안 동시출현만 세므로 <b>인과나 주장 방향은 담기지 않습니다.</b> 두 낱말이 붙어 있다는 사실까지만 말합니다.
-          </p>
-        </div>
-
-        <div class="readnote">
-          <b>이 화면을 읽을 때</b>
-          <p>2026년 7월 26일 하루, 이 사건을 쓴 기사 7건입니다. 그 신문의 평소 성향이 아니라 <b>이날 이 사건을 쓴 방식</b>입니다.
-          이름과 계열은 AI 코더 둘이 따로 붙인 뒤 갈린 곳만 다시 봤으며, 사람 코더 검증은 다음 회차입니다.
-          &ldquo;—&rdquo;는 그 대목을 기자가 직접 쓰지 않고 인용으로 처리했다는 뜻입니다.
-          <a href="#/method">어디까지 말할 수 있는지 &rarr;</a></p>
-        </div>
+          <ul class="pkey"><li>원 크기 = 등장 횟수</li><li>선 굵기 = 같은 문장 동시출현</li><li>두 이야기 공통어 제외</li></ul></div>
+        </section>
 
         <div class="next">
           <a href="#/outlets"><i>다음</i><b>언론사 비교</b><span>쟁점 축에서 각 매체의 위치</span></a>
@@ -1321,14 +1315,6 @@ section[data-screen].on{display:block}
           어느 쪽이 옳은 이야기인지는 여기서 정하지 않습니다.</p>
         </header>
 
-        <div class="legend">
-          <b>이 화면의 숫자 출처</b>
-          <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button>
-          <button class="prov p-rule" type="button" aria-haspopup="dialog" data-book="p-rule">단어 규칙 자동 분류</button>
-          <button class="prov p-derive" type="button" aria-haspopup="dialog" data-book="p-derive">위 결과를 합친 계산</button>
-          <span>배지가 다르면 신뢰 수준이 다릅니다 — 눌러보세요</span>
-          <label class="sw"><input type="checkbox" class="onlyCode" /> AI 채점 산출만 보기</label>
-        </div>
         <h2 class="sec">쟁점 축 — 문제 정의 <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></h2>
         <div class="axis">
           <div class="axis-grid">
@@ -1349,16 +1335,7 @@ section[data-screen].on{display:block}
           </div>
           <p class="axis-rule">배치 규칙 = 그 매체의 이 층위 <b>기자 문장 항목에서 다수를 차지한 계열</b>의 칸.
           계열은 범주형이므로 칸 안에서의 좌우 위치나 칸 사이의 거리에는 <b>아무 의미가 없습니다.</b></p>
-          <p class="note" style="margin-top:8px">
-            축의 양 끝은 이 의제에서 <b>실제로 관측된 두 계열</b>입니다 — 미리 정한 진보·보수 축이 아니고,
-            의제가 바뀌면 축도 바뀝니다. 그래서 이 화면은 매체에 점수를 매기지 않습니다.
-          </p>
         </div>
-        <p class="note" style="margin-top:9px;padding:10px 12px;background:var(--afs-warn-soft);border-radius:var(--afs-r-btn);color:var(--afs-warn)">
-          <b>다음 검사:</b> 매체명을 가린 채 같은 기사를 다시 코딩합니다.
-          그 검사를 통과해야 위 배치가 <b>기사에서 나온 것</b>이지 모델이 아는 매체 평판에서 나온 것이 아님을 말할 수 있습니다.
-          <a href="#/method" style="color:inherit;font-weight:850;text-decoration:underline">방법론 →</a>
-        </p>
 
         <h2 class="sec">다른 질문에서는</h2>
         <div class="grid g2">
@@ -1371,13 +1348,11 @@ section[data-screen].on{display:block}
             <div class="axis-out" style="margin-top:8px">
               <b>축 밖</b> — 기자 문장 미관측 <span class="chip unobs">B일보</span> <span class="chip unobs">F신문</span>
             </div>
-            <p class="note">축에 놓인 매체는 4곳입니다. 나머지 2곳은 <b>축 밖</b>에 둡니다 — 가운데에 놓으면 &ldquo;중도&rdquo;로 읽히기 때문입니다.</p>
           </div>
           <div class="card">
             <h3 class="sub">무엇을 해야 하는가 <span class="chip good">수렴</span></h3>
             <p style="margin:0 0 9px;font-size:12.5px">관측된 4곳이 <b>모두 같은 처방</b>이라 축의 양 끝이 생기지 않았습니다.</p>
             <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip brand">제도적 견제 · 4곳</span><span class="chip unobs">미관측 · 2곳</span></div>
-            <p class="note">축이 없다는 것도 결과입니다. 대립이 해법 단계까지 이어지지 않았다는 뜻입니다.</p>
           </div>
         </div>
 
@@ -1388,7 +1363,7 @@ section[data-screen].on{display:block}
           </p>
           <div class="tscroll" tabindex="0" role="region" aria-label="지칭어 대조 표 — 좌우로 스크롤할 수 있습니다">
           <table class="t">
-            <caption>여당의 법안 처리 행위를 가리킨 서술어 &middot; 기자가 직접 쓴 문장에서만 셌습니다</caption>
+            <caption>여당의 법안 처리 행위를 가리킨 말</caption>
             <thead><tr><th scope="col">표현</th><th scope="col" class="n">매체</th><th scope="col">쓴 곳</th><th scope="col">이 말이 전제하는 것</th></tr></thead>
             <tbody>
               <tr><th scope="row">추진</th><td class="n">3</td><td>A일보 &middot; B일보 &middot; C일보</td><td>절차가 진행 중이다</td></tr>
@@ -1397,10 +1372,6 @@ section[data-screen].on{display:block}
             </tbody>
           </table>
           </div>
-          <p class="note" style="margin-top:10px">
-            사전에는 셋 다 중립어로 올라 있습니다. 그런데 <b>&ldquo;강행&rdquo;을 읽은 독자는 반대편이 있었다는 것을 함께 읽고,
-            &ldquo;처리&rdquo;를 읽은 독자는 그렇지 않습니다.</b> 어느 쪽도 사실을 틀리게 쓰지 않았습니다.
-          </p>
           <div class="tscroll" tabindex="0" role="region" aria-label="법안 지칭 표 — 좌우로 스크롤할 수 있습니다" style="margin-top:12px">
           <table class="t">
             <caption>같은 법안을 부른 이름</caption>
@@ -1411,17 +1382,12 @@ section[data-screen].on{display:block}
             </tbody>
           </table>
           </div>
-          <p class="note" style="margin-top:10px;padding-top:9px;border-top:1px dashed var(--afs-rule)">
-            <b>직접 확인해보세요.</b> 위 세 단어를 각 기사에서 찾아보십시오. 5초면 됩니다.
-            이 대목은 분석을 믿지 않아도 확인됩니다 — 이 화면에서 <b>독자가 직접 검증할 수 있는 유일한 지표</b>입니다.
-          </p>
         </div>
 
         <h2 class="sec">누구의 목소리를 실었나 <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></h2>
         <div class="tscroll">
           <table class="t">
-            <caption>매체 × 취재원 역할. 숫자는 인용된 발언 항목 수입니다(인원수가 아닙니다).
-            코드북의 역할 9종 중 <b>이 표본에서 관측된 5종만</b> 표시했습니다 — 기업·피해 당사자·익명 관계자·기타는 0건입니다.</caption>
+            <caption>매체 × 취재원 역할 &middot; 발언 항목 수</caption>
             <thead><tr><th scope="col">매체</th><th scope="col" class="n">정치 행위자</th><th scope="col" class="n">정부 관계자</th><th scope="col" class="n">사법·수사</th><th scope="col" class="n">전문가</th><th scope="col" class="n">시민사회</th><th scope="col" class="n">합</th></tr></thead>
             <tbody>
               <tr><th scope="row">A일보</th><td class="n">3</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td class="n">0</td><td class="n"><b>7</b></td></tr>
@@ -1437,8 +1403,8 @@ section[data-screen].on{display:block}
           <div class="sec-row" style="margin:0 0 10px">
             <h3 class="sub" style="margin:0">같은 표를 막대로</h3>
             <span class="seg" id="srcSeg" role="radiogroup" aria-label="막대 보기 방식">
-              <button type="button" role="radio" aria-checked="true" tabindex="0" data-src-view="abs">발언 개수</button>
-              <button type="button" role="radio" aria-checked="false" tabindex="-1" data-src-view="pct">구성 비율</button>
+              <button type="button" role="radio" aria-checked="false" tabindex="-1" data-src-view="abs">발언 개수</button>
+              <button type="button" role="radio" aria-checked="true" tabindex="0" data-src-view="pct">구성 비율</button>
             </span>
           </div>
           <ul class="rolekey">
@@ -1448,7 +1414,7 @@ section[data-screen].on{display:block}
             <li><i class="r4"></i>전문가</li>
             <li><i class="r5"></i>시민사회</li>
           </ul>
-          <div class="comp" id="srcAbs" style="grid-template-columns:auto 1fr auto">
+          <div class="comp" id="srcAbs" hidden style="grid-template-columns:auto 1fr auto">
             <span class="nm2">A일보</span><span class="track" role="img" aria-label="정치 3, 정부 1, 사법 2, 전문가 1, 시민 0"><i class="r1" style="flex:0 0 21.4%">3</i><i class="r2" style="flex:0 0 7.1%">1</i><i class="r3" style="flex:0 0 14.3%">2</i><i class="r4" style="flex:0 0 7.1%">1</i></span><span class="nm3">7</span>
             <span class="nm2">B일보</span><span class="track" role="img" aria-label="정치 4, 사법 1"><i class="r1" style="flex:0 0 28.6%">4</i><i class="r3" style="flex:0 0 7.1%">1</i></span><span class="nm3">5</span>
             <span class="nm2">C일보</span><span class="track" role="img" aria-label="정치 2, 정부 1, 사법 2, 전문가 1"><i class="r1" style="flex:0 0 14.3%">2</i><i class="r2" style="flex:0 0 7.1%">1</i><i class="r3" style="flex:0 0 14.3%">2</i><i class="r4" style="flex:0 0 7.1%">1</i></span><span class="nm3">6</span>
@@ -1456,7 +1422,7 @@ section[data-screen].on{display:block}
             <span class="nm2">E일보</span><span class="track" role="img" aria-label="정치 4, 정부 1, 사법 1, 시민 1"><i class="r1" style="flex:0 0 28.6%">4</i><i class="r2" style="flex:0 0 7.1%">1</i><i class="r3" style="flex:0 0 7.1%">1</i><i class="r5" style="flex:0 0 7.1%">1</i></span><span class="nm3">7</span>
             <span class="nm2">F신문</span><span class="track" role="img" aria-label="정치 5, 나머지 0"><i class="r1" style="flex:0 0 35.7%">5</i></span><span class="nm3">5</span>
           </div>
-          <div class="comp" id="srcPct" hidden style="grid-template-columns:auto 1fr auto">
+          <div class="comp" id="srcPct" style="grid-template-columns:auto 1fr auto">
             <span class="nm2">A일보</span><span class="track" role="img" aria-label="정치 43%, 정부 14%, 사법 29%, 전문가 14%"><i class="r1" style="flex:0 0 42.9%">43</i><i class="r2" style="flex:0 0 14.3%">14</i><i class="r3" style="flex:0 0 28.6%">29</i><i class="r4" style="flex:0 0 14.3%">14</i></span><span class="nm3">7건</span>
             <span class="nm2">B일보</span><span class="track" role="img" aria-label="정치 80%, 사법 20%"><i class="r1" style="flex:0 0 80%">80</i><i class="r3" style="flex:0 0 20%">20</i></span><span class="nm3">5건</span>
             <span class="nm2">C일보</span><span class="track" role="img" aria-label="정치 33%, 정부 17%, 사법 33%, 전문가 17%"><i class="r1" style="flex:0 0 33.3%">33</i><i class="r2" style="flex:0 0 16.7%">17</i><i class="r3" style="flex:0 0 33.3%">33</i><i class="r4" style="flex:0 0 16.7%">17</i></span><span class="nm3">6건</span>
@@ -1464,34 +1430,12 @@ section[data-screen].on{display:block}
             <span class="nm2">E일보</span><span class="track" role="img" aria-label="정치 57%, 정부 14%, 사법 14%, 시민 14%"><i class="r1" style="flex:0 0 57.1%">57</i><i class="r2" style="flex:0 0 14.3%">14</i><i class="r3" style="flex:0 0 14.3%">14</i><i class="r5" style="flex:0 0 14.3%">14</i></span><span class="nm3">7건</span>
             <span class="nm2">F신문</span><span class="track" role="img" aria-label="정치 100%"><i class="r1" style="flex:0 0 100%">100</i></span><span class="nm3">5건</span>
           </div>
-          <p class="note" style="margin-top:10px" id="srcNoteAbs">
-            <b>F신문만 한 칸입니다.</b> 다른 모든 표에서 &ldquo;—&rdquo;로만 나오던 매체가 여기서는 비교됩니다 —
-            <b>정치 행위자 발언 5건만</b>으로 기사를 구성했습니다. 반대로 D신문은 네 종류에 흩어져 있습니다.
-            막대 길이가 곧 발언 개수이므로, 많이 인용한 매체(D신문 8건)와 적게 인용한 매체(B·F 5건)가 길이로 구별됩니다.
-          </p>
-          <p class="note" style="margin-top:10px" id="srcNotePct" hidden>
-            <b>같은 폭으로 맞추면 구성이 드러납니다.</b> F신문은 정치 행위자 <b>100%</b>, B일보는 <b>80%</b>,
-            D신문은 <b>38%</b>로 가장 고르게 흩어져 있습니다. 개수 보기에서는 D신문이 가장 긴 막대여서
-            &ldquo;많이 인용한 매체&rdquo;로 읽히는데, 비율로 보면 <b>가장 여러 쪽을 부른 매체</b>라는 것이 함께 보입니다.
-          </p>
-          <p class="note" style="margin-top:8px;padding-top:9px;border-top:1px dashed var(--afs-rule)">
-            <b>두 보기가 서로 다른 것을 말합니다.</b> 기획 시안은 <b>구성 비율</b>(100% 막대)로 그렸습니다 — 매체 사이의 구성을 견주려면 이쪽이 맞습니다.
-            다만 합계가 5~8건이라 F신문의 &ldquo;100%&rdquo;는 발언 5건이고 D신문의 &ldquo;38%&rdquo;는 3건입니다.
-            비율만 보면 <b>인용을 많이 한 매체와 적게 한 매체가 같은 폭</b>이 되므로, 개수 보기를 기본값으로 두고 비율은 견줄 때만 켭니다.
-          </p>
         </div>
         <div class="card" style="margin-top:10px">
           <h3 class="sub">논쟁은 국회 안에서 벌어졌고, 기사도 국회 안에서 취재됐습니다</h3>
           <p style="margin:0 0 8px;font-size:0.9em;line-height:1.68">
             정치인 <b>21회</b> &middot; 사법·수사 <b>6회</b> &middot; 정부 관계자 <b>5회</b> &middot; 전문가 <b>3회</b> &middot; 시민사회 <b>3회</b>.
             발언 38건 중 <b>32건이 제도권 안쪽</b>에서 나왔습니다.
-          </p>
-          <p class="note">
-            Bennett(1990)은 언론의 논쟁 폭이 <b>제도권 엘리트가 다투는 폭을 넘지 않는</b> 경향을 인덱싱이라 불렀습니다.
-            국회에서 다루지 않은 질문은 기사에도 나오지 않습니다. 누구를 부를지 고르는 것은 기자의 일이므로,
-            이 표는 <b>매체의 주장이 아니라 매체의 선택</b>을 보여줍니다.<br />
-            D신문은 다섯 종류를 불렀고, F신문은 정치인만 다섯 번 불렀습니다.
-            F신문 기자는 이 사건에 대해 한 문장도 직접 쓰지 않았지만, <b>누구의 말을 실을지는 골랐습니다.</b>
           </p>
         </div>
 
@@ -1511,21 +1455,7 @@ section[data-screen].on{display:block}
             </tbody>
           </table>
         </div>
-        <p class="note">
-          <b>F신문을 보십시오.</b> 기자가 직접 쓴 문장이 하나도 없어 앞의 축에는 놓을 수 없었지만,
-          <b>인용한 발언은 한쪽 계열로만 모였습니다.</b> 즉 자기 문장을 쓰지 않고도 한 프레임만 실은 것입니다.
-          이것이 &ldquo;기자 문장만 세면 인용 편집을 놓친다&rdquo;는 반론에 대한 답입니다 — 놓치지 않고, 다른 열로 셉니다.
-        </p>
-        <p class="note" style="margin-top:7px;color:var(--afs-warn)">
-          이 열을 비교 지표로 올리려면 &ldquo;인용으로 이야기를 실었다&rdquo;를 판정하는 규칙 — 반박 서술의 정의, 병치와 증폭의 구분 — 을 코드북에 먼저 써야 합니다. <b>다음 회차 작업입니다.</b>
-        </p>
 
-        <div class="readnote">
-          <b>이 화면을 읽을 때</b>
-          <p>2026년 7월 26일 하루, 이 사건을 쓴 기사 7건입니다. 축은 사건마다 새로 만들므로 같은 신문이 다른 사건에서는 반대쪽에 놓일 수 있습니다.
-          이 화면에서 <b>독자가 원문으로 직접 검증할 수 있는 것은 어휘 대조</b>이고, 나머지는 AI 코더 둘의 판정을 거친 값입니다.
-          <a href="#/method">어디까지 말할 수 있는지 &rarr;</a></p>
-        </div>
 
         <div class="next">
           <a href="#/framing"><i>더 깊이</i><b>프레이밍 분석</b><span>이 위치가 어느 문장에서 나왔는지</span></a>
