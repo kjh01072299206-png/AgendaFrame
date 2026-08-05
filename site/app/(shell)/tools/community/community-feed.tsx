@@ -202,16 +202,60 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
     setPosts(sortPosts([...stored, ...seedPosts(issues)], sort));
   };
 
+  /* 목록 GET 은 되는데 등록 POST 는 404 인 배포가 있다 — 워커는 살아 있고 D1 에 그 의제가
+     없는 상태다. 그러면 화면은 '서버 모드' 로 판단해 놓고 등록만 실패해, 글이 그대로 사라진다.
+     쓴 글을 잃지 않게 로컬로 받아 두고 무엇이 일어났는지 알린다. */
+  const fallbackToLocal = (write: () => void, why: string) => {
+    setMode("local");
+    write();
+    setNotice(why);
+  };
+
+  const localPost = (): Post => {
+    const issue = issues.find((row) => row.id === selectedIssue);
+    return {
+      id: `local-${crypto.randomUUID()}`,
+      issueId: selectedIssue,
+      issueTitle: issue?.title ?? null,
+      issueRank: issue?.rank ?? null,
+      displayName: displayName || "익명 독자",
+      readerType: mineType,
+      screen: "커뮤니티",
+      body: body.trim(),
+      reactionCount: 0,
+      reactedByMe: false,
+      replyCount: 0,
+      createdAt: Date.now(),
+      replies: [],
+    };
+  };
+
+  const localReply = (): Reply => ({
+    id: `local-${crypto.randomUUID()}`,
+    displayName: displayName || "익명 독자",
+    readerType: mineType,
+    body: replyBody.trim(),
+    createdAt: Date.now(),
+    reactionCount: 0,
+  });
+
+  const attachReply = (post: Post, reply: Reply) => {
+    const stored = readStored().map((row) =>
+      row.id === post.id ? { ...row, replies: [...row.replies, reply], replyCount: row.replyCount + 1 } : row,
+    );
+    writeStored(stored);
+    setPosts(
+      sortPosts([...stored, ...seedPosts(issues)], sort).map((row) =>
+        row.id === post.id && row.demo ? { ...row, replies: [...row.replies, reply], replyCount: row.replyCount + 1 } : row,
+      ),
+    );
+  };
+
   const submit = async (event: FormEvent) => {
     event.preventDefault(); if (!selectedIssue || !body.trim() || busy) return;
     setBusy(true); setNotice("");
     if (mode === "local") {
-      const issue = issues.find((row) => row.id === selectedIssue);
-      appendLocal({
-        id: `local-${crypto.randomUUID()}`, issueId: selectedIssue, issueTitle: issue?.title ?? null, issueRank: issue?.rank ?? null,
-        displayName: displayName || "익명 독자", readerType: mineType, screen: "커뮤니티", body: body.trim(),
-        reactionCount: 0, reactedByMe: false, replyCount: 0, createdAt: Date.now(), replies: [],
-      });
+      appendLocal(localPost());
       setBody(""); setNotice("이 브라우저에 저장했습니다."); setBusy(false); return;
     }
     try {
@@ -223,9 +267,21 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
         response = await communityFetch(`/api/issues/${encodeURIComponent(selectedIssue)}/community`, { method: "POST", body: JSON.stringify({ body, displayName, readerType: mineType, screen: "커뮤니티" }) });
         payload = await response.json();
       }
-      if (!response.ok) throw new Error(payload?.error?.message ?? "글을 등록하지 못했습니다.");
+      if (!response.ok) {
+        const draft = localPost();
+        fallbackToLocal(
+          () => appendLocal(draft),
+          "공용 저장소가 이 글을 받지 못해 이 브라우저에 저장했습니다. 저장소가 연결되면 함께 올라갑니다.",
+        );
+        setBody("");
+        return;
+      }
       setBody(""); setNotice(payload.notice ?? "글이 등록되었습니다."); await loadPosts(sort);
-    } catch (error) { setNotice(error instanceof Error ? error.message : "글을 등록하지 못했습니다."); }
+    } catch {
+      const draft = localPost();
+      fallbackToLocal(() => appendLocal(draft), "공용 저장소에 닿지 못해 이 브라우저에 저장했습니다.");
+      setBody("");
+    }
     finally { setBusy(false); }
   };
 
@@ -233,10 +289,7 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
     if (!replyBody.trim() || busy) return;
     setBusy(true); setNotice("");
     if (mode === "local") {
-      const reply: Reply = { id: `local-${crypto.randomUUID()}`, displayName: displayName || "익명 독자", readerType: mineType, body: replyBody.trim(), createdAt: Date.now(), reactionCount: 0 };
-      const stored = readStored().map((row) => row.id === post.id ? { ...row, replies: [...row.replies, reply], replyCount: row.replyCount + 1 } : row);
-      writeStored(stored);
-      setPosts(sortPosts([...stored, ...seedPosts(issues)], sort).map((row) => row.id === post.id && row.demo ? { ...row, replies: [...row.replies, reply], replyCount: row.replyCount + 1 } : row));
+      attachReply(post, localReply());
       setReplyBody(""); setReplyingTo(null); setNotice("이 브라우저에 저장했습니다."); setBusy(false); return;
     }
     try {
@@ -246,9 +299,21 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
         response = await communityFetch(`/api/issues/${encodeURIComponent(post.issueId)}/community`, { method: "POST", body: JSON.stringify({ parentId: post.id, body: replyBody, displayName, readerType: mineType, screen: "커뮤니티 답글" }) });
         payload = await response.json();
       }
-      if (!response.ok) throw new Error(payload?.error?.message ?? "답글을 등록하지 못했습니다.");
+      if (!response.ok) {
+        const draft = localReply();
+        fallbackToLocal(
+          () => attachReply(post, draft),
+          "공용 저장소가 이 답글을 받지 못해 이 브라우저에 저장했습니다.",
+        );
+        setReplyBody(""); setReplyingTo(null);
+        return;
+      }
       setReplyBody(""); setReplyingTo(null); setNotice(payload.notice ?? "답글이 등록되었습니다."); await loadPosts(sort);
-    } catch (error) { setNotice(error instanceof Error ? error.message : "답글을 등록하지 못했습니다."); }
+    } catch {
+      const draft = localReply();
+      fallbackToLocal(() => attachReply(post, draft), "공용 저장소에 닿지 못해 이 답글을 이 브라우저에 저장했습니다.");
+      setReplyBody(""); setReplyingTo(null);
+    }
     finally { setBusy(false); }
   };
 

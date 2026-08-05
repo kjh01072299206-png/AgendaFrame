@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SaveIssueButton } from "./saved-issues";
 
 const SCREENS = [
-  { tail: "", label: "사안 개요", says: "무슨 일이 있었고 무엇이 공통인가" },
-  { tail: "/outlets", label: "언론사 비교", says: "매체가 어디에서 갈라지는가" },
-  { tail: "/framing", label: "프레이밍 분석", says: "다섯 층위를 하나씩 본다" },
-  { tail: "/report", label: "리포트", says: "읽을 수 있는 한 편의 글로 본다" },
+  { tail: "", label: "사안 개요", says: "무슨 일이 있었나" },
+  { tail: "/framing", label: "프레이밍 분석", says: "매체가 어디에서 갈라지는가" },
+  { tail: "/report", label: "리포트", says: "한 편의 글로 읽는다" },
 ];
 
 export function IssueSubject({
@@ -52,6 +52,7 @@ export function IssueSubject({
           <span className="afs-chip afs-chip-good afs-num">
             매체 서술 기준 다섯 층위 중 {splitDimensions}곳에서 갈림
           </span>
+          <SaveIssueButton issueId={issueId} title={title} />
         </div>
       </section>
 

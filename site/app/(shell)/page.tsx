@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { RankList } from "../charts";
 import { deriveDay, DIM_LABEL } from "../../lib/initial-five/derive";
+import { SavedIssueList, SaveIssueButton } from "./saved-issues";
 
 const formatDate = (iso: string) => {
   const [y, m, d] = iso.split("-");
@@ -23,6 +24,8 @@ export default function HomePage() {
           갈라졌는지부터 봅니다.
         </p>
       </header>
+
+      <SavedIssueList />
 
       <section className="afs-card">
         <h2>
@@ -62,6 +65,7 @@ export default function HomePage() {
                   </h3>
                   <p className="afs-explore-meta">
                     기사 {issue.articleCount}건 · 매체 {issue.outletCount}곳
+                    <SaveIssueButton issueId={issue.issueId} title={issue.title} compact />
                   </p>
                   {axis ? (
                     <p className="afs-explore-poles" data-axis={DIM_LABEL[axis.dimension]}>

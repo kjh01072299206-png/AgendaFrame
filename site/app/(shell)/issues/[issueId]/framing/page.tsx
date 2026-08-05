@@ -76,6 +76,12 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
      같은 행렬을 한 번은 매체별로 펼치고 한 번은 같은 값끼리 묶은 것이었다 — 정보량이 같다.
      매체별 표 하나만 두고, 어느 묶음에 속하는지는 열로 붙인다. */
   const roleColumns = [...new Set(issue.outlets.flatMap((outlet) => outlet.roles.map((role) => role.label)))];
+  const coarseColumns = [...new Set(issue.outlets.flatMap((outlet) => outlet.coarseRoles.map((role) => role.label)))];
+  const narrowedTotal = issue.outlets.reduce((sum, outlet) => sum + outlet.narrowedActorCount, 0);
+  const actorTotal = issue.outlets.reduce(
+    (sum, outlet) => sum + outlet.articles.reduce((n, article) => n + article.coarseRoles.length, 0),
+    0,
+  );
   const voiceKeys = ["direct_quote", "journalist_narration", "indirect_source", "uncertain_quote"].map((key) => ({
     key,
     label: VOICE_LABEL[key],
@@ -249,6 +255,11 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
                           {familyLabel(outlet.lead[dim].family)}
                           {outlet.families[dim].length > 1 ? (
                             <small className="afs-num">+{outlet.families[dim].length - 1}</small>
+                          ) : null}
+                          {/* 계열 이름만으로는 '공동 책임'이 누구와 누구인지 알 수 없다.
+                              의역문에서 좁힌 주체를 아래 줄에 붙인다. */}
+                          {outlet.subjects[dim]?.length ? (
+                            <small className="afs-cell-who">{outlet.subjects[dim].join(" · ")}</small>
                           ) : null}
                         </>
                       ) : (
@@ -462,6 +473,51 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
               ],
             }))}
           />
+          {narrowedTotal ? (
+            <details className="afs-fold">
+              <summary>
+                역할을 어떻게 좁혔나 <span className="afs-chip afs-chip-src">단어 규칙 · {narrowedTotal}/{actorTotal}건</span>
+              </summary>
+              <p className="afs-note">
+                이중코딩이 낸 역할 코드는 <b>{coarseColumns.join(" · ")}</b> 처럼 굵어서, 여당인지 야당인지가 한 통에
+                들어갑니다. 코딩 지침이 인물 실명 반환을 금지하므로 다시 코딩해도 이름은 얻을 수 없습니다. 대신 그 취재원의
+                근거 문장과 <b>같은 위치에서 뽑힌 의역문</b>을 붙여, 문장이 가리키는 직위·기관을 단어 규칙으로 좁혔습니다.
+              </p>
+              <p className="afs-note">
+                {actorTotal - narrowedTotal
+                  ? `${actorTotal - narrowedTotal}건은 좁혀지지 않아 원 역할 코드를 그대로 씁니다. `
+                  : ""}
+                좁힌 값은 규칙 산출이므로 위 다섯 층위 계열과 같은 신뢰 수준으로 읽으면 안 됩니다.
+              </p>
+              <div className="afs-scroll">
+                <table className="afs-table">
+                  <caption>이중코딩이 낸 원 역할 코드로 센 값</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">매체</th>
+                      {coarseColumns.map((column) => (
+                        <th scope="col" key={column}>
+                          {column}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {issue.outlets.map((outlet) => (
+                      <tr key={outlet.outlet}>
+                        <th scope="row">{outlet.outlet}</th>
+                        {coarseColumns.map((column) => (
+                          <td key={column} className="afs-num">
+                            {outlet.coarseRoles.find((role) => role.label === column)?.count ?? 0}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          ) : null}
         </div>
         <div className="afs-in">
           <h3 className="afs-layer-head">
