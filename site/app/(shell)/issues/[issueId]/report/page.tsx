@@ -153,7 +153,7 @@ export default async function ReportPage({ params }: { params: Promise<{ issueId
       </section>
 
       <section className="afs-card">
-        <h2>이 분석의 범위</h2>
+        <h2>이 리포트를 읽을 때</h2>
         <div className="afs-in afs-prose">
           {issue.comparisonEngine.limitNote ? <p>{issue.comparisonEngine.limitNote}</p> : null}
           <p>

@@ -540,3 +540,55 @@
   color: var(--afs-brand);
   font-weight: 700;
 }
+
+/* 미관측은 값이 아니라 값이 없다는 사실이다. 다른 계열명과 같은 무게로 인쇄되면
+   "미관측이라는 계열"로 읽힌다. */
+.afs-unobs {
+  color: var(--afs-ink-3, #7c8798);
+  font-weight: 400;
+}
+
+/* 자가점검 — 결과는 버튼을 눌러야 나온다. 마지막 문항을 고르는 순간 아래에 결과가 뜨면
+   답을 고치는 동안 결과가 눈앞에서 계속 바뀐다. */
+.afs-quiz-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 14px 16px;
+}
+.afs-btn,
+.afs-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid var(--afs-brand, #2856c8);
+  background: var(--afs-brand, #2856c8);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.afs-btn-ghost {
+  background: transparent;
+  color: var(--afs-ink-2, #4a5566);
+  border-color: var(--afs-rule, #e2e6ec);
+  font-weight: 600;
+}
+.afs-btn:disabled {
+  background: var(--afs-soft, #f1f3f7);
+  border-color: var(--afs-rule, #e2e6ec);
+  color: var(--afs-ink-3, #7c8798);
+  cursor: default;
+  font-weight: 600;
+}
+.afs-btn:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+.afs-btn-ghost:hover {
+  background: var(--afs-soft, #f1f3f7);
+}

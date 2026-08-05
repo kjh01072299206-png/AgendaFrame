@@ -29,7 +29,12 @@ const QUESTIONS: Array<{ axis: AxisId; text: string; a: string; b: string }> = [
   { axis: "range", text: "뉴스를 볼 때 나는", a: "익숙한 매체를 먼저 연다", b: "같은 사건의 여러 매체를 나란히 연다" },
   { axis: "aim", text: "기사에서 가장 알고 싶은 것은", a: "결국 누가 맞느냐", b: "무엇이 쟁점이냐" },
   { axis: "aim", text: "논쟁적인 사안에서 나는", a: "내 판단을 정하고 싶다", b: "판단을 미루고 구도를 먼저 보고 싶다" },
-  { axis: "aim", text: "후속 보도를 볼 때", a: "결과가 나왔는지 확인한다", b: "설명이 어떻게 바뀌었는지 본다" },
+  {
+    axis: "aim",
+    text: "같은 사건의 후속 기사를 볼 때 먼저 찾는 것은",
+    a: "그래서 결론이 어떻게 났는지",
+    b: "처음 보도와 설명이 달라졌는지",
+  },
 ];
 
 export interface ReaderType {
@@ -201,7 +206,15 @@ export function ReaderTypeQuiz() {
   }, [picks]);
 
   const code = AXES.map((axis) => (scores[axis.id].a >= scores[axis.id].b ? axis.a : axis.b)).join("");
+  /* 마지막 문항을 고르는 순간 결과가 같은 화면 아래에 나타나면, 답을 고치는 동안 결과가 눈앞에서
+     계속 흔들린다. '결과 보기' 를 한 번 눌러 화면을 바꾼다. 답이 다시 미완이 되면 자동으로 문항으로
+     돌아온다 — 결과 없이 결과 화면에 남아 있을 수 없게 한다. */
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    if (!done) setRevealed(false);
+  }, [done]);
   const result = done ? TYPES[code] : null;
+  const showResult = Boolean(result) && revealed;
 
   useEffect(() => {
     if (!COMMUNITY_API_ENABLED) return;
@@ -241,58 +254,23 @@ export function ReaderTypeQuiz() {
     return () => { cancelled = true; };
   }, [picks, result]);
 
-  return (
-    <>
-      <section className="afs-card">
-        <h2>
-          문항 {QUESTIONS.length}개
-          <small className="afs-num">
-            {answered}/{QUESTIONS.length}
-          </small>
-        </h2>
-        <div className="afs-in">
-          <p className="afs-note">
-            맞고 틀림을 매기지 않습니다. 평소에 기사를 어떻게 읽는지 고르면, 네 가지 축에서 어디에 서 있는지 알려 줍니다.
-          </p>
-          <ol className="afs-quiz">
-            {QUESTIONS.map((question, index) => (
-              <li key={`q${index}`} className={picks[index] ? "done" : ""}>
-                <p className="afs-quiz-q" id={`afs-q${index}`}>
-                  <span className="afs-quiz-no afs-num">{index + 1}</span>
-                  {question.text}
-                </p>
-                <div className="afs-quiz-opts" role="radiogroup" aria-labelledby={`afs-q${index}`}>
-                  {(["a", "b"] as const).map((side) => (
-                    <button
-                      type="button"
-                      key={side}
-                      role="radio"
-                      aria-checked={picks[index] === side}
-                      onClick={() =>
-                        setPicks((current) => current.map((value, i) => (i === index ? (value === side ? null : side) : value)))
-                      }
-                    >
-                      {question[side]}
-                    </button>
-                  ))}
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {result ? (
+  if (showResult) {
+    return (
+      <>
         <section className="afs-card afs-result">
           <h2>
             내 읽기 유형
-            <small>다시 고르면 즉시 바뀝니다</small>
+            <small className="afs-num">{answered}/{QUESTIONS.length} 응답</small>
           </h2>
           <div className="afs-in">
-            <p className="afs-result-code afs-num">{result.code}</p>
-            <h3 className="afs-result-name">{result.name}</h3>
-            <p className="afs-result-line">{result.line}</p>
+            <p className="afs-result-code afs-num">{result!.code}</p>
+            <h3 className="afs-result-name">{result!.name}</h3>
+            <p className="afs-result-line">{result!.line}</p>
 
+            <h3 className="afs-layer-head">
+              이런 지표로 계산했습니다
+              <b>축마다 문항 세 개 · 많이 고른 쪽이 그 축의 글자</b>
+            </h3>
             <div className="afs-result-axes">
               {AXES.map((axis) => {
                 const score = scores[axis.id];
@@ -322,34 +300,101 @@ export function ReaderTypeQuiz() {
             <div className="afs-cards" style={{ marginTop: 16 }}>
               <article className="afs-mini">
                 <h3>강점</h3>
-                <p>{result.strength}</p>
+                <p>{result!.strength}</p>
               </article>
               <article className="afs-mini">
                 <h3>놓치기 쉬운 것</h3>
-                <p>{result.blind}</p>
+                <p>{result!.blind}</p>
               </article>
               <article className="afs-mini">
                 <h3>이 사이트에서 해 볼 것</h3>
-                <p>{result.todo}</p>
+                <p>{result!.todo}</p>
               </article>
             </div>
 
-            <p style={{ marginTop: 16 }}>
+            <p className="afs-quiz-actions">
+              <button type="button" className="afs-btn-ghost" onClick={() => setRevealed(false)}>
+                답 다시 보기
+              </button>
               <Link className="afs-link" href="/tools/community">
                 커뮤니티에서 같은 유형의 사람들이 어떻게 읽는지 보기 →
               </Link>
             </p>
           </div>
           <p className="afs-foot">
-            {syncState === "saved" ? "자가점검 결과가 익명 세션에 저장되어 커뮤니티 배지에 사용됩니다." : syncState === "offline" ? "결과는 이 브라우저에 저장되어 커뮤니티 배지에 바로 쓰입니다. 공용 저장소가 연결되면 그쪽으로 함께 옮겨집니다." : "자가점검 결과를 저장하는 중입니다."}
+            자기보고식 성향 문항이며 기사 분석 결과와는 별개입니다.{" "}
+            {syncState === "saved"
+              ? "결과가 익명 세션에 저장되어 커뮤니티 배지에 쓰입니다."
+              : syncState === "offline"
+                ? "결과는 이 브라우저에 저장됩니다."
+                : "결과를 저장하는 중입니다."}
           </p>
         </section>
-      ) : (
+      </>
+    );
+  }
+
+  return (
+    <>
+      <section className="afs-card">
+        <h2>
+          문항 {QUESTIONS.length}개
+          <small className="afs-num">
+            {answered}/{QUESTIONS.length}
+          </small>
+        </h2>
+        <div className="afs-in">
+          <ol className="afs-quiz">
+            {QUESTIONS.map((question, index) => (
+              <li key={`q${index}`} className={picks[index] ? "done" : ""}>
+                <p className="afs-quiz-q" id={`afs-q${index}`}>
+                  <span className="afs-quiz-no afs-num">{index + 1}</span>
+                  {question.text}
+                </p>
+                <div className="afs-quiz-opts" role="radiogroup" aria-labelledby={`afs-q${index}`}>
+                  {(["a", "b"] as const).map((side) => (
+                    <button
+                      type="button"
+                      key={side}
+                      role="radio"
+                      aria-checked={picks[index] === side}
+                      onClick={() =>
+                        setPicks((current) => current.map((value, i) => (i === index ? (value === side ? null : side) : value)))
+                      }
+                    >
+                      {question[side]}
+                    </button>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="afs-card">
+        <p className="afs-quiz-actions">
+          <button type="button" className="afs-btn" disabled={!done} onClick={() => setRevealed(true)}>
+            {done ? "결과 보기" : `문항 ${QUESTIONS.length - answered}개 남았습니다`}
+          </button>
+          {answered ? (
+            <button
+              type="button"
+              className="afs-btn-ghost"
+              onClick={() => setPicks(QUESTIONS.map(() => null))}
+            >
+              처음부터 다시
+            </button>
+          ) : null}
+        </p>
+      </section>
+
+      {!done ? (
         <section className="afs-card">
           <h3>16개 유형</h3>
           <div className="afs-in">
             <p className="afs-note">
-              네 축이 각각 두 갈래이므로 16가지가 나옵니다. 문항을 모두 고르면 내 유형이 위에 나타납니다.
+              네 축이 각각 두 갈래이므로 16가지가 나옵니다. 문항을 모두 고른 뒤 ‘결과 보기’를 누르면 내 유형이 나옵니다.
             </p>
             <div className="afs-scroll">
               <table className="afs-table">
@@ -375,7 +420,7 @@ export function ReaderTypeQuiz() {
             </div>
           </div>
         </section>
-      )}
+      ) : null}
     </>
   );
 }

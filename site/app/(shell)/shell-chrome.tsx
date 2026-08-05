@@ -62,26 +62,30 @@ export function ShellSide({
   const groups: Array<{ label: string | null; items: Array<{ href: string; label: string; icon: string; match: (p: string) => boolean }> }> = [
     {
       label: null,
-      items: [
-        { href: "/", label: "홈", icon: "home", match: (p) => p === "/" },
-        { href: "/issues", label: "이슈 탐색", icon: "compass", match: (p) => p === "/issues" },
-      ],
+      items: [{ href: "/", label: "오늘의 의제", icon: "home", match: (p) => p === "/" || p === "/issues" }],
     },
+    /* 사안 개요 → 프레이밍 분석 → 리포트 는 한 의제를 읽는 순서다. 리포트가 '도구' 에 있었던 것은
+       주소는 의제별인데 묶음만 도구였던 오류다. 언론사 비교는 프레이밍 분석에 흡수했다 —
+       같은 행렬을 매체별로 한 번, 조합별로 한 번 그리던 중복이었다. */
     {
       label: "이 의제 안에서",
       items: [
         { href: scoped(""), label: "사안 개요", icon: "layers", match: (p) => /^\/issues\/[^/]+$/.test(p) },
-        { href: scoped("/outlets"), label: "언론사 비교", icon: "outlets", match: (p) => p.endsWith("/outlets") },
-        { href: scoped("/framing"), label: "프레이밍 분석", icon: "compass", match: (p) => p.endsWith("/framing") },
+        {
+          href: scoped("/framing"),
+          label: "프레이밍 분석",
+          icon: "compass",
+          match: (p) => p.endsWith("/framing") || p.endsWith("/outlets"),
+        },
+        { href: scoped("/report"), label: "리포트", icon: "report", match: (p) => p.endsWith("/report") },
       ],
     },
     {
       label: "도구",
       items: [
-        { href: "/tools/self-check", label: "자가점검", icon: "check", match: (p) => p.startsWith("/tools/self-check") },
+        { href: "/tools/self-check", label: "내 읽기 유형", icon: "check", match: (p) => p.startsWith("/tools/self-check") },
         { href: "/tools/ask", label: "AI 대화", icon: "chat", match: (p) => p.startsWith("/tools/ask") },
         { href: "/tools/community", label: "커뮤니티", icon: "people", match: (p) => p.startsWith("/tools/community") },
-        { href: scoped("/report"), label: "리포트", icon: "report", match: (p) => p.endsWith("/report") },
         { href: "/tools/method", label: "방법론", icon: "book", match: (p) => p.startsWith("/tools/method") },
       ],
     },
