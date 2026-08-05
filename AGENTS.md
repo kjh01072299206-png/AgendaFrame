@@ -18,9 +18,11 @@ These instructions apply to the entire repository.
 
 ## Repository boundaries
 
-- Product code belongs under `src/`; repository automation belongs under
-  `scripts/`; tests belong under `tests/`; model and prompt evaluations belong
-  under `evals/`.
+- The deployed web service lives under `site/` and carries its own Node
+  toolchain, tests, and render gate. Everything below describes the Python
+  harness: analysis and collection code under `src/`, repository automation
+  under `scripts/`, tests under `tests/`, model and prompt evaluations under
+  `evals/`.
 - `docs/` contains source documents. `outputs/` contains reviewed generated
   images. Use a temporary output directory for experiments so normal checks do
   not overwrite reviewed artifacts.
@@ -36,6 +38,21 @@ Run the repository's offline gate before handing work off:
 ```powershell
 powershell -NoProfile -File scripts/check.ps1 -Mode quick
 ```
+
+Changing anything under `site/` needs the site's own gate instead — the
+PowerShell gate does not cover it:
+
+```bash
+cd site
+npm run typecheck && npm run lint
+node --test --test-isolation=none tests/initial-five-contract.test.mjs tests/community.test.mjs
+npx next build && npx next start -p 3000 &
+node scripts/audit-site.mjs --url http://127.0.0.1:3000
+```
+
+`.github/workflows/site-gate.yml` runs the same steps on every push to `main`
+and then verifies that the commit actually reached production. See
+`docs/deploy.md`.
 
 Use `-Mode full` after `scripts/bootstrap.ps1` when changing dependencies,
 document generation, or production code. `quick` runs static checks plus unit and

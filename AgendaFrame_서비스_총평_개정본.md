@@ -1,5 +1,10 @@
 # AgendaFrame 서비스 총평
 
+> **검토 시점 기록 (2026-07-17경).** 아래 지적은 그때의 배포본을 대상으로 한 것이며
+> 원문 그대로 보존합니다. 이후 실배포가 <https://agendaframe-capstone.vercel.app>로
+> 옮겨졌고 P0 상당수가 처리됐습니다. 현재 상태는
+> [`docs/planning/product-backlog.md`](docs/planning/product-backlog.md)를 보십시오.
+
 [AgendaFrame](https://agendaframe-capstone.kjh01072299206.chatgpt.site/#live-feed)은 콘셉트와 화면 설계가 상당히 좋습니다. 특히 언론사를 좌·우로 판정하기보다 기사 묶음, 제목 표현, 원문 근거를 먼저 보여주려는 방향은 국내 뉴스 분석 서비스로서 분명한 차별점입니다.
 
 다만 현재 상태는 신뢰 가능한 뉴스 분석 서비스라기보다 잘 만든 연구용 MVP에 가깝습니다. 가장 먼저 고쳐야 할 것은 디자인이나 AI 연결이 아니라 사건 오분류, 존재하지 않는 근거, 오래된 데이터, 검증되지 않은 신뢰도와 비율이 실제보다 확실해 보이는 문제입니다.

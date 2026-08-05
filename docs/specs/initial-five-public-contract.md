@@ -29,14 +29,16 @@ node scripts/build-initial-five.mjs --check
 배포 산출물을 별도 디렉터리에 만들 때만 `--out`을 사용한다. 기본 실행은
 원본 데이터나 저장소 파일을 쓰지 않는다.
 
-현재 `package.json`에는 스크립트를 추가하지 않았다. 향후 팀에서 원하면 다음을
-스크립트로 제안할 수 있다.
+`package.json`에 스크립트가 등록돼 있고 `npm run build`가 이 스크립트를 먼저 돌린다.
 
 ```json
 {
-  "data:build:initial-five": "node scripts/build-initial-five.mjs --out data/initial-five"
+  "data:build:initial-five": "node scripts/build-initial-five.mjs --out public/initial-five"
 }
 ```
+
+산출물이 `public/`으로 가므로 빌드에 그대로 포함되고, Next 라우트 핸들러
+`app/api/initial-five/*`가 이를 읽어 공개 API로 응답한다.
 
 ## 공개 상태
 
@@ -55,9 +57,18 @@ node scripts/build-initial-five.mjs --check
 `automatic_draft` 상태처럼 AI 호출과 구조 검증이 성공했지만 사람 검토가 필요한
 경우에도 엔진 상태는 `succeeded`, `reviewRequired`는 `true`가 될 수 있다.
 
-현재 저장소를 읽으면 메타데이터 클러스터 5개는 AI 출력이 있어 `succeeded`이고,
-본문 시맨틱 파일은 rank 1의 7건만 존재한다. 따라서 rank 2–5의 본문 시맨틱
-프로필은 `review_needed`이며, 규칙 기반 프로필이 그 상태를 대신하지 않는다.
+2026-08-06 기준으로 rank 1–5 전부 `succeeded`다. 메타데이터 클러스터 5개에 AI
+출력이 있고, 본문 시맨틱 프로필도 25건(7·6·4·4·4) 전부 존재한다.
+`reviewNeededArticleCount`는 다섯 의제 모두 0이다.
+
+이 문서를 처음 쓸 때는 rank 1의 7건만 있었고 rank 2–5는 `review_needed`였다.
+그 상태를 다루는 규칙 자체는 그대로 유효하다 — 파일이 없거나 무효인 의제는
+지금도 `review_needed`·`unavailable`로 공개하고, 규칙 기반 프로필이 그 상태를
+대신하지 않는다.
+
+`succeeded`가 사람 검토 완료를 뜻하지 않는다는 원칙도 그대로다. 25건은 서로 다른
+각도의 AI 코더 2인이 독립 코딩한 뒤 판정을 거친 결과이며(평균 층위 일치 89.3%,
+`site/data/coder-agreement-2026-07-26.json`), 사람 코더 검증은 아직 0건이다.
 
 ## 매니페스트
 
@@ -167,13 +178,27 @@ node scripts/build-initial-five.mjs --check
 한다. 시맨틱 디렉터리가 없거나 프로필이 무효인 경우에도 빌드는 중단하지 않고
 해당 기사와 의제를 `review_needed`로 표시한다.
 
-계약 테스트는 `site/tests/initial-five-contract.test.mjs`이며 다음을 검사한다.
+## 코더 일치도
+
+매니페스트는 `coderAgreement`를 함께 싣고, 의제별 번들은 그 의제 기사만으로
+값을 다시 계산해 넣는다. 25건 전부를 덮지 않는 입력이나 요약 수치가 재계산과
+어긋나는 입력은 빌더가 거부한다.
+
+두 코더는 사람이 아니라 서로 다른 프롬프트 각도의 모델 코더다. 산출물의
+`coder_limit` 필드가 이 한계를 명시하며, 화면과 문서에서 사람 코더 간
+신뢰도로 표시하지 않는다.
+
+## 계약 테스트
+
+`site/tests/initial-five-contract.test.mjs`가 다음을 검사한다.
 
 - 5개 의제·25개 기사와 고정 제목
 - 얇은 매니페스트와 결정성
-- 클러스터 AI 메타데이터
-- rank 1의 근거 로케이터·해시
-- rank 2–5의 누락 시맨틱 `review_needed` 처리
-- 규칙 엔진과 AI 엔진 라벨 분리
-- 금지 키와 원문 누출 부재
+- 클러스터 AI 메타데이터, 규칙 엔진과 AI 엔진 라벨 분리
+- 의제 하나의 번들에 기사 메타데이터·계보·상태·근거 로케이터가 들어감
+- 25건 전부가 AI 성공과 근거 검증을 통과한 뒤에만 공개됨
 - AI `analyze`·비fallback·근거 존재 조건
+- 금지 키와 원문 누출 부재
+- 운영 워커가 매니페스트와 지연 로딩 번들을 서빙함
+- 질문 응답이 공개된 근거 안에서만 나옴
+- 코더 일치도가 전 기사를 덮고 의제별로 재계산됨

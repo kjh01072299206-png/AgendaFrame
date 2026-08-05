@@ -1,8 +1,45 @@
 # AgendaFrame Cloud Runtime Architecture
 
-- 상태: 제안(implementation-ready)
-- 최종 갱신: 2026-07-17
+- 상태: **목표 설계(as-planned)** — 아래 0장의 구분표를 먼저 읽을 것
+- 최초 작성: 2026-07-17 · 이행 현황 갱신: 2026-08-06
 - 대상: 공개 데모, Google Cloud 라이브 서비스, 수집·분석 파이프라인
+
+## 0. 이 문서와 실제 시스템의 관계
+
+이 문서는 2026-07-17에 쓴 **목표 설계**다. 1장부터는 그때의 설계안을 그대로 둔다.
+실제로 무엇이 서 있는지는 이 표가 기준이다.
+
+| 구성요소 | 상태 | 근거 |
+| --- | --- | --- |
+| Vertex AI (Gemini) 분석 호출 | **가동** | 상위 5개 의제 클러스터링을 `gemini-2.5-flash-lite`로 산출 |
+| BigQuery 데이터셋·분석 상태 원장 | **코드·프로비저닝 스크립트 있음** | `src/backend/gcp_store.py`, `scripts/gcp/provision.ps1` |
+| Cloud Storage 비공개 버킷(수명주기 포함) | **프로비저닝 스크립트 있음** | `scripts/gcp/provision.ps1` |
+| Cloud Run Job (설정 점검·파일럿) | **배포 스크립트 있음** | `scripts/gcp/deploy.ps1`, `deploy-trial-jobs.ps1` |
+| Artifact Registry · 예산 상한 | **적용** | 단일 프로젝트에 월 지출 상한 설정 |
+| 공개 서빙 (Cloud Run + LB + CDN + Armor) | **미구현 — 대체됨** | 서빙은 Vercel. 4장의 `src/frontend`는 현재 `site/`다 |
+| Cloud Scheduler · Workflows · Pub/Sub DLQ | **미구현 — 보류** | 상시 크롤링을 접었으므로 자동 수집 트리거가 없다 |
+| Playwright 상시 크롤러 (3.2절) | **폐기** | 이용약관 검토 결과 BigKinds 가져오기로 피벗 |
+| Terraform · dev/stg/prod 3분리 · OpenTelemetry · SLO 대시보드 | **미구현 — 범위 밖** | 사용자 규모가 이를 정당화하지 않는다. PowerShell 프로비저닝 스크립트로 대신한다 |
+| `/api/v1/*` 경로, `AGENDAFRAME_DATA_MODE` | **미구현** | 실제 경로는 `/api/*`, 런타임 모드 스위치는 두지 않았다 |
+
+### 실제 런타임 (as-built, 2026-08-06)
+
+```text
+사용자 → Vercel (Next.js 16 / React 19)
+           ├─ 화면 + /api/initial-five/*  ← 빌드 시 포함된 정적 분석 산출물
+           └─ 그 밖의 /api/*  ── rewrite ──→ Cloudflare Worker + D1
+                                              (수집 가져오기, 이슈, 품질 검증)
+
+오프라인 분석 (로컬/배치, 공개 요청 경로 밖)
+   BigKinds Excel·CSV → 구조화 분석 → site/data/*.json → 빌드에 포함
+   Vertex AI Gemini    → 의제 클러스터링
+```
+
+- 공개 요청은 모델을 호출하지 않는다. 분석은 전부 사전 계산해 산출물로 넣는다.
+  이 점은 2장 원칙 2·6과 12장 비목표를 그대로 지킨다.
+- 배포는 `main` push → Vercel 자동 빌드다. 절차와 관문은 [`../deploy.md`](../deploy.md).
+- 라이브 `/api/health`는 아직 `agenda-structure-v5`를 돌려준다. 워커를 v6으로
+  재배포하지 않았기 때문이며 프로덕트 백로그 PBL-29로 잡혀 있다.
 
 ## 1. 결정 요약
 
@@ -11,7 +48,7 @@ AgendaFrame은 **즉시 공개 가능한 데모 경로**와 **실제 뉴스 수�
 | 구분 | Demo Edge | Live GCP |
 | --- | --- | --- |
 | 목적 | 제품 가치와 UX를 즉시 검증 | 실제 수집·분석·운영 |
-| 현재 코드와의 관계 | `src/frontend`의 vinext/Sites 빌드를 사용 | 신규 GCP API·배치·저장소 구현 필요 |
+| 현재 코드와의 관계 | `site/`의 vinext 빌드를 사용(작성 당시 경로는 `src/frontend`였다) | 신규 GCP API·배치·저장소 구현 필요 |
 | 데이터 | 저장소에 검토 후 포함한 고정 데모 스냅샷 | 허용된 언론사에서 수집한 최신 메타데이터 |
 | AI | 검토된 사전 생성 결과만 표시 | Vertex AI를 배치 호출하고 품질 게이트 통과 후 공개 |
 | BigQuery | 사용하지 않음 | 분석 원장 및 이력 저장 |
@@ -19,7 +56,9 @@ AgendaFrame은 **즉시 공개 가능한 데모 경로**와 **실제 뉴스 수�
 | 배포 상태 표시 | 화면에 `DEMO DATA`와 기준 시각을 상시 표시 | `LIVE`, 마지막 성공 수집 시각, 분석 버전을 표시 |
 | 장애 시 동작 | 번들 스냅샷을 계속 제공 | 마지막 검증 스냅샷을 제공; 데모로 조용히 전환하지 않음 |
 
-현재 `src/frontend/.openai/hosting.json`은 D1과 R2가 모두 `null`이며, Worker 엔트리도 Cloudflare 런타임을 전제로 한다. 따라서 현재 프론트엔드 배포는 **글로벌 엣지 데모**이지 Google Cloud 라이브 파이프라인의 완료를 의미하지 않는다. 라이브라고 표시하려면 이 문서의 데이터 출처, 품질, 보안, 관측성 게이트를 모두 통과해야 한다.
+(작성 당시 기록) 현재 프론트엔드 배포는 **엣지 데모**이지 Google Cloud 라이브 파이프라인의 완료를 의미하지 않는다. 라이브라고 표시하려면 이 문서의 데이터 출처, 품질, 보안, 관측성 게이트를 모두 통과해야 한다.
+
+2026-08-06 기준으로 서빙은 Cloudflare가 아니라 Vercel이고 D1은 실제로 붙어 있다. 다만 **품질 게이트 통과 전이라는 판단은 그대로 유효하다** — 사람 라벨 실측(PBL-25)이 아직 0건이므로 어떤 화면도 검증 완료로 표시하지 않는다.
 
 ## 2. 설계 원칙
 

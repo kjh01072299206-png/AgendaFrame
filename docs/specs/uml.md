@@ -1,8 +1,22 @@
 # AgendaFrame UML 산출물
 
-작성일: 2026-07-07  
+작성일: 2026-07-07 · 이행 현황 갱신: 2026-08-06  
 작성 담당: 강준혁  
 프로젝트명: AgendaFrame
+
+> **이 문서는 설계 단계(as-planned) 산출물이다.** 클래스·시퀀스 다이어그램은
+> 2026-07-07 설계안을 보존한다. 그 뒤 구현이 세 군데에서 갈렸으므로 코드를 읽을
+> 때는 아래 대응표를 함께 본다.
+>
+> | 다이어그램의 요소 | 구현된 것 |
+> | --- | --- |
+> | `PlaywrightCrawler` | 상시 크롤링 폐기. BigKinds Excel·CSV 가져오기(`site/scripts/import-bigkinds.mjs`)와 홈페이지 배치 관측 API |
+> | `BigQueryRepository` | 서빙 저장소는 Cloudflare D1. BigQuery는 오프라인 분석 원장 코드로만 존재(`src/backend/gcp_store.py`) |
+> | `VertexEmbeddingClient` | 임베딩 대신 제목 토큰 유사도 + 생성 모델 기반 클러스터링 |
+> | `GeminiClient` | 의제 클러스터링에 사용. 프레임 분석은 오프라인 배치로 분리했고 공개 요청은 모델을 호출하지 않는다 |
+> | 6종 프레임 태그 | 문제정의·원인·책임·평가·해법 + 취재원 구조(Entman 계열)로 교체. 6종은 레거시 보조 태그 |
+>
+> 실제 런타임 구성은 [`../architecture/cloud-runtime.md`](../architecture/cloud-runtime.md) 0장에 있다.
 
 ## 시스템 범위
 

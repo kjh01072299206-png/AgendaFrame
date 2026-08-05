@@ -4,6 +4,13 @@ AgendaFrame is a team project for AI-assisted news agenda and framing analysis.
 The project collects article metadata from selected media outlets, groups related
 issues, compares outlet-level coverage patterns, and generates analysis reports.
 
+Live service: <https://agendaframe-capstone.vercel.app>
+
+The repository holds two toolchains. `site/` is the deployed web service and has
+its own Node toolchain, tests, and render gate; everything else is the Python
+harness for collection, analysis, and evaluation. They are checked separately —
+see `docs/deploy.md` for the site and `scripts/check.ps1` for the harness.
+
 ## Repository Structure
 
 ```text
@@ -14,13 +21,21 @@ issues, compares outlet-level coverage patterns, and generates analysis reports.
 ├── .env.example
 ├── pyproject.toml
 ├── requirements.lock   # hashed, reproducible Python environment
-├── .github/workflows/ci.yml
+├── .github/workflows/
+│   ├── ci.yml           # Python offline gate
+│   ├── release-gate.yml # eval threshold gate
+│   ├── site-ci.yml      # site typecheck/lint/test
+│   └── site-gate.yml    # site render gate + live deploy verification
 ├── docs/
 │   ├── planning/      # product backlog, sprint backlog, WBS
 │   ├── specs/         # use cases, UML, feature specification
+│   ├── architecture/  # target GCP runtime design (not yet built)
 │   ├── research/      # prior research and service review
 │   ├── process/       # deliverable workflow notes
+│   ├── feedback/      # review notes on the live site
+│   ├── deploy.md      # how the site reaches production
 │   └── submission/    # final report and local submission artifacts
+├── site/              # the deployed web service (Next.js on Vercel + Cloudflare Worker)
 ├── src/
 │   ├── backend/       # API server and orchestration
 │   ├── crawler/       # article collection jobs
@@ -84,8 +99,8 @@ powershell -NoProfile -File scripts/bootstrap.ps1
 
 Bootstrap creates `.venv`, installs the hashed `requirements.lock`, installs the
 local tooling package without resolving new dependencies, and runs the quick
-offline gate. The deployed website is not stored in `src/frontend` in this
-checkout and is therefore not claimed as part of this Python harness.
+offline gate. It does not touch `site/`; the deployed web service has its own
+`npm ci` setup documented in `site/README.md`.
 
 After changing Python dependencies, regenerate the lock and run the full gate:
 
