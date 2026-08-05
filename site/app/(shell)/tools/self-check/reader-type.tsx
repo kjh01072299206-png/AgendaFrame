@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { clearLocal, useLocal, writeLocal } from "../../client-store";
-import { COMMUNITY_API_ENABLED, communityFetch } from "../../community-session";
+import { communityFetch } from "../../community-session";
 
 /* 네 축으로 읽기 습관을 가른다. 각 축의 세 문항 중 많이 고른 쪽이 그 축의 글자가 된다
    (문항이 홀수라 무승부가 없다). 16유형은 아래 TYPES 에 전부 적어 둔다. */
@@ -187,7 +187,9 @@ export function ReaderTypeQuiz() {
       return QUESTIONS.map(() => null);
     }
   });
-  const [syncState, setSyncState] = useState<"loading" | "saved" | "offline">(COMMUNITY_API_ENABLED ? "loading" : "offline");
+  // Always try the service first. If the deployed backend does not expose the
+  // route yet, the quiz still remains usable through the local-store fallback.
+  const [syncState, setSyncState] = useState<"loading" | "saved" | "offline">("loading");
   const answered = picks.filter(Boolean).length;
   const done = answered === QUESTIONS.length;
 
@@ -217,12 +219,18 @@ export function ReaderTypeQuiz() {
   const showResult = Boolean(result) && revealed;
 
   useEffect(() => {
-    if (!COMMUNITY_API_ENABLED) return;
     let cancelled = false;
     void communityFetch("/api/self-check", { cache: "no-store" })
       .then(async (response) => {
+        if (!response.ok) {
+          if (!cancelled) setSyncState("offline");
+          return;
+        }
         const payload = await response.json();
-        if (cancelled || !response.ok || !payload.result?.answers) return;
+        if (cancelled || !payload.result?.answers) {
+          if (!cancelled) setSyncState("offline");
+          return;
+        }
         const answers = payload.result.answers as Array<"a" | "b">;
         if (answers.length === QUESTIONS.length && answers.every((answer) => answer === "a" || answer === "b")) {
           // The API is the durable source of truth; local storage only keeps the form usable offline.
@@ -244,7 +252,6 @@ export function ReaderTypeQuiz() {
     const answers = picks as Array<"a" | "b">;
     writeLocal("afs-reader-type", result.code);
     writeLocal("afs-reader-answers", JSON.stringify(answers));
-    if (!COMMUNITY_API_ENABLED) return;
     let cancelled = false;
     void communityFetch("/api/self-check", { method: "POST", body: JSON.stringify({ answers }) })
       .then(async (response) => {
