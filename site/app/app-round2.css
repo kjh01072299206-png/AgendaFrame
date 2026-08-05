@@ -579,10 +579,12 @@
   border-color: var(--afs-rule, #e2e6ec);
   font-weight: 600;
 }
+/* 비활성 버튼도 읽혀야 한다 — ink-3 를 soft 배경에 올리면 3.07:1 로 AA(4.5)에 못 미친다.
+   "아직 누를 수 없다"는 것은 테두리와 커서로 알리고, 글자는 본문 대비를 지킨다. */
 .afs-btn:disabled {
-  background: var(--afs-soft, #f1f3f7);
-  border-color: var(--afs-rule, #e2e6ec);
-  color: var(--afs-ink-3, #7c8798);
+  background: var(--afs-sunk, #f2f4f8);
+  border-color: var(--afs-rule-2, #cfd6e0);
+  color: var(--afs-ink-2, #4a5566);
   cursor: default;
   font-weight: 600;
 }
@@ -805,7 +807,6 @@
   display: block;
   font-size: 13.5px;
   font-weight: 750;
-  color: var(--cc, var(--n1));
 }
 .afs-camps p {
   margin: 4px 0 0;
@@ -814,7 +815,7 @@
   color: var(--afs-ink-2);
 }
 .afs-camp-th {
-  color: var(--cc, var(--n1)) !important;
+  border-top: 2px solid var(--cc, var(--n1));
 }
 .afs-camp-th small {
   display: block;
@@ -856,16 +857,15 @@
   padding-left: 11px;
   border-left: 2px solid var(--cc, var(--n1));
 }
-.afs-clus h4 {
+.afs-clus h3 {
   display: flex;
   align-items: baseline;
   gap: 8px;
   margin: 0 0 7px;
   font-size: 13px;
   font-weight: 750;
-  color: var(--cc, var(--n1));
 }
-.afs-clus h4 small {
+.afs-clus h3 small {
   color: var(--afs-ink-2);
   font-size: 12.5px;
   font-weight: 600;
@@ -893,40 +893,52 @@
   padding-left: 11px;
   border-left: 2px solid var(--cc, var(--n1));
 }
-.afs-nets h4 {
+.afs-nets h3 {
   display: grid;
   gap: 2px;
   margin: 0 0 6px;
   font-size: 13px;
   font-weight: 750;
-  color: var(--cc, var(--n1));
 }
-.afs-nets h4 small {
+.afs-nets h3 small {
   color: var(--afs-ink-3);
   font-size: 11.5px;
   font-weight: 600;
 }
+/* 자유 배치는 좁은 화면에서 낱말이 겹친다. 중심 낱말을 고정하고 나머지를 원에 걸어
+   겹칠 자리를 없앤다. 세 프레임이 함께 쓴 낱말은 흐리게 둔다. */
 .afs-wnet {
   width: 100%;
   height: auto;
 }
-.afs-wnet-e line {
-  stroke: var(--afs-ink-3);
+.afs-wnet .wn-e {
+  stroke: var(--cc, var(--n1));
+  stroke-opacity: 0.5;
 }
-.afs-wnet-p rect {
-  fill: var(--afs-card);
-  opacity: 0.82;
+.afs-wnet .wn-n {
+  fill: var(--afs-sunk);
+  stroke: var(--afs-rule);
+  stroke-width: 0.5;
 }
-.afs-wnet text {
-  text-anchor: middle;
+.afs-wnet .wn-h {
+  fill: var(--cc, var(--n1));
+}
+.afs-wnet .wn-l {
+  font-size: 8px;
+  font-weight: 750;
+  fill: var(--afs-ink-2);
   dominant-baseline: middle;
-  font-weight: 700;
 }
-.afs-wnet-sh {
+.afs-wnet .wn-l.sh {
+  font-weight: 600;
   fill: var(--afs-ink-3);
 }
-.afs-wnet-own {
-  fill: var(--n1);
+.afs-wnet .wn-hl {
+  font-size: 8.5px;
+  font-weight: 850;
+  fill: #fff;
+  text-anchor: middle;
+  dominant-baseline: middle;
 }
 
 /* 층위별 판정 */
@@ -1075,4 +1087,28 @@
 .afs-articles a:hover {
   color: var(--afs-brand);
   text-decoration: underline;
+}
+
+/* ── 채운 브랜드 버튼의 글자색 ────────────────────────────────────────────
+   라이트의 #2856c8 에는 흰 글자가 5.9:1 로 맞지만, 다크의 #6b92e2 에는 3.07:1 이라
+   AA(4.5)에 못 미친다. 계열색이 --n1-ink 를 갖는 것과 같이 짝을 만들어 쓴다. */
+:root {
+  --afs-on-brand: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --afs-on-brand: #0b1220;
+  }
+}
+:root[data-theme="dark"] {
+  --afs-on-brand: #0b1220;
+}
+:root[data-theme="light"] {
+  --afs-on-brand: #ffffff;
+}
+/* 브랜드로 채운 버튼만 — .afs-pill-go 는 배경이 투명하고 글자가 브랜드색이므로 제외한다
+   (여기에 넣으면 라이트에서 흰 글자가 흰 배경에 얹혀 1.00:1 이 된다). */
+.afs-btn,
+.afs-submit {
+  color: var(--afs-on-brand);
 }

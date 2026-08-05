@@ -449,10 +449,10 @@ export function Clusters({ mk }: { mk: ProtoIssue["mk"] }) {
     <div className="afs-clus">
       {mk.clusters.map((cluster, index) => (
         <section key={cluster.members.join()} style={{ ["--cc" as string]: seriesColor(index) }}>
-          <h4>
+          <h3>
             묶음 {index + 1}
             <small>{cluster.members.join(" · ")}</small>
-          </h4>
+          </h3>
           <p>
             <span>공유한 요소</span>
             {cluster.shared.map((item) => (
@@ -590,44 +590,86 @@ export function DeviceTable({ rows }: { rows: ProtoDevice[] }) {
   );
 }
 
-function Network({ group }: { group: ProtoFrameGroup }) {
-  const [width, height] = group.graph.box;
-  const nodes = group.graph.nodes;
-  const label = `${group.members.join(", ")} 프레임의 핵심어 연결망. 큰 말: ${nodes
-    .slice(0, 3)
-    .map((node) => node.term)
-    .join(", ")}`;
+/* 자유 배치는 좁은 화면에서 낱말이 겹친다(관문 TEXT-COLLIDE). 가장 많이 이어진 낱말을
+   가운데 두고 나머지를 원에 걸어, 겹칠 자리를 없앤다. 세 프레임이 함께 쓴 낱말은 흐리게
+   둔다 — 지우면 프레임마다 남는 낱말이 한두 개뿐이라 그림이 서지 않는다. */
+const NET_W = 250;
+const NET_H = 168;
+const NET_CX = 125;
+const NET_CY = 84;
+
+function Network({ group, index }: { group: ProtoFrameGroup; index: number }) {
+  const all = group.graph.nodes;
+  if (!all.length) return null;
+  // 중심은 이어진 무게의 합이 가장 큰 낱말
+  const weight = new Map<number, number>();
+  for (const edge of group.graph.edges) {
+    weight.set(edge.a, (weight.get(edge.a) ?? 0) + edge.w);
+    weight.set(edge.b, (weight.get(edge.b) ?? 0) + edge.w);
+  }
+  const order = all.map((node, at) => ({ node, at })).sort((l, r) => (weight.get(r.at) ?? 0) - (weight.get(l.at) ?? 0));
+  const hub = order[0];
+  const spokes = order.slice(1, 8);
+  const co = (at: number) =>
+    group.graph.edges.find((e) => (e.a === hub.at && e.b === at) || (e.b === hub.at && e.a === at))?.w ?? 0;
+  const maxCount = Math.max(...all.map((n) => n.count));
+  const radius = (count: number) => 4 + (count / maxCount) * 9;
+  const placed = spokes.map((entry, k) => {
+    const angle = (-90 + (360 / spokes.length) * k) * (Math.PI / 180);
+    return { ...entry, x: NET_CX + 62 * Math.cos(angle), y: NET_CY + 54 * Math.sin(angle) };
+  });
+  const label = `${group.members.join(", ")} 프레임의 핵심어 연결망. 중심은 ${hub.node.term} ${hub.node.count}회, 이어진 낱말은 ${placed
+    .map((p) => `${p.node.term} ${p.node.count}회`)
+    .join(", ")}.`;
+
   return (
-    <svg className="afs-wnet" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label}>
-      <g className="afs-wnet-e">
-        {group.graph.edges.map((edge) => {
-          const a = nodes[edge.a];
-          const b = nodes[edge.b];
-          return (
-            <line
-              key={`${edge.a}-${edge.b}`}
-              x1={a.x}
-              y1={a.y}
-              x2={b.x}
-              y2={b.y}
-              strokeWidth={(0.3 + 0.85 * edge.n).toFixed(2)}
-              strokeOpacity={(0.3 + 0.38 * edge.n).toFixed(2)}
-            />
-          );
-        })}
-      </g>
-      <g className="afs-wnet-p">
-        {nodes.map((node) => (
-          <rect key={node.term} x={node.x - node.bw / 2} y={node.y - node.bh / 2} width={node.bw} height={node.bh} rx="0.8" />
+    <svg className="afs-wnet" viewBox={`0 0 ${NET_W} ${NET_H}`} role="img" aria-label={label} style={{ ["--cc" as string]: seriesColor(index) }}>
+      <g>
+        {placed.map((p) => (
+          <line
+            className="wn-e"
+            key={`e${p.at}`}
+            x1={NET_CX}
+            y1={NET_CY}
+            x2={p.x.toFixed(1)}
+            y2={p.y.toFixed(1)}
+            strokeWidth={(0.5 + (co(p.at) / Math.max(1, hub.node.count)) * 1.6).toFixed(2)}
+          />
         ))}
       </g>
       <g>
-        {nodes.map((node) => (
-          <text key={node.term} x={node.x} y={node.y} fontSize={node.fs} className={node.shared ? "afs-wnet-sh" : "afs-wnet-own"}>
-            <title>{`${node.term} ${node.count}회`}</title>
-            {node.term}
-          </text>
+        {placed.map((p) => (
+          <circle className="wn-n" key={`n${p.at}`} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={radius(p.node.count).toFixed(1)}>
+            <title>{`${p.node.term} ${p.node.count}회`}</title>
+          </circle>
         ))}
+      </g>
+      <circle className="wn-h" cx={NET_CX} cy={NET_CY} r={(radius(hub.node.count) + 3).toFixed(1)}>
+        <title>{`${hub.node.term} ${hub.node.count}회`}</title>
+      </circle>
+      <text className="wn-hl" x={NET_CX} y={NET_CY}>
+        {hub.node.term}
+      </text>
+      <g>
+        {placed.map((p) => {
+          const r = radius(p.node.count);
+          const top = Math.abs(p.y - NET_CY) > 34 && p.y < NET_CY;
+          const bottom = Math.abs(p.y - NET_CY) > 34 && p.y > NET_CY;
+          const anchor = top || bottom ? "middle" : p.x >= NET_CX ? "start" : "end";
+          const lx = anchor === "middle" ? p.x : p.x + (anchor === "start" ? r + 4 : -(r + 4));
+          const ly = top ? p.y - r - 7 : bottom ? p.y + r + 7 : p.y;
+          return (
+            <text
+              className={`wn-l${p.node.shared ? " sh" : ""}`}
+              key={`l${p.at}`}
+              x={lx.toFixed(1)}
+              y={ly.toFixed(1)}
+              textAnchor={anchor}
+            >
+              {p.node.term} {p.node.count}
+            </text>
+          );
+        })}
       </g>
     </svg>
   );
@@ -637,20 +679,18 @@ export function SemanticNetworks({ groups }: { groups: ProtoFrameGroup[] }) {
   return (
     <>
       <ul className="afs-legend">
-        <li>글씨 크기 = 그 프레임 안에서의 상대 빈도</li>
-        <li>선 굵기 = 같은 문장에 함께 나온 횟수</li>
-        <li>
-          <b style={{ color: "var(--n1)" }}>진한 말</b> = 이 프레임이 유독 많이 쓴 말
-        </li>
+        <li>원 크기 = 등장 횟수</li>
+        <li>선 굵기 = 같은 문장 동시출현</li>
+        <li>흐린 글씨 = 세 프레임이 모두 쓴 말</li>
       </ul>
       <div className="afs-nets">
         {groups.map((group, index) => (
           <section key={group.members.join()} style={{ ["--cc" as string]: seriesColor(index) }}>
-            <h4>
+            <h3>
               프레임 {index + 1}
               <small>{group.members.join(" · ")}</small>
-            </h4>
-            <Network group={group} />
+            </h3>
+            <Network group={group} index={index} />
           </section>
         ))}
       </div>

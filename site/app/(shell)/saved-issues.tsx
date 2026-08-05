@@ -39,11 +39,14 @@ export function SaveIssueButton({
   const saved = useSavedIssues();
   const on = saved.some((row) => row.id === issueId);
 
+  const say = on ? "찜 해제" : "찜하기";
   return (
     <button
       type="button"
       className={`afs-save${on ? " on" : ""}${compact ? " compact" : ""}`}
       aria-pressed={on}
+      // 화면에서 숨긴 글자 span 은 폭이 부모를 넘어 넘침 검사에 걸린다. 라벨로 준다.
+      aria-label={compact ? say : undefined}
       onClick={() => {
         const next = on
           ? saved.filter((row) => row.id !== issueId)
@@ -53,7 +56,7 @@ export function SaveIssueButton({
       }}
     >
       <span aria-hidden="true">{on ? "★" : "☆"}</span>
-      {compact ? <span className="afs-sr">{on ? "찜 해제" : "찜하기"}</span> : on ? "찜 해제" : "찜하기"}
+      {compact ? null : say}
     </button>
   );
 }

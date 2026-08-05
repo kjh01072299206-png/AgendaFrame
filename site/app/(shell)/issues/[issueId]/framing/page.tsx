@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { Donut } from "../../../../charts";
 import { protoIssue } from "../../../../../lib/proto";
 import {
   Clusters,
@@ -68,28 +67,17 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
         </div>
       </section>
 
-      <div className="afs-grid-2">
-        <section className="afs-card">
-          <h2>
-            정책 프레임
-            <small>Boydstun et al. 2014</small>
-          </h2>
-          <div className="afs-in">
-            {proto.frames ? <PolicyFrames frames={proto.frames} /> : <p className="afs-hold">코딩 진행 중</p>}
-          </div>
-        </section>
-
-        <section className="afs-card">
-          <h2>지배 프레임 분포</h2>
-          <div className="afs-in">
-            <Donut
-              items={proto.policyMix.map((entry) => ({ label: entry.label, count: entry.n }))}
-              center={proto.articleCount}
-              sub="기사"
-            />
-          </div>
-        </section>
-      </div>
+      {/* 열이 여덟이라 절반 폭에 두면 잘린다(관문 DESK-CLIP). 폭을 다 쓴다.
+          지배 프레임 도넛은 이 표의 '지배' 칸과 같은 값이고 의제마다 값이 하나뿐이어서 뺐다. */}
+      <section className="afs-card">
+        <h2>
+          정책 프레임
+          <small>Boydstun et al. 2014</small>
+        </h2>
+        <div className="afs-in">
+          {proto.frames ? <PolicyFrames frames={proto.frames} /> : <p className="afs-hold">코딩 진행 중</p>}
+        </div>
+      </section>
 
       <section className="afs-card">
         <h2>

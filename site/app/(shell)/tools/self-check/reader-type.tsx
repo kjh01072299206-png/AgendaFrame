@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { clearLocal, useLocal, writeLocal } from "../../client-store";
-import { communityFetch } from "../../community-session";
+import { COMMUNITY_API_ENABLED, communityFetch } from "../../community-session";
 
 /* 네 축으로 읽기 습관을 가른다. 각 축의 세 문항 중 많이 고른 쪽이 그 축의 글자가 된다
    (문항이 홀수라 무승부가 없다). 16유형은 아래 TYPES 에 전부 적어 둔다. */
@@ -187,9 +187,11 @@ export function ReaderTypeQuiz() {
       return QUESTIONS.map(() => null);
     }
   });
-  // Always try the service first. If the deployed backend does not expose the
-  // route yet, the quiz still remains usable through the local-store fallback.
-  const [syncState, setSyncState] = useState<"loading" | "saved" | "offline">("loading");
+  /* 라우트가 없는 배포에서 부르면 404 가 콘솔 오류로 남아 렌더 관문이 이를 잡는다.
+     배포에서 켜 줄 때만 부르고, 켜져 있어도 응답이 이상하면 아래에서 offline 로 떨어진다. */
+  const [syncState, setSyncState] = useState<"loading" | "saved" | "offline">(
+    COMMUNITY_API_ENABLED ? "loading" : "offline",
+  );
   const answered = picks.filter(Boolean).length;
   const done = answered === QUESTIONS.length;
 
@@ -222,6 +224,7 @@ export function ReaderTypeQuiz() {
   const showResult = Boolean(result) && revealed;
 
   useEffect(() => {
+    if (!COMMUNITY_API_ENABLED) return;
     let cancelled = false;
     void communityFetch("/api/self-check", { cache: "no-store" })
       .then(async (response) => {
@@ -255,6 +258,7 @@ export function ReaderTypeQuiz() {
     const answers = picks as Array<"a" | "b">;
     writeLocal("afs-reader-type", result.code);
     writeLocal("afs-reader-answers", JSON.stringify(answers));
+    if (!COMMUNITY_API_ENABLED) return;
     let cancelled = false;
     void communityFetch("/api/self-check", { method: "POST", body: JSON.stringify({ answers }) })
       .then(async (response) => {
