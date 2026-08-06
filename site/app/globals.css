@@ -995,6 +995,28 @@ body > footer { gap: 24px; padding: 22px max(24px, calc((100vw - 1440px) / 2)); 
 .morphology-term-grid li button span small { flex: none; padding: 2px 5px; border-radius: 5px; background: var(--paper-deep); color: var(--muted); font-size: 9px; font-weight: 700; }
 .morphology-term-grid li button > b { color: var(--accent); font-size: 11px; font-variant-numeric: tabular-nums; text-align: right; }
 .morphology-term-grid .not-observed { margin: 0; padding: 18px 13px; color: var(--muted); font-size: 11.5px; line-height: 1.6; }
+.semantic-network-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.semantic-network-card { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-top: 3px solid var(--network-accent); border-radius: 10px; background: var(--panel); }
+.semantic-network-card > header { min-height: 92px; padding: 13px 14px 10px; border-bottom: 1px solid var(--line); }
+.semantic-network-kicker { display: block; color: var(--network-accent); font-size: 10px; font-weight: 850; letter-spacing: .04em; text-transform: uppercase; }
+.semantic-network-card h5 { margin: 5px 0 4px; color: var(--ink); font-size: 14px; line-height: 1.35; word-break: keep-all; }
+.semantic-network-card header p { margin: 0; color: var(--muted); font-size: 10.5px; line-height: 1.45; }
+.semantic-network-canvas { min-height: 232px; padding: 4px 5px 0; background: linear-gradient(145deg, rgba(236, 240, 247, .74), rgba(249, 250, 252, .92)); }
+.semantic-network-canvas svg { display: block; width: 100%; height: auto; overflow: visible; }
+.semantic-network-axis { stroke: rgba(92, 111, 141, .13); stroke-width: 1; stroke-dasharray: 3 5; }
+.semantic-network-edge { stroke: var(--network-accent); stroke-linecap: round; fill: none; transition: opacity .15s ease, stroke-width .15s ease; }
+.semantic-network-edge.secondary { stroke: #9cacc8; }
+.semantic-network-center circle { fill: color-mix(in srgb, var(--network-accent) 18%, white); stroke: var(--network-accent); stroke-width: 2.5; }
+.semantic-network-center text { fill: var(--ink); font-size: 15px; font-weight: 850; }
+.semantic-network-center-sub { fill: var(--muted) !important; font-size: 9px !important; font-weight: 700 !important; }
+.semantic-network-node { cursor: pointer; outline: none; }
+.semantic-network-node circle { stroke: rgba(255, 255, 255, .95); stroke-width: 2; filter: drop-shadow(0 2px 2px rgba(31, 44, 69, .16)); transition: r .15s ease, filter .15s ease; }
+.semantic-network-node:hover circle, .semantic-network-node:focus-visible circle, .semantic-network-node.selected circle { stroke: var(--ink); stroke-width: 2.5; filter: drop-shadow(0 3px 4px rgba(31, 44, 69, .28)); }
+.semantic-network-node text { fill: #fff; font-size: 10px; font-weight: 850; pointer-events: none; }
+.semantic-network-node-meta { fill: rgba(255, 255, 255, .82) !important; font-size: 8px !important; font-weight: 650 !important; }
+.semantic-network-foot { margin: 0; padding: 9px 13px 11px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10.5px; line-height: 1.45; }
+.semantic-network-foot strong { color: var(--ink); }
+.semantic-network-detail { margin-top: 0; }
 
 .spectrum-groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 11px; background: var(--line); }
 .spectrum-groups article { min-width: 0; padding: 16px; background: var(--panel); }
@@ -1008,6 +1030,7 @@ body > footer { gap: 24px; padding: 22px max(24px, calc((100vw - 1440px) / 2)); 
   .stance-withheld { min-height: 180px; }
   .morphology-sample { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .morphology-term-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .semantic-network-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 640px) {
   .analysis-visual-card > summary { min-height: 56px; padding: 14px 15px; }
@@ -1031,6 +1054,7 @@ body > footer { gap: 24px; padding: 22px max(24px, calc((100vw - 1440px) / 2)); 
   .morphology-sample { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .morphology-term-grid { grid-template-columns: 1fr; }
   .morphology-term-grid li button { min-height: 46px; }
+  .semantic-network-grid { grid-template-columns: 1fr; }
   .spectrum-groups { grid-template-columns: 1fr; }
   .spectrum-groups article { padding: 14px; }
 }

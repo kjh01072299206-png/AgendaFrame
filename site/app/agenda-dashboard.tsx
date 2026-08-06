@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { FormEvent, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import top5PilotData from "../data/top5-2026-07-26.json";
 import { summarizeKoreanMorphology } from "../worker/korean-morphology.mjs";
 
@@ -1078,69 +1078,179 @@ const morphologyPosColors: Record<string, string> = {
   foreign: "#65478b",
 };
 
-function MorphologyPanel({ module }: { module: NonNullable<Comparison["analysisModules"]>["morphology"] }) {
-  const [selected, setSelected] = useState<{ source: string; term: string } | null>(null);
-  const selectedTerm = selected
-    ? module.byOutlet.find((entry) => entry.source === selected.source)?.terms.find((term) => term.term === selected.term)
-    : null;
-  const posKeys = [...new Set(module.byOutlet.flatMap((entry) => Object.keys(entry.posCounts)))];
+type SemanticNetworkNode = {
+  term: string;
+  pos: string;
+  count: number;
+  documentCount: number;
+  perThousand: number;
+  evidenceRefs: ComparisonSource[];
+  support: number;
+};
+type SemanticNetworkCard = {
+  code: string;
+  label: string;
+  articleCount: number;
+  outletCount: number;
+  evidenceRefs: ComparisonSource[];
+  nodes: SemanticNetworkNode[];
+};
+
+function buildSemanticNetworkCards(
+  module: NonNullable<Comparison["analysisModules"]>["morphology"],
+  frameComposition?: NonNullable<Comparison["analysisModules"]>["frameComposition"],
+  axes: ComparisonAxis[] = [],
+): SemanticNetworkCard[] {
+  const frameSeeds = new Map<string, { code: string; label: string; articleCount: number; refs: ComparisonSource[] }>();
+  for (const entry of frameComposition?.byOutlet ?? []) {
+    for (const label of entry.labels.filter((candidate) => candidate.articleCount > 0)) {
+      const current = frameSeeds.get(label.code) ?? { code: label.code, label: label.label, articleCount: 0, refs: [] };
+      current.articleCount += label.articleCount;
+      current.refs.push(...label.evidenceRefs);
+      frameSeeds.set(label.code, current);
+    }
+  }
+  // A live comparison may expose named axis variants before the frame-label
+  // module is approved. They are still evidence-backed semantic groups.
+  if (!frameSeeds.size) {
+    for (const axis of axes) {
+      for (const variant of axis.variants) {
+        if (!variant.outlets.length) continue;
+        const current = frameSeeds.get(variant.groupId) ?? { code: variant.groupId, label: variant.summary, articleCount: 0, refs: [] };
+        current.articleCount += new Set(variant.outlets.map((outlet) => outlet.articleId)).size;
+        current.refs.push(...variant.outlets);
+        frameSeeds.set(variant.groupId, current);
+      }
+    }
+  }
+
+  const allTerms = module.byOutlet.flatMap((entry) => entry.terms);
+  const fallbackSeeds = frameSeeds.size ? [...frameSeeds.values()] : [{ code: "shared-vocabulary", label: "공통 어휘 신호", articleCount: 0, refs: [] }];
+  return fallbackSeeds
+    .map((seed) => {
+      const referenceArticles = new Set(seed.refs.map((ref) => ref.articleId));
+      const supportByTerm = new Map<string, SemanticNetworkNode>();
+      for (const term of allTerms) {
+        const matchingRefs = term.evidenceRefs.filter((ref) => referenceArticles.has(ref.articleId));
+        const support = matchingRefs.length || (!seed.refs.length ? term.documentCount : 0);
+        if (!support) continue;
+        const key = `${term.pos}:${term.term}`;
+        const current = supportByTerm.get(key);
+        if (current) {
+          current.count += term.count;
+          current.documentCount = Math.max(current.documentCount, term.documentCount);
+          current.perThousand = Math.max(current.perThousand, term.perThousand);
+          current.support += support;
+          current.evidenceRefs.push(...matchingRefs);
+        } else {
+          supportByTerm.set(key, {
+            term: term.term,
+            pos: term.pos,
+            count: term.count,
+            documentCount: term.documentCount,
+            perThousand: term.perThousand,
+            evidenceRefs: [...matchingRefs],
+            support,
+          });
+        }
+      }
+      const nodes = [...supportByTerm.values()]
+        .map((node) => ({ ...node, evidenceRefs: [...new Map(node.evidenceRefs.map((ref) => [`${ref.articleId}:${ref.source}`, ref])).values()] }))
+        .sort((left, right) => right.support - left.support || right.perThousand - left.perThousand || left.term.localeCompare(right.term, "ko"))
+        .slice(0, 6);
+      const evidenceRefs = [...new Map(seed.refs.map((ref) => [`${ref.articleId}:${ref.source}`, ref])).values()];
+      return {
+        code: seed.code,
+        label: seed.label,
+        articleCount: seed.articleCount || new Set(nodes.flatMap((node) => node.evidenceRefs.map((ref) => ref.articleId))).size,
+        outletCount: new Set(evidenceRefs.map((ref) => ref.source)).size,
+        evidenceRefs,
+        nodes,
+      };
+    })
+    .filter((card) => card.nodes.length > 0)
+    .sort((left, right) => right.articleCount - left.articleCount || right.nodes.length - left.nodes.length)
+    .slice(0, 3);
+}
+
+function SemanticNetworkCardView({ card, index, selectedTerm, onSelect }: { card: SemanticNetworkCard; index: number; selectedTerm: string | null; onSelect: (term: string) => void }) {
+  const width = 520;
+  const height = 270;
+  const center = { x: 260, y: 138 };
+  const color = frameColors[card.code] ?? ["#315da8", "#11745b", "#d26437"][index % 3];
+  const positions = card.nodes.map((_, nodeIndex) => {
+    const angle = -Math.PI / 2 + (nodeIndex * Math.PI * 2) / Math.max(1, card.nodes.length);
+    return { x: center.x + Math.cos(angle) * 176, y: center.y + Math.sin(angle) * 88 };
+  });
+  const strongest = card.nodes[0];
+  return (
+    <article className="semantic-network-card" style={{ "--network-accent": color } as CSSProperties}>
+      <header>
+        <span className="semantic-network-kicker">프레임 {String(index + 1).padStart(2, "0")}</span>
+        <h5>{card.label}</h5>
+        <p>기사 {card.articleCount}건 · 프레임 근거 {card.evidenceRefs.length}개 · {card.outletCount || "여러"}개 매체</p>
+      </header>
+      <div className="semantic-network-canvas">
+        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${card.label} 프레임의 핵심어 연결망`}>
+          <title>{card.label} 프레임 핵심어 연결망</title>
+          <line className="semantic-network-axis" x1="38" y1={center.y} x2="482" y2={center.y} />
+          {card.nodes.flatMap((left, leftIndex) => card.nodes.slice(leftIndex + 1).map((right, rightOffset) => {
+            const rightIndex = leftIndex + rightOffset + 1;
+            const leftArticles = new Set(left.evidenceRefs.map((ref) => ref.articleId));
+            const shared = right.evidenceRefs.filter((ref) => leftArticles.has(ref.articleId)).length;
+            return shared ? <line key={`co-${left.term}-${right.term}`} className="semantic-network-edge secondary" style={{ strokeWidth: Math.min(3.5, 0.8 + shared * 0.45), opacity: 0.28 }} x1={positions[leftIndex].x} y1={positions[leftIndex].y} x2={positions[rightIndex].x} y2={positions[rightIndex].y} /> : null;
+          }))}
+          {positions.map((position, nodeIndex) => {
+            const node = card.nodes[nodeIndex];
+            const selected = selectedTerm === node.term;
+            return <line key={`edge-${node.term}`} className="semantic-network-edge" style={{ strokeWidth: Math.min(5, 1.25 + node.support * 0.55), opacity: selected ? 0.9 : 0.42 }} x1={center.x} y1={center.y} x2={position.x} y2={position.y} />;
+          })}
+          <g className="semantic-network-center" transform={`translate(${center.x} ${center.y})`}>
+            <circle r="48" />
+            <text textAnchor="middle" y="-2">{card.label.length > 8 ? `${card.label.slice(0, 8)}…` : card.label}</text>
+            <text className="semantic-network-center-sub" textAnchor="middle" y="17">프레임</text>
+          </g>
+          {positions.map((position, nodeIndex) => {
+            const node = card.nodes[nodeIndex];
+            const selected = selectedTerm === node.term;
+            return <g key={node.term} className={`semantic-network-node${selected ? " selected" : ""}`} role="button" tabIndex={0} aria-label={`${node.term}, ${morphologyPosLabels[node.pos] ?? node.pos}, ${node.documentCount}개 기사`} transform={`translate(${position.x} ${position.y})`} onClick={() => onSelect(node.term)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onSelect(node.term); } }}>
+              <circle r={selected ? 29 : 25} style={{ fill: morphologyPosColors[node.pos] ?? color }} />
+              <text textAnchor="middle" y="-2">{node.term.length > 7 ? `${node.term.slice(0, 7)}…` : node.term}</text>
+              <text className="semantic-network-node-meta" textAnchor="middle" y="14">{node.documentCount}건</text>
+              <title>{node.term} · {morphologyPosLabels[node.pos] ?? node.pos} · 내용어 1,000개당 {node.perThousand.toFixed(1)}회</title>
+            </g>;
+          })}
+        </svg>
+      </div>
+      <p className="semantic-network-foot">가장 굵은 연결: <strong>{card.label}</strong> ↔ <strong>{strongest?.term ?? "반복 어휘"}</strong></p>
+    </article>
+  );
+}
+
+function MorphologyPanel({ module, frameComposition, axes = [] }: { module: NonNullable<Comparison["analysisModules"]>["morphology"]; frameComposition?: NonNullable<Comparison["analysisModules"]>["frameComposition"]; axes?: ComparisonAxis[] }) {
+  const [selected, setSelected] = useState<{ cardCode: string; term: string } | null>(null);
+  const cards = useMemo(() => buildSemanticNetworkCards(module, frameComposition, axes), [module, frameComposition, axes]);
+  const selectedCard = selected ? cards.find((card) => card.code === selected.cardCode) : null;
+  const selectedNode = selectedCard?.nodes.find((node) => node.term === selected?.term) ?? null;
   const analyzedArticles = module.byOutlet.reduce((sum, entry) => sum + entry.analyzedArticles, 0);
   const tokenCount = module.byOutlet.reduce((sum, entry) => sum + entry.tokenCount, 0);
   const negationCount = module.byOutlet.reduce((sum, entry) => sum + entry.negationCount, 0);
 
   return (
     <div className="morphology-panel">
-      <p className="viz-caption">빅카인즈 형태소 분석처럼 어절을 형태 단위로 나누고, 조사·일부 활용형을 표제어에 가깝게 정규화합니다. 이슈 안에서 여러 기사와 독립 미디어그룹에 반복된 어휘만 공개합니다.</p>
+      <p className="viz-caption">형태소 단위로 정규화한 반복 어휘를 프레임 근거와 연결했습니다. 선이 굵을수록 같은 기사 근거에서 함께 관측된 횟수가 많습니다. 원형 노드를 누르면 근거 기사를 확인할 수 있습니다.</p>
       <div className="morphology-sample">
         <span><strong>{analyzedArticles.toLocaleString("ko-KR")}</strong> 분석 기사</span>
         <span><strong>{tokenCount.toLocaleString("ko-KR")}</strong> 형태 단위</span>
         <span><strong>{negationCount.toLocaleString("ko-KR")}</strong> 부정 표지</span>
         <span><strong>DF {module.minimumDocumentFrequency}+ · MG {module.minimumMediaGroupFrequency}+</strong> 공개 기준</span>
       </div>
-      {module.byOutlet.length ? (
-        <>
-          <div className="morphology-pos-bars" aria-label="매체별 형태 단위 구성">
-            {module.byOutlet.map((entry) => {
-              const total = Object.values(entry.posCounts).reduce((sum, count) => sum + count, 0);
-              return (
-                <div className="viz-bar-row" key={entry.source}>
-                  <span className="viz-bar-label">{entry.source}</span>
-                  <div className="viz-bar-track" role="img" aria-label={`${entry.source}: ${posKeys.map((pos) => `${morphologyPosLabels[pos] ?? pos} ${entry.posCounts[pos] ?? 0}`).join(", ")}`}>
-                    {posKeys.map((pos) => {
-                      const count = entry.posCounts[pos] ?? 0;
-                      return count > 0 ? <i key={pos} style={{ flexGrow: count, background: morphologyPosColors[pos] ?? "#59636f" }}>{count / Math.max(1, total) >= 0.08 ? count : <span className="sr-only">{count}</span>}</i> : null;
-                    })}
-                  </div>
-                  <b className="viz-bar-total">{total.toLocaleString("ko-KR")}</b>
-                </div>
-              );
-            })}
-          </div>
-          <div className="viz-legend">{posKeys.map((pos) => <span key={pos}><i style={{ background: morphologyPosColors[pos] ?? "#59636f" }} aria-hidden="true" />{morphologyPosLabels[pos] ?? pos}</span>)}</div>
-          <div className="morphology-term-grid">
-            {module.byOutlet.map((entry) => (
-              <section key={entry.source}>
-                <h5>{entry.source}<small>내용어 {entry.contentTokenCount.toLocaleString("ko-KR")} · 부정 표지 {entry.negationCount.toLocaleString("ko-KR")}</small></h5>
-                {entry.terms.length ? <ol>{entry.terms.slice(0, 10).map((term) => (
-                  <li key={`${term.pos}-${term.term}`}>
-                    <button type="button" className={selected?.source === entry.source && selected?.term === term.term ? "active" : ""} onClick={() => setSelected(selected?.source === entry.source && selected?.term === term.term ? null : { source: entry.source, term: term.term })}>
-                      <span>{term.term}<small>{morphologyPosLabels[term.pos] ?? term.pos}</small></span>
-                      <b>{term.perThousand.toFixed(1)}</b>
-                    </button>
-                  </li>
-                ))}</ol> : <p className="not-observed">공개 빈도 기준을 충족한 반복 어휘가 없습니다.</p>}
-              </section>
-            ))}
-          </div>
-          {selected && selectedTerm && (
-            <div className="frame-evidence-detail" role="status">
-              <h5>{selected.source} · {selectedTerm.term}</h5>
-              <p>내용어 1,000개당 {selectedTerm.perThousand.toFixed(1)}회 · {selectedTerm.documentCount}개 기사에서 {selectedTerm.count}회 관측</p>
-              {selectedTerm.evidenceRefs.length ? <ComparisonSourceLinks outlets={selectedTerm.evidenceRefs} /> : <p>공개 가능한 근거 위치가 없습니다.</p>}
-            </div>
-          )}
-        </>
-      ) : <p className="withheld">형태소 집계가 아직 공개 기준을 충족하지 않았습니다.</p>}
+      {cards.length ? <div className="semantic-network-grid">{cards.map((card, index) => <SemanticNetworkCardView key={card.code} card={card} index={index} selectedTerm={selected?.cardCode === card.code ? selected.term : null} onSelect={(term) => setSelected(selected?.cardCode === card.code && selected.term === term ? null : { cardCode: card.code, term })} />)}</div> : <p className="withheld">프레임과 연결된 반복 어휘가 아직 공개 기준을 충족하지 않았습니다.</p>}
+      {selectedNode && selectedCard && <div className="frame-evidence-detail semantic-network-detail" role="status">
+        <h5>{selectedCard.label} · {selectedNode.term}</h5>
+        <p>{morphologyPosLabels[selectedNode.pos] ?? selectedNode.pos} · 내용어 1,000개당 {selectedNode.perThousand.toFixed(1)}회 · {selectedNode.documentCount}개 기사에서 {selectedNode.count}회 관측</p>
+        {selectedNode.evidenceRefs.length ? <ComparisonSourceLinks outlets={selectedNode.evidenceRefs} /> : <p>공개 가능한 근거 위치가 없습니다.</p>}
+      </div>}
       <p className="viz-method-note"><strong>{module.analyzer.mode === "controlled_lexicon_fallback" ? "경량 규칙형 분석" : module.analyzer.name}</strong> · {module.limitations.join(" ")}</p>
     </div>
   );
@@ -1163,7 +1273,7 @@ function ExtendedAnalysisView({ comparison }: { comparison: Comparison }) {
       {hasEntmanMatrix && <div className="framing-report-section"><h4>분석축별 매체 비교</h4><EntmanMatrix axes={axes} embedded /></div>}
       {hasFrameComposition && frameComposition && <div className="framing-report-section"><h4>매체별 프레임 구성</h4><FrameCompositionByOutlet module={frameComposition} embedded /></div>}
       {hasReportingStyle && reportingStyle && <div className="framing-report-section"><h4>보도 방식 관측</h4><ReportingStyleByOutlet module={reportingStyle} /></div>}
-      {hasMorphology && morphology && <div className="framing-report-section"><h4>형태소·어휘 신호</h4><MorphologyPanel module={morphology} /></div>}
+      {hasMorphology && morphology && <div className="framing-report-section"><h4>프레임별 의미 연결망 <small>형태소·어휘 신호</small></h4><MorphologyPanel module={morphology} frameComposition={frameComposition} axes={axes} /></div>}
     </section>
   );
 }
