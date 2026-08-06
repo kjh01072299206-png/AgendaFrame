@@ -192,6 +192,23 @@ test("answers initial-five questions only from published Gemini evidence", async
   assert.deepEqual(walkKeys(answer), []);
 });
 
+test("routes the selected issue to an answer for every initial-five agenda", async () => {
+  const reader = buildInitialFive({ siteRoot });
+  for (const issue of reader.manifest.issues) {
+    const response = await handleInitialFiveRequest(new Request("https://example.test/api/initial-five/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: "https://example.test" },
+      body: JSON.stringify({ issueId: issue.issueId, question: "이 의제의 핵심 쟁점은 무엇인가요?" }),
+    }));
+    assert.equal(response.status, 200, `rank ${issue.rank} must be answerable`);
+    const answer = await response.json();
+    assert.equal(answer.issueId, issue.issueId);
+    assert.equal(answer.status, "answered");
+    assert.ok(["claude_analysis_grounded_retrieval_v1", "rules_initial_five_v1"].includes(answer.provider));
+    assert.match(answer.answer, /규칙 기반|핵심|문제|쟁점|요약/);
+  }
+});
+
 test("publishes coder agreement for every article and recomputes it per issue", () => {
   const { manifest, getIssueByRank } = buildInitialFive({ siteRoot });
   const published = manifest.coderAgreement;

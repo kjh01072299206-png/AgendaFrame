@@ -1338,6 +1338,15 @@ body > footer { gap: 24px; padding: 22px max(24px, calc((100vw - 1440px) / 2)); 
 .af-status-pill.ai { background: var(--green-soft); color: var(--green); }
 .af-status-pill.rule { background: #edf0f4; color: #5e6979; }
 .af-quick-result .af-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.af-rule-examples { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.af-rule-examples > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.af-rule-examples h3 { margin: 6px 0 0; font-size: 18px; line-height: 1.35; }
+.af-rule-examples-note { margin: 8px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.af-rule-example-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-top: 13px; }
+.af-rule-example-grid article { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcff; }
+.af-rule-example-grid article strong { display: block; color: var(--ink); font-size: 12px; line-height: 1.5; }
+.af-rule-example-grid article p { margin: 8px 0 0; color: #4b586d; font-size: 11px; line-height: 1.6; white-space: pre-line; }
+.af-rule-example-grid article small { display: block; margin-top: 8px; color: var(--muted); font-size: 10px; }
 .af-section { min-width: 0; }
 .af-section-compact .af-section-heading h3 { font-size: 15px; }
 .af-section-heading h3 { margin: 6px 0 0; color: var(--ink); font-size: 19px; line-height: 1.35; letter-spacing: -.025em; text-wrap: balance; }
@@ -1470,6 +1479,7 @@ body > footer { gap: 24px; padding: 22px max(24px, calc((100vw - 1440px) / 2)); 
   .af-issue-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .af-issue-button { min-height: 76px; }
   .af-quick-result { order: 1; }
+  .af-rule-example-grid { grid-template-columns: 1fr; }
   .af-detail-header { grid-template-columns: 1fr; }
   .af-detail-counts { grid-template-columns: repeat(3, max-content); border-top: 1px solid var(--line); border-left: 0; padding: 14px 0 0; }
   .af-evidence-list a { grid-template-columns: 76px minmax(0, 1fr); }
@@ -1492,6 +1502,7 @@ body > footer { gap: 24px; padding: 22px max(24px, calc((100vw - 1440px) / 2)); 
   .af-detail-headline { display: grid; gap: 16px; }
   .af-detail-headline h2 { font-size: 26px; }
   .af-quick-result { padding: 20px; }
+  .af-rule-examples > header { display: grid; gap: 8px; }
   .af-observation-grid { grid-template-columns: 1fr; gap: 0; }
   .af-detail-shell { padding-top: 22px; }
   .af-detail-header { padding-top: 24px; }

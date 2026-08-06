@@ -6,6 +6,7 @@ import issueFour from "../public/initial-five/issues/bigkinds-2026-07-26-top-4.j
 import issueFive from "../public/initial-five/issues/bigkinds-2026-07-26-top-5.json" with { type: "json" };
 // 취재원 역할 좁히기 규칙은 화면(lib/initial-five/derive.ts)과 공유한다
 import { actorParaphrases, narrowSubject, paraphrasesByLocator } from "../lib/initial-five/subjects.mjs";
+import { ruleGroundedAnswer } from "../lib/initial-five/rule-answers.mjs";
 
 const MAX_QUESTION_LENGTH = 500;
 const MAX_BODY_BYTES = 20_000;
@@ -211,11 +212,13 @@ async function handleAsk(request) {
   if (!issueId || !question) return json({ error: "issue_and_question_required" }, 400);
   const bundle = issues.get(issueId);
   if (!bundle) return json({ error: "issue_not_found" }, 404);
+  const grounded = groundedAnswer(bundle, question);
+  const result = grounded.status === "withheld" ? ruleGroundedAnswer(bundle, question) : grounded;
   return json({
-    ...groundedAnswer(bundle, question),
+    ...result,
     issueId,
-    provider: "claude_analysis_grounded_retrieval_v1",
-    limitations: [
+    provider: result.provider ?? "claude_analysis_grounded_retrieval_v1",
+    limitations: result.limitations ?? [
       "새 사실을 생성하지 않고 성공한 Claude 본문 분석의 공개 paraphrase만 검색합니다.",
       "기사 전문·원문 문장은 답변에 포함하지 않습니다.",
     ],

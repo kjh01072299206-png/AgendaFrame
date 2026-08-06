@@ -1,6 +1,8 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import type { IssueAnalysisBundle } from "../../../../lib/initial-five/types";
+import { ruleExamples, ruleGroundedAnswer } from "../../../../lib/initial-five/rule-answers.mjs";
 
 interface AskEvidence {
   articleId: string;
@@ -28,15 +30,60 @@ const SUGGESTIONS = [
   "모든 매체가 같게 쓴 사실은 무엇인가요?",
 ];
 
-/* 대화 화면. 답은 실행 시점에 /api/initial-five/ask 가 만든다 — 성공한 본문 분석의
-   공개 의역과 근거 위치에서만 찾고, 없으면 보류한다. */
-export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: number; title: string }> }) {
-  const [issueId, setIssueId] = useState(issues[0]?.issueId ?? "");
+/* 질문할 때 선택한 issueId를 API에 함께 보내므로 1위 의제에 고정되지 않는다.
+   AI 번들이 아직 준비되지 않은 환경에서는 명시적인 규칙 기반 보조 답변을 표시한다. */
+export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: number; title: string; payloadKey?: string }> }) {
+  const [issueId, setIssueId] = useState(() => {
+    if (typeof window !== "undefined") {
+      const fromUrl = new URLSearchParams(window.location.search).get("issue");
+      if (fromUrl && issues.some((issue) => issue.issueId === fromUrl)) return fromUrl;
+    }
+    return issues[0]?.issueId ?? "";
+  });
+  const [selectedBundle, setSelectedBundle] = useState<IssueAnalysisBundle | null>(null);
   const [question, setQuestion] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const bundleCache = useRef(new Map<string, IssueAnalysisBundle>());
+  const bundleRequest = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const issue = issues.find((candidate) => candidate.issueId === issueId);
+    if (!issue) return;
+    const cached = bundleCache.current.get(issueId);
+    if (cached) {
+      setSelectedBundle(cached);
+      return;
+    }
+    setSelectedBundle(null);
+    bundleRequest.current?.abort();
+    const controller = new AbortController();
+    bundleRequest.current = controller;
+    const endpoints = [
+      `/api/initial-five/issues/${encodeURIComponent(issue.issueId)}`,
+      issue.payloadKey ? `/initial-five/${issue.payloadKey}` : "",
+    ].filter(Boolean);
+    const load = async () => {
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(endpoint, { signal: controller.signal, headers: { Accept: "application/json" } });
+          if (!response.ok) continue;
+          const candidate = await response.json() as IssueAnalysisBundle;
+          if (candidate.issue?.issueId !== issue.issueId) continue;
+          bundleCache.current.set(issueId, candidate);
+          if (!controller.signal.aborted) setSelectedBundle(candidate);
+          return;
+        } catch {
+          if (controller.signal.aborted) return;
+        }
+      }
+      if (!controller.signal.aborted) setSelectedBundle(null);
+    };
+    void load();
+    return () => controller.abort();
+  }, [issueId, issues]);
 
   const ask = async (event?: FormEvent<HTMLFormElement>, asked = question) => {
     event?.preventDefault();
@@ -54,6 +101,11 @@ export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: nu
       });
       const payload = (await response.json()) as AskResult & { error?: string };
       if (!response.ok) {
+        if (response.status !== 429 && selectedBundle) {
+          setTurns((prev) => [...prev, { role: "ai", result: ruleGroundedAnswer(selectedBundle, normalized) as AskResult }]);
+          setError("AI 근거 API를 사용할 수 없어 규칙 기반 보조 답변을 표시했습니다.");
+          return;
+        }
         throw new Error(
           payload.error === "rate_limited"
             ? "질문이 많습니다. 잠시 뒤 다시 시도해 주세요."
@@ -62,7 +114,12 @@ export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: nu
       }
       setTurns((prev) => [...prev, { role: "ai", result: payload }]);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "근거 답변을 불러오지 못했습니다.");
+      if (selectedBundle) {
+        setTurns((prev) => [...prev, { role: "ai", result: ruleGroundedAnswer(selectedBundle, normalized) as AskResult }]);
+        setError("AI 근거 API에 연결하지 못해 규칙 기반 보조 답변을 표시했습니다.");
+      } else {
+        setError(cause instanceof Error ? cause.message : "근거 답변을 불러오지 못했습니다.");
+      }
     } finally {
       setLoading(false);
       requestAnimationFrame(() => endRef.current?.scrollIntoView({ block: "nearest" }));
@@ -82,6 +139,9 @@ export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: nu
               setIssueId(event.target.value);
               setTurns([]);
               setError("");
+              const url = new URL(window.location.href);
+              url.searchParams.set("issue", event.target.value);
+              window.history.replaceState({ issueId: event.target.value }, "", `${url.pathname}?${url.searchParams.toString()}${url.hash}`);
             }}
           >
             {issues.map((issue) => (
@@ -102,6 +162,9 @@ export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: nu
               ) : (
                 <div className="afs-turn" key={index}>
                   <div>
+                    <small className="afs-answer-provider">
+                      {turn.result.provider === "rules_initial_five_v1" ? "규칙 기반 보조 답변" : "AI 본문 근거 답변"}
+                    </small>
                     {turn.result.answer.split("\n").map((line, i) =>
                       line.trim() ? <p key={i}>{line}</p> : null,
                     )}
@@ -161,6 +224,26 @@ export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: nu
       </section>
 
       <div className="afs-grid">
+        <section className="afs-card afs-rule-example-card">
+          <h2>선택한 의제 예시</h2>
+          <div className="afs-in">
+            {selectedBundle ? (
+              <div className="afs-rule-examples">
+                <p className="afs-example-note">규칙 기반 미리보기입니다. 질문을 누르면 선택한 의제의 AI 근거 API로 전송됩니다.</p>
+                {ruleExamples(selectedBundle).map((example) => (
+                  <article key={example.question}>
+                    <button type="button" className="afs-example-question" onClick={() => void ask(undefined, example.question)} disabled={loading}>
+                      {example.question}
+                    </button>
+                    <p>{example.result.answer}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="afs-hold">선택한 의제의 공개 분석 번들을 불러오는 중입니다.</p>
+            )}
+          </div>
+        </section>
         <section className="afs-card">
           <h2>추천 질문</h2>
           <div className="afs-in">

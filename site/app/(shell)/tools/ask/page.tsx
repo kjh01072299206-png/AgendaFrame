@@ -7,7 +7,7 @@ export default function AskPage() {
   const issues = initialFiveManifest.issues
     .slice()
     .sort((a, b) => a.rank - b.rank)
-    .map((issue) => ({ issueId: issue.issueId, rank: issue.rank, title: issue.title }));
+    .map((issue) => ({ issueId: issue.issueId, rank: issue.rank, title: issue.title, payloadKey: issue.payloadKey }));
 
   return (
     <>

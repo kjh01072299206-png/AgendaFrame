@@ -16,6 +16,7 @@ import type {
   SemanticDimensionItem,
   SemanticProfileEntry,
 } from "../lib/initial-five/types";
+import { ruleExamples } from "../lib/initial-five/rule-answers.mjs";
 import SiteHeader from "./site-header";
 
 const dimensionOrder = [
@@ -365,6 +366,7 @@ function IssueSelector({
 function QuickResult({ bundle }: { bundle: IssueAnalysisBundle }) {
   const semantic = bundle.analysisStatus.semantic;
   const sources = sourceNames(bundle);
+  const examples = ruleExamples(bundle);
   return (
     <section className="af-quick-result" aria-labelledby="selected-issue-title">
       <header className="af-detail-headline">
@@ -386,6 +388,27 @@ function QuickResult({ bundle }: { bundle: IssueAnalysisBundle }) {
         <span>{semantic.succeededArticleCount === bundle.issue.articleCount ? "근거가 연결된 AI 자동 초안이며 사람 검토가 필요합니다." : "규칙 기반 보조 지표를 AI 분석으로 합산하지 않습니다."}</span>
       </div>
       <ClusterSummary bundle={bundle} compact />
+      <section className="af-rule-examples" aria-labelledby={`${bundle.issue.issueId}-rule-examples-title`}>
+        <header>
+          <div>
+            <span className="af-section-label">규칙 기반 예시</span>
+            <h3 id={`${bundle.issue.issueId}-rule-examples-title`}>이 의제에 이렇게 물어볼 수 있어요</h3>
+          </div>
+          <Link className="af-inline-link" href={`/tools/ask?issue=${encodeURIComponent(bundle.issue.issueId)}`}>
+            이 의제로 AI 대화 열기 →
+          </Link>
+        </header>
+        <p className="af-rule-examples-note">선택한 의제의 공개 비교축에서 만든 미리보기입니다. AI 본문 답변과 구분해 표시합니다.</p>
+        <div className="af-rule-example-grid">
+          {examples.slice(0, 3).map((example) => (
+            <article key={example.question}>
+              <strong>{example.question}</strong>
+              <p>{example.result.answer}</p>
+              <small>규칙 기반 보조 · {example.result.evidence.length}개 근거 연결</small>
+            </article>
+          ))}
+        </div>
+      </section>
     </section>
   );
 }
@@ -458,7 +481,9 @@ function InitialFiveBootstrap() {
         const manifest = await fetchManifest(controller.signal);
         const firstIssue = manifest.issues[0];
         if (!firstIssue) throw new Error("초기 5개 매니페스트에 의제가 없습니다.");
-        const bundle = await fetchIssueBundle(firstIssue, controller.signal);
+        const selectedIssueId = issueFromLocation(manifest, firstIssue.issueId);
+        const selectedIssue = manifest.issues.find((issue) => issue.issueId === selectedIssueId) ?? firstIssue;
+        const bundle = await fetchIssueBundle(selectedIssue, controller.signal);
         if (!controller.signal.aborted) setData({ manifest, bundle });
       } catch (loadError) {
         if (!controller.signal.aborted) setError(loadError instanceof Error ? loadError.message : "초기 5개 의제를 불러오지 못했습니다.");

@@ -1,6 +1,7 @@
 import { getInitialFiveIssueBundle } from "../../../../lib/initial-five/artifacts";
 import { DIM_LABEL, familyLabel } from "../../../../lib/initial-five/derive";
 import { actorParaphrases, narrowSubject, paraphrasesByLocator } from "../../../../lib/initial-five/subjects.mjs";
+import { ruleGroundedAnswer } from "../../../../lib/initial-five/rule-answers.mjs";
 import type {
   IssueAnalysisBundle,
   InitialFiveArticle,
@@ -308,12 +309,16 @@ export async function POST(request: Request) {
   if (!issueId || !question) return Response.json({ error: "issue_and_question_required" }, { status: 400 });
   const bundle = getInitialFiveIssueBundle(issueId);
   if (!bundle) return Response.json({ error: "issue_not_found" }, { status: 404 });
-  const result = groundedAnswer(bundle, question);
+  const grounded = groundedAnswer(bundle, question);
+  // 본문 AI가 아직 끝나지 않았거나 질문과 연결되는 paraphrase가 없을 때도
+  // 선택한 의제의 규칙 기반 비교축을 사용해 답한다. 보조 답변임을 provider로
+  // 명시해 AI 분석 결과와 섞이지 않게 한다.
+  const result = grounded.status === "withheld" ? ruleGroundedAnswer(bundle, question) : grounded;
   return Response.json({
     ...result,
     issueId,
-    provider: "claude_analysis_grounded_retrieval_v1",
-    limitations: [
+    provider: ("provider" in result ? result.provider : undefined) ?? "claude_analysis_grounded_retrieval_v1",
+    limitations: ("limitations" in result ? result.limitations : undefined) ?? [
       "새 사실을 생성하지 않고 성공한 Claude 본문 분석의 공개 paraphrase만 검색합니다.",
       "기사 전문·원문 문장은 답변에 포함하지 않습니다.",
     ],
