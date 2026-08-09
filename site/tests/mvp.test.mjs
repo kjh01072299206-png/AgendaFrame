@@ -264,6 +264,28 @@ test("clusters real-looking article titles and produces explainable scores", () 
   assert.throws(() => getAnalysisProvider("vertex_ai"), /지원하지 않는 분석 공급자/);
 });
 
+test("uses transient body anchors to merge paraphrased reports without publishing the body", () => {
+  const sameEventBody = "충북 음성군 대소읍에서 말레이시아 국적 외국인들이 길거리에서 집단 패싸움을 벌였다. 흉기를 휘둘러 1명이 숨졌고 경찰은 사건 경위를 조사하고 있다.";
+  const issues = analyzeArticles([
+    { id: "body-cluster-1", sourceId: "hani", source: "한겨레", title: "음성서 외국인 난투극 1명 사망", section: "사회", bodyText: sameEventBody },
+    { id: "body-cluster-2", sourceId: "khan", source: "경향신문", title: "충북 길거리 패싸움 흉기 살해", section: "사회", bodyText: sameEventBody },
+    { id: "body-cluster-3", sourceId: "kmib", source: "국민일보", title: "말레이시아인 체포 음성 사건", section: "사회", bodyText: sameEventBody },
+    {
+      id: "body-negative-1",
+      sourceId: "chosun",
+      source: "조선일보",
+      title: "청주 공장 화재 경찰 조사",
+      section: "사회",
+      bodyText: "충북 청주시 공장에서 화재가 발생해 소방당국과 경찰이 원인을 조사하고 있다. 인명 피해는 없었다.",
+    },
+  ], { configuredSourceCount: 4 });
+  const sameEvent = issues.find((issue) => issue.articles.some((article) => article.id === "body-cluster-1"));
+  assert.ok(sameEvent);
+  assert.deepEqual(sameEvent.articles.map((article) => article.id).sort(), ["body-cluster-1", "body-cluster-2", "body-cluster-3"]);
+  assert.equal(issues.find((issue) => issue.articles.some((article) => article.id === "body-negative-1"))?.articleCount, 1);
+  assert.equal(JSON.stringify(sameEvent).includes(sameEventBody), false);
+});
+
 test("keeps issue names event-shaped instead of appending a generic issue suffix", () => {
   assert.equal(cleanHeadlineToIssueTitle("검경 수사팀 수사 수사 이슈"), "검경 수사팀 수사");
   assert.equal(cleanHeadlineToIssueTitle("중대재해처벌법 개정안 국회 통과 이슈"), "중대재해처벌법 개정안 국회 통과");
@@ -1011,7 +1033,7 @@ test("reports no-cost health and protects write endpoints", async () => {
   assert.equal(healthBody.collection.method, "bigkinds_export");
   assert.equal(healthBody.collection.directCrawling, false);
   assert.equal(healthBody.collection.configuredSources, 22);
-  assert.equal(healthBody.meta.clusteringVersion, "agenda-concepts-complete-link-v6");
+  assert.equal(healthBody.meta.clusteringVersion, "agenda-content-aware-complete-link-v7");
   assert.equal(healthBody.meta.scoreVersion, "observed-agenda-v4");
 
   const sources = await handleApiRequest(new Request("https://example.test/api/sources"));

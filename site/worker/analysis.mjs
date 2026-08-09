@@ -1,6 +1,6 @@
 export const ANALYSIS_PROVIDER = "structured_extractive";
 export const ANALYSIS_MODEL_VERSION = "agenda-structure-v6";
-export const CLUSTERING_VERSION = "agenda-concepts-complete-link-v6";
+export const CLUSTERING_VERSION = "agenda-content-aware-complete-link-v7";
 export const SCORE_VERSION = "observed-agenda-v4";
 export const FRAME_TAXONOMY_VERSION = "frame-elements-v5";
 export const PUBLIC_AGENDA_CATEGORIES = Object.freeze(["정치", "경제", "사회", "국제", "스포츠", "생활·IT"]);
@@ -48,6 +48,16 @@ const genericEventTokens = new Set([
   "추진", "개최", "방문", "오늘", "내일", "전날", "지난", "이번", "속보", "종합",
 ]);
 
+// 본문은 API 요청 중 메모리에서만 사용한다. 조사·기사·보도처럼 거의 모든
+// 기사에 반복되는 단어는 본문 단서에서 제외하고, 사건을 구분하는 명사만
+// 제한된 수로 남겨 2,000건 규모에서도 비교 비용을 bounded 하게 유지한다.
+const bodyStopwords = new Set([
+  ...stopwords,
+  ...genericEventTokens,
+  "것", "수", "등", "때", "곳", "뒤", "앞", "안", "밖", "및", "또한", "따르면",
+  "전해", "알려", "밝혀", "말했다", "설명했다", "기자", "사진", "자료", "관련기사",
+]);
+
 const actorRolePattern = /([가-힣]{2,4})(?:\s+전)?\s*(?:대통령|총리|장관|의원|대표|시장|도지사|교육감|회장|사장|감독|총장|검찰총장|감사위원|사령관|교수|기자|검사|판사)/gu;
 const actionDefinitions = {
   warrant: ["구속영장", "영장 청구", "영장청구"],
@@ -86,6 +96,47 @@ export function titleTokens(title) {
   return [...new Set(tokens)].slice(0, 20);
 }
 
+function bodyTokens(value) {
+  const normalized = String(value ?? "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/https?:\/\/\S+/g, " ")
+    .replace(/[^0-9a-z가-힣]+/g, " ");
+  const counts = new Map();
+  for (const raw of normalized.split(/\s+/)) {
+    const token = cleanToken(raw);
+    if (token.length < 2 || bodyStopwords.has(token) || genericEventTokens.has(token)) continue;
+    counts.set(token, (counts.get(token) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort((left, right) => right[1] - left[1] || right[0].length - left[0].length)
+    .slice(0, 160)
+    .map(([token]) => token);
+}
+
+function filterBodyTokensByDocumentFrequency(articles) {
+  const documentFrequency = new Map();
+  for (const article of articles) {
+    for (const token of new Set(article._bodyTokens ?? [])) {
+      documentFrequency.set(token, (documentFrequency.get(token) ?? 0) + 1);
+    }
+  }
+  // A term appearing in more than 8% of a daily corpus is usually a section,
+  // place-independent institution, or wire-service boilerplate rather than an
+  // event anchor. Keep a small floor for tiny API batches.
+  const maximumFrequency = Math.max(5, Math.ceil(articles.length * 0.08));
+  const anchorFrequency = Math.max(3, Math.ceil(articles.length * 0.02));
+  for (const article of articles) {
+    article._bodyTokens = (article._bodyTokens ?? []).filter((token) =>
+      (documentFrequency.get(token) ?? 0) <= maximumFrequency,
+    );
+    article._bodyAnchorTokens = article._bodyTokens.filter((token) =>
+      (documentFrequency.get(token) ?? 0) <= anchorFrequency,
+    );
+    article._clusterTokens = [...new Set([...article._tokens, ...article._bodyTokens])];
+  }
+}
+
 function similarity(left, right) {
   const a = new Set(left);
   const b = new Set(right);
@@ -93,6 +144,22 @@ function similarity(left, right) {
   for (const token of a) if (b.has(token)) overlap += 1;
   const union = a.size + b.size - overlap;
   return { overlap, jaccard: union ? overlap / union : 0 };
+}
+
+function articleSimilarity(left, right) {
+  const titleCompared = similarity(left._tokens, right._tokens);
+  const leftBody = left._bodyTokens ?? [];
+  const rightBody = right._bodyTokens ?? [];
+  if (!leftBody.length || !rightBody.length) return titleCompared;
+  const contentCompared = similarity(left._clusterTokens, right._clusterTokens);
+  // 제목은 기자가 사건을 압축해 쓰는 신호라 본문보다 강하게 반영한다.
+  return {
+    overlap: titleCompared.overlap + contentCompared.overlap,
+    jaccard: Math.round((titleCompared.jaccard * 0.65 + contentCompared.jaccard * 0.35) * 1000) / 1000,
+    titleJaccard: titleCompared.jaccard,
+    contentJaccard: contentCompared.jaccard,
+    bodyOverlap: overlapCount(leftBody, rightBody),
+  };
 }
 
 function overlapCount(left, right) {
@@ -115,10 +182,14 @@ function eventFeatures(article) {
   const title = String(article.title ?? "").normalize("NFKC");
   const actors = [];
   for (const match of title.matchAll(actorRolePattern)) actors.push(match[1]);
+  const searchableText = `${title} ${String(article.bodyText ?? "").slice(0, 12000)}`;
   const actions = Object.entries(actionDefinitions)
-    .filter(([, signals]) => signals.some((signal) => title.includes(signal)))
+    .filter(([, signals]) => signals.some((signal) => searchableText.includes(signal)))
     .map(([action]) => action);
-  const discriminators = article._tokens.filter((token) => !genericEventTokens.has(token));
+  const discriminators = [...new Set([
+    ...article._tokens,
+    ...(article._bodyTokens ?? []),
+  ].filter((token) => !genericEventTokens.has(token)))];
   return {
     actors: [...new Set(actors)],
     actions,
@@ -166,9 +237,12 @@ function compatibleEvent(left, right) {
   if (left._event.normalized === right._event.normalized) return true;
   if (topCategory(left) !== topCategory(right)) return false;
 
-  const compared = similarity(left._tokens, right._tokens);
+  const compared = articleSimilarity(left, right);
   const sharedConcepts = overlapCount(left._event.concepts, right._event.concepts);
   const sharedDiscriminators = overlapCount(left._event.discriminators, right._event.discriminators);
+  const sharedBodyTokens = overlapCount(left._bodyTokens ?? [], right._bodyTokens ?? []);
+  const sharedBodyAnchors = overlapCount(left._bodyAnchorTokens ?? [], right._bodyAnchorTokens ?? []);
+  const sharedTitleTokens = overlapCount(left._tokens, right._tokens);
   const leftActors = left._event.actors;
   const rightActors = right._event.actors;
   const leftActions = left._event.actions;
@@ -178,6 +252,11 @@ function compatibleEvent(left, right) {
   if (leftActors.length >= 2 && rightActors.length >= 2 && overlapCount(leftActors, rightActors) === 0) return false;
   if (leftActions.length && rightActions.length && overlapCount(leftActions, rightActions) === 0) return false;
   if (leftActors.length >= 2 && rightActors.length >= 2 && sharedDiscriminators < 1) return false;
+  // 본문에 같은 장소·당사자·행위가 반복되면 제목 표현이 달라도 같은 사건으로
+  // 연결한다. bodyOverlap을 단독 근거로 쓰지 않고 내용 유사도와 함께 요구한다.
+  if (sharedBodyAnchors >= 3 && compared.contentJaccard >= 0.18 && overlapCount(left._event.actions, right._event.actions) > 0) return true;
+  if (sharedBodyAnchors >= 2 && sharedTitleTokens >= 1 && compared.contentJaccard >= 0.10) return true;
+  if (sharedBodyAnchors >= 1 && sharedBodyTokens >= 4 && sharedTitleTokens >= 2 && compared.titleJaccard >= 0.15 && compared.contentJaccard >= 0.14) return true;
   if (leftActors.length !== rightActors.length && compared.jaccard < 0.35) return false;
 
   return compared.overlap >= 2 && sharedDiscriminators >= 1 && compared.jaccard >= 0.25;
@@ -190,7 +269,7 @@ function representativeArticle(articles) {
   for (let index = 0; index < articles.length; index += 1) {
     let total = 0;
     for (let other = 0; other < articles.length; other += 1) {
-      if (index !== other) total += similarity(articles[index]._tokens, articles[other]._tokens).jaccard;
+      if (index !== other) total += articleSimilarity(articles[index], articles[other]).jaccard;
     }
     const lengthPenalty = Math.max(0, articles[index].title.length - 70) / 500;
     const score = total / Math.max(1, articles.length - 1) - lengthPenalty;
@@ -507,7 +586,7 @@ function clusterArticles(articles) {
       const cluster = clusters[clusterIndex];
       if (!cluster.every((member) => compatibleEvent(article, member))) continue;
       const representative = representativeArticle(cluster);
-      const compared = similarity(article._tokens, representative._tokens);
+      const compared = articleSimilarity(article, representative);
       if (compared.jaccard > selectedScore) {
         selectedIndex = clusterIndex;
         selectedScore = compared.jaccard;
@@ -534,10 +613,19 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
   const articles = inputArticles.map((article, index) => {
     const category = classifyAgendaCategory(article);
     if (!category) return null;
-    const prepared = { ...article, _index: index, _tokens: titleTokens(article.title), _category: category };
-    prepared._event = eventFeatures(prepared);
+    const prepared = {
+      ...article,
+      _index: index,
+      _tokens: titleTokens(article.title),
+      _bodyTokens: bodyTokens(article.bodyText),
+      _bodyAnchorTokens: [],
+      _category: category,
+    };
+    prepared._clusterTokens = [...new Set([...prepared._tokens, ...prepared._bodyTokens])];
     return prepared;
   }).filter(Boolean);
+  filterBodyTokensByDocumentFrequency(articles);
+  for (const article of articles) article._event = eventFeatures(article);
   const groups = clusterArticles(articles);
   const maxArticleCount = Math.max(1, ...groups.map((group) => group.length));
 
@@ -555,7 +643,7 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
       const volume = Math.min(100, (Math.log1p(group.length) / Math.log1p(maxArticleCount)) * 100);
       const followUpVolume = group.length > 1 ? ((group.length - sources.size) / (group.length - 1)) * 100 : 0;
       const scoreResult = weightedAgendaScore({ diversity, placement, volume, followUpVolume, sourceCount: sources.size, configuredSourceCount });
-      const similarities = group.map((article) => article.id === representative.id ? 1 : similarity(representative._tokens, article._tokens).jaccard);
+      const similarities = group.map((article) => article.id === representative.id ? 1 : articleSimilarity(representative, article).jaccard);
       const minimumSimilarity = Math.min(...similarities);
       const issue = {
         title: synthesizeIssueTitle(group, representative),
@@ -582,6 +670,9 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
           const cleanArticle = { ...article };
           delete cleanArticle._index;
           delete cleanArticle._tokens;
+          delete cleanArticle._bodyTokens;
+          delete cleanArticle._bodyAnchorTokens;
+          delete cleanArticle._clusterTokens;
           delete cleanArticle._event;
           delete cleanArticle._category;
           delete cleanArticle.bodyText;
@@ -593,7 +684,7 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
           return {
             ...cleanArticle,
             contentAvailable: Boolean(article.bodyText) || article.bodyAnalysisAvailable === true,
-            similarity: article.id === representative.id ? 1 : Math.round(similarity(representative._tokens, article._tokens).jaccard * 1000) / 1000,
+            similarity: article.id === representative.id ? 1 : articleSimilarity(representative, article).jaccard,
             membershipStatus: "included",
             representative: article.id === representative.id,
           };
