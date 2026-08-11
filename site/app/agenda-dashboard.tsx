@@ -1660,6 +1660,7 @@ function FrameFunctionTable({ axes, signals }: { axes?: ComparisonAxis[]; signal
 }
 
 function MediaComparisonView({ comparison, articles, issue }: { comparison: Comparison; articles: Article[]; issue: Issue }) {
+  const [expandedDebate, setExpandedDebate] = useState<string | null>(null);
   const headlineEvidence = comparison.availableHeadlineEvidence ?? articles.map((article) => ({ articleId: article.id, source: article.source, sourceUrl: article.url, text: article.title, evidenceType: "headline" }));
   const signals = buildHeadlineSignals(headlineEvidence, articles);
   const contrast = selectContrastAxis(comparison.axes ?? []);
@@ -1722,30 +1723,36 @@ function MediaComparisonView({ comparison, articles, issue }: { comparison: Comp
   const hasBodyContrast = Boolean(contrast);
 
   const sourceNames = (variant: AxisVariant) => [...new Set(variant.outlets.map((outlet) => outlet.source))];
+  const citedVoices = [...new Set(comparison.sourceLens?.byOutlet.flatMap((entry) => entry.voices) ?? [])];
   const contrastSideBySource = new Map<string, string>();
   activeContrast?.variants.forEach((variant, index) => {
     for (const outlet of variant.outlets) contrastSideBySource.set(outlet.source, `갈래 ${String.fromCharCode(65 + index)}`);
   });
-  const bodyCards = contrast?.variants.map((variant, index) => (
-    <article key={variant.groupId} className={`media-side media-side-${index}`}>
-      <span>보도 갈래 {String.fromCharCode(65 + index)} · {contrast.axis.label}</span>
-      <h5>{sourceNames(variant).join(" · ") || "연결 매체 확인 중"}</h5>
-      <strong>{variant.summary}</strong>
-      <p>{commitmentText(variant.commitment)}으로 확인된 한쪽 갈래입니다. 반대 갈래는 같은 사건을 다른 문제·범위로 잘라 보여 주므로 두 문장을 맞대어 읽으세요.</p>
-      <ComparisonEvidenceDisclosure variant={variant} articles={articles} />
-    </article>
-  ));
-  const headlineCards = headlineContrast
-    ? headlineContrast.variants.map((variant, index) => (
-      <article key={variant.groupId} className={`media-side media-side-${index}`}>
-        <span>보도 갈래 {String.fromCharCode(65 + index)} · 제목 단서</span>
-        <h5>{sourceNames(variant).join(" · ")}</h5>
-        <strong>{variant.summary}</strong>
-        <p>제목에서 먼저 갈린 한쪽 초점입니다. 반대편 제목과 대조하면 사건을 보게 하는 단어와 범위의 차이가 드러나지만, 본문 원인·책임·의도는 별도로 확인해야 합니다.</p>
-        <ComparisonEvidenceDisclosure variant={variant} articles={articles} />
-      </article>
-    ))
-    : sides.map((side, index) => (
+  const contrastCards = activeContrast?.variants.map((variant, index) => {
+    const expanded = expandedDebate === variant.groupId;
+    const outlets = sourceNames(variant);
+    const contrastText = hasBodyContrast
+      ? `${commitmentText(variant.commitment)}으로 확인된 한쪽 갈래입니다. 반대 갈래는 같은 사건을 다른 문제·범위로 잘라 보여 주므로 두 문장을 맞대어 읽으세요.`
+      : "제목에서 먼저 갈린 한쪽 초점입니다. 반대편 제목과 대조하면 사건을 보게 하는 단어와 범위의 차이가 드러나지만, 본문 원인·책임·의도는 별도로 확인해야 합니다.";
+    return (
+      <button
+        type="button"
+        key={variant.groupId}
+        className={`media-debate-box media-debate-box-${index}${expanded ? " expanded" : ""}`}
+        aria-expanded={expanded}
+        aria-controls={`media-debate-proof-${variant.groupId}`}
+        onClick={() => setExpandedDebate(expanded ? null : variant.groupId)}
+      >
+        <span className="media-debate-box-head"><span className="media-debate-no">보도 갈래 {String.fromCharCode(65 + index)}</span><strong>{variant.summary}</strong><small>{outlets.join(" · ") || "연결 매체 확인 중"} · 기사 {variant.outlets.length}건</small></span>
+        <span className="media-debate-summary">{contrastText}</span>
+        <span className="media-debate-box-foot"><b>결정적 차이</b><span>{hasBodyContrast ? `반대 갈래와 달리 ${variant.summary.replace(/합니다\.$/u, "")}을 먼저 세웁니다.` : "반대편 제목과 맞대어 읽을 때 먼저 보게 하는 단어와 범위가 달라집니다."}</span><i>기사 근거 {expanded ? "닫기" : "보기"} →</i></span>
+      </button>
+    );
+  });
+  const contrastProof = expandedDebate && activeContrast
+    ? activeContrast.variants.find((variant) => variant.groupId === expandedDebate)
+    : null;
+  const headlineCards = sides.map((side, index) => (
       <article key={side.articleId} className={`media-side media-side-${index}`}>
         <span>보도 갈래 {String.fromCharCode(65 + index)} · 제목 단서</span>
         <h5>{side.source}</h5>
@@ -1763,20 +1770,21 @@ function MediaComparisonView({ comparison, articles, issue }: { comparison: Comp
           <h3 id="media-compare-title">{lead || "매체별 제목과 본문에서 강조점이 갈리는 지점을 비교합니다."}</h3>
           <p>이 화면은 어느 매체가 옳은지 판정하는 대신, 같은 사건을 서로 다른 논조와 범위로 잘라 보여 준 갈래를 A·B로 맞대어 읽게 합니다. 한쪽이 특정 행위·인물·피해를 전면에 놓으면, 반대쪽은 제도·맥락·후속 절차를 앞세울 수 있습니다. 아래 문장은 확인된 기사 표현과 그 표현이 귀속된 위치를 바탕으로 만든 비교입니다.</p>
         </div>
-        <div className="media-compare-meta"><span><b>{outletRows.length}</b>개 매체</span><span><b>{articles.length}</b>건 기사</span><span><b>{activeContrast ? activeContrast.axis.label : sides.length >= 2 ? "제목" : "-"}</b> 갈림 축</span><span><b>{comparison.evidenceBasis === "headline_metadata_only" ? "제목" : "본문·제목"}</b> 근거</span></div>
+        <div className="media-compare-meta"><span><b>{outletRows.length}</b>개 매체</span><span><b>{articles.length}</b>건 기사</span><span><b>{activeContrast ? activeContrast.variants.length : 0}</b>개 논조 군집</span><span><b>{citedVoices.length || "-"}</b>명 인용원</span></div>
       </section>
 
       <section className="media-compare-card media-compare-brief" aria-labelledby="media-brief-title">
         <header><div><p className="context-label">사건 요약</p><h4 id="media-brief-title">비교하기 전에 같은 사건을 먼저 확인합니다</h4></div><span>{issue.category} · {issue.issueDate}</span></header>
         <p className="media-brief-headline">{issue.title}</p>
         <div className="media-brief-grid"><div><span>무슨 일이 있었나</span><p>{issue.summary || "이슈 설명이 별도로 제공되지 않았습니다."}</p></div><div><span>공통으로 반복된 출발점</span><p>{commonTerms.length ? commonTerms.join(" · ") : "공통으로 연결된 제목 표현을 확인하는 중입니다."}</p></div></div>
+        {(comparison.summary?.commonGround || comparison.summary?.sourceContext || summaryDifference) && <details className="media-brief-more"><summary>사건 경위와 용어 더 보기</summary><div>{comparison.summary?.commonGround && <p><b>공통으로 본 것</b> {comparison.summary.commonGround}</p>}{summaryDifference && <p><b>갈린 지점</b> {summaryDifference}</p>}{comparison.summary?.sourceContext && <p><b>인용원 맥락</b> {comparison.summary.sourceContext}</p>}</div></details>}
       </section>
 
       <section className="media-compare-card media-compare-axis" aria-labelledby="media-axis-title">
         <header><div><p className="context-label">논조 갈래 축</p><h4 id="media-axis-title">{activeContrast ? contrastQuestion(activeContrast.axis.dimension) : sides.length >= 2 ? "제목의 단어가 서로 다른 범위를 엽니다" : "공통 보도와 갈린 표현을 함께 봅니다"}</h4></div><span className="media-axis-mark">A ↔ B</span></header>
         <div className="media-debate-question"><span>{activeContrast?.axis.label ?? "제목 단서"}</span><p>{activeContrast ? `‘${activeContrast.variants[0].summary}’로 읽을까, ‘${activeContrast.variants[1].summary}’로 읽을까?` : headlineLead}</p></div>
         {comparison.summary?.commonGround ? <p className="media-common-line"><b>공통으로 본 것</b> {comparison.summary.commonGround}</p> : commonTerms.length ? <p className="media-common-line"><b>공통으로 반복된 제목 표현</b> {commonTerms.join(" · ")}</p> : null}
-        {hasBodyContrast ? <div className="media-contrast-grid">{bodyCards}</div> : headlineCards.length ? <div className="media-contrast-grid">{headlineCards}</div> : <p className="media-compare-muted">현재 표본에서는 본문 갈림을 확정할 만큼 독립적인 본문 근거가 충분하지 않습니다. 대신 제목에서 실제로 달라진 단어와 범위를 아래에 남겼습니다.</p>}
+        {activeContrast ? <><div className="media-debate-boxes">{contrastCards}</div>{contrastProof && <section className="media-debate-proof" id={`media-debate-proof-${contrastProof.groupId}`} aria-live="polite"><header><span>갈래 {String.fromCharCode(65 + activeContrast.variants.findIndex((variant) => variant.groupId === contrastProof.groupId))}</span><div><b>{sourceNames(contrastProof).join(" · ") || "연결 매체 확인 중"}</b><p>{contrastProof.summary} · 기사 {contrastProof.outlets.length}건</p></div></header><div className="media-debate-proof-reason"><b>왜 이 갈래로 묶였나</b><p>{hasBodyContrast ? `${contrastProof.summary}을 본문에서 같은 설명 유형으로 확인하고, 반대 갈래와 대비되는 근거 위치를 연결했습니다.` : "제목에서 실제로 사용된 단어를 기준으로 묶었습니다. 본문 원인·책임·의도는 별도로 확인해야 합니다."}</p></div><ComparisonEvidenceDisclosure variant={contrastProof} articles={articles} /></section>}</> : headlineCards.length ? <div className="media-contrast-grid">{headlineCards}</div> : <p className="media-compare-muted">현재 표본에서는 본문 갈림을 확정할 만큼 독립적인 본문 근거가 충분하지 않습니다. 대신 제목에서 실제로 달라진 단어와 범위를 아래에 남겼습니다.</p>}
         {comparison.summary?.sourceContext ? <p className="media-compare-attribution">근거 읽기: {comparison.summary.sourceContext}</p> : null}
       </section>
 
@@ -1790,7 +1798,7 @@ function MediaComparisonView({ comparison, articles, issue }: { comparison: Comp
       </section>
 
       <section className="media-compare-card" aria-labelledby="media-article-title">
-        <header><div><p className="context-label">기사 근거</p><h4 id="media-article-title">갈림을 만든 제목과 본문 위치를 직접 비교하세요</h4></div><span>{headlineEvidence.length + (contrast ? contrast.variants.reduce((sum, variant) => sum + variant.outlets.length, 0) : 0)}건 연결</span></header>
+        <header><div><p className="context-label">기사 목록</p><h4 id="media-article-title">갈림을 만든 제목과 본문 위치를 직접 비교하세요</h4></div><span>{headlineEvidence.length + (contrast ? contrast.variants.reduce((sum, variant) => sum + variant.outlets.length, 0) : 0)}건 연결</span></header>
         <div className="media-article-list">{headlineEvidence.map((item) => <a key={item.articleId} href={item.sourceUrl} target="_blank" rel="noopener noreferrer"><strong>{item.source}</strong><span>{item.text}</span><small>{item.evidenceType === "headline" ? "제목 단서 · 원문 열기 →" : "근거 위치 · 원문 열기 →"}</small></a>)}</div>
         {activeContrast ? <div className="media-article-axis-links">{activeContrast.variants.map((variant) => <div key={variant.groupId}><b>{variant.summary}</b><ComparisonSourceLinks outlets={variant.outlets.slice(0, 6)} /></div>)}</div> : null}
       </section>
@@ -2165,17 +2173,25 @@ function FramingEditorialView({ comparison, articles }: { comparison: Comparison
         {issueMap && <IssueMapView issueMap={issueMap} isProviderExcerpt={comparison.sample?.textScope === "provider_excerpt"} />}
       </section>
 
+      <div className="framing-prototype-intro-grid">
+        <section className="framing-prototype-summary" aria-labelledby="framing-prototype-summary-title">
+          <header><p className="context-label">프레이밍 분석 요약</p><h4 id="framing-prototype-summary-title">공통으로 본 것과 갈린 지점</h4></header>
+          <p><b>공통으로 본 것</b> {summary.commonGround ?? "공통으로 확인된 설명이 아직 요약되지 않았습니다."}</p>
+          <p><b>갈린 지점</b> {summary.mainDifference ?? "현재 표본에서 독립적인 갈림은 확정하지 않았습니다."}</p>
+          {summary.whyItMatters && <p className="framing-prototype-so-what">{summary.whyItMatters}</p>}
+        </section>
+        <ScopeDistribution comparison={comparison} />
+      </div>
+
       <FramingDimensionOverview axes={axes} sourceLens={sourceLens} signals={headlineSignals} />
       {titleOnlyContrast && headlineContrast && <section className="framing-headline-contrast" aria-labelledby="framing-headline-contrast-title">
         <header><div><p className="context-label">제목에서 먼저 갈린 대립축</p><h4 id="framing-headline-contrast-title">본문 판정 전에도 두 논조의 출발점은 맞대어 볼 수 있습니다</h4></div><span>A ↔ B · 제목 단서</span></header>
         <div className="framing-headline-contrast-grid">{headlineContrast.variants.map((variant, index) => <article className={`framing-headline-side framing-headline-side-${index}`} key={variant.groupId}><span>갈래 {String.fromCharCode(65 + index)}</span><strong>{variant.summary}</strong><p>반대 갈래가 먼저 세운 단어와 대조할 때 드러나는 제목 수준의 초점입니다. 본문 원인·책임·의도는 아직 확정하지 않습니다.</p><ComparisonEvidenceDisclosure variant={variant} articles={articles} /></article>)}</div>
       </section>}
-      <ScopeDistribution comparison={comparison} />
       <ContextGapOverview gaps={comparison.contextGaps ?? []} />
 
       <section className="framing-report" aria-labelledby="framing-report-title">
-        <header><p className="context-label">프레이밍 분석 요약</p><h3 id="framing-report-title">무엇이 문제인가부터 달라집니다</h3><p>기사의 제목만으로 결론을 내리지 않고, 동일 사건에 연결된 본문 근거를 분석축별로 모아 읽을 수 있게 했습니다. 서로 다른 갈래는 A·B로 맞대어 읽고, 취재원 귀속 발언은 매체의 입장과 구분합니다.</p></header>
-        {(summary.commonGround || summary.mainDifference || summary.whyItMatters) && <div className="framing-summary-copy"><p><b>공통으로 본 것</b> {summary.commonGround ?? "공통으로 확인된 설명이 아직 요약되지 않았습니다."}</p><p><b>갈린 지점</b> {summary.mainDifference ?? "현재 표본에서 독립적인 갈림은 확정하지 않았습니다."}</p>{summary.whyItMatters && <small>{summary.whyItMatters}</small>}</div>}
+        <header><p className="context-label">프레임 4기능과 근거</p><h3 id="framing-report-title">문제 정의·원인·책임·평가·해법을 맞대어 읽습니다</h3><p>기사의 제목만으로 결론을 내리지 않고, 동일 사건에 연결된 본문 근거를 분석축별로 모아 읽을 수 있게 했습니다. 서로 다른 갈래는 A·B로 맞대어 읽고, 취재원 귀속 발언은 매체의 입장과 구분합니다.</p></header>
         <div className="framing-report-section">
           <h4>쟁점 구도: ‘무엇이 문제인가’부터 다르다</h4>
           <p>{summary.mainDifference ?? (issueMap?.reason ?? "현재 표본에서 문제 정의의 양쪽을 안정적으로 연결할 근거가 충분하지 않습니다.")}</p>

@@ -158,6 +158,29 @@ test("keeps the public dashboard focused on date, issue, and outlet exploration"
   assert.match(styles, /min-height: 44px/);
 });
 
+test("keeps the prototype comparison order and opposing evidence interaction", async () => {
+  const dashboard = await readFile(new URL("../app/agenda-dashboard.tsx", import.meta.url), "utf8");
+  const mediaStart = dashboard.indexOf("function MediaComparisonView");
+  const framingStart = dashboard.indexOf("function FramingEditorialView");
+  const media = dashboard.slice(mediaStart, framingStart);
+  const framing = dashboard.slice(framingStart, dashboard.indexOf("function FramingComparisonView", framingStart));
+
+  for (const copy of ["같은 사건, 서로 다른 독해", "논조 갈래 축", "결정적 차이", "왜 이 갈래로 묶였나", "기사 목록"]) {
+    assert.match(media, new RegExp(copy));
+  }
+  assert.match(media, /aria-expanded=\{expanded\}/);
+  assert.match(media, /aria-controls=\{`media-debate-proof-/);
+  assert.ok(media.indexOf("사건 요약") < media.indexOf("논조 갈래 축"));
+  assert.ok(media.indexOf("논조 갈래 축") < media.indexOf("기사 목록"));
+
+  for (const copy of ["framing-prototype-intro-grid", "공통으로 본 것과 갈린 지점", "프레임 4기능과 근거"]) {
+    assert.match(framing, new RegExp(copy));
+  }
+  assert.match(dashboard, /여섯 항목/);
+  assert.ok(framing.indexOf("framing-prototype-intro-grid") < framing.indexOf("<FramingDimensionOverview"));
+  assert.ok(framing.indexOf("<FramingDimensionOverview") < framing.indexOf("프레임 4기능과 근거"));
+});
+
 /* 화면 구성은 (shell) 라우트 그룹으로 옮겼다(홈 = 하루 단위 지형, 도구 = /tools/*).
    단일 페이지 리더(InitialFiveExperience)는 /top5-2026-07-26 에 그대로 남아 있다.
    이 테스트가 지키려는 것은 파일 경로가 아니라 그 분리다. */
