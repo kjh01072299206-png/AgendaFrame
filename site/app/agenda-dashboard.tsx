@@ -961,8 +961,11 @@ function headlineTokens(text: string) {
 function headlineSnippet(title: string, markers: string[], fallback: string) {
   const marker = markers.find((candidate) => title.includes(candidate));
   if (!marker) return fallback;
-  const start = Math.max(0, title.indexOf(marker) - 12);
-  const end = Math.min(title.length, title.indexOf(marker) + marker.length + 18);
+  const markerIndex = title.indexOf(marker);
+  const startBoundary = title.lastIndexOf(" ", Math.max(0, markerIndex - 12));
+  const endCandidate = title.indexOf(" ", markerIndex + marker.length + 18);
+  const start = startBoundary < 0 ? 0 : startBoundary + 1;
+  const end = endCandidate < 0 ? title.length : endCandidate;
   return title.slice(start, end).trim();
 }
 
@@ -994,7 +997,7 @@ function buildHeadlineSignals(evidence: HeadlineEvidence[], articles: Article[] 
       tokens,
       focusTerms: terms,
       commonTerms,
-      problem: terms.length ? `${terms.join("·")}을 제목의 중심에 둠` : "공통 제목 표현 중심",
+      problem: terms.length ? `${terms.join("·")} 표현을 제목의 중심에 둠` : "공통 제목 표현 중심",
       cause: headlineSnippet(title, headlineCauseWords, "제목에서 원인 연결어 미관측"),
       responsibility: headlineSnippet(title, headlineResponsibilityWords, "제목에서 책임 주체 미관측"),
       evaluation: headlineSnippet(title, headlineEvaluationWords, "제목에서 평가어 미관측"),
@@ -1012,7 +1015,7 @@ function headlineAxisText(signals: HeadlineSignal[]) {
   if (withFocus.length < 2) return "제목에서 공통으로 확인되는 표현이 중심이며, 서로 반대되는 초점은 제목만으로 확정하지 않습니다.";
   const left = withFocus[0];
   const right = [...withFocus].reverse().find((signal) => signal.source !== left.source) ?? withFocus[1];
-  return `${left.source}는 ‘${left.focusTerms.join("·")}’을 앞세웠고, ${right.source}는 ‘${right.focusTerms.join("·")}’을 덧붙여 사건의 범위를 다르게 잡았습니다.`;
+  return `${left.source}는 ‘${left.focusTerms.join("·")}’ 표현을 앞세웠고, ${right.source}는 ‘${right.focusTerms.join("·")}’ 표현을 덧붙여 사건의 범위를 다르게 잡았습니다.`;
 }
 
 function SourcingBars({ byOutlet }: { byOutlet: NonNullable<Comparison["sourceLens"]>["byOutlet"] }) {
@@ -1446,7 +1449,7 @@ function MediaComparisonView({ comparison, articles }: { comparison: Comparison;
   const headlineLead = headlineAxisText(signals);
   const lead = comparison.summary?.mainDifference || (bodyVariants.length >= 2 ? `${bodyVariants[0].summary} ↔ ${bodyVariants[1].summary}` : headlineLead);
   const articleBySource = new Map(articles.map((article) => [article.source, article]));
-  const sides = signals.filter((signal) => signal.focusTerms.length > 0).slice(0, 3);
+  const sides = signals.filter((signal) => signal.focusTerms.length > 0).slice(0, 2);
   const outletRows = signals.length ? signals : [...(comparison.sourceLens?.byOutlet ?? [])].map((entry) => ({
     source: entry.source,
     articleId: articleBySource.get(entry.source)?.id ?? `source:${entry.source}`,
@@ -1477,7 +1480,7 @@ function MediaComparisonView({ comparison, articles }: { comparison: Comparison;
         <header><div><p className="context-label">보도 갈래</p><h4 id="media-axis-title">{sides.length >= 2 ? "서로 다른 초점이 한 사건 안에서 맞섭니다" : "공통 보도와 갈린 표현을 함께 봅니다"}</h4></div><span className="media-axis-mark">A ↔ B</span></header>
         <p className="media-compare-lead-text">{headlineLead}</p>
         {commonTerms.length ? <p className="media-common-line"><b>공통으로 반복된 표현</b> {commonTerms.join(" · ")}</p> : null}
-        {sides.length >= 2 ? <div className="media-contrast-grid">{sides.map((side, index) => <article key={side.articleId} className={`media-side media-side-${index}`}><span>보도 갈래 {String.fromCharCode(65 + index)}</span><h5>{side.source}</h5><strong>{side.focusTerms.join(" · ")}</strong><p>{side.source}는 제목에서 {side.focusTerms.join("·")}을 앞세웠습니다. 같은 사건을 다른 범위로 읽게 만드는 지점입니다.</p><ComparisonSourceLinks outlets={[headlineSource(side)]} /></article>)}</div> : <p className="media-compare-muted">현재 표본에서는 본문 갈림을 확정할 만큼 독립적인 본문 근거가 충분하지 않습니다. 대신 제목에서 실제로 달라진 단어와 범위를 아래에 남겼습니다.</p>}
+        {sides.length >= 2 ? <div className="media-contrast-grid">{sides.map((side, index) => <article key={side.articleId} className={`media-side media-side-${index}`}><span>보도 갈래 {String.fromCharCode(65 + index)}</span><h5>{side.source}</h5><strong>{side.focusTerms.join(" · ")}</strong><p>{side.source}는 제목에서 {side.focusTerms.join("·")} 표현을 앞세웠습니다. 같은 사건을 다른 범위로 읽게 만드는 지점입니다.</p><ComparisonSourceLinks outlets={[headlineSource(side)]} /></article>)}</div> : <p className="media-compare-muted">현재 표본에서는 본문 갈림을 확정할 만큼 독립적인 본문 근거가 충분하지 않습니다. 대신 제목에서 실제로 달라진 단어와 범위를 아래에 남겼습니다.</p>}
       </section>
 
       <section className="media-compare-card" aria-labelledby="media-outlet-title">
