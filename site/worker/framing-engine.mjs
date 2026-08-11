@@ -234,6 +234,19 @@ const CONTROLLED_CONCEPTS = Object.freeze([
   { code: "citizens", pattern: /(?:시민|국민|주민|노동자|학생|피해자|유가족)/ },
 ]);
 
+const CONTROLLED_CONCEPT_LABELS = Object.freeze({
+  government: "정부·공공기관",
+  legislature_politics: "국회·정치권",
+  economy: "경제·시장",
+  rights_fairness: "권리·공정",
+  safety_health: "안전·건강",
+  law_justice: "법·사법",
+  welfare_livelihood: "복지·생활",
+  international_security: "국제·안보",
+  environment: "환경·에너지",
+  citizens: "시민·당사자",
+});
+
 const SOURCE_ROLE_RULES = Object.freeze([
   // Check anonymity first: "정부 관계자" is an unnamed source even though
   // the institution itself is governmental.
@@ -1185,6 +1198,214 @@ function buildFrameLens(profiles, metadataById) {
   };
 }
 
+function buildGenericFrameLens(profiles, metadataById) {
+  const byOutlet = new Map();
+  for (const profile of profiles) {
+    const articleId = String(profile.article.article_id);
+    const outletName = outletLabel(articleId, metadataById);
+    const outlet = byOutlet.get(outletName) ?? {
+      outlet: outletName,
+      articles: new Set(),
+      frames: new Map(GENERIC_FRAME_RULES.map((rule) => [rule.code, {
+        code: rule.code,
+        label: rule.label,
+        articles: new Set(),
+        sentence_count: 0,
+        evidence: [],
+      }])),
+    };
+    outlet.articles.add(articleId);
+    for (const descriptor of profile.secondary_descriptors?.generic_frames ?? []) {
+      const frame = outlet.frames.get(descriptor.code);
+      if (!frame) continue;
+      frame.articles.add(articleId);
+      frame.sentence_count += Number(descriptor.sentence_count ?? 0);
+      frame.evidence.push(...(descriptor.evidence ?? []).map((entry) => ({ article_id: articleId, ...entry })));
+    }
+    byOutlet.set(outletName, outlet);
+  }
+  return {
+    status: byOutlet.size >= 2 ? "available" : "partial",
+    taxonomy: "Semetko and Valkenburg generic frames",
+    taxonomy_version: "generic-frames-v1",
+    method_version: FRAMING_ENGINE_VERSION,
+    unit: "article_presence",
+    by_outlet: [...byOutlet.values()].map((outlet) => ({
+      outlet: outlet.outlet,
+      analyzed_article_count: outlet.articles.size,
+      frames: [...outlet.frames.values()].map((frame) => ({
+        code: frame.code,
+        label: frame.label,
+        article_count: frame.articles.size,
+        present: frame.articles.size > 0,
+        sentence_count: frame.sentence_count,
+        evidence: uniqueEvidence(frame.evidence).slice(0, 4),
+      })),
+    })),
+    caution: "갈등·인간적 관심·경제적 결과·도덕성·책임의 명시 표지를 기사별 존재 여부로 집계한 자동 코딩입니다.",
+  };
+}
+
+function buildCompositionClusters(profiles, metadataById) {
+  const grouped = new Map();
+  for (const profile of profiles) {
+    const articleId = String(profile.article.article_id);
+    const observed = DIMENSION_ORDER.filter((dimension) => {
+      const result = profile.dimensions?.[dimension];
+      return result?.status !== "not_observed"
+        && result?.model_status !== "conflicting"
+        && (result?.items ?? []).some((item) => item.voice?.kind === "journalist_narration");
+    });
+    const key = observed.length ? observed.join("+") : "not_observed";
+    const cluster = grouped.get(key) ?? {
+      key,
+      article_ids: [],
+      outlets: new Set(),
+      observed_dimensions: observed,
+      evidence: [],
+    };
+    cluster.article_ids.push(articleId);
+    cluster.outlets.add(outletLabel(articleId, metadataById));
+    for (const dimension of observed) {
+      for (const item of profile.dimensions?.[dimension]?.items ?? []) {
+        if (item.voice?.kind !== "journalist_narration" || !item.evidence) continue;
+        cluster.evidence.push({ article_id: articleId, ...item.evidence });
+      }
+    }
+    grouped.set(key, cluster);
+  }
+  const clusters = [...grouped.values()]
+    .sort((left, right) => right.article_ids.length - left.article_ids.length || left.key.localeCompare(right.key))
+    .map((cluster, index) => {
+      const labels = cluster.observed_dimensions.map((dimension) => DIMENSION_LABELS[dimension]);
+      return {
+        cluster_id: `composition-${index + 1}`,
+        signature: cluster.key,
+        title: labels.length ? `${labels.join("·")}이 함께 나타난 갈래` : "4기능의 명시 표현이 관측되지 않은 갈래",
+        summary: labels.length
+          ? `기사 서술에서 ${labels.join("·")} 요소가 함께 관측됐습니다.`
+          : "분석 가능한 본문에서 문제·원인·평가·대응을 직접 구성하는 기자 서술 표지가 관측되지 않았습니다.",
+        article_count: cluster.article_ids.length,
+        outlet_count: cluster.outlets.size,
+        article_ids: cluster.article_ids.sort(),
+        outlets: [...cluster.outlets].sort((left, right) => left.localeCompare(right, "ko")),
+        observed_dimensions: cluster.observed_dimensions,
+        evidence: uniqueComparisonEvidence(cluster.evidence).slice(0, 8),
+      };
+    });
+  return {
+    status: clusters.length ? "available" : "partial",
+    method_version: FRAMING_ENGINE_VERSION,
+    basis: "article_level_entman_function_presence",
+    clusters,
+    caution: "군집은 기사별 프레임 4기능의 명시적 기자 서술 관측 조합을 비교합니다. 매체의 고정 성향을 뜻하지 않습니다.",
+  };
+}
+
+function buildSemanticNetworkLens(profiles, metadataById, compositionClusters) {
+  const profileById = new Map(profiles.map((profile) => [String(profile.article.article_id), profile]));
+  const rawGroups = compositionClusters.clusters.map((cluster) => {
+    const edges = new Map();
+    for (const articleId of cluster.article_ids) {
+      const profile = profileById.get(String(articleId));
+      for (const association of profile?.secondary_descriptors?.controlled_associations ?? []) {
+        const key = `${association.source}::${association.target}`;
+        const edge = edges.get(key) ?? {
+          source: association.source,
+          target: association.target,
+          sentence_count: 0,
+        };
+        edge.sentence_count += Number(association.sentence_count ?? 0);
+        edges.set(key, edge);
+      }
+    }
+    const nodes = new Map();
+    for (const edge of edges.values()) {
+      nodes.set(edge.source, (nodes.get(edge.source) ?? 0) + edge.sentence_count);
+      nodes.set(edge.target, (nodes.get(edge.target) ?? 0) + edge.sentence_count);
+    }
+    return {
+      cluster_id: cluster.cluster_id,
+      title: cluster.title,
+      outlets: cluster.outlets,
+      article_count: cluster.article_count,
+      nodes,
+      edges: [...edges.values()].sort((left, right) => right.sentence_count - left.sentence_count || `${left.source}:${left.target}`.localeCompare(`${right.source}:${right.target}`)),
+    };
+  });
+  const nonEmptyGroups = rawGroups.filter((group) => group.nodes.size > 0);
+  const sharedNodes = new Set(CONTROLLED_CONCEPTS
+    .map((concept) => concept.code)
+    .filter((code) => nonEmptyGroups.length > 1 && nonEmptyGroups.every((group) => group.nodes.has(code))));
+  return {
+    status: nonEmptyGroups.length ? "available" : "partial",
+    method_version: FRAMING_ENGINE_VERSION,
+    basis: "same_sentence_controlled_concept_cooccurrence",
+    groups: rawGroups.map((group) => ({
+      cluster_id: group.cluster_id,
+      title: group.title,
+      outlets: group.outlets,
+      article_count: group.article_count,
+      nodes: [...group.nodes.entries()]
+        .map(([code, count]) => ({ code, label: CONTROLLED_CONCEPT_LABELS[code] ?? code, count, shared: sharedNodes.has(code) }))
+        .sort((left, right) => right.count - left.count || left.code.localeCompare(right.code))
+        .slice(0, 8),
+      edges: group.edges.slice(0, 12),
+    })),
+    limitations: [
+      "노드 크기는 같은 문장 연결에 참여한 누적 횟수, 선 굵기는 두 개념이 같은 문장에 함께 나온 횟수를 나타냅니다.",
+      "통제 어휘로 관측되지 않은 의미 관계는 표시하지 않으며 원문 문장과 단어 순서는 저장하지 않습니다.",
+    ],
+  };
+}
+
+function buildDeviceLens(profiles, metadataById) {
+  const byOutlet = new Map();
+  for (const profile of profiles) {
+    const articleId = String(profile.article.article_id);
+    const outletName = outletLabel(articleId, metadataById);
+    const outlet = byOutlet.get(outletName) ?? { outlet: outletName, articles: new Set(), devices: new Map() };
+    outlet.articles.add(articleId);
+    for (const item of profile.framing_devices ?? []) {
+      const device = outlet.devices.get(item.code) ?? {
+        code: item.code,
+        label: item.label,
+        articles: new Set(),
+        count: 0,
+        lead_articles: new Set(),
+        evidence: [],
+      };
+      if (Number(item.count ?? 0) > 0) device.articles.add(articleId);
+      device.count += Number(item.count ?? 0);
+      if (item.appears_in_lead === true) device.lead_articles.add(articleId);
+      device.evidence.push(...(item.evidence ?? []).map((entry) => ({ article_id: articleId, ...entry })));
+      outlet.devices.set(item.code, device);
+    }
+    byOutlet.set(outletName, outlet);
+  }
+  return {
+    status: byOutlet.size ? "available" : "partial",
+    method_version: FRAMING_ENGINE_VERSION,
+    by_outlet: [...byOutlet.values()].map((outlet) => ({
+      outlet: outlet.outlet,
+      analyzed_article_count: outlet.articles.size,
+      headline_alignment: null,
+      devices: [...outlet.devices.values()]
+        .filter((device) => device.count > 0)
+        .map((device) => ({
+          code: device.code,
+          label: device.label,
+          article_count: device.articles.size,
+          count: device.count,
+          lead_article_count: device.lead_articles.size,
+          evidence: uniqueEvidence(device.evidence).slice(0, 4),
+        }))
+        .sort((left, right) => right.article_count - left.article_count || right.count - left.count || left.code.localeCompare(right.code)),
+    })),
+    caution: "장치는 명시적인 수치·대조·과거 경과·개인 사례·평가적 제목·취재원 인용 표지를 집계합니다. 제목-본문 정렬과 시각 이미지는 별도 코딩 전까지 유보합니다.",
+  };
+}
+
 function buildReportingStyleLens(profiles, metadataById) {
   const NEGATIVE_EVALUATIONS = new Set(["negative_legitimacy_evaluation"]);
   const POSITIVE_EVALUATIONS = new Set(["positive_legitimacy_evaluation"]);
@@ -1953,10 +2174,15 @@ export function buildIssueFrameComparison(profiles, articleMetadata = [], option
   }));
   const axes = DIMENSION_ORDER.map((dimension) => buildAxis(dimension, profiles, metadataById));
   const sourceLens = buildSourceLens(profiles, metadataById);
+  const compositionClusters = buildCompositionClusters(profiles, metadataById);
   const analysisModules = {
     frame_composition: buildFrameLens(profiles, metadataById),
+    generic_frames: buildGenericFrameLens(profiles, metadataById),
     reporting_style: buildReportingStyleLens(profiles, metadataById),
     morphology: buildMorphologyLens(profiles, metadataById),
+    composition_clusters: compositionClusters,
+    semantic_networks: buildSemanticNetworkLens(profiles, metadataById, compositionClusters),
+    devices: buildDeviceLens(profiles, metadataById),
   };
   const scopeCounts = countBy(profiles, (profile) => profile.scope.code);
   const contextCounts = countBy(profiles, (profile) => profile.context_depth.level);

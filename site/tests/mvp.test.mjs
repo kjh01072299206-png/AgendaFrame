@@ -582,6 +582,10 @@ test("resumes public body analysis across batches and stores only derived signal
   const comparisonInsert = statements.find((statement) => statement.sql.includes("INSERT INTO issue_frame_comparisons"));
   const storedComparison = JSON.parse(comparisonInsert.parameters[2]);
   assert.ok(storedComparison.analysisModules?.frameComposition);
+  assert.ok(storedComparison.analysisModules?.genericFrames);
+  assert.ok(storedComparison.analysisModules?.compositionClusters);
+  assert.ok(storedComparison.analysisModules?.semanticNetworks);
+  assert.ok(storedComparison.analysisModules?.devices);
   assert.ok(storedComparison.analysisModules?.reportingStyle);
   assert.ok(storedComparison.analysisModules?.morphology);
   assert.ok(storedComparison.analysisModules.morphology.byOutlet.every((outlet) => Number.isInteger(outlet.negationCount)));

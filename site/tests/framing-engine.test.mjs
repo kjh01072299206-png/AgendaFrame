@@ -496,6 +496,36 @@ test("aggregates evidence-grounded analysis modules and suppresses unsupported v
   }
 });
 
+test("builds generic-frame, composition-cluster, semantic-network, and device modules without raw text", async () => {
+  const profiles = await Promise.all([
+    analyzeArticleFraming({
+      articleId: "extended-alpha",
+      title: "시민 안전 대책",
+      bodyText: "정부는 시민 안전 피해와 예산 비용 문제를 책임져야 한다. 피해자 지원을 강화해야 한다.",
+    }),
+    analyzeArticleFraming({
+      articleId: "extended-beta",
+      title: "안전 책임 공방",
+      bodyText: "정부와 국회는 시민 안전과 법적 책임을 두고 갈등했다. 10명이 피해를 입었다.",
+    }),
+  ]);
+  const comparison = buildIssueFrameComparison(profiles, [
+    { articleId: "extended-alpha", sourceId: "alpha", sourceName: "알파일보", mediaGroupId: "alpha" },
+    { articleId: "extended-beta", sourceId: "beta", sourceName: "베타신문", mediaGroupId: "beta" },
+  ]);
+  const modules = comparison.analysis_modules;
+
+  assert.equal(modules.generic_frames.by_outlet.length, 2);
+  assert.ok(modules.generic_frames.by_outlet.every((outlet) => outlet.frames.length === 5));
+  assert.ok(modules.generic_frames.by_outlet.some((outlet) => outlet.frames.some((frame) => frame.code === "responsibility" && frame.present)));
+  assert.ok(modules.composition_clusters.clusters.length >= 1);
+  assert.equal(modules.composition_clusters.clusters.flatMap((cluster) => cluster.article_ids).length, 2);
+  assert.ok(modules.semantic_networks.groups.some((group) => group.edges.some((edge) => edge.sentence_count > 0)));
+  assert.ok(modules.semantic_networks.groups.flatMap((group) => group.nodes).some((node) => node.label === "정부·공공기관"));
+  assert.ok(modules.devices.by_outlet.some((outlet) => outlet.devices.some((device) => device.code === "statistics")));
+  assert.doesNotMatch(JSON.stringify(modules), /정부는 시민 안전 피해와 예산 비용 문제/);
+});
+
 test("validator rejects conventional raw-text carrier fields", async () => {
   const profile = await analyzeArticleFraming({
     articleId: "validation-1",
