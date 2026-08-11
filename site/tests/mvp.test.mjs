@@ -5,7 +5,7 @@ import test from "node:test";
 import sourcePanel from "../data/sources.json" with { type: "json" };
 import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, PUBLIC_AGENDA_CATEGORIES, analyzeArticles, classifyAgendaCategory, cleanHeadlineToIssueTitle, titleTokens } from "../worker/analysis.mjs";
 import { getAnalysisProvider } from "../worker/analysis-provider.mjs";
-import { approvedClusterApprovals, calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, clusterArticleSetSha256, clusterArticleSignature, configureSourcePanel, enumerateKstDates, extractArticleBodyFromHtml, handleApiRequest, resolveArticleFetchSource, resolveClusterApproval, validateAnalyzedImportRows, validateImportRows, validateStructuredImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
+import { approvedClusterApprovals, calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, clusterArticleSetSha256, clusterArticleSignature, configureSourcePanel, enumerateKstDates, extractArticleBodyFromHtml, handleApiRequest, resolveArticleFetchSource, resolveClusterApproval, resolveContentEvidenceCount, validateAnalyzedImportRows, validateImportRows, validateStructuredImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
 
 configureSourcePanel(sourcePanel);
 
@@ -16,6 +16,11 @@ test("resolves broadcaster article fetches through the approved research panel",
   assert.deepEqual(kbs?.domains, ["kbs.co.kr"]);
   assert.equal(sbs?.active, true);
   assert.deepEqual(sbs?.domains, ["sbs.co.kr"]);
+});
+
+test("counts every structured article profile as available body evidence", () => {
+  assert.equal(resolveContentEvidenceCount({ contentAvailableCount: 3, structuredProfileCount: 6 }), 6);
+  assert.equal(resolveContentEvidenceCount({ contentAvailableCount: 5, structuredProfileCount: 2 }), 5);
 });
 
 test("builds the real React dashboard and admin application", async () => {

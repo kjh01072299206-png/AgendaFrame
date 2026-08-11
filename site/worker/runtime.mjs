@@ -218,9 +218,16 @@ function responseMeta(run = null, runtimeMode = "demo", comparisonLineage = null
   };
 }
 
+export function resolveContentEvidenceCount(row) {
+  return Math.max(
+    Number(row?.contentAvailableCount ?? 0),
+    Number(row?.structuredProfileCount ?? 0),
+  );
+}
+
 function publicIssue(row, run, configuredSources = 22, preserveScore = false) {
   const placementObservedCount = Number(row.placementObservedCount ?? 0);
-  const contentAvailableCount = Number(row.contentAvailableCount ?? 0);
+  const contentAvailableCount = resolveContentEvidenceCount(row);
   const structuredProfileCount = Number(row.structuredProfileCount ?? 0);
   const legacy = !COMPATIBLE_ANALYSIS_MODELS.has(run?.modelVersion);
   const issue = { ...row };
