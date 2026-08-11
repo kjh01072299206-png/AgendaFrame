@@ -169,8 +169,8 @@ test("keeps the initial-five reader surface separate from site-wide tools", asyn
   const selfCheck = await readFile(new URL("../app/(shell)/tools/self-check/page.tsx", import.meta.url), "utf8");
   const community = await readFile(new URL("../app/(shell)/tools/community/page.tsx", import.meta.url), "utf8");
 
-  // 홈은 사안 하나를 설명하지 않고 그날 전체를 집계한다
-  assert.match(home, /deriveDay/);
+  // 홈은 최신 12개 매체 수집·분석 화면으로 곧바로 이동한다.
+  assert.match(home, /redirect\("\/dashboard"\)/);
   assert.doesNotMatch(home, /InitialFiveExperience/);
   // 단일 페이지 리더는 자기 라우트에만 남는다
   assert.match(legacyReaderRoute, /InitialFiveExperience/);
