@@ -116,6 +116,79 @@ export interface LiveFrameCompositionModule {
   caution?: string | null;
 }
 
+export interface LiveGenericFramesModule {
+  status: string;
+  methodVersion: string;
+  taxonomyVersion: string;
+  unit: string;
+  byOutlet: Array<{
+    source: string;
+    analyzedArticles: number;
+    frames: Array<{
+      code: string;
+      label: string;
+      articleCount: number;
+      present: boolean;
+      sentenceCount: number;
+      evidenceRefs: LiveComparisonEvidence[];
+    }>;
+  }>;
+  caution?: string | null;
+}
+
+export interface LiveCompositionClustersModule {
+  status: string;
+  methodVersion: string;
+  basis: string;
+  clusters: Array<{
+    clusterId: string;
+    signature: string;
+    title: string;
+    summary: string;
+    articleCount: number;
+    outletCount: number;
+    articleIds: string[];
+    outlets: string[];
+    observedDimensions: string[];
+    evidenceRefs: LiveComparisonEvidence[];
+  }>;
+  caution?: string | null;
+}
+
+export interface LiveSemanticNetworksModule {
+  status: string;
+  methodVersion: string;
+  basis: string;
+  groups: Array<{
+    clusterId: string;
+    title: string;
+    outlets: string[];
+    articleCount: number;
+    nodes: Array<{ code: string; label: string; count: number; shared: boolean }>;
+    edges: Array<{ source: string; target: string; sentenceCount: number }>;
+  }>;
+  limitations: string[];
+}
+
+export interface LiveDevicesModule {
+  status: string;
+  methodVersion: string;
+  byOutlet: Array<{
+    source: string;
+    analyzedArticles: number;
+    headlineAlignment: string | null;
+    devices: Array<{
+      code: string;
+      label: string;
+      articleCount: number;
+      count: number;
+      leadArticleCount: number;
+      evidenceRefs: LiveComparisonEvidence[];
+    }>;
+  }>;
+  caution?: string | null;
+}
+
 export interface LiveReportingStyleModule {
   status: string;
   methodVersion: string;
@@ -222,6 +295,10 @@ export interface LiveIssueDetail {
     };
     analysisModules?: {
       frameComposition: LiveFrameCompositionModule;
+      genericFrames?: LiveGenericFramesModule;
+      compositionClusters?: LiveCompositionClustersModule;
+      semanticNetworks?: LiveSemanticNetworksModule;
+      devices?: LiveDevicesModule;
       reportingStyle: LiveReportingStyleModule;
       morphology: LiveMorphologyModule;
     };

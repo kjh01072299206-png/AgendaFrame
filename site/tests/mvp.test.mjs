@@ -213,8 +213,12 @@ test("keeps the initial-five reader surface separate from site-wide tools", asyn
   ]) assert.match(liveIssue, new RegExp(citation));
   assert.match(liveIssue, /매체별 성향을 나누는 표가 아닙니다/);
   assert.match(liveIssue, /사건\+구조/);
-  assert.match(liveIssue, /코딩 진행 중/);
-  assert.match(liveIssue, /리드문 코딩 추가 후 실측/);
+  assert.match(liveIssue, /function GenericFramePanel/);
+  assert.match(liveIssue, /function SemanticNetworksPanel/);
+  assert.match(liveIssue, /관측 기준 충족 없음/);
+  assert.match(liveIssue, /제목-본문 정렬은 별도 코딩 전/);
+  assert.doesNotMatch(liveIssue, /<FrameCard number="04"[^>]*>[\s\S]{0,120}<CodingHold/);
+  assert.doesNotMatch(liveIssue, /<FrameCard number="07"[^>]*>[\s\S]{0,120}<CodingHold/);
   assert.doesNotMatch(liveIssue, /이 사안의 프레이밍/);
   assert.doesNotMatch(liveIssue, /현재 관측된 표현 근거/);
   assert.doesNotMatch(liveIssue, /프레임 요소별 판단/);
