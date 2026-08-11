@@ -18,7 +18,7 @@ import {
 export const ARTICLE_FRAME_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v1";
 export const AI_ARTICLE_FRAME_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v2";
 export const ISSUE_FRAME_COMPARISON_SCHEMA = "agendaframe.issue-frame-comparison.v1";
-export const FRAMING_ENGINE_VERSION = "korean-evidence-rules-v2";
+export const FRAMING_ENGINE_VERSION = "korean-evidence-rules-v3";
 
 const DIMENSION_ORDER = Object.freeze([
   "problem_definition",
@@ -36,7 +36,7 @@ const DIMENSION_LABELS = Object.freeze({
   treatment_recommendation: "해법·처방",
 });
 
-const REPORTING_VERBS = /(?:말했|밝혔|설명했|주장했|지적했|강조했|전했|반박했|촉구했|요구했|평가했|내다봤|덧붙였|호소했|발표했|논평했|보도했|알렸|답했|언급했)/;
+const REPORTING_VERBS = /(?:말했|밝혔|설명했|주장했|지적했|강조했|전했|반박했|촉구했|요구했|평가했|내다봤|덧붙였|호소했|발표했|논평했|보도했|알렸|답했|언급했|제시했|제안했|분석했|진단했|비판했|제기했|주문했|당부했|전망했)/;
 const ATTRIBUTION_MARKERS = /(?:에 따르면|자료에 따르면|보고서에 따르면|입장문에서|논평에서|성명에서|보도자료에서)/;
 const DIRECT_QUOTE_RE = /["“‘][^"”’]{2,}["”’]/g;
 
@@ -193,6 +193,87 @@ const DIMENSION_RULES = Object.freeze({
   ],
 });
 
+// The first rule set intentionally stays narrow: it only emits a dimension
+// when a well-known phrase makes the interpretation explicit.  That is safe,
+// but it left ordinary straight-news copy almost entirely blank (for example,
+// a report that says an investigation procedure became controversial, or
+// that a follow-up measure was demanded).  These supplemental rules widen the
+// observation surface without making a semantic/ideological claim.  Every
+// match still goes through classifyVoice() and keeps a sentence locator plus
+// a salted hash; the public result never stores the matched sentence.
+const CONTEXTUAL_DIMENSION_RULES = Object.freeze({
+  problem_definition: [
+    {
+      code: "investigation_procedure_focus",
+      pattern: /(?:압수수색|구속영장|기소|재판|판결|수사|조사).{0,28}(?:절차|과정|대상|착수|진행|확대|논란|공방|문제|결과|결정)|(?:절차|과정|논란|공방|문제).{0,28}(?:압수수색|구속영장|기소|재판|판결|수사|조사)/u,
+      paraphrase: "수사·법 집행의 절차와 진행을 사건의 핵심 쟁점으로 다룹니다.",
+    },
+    {
+      code: "institutional_response_problem",
+      pattern: /(?:대응|관리|감독|수습|운영|조치|처리).{0,22}(?:소홀|부실|미흡|늦장|지연|실패|허점|공백|혼선|문제|논란)|(?:소홀|부실|미흡|늦장|지연|실패|허점|공백|혼선|문제|논란).{0,22}(?:대응|관리|감독|수습|운영|조치|처리)/u,
+      paraphrase: "기관의 대응·관리 과정에서 드러난 공백이나 미흡을 핵심 문제로 다룹니다.",
+    },
+    {
+      code: "public_consequence_focus",
+      pattern: /(?:피해|불안|혼란|혼선|차질|파장|후폭풍|우려).{0,20}(?:커|확산|증가|이어|불거|발생|번지|높아)|(?:커지|확산|증가|이어지|불거지).{0,20}(?:피해|불안|혼란|혼선|차질|파장|우려)/u,
+      paraphrase: "사건이 시민·현장에 미친 피해와 파장을 핵심 문제로 다룹니다.",
+    },
+  ],
+  causal_interpretation: [
+    {
+      code: "causal_connector",
+      pattern: /(?:때문에|탓에|탓으로|원인은|원인으로|배경은|배경에는|영향으로|영향 때문에|으로 인해|로 인해|에서 비롯|부터 비롯|초래한|낳은|촉발한)/u,
+      paraphrase: "사건의 원인이나 배경을 인과 관계로 연결해 설명합니다.",
+    },
+    {
+      code: "structural_condition_cause",
+      pattern: /(?:구조적|제도적|정책상|행정상|관리상|운영상|현장).{0,24}(?:문제|한계|배경|원인|허점|공백|조건)|(?:문제|한계|배경|원인|허점|공백|조건).{0,24}(?:구조적|제도적|정책상|행정상|관리상|운영상)/u,
+      paraphrase: "제도·운영·현장 조건을 사건의 배경이나 원인으로 제시합니다.",
+    },
+    {
+      code: "actor_decision_cause",
+      pattern: /(?:방치|묵인|무시|강행|늦장|소극적|무리한|잘못된).{0,24}(?:대응|결정|조치|행동|관리|정책|수사)|(?:대응|결정|조치|행동|관리|정책|수사).{0,24}(?:방치|묵인|무시|강행|늦장|소극적|무리한|잘못된)/u,
+      paraphrase: "행위자의 대응·결정·조치를 사건 전개의 원인으로 연결합니다.",
+    },
+  ],
+  responsibility_attribution: [
+    {
+      code: "institutional_failure_responsibility",
+      pattern: /(?:관리|감독|대응|수습|운영|조치|점검|검증).{0,22}(?:소홀|부실|미흡|늦장|실패|방치|책임|의무)|(?:소홀|부실|미흡|늦장|실패|방치|책임|의무).{0,22}(?:관리|감독|대응|수습|운영|조치|점검|검증)/u,
+      paraphrase: "기관의 관리·감독·대응 의무를 책임 쟁점으로 제시합니다.",
+    },
+    {
+      code: "accountability_demand",
+      pattern: /(?:책임자|책임론|문책|사과|해명|진상규명|진상 규명|규명|감사|처벌).{0,22}(?:요구|촉구|필요|나서|해야|목소리|제기)|(?:요구|촉구|필요|나서|해야|목소리|제기).{0,22}(?:책임자|책임론|문책|사과|해명|진상규명|진상 규명|규명|감사|처벌)/u,
+      paraphrase: "책임자 확인·해명·조사와 같은 사후 책임 조치를 쟁점으로 제시합니다.",
+    },
+  ],
+  moral_evaluation: [
+    {
+      code: "critical_assessment_signal",
+      pattern: /(?:무리한|졸속|불투명|부실한|미흡한|무책임한|부당한|위법한|위헌적|논란이|우려가|의문이|비판이|반발이).{0,20}(?:제기|커|확산|이어|불거|나오|높아|있)|(?:미흡했다는|미흡하다는|부족했다는|부족하다는|부적절하다는|무리했다는).{0,20}(?:평가|지적|비판|의견)/u,
+      paraphrase: "결정이나 대응의 정당성·적절성에 비판적 평가가 붙습니다.",
+    },
+    {
+      code: "public_concern_assessment",
+      pattern: /(?:우려|불안|혼란|피해|논란|파장).{0,18}(?:키우|가중|심화|확대|낳|부추|초래|보여|드러)/u,
+      paraphrase: "사건의 결과를 공공의 우려·피해·혼란이라는 기준으로 평가합니다.",
+    },
+  ],
+  treatment_recommendation: [
+    {
+      code: "followup_action",
+      pattern: /(?:후속|재발 방지|재발방지|진상 규명|진상규명|책임 규명|대책|방안|조치|대응).{0,24}(?:마련|추진|강화|확대|정비|검토|필요|해야|나서|요구|촉구)|(?:마련|추진|강화|확대|정비|검토|필요|해야|나서|요구|촉구).{0,24}(?:후속|재발 방지|재발방지|진상 규명|진상규명|책임 규명|대책|방안|조치|대응)|(?:고칠|개선할|보완할|바꿀|정비할|바로잡을).{0,20}(?:필요|해야|것)/u,
+      paraphrase: "후속 조치·재발 방지·진상 규명 같은 대응을 해법으로 제시합니다.",
+    },
+    {
+      code: "institutional_response_remedy",
+      pattern: /(?:지원|보상|구제|안전|감독|점검|관리|수습|협의|공론화).{0,24}(?:강화|확대|마련|보장|정비|철저|필요|해야|추진)|(?:강화|확대|마련|보장|정비|철저|필요|해야|추진).{0,24}(?:지원|보상|구제|안전|감독|점검|관리|수습|협의|공론화)/u,
+      paraphrase: "지원·감독·협의 등 제도적 대응 경로를 해법으로 제시합니다.",
+    },
+  ],
+});
+
 const GENERIC_FRAME_RULES = Object.freeze([
   { code: "conflict", label: "갈등", patterns: [/(?:충돌|공방|대립|갈등|맞서|반발|비판|논쟁)/, /(?:여야|노사|정부와 야당).{0,18}(?:대립|공방|충돌)/] },
   { code: "responsibility", label: "책임", patterns: [/(?:책임|책임론|잘못|방치|문책|사과|해명)/] },
@@ -338,12 +419,16 @@ function findQuoteRanges(text) {
 }
 
 function sanitizeActorName(value) {
-  const cleaned = String(value ?? "")
+  const initial = String(value ?? "")
     .replace(/["“”‘’()[\]{}<>]/g, " ")
-    .replace(/(?:은|는|이|가|측은|측이|관계자는|관계자가|에 따르면)$/u, "")
     .replace(/^(?:그러나|하지만|또한|한편|이어|이에|다만)\s+/u, "")
     .replace(/\s+/g, " ")
     .trim();
+  // "전문가" is a source-role noun, not the noun "전문" followed by the
+  // subject particle "가". Keep the final syllable for role classification.
+  const cleaned = initial.endsWith("전문가")
+    ? initial
+    : initial.replace(/(?:은|는|이|가|측은|측이|관계자는|관계자가|에 따르면)$/u, "");
   if (!cleaned || cleaned.length > 28 || /^[0-9]+$/.test(cleaned)) return null;
   const tokens = cleaned.split(" ");
   return tokens.slice(Math.max(0, tokens.length - 4)).join(" ");
@@ -359,6 +444,8 @@ function extractSpeaker(sentenceText) {
   const beforeQuote = Number.isFinite(quoteStart) ? sentenceText.slice(0, quoteStart) : sentenceText;
   const anonymousRelation = beforeQuote.trim().match(/([가-힣A-Za-z0-9·][가-힣A-Za-z0-9·\s]{0,20}?)\s*관계자(?:는|가)$/u);
   if (anonymousRelation) return sanitizeActorName(`${anonymousRelation[1]} 관계자`);
+  const protectedRoleSubject = beforeQuote.trim().match(/((?:전문가|연구원|학자|교수|연구소|평가단))\s*(?:은|는|이|가)$/u);
+  if (protectedRoleSubject) return sanitizeActorName(protectedRoleSubject[1]);
   const subjectMatch = beforeQuote.trim().match(/([가-힣A-Za-z0-9·][가-힣A-Za-z0-9·\s]{0,27}?)(?:관계자는|관계자가|측은|측이|은|는|이|가)$/u);
   if (subjectMatch) return sanitizeActorName(subjectMatch[1]);
 
@@ -368,6 +455,8 @@ function extractSpeaker(sentenceText) {
   const reportingIndex = sentenceText.search(REPORTING_VERBS);
   if (reportingIndex >= 0) {
     const prefix = sentenceText.slice(0, reportingIndex);
+    const protectedReporting = prefix.match(/((?:전문가|연구원|학자|교수|연구소|평가단))\s*(?:은|는|이|가)/u);
+    if (protectedReporting) return sanitizeActorName(protectedReporting[1]);
     const fallback = prefix.match(/([가-힣A-Za-z0-9·][가-힣A-Za-z0-9·\s]{0,27}?)(?:관계자는|관계자가|측은|측이|은|는|이|가)[^.!?]{0,80}$/u);
     if (fallback) return sanitizeActorName(fallback[1]);
   }
@@ -427,8 +516,12 @@ async function extractDimensions(articleId, sentences) {
   for (const dimension of DIMENSION_ORDER) {
     const items = [];
     const seenCodeScopes = new Set();
+    const rules = [
+      ...(DIMENSION_RULES[dimension] ?? []),
+      ...(CONTEXTUAL_DIMENSION_RULES[dimension] ?? []),
+    ];
     for (const sentence of sentences) {
-      for (const rule of DIMENSION_RULES[dimension]) {
+      for (const rule of rules) {
         const match = rule.pattern.exec(sentence.text);
         rule.pattern.lastIndex = 0;
         if (!match) continue;

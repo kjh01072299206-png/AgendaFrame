@@ -136,6 +136,58 @@ test("matches Policy descriptors on normalized lemmas instead of Korean substrin
   assert.ok(grounded.secondary_descriptors.policy_frames.some((descriptor) => descriptor.code === "health_safety"));
 });
 
+test("expands ordinary body wording into evidence-backed framing dimensions", async () => {
+  const profile = await analyzeArticleFraming({
+    articleId: "contextual-dimension-expansion",
+    title: "수사 절차 논란과 후속 대책",
+    bodyText: [
+      "압수수색 절차의 적법성 논란이 커졌다.",
+      "관리상 허점 때문에 현장 혼선이 이어졌다.",
+      "감독 소홀에 대한 책임을 물어야 한다는 지적이 나왔다.",
+      "무리한 대응이라는 비판이 제기됐다.",
+      "재발 방지 대책을 마련해야 한다.",
+    ].join("\n\n"),
+  });
+
+  for (const [dimension, code] of [
+    ["problem_definition", "investigation_procedure_focus"],
+    ["causal_interpretation", "causal_connector"],
+    ["responsibility_attribution", "institutional_failure_responsibility"],
+    ["moral_evaluation", "critical_assessment_signal"],
+    ["treatment_recommendation", "followup_action"],
+  ]) {
+    const item = profile.dimensions[dimension].items.find((entry) => entry.code === code);
+    assert.ok(item, `${dimension} should observe ${code}`);
+    assert.equal(item.voice.kind, "journalist_narration");
+    assert.match(item.evidence.sentence_sha256, /^[a-f0-9]{64}$/);
+    assert.ok(item.evidence.locator.paragraph >= 1);
+  }
+
+  const serialized = JSON.stringify(profile);
+  assert.doesNotMatch(serialized, /압수수색 절차의 적법성 논란이 커졌다/);
+  assert.equal(profile.engine.semantic_ai, false);
+});
+
+test("keeps expanded signals attributed when a source presents the interpretation", async () => {
+  const profile = await analyzeArticleFraming({
+    articleId: "contextual-source-boundary",
+    title: "전문가 평가와 제도 개선",
+    bodyText: [
+      "전문가는 대응이 미흡했다는 평가를 제시했다.",
+      "전문가는 제도를 고칠 필요가 있다고 제안했다.",
+    ].join("\n\n"),
+  });
+
+  const evaluations = profile.dimensions.moral_evaluation.items;
+  assert.ok(evaluations.some((item) => item.code === "critical_assessment_signal"));
+  assert.ok(evaluations.every((item) => item.voice.kind === "indirect_source"));
+  assert.ok(evaluations.every((item) => item.voice.speaker_role === "expert_research"));
+  const remedies = profile.dimensions.treatment_recommendation.items;
+  assert.ok(remedies.some((item) => item.code === "followup_action"));
+  assert.ok(remedies.every((item) => item.voice.kind === "indirect_source"));
+  assert.ok(remedies.every((item) => item.voice.speaker_role === "expert_research"));
+});
+
 test("returns evidence fingerprints and never leaks raw body or exact sentences", async () => {
   const uniqueSentence = "절대로 공개 결과에 그대로 남으면 안 되는 고유 문장 7f9d입니다.";
   const bodyText = [

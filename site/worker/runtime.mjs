@@ -23,6 +23,10 @@ const PUBLIC_API_SCHEMA_VERSION = publicApiSchema["x-api-version"];
 const PROMPT_VERSION = "framing-codebook-v6";
 const EVALUATION_DATASET_VERSION = "not_configured";
 const COMPATIBLE_ANALYSIS_MODELS = new Set([ANALYSIS_MODEL_VERSION, "agenda-rules-v4", "agenda-rules-v3", "agenda-rules-v2"]);
+// Existing reviewed semantic imports remain readable after the v3 rule
+// expansion. New structured imports are written with v3, while v2 profiles
+// are accepted only as a backward-compatible lineage value.
+const SUPPORTED_COMPARISON_ENGINE_VERSIONS = new Set([FRAMING_ENGINE_VERSION, "korean-evidence-rules-v2"]);
 const PUBLIC_AGENDA_CATEGORY_SET = new Set(PUBLIC_AGENDA_CATEGORIES);
 const SHA256_HEX_PATTERN = /^[a-f0-9]{64}$/;
 const SEMANTIC_TEXT_SCOPES = new Set(["provider_export", "provider_excerpt", "transient_public_page_extract"]);
@@ -1470,7 +1474,7 @@ function validateSemanticProfileLineage(profile, context = "semantic profile") {
   if (analysisSchemaVersion !== String(profile.schema_version ?? "")) {
     throw new Error(`${context}의 analysis_schema_version이 profile.schema_version과 일치하지 않습니다.`);
   }
-  if (comparisonEngineVersion !== FRAMING_ENGINE_VERSION) {
+  if (!SUPPORTED_COMPARISON_ENGINE_VERSIONS.has(comparisonEngineVersion)) {
     throw new Error(`${context}의 comparison_engine_version이 현재 비교 엔진과 일치하지 않습니다.`);
   }
   return {
