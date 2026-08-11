@@ -1450,6 +1450,11 @@ function MediaComparisonView({ comparison, articles }: { comparison: Comparison;
   const lead = comparison.summary?.mainDifference || (bodyVariants.length >= 2 ? `${bodyVariants[0].summary} ↔ ${bodyVariants[1].summary}` : headlineLead);
   const articleBySource = new Map(articles.map((article) => [article.source, article]));
   const sides = signals.filter((signal) => signal.focusTerms.length > 0).slice(0, 2);
+  const bodyContrastVariants = (comparison.axes ?? [])
+    .find((axis) => axis.dimension === "problem_definition")?.variants
+    .filter((variant) => variant.summary && variant.outlets.length)
+    .slice(0, 2) ?? [];
+  const hasBodyContrast = bodyContrastVariants.length >= 2;
   const outletRows = signals.length ? signals : [...(comparison.sourceLens?.byOutlet ?? [])].map((entry) => ({
     source: entry.source,
     articleId: articleBySource.get(entry.source)?.id ?? `source:${entry.source}`,
@@ -1473,14 +1478,14 @@ function MediaComparisonView({ comparison, articles }: { comparison: Comparison;
           <h3 id="media-compare-title">{lead || "매체별 제목과 본문에서 강조점이 갈리는 지점을 비교합니다."}</h3>
           <p>한쪽은 특정 행위·인물·피해를 전면에 놓고, 다른 쪽은 제도·맥락·후속 절차를 덧붙이는 식으로 보도 초점이 갈릴 수 있습니다. 아래 문장은 확인된 기사 표현을 바탕으로 만든 비교입니다.</p>
         </div>
-        <div className="media-compare-meta"><span><b>{outletRows.length}</b>개 매체</span><span><b>{articles.length}</b>건 기사</span><span><b>{Math.min(3, sides.length || bodyVariants.length)}</b>개 갈림 축</span><span><b>{comparison.evidenceBasis === "headline_metadata_only" ? "제목" : "본문·제목"}</b> 근거</span></div>
+        <div className="media-compare-meta"><span><b>{outletRows.length}</b>개 매체</span><span><b>{articles.length}</b>건 기사</span><span><b>{Math.min(3, hasBodyContrast ? bodyContrastVariants.length : sides.length || bodyVariants.length)}</b>개 갈림 축</span><span><b>{comparison.evidenceBasis === "headline_metadata_only" ? "제목" : "본문·제목"}</b> 근거</span></div>
       </section>
 
       <section className="media-compare-card media-compare-axis" aria-labelledby="media-axis-title">
-        <header><div><p className="context-label">보도 갈래</p><h4 id="media-axis-title">{sides.length >= 2 ? "서로 다른 초점이 한 사건 안에서 맞섭니다" : "공통 보도와 갈린 표현을 함께 봅니다"}</h4></div><span className="media-axis-mark">A ↔ B</span></header>
+        <header><div><p className="context-label">보도 갈래</p><h4 id="media-axis-title">{hasBodyContrast || sides.length >= 2 ? "서로 다른 초점이 한 사건 안에서 맞섭니다" : "공통 보도와 갈린 표현을 함께 봅니다"}</h4></div><span className="media-axis-mark">A ↔ B</span></header>
         <p className="media-compare-lead-text">{headlineLead}</p>
         {commonTerms.length ? <p className="media-common-line"><b>공통으로 반복된 표현</b> {commonTerms.join(" · ")}</p> : null}
-        {sides.length >= 2 ? <div className="media-contrast-grid">{sides.map((side, index) => <article key={side.articleId} className={`media-side media-side-${index}`}><span>보도 갈래 {String.fromCharCode(65 + index)}</span><h5>{side.source}</h5><strong>{side.focusTerms.join(" · ")}</strong><p>{side.source}는 제목에서 {side.focusTerms.join("·")} 표현을 앞세웠습니다. 같은 사건을 다른 범위로 읽게 만드는 지점입니다.</p><ComparisonSourceLinks outlets={[headlineSource(side)]} /></article>)}</div> : <p className="media-compare-muted">현재 표본에서는 본문 갈림을 확정할 만큼 독립적인 본문 근거가 충분하지 않습니다. 대신 제목에서 실제로 달라진 단어와 범위를 아래에 남겼습니다.</p>}
+        {hasBodyContrast ? <div className="media-contrast-grid">{bodyContrastVariants.map((variant, index) => <article key={variant.groupId} className={`media-side media-side-${index}`}><span>보도 갈래 {String.fromCharCode(65 + index)} · 본문 분석축</span><h5>{[...new Set(variant.outlets.map((outlet) => outlet.source))].join(" · ")}</h5><strong>{variant.summary}</strong><p>이 갈래는 문제 정의를 이렇게 묶어 설명합니다. 반대쪽 갈래와 함께 읽을 때 같은 사건의 초점 차이가 드러납니다.</p><ComparisonSourceLinks outlets={variant.outlets.slice(0, 4)} /></article>)}</div> : sides.length >= 2 ? <div className="media-contrast-grid">{sides.map((side, index) => <article key={side.articleId} className={`media-side media-side-${index}`}><span>보도 갈래 {String.fromCharCode(65 + index)} · 제목 단서</span><h5>{side.source}</h5><strong>{side.focusTerms.join(" · ")}</strong><p>{side.source}는 제목에서 {side.focusTerms.join("·")} 표현을 앞세웠습니다. 같은 사건을 다른 범위로 읽게 만드는 지점입니다.</p><ComparisonSourceLinks outlets={[headlineSource(side)]} /></article>)}</div> : <p className="media-compare-muted">현재 표본에서는 본문 갈림을 확정할 만큼 독립적인 본문 근거가 충분하지 않습니다. 대신 제목에서 실제로 달라진 단어와 범위를 아래에 남겼습니다.</p>}
       </section>
 
       <section className="media-compare-card" aria-labelledby="media-outlet-title">
