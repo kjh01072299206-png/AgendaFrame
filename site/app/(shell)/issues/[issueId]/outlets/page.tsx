@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { getInitialFiveIssueBundle } from "../../../../../lib/initial-five/artifacts";
+import { safeDecode } from "../../../../../lib/initial-five/derive";
 import { protoIssue } from "../../../../../lib/proto";
 import {
   ArticleList,
@@ -7,6 +9,7 @@ import {
   VerticalCompare,
   VoiceTable,
 } from "../../../proto-parts";
+import { LiveIssueView } from "../live-issue";
 import { loadIssue } from "../load";
 
 export const metadata = { title: "언론사 비교 | AgendaFrame" };
@@ -14,7 +17,10 @@ export const metadata = { title: "언론사 비교 | AgendaFrame" };
 /* 언론사 비교는 세는 것만 놓는다 — 누구를 인용했나, 어떤 말로 썼나, 어떤 낱말을 유독 많이 썼나.
    프레임 이론(Entman·Boydstun·Semetko·Iyengar·군집·연결망)은 프레이밍 분석 화면으로 넘긴다. */
 export default async function OutletsPage({ params }: { params: Promise<{ issueId: string }> }) {
-  const issue = await loadIssue(params);
+  const { issueId } = await params;
+  const decoded = safeDecode(issueId);
+  if (!getInitialFiveIssueBundle(decoded)) return <LiveIssueView issueId={decoded} view="outlets" />;
+  const issue = await loadIssue(Promise.resolve({ issueId }));
   const proto = protoIssue(issue.issueId);
   if (!proto) notFound();
 

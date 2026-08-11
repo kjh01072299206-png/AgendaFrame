@@ -20,6 +20,7 @@ export function IssueSubject({
   articleCount,
   outletCount,
   splitDimensions,
+  analysisPending = false,
 }: {
   issueId: string;
   rank: number;
@@ -29,6 +30,7 @@ export function IssueSubject({
   articleCount: number;
   outletCount: number;
   splitDimensions: number;
+  analysisPending?: boolean;
 }) {
   const pathname = usePathname() ?? "";
   const base = `/issues/${encodeURIComponent(issueId)}`;
@@ -47,7 +49,9 @@ export function IssueSubject({
           {category ? <span className="afs-chip afs-chip-brand">{category}</span> : null}
           <span className="afs-chip afs-num">기사 {articleCount}건</span>
           <span className="afs-chip afs-num">매체 {outletCount}곳</span>
-          <span className="afs-chip afs-chip-good afs-num">다섯 층위 중 {splitDimensions}곳에서 갈림</span>
+          <span className="afs-chip afs-chip-good afs-num">
+            {analysisPending ? "본문 근거 부족 · 비교 보류" : `다섯 층위 중 ${splitDimensions}곳에서 갈림`}
+          </span>
           <SaveIssueButton issueId={issueId} title={title} />
         </div>
       </section>

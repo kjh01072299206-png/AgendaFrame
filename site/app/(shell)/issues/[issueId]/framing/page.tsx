@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { getInitialFiveIssueBundle } from "../../../../../lib/initial-five/artifacts";
+import { safeDecode } from "../../../../../lib/initial-five/derive";
 import { protoIssue } from "../../../../../lib/proto";
 import {
   Clusters,
@@ -9,6 +11,7 @@ import {
   PolicyFrames,
   SemanticNetworks,
 } from "../../../proto-parts";
+import { LiveIssueView } from "../live-issue";
 import { loadIssue } from "../load";
 
 export const metadata = { title: "프레이밍 분석 | AgendaFrame" };
@@ -16,7 +19,10 @@ export const metadata = { title: "프레이밍 분석 | AgendaFrame" };
 /* 프레이밍 분석은 이론에 붙은 층위만 모은다. 세는 것(인용원·인용 방식·형태소)은 언론사 비교로 갔다.
    각 층위 제목 옆의 출처가 그 표를 왜 그렇게 그렸는지의 근거다. */
 export default async function FramingPage({ params }: { params: Promise<{ issueId: string }> }) {
-  const issue = await loadIssue(params);
+  const { issueId } = await params;
+  const decoded = safeDecode(issueId);
+  if (!getInitialFiveIssueBundle(decoded)) return <LiveIssueView issueId={decoded} view="framing" />;
+  const issue = await loadIssue(Promise.resolve({ issueId }));
   const proto = protoIssue(issue.issueId);
   if (!proto) notFound();
 

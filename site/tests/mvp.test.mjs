@@ -163,14 +163,26 @@ test("keeps the public dashboard focused on date, issue, and outlet exploration"
    이 테스트가 지키려는 것은 파일 경로가 아니라 그 분리다. */
 test("keeps the initial-five reader surface separate from site-wide tools", async () => {
   const home = await readFile(new URL("../app/(shell)/page.tsx", import.meta.url), "utf8");
+  const liveHome = await readFile(new URL("../app/(shell)/live-home.tsx", import.meta.url), "utf8");
+  const liveData = await readFile(new URL("../app/(shell)/live-data.ts", import.meta.url), "utf8");
+  const shellChrome = await readFile(new URL("../app/(shell)/shell-chrome.tsx", import.meta.url), "utf8");
+  const liveIssue = await readFile(new URL("../app/(shell)/issues/[issueId]/live-issue.tsx", import.meta.url), "utf8");
   const reader = await readFile(new URL("../app/initial-five.tsx", import.meta.url), "utf8");
   const legacyReaderRoute = await readFile(new URL("../app/top5-2026-07-26/page.tsx", import.meta.url), "utf8");
   const method = await readFile(new URL("../app/(shell)/tools/method/page.tsx", import.meta.url), "utf8");
   const selfCheck = await readFile(new URL("../app/(shell)/tools/self-check/page.tsx", import.meta.url), "utf8");
   const community = await readFile(new URL("../app/(shell)/tools/community/page.tsx", import.meta.url), "utf8");
 
-  // 홈은 최신 12개 매체 수집·분석 화면으로 곧바로 이동한다.
-  assert.match(home, /redirect\("\/dashboard"\)/);
+  // 기존 메인 화면 구조를 유지한 채 최신 12개 매체 기사·분석 데이터만 교체한다.
+  assert.match(home, /<LiveHome \/>/);
+  assert.doesNotMatch(home, /redirect\(/);
+  assert.match(liveHome, /afs-head/);
+  assert.match(liveHome, /afs-cards/);
+  assert.match(liveData, /scope=\$\{LIVE_SCOPE\}/);
+  assert.match(liveData, /\/api\/issues\/dates/);
+  assert.match(shellChrome, /fetchLiveIssueList\(5\)/);
+  assert.match(liveIssue, /fetchLiveIssueDetail\(issueId\)/);
+  assert.match(liveIssue, /본문 근거/);
   assert.doesNotMatch(home, /InitialFiveExperience/);
   // 단일 페이지 리더는 자기 라우트에만 남는다
   assert.match(legacyReaderRoute, /InitialFiveExperience/);

@@ -2,15 +2,24 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { safeDecode } from "../../lib/initial-five/derive";
 import { setTheme, useTheme } from "./client-store";
+import { fetchLiveIssueList, type LiveIssueList } from "./live-data";
+import { ScrollTop } from "./scroll-top";
 
 export interface ShellIssue {
   issueId: string;
   rank: number;
   title: string;
   category: string | null;
+}
+
+export interface ShellMeta {
+  basisDate: string;
+  articleCount: number;
+  outletCount: number;
+  issueCount: number;
 }
 
 const ICON: Record<string, string> = {
@@ -43,6 +52,55 @@ function currentIssueId(pathname: string, issues: ShellIssue[]) {
   return issues[0]?.issueId ?? "";
 }
 
+export function ShellChrome({
+  fallbackIssues,
+  fallbackMeta,
+  children,
+}: {
+  fallbackIssues: ShellIssue[];
+  fallbackMeta: ShellMeta;
+  children: ReactNode;
+}) {
+  const pathname = usePathname() ?? "/";
+  const legacyIssue = /\/issues\/bigkinds-2026-07-26-/.test(pathname);
+  const [liveData, setLiveData] = useState<LiveIssueList | null>(null);
+
+  useEffect(() => {
+    if (legacyIssue) return;
+    let cancelled = false;
+    fetchLiveIssueList(5).then((payload) => {
+      if (cancelled) return;
+      setLiveData(payload);
+    }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [legacyIssue]);
+
+  const issues = legacyIssue || !liveData ? fallbackIssues : liveData.issues.map((issue, index) => ({
+    issueId: issue.id,
+    rank: index + 1,
+    title: issue.title,
+    category: issue.category,
+  }));
+  const meta = legacyIssue || !liveData ? fallbackMeta : {
+    basisDate: liveData.date,
+    articleCount: liveData.articleCount,
+    outletCount: liveData.configuredSources,
+    issueCount: liveData.issueCount,
+  };
+
+  return (
+    <div className="afs-shell">
+      <ScrollTop />
+      <a className="afs-skip" href="#afs-main">본문으로 건너뛰기</a>
+      <ShellSide issues={issues} meta={meta} />
+      <div className="afs-main">
+        <ShellTop issues={issues} />
+        <main id="afs-main" className="afs-body">{children}</main>
+      </div>
+    </div>
+  );
+}
+
 /** 화면 안에서 의제를 바꿀 때 같은 화면에 머무르게 하려고 경로 꼬리를 보존한다. */
 function issueTail(pathname: string) {
   const match = pathname.match(/\/issues\/[^/?#]+\/([a-z-]+)/);
@@ -54,7 +112,7 @@ export function ShellSide({
   meta,
 }: {
   issues: ShellIssue[];
-  meta: { basisDate: string; articleCount: number; outletCount: number; issueCount: number };
+  meta: ShellMeta;
 }) {
   const pathname = usePathname() ?? "/";
   const issueId = currentIssueId(pathname, issues);

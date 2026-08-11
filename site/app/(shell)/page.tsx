@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { LiveHome } from "./live-home";
 
 export default function HomePage() {
-  redirect("/dashboard");
+  return <LiveHome />;
 }

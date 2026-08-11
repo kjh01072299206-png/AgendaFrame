@@ -1,12 +1,18 @@
 import { notFound } from "next/navigation";
+import { getInitialFiveIssueBundle } from "../../../../lib/initial-five/artifacts";
+import { safeDecode } from "../../../../lib/initial-five/derive";
 import { protoIssue } from "../../../../lib/proto";
 import { AgreedFacts, Camps, Glossary, Keywords, SplitTable, Timeline } from "../../proto-parts";
+import { LiveIssueView } from "./live-issue";
 import { loadIssue } from "./load";
 
 /* 무슨 일이었나. 사실 → 보도 흐름 → 같게 쓴 것 → 갈린 것 순서로만 간다.
    방법론·유의사항은 방법론 화면에 한 번만 둔다. */
 export default async function IssueOverviewPage({ params }: { params: Promise<{ issueId: string }> }) {
-  const issue = await loadIssue(params);
+  const { issueId } = await params;
+  const decoded = safeDecode(issueId);
+  if (!getInitialFiveIssueBundle(decoded)) return <LiveIssueView issueId={decoded} view="overview" />;
+  const issue = await loadIssue(Promise.resolve({ issueId }));
   const proto = protoIssue(issue.issueId);
   if (!proto) notFound();
 

@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { getInitialFiveIssueBundle, initialFiveManifest } from "../../../../lib/initial-five/artifacts";
 import { deriveIssue, safeDecode } from "../../../../lib/initial-five/derive";
 import { IssueSubject } from "../../issue-subject";
@@ -16,7 +15,7 @@ export default async function IssueLayout({
 }) {
   const { issueId } = await params;
   const bundle = getInitialFiveIssueBundle(safeDecode(issueId));
-  if (!bundle) notFound();
+  if (!bundle) return children;
   const issue = deriveIssue(bundle);
 
   return (
