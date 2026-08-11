@@ -62,6 +62,111 @@ export interface LiveComparisonAxis {
   variants: LiveComparisonVariant[];
 }
 
+export interface LiveComparisonNarrativeClause {
+  dimension: string;
+  label: string;
+  groupId: string;
+  summary: string;
+  supportingArticleCount: number;
+  observedArticleCount: number;
+  supportShare: number;
+  claimIds: string[];
+  evidence: LiveComparisonEvidence[];
+}
+
+export interface LiveComparisonNarrative {
+  narrativeId: string;
+  status: string;
+  summary: string;
+  articleCount: number;
+  outletCount: number;
+  independentMediaGroups: number;
+  completeness: number;
+  supportingArticleIds: string[];
+  supportingOutlets: string[];
+  claimIds: string[];
+  evidence: LiveComparisonEvidence[];
+  problem: LiveComparisonNarrativeClause;
+  cause: LiveComparisonNarrativeClause | null;
+  responsibility: LiveComparisonNarrativeClause | null;
+  evaluation: LiveComparisonNarrativeClause | null;
+  remedy: LiveComparisonNarrativeClause | null;
+}
+
+export interface LiveFrameCompositionModule {
+  status: string;
+  methodVersion: string;
+  taxonomyVersion: string;
+  unit: string;
+  multiLabel: boolean;
+  byOutlet: Array<{
+    source: string;
+    analyzedArticles: number;
+    assignmentCount: number;
+    labels: Array<{
+      code: string;
+      label: string;
+      articleCount: number;
+      articleShare: number;
+      sentenceCount: number;
+      compositionShare: number;
+      evidenceRefs: LiveComparisonEvidence[];
+    }>;
+  }>;
+  caution?: string | null;
+}
+
+export interface LiveReportingStyleModule {
+  status: string;
+  methodVersion: string;
+  byOutlet: Array<{
+    source: string;
+    analyzedArticles: number;
+    evaluation: {
+      status: string;
+      index: number | null;
+      observedArticles: number;
+      criticalArticles: number;
+      supportiveArticles: number;
+      attributedOnlyArticles: number;
+      evidenceRefs: LiveComparisonEvidence[];
+    };
+    scope: {
+      status: string;
+      index: number | null;
+      observedArticles: number;
+      episodicSentenceCount: number;
+      thematicSentenceCount: number;
+      evidenceRefs: LiveComparisonEvidence[];
+    };
+  }>;
+  caution?: string | null;
+}
+
+export interface LiveMorphologyModule {
+  status: string;
+  analyzer: { name: string; mode: string; version: string; dictionaryVersion: string; posTagset: string };
+  minimumDocumentFrequency: number;
+  minimumMediaGroupFrequency: number;
+  byOutlet: Array<{
+    source: string;
+    analyzedArticles: number;
+    tokenCount: number;
+    contentTokenCount: number;
+    negationCount: number;
+    posCounts: Record<string, number>;
+    terms: Array<{
+      term: string;
+      pos: string;
+      count: number;
+      documentCount: number;
+      perThousand: number;
+      evidenceRefs: LiveComparisonEvidence[];
+    }>;
+  }>;
+  limitations: string[];
+}
+
 export interface LiveIssueDetail {
   issue: LiveIssueSummary;
   articles: LiveArticle[];
@@ -90,6 +195,36 @@ export interface LiveIssueDetail {
       sourceContext: string | null;
     };
     axes?: LiveComparisonAxis[];
+    narratives?: LiveComparisonNarrative[];
+    sourceLens?: {
+      sharedVoices: string[];
+      voicesPresentInSomeOutlets: string[];
+      byOutlet: Array<{
+        source: string;
+        articleCount: number;
+        sourceArticleCount: number;
+        voices: string[];
+        roleCounts: Array<{
+          role: string;
+          roleLabel: string;
+          count: number;
+          articleCount: number;
+          presenceRate: number;
+          directQuoteArticleCount: number;
+          indirectAttributionArticleCount: number;
+          mentionCount: number;
+        }>;
+        officialShare: number | null;
+        affectedGroupVoice: boolean;
+        affectedGroupPresenceRate: number;
+      }>;
+      caution: string | null;
+    };
+    analysisModules?: {
+      frameComposition: LiveFrameCompositionModule;
+      reportingStyle: LiveReportingStyleModule;
+      morphology: LiveMorphologyModule;
+    };
   };
 }
 

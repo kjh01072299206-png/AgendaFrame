@@ -191,6 +191,30 @@ test("keeps the initial-five reader surface separate from site-wide tools", asyn
   assert.match(liveIssue, /어떻게 하자는가/);
   assert.match(liveIssue, /Entman \(1993\) · 기사 본문 구조화/);
   assert.match(liveIssue, /명시 없음/);
+  for (const title of [
+    "비슷한 방식으로 보도한 기사 묶음",
+    "기사가 이 사안을 바라본 관점",
+    "기사들은 무엇을 강조했나",
+    "사건 하나로 봤나, 구조 문제로 봤나",
+    "누구의 말을 중심에 뒀나",
+    "갈래별 의미 연결망",
+    "형태소 분석",
+    "근거 장치",
+  ]) assert.match(liveIssue, new RegExp(title));
+  for (const citation of [
+    "Matthes & Kohring 2008",
+    "Boydstun et al. 2014 · Codebook 2020",
+    "Semetko & Valkenburg 2000",
+    "Iyengar 1991",
+    "Gans 1979 · 취재원 분석",
+    "semantic network analysis",
+    "키네스 분석\\(Kilgarriff 2001\\)",
+    "Gamson & Modigliani 1989",
+  ]) assert.match(liveIssue, new RegExp(citation));
+  assert.match(liveIssue, /매체별 성향을 나누는 표가 아닙니다/);
+  assert.match(liveIssue, /사건\+구조/);
+  assert.match(liveIssue, /코딩 진행 중/);
+  assert.match(liveIssue, /리드문 코딩 추가 후 실측/);
   assert.doesNotMatch(liveIssue, /이 사안의 프레이밍/);
   assert.doesNotMatch(liveIssue, /현재 관측된 표현 근거/);
   assert.doesNotMatch(liveIssue, /프레임 요소별 판단/);
