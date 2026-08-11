@@ -2847,16 +2847,29 @@ async function resolveAnalysisDate(db, requestedDate, articleScope = null) {
   return resolved;
 }
 
-export async function handleAnalyze(request, env, { contentOverrides = new Map(), includeStoredContents = true, includeDerivedSignals = true, panelOverride = null, articleScope = null } = {}) {
+export async function handleAnalyze(request, env, {
+  contentOverrides = new Map(),
+  includeStoredContents = true,
+  includeDerivedSignals = true,
+  panelOverride = null,
+  articleScope = null,
+  internalPayload = null,
+} = {}) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
-  if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
-
   let payload = {};
-  try {
-    const text = await request.text();
-    if (text) payload = JSON.parse(text);
-  } catch {
-    return jsonResponse({ error: "분석 요청 형식을 확인해 주세요." }, 400);
+  if (internalPayload === null) {
+    if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
+    try {
+      const text = await request.text();
+      if (text) payload = JSON.parse(text);
+    } catch {
+      return jsonResponse({ error: "분석 요청 형식을 확인해 주세요." }, 400);
+    }
+  } else {
+    if (!internalPayload || typeof internalPayload !== "object" || Array.isArray(internalPayload)) {
+      return jsonResponse({ error: "내부 분석 요청 형식을 확인해 주세요." }, 400);
+    }
+    payload = internalPayload;
   }
 
   const db = env.DB;

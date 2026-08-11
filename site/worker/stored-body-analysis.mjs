@@ -172,29 +172,12 @@ function analysisPanel(policy) {
 
 export async function runStoredAnalysisForDates(env, policy, dates) {
   if (!Array.isArray(dates) || !dates.length) return [];
-  const token = [env?.IMPORT_TOKEN, env?.CODEX_IMPORT_TOKEN].find((value) => Boolean(String(value ?? "").trim()));
-  if (!token) {
-    return [...new Set(dates)].sort().map((date) => ({
-      date,
-      status: "failed",
-      httpStatus: 0,
-      runId: null,
-      issueCount: 0,
-      error: "ANALYSIS_TOKEN_MISSING",
-    }));
-  }
   const { handleAnalyze } = await import("./runtime.mjs");
   const results = [];
   for (const date of [...new Set(dates)].sort()) {
     try {
-      const response = await handleAnalyze(new Request("https://agendaframe.internal/api/analyze", {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${token}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({ date }),
-      }), env, {
+      const response = await handleAnalyze(null, env, {
+        internalPayload: { date },
         panelOverride: analysisPanel(policy),
         articleScope: {
           provider: COLLECTION_PROVIDER,
@@ -215,7 +198,12 @@ export async function runStoredAnalysisForDates(env, policy, dates) {
         issueCount: response.ok ? Number(payload?.issueCount ?? 0) : 0,
         error: response.ok ? null : "ANALYSIS_REQUEST_FAILED",
       });
-    } catch {
+    } catch (error) {
+      console.error("AgendaFrame stored aggregate analysis failed", {
+        date,
+        failureType: error instanceof Error ? error.name : "UnknownError",
+        failureMessage: String(error instanceof Error ? error.message : error).slice(0, 200),
+      });
       results.push({
         date,
         status: "failed",
@@ -223,6 +211,8 @@ export async function runStoredAnalysisForDates(env, policy, dates) {
         runId: null,
         issueCount: 0,
         error: "ANALYSIS_RUNTIME_FAILED",
+        failureType: error instanceof Error ? error.name : "UnknownError",
+        failureMessage: String(error instanceof Error ? error.message : error).slice(0, 200),
       });
     }
   }

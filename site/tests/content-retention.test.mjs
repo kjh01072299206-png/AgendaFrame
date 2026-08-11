@@ -189,6 +189,7 @@ const COLLECTION_MIGRATIONS = [
   "0000_numerous_quasar.sql",
   "0001_easy_dexter_bennett.sql",
   "0003_complex_mikhail_rasputin.sql",
+  "0004_colossal_kylun.sql",
   "0005_structured_frame_profiles.sql",
   "0007_durable_operations.sql",
   "0011_collection_execution_lock.sql",
@@ -243,7 +244,7 @@ function fakeContent() {
   };
 }
 
-test("a scheduled run without an analysis token records the failure instead of crashing with a TypeError", async (t) => {
+test("a scheduled run completes aggregate analysis without an internal admin token", async (t) => {
   const DB = migratedDatabase(t);
   const CONTENT = fakeContent();
   const rss = discoveryRss();
@@ -277,7 +278,7 @@ test("a scheduled run without an analysis token records the failure instead of c
     workerId: "regression-test-worker",
   });
 
-  assert.equal(result.status, "completed_with_errors");
+  assert.equal(result.status, "completed");
   assert.equal(result.lease.acquired, true);
   assert.equal(result.discovery.status, "success");
   assert.equal(result.discoveryPersistence.inserted, 1);
@@ -287,23 +288,27 @@ test("a scheduled run without an analysis token records the failure instead of c
   assert.equal(result.workBudget.bodyLimit, 5);
   assert.equal(result.workBudget.profileLimit, 5);
   assert.equal(result.workBudget.aggregateDateLimit, 1);
-  assert.deepEqual(result.stageErrors, [
-    { stage: "aggregate_analysis", code: "ANALYSIS_TOKEN_MISSING", date: "2026-08-10" },
-  ]);
+  assert.equal(result.aggregateAnalysis.length, 1);
+  assert.equal(result.aggregateAnalysis[0].date, "2026-08-10");
+  assert.equal(result.aggregateAnalysis[0].status, "analyzed");
+  assert.equal(result.aggregateAnalysis[0].httpStatus, 201);
+  assert.equal(result.aggregateAnalysis[0].issueCount, 1);
+  assert.ok(result.aggregateAnalysis[0].runId);
+  assert.deepEqual(result.stageErrors, []);
   assert.equal(result.operations.processed, true);
   assert.equal(requests.length, discoveryPolicy.sources.length + 1);
   assert.equal(CONTENT.objects.size, 1);
 });
 
-test("runStoredAnalysisForDates reports a missing token per date instead of throwing", async () => {
+test("runStoredAnalysisForDates reports a missing database per date instead of throwing", async () => {
   const { runStoredAnalysisForDates } = await import("../worker/stored-body-analysis.mjs");
   const failures = await runStoredAnalysisForDates({}, discoveryPolicy, ["2026-08-10"]);
   assert.deepEqual(failures, [{
     date: "2026-08-10",
     status: "failed",
-    httpStatus: 0,
+    httpStatus: 503,
     runId: null,
     issueCount: 0,
-    error: "ANALYSIS_TOKEN_MISSING",
+    error: "ANALYSIS_REQUEST_FAILED",
   }]);
 });
