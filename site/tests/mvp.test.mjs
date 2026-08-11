@@ -1094,6 +1094,18 @@ test("reports no-cost health and protects write endpoints", async () => {
     headers: { authorization: "Bearer wrong", origin: "https://example.test" },
   }), { DB: {}, IMPORT_TOKEN: "correct" });
   assert.equal(runsUnauthorized.status, 401);
+  const oneShotAnalysis = await handleApiRequest(new Request("https://example.test/api/analyze", {
+    method: "POST",
+    headers: { authorization: "Bearer refresh-only", "content-type": "application/json", origin: "https://example.test" },
+    body: JSON.stringify({ date: "not-a-date" }),
+  }), { DB: {}, IMPORT_TOKEN: "admin-only", ANALYSIS_REFRESH_TOKEN: "refresh-only" });
+  assert.equal(oneShotAnalysis.status, 400);
+  const oneShotCannotImport = await handleApiRequest(new Request("https://example.test/api/import", {
+    method: "POST",
+    headers: { authorization: "Bearer refresh-only", "content-type": "application/json", origin: "https://example.test" },
+    body: JSON.stringify({ rows: [] }),
+  }), { DB: {}, IMPORT_TOKEN: "admin-only", ANALYSIS_REFRESH_TOKEN: "refresh-only" });
+  assert.equal(oneShotCannotImport.status, 401);
 
   const missing = await handleApiRequest(new Request("https://example.test/api/missing"));
   assert.equal(missing.status, 404);

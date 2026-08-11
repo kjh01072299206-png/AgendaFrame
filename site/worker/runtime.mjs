@@ -2794,6 +2794,18 @@ async function adminAuthorized(request, env) {
   return matches.some(Boolean);
 }
 
+async function analysisRefreshAuthorized(request, env) {
+  const configuredToken = env?.ANALYSIS_REFRESH_TOKEN;
+  if (!configuredToken) return false;
+  const requestUrl = new URL(request.url);
+  const origin = request.headers.get("origin");
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if ((origin && origin !== requestUrl.origin) || (fetchSite && !["same-origin", "none"].includes(fetchSite))) return false;
+  const authorization = request.headers.get("authorization") ?? "";
+  const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+  return secureTokenMatches(token, configuredToken);
+}
+
 async function runBatches(db, statements, size = 100) {
   for (let offset = 0; offset < statements.length; offset += size) {
     await db.batch(statements.slice(offset, offset + size));
@@ -2945,7 +2957,7 @@ export async function handleAnalyze(request, env, {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
   let payload = {};
   if (internalPayload === null) {
-    if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
+    if (!(await adminAuthorized(request, env)) && !(await analysisRefreshAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
     try {
       const text = await request.text();
       if (text) payload = JSON.parse(text);
