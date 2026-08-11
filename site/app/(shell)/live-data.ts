@@ -76,23 +76,26 @@ async function readJson<T>(url: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export async function fetchLiveIssueList(limit = 5): Promise<LiveIssueList> {
-  const dates = await readJson<{
-    dates: Array<{ date: string; articleCount: number; issueCount: number }>;
+const issueListCache = new Map<number, Promise<LiveIssueList>>();
+
+export function fetchLiveIssueList(limit = 5): Promise<LiveIssueList> {
+  const cached = issueListCache.get(limit);
+  if (cached) return cached;
+  const request = readJson<{
+    run: { targetDate: string; articleCount: number; issueCount: number };
     scope: { configuredSources: number };
-  }>(`/api/issues/dates?limit=31&scope=${LIVE_SCOPE}`);
-  const latest = dates.dates[0];
-  if (!latest) throw new Error("분석된 최신 의제가 없습니다.");
-  const payload = await readJson<{ issues: LiveIssueSummary[]; total: number }>(
-    `/api/issues?limit=${limit}&scope=${LIVE_SCOPE}&date=${encodeURIComponent(latest.date)}`,
-  );
-  return {
-    date: latest.date,
-    articleCount: latest.articleCount,
-    issueCount: payload.total || latest.issueCount,
-    configuredSources: dates.scope.configuredSources || 12,
+    issues: LiveIssueSummary[];
+    total: number;
+  }>(`/api/issues?limit=${limit}&scope=${LIVE_SCOPE}`).then((payload) => ({
+    date: payload.run.targetDate,
+    articleCount: payload.run.articleCount,
+    issueCount: payload.total || payload.run.issueCount,
+    configuredSources: payload.scope.configuredSources || 12,
     issues: payload.issues,
-  };
+  }));
+  issueListCache.set(limit, request);
+  void request.catch(() => issueListCache.delete(limit));
+  return request;
 }
 
 export async function fetchLiveIssueDetail(issueId: string): Promise<LiveIssueDetail> {

@@ -179,7 +179,8 @@ test("keeps the initial-five reader surface separate from site-wide tools", asyn
   assert.match(liveHome, /afs-head/);
   assert.match(liveHome, /afs-cards/);
   assert.match(liveData, /scope=\$\{LIVE_SCOPE\}/);
-  assert.match(liveData, /\/api\/issues\/dates/);
+  assert.match(liveData, /issueListCache/);
+  assert.match(liveData, /payload\.run\.targetDate/);
   assert.match(shellChrome, /fetchLiveIssueList\(5\)/);
   assert.match(liveIssue, /fetchLiveIssueDetail\(issueId\)/);
   assert.match(liveIssue, /본문 근거/);
