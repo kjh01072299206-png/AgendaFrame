@@ -184,6 +184,11 @@ test("keeps the initial-five reader surface separate from site-wide tools", asyn
   assert.match(method, /coderAgreement/);
 });
 
+test("keeps example-question buttons large enough to tap", async () => {
+  const styles = await readFile(new URL("../app/app-round2.css", import.meta.url), "utf8");
+  assert.match(styles, /\.afs-example-question \{[^}]*min-height: 44px;/);
+});
+
 test("packages Sites hosting metadata and database migrations", async () => {
   const hosting = JSON.parse(await readFile(new URL("../dist/.openai/hosting.json", import.meta.url), "utf8"));
   assert.equal(hosting.project_id, "appgprj_6a54eb02c21c819199c3369cc67c6857");
