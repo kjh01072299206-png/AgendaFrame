@@ -67,6 +67,22 @@ test("extracts a Chosun-style body and removes nested ads and recommendations", 
   assert.ok(result.quality >= 0.75);
 });
 
+test("accepts a short SBS bulletin only from structured NewsArticle data", () => {
+  const body = "무안공항 여객기 참사를 수사 중인 경찰 특별수사단이 오늘 오전 한국공항공사와 국토교통부, 부산지방항공청을 압수수색하고 있다고 밝혔습니다. 업무상 과실치사상 혐의와 관련된 추가 자료를 확보하기 위한 차원이라는 게 특수단 설명입니다. 지금까지 74명을 입건한 경찰은 중대시민재해 혐의 적용 가능 여부도 들여다보고 있습니다.";
+  const html = `<script type="application/ld+json">${JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [{ "@type": "NewsArticle", articleBody: body }],
+  })}</script><nav>${"메뉴 ".repeat(200)}</nav>`;
+  const result = extractArticleBody(html, { hostname: "news.sbs.co.kr", sourceId: "sbs" });
+  assert.equal(result.strategy, "json-ld");
+  assert.equal(result.bodyText, body);
+  assert.ok(result.quality >= 0.54);
+  assert.throws(
+    () => extractArticleBody(html, { hostname: "example.test", sourceId: "unknown" }),
+    (error) => error instanceof ArticleExtractionError && error.code === "BODY_UNAVAILABLE",
+  );
+});
+
 test("maps structured article sections only to the four approved research topics", () => {
   const html = (articleSection) => `<script type="application/ld+json">${JSON.stringify({
     "@type": "NewsArticle",

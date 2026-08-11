@@ -1,6 +1,7 @@
 const MIN_BODY_CHARACTERS = 280;
 const MAX_BODY_CHARACTERS = 200_000;
 const MIN_ACCEPTABLE_QUALITY = 0.54;
+const SOURCE_STRUCTURED_BODY_MIN_CHARACTERS = Object.freeze({ sbs: 140 });
 
 const BLOCK_TAGS = new Set([
   "address",
@@ -666,9 +667,9 @@ function textStatistics(rawHtml, bodyText) {
   };
 }
 
-function qualityScore(rawHtml, bodyText, strategy) {
+function qualityScore(rawHtml, bodyText, strategy, minBodyCharacters = MIN_BODY_CHARACTERS) {
   const length = bodyText.length;
-  if (length < MIN_BODY_CHARACTERS || length > MAX_BODY_CHARACTERS) return 0;
+  if (length < minBodyCharacters || length > MAX_BODY_CHARACTERS) return 0;
   const stats = textStatistics(rawHtml, bodyText);
   const lengthScore =
     length < 450
@@ -710,7 +711,7 @@ function repeatedLineRatio(bodyText) {
   return (lines.length - unique.size) / lines.length;
 }
 
-function candidateResult(candidate) {
+function candidateResult(candidate, sourceId) {
   const bodyText = normalizeCandidateValue(candidate.rawText ?? candidate.rawHtml);
   if (RESTRICTED_TEXT_PATTERNS.some((pattern) => pattern.test(bodyText))) {
     throw new ArticleExtractionError(
@@ -718,10 +719,14 @@ function candidateResult(candidate) {
       "로그인·구독 또는 유료 접근이 필요한 기사 본문은 추출하지 않습니다.",
     );
   }
+  const sourceStructuredMinimum = SOURCE_STRUCTURED_BODY_MIN_CHARACTERS[sourceId];
+  const minBodyCharacters = candidate.strategy === "json-ld" && sourceStructuredMinimum
+    ? sourceStructuredMinimum
+    : MIN_BODY_CHARACTERS;
   return {
     bodyText,
     strategy: candidate.strategy,
-    quality: qualityScore(candidate.rawHtml ?? "", bodyText, candidate.strategy),
+    quality: qualityScore(candidate.rawHtml ?? "", bodyText, candidate.strategy, minBodyCharacters),
     sourceOffset: candidate.sourceOffset ?? Number.MAX_SAFE_INTEGER,
   };
 }
@@ -757,7 +762,7 @@ export function extractArticleBody(html, options = {}) {
 
   const uniqueCandidates = new Map();
   for (const candidate of candidates) {
-    const result = candidateResult(candidate);
+    const result = candidateResult(candidate, options.sourceId);
     if (!result.bodyText) continue;
     const fingerprint = result.bodyText.slice(0, 320) + result.bodyText.slice(-160);
     const existing = uniqueCandidates.get(fingerprint);
