@@ -2,6 +2,7 @@ import { getAnalysisProvider } from "./analysis-provider.mjs";
 import { CLUSTERING_VERSION, FRAME_TAXONOMY_VERSION, PUBLIC_AGENDA_CATEGORIES, SCORE_VERSION, cleanHeadlineToIssueTitle, extractBodyFrameSignals } from "./analysis.mjs";
 import { ArticleExtractionError, extractArticleBody } from "./article-extractor.mjs";
 import {
+  AI_ARTICLE_FRAME_PROFILE_SCHEMA,
   ARTICLE_FRAME_PROFILE_SCHEMA,
   FRAMING_ENGINE_VERSION,
   ISSUE_FRAME_COMPARISON_SCHEMA,
@@ -10,6 +11,11 @@ import {
   validateArticleFrameProfile,
 } from "./framing-engine.mjs";
 import publicApiSchema from "../docs/public-api.schema.json" with { type: "json" };
+import researchCollectionPolicy from "../data/discovery-sources.json" with { type: "json" };
+import { handleCommunityRequest } from "./community.mjs";
+import { handleEvidenceChat } from "./evidence-chat.mjs";
+import { handleInitialFiveRequest } from "./initial-five-api.mjs";
+import { handleReleaseAdminRequest } from "./release-admin.mjs";
 
 const analysisProvider = getAnalysisProvider();
 const ANALYSIS_PROVIDER = analysisProvider.provider;
@@ -19,6 +25,8 @@ const PROMPT_VERSION = "framing-codebook-v6";
 const EVALUATION_DATASET_VERSION = "not_configured";
 const COMPATIBLE_ANALYSIS_MODELS = new Set([ANALYSIS_MODEL_VERSION, "agenda-rules-v4", "agenda-rules-v3", "agenda-rules-v2"]);
 const PUBLIC_AGENDA_CATEGORY_SET = new Set(PUBLIC_AGENDA_CATEGORIES);
+const SHA256_HEX_PATTERN = /^[a-f0-9]{64}$/;
+const SEMANTIC_TEXT_SCOPES = new Set(["provider_export", "provider_excerpt", "transient_public_page_extract"]);
 
 const assets = globalThis.__AGENDAFRAME_ASSETS__ ?? {};
 let sourcePanel = globalThis.__AGENDAFRAME_SOURCE_PANEL__ ?? {
@@ -30,6 +38,62 @@ let sourcePanel = globalThis.__AGENDAFRAME_SOURCE_PANEL__ ?? {
 
 export function configureSourcePanel(panel) {
   if (panel?.sources?.length) sourcePanel = panel;
+}
+
+const RESEARCH_SCOPE_KEY = "academic_panel_12";
+const RESEARCH_COLLECTION_PROVIDER = "authorized_crawl";
+const RESEARCH_SOURCE_IDS = researchCollectionPolicy.sources.map((source) => source.id);
+const RESEARCH_SOURCE_NAMES = new Set(researchCollectionPolicy.sources.map((source) => source.name));
+const ISSUE_SCOPE_KEYS = new Set(["all", "general_daily_10", RESEARCH_SCOPE_KEY]);
+
+function resolveIssueScope(request) {
+  const value = new URL(request.url).searchParams.get("scope");
+  const key = value?.trim() || "all";
+  if (!ISSUE_SCOPE_KEYS.has(key)) return null;
+  if (key === "all") {
+    const configuredCount = sourcePanel.sources.filter((source) => source.active).length || 22;
+    return { key, kind: "all", sourceType: null, provider: null, sourceIds: [], label: "전체 온라인 뉴스 표본", configuredCount, sourceNames: null };
+  }
+  if (key === RESEARCH_SCOPE_KEY) {
+    return {
+      key,
+      kind: "provider_sources",
+      sourceType: null,
+      provider: RESEARCH_COLLECTION_PROVIDER,
+      sourceIds: RESEARCH_SOURCE_IDS,
+      label: "학술연구 12개 매체",
+      configuredCount: RESEARCH_SOURCE_IDS.length,
+      sourceNames: RESEARCH_SOURCE_NAMES,
+    };
+  }
+  const scopedSources = sourcePanel.sources.filter((source) => source.active && source.sourceType === "general_daily");
+  return {
+    key,
+    kind: "source_type",
+    sourceType: "general_daily",
+    provider: null,
+    sourceIds: [],
+    label: "국내 10대 종합일간지",
+    configuredCount: scopedSources.length || 10,
+    sourceNames: new Set(scopedSources.map((source) => source.name)),
+  };
+}
+
+function comparisonOnlyUsesSources(value, allowedSources) {
+  if (!allowedSources || !value || typeof value !== "object") return true;
+  const seen = new Set();
+  const visit = (node, key = "") => {
+    if (typeof node === "string" && (key === "source" || key === "supportingOutlets")) seen.add(node);
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item, key);
+      return;
+    }
+    if (node && typeof node === "object") {
+      for (const [childKey, child] of Object.entries(node)) visit(child, childKey);
+    }
+  };
+  visit(value);
+  return [...seen].every((source) => allowedSources.has(source));
 }
 
 const securityHeaders = {
@@ -117,22 +181,31 @@ export function classifySnapshotStatus({ targetDate = null, dataAsOf = null, col
   return { status: "normal", label: "정상", staleDays: 0 };
 }
 
-function analysisVersions(run) {
+function analysisVersions(run, comparisonLineage = null) {
   const modelVersion = run?.modelVersion ?? ANALYSIS_MODEL_VERSION;
   const current = modelVersion === ANALYSIS_MODEL_VERSION;
   const versionFour = modelVersion === "agenda-rules-v4";
+  const approval = comparisonLineage?.approval ?? null;
   return {
     sourcePolicyVersion: sourcePanel.panelVersion ?? "unknown",
     clusteringVersion: current ? CLUSTERING_VERSION : versionFour ? "event-anchors-complete-link-v2" : "legacy-v1-unverified",
     scoreVersion: current ? SCORE_VERSION : versionFour ? "observed-agenda-v3" : "legacy-v1-unverified",
     frameTaxonomyVersion: current ? FRAME_TAXONOMY_VERSION : versionFour ? "frame-signals-v4" : "legacy-v1-unverified",
-    modelId: modelVersion,
-    promptVersion: current ? PROMPT_VERSION : versionFour ? "not_applicable_rules" : "legacy-unverified",
+    modelId: comparisonLineage?.modelId ?? modelVersion,
+    promptVersion: comparisonLineage?.promptVersion ?? (current ? PROMPT_VERSION : versionFour ? "not_applicable_rules" : "legacy-unverified"),
+    analysisSchemaVersion: comparisonLineage?.analysisSchemaVersion ?? null,
+    comparisonEngineVersion: comparisonLineage?.comparisonEngineVersion ?? null,
+    authorizationId: approval?.authorizationId ?? null,
+    approvalFingerprint: approval?.fingerprint ?? null,
+    clusterId: approval?.clusterId ?? null,
+    reviewer: approval?.reviewer ?? null,
+    approvalReviewedAt: approval?.reviewedAt ?? null,
+    approvedUrlsSha256: approval?.approvedUrlsSha256 ?? null,
     evaluationDatasetVersion: EVALUATION_DATASET_VERSION,
   };
 }
 
-function responseMeta(run = null, runtimeMode = "demo") {
+function responseMeta(run = null, runtimeMode = "demo", comparisonLineage = null) {
   return {
     schemaVersion: PUBLIC_API_SCHEMA_VERSION,
     runtimeMode,
@@ -140,11 +213,11 @@ function responseMeta(run = null, runtimeMode = "demo") {
     runId: run?.id ?? null,
     basisDate: run?.targetDate ?? null,
     publishedAt: run?.finishedAt ?? null,
-    ...analysisVersions(run),
+    ...analysisVersions(run, comparisonLineage),
   };
 }
 
-function publicIssue(row, run) {
+function publicIssue(row, run, configuredSources = 22, preserveScore = false) {
   const placementObservedCount = Number(row.placementObservedCount ?? 0);
   const contentAvailableCount = Number(row.contentAvailableCount ?? 0);
   const structuredProfileCount = Number(row.structuredProfileCount ?? 0);
@@ -152,23 +225,27 @@ function publicIssue(row, run) {
   const issue = { ...row };
   delete issue.confidence;
 
-  const cleanedTitle = cleanHeadlineToIssueTitle(row.title);
+  const cleanedTitle = cleanHeadlineToIssueTitle(row.representativeTitle || row.title);
+  delete issue.representativeTitle;
   const sourceCount = Number(row.sourceCount ?? 1);
-  const coverageRatio = sourceCount / 22;
+  const coverageRatio = sourceCount / Math.max(1, configuredSources);
   const coverageFactor = Math.min(1.0, 0.45 + coverageRatio * 0.8);
-  const adjustedAgendaScore = Math.round(Number(row.agendaScore ?? 0) * coverageFactor * 10) / 10;
+  const adjustedAgendaScore = preserveScore
+    ? Math.round(Number(row.agendaScore ?? 0) * 10) / 10
+    : Math.round(Number(row.agendaScore ?? 0) * coverageFactor * 10) / 10;
+  const scoreUnavailable = legacy && !preserveScore;
 
   return {
     ...issue,
     title: cleanedTitle,
-    agendaScore: legacy ? null : adjustedAgendaScore,
+    agendaScore: scoreUnavailable ? null : adjustedAgendaScore,
     placementScore: placementObservedCount ? Number(row.placementScore) : null,
     placementObservedCount,
     placementTotalCount: Number(row.placementTotalCount ?? row.articleCount ?? 0),
     followUpVolumeScore: Number(row.repetitionScore ?? 0),
-    scoreStatus: legacy ? "legacy_reanalysis_required" : (placementObservedCount ? "observed_components" : "placement_excluded"),
+    scoreStatus: scoreUnavailable ? "legacy_reanalysis_required" : (preserveScore ? "scope_observed_components" : (placementObservedCount ? "observed_components" : "placement_excluded")),
     calibrationStatus: "not_calibrated",
-    clusterQuality: legacy ? "review_required" : "not_human_reviewed",
+    clusterQuality: scoreUnavailable ? "review_required" : "not_human_reviewed",
     contentAvailableCount,
     structuredProfileCount,
     evidenceBasis: structuredProfileCount
@@ -384,14 +461,10 @@ async function collectionHealth(db) {
         SELECT article_id
         FROM article_frame_profiles
         WHERE status IN ('analyzed', 'partial')
-          AND model_version = ?
-          AND schema_version = ?
       )) AS body_evidence_count
   `).bind(
     FRAME_TAXONOMY_VERSION,
     FRAME_TAXONOMY_VERSION,
-    FRAMING_ENGINE_VERSION,
-    ARTICLE_FRAME_PROFILE_SCHEMA,
   ).first();
   const latest = await db.prepare(`
     SELECT id, status, finished_at, article_count, duplicate_count
@@ -448,17 +521,19 @@ async function readImportPayload(request) {
   return readJsonPayload(request);
 }
 
-async function handleImport(request, env) {
+async function handleImport(
+  request,
+  env,
+  { provider = "bigkinds_export", trigger = "manual" } = {},
+) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
-  if (!env?.IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503);
+  if (!env?.IMPORT_TOKEN && !env?.CODEX_IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503);
 
   if (!isSameSiteRequest(request, env)) {
     return jsonResponse({ error: "같은 사이트에서 보낸 요청만 허용됩니다." }, 403);
   }
 
-  const authorization = request.headers.get("authorization") ?? "";
-  const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
-  if (!(await secureTokenMatches(token, env.IMPORT_TOKEN))) {
+  if (!(await adminAuthorized(request, env))) {
     return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
   }
 
@@ -478,14 +553,14 @@ async function handleImport(request, env) {
     await db.prepare(`
       INSERT INTO collection_runs
         (id, provider, trigger, status, started_at, article_count, duplicate_count, error_count)
-      VALUES (?, 'bigkinds_export', 'manual', 'running', ?, 0, 0, 0)
-    `).bind(runId, startedAt).run();
+      VALUES (?, ?, ?, 'running', ?, 0, 0, 0)
+    `).bind(runId, provider, trigger, startedAt).run();
 
     const articleIds = await Promise.all(rows.map((row) => sha256Hex(row.canonicalUrl)));
     const statements = rows.map((row, index) => db.prepare(`
       INSERT INTO articles
         (id, provider, external_id, source_id, title, canonical_url, section, published_at, collected_at, homepage_placement, homepage_rank)
-      VALUES (?, 'bigkinds_export', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(canonical_url) DO UPDATE SET
         provider = excluded.provider,
         external_id = excluded.external_id,
@@ -506,6 +581,7 @@ async function handleImport(request, env) {
         (excluded.homepage_rank IS NOT NULL AND COALESCE(articles.homepage_rank, 0) != excluded.homepage_rank)
     `).bind(
       crypto.randomUUID(),
+      provider,
       articleIds[index],
       row.source.id,
       row.title,
@@ -605,6 +681,8 @@ const ARTICLE_REDIRECT_LIMIT = 3;
 const ARTICLE_EXTRACTOR_VERSION = "public-news-body-v2";
 const BIGKINDS_TEXT_EXTRACTOR_VERSION = "bigkinds-export-text-v2";
 const STRUCTURED_IMPORT_BATCH_LIMIT = 100;
+const ANALYZED_IMPORT_BATCH_LIMIT = 50;
+const GCP_ANALYZED_EXTRACTOR_VERSION = "gcp-authorized-body-v1";
 
 function integerInRange(value, minimum, maximum, label) {
   const number = Number(value);
@@ -796,12 +874,13 @@ export function validateStructuredImportRows(inputRows, panel = sourcePanel, now
     const input = inputRows[index];
     const excerpt = normalizeArticleBody(input.excerpt ?? input.body_excerpt);
     const textScope = String(input.textScope ?? input.text_scope ?? "provider_excerpt").trim();
-    if (!["provider_excerpt", "article_body"].includes(textScope)) {
-      throw new Error(`${index + 1}행: 본문 범위는 provider_excerpt 또는 article_body여야 합니다.`);
+    if (!["provider_excerpt", "article_body", "transient_public_page_extract"].includes(textScope)) {
+      throw new Error(`${index + 1}행: 본문 범위는 provider_excerpt 또는 article_body여야 합니다. 호환 입력으로 transient_public_page_extract도 지원합니다.`);
     }
-    const maximumCharacters = textScope === "article_body" ? 200_000 : 5_000;
+    const isFullBody = textScope === "article_body" || textScope === "transient_public_page_extract";
+    const maximumCharacters = isFullBody ? 200_000 : 5_000;
     if (excerpt.length < 40 || excerpt.length > maximumCharacters) {
-      throw new Error(`${index + 1}행: ${textScope === "article_body" ? "분석용 기사 본문" : "분석용 본문 발췌"}은 40~${maximumCharacters.toLocaleString("ko-KR")}자여야 합니다.`);
+      throw new Error(`${index + 1}행: ${isFullBody ? "분석용 기사 본문" : "분석용 본문 발췌"}은 40~${maximumCharacters.toLocaleString("ko-KR")}자여야 합니다.`);
     }
     return {
       ...metadata,
@@ -811,9 +890,158 @@ export function validateStructuredImportRows(inputRows, panel = sourcePanel, now
   });
 }
 
+export function validateAnalyzedImportRows(inputRows, panel = sourcePanel, now = new Date().toISOString()) {
+  if (!Array.isArray(inputRows) || inputRows.length === 0) throw new Error("가져올 분석 결과가 없습니다.");
+  if (inputRows.length > ANALYZED_IMPORT_BATCH_LIMIT) {
+    throw new Error(`GCP 분석 결과는 한 번에 최대 ${ANALYZED_IMPORT_BATCH_LIMIT}행까지 처리할 수 있습니다.`);
+  }
+  const metadata = validateImportRows(inputRows.map((row) => ({
+    source: row?.article?.source_id,
+    title: row?.article?.title,
+    url: row?.article?.canonical_url,
+    published_at: row?.article?.published_at,
+    collected_at: row?.article?.collected_at,
+    section: row?.article?.section,
+  })), panel, now);
+  return inputRows.map((row, index) => {
+    if (!row || typeof row !== "object" || Array.isArray(row)) throw new Error(`${index + 1}행 형식이 올바르지 않습니다.`);
+    const profile = structuredClone(row.profile);
+    const bodyHash = String(row.article?.body_hash ?? "").toLowerCase();
+    const bodyCharacters = Number(row.article?.body_characters);
+    if (!/^[a-f0-9]{64}$/.test(bodyHash)) throw new Error(`${index + 1}행: 본문 해시를 확인해 주세요.`);
+    if (!Number.isInteger(bodyCharacters) || bodyCharacters < 1 || bodyCharacters > 200_000) {
+      throw new Error(`${index + 1}행: 본문 문자 수를 확인해 주세요.`);
+    }
+    if (profile?.schema_version !== AI_ARTICLE_FRAME_PROFILE_SCHEMA) {
+      throw new Error(`${index + 1}행: 지원하지 않는 AI 분석 스키마입니다.`);
+    }
+    validateSemanticProfileLineage(profile, `${index + 1}번째 분석 프로필`);
+    validateSemanticExtraction(profile, bodyCharacters, `${index + 1}번째 분석 프로필`);
+    const upstreamArticleId = String(row.article?.article_id ?? "").trim();
+    if (
+      !upstreamArticleId
+      || profile?.article?.article_id !== upstreamArticleId
+      || profile?.article?.upstream_article_id !== upstreamArticleId
+    ) {
+      throw new Error(`${index + 1}행: 상류 기사 식별자와 분석 프로필이 일치하지 않습니다.`);
+    }
+    if (profile?.article?.body_sha256 !== bodyHash || Number(profile?.article?.body_character_count) !== bodyCharacters) {
+      throw new Error(`${index + 1}행: 기사 정보와 분석 프로필의 본문 식별값이 다릅니다.`);
+    }
+    const validation = validateArticleFrameProfile(profile);
+    if (!validation.valid) throw new Error(`${index + 1}행: 분석 프로필 검증 실패: ${validation.errors.join("; ")}`);
+    return {
+      metadata: metadata[index],
+      bodyHash,
+      bodyCharacters,
+      profile,
+    };
+  });
+}
+
+async function handleAnalyzedImport(request, env) {
+  if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503, { request });
+  if (!env?.IMPORT_TOKEN && !env?.CODEX_IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503, { request });
+  if (request.headers.get("x-agendaframe-source") !== "gcp-batch-v1") {
+    return jsonResponse({ error: "허용된 배치 게시자 요청이 아닙니다." }, 403, { request });
+  }
+  if (!(await adminAuthorized(request, env))) {
+    return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401, { request });
+  }
+
+  let rows;
+  try {
+    const payload = await readJsonPayload(request, 4 * 1024 * 1024);
+    rows = validateAnalyzedImportRows(payload.rows);
+  } catch (error) {
+    return jsonResponse({ error: error instanceof Error ? error.message : "GCP 분석 결과 형식을 확인해 주세요." }, 400, { request });
+  }
+
+  const origin = new URL(request.url).origin;
+  const metadataRequest = new Request(new URL("/api/import", request.url), {
+    method: "POST",
+    headers: {
+      authorization: request.headers.get("authorization") ?? "",
+      "content-type": "application/json",
+      origin,
+      "sec-fetch-site": "same-origin",
+    },
+    body: JSON.stringify({
+      rows: rows.map(({ metadata }) => ({
+        source: metadata.source.name,
+        title: metadata.title,
+        url: metadata.canonicalUrl,
+        published_at: new Date(metadata.publishedAt).toISOString(),
+        collected_at: new Date(metadata.collectedAt).toISOString(),
+        section: metadata.section,
+      })),
+    }),
+  });
+  const metadataResponse = await handleImport(metadataRequest, env, {
+    provider: "gcp_batch",
+    trigger: "gcp_publish",
+  });
+  const metadataResult = await metadataResponse.json();
+  if (!metadataResponse.ok) return jsonResponse(metadataResult, metadataResponse.status, { request });
+
+  try {
+    const lookups = await env.DB.batch(rows.map(({ metadata }) => env.DB.prepare(`
+      SELECT id FROM articles WHERE canonical_url = ? LIMIT 1
+    `).bind(metadata.canonicalUrl)));
+    const analyzedAt = Date.now();
+    const statements = rows.map((row, index) => {
+      const articleId = lookups[index]?.results?.[0]?.id;
+      if (!articleId) throw new Error("저장한 기사 식별자를 찾지 못했습니다.");
+      const validation = validateArticleFrameProfile(row.profile);
+      if (!validation.valid) throw new Error(`게시 직전 분석 프로필 검증 실패: ${validation.errors.join("; ")}`);
+      const modelVersion = String(row.profile.engine?.version ?? "").slice(0, 120);
+      const promptVersion = String(row.profile.engine?.prompt_version ?? "").slice(0, 120);
+      if (!modelVersion || !promptVersion) throw new Error("모델과 프롬프트 버전이 필요합니다.");
+      return env.DB.prepare(`
+        INSERT INTO article_frame_profiles
+          (id, article_id, body_hash, body_characters, profile_json, status, failure_code, extractor_version, provider, model_version, prompt_version, schema_version, review_status, analyzed_at)
+        VALUES (?, ?, ?, ?, ?, 'analyzed', NULL, ?, 'vertex_ai', ?, ?, ?, 'automatic_draft', ?)
+        ON CONFLICT(article_id, extractor_version, model_version, schema_version) DO UPDATE SET
+          body_hash = excluded.body_hash,
+          body_characters = excluded.body_characters,
+          profile_json = excluded.profile_json,
+          status = 'analyzed',
+          failure_code = NULL,
+          provider = excluded.provider,
+          prompt_version = excluded.prompt_version,
+          review_status = 'automatic_draft',
+          analyzed_at = excluded.analyzed_at
+      `).bind(
+        crypto.randomUUID(),
+        articleId,
+        row.bodyHash,
+        row.bodyCharacters,
+        JSON.stringify(row.profile),
+        GCP_ANALYZED_EXTRACTOR_VERSION,
+        modelVersion,
+        promptVersion,
+        AI_ARTICLE_FRAME_PROFILE_SCHEMA,
+        analyzedAt,
+      );
+    });
+    await runBatches(env.DB, statements);
+    return jsonResponse({
+      received: rows.length,
+      saved: statements.length,
+      metadata: metadataResult,
+      bodyStorageCount: 0,
+      schemaVersion: AI_ARTICLE_FRAME_PROFILE_SCHEMA,
+      reviewStatus: "automatic_draft",
+    }, 201, { request });
+  } catch (error) {
+    console.error("AgendaFrame analyzed import failed", error);
+    return jsonResponse({ error: "분석 결과를 저장하지 못했습니다." }, 500, { request });
+  }
+}
+
 async function handleStructuredImport(request, env) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503, { request });
-  if (!env?.IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503, { request });
+  if (!env?.IMPORT_TOKEN && !env?.CODEX_IMPORT_TOKEN) return jsonResponse({ error: "관리자 가져오기가 아직 활성화되지 않았습니다." }, 503, { request });
   if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "같은 사이트에서 보낸 요청만 허용됩니다." }, 403, { request });
   if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401, { request });
 
@@ -934,10 +1162,13 @@ async function handleStructuredImport(request, env) {
       ));
     }
     await runBatches(env.DB, statements);
+    const textScope = rows.every((row) => row.textScope === "transient_public_page_extract")
+      ? "transient_public_page_extract"
+      : "provider_excerpt";
     return jsonResponse({
       ...metadataResult,
       analyzedExcerpts: results.length,
-      textScope: [...new Set(rows.map((row) => row.textScope))].join(","),
+      textScope,
       rawTextStored: false,
       extractorVersion: BIGKINDS_TEXT_EXTRACTOR_VERSION,
       framingEngineVersion: FRAMING_ENGINE_VERSION,
@@ -1127,7 +1358,12 @@ function parseDetectedFrames(value) {
 function parseFrameProfile(value) {
   try {
     const profile = JSON.parse(String(value ?? "{}"));
-    return validateArticleFrameProfile(profile).valid ? profile : null;
+    if (!validateArticleFrameProfile(profile).valid) return null;
+    if (profile.schema_version === AI_ARTICLE_FRAME_PROFILE_SCHEMA) {
+      validateSemanticProfileLineage(profile, "저장된 분석 프로필");
+      validateSemanticExtraction(profile, Number(profile.article?.body_character_count), "저장된 분석 프로필");
+    }
+    return profile;
   } catch {
     return null;
   }
@@ -1140,22 +1376,312 @@ async function loadArticleFrameProfiles(db, start, end) {
     JOIN articles a ON a.id = profiles.article_id
     WHERE a.published_at >= ? AND a.published_at < ?
       AND profiles.status IN ('analyzed', 'partial')
-      AND profiles.model_version = ?
-      AND profiles.schema_version = ?
-    ORDER BY profiles.article_id ASC, profiles.analyzed_at DESC
-  `).bind(
-    start,
-    end,
-    FRAMING_ENGINE_VERSION,
-    ARTICLE_FRAME_PROFILE_SCHEMA,
-  ).all();
+      AND profiles.review_status != 'rejected'
+    ORDER BY
+      profiles.article_id ASC,
+      CASE profiles.provider WHEN 'vertex_ai' THEN 0 ELSE 1 END,
+      profiles.analyzed_at DESC
+  `).bind(start, end).all();
   const profiles = new Map();
   for (const row of result.results ?? []) {
     if (profiles.has(row.articleId)) continue;
     const profile = parseFrameProfile(row.profileJson);
-    if (profile) profiles.set(row.articleId, profile);
+    if (profile) {
+      profile.article.upstream_article_id ??= profile.article.article_id;
+      profile.article.article_id = row.articleId;
+      profiles.set(row.articleId, profile);
+    }
   }
   return profiles;
+}
+
+export function clusterArticleSignature(values) {
+  if (!Array.isArray(values) || values.length < 2) return "";
+  try {
+    const normalized = uniqueStrings(values.map((value) => canonicalizeArticleUrl(value))).sort();
+    return normalized.length >= 2 ? normalized.join("\n") : "";
+  } catch {
+    return "";
+  }
+}
+
+export async function clusterArticleSetSha256(values) {
+  const signature = clusterArticleSignature(values);
+  return signature ? sha256Hex(signature) : "";
+}
+
+function requireLineageString(value, field, context) {
+  const normalized = String(value ?? "").trim();
+  if (!normalized || normalized.length > 200) {
+    throw new Error(`${context}의 ${field} 값이 없거나 너무 깁니다.`);
+  }
+  return normalized;
+}
+
+function requireLineageHash(value, field, context) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!SHA256_HEX_PATTERN.test(normalized)) {
+    throw new Error(`${context}의 ${field} 값은 소문자 SHA-256이어야 합니다.`);
+  }
+  return normalized;
+}
+
+function normalizePublicApproval(value, context) {
+  if (!isPlainObject(value)) throw new Error(`${context}의 approval 객체가 필요합니다.`);
+  const reviewedAtValue = requireLineageString(value.reviewed_at, "reviewed_at", context);
+  const reviewedAt = new Date(reviewedAtValue);
+  if (!Number.isFinite(reviewedAt.getTime())) {
+    throw new Error(`${context}의 reviewed_at 값은 ISO-8601 시각이어야 합니다.`);
+  }
+  return {
+    authorizationId: requireLineageString(value.authorization_id, "authorization_id", context),
+    fingerprint: requireLineageHash(value.fingerprint, "fingerprint", context),
+    clusterId: requireLineageString(value.cluster_id, "cluster_id", context),
+    reviewer: requireLineageString(value.reviewer, "reviewer", context),
+    reviewedAt: reviewedAt.toISOString(),
+    approvedUrlsSha256: requireLineageHash(value.approved_urls_sha256, "approved_urls_sha256", context),
+  };
+}
+
+function validateSemanticExtraction(profile, bodyCharacters, context = "semantic profile") {
+  const extraction = profile?.extraction;
+  if (!isPlainObject(extraction)) throw new Error(`${context}의 extraction 객체가 필요합니다.`);
+  const textScope = String(extraction.text_scope ?? "").trim();
+  const analyzedCharacters = Number(extraction.analyzed_character_count);
+  const inputTruncated = extraction.input_truncated;
+  if (!SEMANTIC_TEXT_SCOPES.has(textScope)) {
+    throw new Error(`${context}의 text_scope가 승인된 값이 아닙니다.`);
+  }
+  if (!Number.isInteger(analyzedCharacters) || analyzedCharacters < 1 || analyzedCharacters > bodyCharacters) {
+    throw new Error(`${context}의 analyzed_character_count가 본문 범위를 벗어났습니다.`);
+  }
+  if (typeof inputTruncated !== "boolean") {
+    throw new Error(`${context}의 input_truncated는 boolean이어야 합니다.`);
+  }
+  if (!inputTruncated && analyzedCharacters !== bodyCharacters) {
+    throw new Error(`${context}가 미절단 입력이라면 분석 문자 수와 본문 문자 수가 같아야 합니다.`);
+  }
+  if (inputTruncated && analyzedCharacters >= bodyCharacters) {
+    throw new Error(`${context}가 절단 입력이라면 분석 문자 수가 본문 문자 수보다 작아야 합니다.`);
+  }
+  return { textScope, analyzedCharacters, inputTruncated };
+}
+
+function validateSemanticProfileLineage(profile, context = "semantic profile") {
+  if (!isPlainObject(profile?.lineage)) throw new Error(`${context}의 lineage 객체가 필요합니다.`);
+  const modelId = requireLineageString(profile.lineage.model_id, "model_id", context);
+  const promptVersion = requireLineageString(profile.lineage.prompt_version, "prompt_version", context);
+  const analysisSchemaVersion = requireLineageString(
+    profile.lineage.analysis_schema_version,
+    "analysis_schema_version",
+    context,
+  );
+  const comparisonEngineVersion = requireLineageString(
+    profile.lineage.comparison_engine_version,
+    "comparison_engine_version",
+    context,
+  );
+  if (modelId !== String(profile.engine?.version ?? "")) {
+    throw new Error(`${context}의 model_id가 engine.version과 일치하지 않습니다.`);
+  }
+  if (promptVersion !== String(profile.engine?.prompt_version ?? "")) {
+    throw new Error(`${context}의 prompt_version이 engine.prompt_version과 일치하지 않습니다.`);
+  }
+  if (analysisSchemaVersion !== String(profile.schema_version ?? "")) {
+    throw new Error(`${context}의 analysis_schema_version이 profile.schema_version과 일치하지 않습니다.`);
+  }
+  if (comparisonEngineVersion !== FRAMING_ENGINE_VERSION) {
+    throw new Error(`${context}의 comparison_engine_version이 현재 비교 엔진과 일치하지 않습니다.`);
+  }
+  return {
+    modelId,
+    promptVersion,
+    analysisSchemaVersion,
+    comparisonEngineVersion,
+    approval: normalizePublicApproval(profile.lineage.approval, context),
+  };
+}
+
+function profileAnalysisLineage(profile) {
+  if (profile?.schema_version === AI_ARTICLE_FRAME_PROFILE_SCHEMA) {
+    return validateSemanticProfileLineage(profile);
+  }
+  return {
+    modelId: String(profile?.engine?.version ?? FRAMING_ENGINE_VERSION),
+    promptVersion: "not_applicable_rules",
+    analysisSchemaVersion: String(profile?.schema_version ?? ARTICLE_FRAME_PROFILE_SCHEMA),
+    comparisonEngineVersion: FRAMING_ENGINE_VERSION,
+    approval: null,
+  };
+}
+
+function equalApproval(left, right) {
+  return Boolean(left && right)
+    && left.authorizationId === right.authorizationId
+    && left.fingerprint === right.fingerprint
+    && left.clusterId === right.clusterId
+    && left.reviewer === right.reviewer
+    && left.reviewedAt === right.reviewedAt
+    && left.approvedUrlsSha256 === right.approvedUrlsSha256;
+}
+
+export async function approvedClusterApprovals(payload) {
+  const clusters = payload?.approved_same_event_clusters;
+  if (clusters === undefined) return new Map();
+  if (!Array.isArray(clusters) || clusters.length > 20) {
+    throw new Error("승인된 동일 사건 클러스터는 최대 20개의 배열이어야 합니다.");
+  }
+  const approvals = new Map();
+  const clusterIds = new Set();
+  for (const [index, cluster] of clusters.entries()) {
+    const context = `${index + 1}번째 동일 사건 승인`;
+    if (!isPlainObject(cluster)) {
+      throw new Error(`${context}은 승인 지문을 포함한 객체여야 하며 URL 배열만으로는 승인할 수 없습니다.`);
+    }
+    const approvedUrls = cluster.approved_urls;
+    if (!Array.isArray(approvedUrls) || approvedUrls.length < 2 || approvedUrls.length > 50) {
+      throw new Error(`${context}의 approved_urls는 2~50개의 URL이어야 합니다.`);
+    }
+    let canonicalUrls;
+    try {
+      canonicalUrls = approvedUrls.map((value) => canonicalizeArticleUrl(value));
+    } catch {
+      throw new Error(`${context}의 approved_urls에 올바르지 않은 URL이 있습니다.`);
+    }
+    if (new Set(canonicalUrls).size !== canonicalUrls.length) {
+      throw new Error(`${context}의 approved_urls에 중복 URL이 있습니다.`);
+    }
+    const signature = clusterArticleSignature(canonicalUrls);
+    if (!signature) throw new Error(`${context}의 URL 집합을 확인해 주세요.`);
+    const approval = normalizePublicApproval(cluster, context);
+    const expectedHash = await sha256Hex(signature);
+    if (approval.approvedUrlsSha256 !== expectedHash) {
+      throw new Error(`${context}의 approved_urls_sha256이 정확한 URL 집합과 일치하지 않습니다.`);
+    }
+    if (approvals.has(signature)) throw new Error(`${context}의 URL 집합이 중복 승인되었습니다.`);
+    if (clusterIds.has(approval.clusterId)) throw new Error(`${context}의 cluster_id가 중복되었습니다.`);
+    approvals.set(signature, { ...approval, approvedUrls: signature.split("\n") });
+    clusterIds.add(approval.clusterId);
+  }
+  return approvals;
+}
+
+export function resolveClusterApproval(issueUrls, profiles, approvals) {
+  const signature = clusterArticleSignature(issueUrls);
+  const approval = signature && approvals instanceof Map ? approvals.get(signature) ?? null : null;
+  const semanticProfiles = profiles.filter((profile) => profile?.schema_version === AI_ARTICLE_FRAME_PROFILE_SCHEMA);
+  if (!approval && semanticProfiles.length) {
+    throw new Error("Semantic analysis profiles require an approval object bound to the exact issue URL set.");
+  }
+  if (!approval) return null;
+  if (!profiles.length) throw new Error("The approved issue URL set has no usable analysis profiles.");
+  for (const profile of profiles) {
+    const lineage = profileAnalysisLineage(profile);
+    if (!equalApproval(lineage.approval, approval)) {
+      throw new Error("The analysis profile approval lineage does not match the exact issue approval.");
+    }
+  }
+  return approval;
+}
+
+function comparisonAnalysisLineage(profiles, approval = null) {
+  if (!profiles.length) throw new Error("At least one analysis profile is required for comparison lineage.");
+  const lineages = profiles.map(profileAnalysisLineage);
+  const first = lineages[0];
+  for (const lineage of lineages.slice(1)) {
+    if (
+      lineage.modelId !== first.modelId
+      || lineage.promptVersion !== first.promptVersion
+      || lineage.analysisSchemaVersion !== first.analysisSchemaVersion
+      || lineage.comparisonEngineVersion !== first.comparisonEngineVersion
+    ) {
+      throw new Error("A comparison cannot publish mixed model, prompt, schema, or comparison-engine lineage.");
+    }
+  }
+  return {
+    modelId: first.modelId,
+    promptVersion: first.promptVersion,
+    analysisSchemaVersion: first.analysisSchemaVersion,
+    comparisonEngineVersion: first.comparisonEngineVersion,
+    approval: approval ? {
+      authorizationId: approval.authorizationId,
+      fingerprint: approval.fingerprint,
+      clusterId: approval.clusterId,
+      reviewer: approval.reviewer,
+      reviewedAt: approval.reviewedAt,
+      approvedUrlsSha256: approval.approvedUrlsSha256,
+    } : null,
+  };
+}
+
+function withheldClusterReviewComparison(profiles, issue, articleMetadata) {
+  const outlets = new Set(articleMetadata.map((article) => article.sourceId ?? article.source));
+  const mediaGroups = new Set(
+    articleMetadata.map((article) => article.mediaGroupId ?? article.sourceId ?? article.source),
+  );
+  return {
+    lineage: comparisonAnalysisLineage(profiles),
+    status: "withheld_insufficient_evidence",
+    divergenceDetected: false,
+    evidenceBasis: profiles.length ? "evidence_spans" : "headline_metadata_only",
+    reason: "자동 사건 군집의 동일성 검토가 끝나지 않아 매체 간 프레이밍 비교를 보류했습니다.",
+    methodologyLabel: "동일 사건 확인 대기",
+    reviewStatus: "cluster_review_required",
+    summary: {
+      commonGround: null,
+      mainDifference: "서로 다른 사건이나 후속 반응이 섞였을 가능성을 먼저 확인해야 합니다.",
+      whyItMatters: "사건 단위가 다르면 기사 내용의 차이를 언론사 프레임 차이로 잘못 읽을 수 있습니다.",
+      sourceContext: null,
+    },
+    sample: {
+      analyzedArticles: profiles.length,
+      textScope: profiles.some((profile) => profile.extraction?.text_scope === "provider_excerpt")
+        ? "provider_excerpt"
+        : "article_body",
+      outlets: outlets.size,
+      independentMediaGroups: mediaGroups.size,
+      excludedArticles: Math.max(0, Number(issue.articleCount ?? 0) - profiles.length),
+      inputTruncatedArticles: profiles.filter((profile) => profile.extraction?.input_truncated === true).length,
+    },
+    axes: [],
+    issueMap: {
+      status: "withheld_review_required",
+      reason: "동일 사건 검토가 끝나지 않아 쟁점 지도 계산을 보류했습니다.",
+      axisId: null,
+      dimension: "problem_definition",
+      label: "문제 정의",
+      leftAnchor: null,
+      rightAnchor: null,
+      selectionBasis: {
+        minimumArticles: 4,
+        minimumOutlets: 3,
+        minimumIndependentMediaGroups: 2,
+        minimumArticlesPerAnchor: 2,
+        articleCount: profiles.length,
+        outletCount: outlets.size,
+        independentMediaGroups: mediaGroups.size,
+        balancedCoverage: null,
+        overlap: null,
+        axisStrength: null,
+        coveredArticleCount: 0,
+        formula: null,
+      },
+      outlets: [],
+    },
+    narratives: [],
+    readerQuestions: [],
+    sourceLens: {
+      sharedVoices: [],
+      voicesPresentInSomeOutlets: [],
+      byOutlet: [],
+      caution: null,
+    },
+    contextGaps: [],
+    limitations: [
+      "동일 사건으로 사람 검토가 완료되기 전에는 매체 간 차이를 공개하지 않습니다.",
+      "기사 메타데이터와 원문 링크는 계속 확인할 수 있습니다.",
+    ],
+  };
 }
 
 function uniqueStrings(values) {
@@ -1166,68 +1692,283 @@ function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function isNonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isStringArray(value, { nonEmpty = false } = {}) {
+  return Array.isArray(value)
+    && (!nonEmpty || value.length > 0)
+    && value.every(isNonEmptyString);
+}
+
+function isFiniteRange(value, minimum, maximum) {
+  return typeof value === "number"
+    && Number.isFinite(value)
+    && value >= minimum
+    && value <= maximum;
+}
+
+function isPublicClaimEvidence(value) {
+  return isPlainObject(value)
+    && isNonEmptyString(value.claimId)
+    && isNonEmptyString(value.articleId)
+    && isNonEmptyString(value.source)
+    && isNonEmptyString(value.sourceUrl)
+    && (value.evidenceLocator === null || isNonEmptyString(value.evidenceLocator))
+    && (value.evidenceHash === null || SHA256_HEX_PATTERN.test(String(value.evidenceHash)))
+    && (value.voiceKind === null || isNonEmptyString(value.voiceKind));
+}
+
+function isPublicEvidenceList(value, claimIds, { nonEmpty = false } = {}) {
+  return Array.isArray(value)
+    && (!nonEmpty || value.length > 0)
+    && value.every((evidence) => isPublicClaimEvidence(evidence) && claimIds.includes(evidence.claimId));
+}
+
+function isPublicNarrativeClause(value) {
+  if (value === null) return true;
+  if (!isPlainObject(value)
+    || !isNonEmptyString(value.dimension)
+    || !isNonEmptyString(value.label)
+    || !isNonEmptyString(value.groupId)
+    || !isNonEmptyString(value.summary)
+    || !Number.isInteger(value.supportingArticleCount)
+    || value.supportingArticleCount < 2
+    || !Number.isInteger(value.observedArticleCount)
+    || value.observedArticleCount < value.supportingArticleCount
+    || !isFiniteRange(value.supportShare, 0.6, 1)
+    || !isStringArray(value.claimIds, { nonEmpty: true })) return false;
+  return isPublicEvidenceList(value.evidence, value.claimIds, { nonEmpty: true });
+}
+
+function isPublicIssueMapAnchor(value) {
+  if (!isPlainObject(value)
+    || !isNonEmptyString(value.groupId)
+    || !isNonEmptyString(value.label)
+    || !(value.frameFamily === null || isNonEmptyString(value.frameFamily))
+    || !Number.isInteger(value.articleCount)
+    || value.articleCount < 2
+    || !Number.isInteger(value.outletCount)
+    || value.outletCount < 1
+    || !Number.isInteger(value.independentMediaGroups)
+    || value.independentMediaGroups < 1
+    || !isStringArray(value.claimIds, { nonEmpty: true })) return false;
+  return isPublicEvidenceList(value.evidence, value.claimIds, { nonEmpty: true });
+}
+
+function isPublicIssueMap(value) {
+  if (!isPlainObject(value)
+    || !["available", "provisional", "withheld_insufficient_evidence", "withheld_source_dominated", "withheld_review_required"].includes(value.status)
+    || !isNonEmptyString(value.reason)
+    || !(value.axisId === null || isNonEmptyString(value.axisId))
+    || value.dimension !== "problem_definition"
+    || !isNonEmptyString(value.label)
+    || !isPlainObject(value.selectionBasis)
+    || !Array.isArray(value.outlets)) return false;
+  const selection = value.selectionBasis;
+  for (const field of ["minimumArticles", "minimumOutlets", "minimumIndependentMediaGroups", "minimumArticlesPerAnchor", "articleCount", "outletCount", "independentMediaGroups", "coveredArticleCount"]) {
+    if (!Number.isInteger(selection[field]) || selection[field] < 0) return false;
+  }
+  for (const field of ["balancedCoverage", "overlap", "axisStrength"]) {
+    if (!(selection[field] === null || isFiniteRange(selection[field], 0, 1))) return false;
+  }
+  if (!(selection.formula === null || isNonEmptyString(selection.formula))) return false;
+  const available = ["available", "provisional"].includes(value.status);
+  if (available) {
+    if (!isNonEmptyString(value.axisId)
+      || !isPublicIssueMapAnchor(value.leftAnchor)
+      || !isPublicIssueMapAnchor(value.rightAnchor)) return false;
+  } else if (value.axisId !== null || value.leftAnchor !== null || value.rightAnchor !== null || value.outlets.length) {
+    return false;
+  }
+  return value.outlets.every((outlet) => {
+    if (!isPlainObject(outlet)
+      || !isNonEmptyString(outlet.sourceId)
+      || !isNonEmptyString(outlet.source)
+      || !["left", "mixed", "right", "insufficient"].includes(outlet.classification)
+      || !(outlet.score === null || isFiniteRange(outlet.score, -1, 1))
+      || !(outlet.displayPosition === null || isFiniteRange(outlet.displayPosition, 10, 90))
+      || !["insufficient", "single_article_observation", "automatic_draft", "supported"].includes(outlet.evidenceStatus)
+      || !isStringArray(outlet.claimIds)) return false;
+    for (const field of ["articleCount", "eligibleArticleCount", "leftArticleCount", "mixedArticleCount", "rightArticleCount"]) {
+      if (!Number.isInteger(outlet[field]) || outlet[field] < 0) return false;
+    }
+    return isPublicEvidenceList(outlet.evidence, outlet.claimIds);
+  });
+}
+
+function isPublicNarrative(value) {
+  if (!isPlainObject(value)
+    || !isNonEmptyString(value.narrativeId)
+    || !["automatic_draft", "supported"].includes(value.status)
+    || !isNonEmptyString(value.summary)
+    || !Number.isInteger(value.articleCount)
+    || value.articleCount < 2
+    || !Number.isInteger(value.outletCount)
+    || value.outletCount < 1
+    || !Number.isInteger(value.independentMediaGroups)
+    || value.independentMediaGroups < 1
+    || !isFiniteRange(value.completeness, 0.6, 1)
+    || !isStringArray(value.supportingArticleIds, { nonEmpty: true })
+    || !isStringArray(value.supportingOutlets, { nonEmpty: true })
+    || !isStringArray(value.claimIds, { nonEmpty: true })
+    || !isPublicEvidenceList(value.evidence, value.claimIds, { nonEmpty: true })
+    || !isPublicNarrativeClause(value.problem)
+    || value.problem === null) return false;
+  return [value.cause, value.responsibility, value.evaluation, value.remedy]
+    .every(isPublicNarrativeClause);
+}
+
+function isPublicReaderQuestion(value) {
+  if (!isPlainObject(value)
+    || !isNonEmptyString(value.questionId)
+    || !["narrative_contrast", "issue_axis_contrast", "affected_voice_gap", "source_voice_gap", "context_gap"].includes(value.triggerType)
+    || !isNonEmptyString(value.question)
+    || !isStringArray(value.basisClaimIds, { nonEmpty: true })
+    || !isStringArray(value.basisArticleIds, { nonEmpty: true })) return false;
+  return isPublicEvidenceList(value.evidence, value.basisClaimIds, { nonEmpty: true });
+}
+
 function isStructuredComparisonPayload(value) {
   if (!isPlainObject(value)) return false;
+  if (!isPlainObject(value.lineage)
+    || !isNonEmptyString(value.lineage.modelId)
+    || !isNonEmptyString(value.lineage.promptVersion)
+    || !isNonEmptyString(value.lineage.analysisSchemaVersion)
+    || !isNonEmptyString(value.lineage.comparisonEngineVersion)) return false;
+  if (value.lineage.approval !== null) {
+    const approval = value.lineage.approval;
+    if (!isPlainObject(approval)
+      || !isNonEmptyString(approval.authorizationId)
+      || !isNonEmptyString(approval.clusterId)
+      || !isNonEmptyString(approval.reviewer)
+      || !isNonEmptyString(approval.reviewedAt)
+      || !Number.isFinite(Date.parse(approval.reviewedAt))
+      || !SHA256_HEX_PATTERN.test(String(approval.fingerprint ?? ""))
+      || !SHA256_HEX_PATTERN.test(String(approval.approvedUrlsSha256 ?? ""))) return false;
+  }
   if (!["available", "partial", "withheld_insufficient_evidence"].includes(value.status)) return false;
   if (typeof value.divergenceDetected !== "boolean" || !isPlainObject(value.summary) || !isPlainObject(value.sample)) return false;
   if (!["provider_excerpt", "article_body"].includes(value.sample.textScope)) return false;
-  if (!Array.isArray(value.axes) || !isPlainObject(value.sourceLens) || !Array.isArray(value.contextGaps) || !Array.isArray(value.limitations)) return false;
-  if (!Array.isArray(value.sourceLens.sharedVoices) || !Array.isArray(value.sourceLens.voicesPresentInSomeOutlets) || !Array.isArray(value.sourceLens.byOutlet)) return false;
-  if (!value.axes.every((axis) => isPlainObject(axis) && typeof axis.dimension === "string" && typeof axis.label === "string"
+  for (const field of ["analyzedArticles", "outlets", "independentMediaGroups", "excludedArticles", "inputTruncatedArticles"]) {
+    if (!Number.isInteger(value.sample[field]) || value.sample[field] < 0) return false;
+  }
+  if (value.sample.inputTruncatedArticles > value.sample.analyzedArticles) return false;
+  if (!Array.isArray(value.axes)
+    || !isPublicIssueMap(value.issueMap)
+    || !Array.isArray(value.narratives)
+    || value.narratives.length > 2
+    || !value.narratives.every(isPublicNarrative)
+    || !Array.isArray(value.readerQuestions)
+    || value.readerQuestions.length > 3
+    || !value.readerQuestions.every(isPublicReaderQuestion)
+    || !isPlainObject(value.sourceLens)
+    || !Array.isArray(value.contextGaps)
+    || !Array.isArray(value.limitations)) return false;
+  if (!isStringArray(value.sourceLens.sharedVoices)
+    || !isStringArray(value.sourceLens.voicesPresentInSomeOutlets)
+    || !Array.isArray(value.sourceLens.byOutlet)
+    || !(value.sourceLens.caution === null || isNonEmptyString(value.sourceLens.caution))) return false;
+  if (!value.axes.every((axis) => isPlainObject(axis) && isNonEmptyString(axis.dimension) && isNonEmptyString(axis.label)
     && Array.isArray(axis.variants) && axis.variants.every((variant) => isPlainObject(variant)
-      && typeof variant.summary === "string"
+      && isNonEmptyString(variant.groupId)
+      && (variant.frameFamily === null || isNonEmptyString(variant.frameFamily))
+      && isStringArray(variant.claimIds, { nonEmpty: true })
+      && isNonEmptyString(variant.summary)
       && Array.isArray(variant.outlets)
       && variant.outlets.every((outlet) => isPlainObject(outlet)
-        && typeof outlet.source === "string"
-        && typeof outlet.articleId === "string"
-        && typeof outlet.sourceUrl === "string")))) return false;
-  if (!value.sourceLens.byOutlet.every((entry) => isPlainObject(entry)
-    && typeof entry.source === "string"
-    && Array.isArray(entry.voices))) return false;
+        && isNonEmptyString(outlet.source)
+        && isNonEmptyString(outlet.articleId)
+        && isNonEmptyString(outlet.sourceUrl)
+        && isNonEmptyString(outlet.claimId)
+        && variant.claimIds.includes(outlet.claimId))))) return false;
+  if (!value.sourceLens.byOutlet.every((entry) => {
+    if (!isPlainObject(entry)
+      || !isNonEmptyString(entry.source)
+      || !Number.isInteger(entry.articleCount)
+      || entry.articleCount < 0
+      || !Number.isInteger(entry.sourceArticleCount)
+      || entry.sourceArticleCount < 0
+      || entry.sourceArticleCount > entry.articleCount
+      || !isStringArray(entry.voices)
+      || !Array.isArray(entry.roleCounts)
+      || !(entry.officialShare === null || isFiniteRange(entry.officialShare, 0, 1))
+      || typeof entry.affectedGroupVoice !== "boolean"
+      || !isFiniteRange(entry.affectedGroupPresenceRate, 0, 1)) return false;
+    return entry.roleCounts.every((role) => isPlainObject(role)
+      && isNonEmptyString(role.role)
+      && isNonEmptyString(role.roleLabel)
+      && Number.isInteger(role.count)
+      && role.count > 0
+      && role.count === role.articleCount
+      && isFiniteRange(role.presenceRate, 0, 1)
+      && Number.isInteger(role.directQuoteArticleCount)
+      && role.directQuoteArticleCount >= 0
+      && Number.isInteger(role.indirectAttributionArticleCount)
+      && role.indirectAttributionArticleCount >= 0
+      && Number.isInteger(role.mentionCount)
+      && role.mentionCount >= 0);
+  })) return false;
   if (!value.contextGaps.every((gap) => isPlainObject(gap)
-    && typeof gap.feature === "string"
-    && Array.isArray(gap.presentInOutlets)
-    && Array.isArray(gap.notObservedInOutlets)
-    && typeof gap.displayText === "string")) return false;
-  if (!value.limitations.every((item) => typeof item === "string")) return false;
-  if (value.analysisModules != null) {
-    const modules = value.analysisModules;
-    if (!isPlainObject(modules) || !isPlainObject(modules.frameComposition)
-      || !isPlainObject(modules.reportingStyle) || !isPlainObject(modules.morphology)) return false;
-    if (!Array.isArray(modules.frameComposition.byOutlet)
-      || !Array.isArray(modules.reportingStyle.byOutlet)
-      || !Array.isArray(modules.morphology.byOutlet)) return false;
-    if (!modules.frameComposition.byOutlet.every((entry) => isPlainObject(entry)
-      && typeof entry.source === "string" && Array.isArray(entry.labels))) return false;
-    if (!modules.reportingStyle.byOutlet.every((entry) => isPlainObject(entry)
-      && typeof entry.source === "string" && isPlainObject(entry.evaluation) && isPlainObject(entry.scope))) return false;
-    if (!modules.morphology.byOutlet.every((entry) => isPlainObject(entry)
-      && typeof entry.source === "string" && Array.isArray(entry.terms))) return false;
-  }
+    && isNonEmptyString(gap.feature)
+    && isStringArray(gap.presentInOutlets)
+    && isStringArray(gap.notObservedInOutlets)
+    && isNonEmptyString(gap.displayText))) return false;
+  if (!value.limitations.every(isNonEmptyString)) return false;
   return !/"(?:raw_body|rawBody|body_text|bodyText|sentence_text|sentenceText|quote|quotation|excerpt|html|content)"\s*:/i.test(JSON.stringify(value));
 }
 
-function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { issueArticleCount = issueArticles.length } = {}) {
+function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { issueArticleCount = issueArticles.length, approval = null } = {}) {
   const articleById = new Map(issueArticles.map((article) => [String(article.id), article]));
   const profileById = new Map(profiles.map((profile) => [String(profile.article.article_id), profile]));
-  const publicEvidenceRefs = (entries = []) => {
+  const publicEvidence = (entry) => {
+    const article = articleById.get(String(entry?.article_id));
+    if (!article) return null;
+    const locator = entry?.locator;
+    return {
+      claimId: String(entry.claim_id ?? ""),
+      articleId: String(article.id),
+      source: String(article.source),
+      sourceUrl: String(article.url ?? article.canonicalUrl),
+      evidenceLocator: locator ? `${locator.paragraph}문단 ${locator.sentence}문장` : null,
+      evidenceHash: entry?.sentence_sha256 ?? null,
+      voiceKind: entry?.voice_kind ?? null,
+    };
+  };
+  const publicEvidenceList = (entries) => {
     const seen = new Set();
-    return entries.flatMap((entry) => {
-      const article = articleById.get(String(entry.article_id));
-      if (!article) return [];
-      const locator = entry.locator;
-      const key = `${article.id}:${locator?.paragraph ?? ""}:${locator?.sentence ?? ""}:${entry.sentence_sha256 ?? ""}`;
+    return (entries ?? []).flatMap((entry) => {
+      const evidence = publicEvidence(entry);
+      if (!evidence) return [];
+      const key = `${evidence.articleId}:${evidence.claimId}:${evidence.evidenceHash}`;
       if (seen.has(key)) return [];
       seen.add(key);
-      return [{
-        source: article.source,
-        articleId: article.id,
-        sourceUrl: article.url,
-        evidenceLocator: locator ? `${locator.paragraph}문단 ${locator.sentence}문장` : null,
-        evidenceHash: entry.sentence_sha256 ?? null,
-      }];
+      return [evidence];
     });
   };
+  const publicEvidenceRefs = publicEvidenceList;
+  const publicAnchor = (anchor) => anchor ? {
+    groupId: anchor.group_id,
+    label: anchor.label,
+    frameFamily: anchor.frame_family,
+    articleCount: Number(anchor.article_count ?? 0),
+    outletCount: Number(anchor.outlet_count ?? 0),
+    independentMediaGroups: Number(anchor.independent_media_group_count ?? 0),
+    claimIds: anchor.claim_ids ?? [],
+    evidence: publicEvidenceList(anchor.evidence),
+  } : null;
+  const publicClause = (clause) => clause ? {
+    dimension: clause.dimension,
+    label: clause.label,
+    groupId: clause.group_id,
+    summary: clause.summary,
+    supportingArticleCount: Number(clause.supporting_article_count ?? 0),
+    observedArticleCount: Number(clause.observed_article_count ?? 0),
+    supportShare: Number(clause.support_share ?? 0),
+    claimIds: clause.claim_ids ?? [],
+    evidence: publicEvidenceList(clause.evidence),
+  } : null;
   const rawAxes = rawComparison.comparison_axes ?? [];
   const divergenceDetected = rawComparison.summary_30_seconds?.divergence_detected === true;
   const axes = rawAxes
@@ -1249,11 +1990,16 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
             source: article.source,
             articleId: article.id,
             sourceUrl: article.url,
+            claimId: articleEvidence?.claim_id ?? null,
             evidenceLocator: locator ? `${locator.paragraph}문단 ${locator.sentence}문장` : null,
             evidenceHash: articleEvidence?.sentence_sha256 ?? null,
+            voiceKind: articleEvidence?.voice_kind ?? null,
           });
         }
         return {
+          groupId: pattern.variant_key,
+          frameFamily: pattern.frame_family ?? null,
+          claimIds: pattern.claim_ids ?? [],
           summary: pattern.public_paraphrase,
           outlets,
           commitment: pattern.voice_scope === "outlet_narration" ? "explicit" : "source_attributed",
@@ -1264,6 +2010,72 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
       }),
     }))
     .filter((axis) => axis.variants.length);
+
+  const rawIssueMap = rawComparison.issue_map ?? {};
+  const issueMap = {
+    status: rawIssueMap.status ?? "withheld_insufficient_evidence",
+    reason: rawIssueMap.reason ?? "쟁점 지도 계산 결과가 없습니다.",
+    axisId: rawIssueMap.axis_id ?? null,
+    dimension: rawIssueMap.dimension ?? "problem_definition",
+    label: rawIssueMap.label ?? "문제 정의",
+    leftAnchor: publicAnchor(rawIssueMap.left_anchor),
+    rightAnchor: publicAnchor(rawIssueMap.right_anchor),
+    selectionBasis: {
+      minimumArticles: Number(rawIssueMap.selection_basis?.minimum_articles ?? 4),
+      minimumOutlets: Number(rawIssueMap.selection_basis?.minimum_outlets ?? 3),
+      minimumIndependentMediaGroups: Number(rawIssueMap.selection_basis?.minimum_independent_media_groups ?? 2),
+      minimumArticlesPerAnchor: Number(rawIssueMap.selection_basis?.minimum_articles_per_anchor ?? 2),
+      articleCount: Number(rawIssueMap.selection_basis?.article_count ?? profiles.length),
+      outletCount: Number(rawIssueMap.selection_basis?.outlet_count ?? 0),
+      independentMediaGroups: Number(rawIssueMap.selection_basis?.independent_media_group_count ?? 0),
+      balancedCoverage: rawIssueMap.selection_basis?.balanced_coverage ?? null,
+      overlap: rawIssueMap.selection_basis?.overlap ?? null,
+      axisStrength: rawIssueMap.selection_basis?.axis_strength ?? null,
+      coveredArticleCount: Number(rawIssueMap.selection_basis?.covered_article_count ?? 0),
+      formula: rawIssueMap.selection_basis?.formula ?? null,
+    },
+    outlets: (rawIssueMap.outlets ?? []).map((outlet) => ({
+      sourceId: outlet.source_id,
+      source: outlet.source,
+      classification: outlet.classification,
+      score: outlet.score,
+      displayPosition: outlet.display_position,
+      articleCount: Number(outlet.article_count ?? 0),
+      eligibleArticleCount: Number(outlet.eligible_article_count ?? 0),
+      leftArticleCount: Number(outlet.left_article_count ?? 0),
+      mixedArticleCount: Number(outlet.mixed_article_count ?? 0),
+      rightArticleCount: Number(outlet.right_article_count ?? 0),
+      evidenceStatus: outlet.evidence_status,
+      claimIds: outlet.claim_ids ?? [],
+      evidence: publicEvidenceList(outlet.evidence),
+    })),
+  };
+  const narratives = (rawComparison.narratives ?? []).map((narrative) => ({
+    narrativeId: narrative.narrative_id,
+    status: narrative.status,
+    summary: narrative.summary,
+    articleCount: Number(narrative.article_count ?? 0),
+    outletCount: Number(narrative.outlet_count ?? 0),
+    independentMediaGroups: Number(narrative.independent_media_group_count ?? 0),
+    completeness: Number(narrative.completeness ?? 0),
+    supportingArticleIds: narrative.supporting_article_ids ?? [],
+    supportingOutlets: narrative.supporting_outlets ?? [],
+    claimIds: narrative.claim_ids ?? [],
+    evidence: publicEvidenceList(narrative.evidence),
+    problem: publicClause(narrative.problem),
+    cause: publicClause(narrative.cause),
+    responsibility: publicClause(narrative.responsibility),
+    evaluation: publicClause(narrative.evaluation),
+    remedy: publicClause(narrative.remedy),
+  }));
+  const readerQuestions = (rawComparison.reader_questions ?? []).map((question) => ({
+    questionId: question.question_id,
+    triggerType: question.trigger_type,
+    question: question.question,
+    basisClaimIds: question.basis_claim_ids ?? [],
+    basisArticleIds: question.basis_article_ids ?? [],
+    evidence: publicEvidenceList(question.evidence),
+  }));
 
   const sample = rawComparison.sample ?? {};
   const analyzedOutletCount = Number(sample.outlet_count ?? 0);
@@ -1282,19 +2094,27 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
   const byOutlet = profileOutlets.map((outlet) => {
     const entry = rawByOutlet.get(outlet) ?? { outlet, roles: [] };
     const counts = entry.roles ?? [];
-    const total = counts.reduce((sum, role) => sum + Number(role.count ?? 0), 0);
-    const official = counts
-      .filter((role) => ["government_official", "political_actor", "judiciary_law_enforcement", "anonymous_official"].includes(role.role))
-      .reduce((sum, role) => sum + Number(role.count ?? 0), 0);
     return {
       source: entry.outlet,
+      articleCount: Number(entry.article_count ?? 0),
+      sourceArticleCount: Number(entry.source_article_count ?? 0),
       voices: uniqueStrings(counts.map((role) => role.role_label)),
       roleCounts: counts
-        .map((role) => ({ role: String(role.role), roleLabel: String(role.role_label ?? role.role), count: Number(role.count ?? 0) }))
-        .filter((role) => role.count > 0)
-        .sort((a, b) => b.count - a.count),
-      officialShare: total ? Math.round((official / total) * 1000) / 1000 : null,
-      affectedGroupVoice: counts.some((role) => role.role === "affected_person"),
+        .map((role) => ({
+          role: String(role.role),
+          roleLabel: String(role.role_label ?? role.role),
+          count: Number(role.article_count ?? role.count ?? 0),
+          articleCount: Number(role.article_count ?? role.count ?? 0),
+          presenceRate: Number(role.presence_rate ?? 0),
+          directQuoteArticleCount: Number(role.direct_quote_article_count ?? 0),
+          indirectAttributionArticleCount: Number(role.indirect_attribution_article_count ?? 0),
+          mentionCount: Number(role.mention_count ?? role.count ?? 0),
+        }))
+        .filter((role) => role.articleCount > 0)
+        .sort((a, b) => b.articleCount - a.articleCount || a.role.localeCompare(b.role)),
+      officialShare: entry.official_share ?? null,
+      affectedGroupVoice: Number(entry.affected_group_presence_rate ?? 0) > 0,
+      affectedGroupPresenceRate: Number(entry.affected_group_presence_rate ?? 0),
     };
   });
 
@@ -1411,13 +2231,18 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
     "표본 본문에서 확인되지 않은 요소는 실제 부재나 의도적 누락을 뜻하지 않습니다.",
   ];
   const providerExcerptCount = profiles.filter((profile) => profile.extraction?.text_scope === "provider_excerpt").length;
+  const inputTruncatedCount = profiles.filter((profile) => profile.extraction?.input_truncated === true).length;
   if (providerExcerptCount) {
     limitations.unshift(`BigKinds가 제공한 본문 발췌 ${providerExcerptCount}건을 분석했습니다. 기사 전문 전체를 분석한 결과가 아닙니다.`);
+  }
+  if (inputTruncatedCount) {
+    limitations.unshift(`모델 입력 한도로 본문 일부만 분석한 기사 ${inputTruncatedCount}건이 포함되었습니다.`);
   }
   const excluded = Math.max(0, Number(issueArticleCount) - usableProfiles);
   if (excluded) limitations.push(`본문을 확보·검증하지 못한 기사 ${excluded}건은 구조화 비교에서 제외했습니다.`);
 
   return {
+    lineage: comparisonAnalysisLineage(profiles, approval),
     status,
     divergenceDetected,
     evidenceBasis: usableProfiles ? "evidence_spans" : "headline_metadata_only",
@@ -1440,12 +2265,17 @@ function publicComparisonFromEngine(rawComparison, profiles, issueArticles, { is
       outlets: Number(sample.outlet_count ?? new Set(issueArticles.map((article) => article.source)).size),
       independentMediaGroups: independentGroups,
       excludedArticles: excluded,
+      inputTruncatedArticles: inputTruncatedCount,
     },
     axes,
+    issueMap,
+    narratives,
+    readerQuestions,
     sourceLens: {
       sharedVoices: uniqueStrings(sharedVoices),
       voicesPresentInSomeOutlets: uniqueStrings(voicesPresentInSomeOutlets),
       byOutlet,
+      caution: rawComparison.source_lens?.caution ?? null,
     },
     ...(analysisModules ? { analysisModules } : {}),
     contextGaps,
@@ -1719,7 +2549,10 @@ async function handleTransientAnalyze(request, env) {
       const analysisResponse = await handleAnalyze(new Request(new URL("/api/analyze", request.url), {
         method: "POST",
         headers: analysisHeaders,
-        body: JSON.stringify({ date: targetDate }),
+        body: JSON.stringify({
+          date: targetDate,
+          approved_same_event_clusters: payload.approved_same_event_clusters,
+        }),
       }), env);
       analysis = await analysisResponse.json();
       if (!analysisResponse.ok) return jsonResponse(analysis, analysisResponse.status, { request });
@@ -1940,20 +2773,81 @@ function kstDateFromMilliseconds(value) {
   return Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 10) : "";
 }
 
-async function resolveAnalysisDate(db, requestedDate) {
+function normalizeArticleScope(value) {
+  if (value == null) return null;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new TypeError("articleScope must be an object.");
+  }
+  const provider = String(value.provider ?? "").trim();
+  const sourceIds = [...new Set(
+    (Array.isArray(value.sourceIds) ? value.sourceIds : [])
+      .map((sourceId) => String(sourceId ?? "").trim())
+      .filter(Boolean),
+  )];
+  if (!provider || provider.length > 100) throw new TypeError("articleScope.provider is invalid.");
+  if (!sourceIds.length || sourceIds.some((sourceId) => sourceId.length > 200)) {
+    throw new TypeError("articleScope.sourceIds must contain valid source IDs.");
+  }
+  return { provider, sourceIds };
+}
+
+function articleScopeFilter(articleScope) {
+  if (!articleScope) return { sql: "", parameters: [] };
+  return {
+    sql: ` AND a.provider = ? AND a.source_id IN (${articleScope.sourceIds.map(() => "?").join(", ")})`,
+    parameters: [articleScope.provider, ...articleScope.sourceIds],
+  };
+}
+
+function scopedArticlePredicate(scope, articleAlias = "a", sourceAlias = "s") {
+  if (!scope || scope.kind === "all") return { sql: "1 = 1", parameters: [] };
+  if (scope.kind === "source_type") {
+    return {
+      sql: `${sourceAlias}.source_type = ? AND ${sourceAlias}.active = 1`,
+      parameters: [scope.sourceType],
+    };
+  }
+  return {
+    sql: `${articleAlias}.provider = ? AND ${articleAlias}.source_id IN (${scope.sourceIds.map(() => "?").join(", ")})`,
+    parameters: [scope.provider, ...scope.sourceIds],
+  };
+}
+
+function scopedRunExistsClause(scope, runAlias = "analysis_runs") {
+  if (!scope || scope.kind === "all") return { sql: "", parameters: [] };
+  const predicate = scopedArticlePredicate(scope, "scoped_run_a", "scoped_run_s");
+  return {
+    sql: ` AND EXISTS (
+      SELECT 1
+      FROM issues scoped_run_i
+      JOIN issue_articles scoped_run_ia ON scoped_run_ia.issue_id = scoped_run_i.id
+      JOIN articles scoped_run_a ON scoped_run_a.id = scoped_run_ia.article_id
+      JOIN media_sources scoped_run_s ON scoped_run_s.id = scoped_run_a.source_id
+      WHERE scoped_run_i.run_id = ${runAlias}.id AND ${predicate.sql}
+    )`,
+    parameters: predicate.parameters,
+  };
+}
+
+async function resolveAnalysisDate(db, requestedDate, articleScope = null) {
   if (requestedDate) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(requestedDate) || !Number.isFinite(Date.parse(`${requestedDate}T00:00:00+09:00`))) {
       throw new Error("분석 날짜를 YYYY-MM-DD 형식으로 입력해 주세요.");
     }
     return requestedDate;
   }
-  const latest = await db.prepare("SELECT MAX(published_at) AS published_at FROM articles").first();
+  const scope = articleScopeFilter(articleScope);
+  const latest = await db.prepare(`
+    SELECT MAX(a.published_at) AS published_at
+    FROM articles AS a
+    WHERE 1 = 1${scope.sql}
+  `).bind(...scope.parameters).first();
   const resolved = kstDateFromMilliseconds(latest?.published_at);
   if (!resolved) throw new Error("분석할 기사가 없습니다.");
   return resolved;
 }
 
-async function handleAnalyze(request, env, { contentOverrides = new Map(), includeStoredContents = true, includeDerivedSignals = true } = {}) {
+export async function handleAnalyze(request, env, { contentOverrides = new Map(), includeStoredContents = true, includeDerivedSignals = true, panelOverride = null, articleScope = null } = {}) {
   if (!env?.DB) return jsonResponse({ error: "데이터 저장소가 아직 준비되지 않았습니다." }, 503);
   if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401);
 
@@ -1967,13 +2861,18 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
 
   const db = env.DB;
   let targetDate;
+  let reviewedClusterApprovals;
+  let normalizedArticleScope;
   try {
-    targetDate = await resolveAnalysisDate(db, String(payload.date ?? "").trim());
+    normalizedArticleScope = normalizeArticleScope(articleScope);
+    targetDate = await resolveAnalysisDate(db, String(payload.date ?? "").trim(), normalizedArticleScope);
+    reviewedClusterApprovals = await approvedClusterApprovals(payload);
   } catch (error) {
     return jsonResponse({ error: error.message }, 400);
   }
   const start = Date.parse(`${targetDate}T00:00:00+09:00`);
   const end = start + 86_400_000;
+  const articleScopeWhere = articleScopeFilter(normalizedArticleScope);
   const articleResult = await db.prepare(`
       SELECT
         a.id,
@@ -1988,10 +2887,10 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
         a.homepage_rank AS homepageRank
       FROM articles a
       JOIN media_sources s ON s.id = a.source_id
-      WHERE a.published_at >= ? AND a.published_at < ?
+      WHERE a.published_at >= ? AND a.published_at < ?${articleScopeWhere.sql}
       ORDER BY a.published_at DESC, a.id DESC
       LIMIT 5000
-    `).bind(start, end).all();
+    `).bind(start, end, ...articleScopeWhere.parameters).all();
   const placementResult = await db.prepare(`
       SELECT
         po.article_id AS articleId,
@@ -2030,7 +2929,8 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
     });
     placementByArticle.set(observation.articleId, values);
   }
-  const sourcePolicyById = new Map(sourcePanel.sources.map((source) => [source.id, source]));
+  const analysisPanel = panelOverride ?? sourcePanel;
+  const sourcePolicyById = new Map(analysisPanel.sources.map((source) => [source.id, source]));
   const articles = (articleResult.results ?? []).map((article) => {
     const sourcePolicy = sourcePolicyById.get(article.sourceId);
     return {
@@ -2053,33 +2953,66 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
   `).bind(runId, targetDate, ANALYSIS_PROVIDER, ANALYSIS_MODEL_VERSION, startedAt, articles.length).run();
 
   try {
-    const activeSources = sourcePanel.sources.filter((source) => source.active);
+    const activeSources = analysisPanel.sources.filter((source) => source.active);
     const analyzed = analysisProvider.analyze(articles, {
       configuredSourceCount: activeSources.length,
       configuredSourceGroupCount: new Set(activeSources.map((source) => source.mediaGroupId ?? source.id)).size,
       maxIssues: 80,
     });
     const issueIds = await Promise.all(analyzed.map((issue, index) => sha256Hex(`${runId}:${index}:${issue.title}`)));
+    const consumedClusterApprovals = new Set();
     analyzed.forEach((issue, index) => {
       const profiles = issue.articles
         .map((article) => frameProfiles.get(article.id))
         .filter(Boolean);
       if (!profiles.length) return;
+      const issueSignature = clusterArticleSignature(
+        issue.articles.map((article) => article.url ?? article.canonicalUrl),
+      );
+      const clusterApproval = resolveClusterApproval(
+        issue.articles.map((article) => article.url ?? article.canonicalUrl),
+        profiles,
+        reviewedClusterApprovals,
+      );
+      const clusterNeedsReview = issue.clusterQuality === "review_required";
+      const clusterWasReviewed = Boolean(clusterApproval);
+      if (clusterApproval) consumedClusterApprovals.add(issueSignature);
+      if (clusterNeedsReview && !clusterWasReviewed) {
+        issue.structuredComparison = withheldClusterReviewComparison(
+          profiles,
+          issue,
+          issue.articles,
+        );
+        return;
+      }
       const rawComparison = buildIssueFrameComparison(profiles, issue.articles, {
         issueId: issueIds[index],
         issueTitle: issue.title,
       });
+      rawComparison.review.cluster_status = clusterWasReviewed
+        ? "approved_same_event"
+        : "automatic_cohesive";
+      rawComparison.review.cluster_approval = clusterApproval;
       issue.structuredComparison = publicComparisonFromEngine(rawComparison, profiles, issue.articles, {
         issueArticleCount: issue.articleCount,
+        approval: clusterApproval,
       });
       if (!isStructuredComparisonPayload(issue.structuredComparison)) {
         throw new Error("공개 구조화 비교 계약 검증에 실패했습니다.");
       }
     });
-    const statements = [];
-    analyzed.forEach((issue, index) => {
+    const unusedApprovalCount = [...reviewedClusterApprovals.keys()]
+      .filter((signature) => !consumedClusterApprovals.has(signature))
+      .length;
+    if (unusedApprovalCount) {
+      throw new Error(`${unusedApprovalCount} approved cluster(s) did not match an analyzed issue with usable profiles.`);
+    }
+    const statementGroups = [];
+    for (let index = 0; index < analyzed.length; index += 1) {
+      const issue = analyzed[index];
       const issueId = issueIds[index];
-      statements.push(db.prepare(`
+      const generatedAt = Date.now();
+      const statements = [db.prepare(`
         INSERT INTO issues
           (id, run_id, issue_date, title, summary, category, article_count, source_count, agenda_score, diversity_score, placement_score, volume_score, repetition_score, confidence)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -2098,7 +3031,7 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
         issue.volumeScore,
         issue.repetitionScore,
         issue.confidence ?? 0,
-      ));
+      )];
       issue.articles.forEach((article) => {
         statements.push(db.prepare(`
           INSERT INTO issue_articles (id, issue_id, article_id, similarity, representative)
@@ -2139,7 +3072,7 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
         issue.report.caution,
         ANALYSIS_PROVIDER,
         ANALYSIS_MODEL_VERSION,
-        Date.now(),
+        generatedAt,
       ));
       if (issue.structuredComparison) {
         statements.push(db.prepare(`
@@ -2155,11 +3088,42 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
           "structured_extractive",
           FRAMING_ENGINE_VERSION,
           ISSUE_FRAME_COMPARISON_SCHEMA,
-          Date.now(),
+          generatedAt,
         ));
       }
-    });
-    await runBatches(db, statements);
+      const comparisonSchemaVersion = issue.structuredComparison ? ISSUE_FRAME_COMPARISON_SCHEMA : "none";
+      const publicationPayload = JSON.stringify({
+        schemaVersion: 1,
+        issueId,
+        runId,
+        targetDate,
+        publicApiVersion: PUBLIC_API_SCHEMA_VERSION,
+        comparisonSchemaVersion,
+      });
+      const publicationPayloadHash = await sha256Hex(publicationPayload);
+      statements.push(db.prepare(`
+        INSERT INTO publication_outbox_events (
+          id, destination, aggregate_type, aggregate_id, aggregate_version,
+          event_type, payload, payload_hash, idempotency_key, status,
+          attempt_count, available_at, claim_token, claimed_by, lease_expires_at,
+          last_error_code, last_error_at, delivered_at, created_at, updated_at
+        ) VALUES (?, 'public-site-local', 'issue', ?, 1, 'issue.published', ?, ?, ?, 'pending', 0, ?, NULL, NULL, NULL, NULL, NULL, NULL, ?, ?)
+      `).bind(
+        crypto.randomUUID(),
+        issueId,
+        publicationPayload,
+        publicationPayloadHash,
+        `issue:${issueId}:published:v1`,
+        generatedAt,
+        generatedAt,
+        generatedAt,
+      ));
+      if (statements.length > 100) {
+        throw new Error("한 이슈의 원자적 게시 작업이 D1 안전 한도를 초과했습니다.");
+      }
+      statementGroups.push(statements);
+    }
+    for (const statements of statementGroups) await db.batch(statements);
     const finishedAt = Date.now();
     await db.prepare(`
       UPDATE analysis_runs
@@ -2182,6 +3146,7 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
           && (Boolean(content?.bodyText) || content?.bodyAnalysisAvailable === true))
         .length,
       issueCount: analyzed.length,
+      approvedClusterCount: consumedClusterApprovals.size,
       paidServicesUsed: false,
     }, 201);
   } catch (error) {
@@ -2195,23 +3160,24 @@ async function handleAnalyze(request, env, { contentOverrides = new Map(), inclu
   }
 }
 
-async function latestAnalysisRun(db, requestedDate = "") {
+async function latestAnalysisRun(db, requestedDate = "", scope = null) {
+  const scopedRun = scopedRunExistsClause(scope, "analysis_runs");
   if (requestedDate) {
     return db.prepare(`
       SELECT id, target_date AS targetDate, provider, model_version AS modelVersion, finished_at AS finishedAt, article_count AS articleCount, issue_count AS issueCount
       FROM analysis_runs
-      WHERE status = 'success' AND target_date = ?
+      WHERE status = 'success' AND target_date = ?${scopedRun.sql}
       ORDER BY finished_at DESC
       LIMIT 1
-    `).bind(requestedDate).first();
+    `).bind(requestedDate, ...scopedRun.parameters).first();
   }
   return db.prepare(`
     SELECT id, target_date AS targetDate, provider, model_version AS modelVersion, finished_at AS finishedAt, article_count AS articleCount, issue_count AS issueCount
     FROM analysis_runs
-    WHERE status = 'success'
+    WHERE status = 'success'${scopedRun.sql}
     ORDER BY target_date DESC, finished_at DESC
     LIMIT 1
-  `).first();
+  `).bind(...scopedRun.parameters).first();
 }
 
 function validKstDate(value) {
@@ -2223,9 +3189,21 @@ function validKstDate(value) {
 async function handleIssueDates(request, env) {
   if (!env?.DB) return jsonResponse({ dates: [], meta: responseMeta(null, "demo") }, 200, { request, etag: true, cacheControl: "public, max-age=30, must-revalidate" });
   const url = new URL(request.url);
+  const scope = resolveIssueScope(request);
+  if (!scope) return jsonResponse({ error: "吏?먰븯吏 ?딅뒗 遺꾩꽍 ?쒕낯?낅땲??" }, 400, { request });
   const limitValue = Number(url.searchParams.get("limit") ?? 31);
   const limit = Number.isInteger(limitValue) ? Math.min(Math.max(limitValue, 1), 90) : 31;
   const categoryPlaceholders = PUBLIC_AGENDA_CATEGORIES.map(() => "?").join(", ");
+  const issuePredicate = scopedArticlePredicate(scope, "scoped_date_a", "scoped_date_s");
+  const scopeIssueClause = scope.kind === "all" ? "" : `AND EXISTS (
+          SELECT 1
+          FROM issue_articles scoped_date_ia
+          JOIN articles scoped_date_a ON scoped_date_a.id = scoped_date_ia.article_id
+          JOIN media_sources scoped_date_s ON scoped_date_s.id = scoped_date_a.source_id
+          WHERE scoped_date_ia.issue_id = public_issues.id
+            AND ${issuePredicate.sql}
+        )`;
+  const scopedRun = scopedRunExistsClause(scope, "candidate_runs");
   const result = await env.DB.prepare(`
     SELECT id, targetDate, analyzedAt, articleCount, issueCount
     FROM (
@@ -2234,7 +3212,7 @@ async function handleIssueDates(request, env) {
         ranked.targetDate,
         ranked.analyzedAt,
         ranked.articleCount,
-        (SELECT COUNT(*) FROM issues public_issues WHERE public_issues.run_id = ranked.id AND public_issues.category IN (${categoryPlaceholders})) AS issueCount
+        (SELECT COUNT(*) FROM issues public_issues WHERE public_issues.run_id = ranked.id AND public_issues.category IN (${categoryPlaceholders}) ${scopeIssueClause}) AS issueCount
       FROM (
         SELECT
           id,
@@ -2242,15 +3220,15 @@ async function handleIssueDates(request, env) {
           finished_at AS analyzedAt,
           article_count AS articleCount,
           ROW_NUMBER() OVER (PARTITION BY target_date ORDER BY finished_at DESC) AS dateRank
-        FROM analysis_runs
-        WHERE status = 'success'
+        FROM analysis_runs candidate_runs
+        WHERE status = 'success'${scopedRun.sql}
       ) ranked
       WHERE ranked.dateRank = 1
     ) public_runs
     WHERE issueCount > 0
     ORDER BY targetDate DESC
     LIMIT ?
-  `).bind(...PUBLIC_AGENDA_CATEGORIES, limit).all();
+  `).bind(...PUBLIC_AGENDA_CATEGORIES, ...issuePredicate.parameters, ...scopedRun.parameters, limit).all();
   const dates = (result.results ?? []).map((entry) => ({
     date: entry.targetDate,
     analyzedAt: Number(entry.analyzedAt ?? 0) || null,
@@ -2259,6 +3237,7 @@ async function handleIssueDates(request, env) {
   }));
   return jsonResponse({
     dates,
+    scope: { key: scope.key, label: scope.label, configuredSources: scope.configuredCount },
     meta: responseMeta(null, "live_metadata"),
   }, 200, { request, etag: true, cacheControl: "public, max-age=300, must-revalidate" });
 }
@@ -2366,6 +3345,99 @@ async function handleAnalysisRollback(request, runId, env) {
   return jsonResponse({ rolledBackRunId: runId, fallbackRunId: fallback.id, targetDate: run.targetDate }, 200, { request });
 }
 
+async function handleScopedIssues(request, env, scope, run, category, limit) {
+  const categoryPlaceholders = PUBLIC_AGENDA_CATEGORIES.map(() => "?").join(", ");
+  const clauses = ["i.run_id = ?", `i.category IN (${categoryPlaceholders})`];
+  const parameters = [run.id, ...PUBLIC_AGENDA_CATEGORIES];
+  if (category) {
+    clauses.push("i.category = ?");
+    parameters.push(category);
+  }
+  const where = clauses.join(" AND ");
+  const scopePredicate = scopedArticlePredicate(scope, "scoped_exists_a", "scoped_exists_s");
+  const metricsPredicate = scopedArticlePredicate(scope, "a", "s");
+  const titlePredicate = scopedArticlePredicate(scope, "scoped_title_a", "scoped_title_s");
+  const scopeExists = `EXISTS (
+    SELECT 1
+    FROM issue_articles scoped_exists_ia
+    JOIN articles scoped_exists_a ON scoped_exists_a.id = scoped_exists_ia.article_id
+    JOIN media_sources scoped_exists_s ON scoped_exists_s.id = scoped_exists_a.source_id
+    WHERE scoped_exists_ia.issue_id = i.id
+      AND ${scopePredicate.sql}
+  )`;
+  const [count, result, categoryResult] = await Promise.all([
+    env.DB.prepare(`SELECT COUNT(*) AS total FROM issues i WHERE ${where} AND ${scopeExists}`).bind(...parameters, ...scopePredicate.parameters).first(),
+    env.DB.prepare(`
+      WITH scoped_issue_metrics AS (
+        SELECT
+          ia.issue_id,
+          COUNT(*) AS articleCount,
+          COUNT(DISTINCT a.source_id) AS sourceCount,
+          SUM(CASE WHEN (EXISTS(
+            SELECT 1 FROM article_contents ac
+            WHERE ac.article_id = ia.article_id
+              AND ac.status = 'active'
+              AND ac.analysis_allowed = 1
+              AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+          ) OR EXISTS(
+            SELECT 1 FROM frame_analyses fa
+            WHERE fa.issue_id = ia.issue_id
+              AND fa.article_id = ia.article_id
+              AND fa.evidence_basis = 'body_transient'
+          )) THEN 1 ELSE 0 END) AS contentAvailableCount,
+          SUM(CASE WHEN EXISTS(
+            SELECT 1 FROM article_frame_profiles profiles
+            WHERE profiles.article_id = ia.article_id
+              AND profiles.status IN ('analyzed', 'partial')
+          ) THEN 1 ELSE 0 END) AS structuredProfileCount,
+          SUM(CASE WHEN a.homepage_placement IS NOT NULL OR EXISTS(
+            SELECT 1 FROM placement_observations po WHERE po.article_id = a.id
+          ) THEN 1 ELSE 0 END) AS placementObservedCount
+        FROM issue_articles ia
+        JOIN articles a ON a.id = ia.article_id
+        JOIN media_sources s ON s.id = a.source_id
+        WHERE ${metricsPredicate.sql}
+        GROUP BY ia.issue_id
+      )
+      SELECT
+        i.id, i.issue_date AS issueDate, i.title, i.summary, i.category,
+        (SELECT scoped_title_a.title
+         FROM issue_articles scoped_title_ia
+         JOIN articles scoped_title_a ON scoped_title_a.id = scoped_title_ia.article_id
+         JOIN media_sources scoped_title_s ON scoped_title_s.id = scoped_title_a.source_id
+         WHERE scoped_title_ia.issue_id = i.id AND ${titlePredicate.sql}
+         ORDER BY scoped_title_ia.representative DESC, scoped_title_a.published_at DESC
+         LIMIT 1) AS representativeTitle,
+        m.articleCount, m.sourceCount,
+        ROUND((m.sourceCount * 60.0 / ?) + (MIN(m.articleCount, 10) * 4.0), 1) AS agendaScore,
+        ROUND(m.sourceCount * 100.0 / ?, 1) AS diversityScore,
+        ROUND(m.placementObservedCount * 100.0 / MAX(m.articleCount, 1), 1) AS placementScore,
+        ROUND(MIN(m.articleCount, 10) * 10.0, 1) AS volumeScore,
+        i.repetition_score AS repetitionScore,
+        NULL AS confidence,
+        m.placementObservedCount,
+        m.articleCount AS placementTotalCount,
+        m.contentAvailableCount,
+        m.structuredProfileCount
+      FROM issues i
+      JOIN scoped_issue_metrics m ON m.issue_id = i.id
+      WHERE ${where}
+      ORDER BY m.sourceCount DESC, m.articleCount DESC, i.title ASC
+      LIMIT ?
+    `).bind(...metricsPredicate.parameters, ...titlePredicate.parameters, scope.configuredCount, scope.configuredCount, ...parameters, limit).all(),
+    env.DB.prepare(`SELECT i.category, COUNT(*) AS count FROM issues i WHERE i.run_id = ? AND i.category IN (${categoryPlaceholders}) AND ${scopeExists} GROUP BY i.category ORDER BY count DESC, i.category`).bind(run.id, ...PUBLIC_AGENDA_CATEGORIES, ...scopePredicate.parameters).all(),
+  ]);
+  return jsonResponse({
+    run,
+    scope: { key: scope.key, label: scope.label, configuredSources: scope.configuredCount },
+    issues: (result.results ?? []).map((issue) => publicIssue(issue, run, scope.configuredCount, true)),
+    total: Number(count?.total ?? 0),
+    categories: categoryResult.results ?? [],
+    analysisDisclosure: `${scope.label} 기사만으로 보도 확산과 설명 차이를 비교합니다. 이 점수는 사회적 중요도·사실성·여론을 뜻하지 않습니다.`,
+    meta: responseMeta(run, "live_metadata"),
+  }, 200, { request, etag: true, cacheControl: "public, max-age=60, must-revalidate" });
+}
+
 async function handleIssues(request, env) {
   if (!env?.DB) return jsonResponse({ issues: [], total: 0, run: null, categories: [], meta: responseMeta(null, "demo") }, 200, { request, etag: true, cacheControl: "public, max-age=30, must-revalidate" });
   const url = new URL(request.url);
@@ -2375,8 +3447,11 @@ async function handleIssues(request, env) {
   if (category && !PUBLIC_AGENDA_CATEGORY_SET.has(category)) return jsonResponse({ error: `의제 분야는 ${PUBLIC_AGENDA_CATEGORIES.join("·")} 중에서 선택해 주세요.` }, 400, { request });
   const limitValue = Number(url.searchParams.get("limit") ?? 30);
   const limit = Number.isInteger(limitValue) ? Math.min(Math.max(limitValue, 1), 50) : 30;
-  const run = await latestAnalysisRun(env.DB, date);
+  const scope = resolveIssueScope(request);
+  if (!scope) return jsonResponse({ error: "지원하지 않는 분석 표본입니다." }, 400, { request });
+  const run = await latestAnalysisRun(env.DB, date, scope);
   if (!run) return jsonResponse({ issues: [], total: 0, run: null, categories: [], meta: responseMeta(null, "live_metadata") }, 200, { request, etag: true, cacheControl: "public, max-age=30, must-revalidate" });
+  if (scope.key !== "all") return handleScopedIssues(request, env, scope, run, category, limit);
 
   const categoryPlaceholders = PUBLIC_AGENDA_CATEGORIES.map(() => "?").join(", ");
   const clauses = ["run_id = ?", `category IN (${categoryPlaceholders})`];
@@ -2391,6 +3466,12 @@ async function handleIssues(request, env) {
     env.DB.prepare(`
       SELECT
         id, issue_date AS issueDate, title, summary, category, article_count AS articleCount, source_count AS sourceCount,
+        (SELECT a.title
+         FROM issue_articles ia
+         JOIN articles a ON a.id = ia.article_id
+         WHERE ia.issue_id = issues.id
+         ORDER BY ia.representative DESC, a.published_at DESC
+         LIMIT 1) AS representativeTitle,
         agenda_score AS agendaScore, diversity_score AS diversityScore, placement_score AS placementScore,
         volume_score AS volumeScore, repetition_score AS repetitionScore, confidence,
         (SELECT COUNT(*) FROM issue_articles ia JOIN articles a ON a.id = ia.article_id WHERE ia.issue_id = issues.id AND (a.homepage_placement IS NOT NULL OR EXISTS(SELECT 1 FROM placement_observations po WHERE po.article_id = a.id))) AS placementObservedCount,
@@ -2413,8 +3494,6 @@ async function handleIssues(request, env) {
            SELECT 1 FROM article_frame_profiles profiles
            WHERE profiles.article_id = ia.article_id
              AND profiles.status IN ('analyzed', 'partial')
-             AND profiles.model_version = '${FRAMING_ENGINE_VERSION}'
-             AND profiles.schema_version = '${ARTICLE_FRAME_PROFILE_SCHEMA}'
          )) AS structuredProfileCount
       FROM issues
       WHERE ${where}
@@ -2428,7 +3507,8 @@ async function handleIssues(request, env) {
   ]);
   return jsonResponse({
     run,
-    issues: (result.results ?? []).map((issue) => publicIssue(issue, run)),
+    scope: { key: scope.key, label: scope.label, configuredSources: scope.configuredCount },
+    issues: (result.results ?? []).map((issue) => publicIssue(issue, run, scope.configuredCount)),
     total: Number(count?.total ?? 0),
     categories: categoryResult.results ?? [],
     analysisDisclosure: "공개 본문을 저장하지 않고 근거 위치·해시와 구조화 프레임 요소를 추출한 자동 초안입니다. 사람 검토·사실성·편향 판정이 아닙니다.",
@@ -2438,9 +3518,17 @@ async function handleIssues(request, env) {
 
 async function handleIssueDetail(request, issueId, env) {
   if (!env?.DB) return jsonResponse({ error: "분석 데이터가 없습니다." }, 404, { request });
-  const issue = await env.DB.prepare(`
+  const scope = resolveIssueScope(request);
+  if (!scope) return jsonResponse({ error: "지원하지 않는 분석 표본입니다." }, 400, { request });
+  let issue = await env.DB.prepare(`
     SELECT
       i.id, i.issue_date AS issueDate, i.title, i.summary, i.category, i.article_count AS articleCount, i.source_count AS sourceCount,
+      (SELECT a.title
+       FROM issue_articles representative_ia
+       JOIN articles a ON a.id = representative_ia.article_id
+       WHERE representative_ia.issue_id = i.id
+       ORDER BY representative_ia.representative DESC, a.published_at DESC
+       LIMIT 1) AS representativeTitle,
       i.agenda_score AS agendaScore, i.diversity_score AS diversityScore, i.placement_score AS placementScore,
       i.volume_score AS volumeScore, i.repetition_score AS repetitionScore, i.confidence,
       r.id AS runId, r.target_date AS targetDate, r.provider, r.model_version AS modelVersion, r.finished_at AS analyzedAt,
@@ -2464,8 +3552,6 @@ async function handleIssueDetail(request, issueId, env) {
         SELECT 1 FROM article_frame_profiles profiles
         WHERE profiles.article_id = profile_ia.article_id
           AND profiles.status IN ('analyzed', 'partial')
-          AND profiles.model_version = '${FRAMING_ENGINE_VERSION}'
-          AND profiles.schema_version = '${ARTICLE_FRAME_PROFILE_SCHEMA}'
       )) AS structuredProfileCount
     FROM issues i
     JOIN analysis_runs r ON r.id = i.run_id
@@ -2473,6 +3559,59 @@ async function handleIssueDetail(request, issueId, env) {
   `).bind(issueId).first();
   if (!issue) return jsonResponse({ error: "이슈를 찾지 못했습니다." }, 404, { request });
   if (!PUBLIC_AGENDA_CATEGORY_SET.has(issue.category)) return jsonResponse({ error: "제공 범위에 포함되지 않는 의제입니다." }, 404, { request });
+  if (scope.key !== "all") {
+    const detailPredicate = scopedArticlePredicate(scope, "a", "s");
+    const scopedMetrics = await env.DB.prepare(`
+      SELECT
+        COUNT(*) AS articleCount,
+        COUNT(DISTINCT a.source_id) AS sourceCount,
+        SUM(CASE WHEN (EXISTS(
+          SELECT 1 FROM article_contents ac
+          WHERE ac.article_id = ia.article_id
+            AND ac.status = 'active'
+            AND ac.analysis_allowed = 1
+            AND (ac.usage_expires_at IS NULL OR ac.usage_expires_at > (unixepoch() * 1000))
+        ) OR EXISTS(
+          SELECT 1 FROM frame_analyses fa
+          WHERE fa.issue_id = ia.issue_id
+            AND fa.article_id = ia.article_id
+            AND fa.evidence_basis = 'body_transient'
+        )) THEN 1 ELSE 0 END) AS contentAvailableCount,
+        SUM(CASE WHEN EXISTS(
+          SELECT 1 FROM article_frame_profiles profiles
+          WHERE profiles.article_id = ia.article_id
+            AND profiles.status IN ('analyzed', 'partial')
+        ) THEN 1 ELSE 0 END) AS structuredProfileCount,
+        SUM(CASE WHEN a.homepage_placement IS NOT NULL OR EXISTS(
+          SELECT 1 FROM placement_observations po WHERE po.article_id = a.id
+        ) THEN 1 ELSE 0 END) AS placementObservedCount
+      FROM issue_articles ia
+      JOIN articles a ON a.id = ia.article_id
+      JOIN media_sources s ON s.id = a.source_id
+      WHERE ia.issue_id = ? AND ${detailPredicate.sql}
+    `).bind(issueId, ...detailPredicate.parameters).first();
+    if (!scopedMetrics || Number(scopedMetrics.articleCount ?? 0) < 1) return jsonResponse({ error: "해당 표본에 포함된 기사가 없습니다." }, 404, { request });
+    issue = {
+      ...issue,
+      articleCount: Number(scopedMetrics.articleCount ?? 0),
+      sourceCount: Number(scopedMetrics.sourceCount ?? 0),
+      contentAvailableCount: Number(scopedMetrics.contentAvailableCount ?? 0),
+      structuredProfileCount: Number(scopedMetrics.structuredProfileCount ?? 0),
+      placementObservedCount: Number(scopedMetrics.placementObservedCount ?? 0),
+      placementTotalCount: Number(scopedMetrics.articleCount ?? 0),
+      agendaScore: Math.round(((Number(scopedMetrics.sourceCount ?? 0) * 60) / scope.configuredCount + Math.min(Number(scopedMetrics.articleCount ?? 0), 10) * 4) * 10) / 10,
+      diversityScore: Math.round((Number(scopedMetrics.sourceCount ?? 0) * 1000) / scope.configuredCount) / 10,
+      placementScore: Number(scopedMetrics.placementObservedCount ?? 0) ? Math.round((Number(scopedMetrics.placementObservedCount ?? 0) * 1000) / Number(scopedMetrics.articleCount ?? 1)) / 10 : null,
+      volumeScore: Math.min(Number(scopedMetrics.articleCount ?? 0), 10) * 10,
+    };
+  }
+  const detailArticlePredicate = scopedArticlePredicate(scope, "a", "s");
+  const articleScopeClause = scope.key === "all" ? "" : ` AND ${detailArticlePredicate.sql}`;
+  const articleScopeParameters = scope.key === "all" ? [issueId] : [issueId, ...detailArticlePredicate.parameters];
+  const frameScopeClause = scope.key === "all" ? "" : ` AND ${detailArticlePredicate.sql}`;
+  const frameScopeParameters = scope.key === "all" ? [issueId] : [issueId, ...detailArticlePredicate.parameters];
+  const outletScopeClause = scope.key === "all" ? "" : ` AND ${detailArticlePredicate.sql}`;
+  const outletScopeParameters = scope.key === "all" ? [issueId] : [issueId, ...detailArticlePredicate.parameters];
   const [articles, frames, report, outlets, comparisonRow] = await Promise.all([
     env.DB.prepare(`
       SELECT
@@ -2494,9 +3633,9 @@ async function handleIssueDetail(request, issueId, env) {
       FROM issue_articles ia
       JOIN articles a ON a.id = ia.article_id
       JOIN media_sources s ON s.id = a.source_id
-      WHERE ia.issue_id = ?
+      WHERE ia.issue_id = ?${articleScopeClause}
       ORDER BY ia.representative DESC, a.published_at DESC
-    `).bind(issueId).all(),
+    `).bind(...articleScopeParameters).all(),
     env.DB.prepare(`
       SELECT fa.frame, fa.score, fa.confidence, fa.evidence_basis AS evidenceBasis,
         fa.evidence_text AS evidenceText, fa.evidence_start AS evidenceStart, fa.evidence_end AS evidenceEnd,
@@ -2507,9 +3646,9 @@ async function handleIssueDetail(request, issueId, env) {
       LEFT JOIN media_sources s ON s.id = fa.source_id
       LEFT JOIN articles a ON a.id = fa.article_id
       LEFT JOIN article_contents ac ON ac.id = fa.content_version_id
-      WHERE fa.issue_id = ?
+      WHERE fa.issue_id = ?${frameScopeClause}
       ORDER BY fa.score DESC
-    `).bind(issueId).all(),
+    `).bind(...frameScopeParameters).all(),
     env.DB.prepare(`
       SELECT summary, missing_perspective AS missingPerspective, caution, provider, model_version AS modelVersion, generated_at AS generatedAt
       FROM ai_reports
@@ -2521,10 +3660,10 @@ async function handleIssueDetail(request, issueId, env) {
       FROM issue_articles ia
       JOIN articles a ON a.id = ia.article_id
       JOIN media_sources s ON s.id = a.source_id
-      WHERE ia.issue_id = ?
+      WHERE ia.issue_id = ?${outletScopeClause}
       GROUP BY s.id, s.name
       ORDER BY articleCount DESC, s.name
-    `).bind(issueId).all(),
+    `).bind(...outletScopeParameters).all(),
     env.DB.prepare(`
       SELECT comparison_json AS comparisonJson
       FROM issue_frame_comparisons
@@ -2533,6 +3672,9 @@ async function handleIssueDetail(request, issueId, env) {
   ]);
   const run = { id: issue.runId, targetDate: issue.targetDate, provider: issue.provider, modelVersion: issue.modelVersion, finishedAt: issue.analyzedAt };
   const publicArticles = articles.results ?? [];
+  if (scope.key !== "all") {
+    issue.representativeTitle = publicArticles.find((article) => Number(article.representative) === 1)?.title ?? publicArticles[0]?.title ?? issue.representativeTitle;
+  }
   const currentAnalysis = COMPATIBLE_ANALYSIS_MODELS.has(issue.modelVersion);
   const publicFrames = currentAnalysis ? (frames.results ?? []).map((row) => {
     const frame = { ...row };
@@ -2568,19 +3710,20 @@ async function handleIssueDetail(request, issueId, env) {
   if (currentAnalysis && comparisonRow?.comparisonJson) {
     try {
       const parsed = JSON.parse(String(comparisonRow.comparisonJson));
-      if (isStructuredComparisonPayload(parsed)) structuredComparison = parsed;
+      if (isStructuredComparisonPayload(parsed) && comparisonOnlyUsesSources(parsed, scope.sourceNames)) structuredComparison = parsed;
     } catch {
       structuredComparison = null;
     }
   }
   return jsonResponse({
-    issue: publicIssue(issue, run),
+    scope: { key: scope.key, label: scope.label, configuredSources: scope.configuredCount },
+    issue: publicIssue(issue, run, scope.configuredCount, scope.key !== "all"),
     articles: publicArticles,
     frames: publicFrames,
     report: publicReport,
     outlets: (outlets.results ?? []).map((outlet) => ({ ...outlet, placement: placementByWeight[outlet.placementWeight] ?? "미확인" })),
     comparison: structuredComparison ?? evidenceFirstComparison(issue, publicArticles),
-    meta: responseMeta(run, "live_metadata"),
+    meta: responseMeta(run, "live_metadata", structuredComparison?.lineage ?? null),
   }, 200, { request, etag: true, cacheControl: "public, max-age=300, immutable" });
 }
 
@@ -2808,6 +3951,19 @@ export async function handleApiRequest(request, env = {}) {
   const url = new URL(request.url);
   if (!url.pathname.startsWith("/api/")) return null;
 
+  const initialFiveResponse = await handleInitialFiveRequest(request);
+  if (initialFiveResponse) return initialFiveResponse;
+  if (url.pathname === "/api/chat") return handleEvidenceChat(request, env);
+  if (url.pathname === "/api/community" || url.pathname === "/api/community/session" || url.pathname === "/api/self-check" || url.pathname.startsWith("/api/community/") && (url.pathname.endsWith("/replies") || url.pathname.endsWith("/react") || url.pathname.endsWith("/report"))) return handleCommunityRequest(request, env);
+  if (url.pathname.startsWith("/api/issues/") && url.pathname.endsWith("/community")) return handleCommunityRequest(request, env);
+  if (url.pathname.startsWith("/api/comments/") && url.pathname.endsWith("/report")) return handleCommunityRequest(request, env);
+  if (url.pathname.startsWith("/api/admin/community/")) {
+    return handleCommunityRequest(request, env, { isAdmin: await adminAuthorized(request, env) });
+  }
+  if (url.pathname === "/api/admin/release/evaluate") {
+    return handleReleaseAdminRequest(request, env, { isAdmin: await adminAuthorized(request, env) });
+  }
+
   if (url.pathname === "/api/health" && request.method === "GET") {
     if (!env.DB) {
       const freshness = classifySnapshotStatus();
@@ -2851,6 +4007,27 @@ export async function handleApiRequest(request, env = {}) {
     }
   }
   if (url.pathname === "/api/sources" && request.method === "GET") {
+    const requestedScope = url.searchParams.get("scope")?.trim();
+    if (requestedScope === RESEARCH_SCOPE_KEY) {
+      const sources = researchCollectionPolicy.sources.map((source, index) => ({
+        id: source.id,
+        name: source.name,
+        sourceType: source.sourceType,
+        sourceTypeLabel: source.sourceType === "broadcaster" ? "방송사" : "종합일간지",
+        homepageUrl: source.homepageUrl,
+        active: source.endpoints.some((endpoint) => endpoint.enabled),
+        sampleOrder: index + 1,
+      }));
+      return jsonResponse({
+        panelVersion: researchCollectionPolicy.policyVersion,
+        panelLabel: "AgendaFrame 학술연구 12개 매체",
+        excludedMediaTypes: ["opinion", "column", "editorial", "paywalled", "image_only", "video_only"],
+        method: RESEARCH_COLLECTION_PROVIDER,
+        directCrawling: true,
+        sources,
+        meta: responseMeta(null, env?.DB ? "live_metadata" : "demo"),
+      }, 200, { request, etag: true, cacheControl: "public, max-age=3600, must-revalidate" });
+    }
     const publicSources = sourcePanel.sources.map((entry) => {
       const source = { ...entry };
       delete source.domains;
@@ -2889,6 +4066,10 @@ export async function handleApiRequest(request, env = {}) {
   if (url.pathname === "/api/import/structured") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
     return handleStructuredImport(request, env);
+  }
+  if (url.pathname === "/api/import/analyzed") {
+    if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);
+    return handleAnalyzedImport(request, env);
   }
   if (url.pathname === "/api/analyze") {
     if (request.method !== "POST") return jsonResponse({ error: "POST 요청만 허용됩니다." }, 405);

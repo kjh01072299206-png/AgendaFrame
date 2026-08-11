@@ -1,0 +1,3410 @@
+{
+  "schemaVersion": "agendaframe.initial-five.public.v1",
+  "basisDate": "2026-07-26",
+  "status": "succeeded",
+  "issue": {
+    "issueId": "bigkinds-2026-07-26-top-5",
+    "rank": 5,
+    "title": "음성 외국인 집단 난투 사건",
+    "category": "사회",
+    "articleCount": 4,
+    "outletCount": 4
+  },
+  "analysisStatus": {
+    "state": "succeeded",
+    "cluster": {
+      "label": "ai_semantic",
+      "engineLabel": "ai_semantic",
+      "semanticAi": true,
+      "status": "succeeded",
+      "model": "gemini-2.5-flash-lite",
+      "promptVersion": "2.0.0",
+      "schemaVersion": 1,
+      "source": "metadata-clusters-2026-07-26.json",
+      "decision": "analyze",
+      "coherence": "high",
+      "textScope": "title_source_published_at_only",
+      "fallbackReason": null,
+      "requiresHumanReview": true,
+      "summary": "충북 음성에서 외국인 10여 명이 집단으로 패싸움을 벌여 2명이 사상자가 발생했으며, 이 중 1명은 살인 혐의로 입건되었다.",
+      "commonSubjects": [
+        "외국인",
+        "경찰",
+        "패싸움",
+        "사상",
+        "입건",
+        "지인",
+        "충북 음성",
+        "2026-07-26"
+      ],
+      "narrativeVariants": [
+        {
+          "label": "사건 발생 및 규모 강조",
+          "description": "음성에서 발생한 외국인 패싸움 사건의 규모와 사상자 발생을 중심으로 보도합니다.",
+          "article_ids": [
+            "01100501.20260726131922001",
+            "01100701.20260726130444001",
+            "01100201.20260726112314001"
+          ]
+        },
+        {
+          "label": "가해자 입건 및 사건 심각성 강조",
+          "description": "패싸움 사건 관련자 중 살인 혐의로 입건된 사실을 부각하며 사건의 심각성을 알립니다.",
+          "article_ids": [
+            "01100611.20260726132449001"
+          ]
+        }
+      ],
+      "outlierArticleIds": [],
+      "articleIds": [
+        "01100611.20260726132449001",
+        "01100501.20260726131922001",
+        "01100701.20260726130444001",
+        "01100201.20260726112314001"
+      ]
+    },
+    "semantic": {
+      "label": "ai_semantic",
+      "engineLabel": "ai_semantic",
+      "semanticAi": true,
+      "status": "succeeded",
+      "model": "claude-sonnet-5x2-opus-5-adjudicated",
+      "promptVersion": "claude-framing-v1.0.0",
+      "schemaVersion": "agendaframe.article-frame-profile.v2",
+      "source": "semantic-rank*-2026-07-26",
+      "articleCount": 4,
+      "succeededArticleCount": 4,
+      "reviewNeededArticleCount": 0,
+      "requiresHumanReview": true
+    }
+  },
+  "clusterAi": {
+    "label": "ai_semantic",
+    "engineLabel": "ai_semantic",
+    "semanticAi": true,
+    "status": "succeeded",
+    "model": "gemini-2.5-flash-lite",
+    "promptVersion": "2.0.0",
+    "schemaVersion": 1,
+    "source": "metadata-clusters-2026-07-26.json",
+    "decision": "analyze",
+    "coherence": "high",
+    "textScope": "title_source_published_at_only",
+    "fallbackReason": null,
+    "requiresHumanReview": true,
+    "summary": "충북 음성에서 외국인 10여 명이 집단으로 패싸움을 벌여 2명이 사상자가 발생했으며, 이 중 1명은 살인 혐의로 입건되었다.",
+    "commonSubjects": [
+      "외국인",
+      "경찰",
+      "패싸움",
+      "사상",
+      "입건",
+      "지인",
+      "충북 음성",
+      "2026-07-26"
+    ],
+    "narrativeVariants": [
+      {
+        "label": "사건 발생 및 규모 강조",
+        "description": "음성에서 발생한 외국인 패싸움 사건의 규모와 사상자 발생을 중심으로 보도합니다.",
+        "article_ids": [
+          "01100501.20260726131922001",
+          "01100701.20260726130444001",
+          "01100201.20260726112314001"
+        ]
+      },
+      {
+        "label": "가해자 입건 및 사건 심각성 강조",
+        "description": "패싸움 사건 관련자 중 살인 혐의로 입건된 사실을 부각하며 사건의 심각성을 알립니다.",
+        "article_ids": [
+          "01100611.20260726132449001"
+        ]
+      }
+    ],
+    "outlierArticleIds": [],
+    "articleIds": [
+      "01100611.20260726132449001",
+      "01100501.20260726131922001",
+      "01100701.20260726130444001",
+      "01100201.20260726112314001"
+    ]
+  },
+  "articles": [
+    {
+      "articleId": "01100611.20260726132449001",
+      "id": "01100611.20260726132449001",
+      "title": "충북 음성서 외국인 패싸움 2명 사상 40대 외국인 살인 혐의 입건",
+      "outlet": "서울신문",
+      "sourceId": "seoul",
+      "mediaGroupId": "seoul_group",
+      "publishedAt": "2026-07-26T13:24:49+09:00",
+      "section": "사회>사건_사고",
+      "canonicalUrl": "https://www.seoul.co.kr/news/newsView.php?id=20260726500053",
+      "bodySha256": "2474bdd4e3380abba2ea0af4b0928d7c1b0b55606101dc7658d123a2480c78ed",
+      "analysis": {
+        "semantic": {
+          "label": "ai_semantic",
+          "engineLabel": "ai_semantic",
+          "semanticAi": true,
+          "status": "succeeded",
+          "model": "claude-sonnet-5x2-opus-5-adjudicated",
+          "promptVersion": "claude-framing-v1.0.0",
+          "schemaVersion": "agendaframe.article-frame-profile.v2",
+          "source": "semantic-rank*-2026-07-26",
+          "articleId": "01100611.20260726132449001",
+          "evidenceCount": 7,
+          "bodySha256": "2474bdd4e3380abba2ea0af4b0928d7c1b0b55606101dc7658d123a2480c78ed",
+          "reviewRequired": true,
+          "fallbackReason": null
+        },
+        "rules": {
+          "label": "rules_local",
+          "engineLabel": "rules_local",
+          "semanticAi": false,
+          "status": "succeeded",
+          "model": "korean-evidence-rules-v2",
+          "promptVersion": null,
+          "schemaVersion": "agendaframe.article-frame-profile.v1",
+          "source": "top5-2026-07-26.json",
+          "articleId": "01100611.20260726132449001",
+          "evidenceCount": 6,
+          "bodySha256": "a4cb57cea651154382d49b0664a88a7ec74f28897a982eea96be20d0a2d27be1"
+        }
+      },
+      "issueId": "bigkinds-2026-07-26-top-5"
+    },
+    {
+      "articleId": "01100501.20260726131922001",
+      "id": "01100501.20260726131922001",
+      "title": "음성서 외국인 10여명 패싸움 2명 사상",
+      "outlet": "문화일보",
+      "sourceId": "munhwa",
+      "mediaGroupId": "munhwa_group",
+      "publishedAt": "2026-07-26T13:19:22+09:00",
+      "section": "사회>사건_사고",
+      "canonicalUrl": "https://www.munhwa.com/article/11605030?ref=kpf",
+      "bodySha256": "5dd409f2026a9707a80657c44bbf68219198fea758f64da4ae96a0bb288d4395",
+      "analysis": {
+        "semantic": {
+          "label": "ai_semantic",
+          "engineLabel": "ai_semantic",
+          "semanticAi": true,
+          "status": "succeeded",
+          "model": "claude-sonnet-5x2-opus-5-adjudicated",
+          "promptVersion": "claude-framing-v1.0.0",
+          "schemaVersion": "agendaframe.article-frame-profile.v2",
+          "source": "semantic-rank*-2026-07-26",
+          "articleId": "01100501.20260726131922001",
+          "evidenceCount": 7,
+          "bodySha256": "5dd409f2026a9707a80657c44bbf68219198fea758f64da4ae96a0bb288d4395",
+          "reviewRequired": true,
+          "fallbackReason": null
+        },
+        "rules": {
+          "label": "rules_local",
+          "engineLabel": "rules_local",
+          "semanticAi": false,
+          "status": "succeeded",
+          "model": "korean-evidence-rules-v2",
+          "promptVersion": null,
+          "schemaVersion": "agendaframe.article-frame-profile.v1",
+          "source": "top5-2026-07-26.json",
+          "articleId": "01100501.20260726131922001",
+          "evidenceCount": 12,
+          "bodySha256": "356ad579eb3b838987a7ed977faf334ab62519464974d91b95f91d0310e4c45e"
+        }
+      },
+      "issueId": "bigkinds-2026-07-26-top-5"
+    },
+    {
+      "articleId": "01100701.20260726130444001",
+      "id": "01100701.20260726130444001",
+      "title": "충북 음성서 외국인 지인 간 ‘패싸움’ 2명 사상",
+      "outlet": "세계일보",
+      "sourceId": "segye",
+      "mediaGroupId": "segye_group",
+      "publishedAt": "2026-07-26T13:04:44+09:00",
+      "section": "사회>사건_사고",
+      "canonicalUrl": "https://www.segye.com/newsView/20260726504423",
+      "bodySha256": "555e098fbcf9e8a72c7dfec810a3e579a4ac9d3d1808e3d39d7036ac95f07118",
+      "analysis": {
+        "semantic": {
+          "label": "ai_semantic",
+          "engineLabel": "ai_semantic",
+          "semanticAi": true,
+          "status": "succeeded",
+          "model": "claude-sonnet-5x2-opus-5-adjudicated",
+          "promptVersion": "claude-framing-v1.0.0",
+          "schemaVersion": "agendaframe.article-frame-profile.v2",
+          "source": "semantic-rank*-2026-07-26",
+          "articleId": "01100701.20260726130444001",
+          "evidenceCount": 7,
+          "bodySha256": "555e098fbcf9e8a72c7dfec810a3e579a4ac9d3d1808e3d39d7036ac95f07118",
+          "reviewRequired": true,
+          "fallbackReason": null
+        },
+        "rules": {
+          "label": "rules_local",
+          "engineLabel": "rules_local",
+          "semanticAi": false,
+          "status": "succeeded",
+          "model": "korean-evidence-rules-v2",
+          "promptVersion": null,
+          "schemaVersion": "agendaframe.article-frame-profile.v1",
+          "source": "top5-2026-07-26.json",
+          "articleId": "01100701.20260726130444001",
+          "evidenceCount": 7,
+          "bodySha256": "526dfadb50efa9ee8673069696c5c13804722202bb60c260a1785736c262501d"
+        }
+      },
+      "issueId": "bigkinds-2026-07-26-top-5"
+    },
+    {
+      "articleId": "01100201.20260726112314001",
+      "id": "01100201.20260726112314001",
+      "title": "음성서 외국인 10여명 집단 패싸움 2명 사상",
+      "outlet": "국민일보",
+      "sourceId": "kmib",
+      "mediaGroupId": "kmib_group",
+      "publishedAt": "2026-07-26T11:23:14+09:00",
+      "section": "사회>사건_사고",
+      "canonicalUrl": "https://www.kmib.co.kr/article/view.asp?arcid=0030163038&code=61121211&cp=kd",
+      "bodySha256": "36e12769374fe71dd0d3b25601765024c3099023bc4c092032df1e04e10c8a1e",
+      "analysis": {
+        "semantic": {
+          "label": "ai_semantic",
+          "engineLabel": "ai_semantic",
+          "semanticAi": true,
+          "status": "succeeded",
+          "model": "claude-sonnet-5x2-opus-5-adjudicated",
+          "promptVersion": "claude-framing-v1.0.0",
+          "schemaVersion": "agendaframe.article-frame-profile.v2",
+          "source": "semantic-rank*-2026-07-26",
+          "articleId": "01100201.20260726112314001",
+          "evidenceCount": 5,
+          "bodySha256": "36e12769374fe71dd0d3b25601765024c3099023bc4c092032df1e04e10c8a1e",
+          "reviewRequired": true,
+          "fallbackReason": null
+        },
+        "rules": {
+          "label": "rules_local",
+          "engineLabel": "rules_local",
+          "semanticAi": false,
+          "status": "succeeded",
+          "model": "korean-evidence-rules-v2",
+          "promptVersion": null,
+          "schemaVersion": "agendaframe.article-frame-profile.v1",
+          "source": "top5-2026-07-26.json",
+          "articleId": "01100201.20260726112314001",
+          "evidenceCount": 5,
+          "bodySha256": "a3d5a64ab595ffcd38e97eddd3f23008f2ab9d54735c887bc448b5d9578299eb"
+        }
+      },
+      "issueId": "bigkinds-2026-07-26-top-5"
+    }
+  ],
+  "semanticProfiles": [
+    {
+      "articleId": "01100611.20260726132449001",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "claude-sonnet-5x2-opus-5-adjudicated",
+        "promptVersion": "claude-framing-v1.0.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "semantic-rank*-2026-07-26",
+        "articleId": "01100611.20260726132449001",
+        "evidenceCount": 7,
+        "bodySha256": "2474bdd4e3380abba2ea0af4b0928d7c1b0b55606101dc7658d123a2480c78ed",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "59e4f36a1b81df4c01758b0fadc143c6281dec03a6c578501896caf459cf724b"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 9
+          },
+          "sentenceSha256": "70434e47f44989a665dfd8c08a858c897d997a2635956496721259017661fc99"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 8
+          },
+          "sentenceSha256": "8f201bbab90ea2e033fa29c365ed9599dc58dbbb35eafc3142f99ed2476ce3a1"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "baacba6cda583c8a073e4370d5b139034e4e40a317a6affb616436a9cd614de5"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "b19c2bd0d869187203076f1a6bade79f9babf8efa3a07562278d7a46361ae81f"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 7
+          },
+          "sentenceSha256": "4de073458724b578dd7212a0fcc71bc6bac6acbf0d69969602afb0ed8c57098a"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 10
+          },
+          "sentenceSha256": "ba0f89e438719edeec4168b32c29d4592cccbc82ed1a6f038fdfb81159389863"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+          "prompt_version": "claude-framing-v1.0.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": {
+            "authorization_id": "bigkinds-2026-07-26-rank-5-16619490411c",
+            "fingerprint": "c4af0c88ede8789712667db4872fbcec65949c563a8c15983add1b92f8291f50",
+            "cluster_id": "bigkinds-2026-07-26-rank-5",
+            "reviewer": "AgendaFrame agent-assisted evidence audit",
+            "reviewed_at": "2026-08-02T00:00:00+09:00",
+            "approved_urls_sha256": "4b223d11c96cbcd42f7b05d22baf9a563874cd549a404edb244611ef44bfa2fc"
+          }
+        },
+        "engine": {
+          "name": "AgendaFrame Claude evidence coder",
+          "version": "claude-sonnet-5x2-opus-5-adjudicated",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "claude-framing-v1.0.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100611.20260726132449001",
+          "upstream_article_id": "01100611.20260726132449001",
+          "published_at": "2026-07-26T13:24:49+09:00",
+          "title_sha256": "2b565d53f648d12dd245216af84cb7b05c641891e0c0ac40b2f654529f055f49",
+          "body_sha256": "2474bdd4e3380abba2ea0af4b0928d7c1b0b55606101dc7658d123a2480c78ed",
+          "body_character_count": 485,
+          "body_word_count": 126,
+          "paragraph_count": 1,
+          "sentence_count": 14
+        },
+        "extraction": {
+          "text_scope": "transient_public_page_extract",
+          "analyzed_character_count": 485,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "unknown",
+          "label": "자동 분류 안 함",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:ba70c3d8d5362dfeec3c0bb2cc58b0294b9aa75dcc72bf81827cdeec1c32cd2e",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "외국인 일행끼리 벌인 거리 집단 다툼에서 흉기가 사용돼 사망자와 부상자가 나온 강력범죄 사건으로 규정된다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "59e4f36a1b81df4c01758b0fadc143c6281dec03a6c578501896caf459cf724b"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:b5dfc65e08b731e84b261681c37ba9fcbe09daa24bf35cd9db525708a46e64bf",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "다수가 뒤엉킨 싸움 도중 피의자 한 명이 흉기를 빼 들어 휘두른 개인 행위가 사망의 직접 원인으로 전해진다.",
+                "voice": {
+                  "kind": "uncertain_quote",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "70434e47f44989a665dfd8c08a858c897d997a2635956496721259017661fc99"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:1d9185200d1a1cb02e7475f494937ab08db292728076581ae35b6e43c21fd472",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "경찰 설명을 통해 살인 혐의의 책임 주체가 40대 남성 피의자 개인으로 특정된다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "8f201bbab90ea2e033fa29c365ed9599dc58dbbb35eafc3142f99ed2476ce3a1"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:a4cce9e42c35cc10caac50c643ee6b9c019f470615252dd48d827e745bf55c7b",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "달아난 피의자를 검거한 데 이어 관련자들을 조사해 사건 경위를 규명하는 수사 절차가 후속 조치로 제시된다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "baacba6cda583c8a073e4370d5b139034e4e40a317a6affb616436a9cd614de5"
+                }
+              },
+              {
+                "claim_id": "claim:a4cce9e42c35cc10caac50c643ee6b9c019f470615252dd48d827e745bf55c7b",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "달아난 피의자를 검거한 데 이어 관련자들을 조사해 사건 경위를 규명하는 수사 절차가 후속 조치로 제시된다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "b19c2bd0d869187203076f1a6bade79f9babf8efa3a07562278d7a46361ae81f"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:b97ad7d9e2039a563b146a3af1396103ffade8a8540a2f3e624cc1b208215949",
+            "role": "judiciary_law_enforcement",
+            "role_label": "법조·수사기관",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 8
+                },
+                "sentence_sha256": "8f201bbab90ea2e033fa29c365ed9599dc58dbbb35eafc3142f99ed2476ce3a1"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 7
+                },
+                "sentence_sha256": "4de073458724b578dd7212a0fcc71bc6bac6acbf0d69969602afb0ed8c57098a"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:402eb49ae91d20fd54eaf0a6d9665649ebdbd15fcde5c3ce04c6f09746063e8c",
+            "role": "other",
+            "role_label": "기타 취재원",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 9
+                },
+                "sentence_sha256": "70434e47f44989a665dfd8c08a858c897d997a2635956496721259017661fc99"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 10
+                },
+                "sentence_sha256": "ba0f89e438719edeec4168b32c29d4592cccbc82ed1a6f038fdfb81159389863"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "unknown"
+        },
+        "scope": {
+          "code": "unknown"
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [],
+          "controlled_associations": []
+        },
+        "framing_devices": [],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "18550456cd233e806921b05f47dd4836ba946cc73fa522ec90ac3c319066ff5c",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "01100501.20260726131922001",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "claude-sonnet-5x2-opus-5-adjudicated",
+        "promptVersion": "claude-framing-v1.0.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "semantic-rank*-2026-07-26",
+        "articleId": "01100501.20260726131922001",
+        "evidenceCount": 7,
+        "bodySha256": "5dd409f2026a9707a80657c44bbf68219198fea758f64da4ae96a0bb288d4395",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "5c6f792c8172bc010a639c3295f8222ddce0c920feca135244ac4a3d3f740f6c"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 8
+          },
+          "sentenceSha256": "55c04f6ed1503a2962041461e2120ca552eb34b80dbf6f5a318e519867982ded"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "18cfadc4de37b95f026cad3006a7ef3b0098ecc4fb8c2641534b5ed1567162d3"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "8b0ff5e167083f35c4d1394abf09d08199e0cf1bfddccf487e7336979fa22141"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "8c80adaf8f4448ea7c5bc606cad18467476d23cde21c73e24b6eca0fcccf1ab8"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 5
+          },
+          "sentenceSha256": "9de2292bf6844835869f760a2e9158d6a1405def339ab947f5675499400d078c"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 7
+          },
+          "sentenceSha256": "8c7be4cc407ea454382ab17d4052258acb03f97a9b4b15b0ea66c2cefd164074"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+          "prompt_version": "claude-framing-v1.0.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": {
+            "authorization_id": "bigkinds-2026-07-26-rank-5-16619490411c",
+            "fingerprint": "c4af0c88ede8789712667db4872fbcec65949c563a8c15983add1b92f8291f50",
+            "cluster_id": "bigkinds-2026-07-26-rank-5",
+            "reviewer": "AgendaFrame agent-assisted evidence audit",
+            "reviewed_at": "2026-08-02T00:00:00+09:00",
+            "approved_urls_sha256": "4b223d11c96cbcd42f7b05d22baf9a563874cd549a404edb244611ef44bfa2fc"
+          }
+        },
+        "engine": {
+          "name": "AgendaFrame Claude evidence coder",
+          "version": "claude-sonnet-5x2-opus-5-adjudicated",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "claude-framing-v1.0.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100501.20260726131922001",
+          "upstream_article_id": "01100501.20260726131922001",
+          "published_at": "2026-07-26T13:19:22+09:00",
+          "title_sha256": "765afff7beaac36e68218f883fff01370061c28c4cedee87777147ba0209d391",
+          "body_sha256": "5dd409f2026a9707a80657c44bbf68219198fea758f64da4ae96a0bb288d4395",
+          "body_character_count": 1223,
+          "body_word_count": 304,
+          "paragraph_count": 1,
+          "sentence_count": 56
+        },
+        "extraction": {
+          "text_scope": "transient_public_page_extract",
+          "analyzed_character_count": 1223,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "unknown",
+          "label": "자동 분류 안 함",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:9971bac0d59e524fd00fff4e5a12a206012f7438c416fac57236036f3c1ea9e8",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "새벽 시간 길거리에서 벌어진 외국인 무리 간 집단 다툼이 흉기 살인으로 번진 사건으로 규정된다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "5c6f792c8172bc010a639c3295f8222ddce0c920feca135244ac4a3d3f740f6c"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:81bfc7c67406f2462aba464cd8a27ddf302352f50305658fc10d9c83cee01c56",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "이전부터 관계가 나빴던 두 무리가 이날 서로 만나 싸우기로 정한 점이 사건의 직접 배경으로 전해진다고 서술된다.",
+                "voice": {
+                  "kind": "uncertain_quote",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "55c04f6ed1503a2962041461e2120ca552eb34b80dbf6f5a318e519867982ded"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:5d3629aaff4692912ac9d19ff13cd7d305993644afdd9ae4a80c181a2e74c804",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "검거된 40대 피의자 개인이 흉기로 상대를 살해한 혐의를 지는 구도로 책임이 귀속된다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "18cfadc4de37b95f026cad3006a7ef3b0098ecc4fb8c2641534b5ed1567162d3"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:fe0f3fd198617673ea9840cbe964fe4bad71bf162a6d30069ac31ae8eddec5c1",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "경찰이 경위 조사를 마친 뒤 신병 확보를 위한 영장을 청구하고 나머지 가담자 처리도 추후 결정하겠다는 방침을 제시한다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "8b0ff5e167083f35c4d1394abf09d08199e0cf1bfddccf487e7336979fa22141"
+                }
+              },
+              {
+                "claim_id": "claim:fe0f3fd198617673ea9840cbe964fe4bad71bf162a6d30069ac31ae8eddec5c1",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "경찰이 경위 조사를 마친 뒤 신병 확보를 위한 영장을 청구하고 나머지 가담자 처리도 추후 결정하겠다는 방침을 제시한다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "8c80adaf8f4448ea7c5bc606cad18467476d23cde21c73e24b6eca0fcccf1ab8"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:54978fbf58e59823785f6e4154987a5263da42c1e0ee0160308297b4e68a6011",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 5
+                },
+                "sentence_sha256": "9de2292bf6844835869f760a2e9158d6a1405def339ab947f5675499400d078c"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 7
+                },
+                "sentence_sha256": "8c7be4cc407ea454382ab17d4052258acb03f97a9b4b15b0ea66c2cefd164074"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 12
+                },
+                "sentence_sha256": "8c80adaf8f4448ea7c5bc606cad18467476d23cde21c73e24b6eca0fcccf1ab8"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "unknown"
+        },
+        "scope": {
+          "code": "unknown"
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [],
+          "controlled_associations": []
+        },
+        "framing_devices": [],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "3f140cacb8402ced642ccd36facef49dedc095eb74c7005f259441d6c4d4d9ef",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "01100701.20260726130444001",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "claude-sonnet-5x2-opus-5-adjudicated",
+        "promptVersion": "claude-framing-v1.0.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "semantic-rank*-2026-07-26",
+        "articleId": "01100701.20260726130444001",
+        "evidenceCount": 7,
+        "bodySha256": "555e098fbcf9e8a72c7dfec810a3e579a4ac9d3d1808e3d39d7036ac95f07118",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "15dfdde0459452fc315ebb0a4e46824a8258d37fc0fb3368d3f37d3a0b0c578f"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "88475447bd69b476e03e4957bbb391f3d5104b900739a97539bab4d0fc37cced"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "f9a56158801afcf18493a0b3f58d3eef3a304f301ec4f8690f85438d080357b7"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 9
+          },
+          "sentenceSha256": "90c2c3535c5fa5135809cc61160b9868f58f5c410e9f776461412c97c1f79241"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "67a6c09d1f1c50d48aae110ebfba14c5a3b7d9ec89983a3c73138df99961c4df"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "c3fff3b8747c6067534881ee6f6246d8098d2dd654c2619627ac773e5371337f"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "04a97e81586aa952046714789be3d75e08d53dd16381e3a3e3c66f54e5ed8c98"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+          "prompt_version": "claude-framing-v1.0.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": {
+            "authorization_id": "bigkinds-2026-07-26-rank-5-16619490411c",
+            "fingerprint": "c4af0c88ede8789712667db4872fbcec65949c563a8c15983add1b92f8291f50",
+            "cluster_id": "bigkinds-2026-07-26-rank-5",
+            "reviewer": "AgendaFrame agent-assisted evidence audit",
+            "reviewed_at": "2026-08-02T00:00:00+09:00",
+            "approved_urls_sha256": "4b223d11c96cbcd42f7b05d22baf9a563874cd549a404edb244611ef44bfa2fc"
+          }
+        },
+        "engine": {
+          "name": "AgendaFrame Claude evidence coder",
+          "version": "claude-sonnet-5x2-opus-5-adjudicated",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "claude-framing-v1.0.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100701.20260726130444001",
+          "upstream_article_id": "01100701.20260726130444001",
+          "published_at": "2026-07-26T13:04:44+09:00",
+          "title_sha256": "cd869c5119da03bdddce182803cf5418ce5bcccb806ebe730b61c4c0f2bae9a9",
+          "body_sha256": "555e098fbcf9e8a72c7dfec810a3e579a4ac9d3d1808e3d39d7036ac95f07118",
+          "body_character_count": 558,
+          "body_word_count": 139,
+          "paragraph_count": 1,
+          "sentence_count": 13
+        },
+        "extraction": {
+          "text_scope": "transient_public_page_extract",
+          "analyzed_character_count": 558,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "unknown",
+          "label": "자동 분류 안 함",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:96d11f8aa069135443f94906de79dccd91bd2638dc7dfb48063226ba2c890b4d",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "외국인 무리 사이의 길거리 충돌이 흉기 사용으로 번져 사망자와 부상자가 생긴 사건이 문제로 제시된다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "15dfdde0459452fc315ebb0a4e46824a8258d37fc0fb3368d3f37d3a0b0c578f"
+                }
+              },
+              {
+                "claim_id": "claim:96d11f8aa069135443f94906de79dccd91bd2638dc7dfb48063226ba2c890b4d",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "외국인 무리 사이의 길거리 충돌이 흉기 사용으로 번져 사망자와 부상자가 생긴 사건이 문제로 제시된다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "88475447bd69b476e03e4957bbb391f3d5104b900739a97539bab4d0fc37cced"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:5d61fefd4d7a9a316bcbd28618908a9132625a5a6cdb1ddc39a7095b218721d7",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "말다툼에서 시작된 충돌이 격해지는 과정에서 피의자가 흉기를 꺼내 든 개별 행위가 사망의 직접 원인으로 지목된다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "f9a56158801afcf18493a0b3f58d3eef3a304f301ec4f8690f85438d080357b7"
+                }
+              },
+              {
+                "claim_id": "claim:5d61fefd4d7a9a316bcbd28618908a9132625a5a6cdb1ddc39a7095b218721d7",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "말다툼에서 시작된 충돌이 격해지는 과정에서 피의자가 흉기를 꺼내 든 개별 행위가 사망의 직접 원인으로 지목된다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "90c2c3535c5fa5135809cc61160b9868f58f5c410e9f776461412c97c1f79241"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:c184ebe2eaebee2003e8191e59933d538d9cb5ef3c5c56be7a6c4dcbed5916cc",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "흉기를 사용해 상대를 숨지게 한 혐의로 붙잡힌 개인 피의자에게 책임이 돌아간다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "67a6c09d1f1c50d48aae110ebfba14c5a3b7d9ec89983a3c73138df99961c4df"
+                }
+              },
+              {
+                "claim_id": "claim:c184ebe2eaebee2003e8191e59933d538d9cb5ef3c5c56be7a6c4dcbed5916cc",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "흉기를 사용해 상대를 숨지게 한 혐의로 붙잡힌 개인 피의자에게 책임이 돌아간다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "f9a56158801afcf18493a0b3f58d3eef3a304f301ec4f8690f85438d080357b7"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:73269a8e55e05536cc20a4ae1116aefdd73ee502dc032665776ec7e12bd931a8",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "피의자를 긴급 체포한 뒤 양측 관계자를 상대로 경위와 동기를 규명하는 수사를 이어가는 것이 대응으로 제시된다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "c3fff3b8747c6067534881ee6f6246d8098d2dd654c2619627ac773e5371337f"
+                }
+              },
+              {
+                "claim_id": "claim:73269a8e55e05536cc20a4ae1116aefdd73ee502dc032665776ec7e12bd931a8",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "피의자를 긴급 체포한 뒤 양측 관계자를 상대로 경위와 동기를 규명하는 수사를 이어가는 것이 대응으로 제시된다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "04a97e81586aa952046714789be3d75e08d53dd16381e3a3e3c66f54e5ed8c98"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:a2b7f2b5a7b996770ab77a169fd5d314bd7bd96c1449c5151f8863fbf98e6ac1",
+            "role": "judiciary_law_enforcement",
+            "role_label": "법조·수사기관",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 3,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "67a6c09d1f1c50d48aae110ebfba14c5a3b7d9ec89983a3c73138df99961c4df"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "f9a56158801afcf18493a0b3f58d3eef3a304f301ec4f8690f85438d080357b7"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 12
+                },
+                "sentence_sha256": "c3fff3b8747c6067534881ee6f6246d8098d2dd654c2619627ac773e5371337f"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "unknown"
+        },
+        "scope": {
+          "code": "unknown"
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [],
+          "controlled_associations": []
+        },
+        "framing_devices": [],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "9276d1c544370b8ea01e16d83f1bf262d472ae4198e392dc4cb6ee79033f8a3f",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "01100201.20260726112314001",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "claude-sonnet-5x2-opus-5-adjudicated",
+        "promptVersion": "claude-framing-v1.0.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "semantic-rank*-2026-07-26",
+        "articleId": "01100201.20260726112314001",
+        "evidenceCount": 5,
+        "bodySha256": "36e12769374fe71dd0d3b25601765024c3099023bc4c092032df1e04e10c8a1e",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "01100201.20260726112314001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "6590ed479d03b2a4a96e477f82b3a5bba81f1d9a65b1cb77e4593c0cead760e7"
+        },
+        {
+          "articleId": "01100201.20260726112314001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "9aba231c8f01e237344c3ecd75ca9041091b29b39cbdc23422f1d0af897978f1"
+        },
+        {
+          "articleId": "01100201.20260726112314001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "b5e6ed80dc8dc6ca30f644b0ad88bb2d378f7d080f1749236712968313acbbcc"
+        },
+        {
+          "articleId": "01100201.20260726112314001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 8
+          },
+          "sentenceSha256": "ecbca660ebcf770fd2a87ddcd3cc5d05b4ed1d4e37ce98abe0974e2ede112a65"
+        },
+        {
+          "articleId": "01100201.20260726112314001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "b2efa8090704104ad92b41bdf75046aef060cc88b3a5d33f55421707b3d077ec"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+          "prompt_version": "claude-framing-v1.0.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": {
+            "authorization_id": "bigkinds-2026-07-26-rank-5-16619490411c",
+            "fingerprint": "c4af0c88ede8789712667db4872fbcec65949c563a8c15983add1b92f8291f50",
+            "cluster_id": "bigkinds-2026-07-26-rank-5",
+            "reviewer": "AgendaFrame agent-assisted evidence audit",
+            "reviewed_at": "2026-08-02T00:00:00+09:00",
+            "approved_urls_sha256": "4b223d11c96cbcd42f7b05d22baf9a563874cd549a404edb244611ef44bfa2fc"
+          }
+        },
+        "engine": {
+          "name": "AgendaFrame Claude evidence coder",
+          "version": "claude-sonnet-5x2-opus-5-adjudicated",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "claude-framing-v1.0.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100201.20260726112314001",
+          "upstream_article_id": "01100201.20260726112314001",
+          "published_at": "2026-07-26T11:23:14+09:00",
+          "title_sha256": "ffc86e179b6d2fdf13fea44342808bfc8c07eb76111d57a408d02636a31efae2",
+          "body_sha256": "36e12769374fe71dd0d3b25601765024c3099023bc4c092032df1e04e10c8a1e",
+          "body_character_count": 423,
+          "body_word_count": 102,
+          "paragraph_count": 1,
+          "sentence_count": 9
+        },
+        "extraction": {
+          "text_scope": "transient_public_page_extract",
+          "analyzed_character_count": 423,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "unknown",
+          "label": "자동 분류 안 함",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:debacd0a2a0018cee753c428f4f3b7b359fcdca59e5c8264986c260e5e0c5879",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "거리에서 벌어진 외국인 다수의 물리적 충돌이 사망자를 낳은 강력범죄 사안으로 규정된다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "6590ed479d03b2a4a96e477f82b3a5bba81f1d9a65b1cb77e4593c0cead760e7"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:3d88deea0d542cda5cca56834d7de4e356035dbeb6b3860174dec5926d1b92e9",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "충돌에 가담한 피의자가 흉기를 꺼내 사용한 개인적 행위가 사망을 초래한 것으로 수사 결과가 전해진다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "9aba231c8f01e237344c3ecd75ca9041091b29b39cbdc23422f1d0af897978f1"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:db81362d667f14348a3e36d060d461f73b901b750bae44bca6d39c70e8020877",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "체포된 40대 외국인 남성 개인이 살인 혐의 당사자로 지목돼 책임이 귀속된다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "b5e6ed80dc8dc6ca30f644b0ad88bb2d378f7d080f1749236712968313acbbcc"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:620b408e45637a09e4e195465266518e299984193170f2dde507ea7b21560820",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "수사기관이 피의자와 관련자를 상대로 사건 경과를 규명하는 조사가 후속 대응으로 제시된다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "ecbca660ebcf770fd2a87ddcd3cc5d05b4ed1d4e37ce98abe0974e2ede112a65"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:bbdee90069e8a87129848cf5caf085e10fee587bf9eaa17ef116a9bcc0c91708",
+            "role": "judiciary_law_enforcement",
+            "role_label": "법조·수사기관",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "b2efa8090704104ad92b41bdf75046aef060cc88b3a5d33f55421707b3d077ec"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "9aba231c8f01e237344c3ecd75ca9041091b29b39cbdc23422f1d0af897978f1"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "unknown"
+        },
+        "scope": {
+          "code": "unknown"
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [],
+          "controlled_associations": []
+        },
+        "framing_devices": [],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "c85f9a6d61dd045a9db51366b18beb853ce8027d19041a92dc845086d9b9f030",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    }
+  ],
+  "ruleProfiles": [
+    {
+      "articleId": "01100611.20260726132449001",
+      "status": "succeeded",
+      "engine": {
+        "label": "rules_local",
+        "engineLabel": "rules_local",
+        "semanticAi": false,
+        "status": "succeeded",
+        "model": "korean-evidence-rules-v2",
+        "promptVersion": null,
+        "schemaVersion": "agendaframe.article-frame-profile.v1",
+        "source": "top5-2026-07-26.json",
+        "articleId": "01100611.20260726132449001",
+        "evidenceCount": 6,
+        "bodySha256": "a4cb57cea651154382d49b0664a88a7ec74f28897a982eea96be20d0a2d27be1"
+      },
+      "evidence": [
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 8,
+            "sentence": 1
+          },
+          "sentenceSha256": "28380cb66670b8fdcbf04b84ce7e7ec2d57bcf81475ea4194b860641b9deb5d9"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 9,
+            "sentence": 1
+          },
+          "sentenceSha256": "4fedd9363c2a9af9ba0e6a7e0561397222163e25951b7eacca56ef4a1dd7da0f"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 11,
+            "sentence": 1
+          },
+          "sentenceSha256": "08f969d6c0e81f729b23cf83134a1dc48abe5c6e688795a37dc0e4927e5c0f5e"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 10,
+            "sentence": 1
+          },
+          "sentenceSha256": "0f5f655582a86db88c1629b5ed894611ffe2a5989f9ab69fbbd006da099d1dd3"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 5,
+            "sentence": 1
+          },
+          "sentenceSha256": "8320cf327da28910e281defce7d29c2e4d80fe05bcc37a6454e34564819068a8"
+        },
+        {
+          "articleId": "01100611.20260726132449001",
+          "locator": {
+            "paragraph": 6,
+            "sentence": 1
+          },
+          "sentenceSha256": "1f763275fab6cfe4cb568b6cbea45d96c58344b9898fd0aed05e7326039f70c1"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v1",
+        "engine": {
+          "name": "AgendaFrame Korean evidence rules",
+          "version": "korean-evidence-rules-v2",
+          "approach": "deterministic_extractive_rules",
+          "semantic_ai": false,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "이 결과는 한국어 어휘·구문 규칙에 따른 구조화 관측이며 사람의 의미 해석이나 LLM 판정이 아닙니다.",
+            "취재원에게 귀속된 발언은 언론사의 서술·입장으로 합산하지 않습니다.",
+            "확인되지 않음은 기사에 요소가 없다는 단정이 아니라 분석 가능한 본문에서 규칙으로 관측되지 않았다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100611.20260726132449001",
+          "published_at": "2026-07-26T13:24:49+09:00",
+          "title_sha256": "6f941a21617d0689b838826ce38733df31eca96aec72867f9f983586bf140b59",
+          "body_sha256": "a4cb57cea651154382d49b0664a88a7ec74f28897a982eea96be20d0a2d27be1",
+          "body_character_count": 485,
+          "body_word_count": 126,
+          "paragraph_count": 14,
+          "sentence_count": 14
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": "스트레이트 기사",
+          "basis": "명시적인 의견·해설 장르 표지가 없음",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "source-1",
+            "name": "경찰",
+            "role": "judiciary_law_enforcement",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1,
+            "role_label": "법조·수사기관",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 8,
+                  "sentence": 1
+                },
+                "sentence_sha256": "28380cb66670b8fdcbf04b84ce7e7ec2d57bcf81475ea4194b860641b9deb5d9"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "shallow",
+          "score": 24,
+          "signals": [
+            {
+              "code": "historical_context",
+              "label": "과거 경과",
+              "sentence_count": 2,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 9,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "4fedd9363c2a9af9ba0e6a7e0561397222163e25951b7eacca56ef4a1dd7da0f"
+                },
+                {
+                  "locator": {
+                    "paragraph": 11,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "08f969d6c0e81f729b23cf83134a1dc48abe5c6e688795a37dc0e4927e5c0f5e"
+                }
+              ]
+            },
+            {
+              "code": "statistics",
+              "label": "수치·통계",
+              "sentence_count": 1,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 10,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "0f5f655582a86db88c1629b5ed894611ffe2a5989f9ab69fbbd006da099d1dd3"
+                }
+              ]
+            }
+          ],
+          "caution": "맥락 깊이는 관측 가능한 배경·통계·제도·반론 표지의 범위를 나타내며 기사 품질 점수가 아닙니다."
+        },
+        "scope": {
+          "code": "episodic",
+          "label": "사례·사건 중심",
+          "episodic_sentence_count": 1,
+          "thematic_sentence_count": 0,
+          "evidence": {
+            "episodic": [
+              {
+                "locator": {
+                  "paragraph": 12,
+                  "sentence": 1
+                },
+                "sentence_sha256": "5d162602cf07db90bd45764d21235a261ba3c49af963c3717c5c3a556f656757"
+              }
+            ],
+            "thematic": []
+          },
+          "caution": "기사의 설명 범위를 나타내는 보조 분류이며 보도의 우열을 뜻하지 않습니다."
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [
+            {
+              "code": "crime_punishment",
+              "label": "범죄·처벌",
+              "sentence_count": 6,
+              "share_of_sentences": 0.429,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 5,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "8320cf327da28910e281defce7d29c2e4d80fe05bcc37a6454e34564819068a8"
+                },
+                {
+                  "locator": {
+                    "paragraph": 6,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "1f763275fab6cfe4cb568b6cbea45d96c58344b9898fd0aed05e7326039f70c1"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "quality_of_life",
+              "label": "삶의 질",
+              "sentence_count": 1,
+              "share_of_sentences": 0.071,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 11,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "08f969d6c0e81f729b23cf83134a1dc48abe5c6e688795a37dc0e4927e5c0f5e"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            }
+          ],
+          "controlled_associations": [
+            {
+              "source": "law_justice",
+              "target": "welfare_livelihood",
+              "sentence_count": 1
+            }
+          ]
+        },
+        "framing_devices": [
+          {
+            "code": "statistics",
+            "label": "수치·통계",
+            "count": 1,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 10,
+                  "sentence": 1
+                },
+                "sentence_sha256": "0f5f655582a86db88c1629b5ed894611ffe2a5989f9ab69fbbd006da099d1dd3"
+              }
+            ]
+          },
+          {
+            "code": "historical_reference",
+            "label": "과거 경과",
+            "count": 2,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 9,
+                  "sentence": 1
+                },
+                "sentence_sha256": "4fedd9363c2a9af9ba0e6a7e0561397222163e25951b7eacca56ef4a1dd7da0f"
+              },
+              {
+                "locator": {
+                  "paragraph": 11,
+                  "sentence": 1
+                },
+                "sentence_sha256": "08f969d6c0e81f729b23cf83134a1dc48abe5c6e688795a37dc0e4927e5c0f5e"
+              }
+            ]
+          },
+          {
+            "code": "source_attribution",
+            "label": "명시적 취재원 인용",
+            "count": 1,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 8,
+                  "sentence": 1
+                },
+                "sentence_sha256": "28380cb66670b8fdcbf04b84ce7e7ec2d57bcf81475ea4194b860641b9deb5d9"
+              }
+            ]
+          }
+        ],
+        "review": {
+          "status": "machine_observation_unreviewed",
+          "requires_human_review": true,
+          "publication_rule": "책임 귀속·규범적 평가·매체 간 차이는 사람 검토 전 확정 표현으로 공개하지 않습니다."
+        },
+        "extraction": {
+          "strategy": "bigkinds_workbook_body",
+          "quality": 1,
+          "extractor_version": "workbook-body-v1",
+          "text_scope": "article_body",
+          "body_character_count": 485,
+          "body_fingerprint": "58ccc1da01412614ccd3991f9195121e1ae2c59cca37ab0b439cb741af8c3b1d"
+        }
+      }
+    },
+    {
+      "articleId": "01100501.20260726131922001",
+      "status": "succeeded",
+      "engine": {
+        "label": "rules_local",
+        "engineLabel": "rules_local",
+        "semanticAi": false,
+        "status": "succeeded",
+        "model": "korean-evidence-rules-v2",
+        "promptVersion": null,
+        "schemaVersion": "agendaframe.article-frame-profile.v1",
+        "source": "top5-2026-07-26.json",
+        "articleId": "01100501.20260726131922001",
+        "evidenceCount": 12,
+        "bodySha256": "356ad579eb3b838987a7ed977faf334ab62519464974d91b95f91d0310e4c45e"
+      },
+      "evidence": [
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 4,
+            "sentence": 2
+          },
+          "sentenceSha256": "dcb8b530c71745e04cf2e47e537a06b8bd65237f88c0171a27888c00c7963688"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 5,
+            "sentence": 2
+          },
+          "sentenceSha256": "10f5ccd3600b3abf3f060ab32b5eb2828dcbfd0c1d1bbe22baf468a58ba012fb"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 7,
+            "sentence": 2
+          },
+          "sentenceSha256": "7a712dfe7a8e34c1bb248e4a97e4b22d08dfe23569ddac23415c54280af6b78a"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 6,
+            "sentence": 2
+          },
+          "sentenceSha256": "d3b65e927cab3e4ab6a2c20399c0cbe2f7f0db1389a0e2a5dc2330162a8c20af"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 6,
+            "sentence": 1
+          },
+          "sentenceSha256": "5099a0f14589adbf3e29ea042f4bab870203cbccdba4097d9f97674a9d35c4d5"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 15,
+            "sentence": 1
+          },
+          "sentenceSha256": "1c932bb2ba93ccf9220e03515db0f03ccaa03137d42831d112aa36a0d07054a5"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 25,
+            "sentence": 1
+          },
+          "sentenceSha256": "570e04f21cf0ff0337754c88021071d4dc299f2866cd44b5bd064124c14faefa"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "2f8c2c271db27441e6e2760e622544b0172fb52ea60d7d291ecf5fecfd892c23"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 4,
+            "sentence": 1
+          },
+          "sentenceSha256": "f16f9fed344abc4b1844df0aa8ca87bafbfe929cf7a199ab21e93347016719fd"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 24,
+            "sentence": 1
+          },
+          "sentenceSha256": "5229c881b0c571dd83b93cddb31d019eb368732a7448cb12c63aed55088d0944"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 34,
+            "sentence": 1
+          },
+          "sentenceSha256": "be8578df427aa0f9f739e251e292d318404da8e118de69542b9dd038f2dad5f0"
+        },
+        {
+          "articleId": "01100501.20260726131922001",
+          "locator": {
+            "paragraph": 18,
+            "sentence": 1
+          },
+          "sentenceSha256": "c0e319e13a00084e9008e8b88dc8a28293bf0ef3635995033b6831d929741751"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v1",
+        "engine": {
+          "name": "AgendaFrame Korean evidence rules",
+          "version": "korean-evidence-rules-v2",
+          "approach": "deterministic_extractive_rules",
+          "semantic_ai": false,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "이 결과는 한국어 어휘·구문 규칙에 따른 구조화 관측이며 사람의 의미 해석이나 LLM 판정이 아닙니다.",
+            "취재원에게 귀속된 발언은 언론사의 서술·입장으로 합산하지 않습니다.",
+            "확인되지 않음은 기사에 요소가 없다는 단정이 아니라 분석 가능한 본문에서 규칙으로 관측되지 않았다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100501.20260726131922001",
+          "published_at": "2026-07-26T13:19:22+09:00",
+          "title_sha256": "99a21b9c9a55592c58e5182c2b926b9ca06acc14d79bd7ac1d9367e6674c87e8",
+          "body_sha256": "356ad579eb3b838987a7ed977faf334ab62519464974d91b95f91d0310e4c45e",
+          "body_character_count": 1223,
+          "body_word_count": 304,
+          "paragraph_count": 51,
+          "sentence_count": 58
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": "스트레이트 기사",
+          "basis": "명시적인 의견·해설 장르 표지가 없음",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "source-1",
+            "name": "충북 음성경찰서",
+            "role": "judiciary_law_enforcement",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1,
+            "role_label": "법조·수사기관",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 4,
+                  "sentence": 2
+                },
+                "sentence_sha256": "dcb8b530c71745e04cf2e47e537a06b8bd65237f88c0171a27888c00c7963688"
+              }
+            ]
+          },
+          {
+            "actor_id": "source-2",
+            "name": "경찰",
+            "role": "judiciary_law_enforcement",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1,
+            "role_label": "법조·수사기관",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 2
+                },
+                "sentence_sha256": "10f5ccd3600b3abf3f060ab32b5eb2828dcbfd0c1d1bbe22baf468a58ba012fb"
+              }
+            ]
+          },
+          {
+            "actor_id": "source-3",
+            "name": "경찰 관계자",
+            "role": "anonymous_official",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
+            "role_label": "익명·비실명 관계자",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 7,
+                  "sentence": 2
+                },
+                "sentence_sha256": "7a712dfe7a8e34c1bb248e4a97e4b22d08dfe23569ddac23415c54280af6b78a"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "moderate",
+          "score": 32,
+          "signals": [
+            {
+              "code": "historical_context",
+              "label": "과거 경과",
+              "sentence_count": 1,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 6,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "d3b65e927cab3e4ab6a2c20399c0cbe2f7f0db1389a0e2a5dc2330162a8c20af"
+                }
+              ]
+            },
+            {
+              "code": "statistics",
+              "label": "수치·통계",
+              "sentence_count": 4,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 6,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "5099a0f14589adbf3e29ea042f4bab870203cbccdba4097d9f97674a9d35c4d5"
+                },
+                {
+                  "locator": {
+                    "paragraph": 15,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "1c932bb2ba93ccf9220e03515db0f03ccaa03137d42831d112aa36a0d07054a5"
+                }
+              ]
+            }
+          ],
+          "caution": "맥락 깊이는 관측 가능한 배경·통계·제도·반론 표지의 범위를 나타내며 기사 품질 점수가 아닙니다."
+        },
+        "scope": {
+          "code": "episodic",
+          "label": "사례·사건 중심",
+          "episodic_sentence_count": 2,
+          "thematic_sentence_count": 1,
+          "evidence": {
+            "episodic": [
+              {
+                "locator": {
+                  "paragraph": 7,
+                  "sentence": 1
+                },
+                "sentence_sha256": "def8e72e2f7c352fc7507a908020661f4ab6799d60496742af286b10d8b7110f"
+              },
+              {
+                "locator": {
+                  "paragraph": 18,
+                  "sentence": 1
+                },
+                "sentence_sha256": "c0e319e13a00084e9008e8b88dc8a28293bf0ef3635995033b6831d929741751"
+              }
+            ],
+            "thematic": [
+              {
+                "locator": {
+                  "paragraph": 10,
+                  "sentence": 1
+                },
+                "sentence_sha256": "244fb4719b1e7fd6ea59d881f7cb296e6e7867c4106c9fbae69dccb557103dac"
+              }
+            ]
+          },
+          "caution": "기사의 설명 범위를 나타내는 보조 분류이며 보도의 우열을 뜻하지 않습니다."
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "conflict",
+              "label": "갈등",
+              "sentence_count": 1,
+              "share_of_sentences": 0.017,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 25,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "570e04f21cf0ff0337754c88021071d4dc299f2866cd44b5bd064124c14faefa"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "crime_punishment",
+              "label": "범죄·처벌",
+              "sentence_count": 7,
+              "share_of_sentences": 0.121,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "2f8c2c271db27441e6e2760e622544b0172fb52ea60d7d291ecf5fecfd892c23"
+                },
+                {
+                  "locator": {
+                    "paragraph": 4,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "f16f9fed344abc4b1844df0aa8ca87bafbfe929cf7a199ab21e93347016719fd"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "security_defense",
+              "label": "안보·국방",
+              "sentence_count": 2,
+              "share_of_sentences": 0.034,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 24,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "5229c881b0c571dd83b93cddb31d019eb368732a7448cb12c63aed55088d0944"
+                },
+                {
+                  "locator": {
+                    "paragraph": 34,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "be8578df427aa0f9f739e251e292d318404da8e118de69542b9dd038f2dad5f0"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "health_safety",
+              "label": "건강·안전",
+              "sentence_count": 1,
+              "share_of_sentences": 0.017,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 18,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "c0e319e13a00084e9008e8b88dc8a28293bf0ef3635995033b6831d929741751"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "quality_of_life",
+              "label": "삶의 질",
+              "sentence_count": 1,
+              "share_of_sentences": 0.017,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 6,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "d3b65e927cab3e4ab6a2c20399c0cbe2f7f0db1389a0e2a5dc2330162a8c20af"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            }
+          ],
+          "controlled_associations": [
+            {
+              "source": "law_justice",
+              "target": "welfare_livelihood",
+              "sentence_count": 1
+            }
+          ]
+        },
+        "framing_devices": [
+          {
+            "code": "statistics",
+            "label": "수치·통계",
+            "count": 4,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 6,
+                  "sentence": 1
+                },
+                "sentence_sha256": "5099a0f14589adbf3e29ea042f4bab870203cbccdba4097d9f97674a9d35c4d5"
+              },
+              {
+                "locator": {
+                  "paragraph": 15,
+                  "sentence": 1
+                },
+                "sentence_sha256": "1c932bb2ba93ccf9220e03515db0f03ccaa03137d42831d112aa36a0d07054a5"
+              }
+            ]
+          },
+          {
+            "code": "historical_reference",
+            "label": "과거 경과",
+            "count": 1,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 6,
+                  "sentence": 2
+                },
+                "sentence_sha256": "d3b65e927cab3e4ab6a2c20399c0cbe2f7f0db1389a0e2a5dc2330162a8c20af"
+              }
+            ]
+          },
+          {
+            "code": "source_attribution",
+            "label": "명시적 취재원 인용",
+            "count": 3,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 4,
+                  "sentence": 2
+                },
+                "sentence_sha256": "dcb8b530c71745e04cf2e47e537a06b8bd65237f88c0171a27888c00c7963688"
+              },
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 2
+                },
+                "sentence_sha256": "10f5ccd3600b3abf3f060ab32b5eb2828dcbfd0c1d1bbe22baf468a58ba012fb"
+              },
+              {
+                "locator": {
+                  "paragraph": 7,
+                  "sentence": 2
+                },
+                "sentence_sha256": "7a712dfe7a8e34c1bb248e4a97e4b22d08dfe23569ddac23415c54280af6b78a"
+              }
+            ]
+          }
+        ],
+        "review": {
+          "status": "machine_observation_unreviewed",
+          "requires_human_review": true,
+          "publication_rule": "책임 귀속·규범적 평가·매체 간 차이는 사람 검토 전 확정 표현으로 공개하지 않습니다."
+        },
+        "extraction": {
+          "strategy": "bigkinds_workbook_body",
+          "quality": 1,
+          "extractor_version": "workbook-body-v1",
+          "text_scope": "article_body",
+          "body_character_count": 1223,
+          "body_fingerprint": "d1a80aab795b8a144ecaab144bba2447ca3d52b02de2992e3579abfcbff9a5e6"
+        }
+      }
+    },
+    {
+      "articleId": "01100701.20260726130444001",
+      "status": "succeeded",
+      "engine": {
+        "label": "rules_local",
+        "engineLabel": "rules_local",
+        "semanticAi": false,
+        "status": "succeeded",
+        "model": "korean-evidence-rules-v2",
+        "promptVersion": null,
+        "schemaVersion": "agendaframe.article-frame-profile.v1",
+        "source": "top5-2026-07-26.json",
+        "articleId": "01100701.20260726130444001",
+        "evidenceCount": 7,
+        "bodySha256": "526dfadb50efa9ee8673069696c5c13804722202bb60c260a1785736c262501d"
+      },
+      "evidence": [
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "fe3d80b3b4b9285d9d048d962f4742c65fe4948bfa868122e2d2481b3877f568"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 4,
+            "sentence": 1
+          },
+          "sentenceSha256": "215788d1219572158710718e14db01f48937206113cd218907ecaafa0f89aac9"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 5,
+            "sentence": 1
+          },
+          "sentenceSha256": "6dfef25b9cd6ee67b06a6707a2d3634db9fac3ca0e0f21fd50b5a0735ee4e724"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 5,
+            "sentence": 2
+          },
+          "sentenceSha256": "2ad7c083b41af7bdc4f29616562253e6370638d4fdcfe13fcc27e334ac818e31"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "3c1250050a36d9198d4ec95a5040b85f2437cfe617ba24a4f014deac8ab6a8c6"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "41461369276e48859eefb82d9075ac4ec6ccddbaf88dd3a593a223d3768f45dd"
+        },
+        {
+          "articleId": "01100701.20260726130444001",
+          "locator": {
+            "paragraph": 8,
+            "sentence": 1
+          },
+          "sentenceSha256": "540c454e02732eb048be6d3471bbea8e2d9d419ef3cadbe64e7cf5949f74445e"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v1",
+        "engine": {
+          "name": "AgendaFrame Korean evidence rules",
+          "version": "korean-evidence-rules-v2",
+          "approach": "deterministic_extractive_rules",
+          "semantic_ai": false,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "이 결과는 한국어 어휘·구문 규칙에 따른 구조화 관측이며 사람의 의미 해석이나 LLM 판정이 아닙니다.",
+            "취재원에게 귀속된 발언은 언론사의 서술·입장으로 합산하지 않습니다.",
+            "확인되지 않음은 기사에 요소가 없다는 단정이 아니라 분석 가능한 본문에서 규칙으로 관측되지 않았다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100701.20260726130444001",
+          "published_at": "2026-07-26T13:04:44+09:00",
+          "title_sha256": "6256d288a2abf0a45e05f0172692217185234335841d9b0d0113b563f3270154",
+          "body_sha256": "526dfadb50efa9ee8673069696c5c13804722202bb60c260a1785736c262501d",
+          "body_character_count": 558,
+          "body_word_count": 139,
+          "paragraph_count": 10,
+          "sentence_count": 14
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": "스트레이트 기사",
+          "basis": "명시적인 의견·해설 장르 표지가 없음",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "source-1",
+            "name": "충북 음성경찰서",
+            "role": "judiciary_law_enforcement",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1,
+            "role_label": "법조·수사기관",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 2,
+                  "sentence": 1
+                },
+                "sentence_sha256": "fe3d80b3b4b9285d9d048d962f4742c65fe4948bfa868122e2d2481b3877f568"
+              }
+            ]
+          },
+          {
+            "actor_id": "source-2",
+            "name": "경찰",
+            "role": "judiciary_law_enforcement",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1,
+            "role_label": "법조·수사기관",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 4,
+                  "sentence": 1
+                },
+                "sentence_sha256": "215788d1219572158710718e14db01f48937206113cd218907ecaafa0f89aac9"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "level": "shallow",
+          "score": 24,
+          "signals": [
+            {
+              "code": "historical_context",
+              "label": "과거 경과",
+              "sentence_count": 2,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 5,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "6dfef25b9cd6ee67b06a6707a2d3634db9fac3ca0e0f21fd50b5a0735ee4e724"
+                },
+                {
+                  "locator": {
+                    "paragraph": 5,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "2ad7c083b41af7bdc4f29616562253e6370638d4fdcfe13fcc27e334ac818e31"
+                }
+              ]
+            },
+            {
+              "code": "statistics",
+              "label": "수치·통계",
+              "sentence_count": 1,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "3c1250050a36d9198d4ec95a5040b85f2437cfe617ba24a4f014deac8ab6a8c6"
+                }
+              ]
+            }
+          ],
+          "caution": "맥락 깊이는 관측 가능한 배경·통계·제도·반론 표지의 범위를 나타내며 기사 품질 점수가 아닙니다."
+        },
+        "scope": {
+          "code": "episodic",
+          "label": "사례·사건 중심",
+          "episodic_sentence_count": 2,
+          "thematic_sentence_count": 0,
+          "evidence": {
+            "episodic": [
+              {
+                "locator": {
+                  "paragraph": 8,
+                  "sentence": 1
+                },
+                "sentence_sha256": "540c454e02732eb048be6d3471bbea8e2d9d419ef3cadbe64e7cf5949f74445e"
+              },
+              {
+                "locator": {
+                  "paragraph": 9,
+                  "sentence": 1
+                },
+                "sentence_sha256": "755c3364bc4815bfb87ddc772acbb710f72fc1f49571ac0d424acaf161fa7de7"
+              }
+            ],
+            "thematic": []
+          },
+          "caution": "기사의 설명 범위를 나타내는 보조 분류이며 보도의 우열을 뜻하지 않습니다."
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [
+            {
+              "code": "crime_punishment",
+              "label": "범죄·처벌",
+              "sentence_count": 6,
+              "share_of_sentences": 0.429,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "41461369276e48859eefb82d9075ac4ec6ccddbaf88dd3a593a223d3768f45dd"
+                },
+                {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "fe3d80b3b4b9285d9d048d962f4742c65fe4948bfa868122e2d2481b3877f568"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "quality_of_life",
+              "label": "삶의 질",
+              "sentence_count": 1,
+              "share_of_sentences": 0.071,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 8,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "540c454e02732eb048be6d3471bbea8e2d9d419ef3cadbe64e7cf5949f74445e"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            }
+          ],
+          "controlled_associations": [
+            {
+              "source": "law_justice",
+              "target": "welfare_livelihood",
+              "sentence_count": 1
+            }
+          ]
+        },
+        "framing_devices": [
+          {
+            "code": "statistics",
+            "label": "수치·통계",
+            "count": 1,
+            "appears_in_lead": true,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "3c1250050a36d9198d4ec95a5040b85f2437cfe617ba24a4f014deac8ab6a8c6"
+              }
+            ]
+          },
+          {
+            "code": "historical_reference",
+            "label": "과거 경과",
+            "count": 2,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 1
+                },
+                "sentence_sha256": "6dfef25b9cd6ee67b06a6707a2d3634db9fac3ca0e0f21fd50b5a0735ee4e724"
+              },
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 2
+                },
+                "sentence_sha256": "2ad7c083b41af7bdc4f29616562253e6370638d4fdcfe13fcc27e334ac818e31"
+              }
+            ]
+          },
+          {
+            "code": "personal_example",
+            "label": "개인·현장 사례",
+            "count": 1,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 8,
+                  "sentence": 1
+                },
+                "sentence_sha256": "540c454e02732eb048be6d3471bbea8e2d9d419ef3cadbe64e7cf5949f74445e"
+              }
+            ]
+          },
+          {
+            "code": "source_attribution",
+            "label": "명시적 취재원 인용",
+            "count": 2,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 2,
+                  "sentence": 1
+                },
+                "sentence_sha256": "fe3d80b3b4b9285d9d048d962f4742c65fe4948bfa868122e2d2481b3877f568"
+              },
+              {
+                "locator": {
+                  "paragraph": 4,
+                  "sentence": 1
+                },
+                "sentence_sha256": "215788d1219572158710718e14db01f48937206113cd218907ecaafa0f89aac9"
+              }
+            ]
+          }
+        ],
+        "review": {
+          "status": "machine_observation_unreviewed",
+          "requires_human_review": true,
+          "publication_rule": "책임 귀속·규범적 평가·매체 간 차이는 사람 검토 전 확정 표현으로 공개하지 않습니다."
+        },
+        "extraction": {
+          "strategy": "bigkinds_workbook_body",
+          "quality": 1,
+          "extractor_version": "workbook-body-v1",
+          "text_scope": "article_body",
+          "body_character_count": 558,
+          "body_fingerprint": "68b91c9dd65d6e7cd712fdfafd90b56778f491f77506baee5cc0743c9d9dc9e2"
+        }
+      }
+    },
+    {
+      "articleId": "01100201.20260726112314001",
+      "status": "succeeded",
+      "engine": {
+        "label": "rules_local",
+        "engineLabel": "rules_local",
+        "semanticAi": false,
+        "status": "succeeded",
+        "model": "korean-evidence-rules-v2",
+        "promptVersion": null,
+        "schemaVersion": "agendaframe.article-frame-profile.v1",
+        "source": "top5-2026-07-26.json",
+        "articleId": "01100201.20260726112314001",
+        "evidenceCount": 5,
+        "bodySha256": "a3d5a64ab595ffcd38e97eddd3f23008f2ab9d54735c887bc448b5d9578299eb"
+      },
+      "evidence": [
+        {
+          "articleId": "01100201.20260726112314001",
+          "locator": {
+            "paragraph": 4,
+            "sentence": 1
+          },
+          "sentenceSha256": "fc976c6333dc3687dfe105a4e2e8d5ca2eb70346b865f8f3b9ef4ed358922945"
+        },
+        {
+          "articleId": "01100201.20260726112314001",
+          "locator": {
+            "paragraph": 6,
+            "sentence": 1
+          },
+          "sentenceSha256": "66e24abb5c6a3ff6d34810014aecdfed6a07cde770ee5b270994cb839786f0ba"
+        },
+        {
+          "articleId": "01100201.20260726112314001",
+          "locator": {
+            "paragraph": 5,
+            "sentence": 2
+          },
+          "sentenceSha256": "9e8c76a8bcea7b49ff20d3be36fde1e7c8b3ece418e15099779d2132f89dfea4"
+        },
+        {
+          "articleId": "01100201.20260726112314001",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "413b325a183a51e275e8742f4798073e0a7b359662779170a12ba49bfda238c8"
+        },
+        {
+          "articleId": "01100201.20260726112314001",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "4be871c9f071a70a8990f9a69cd915e9cde9b46e58fe304b42c131bba6fcea8f"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v1",
+        "engine": {
+          "name": "AgendaFrame Korean evidence rules",
+          "version": "korean-evidence-rules-v2",
+          "approach": "deterministic_extractive_rules",
+          "semantic_ai": false,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "limitations": [
+            "이 결과는 한국어 어휘·구문 규칙에 따른 구조화 관측이며 사람의 의미 해석이나 LLM 판정이 아닙니다.",
+            "취재원에게 귀속된 발언은 언론사의 서술·입장으로 합산하지 않습니다.",
+            "확인되지 않음은 기사에 요소가 없다는 단정이 아니라 분석 가능한 본문에서 규칙으로 관측되지 않았다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "01100201.20260726112314001",
+          "published_at": "2026-07-26T11:23:14+09:00",
+          "title_sha256": "048e25e2b0572f01c0fad8bf03e20daffeaf181772dd91485563d5130c83d74d",
+          "body_sha256": "a3d5a64ab595ffcd38e97eddd3f23008f2ab9d54735c887bc448b5d9578299eb",
+          "body_character_count": 423,
+          "body_word_count": 102,
+          "paragraph_count": 8,
+          "sentence_count": 11
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": "스트레이트 기사",
+          "basis": "명시적인 의견·해설 장르 표지가 없음",
+          "evidence": []
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "outlet_narration_observed": false,
+            "items": [],
+            "abstention_reason": "분석 가능한 본문에서 이 요소를 직접 뒷받침하는 표현을 확인하지 못했습니다."
+          }
+        },
+        "actors_and_sources": [],
+        "context_depth": {
+          "level": "shallow",
+          "score": 24,
+          "signals": [
+            {
+              "code": "historical_context",
+              "label": "과거 경과",
+              "sentence_count": 2,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 4,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "fc976c6333dc3687dfe105a4e2e8d5ca2eb70346b865f8f3b9ef4ed358922945"
+                },
+                {
+                  "locator": {
+                    "paragraph": 6,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "66e24abb5c6a3ff6d34810014aecdfed6a07cde770ee5b270994cb839786f0ba"
+                }
+              ]
+            },
+            {
+              "code": "statistics",
+              "label": "수치·통계",
+              "sentence_count": 1,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 5,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "9e8c76a8bcea7b49ff20d3be36fde1e7c8b3ece418e15099779d2132f89dfea4"
+                }
+              ]
+            }
+          ],
+          "caution": "맥락 깊이는 관측 가능한 배경·통계·제도·반론 표지의 범위를 나타내며 기사 품질 점수가 아닙니다."
+        },
+        "scope": {
+          "code": "episodic",
+          "label": "사례·사건 중심",
+          "episodic_sentence_count": 1,
+          "thematic_sentence_count": 0,
+          "evidence": {
+            "episodic": [
+              {
+                "locator": {
+                  "paragraph": 7,
+                  "sentence": 1
+                },
+                "sentence_sha256": "26043ce13ba150ffd1539521af87d176f9b7f465432e4ae010ae613abe664a5d"
+              }
+            ],
+            "thematic": []
+          },
+          "caution": "기사의 설명 범위를 나타내는 보조 분류이며 보도의 우열을 뜻하지 않습니다."
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [
+            {
+              "code": "crime_punishment",
+              "label": "범죄·처벌",
+              "sentence_count": 4,
+              "share_of_sentences": 0.364,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "413b325a183a51e275e8742f4798073e0a7b359662779170a12ba49bfda238c8"
+                },
+                {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "4be871c9f071a70a8990f9a69cd915e9cde9b46e58fe304b42c131bba6fcea8f"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            },
+            {
+              "code": "quality_of_life",
+              "label": "삶의 질",
+              "sentence_count": 1,
+              "share_of_sentences": 0.091,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 6,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "66e24abb5c6a3ff6d34810014aecdfed6a07cde770ee5b270994cb839786f0ba"
+                }
+              ],
+              "interpretation_limit": "고정 어휘·구문이 관측된 보조 지표이며, 그 자체로 완결된 프레임 판정은 아닙니다."
+            }
+          ],
+          "controlled_associations": [
+            {
+              "source": "law_justice",
+              "target": "welfare_livelihood",
+              "sentence_count": 1
+            }
+          ]
+        },
+        "framing_devices": [
+          {
+            "code": "statistics",
+            "label": "수치·통계",
+            "count": 1,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 5,
+                  "sentence": 2
+                },
+                "sentence_sha256": "9e8c76a8bcea7b49ff20d3be36fde1e7c8b3ece418e15099779d2132f89dfea4"
+              }
+            ]
+          },
+          {
+            "code": "historical_reference",
+            "label": "과거 경과",
+            "count": 2,
+            "appears_in_lead": false,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 4,
+                  "sentence": 1
+                },
+                "sentence_sha256": "fc976c6333dc3687dfe105a4e2e8d5ca2eb70346b865f8f3b9ef4ed358922945"
+              },
+              {
+                "locator": {
+                  "paragraph": 6,
+                  "sentence": 1
+                },
+                "sentence_sha256": "66e24abb5c6a3ff6d34810014aecdfed6a07cde770ee5b270994cb839786f0ba"
+              }
+            ]
+          },
+          {
+            "code": "source_attribution",
+            "label": "명시적 취재원 인용",
+            "count": 0,
+            "appears_in_lead": false,
+            "evidence": []
+          }
+        ],
+        "review": {
+          "status": "machine_observation_unreviewed",
+          "requires_human_review": true,
+          "publication_rule": "책임 귀속·규범적 평가·매체 간 차이는 사람 검토 전 확정 표현으로 공개하지 않습니다."
+        },
+        "extraction": {
+          "strategy": "bigkinds_workbook_body",
+          "quality": 1,
+          "extractor_version": "workbook-body-v1",
+          "text_scope": "article_body",
+          "body_character_count": 423,
+          "body_fingerprint": "9e8d60ce7030e8582b2be7948d48efc5eb6985a4feac6e450b9e2cdafeb9c6db"
+        }
+      }
+    }
+  ],
+  "comparison": {
+    "engine": {
+      "label": "rules_local",
+      "engineLabel": "rules_local",
+      "semanticAi": false,
+      "status": "succeeded",
+      "model": "korean-evidence-rules-v2",
+      "promptVersion": null,
+      "schemaVersion": "agendaframe.issue-frame-comparison.v1",
+      "source": "top5-2026-07-26.json"
+    },
+    "data": {
+      "schema_version": "agendaframe.issue-frame-comparison.v1",
+      "issue": {
+        "issue_id": "bigkinds-2026-07-26-top-5",
+        "issue_title": "음성서 외국인 여명 이슈"
+      },
+      "method": {
+        "article_first": true,
+        "comparison_unit": "same_event_articles",
+        "outlet_voice_separated_from_sources": true,
+        "source_dominance_check": {
+          "detected": false,
+          "attributed_item_count": 0,
+          "total_item_count": 0,
+          "attributed_share": 0
+        },
+        "secondary_taxonomies_are_descriptive_only": true,
+        "semantic_ai": false,
+        "caution": "동일 사건으로 검증된 기사끼리만 비교해야 하며, 관측되지 않은 요소를 의도적 누락으로 해석하지 않습니다.",
+        "engine_label": "rules_local"
+      },
+      "sample": {
+        "article_count": 4,
+        "outlet_count": 4,
+        "independent_media_group_count": 4,
+        "body_evidence_article_count": 4,
+        "short_body_article_count": 0,
+        "genres": {
+          "straight_news": 4
+        },
+        "context_depth": {
+          "shallow": 3,
+          "moderate": 1
+        },
+        "scope": {
+          "episodic": 4
+        },
+        "article_ids": [
+          "01100611.20260726132449001",
+          "01100501.20260726131922001",
+          "01100701.20260726130444001",
+          "01100201.20260726112314001"
+        ]
+      },
+      "comparison_axes": [
+        {
+          "dimension": "problem_definition",
+          "label": "문제 정의",
+          "observed_article_count": 0,
+          "outlet_narration_article_count": 0,
+          "source_attributed_only_article_count": 0,
+          "not_observed_article_count": 4,
+          "patterns": [],
+          "not_observed_statement": "4건에서는 분석 가능한 본문 안에서 문제 정의 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다."
+        },
+        {
+          "dimension": "causal_interpretation",
+          "label": "원인 해석",
+          "observed_article_count": 0,
+          "outlet_narration_article_count": 0,
+          "source_attributed_only_article_count": 0,
+          "not_observed_article_count": 4,
+          "patterns": [],
+          "not_observed_statement": "4건에서는 분석 가능한 본문 안에서 원인 해석 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다."
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "label": "책임 귀속",
+          "observed_article_count": 0,
+          "outlet_narration_article_count": 0,
+          "source_attributed_only_article_count": 0,
+          "not_observed_article_count": 4,
+          "patterns": [],
+          "not_observed_statement": "4건에서는 분석 가능한 본문 안에서 책임 귀속 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다."
+        },
+        {
+          "dimension": "moral_evaluation",
+          "label": "규범적 평가",
+          "observed_article_count": 0,
+          "outlet_narration_article_count": 0,
+          "source_attributed_only_article_count": 0,
+          "not_observed_article_count": 4,
+          "patterns": [],
+          "not_observed_statement": "4건에서는 분석 가능한 본문 안에서 규범적 평가 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다."
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "label": "해법·처방",
+          "observed_article_count": 0,
+          "outlet_narration_article_count": 0,
+          "source_attributed_only_article_count": 0,
+          "not_observed_article_count": 4,
+          "patterns": [],
+          "not_observed_statement": "4건에서는 분석 가능한 본문 안에서 해법·처방 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다."
+        }
+      ],
+      "source_lens": {
+        "roles": [
+          {
+            "role": "judiciary_law_enforcement",
+            "role_label": "법조·수사기관",
+            "article_count": 3,
+            "outlet_count": 3,
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 5
+          },
+          {
+            "role": "anonymous_official",
+            "role_label": "익명·비실명 관계자",
+            "article_count": 1,
+            "outlet_count": 1,
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0
+          }
+        ],
+        "by_outlet": [
+          {
+            "outlet": "서울신문",
+            "roles": [
+              {
+                "role": "judiciary_law_enforcement",
+                "role_label": "법조·수사기관",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "outlet": "문화일보",
+            "roles": [
+              {
+                "role": "judiciary_law_enforcement",
+                "role_label": "법조·수사기관",
+                "count": 2
+              },
+              {
+                "role": "anonymous_official",
+                "role_label": "익명·비실명 관계자",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "outlet": "세계일보",
+            "roles": [
+              {
+                "role": "judiciary_law_enforcement",
+                "role_label": "법조·수사기관",
+                "count": 2
+              }
+            ]
+          }
+        ],
+        "caution": "인용 횟수는 목소리의 가시성을 나타내는 관측치이며, 취재원의 신뢰도나 매체의 지지 여부를 뜻하지 않습니다."
+      },
+      "secondary_descriptors": {
+        "generic_frames": [
+          {
+            "code": "conflict",
+            "label": "갈등",
+            "article_count": 1
+          }
+        ],
+        "policy_frames": [
+          {
+            "code": "crime_punishment",
+            "label": "범죄·처벌",
+            "article_count": 4
+          },
+          {
+            "code": "quality_of_life",
+            "label": "삶의 질",
+            "article_count": 4
+          },
+          {
+            "code": "health_safety",
+            "label": "건강·안전",
+            "article_count": 1
+          },
+          {
+            "code": "security_defense",
+            "label": "안보·국방",
+            "article_count": 1
+          }
+        ]
+      },
+      "not_observed_statements": [
+        "4건에서는 분석 가능한 본문 안에서 문제 정의 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다.",
+        "4건에서는 분석 가능한 본문 안에서 원인 해석 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다.",
+        "4건에서는 분석 가능한 본문 안에서 책임 귀속 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다.",
+        "4건에서는 분석 가능한 본문 안에서 규범적 평가 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다.",
+        "4건에서는 분석 가능한 본문 안에서 해법·처방 요소가 관측되지 않았습니다. 이는 해당 요소의 실제 부재나 의도적 누락을 뜻하지 않습니다."
+      ],
+      "summary_30_seconds": {
+        "sample": "4개 매체의 4건을 본문 근거 위치와 함께 비교했습니다.",
+        "common_ground": "분석 표본의 60% 이상에서 공통으로 확인되는 단일한 매체 서술 패턴은 관측되지 않았습니다.",
+        "main_difference": "매체 서술로 확인된 요소만 놓고 볼 때, 서로 다른 미디어그룹의 설명 패턴이 갈렸다고 확정할 근거는 아직 충분하지 않습니다.",
+        "divergence_detected": false,
+        "source_context": "가장 자주 가시화된 취재원 범주는 법조·수사기관이며 3건에서 관측됐습니다. 이는 매체의 동의나 취재원 신뢰도 판정이 아닙니다.",
+        "limit": "이 요약은 규칙 기반 관측 결과입니다. 5개 비교 축에서 일부 미관측이 있으며, 사람 검토 전에는 매체의 의도·편향·사실성 판정으로 사용하면 안 됩니다."
+      },
+      "review": {
+        "status": "machine_comparison_unreviewed",
+        "requires_human_review": true,
+        "cluster_status": "not_reviewed",
+        "cluster_reviewed_at": null
+      }
+    },
+    "evidence": []
+  },
+  "coderAgreement": {
+    "method": {
+      "schemaVersion": "agendaframe.coder-agreement.v1",
+      "design": "독립 이중 코딩 후 판정(adjudication)",
+      "coderCount": 2,
+      "coderKind": "ai",
+      "coderNote": "기사마다 두 코더가 서로 다른 순서로 라벨을 붙였다. 한 코더는 코드북 순서대로, 다른 코더는 근거 문장을 먼저 고르고 라벨을 붙였다.",
+      "coderLimit": "두 코더는 사람이 아니라 서로 다른 프롬프트 각도의 모델 코더다. 사람 코더 간 신뢰도와 같은 값으로 읽을 수 없다.",
+      "measuredOn": "판정 전 두 코더의 frame_family 일치 여부",
+      "adjudication": "불일치한 층위만 판정 단계에서 다시 보고 확정한 뒤, 근거 문장이 본문에 실재하고 라벨을 지지하는지 반박 검증을 거쳤다",
+      "statistic": "단순 일치율(percent agreement). 우연 일치를 보정한 카파 계열 계수는 계열 분포가 편중돼 산출하지 않았다.",
+      "dimensions": [
+        "problem_definition",
+        "causal_attribution",
+        "responsibility_attribution",
+        "evaluation",
+        "treatment_recommendation",
+        "actor_visibility"
+      ]
+    },
+    "articleCount": 4,
+    "dimensionCount": 6,
+    "meanDimensionAgreement": 1,
+    "perDimensionAgreement": {
+      "problem_definition": 1,
+      "causal_attribution": 1,
+      "responsibility_attribution": 1,
+      "evaluation": 1,
+      "treatment_recommendation": 1,
+      "actor_visibility": 1
+    },
+    "fullAgreementArticleCount": 4,
+    "articles": [
+      {
+        "articleId": "01100201.20260726112314001",
+        "agreedDimensions": 6,
+        "perDimension": {
+          "problem_definition": true,
+          "causal_attribution": true,
+          "responsibility_attribution": true,
+          "evaluation": true,
+          "treatment_recommendation": true,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": true
+      },
+      {
+        "articleId": "01100501.20260726131922001",
+        "agreedDimensions": 6,
+        "perDimension": {
+          "problem_definition": true,
+          "causal_attribution": true,
+          "responsibility_attribution": true,
+          "evaluation": true,
+          "treatment_recommendation": true,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": true
+      },
+      {
+        "articleId": "01100611.20260726132449001",
+        "agreedDimensions": 6,
+        "perDimension": {
+          "problem_definition": true,
+          "causal_attribution": true,
+          "responsibility_attribution": true,
+          "evaluation": true,
+          "treatment_recommendation": true,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": true
+      },
+      {
+        "articleId": "01100701.20260726130444001",
+        "agreedDimensions": 6,
+        "perDimension": {
+          "problem_definition": true,
+          "causal_attribution": true,
+          "responsibility_attribution": true,
+          "evaluation": true,
+          "treatment_recommendation": true,
+          "actor_visibility": true
+        },
+        "policyFrameAgree": true,
+        "scopeAgree": true
+      }
+    ]
+  },
+  "lineage": {
+    "contractVersion": "agendaframe.initial-five.public.v1",
+    "basisDate": "2026-07-26",
+    "source": {
+      "top5SchemaVersion": "agendaframe.top5-framing-pilot.v1",
+      "top5GeneratedAt": "2026-07-31T17:12:31.662Z",
+      "metadataSchemaVersion": "agendaframe.metadata-issue-cluster.v1",
+      "metadataGeneratedAt": "2026-08-02T14:33:45.855490+00:00",
+      "semanticDirectory": "semantic-rank5-2026-07-26",
+      "semanticFileCount": 4
+    },
+    "issueId": "bigkinds-2026-07-26-top-5"
+  }
+}

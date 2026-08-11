@@ -1,0 +1,192 @@
+{
+  "schemaVersion": "agendaframe.initial-five.public.v1",
+  "basisDate": "2026-07-26",
+  "generatedAt": "2026-07-31T17:12:31.662Z",
+  "issueCount": 5,
+  "articleCount": 25,
+  "issues": [
+    {
+      "issueId": "bigkinds-2026-07-26-top-1",
+      "rank": 1,
+      "title": "정점식 의원의 특검 보완수사권 주장",
+      "category": "정치",
+      "articleCount": 7,
+      "outletCount": 6,
+      "status": "succeeded",
+      "payloadKey": "issues/bigkinds-2026-07-26-top-1.json",
+      "clusterAi": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.0.0",
+        "schemaVersion": 1
+      },
+      "semantic": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "claude-sonnet-5x2-opus-5-adjudicated",
+        "promptVersion": "claude-framing-v1.0.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "succeededArticleCount": 7,
+        "reviewNeededArticleCount": 0
+      }
+    },
+    {
+      "issueId": "bigkinds-2026-07-26-top-2",
+      "rank": 2,
+      "title": "권영진 의원의 정점식 의원 멱살 논란",
+      "category": "정치",
+      "articleCount": 6,
+      "outletCount": 6,
+      "status": "succeeded",
+      "payloadKey": "issues/bigkinds-2026-07-26-top-2.json",
+      "clusterAi": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.0.0",
+        "schemaVersion": 1
+      },
+      "semantic": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "claude-sonnet-5x2-opus-5-adjudicated",
+        "promptVersion": "claude-framing-v1.0.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "succeededArticleCount": 6,
+        "reviewNeededArticleCount": 0
+      }
+    },
+    {
+      "issueId": "bigkinds-2026-07-26-top-3",
+      "rank": 3,
+      "title": "경산 아파트 방화·보복범죄 수사",
+      "category": "사회",
+      "articleCount": 4,
+      "outletCount": 4,
+      "status": "succeeded",
+      "payloadKey": "issues/bigkinds-2026-07-26-top-3.json",
+      "clusterAi": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.0.0",
+        "schemaVersion": 1
+      },
+      "semantic": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "claude-sonnet-5x2-opus-5-adjudicated",
+        "promptVersion": "claude-framing-v1.0.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "succeededArticleCount": 4,
+        "reviewNeededArticleCount": 0
+      }
+    },
+    {
+      "issueId": "bigkinds-2026-07-26-top-4",
+      "rank": 4,
+      "title": "권경애 재판 불출석 손해배상 조정",
+      "category": "사회",
+      "articleCount": 4,
+      "outletCount": 4,
+      "status": "succeeded",
+      "payloadKey": "issues/bigkinds-2026-07-26-top-4.json",
+      "clusterAi": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.0.0",
+        "schemaVersion": 1
+      },
+      "semantic": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "claude-sonnet-5x2-opus-5-adjudicated",
+        "promptVersion": "claude-framing-v1.0.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "succeededArticleCount": 4,
+        "reviewNeededArticleCount": 0
+      }
+    },
+    {
+      "issueId": "bigkinds-2026-07-26-top-5",
+      "rank": 5,
+      "title": "음성 외국인 집단 난투 사건",
+      "category": "사회",
+      "articleCount": 4,
+      "outletCount": 4,
+      "status": "succeeded",
+      "payloadKey": "issues/bigkinds-2026-07-26-top-5.json",
+      "clusterAi": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.0.0",
+        "schemaVersion": 1
+      },
+      "semantic": {
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "claude-sonnet-5x2-opus-5-adjudicated",
+        "promptVersion": "claude-framing-v1.0.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "succeededArticleCount": 4,
+        "reviewNeededArticleCount": 0
+      }
+    }
+  ],
+  "coderAgreement": {
+    "method": {
+      "schemaVersion": "agendaframe.coder-agreement.v1",
+      "design": "독립 이중 코딩 후 판정(adjudication)",
+      "coderCount": 2,
+      "coderKind": "ai",
+      "coderNote": "기사마다 두 코더가 서로 다른 순서로 라벨을 붙였다. 한 코더는 코드북 순서대로, 다른 코더는 근거 문장을 먼저 고르고 라벨을 붙였다.",
+      "coderLimit": "두 코더는 사람이 아니라 서로 다른 프롬프트 각도의 모델 코더다. 사람 코더 간 신뢰도와 같은 값으로 읽을 수 없다.",
+      "measuredOn": "판정 전 두 코더의 frame_family 일치 여부",
+      "adjudication": "불일치한 층위만 판정 단계에서 다시 보고 확정한 뒤, 근거 문장이 본문에 실재하고 라벨을 지지하는지 반박 검증을 거쳤다",
+      "statistic": "단순 일치율(percent agreement). 우연 일치를 보정한 카파 계열 계수는 계열 분포가 편중돼 산출하지 않았다.",
+      "dimensions": [
+        "problem_definition",
+        "causal_attribution",
+        "responsibility_attribution",
+        "evaluation",
+        "treatment_recommendation",
+        "actor_visibility"
+      ]
+    },
+    "summary": {
+      "articleCount": 25,
+      "validProfileCount": 25,
+      "failureCount": 0,
+      "meanDimensionAgreement": 0.893,
+      "perDimensionAgreement": {
+        "problem_definition": 0.76,
+        "causal_attribution": 1,
+        "responsibility_attribution": 0.92,
+        "evaluation": 0.88,
+        "treatment_recommendation": 0.88,
+        "actor_visibility": 0.92
+      },
+      "dominantPolicyFrameAgreement": 1,
+      "scopeAgreement": 0.84
+    }
+  },
+  "lineage": {
+    "top5SchemaVersion": "agendaframe.top5-framing-pilot.v1",
+    "metadataSchemaVersion": "agendaframe.metadata-issue-cluster.v1",
+    "metadataGeneratedAt": "2026-08-02T14:33:45.855490+00:00",
+    "coderAgreementSchemaVersion": "agendaframe.coder-agreement.v1"
+  }
+}

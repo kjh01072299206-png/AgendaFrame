@@ -1,0 +1,19 @@
+{
+  "environment": "staging-first",
+  "canary": {
+    "initialTrafficPercent": 5,
+    "observationMinutes": 30,
+    "rollbackOnGateFailure": true,
+    "rollbackOnSloBreach": true
+  },
+  "slos": {
+    "errorRate": 0.02,
+    "p95LatencyMs": 1500,
+    "withheldAnswerRate": 0.35,
+    "communityModerationQueueAgeHours": 24
+  },
+  "rollback": {
+    "keepPreviousVersions": 2,
+    "requireImmutableVersion": true
+  }
+}

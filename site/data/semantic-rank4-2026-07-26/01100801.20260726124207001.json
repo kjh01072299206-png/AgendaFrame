@@ -1,0 +1,287 @@
+{
+ "articleId": "01100801.20260726124207001",
+ "profile": {
+  "schema_version": "agendaframe.article-frame-profile.v2",
+  "lineage": {
+   "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+   "model_output_schema_version": 3,
+   "comparison_engine_version": "korean-evidence-rules-v2",
+   "approval": {
+    "authorization_id": "bigkinds-2026-07-26-rank-4-00a35b874b22",
+    "fingerprint": "9601bb0520e2c8d760ee3ae0e38c6c324c052db0aaf1b8a8112ce5501beff5b7",
+    "cluster_id": "bigkinds-2026-07-26-rank-4",
+    "reviewer": "AgendaFrame agent-assisted evidence audit",
+    "reviewed_at": "2026-08-02T00:00:00+09:00",
+    "approved_urls_sha256": "815e7ea12b6ad20238a92fa219920094b9184b129e4c83e7c872f0a97f79be1e"
+   }
+  },
+  "engine": {
+   "name": "AgendaFrame Claude evidence coder",
+   "version": "claude-sonnet-5x2-opus-5-adjudicated",
+   "approach": "semantic_evidence_bounded",
+   "semantic_ai": true,
+   "status": "semantic_draft",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": 3,
+   "evidence_storage": "locator_and_salted_sha256_only",
+   "limitations": [
+    "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+    "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+    "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+   ]
+  },
+  "article": {
+   "article_id": "01100801.20260726124207001",
+   "upstream_article_id": "01100801.20260726124207001",
+   "published_at": "2026-07-26T12:42:07+09:00",
+   "title_sha256": "fc0d790996c6ce12029d8e7a0f49288412a9ec8f3cf0237625d552fd55a9db06",
+   "body_sha256": "19b9d68fa13a3e35f1051658ecbda753131eb386f1625fa45d83ae726cc5284f",
+   "body_character_count": 1452,
+   "body_word_count": 344,
+   "paragraph_count": 1,
+   "sentence_count": 24,
+   "raw_body_retained": false
+  },
+  "extraction": {
+   "text_scope": "transient_public_page_extract",
+   "analyzed_character_count": 1452,
+   "input_truncated": false
+  },
+  "genre": {
+   "code": "unknown",
+   "label": "자동 분류 안 함",
+   "evidence": []
+  },
+  "dimensions": {
+   "problem_definition": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:b52d45e8add1f5cecf7527883aabb1f732c13592f2e10afc3e2699d1ddbb65ac",
+      "code": "semantic_problem_definition",
+      "frame_family": "legal_institutional",
+      "variant_key": "semantic:problem_definition:family:legal_institutional",
+      "public_paraphrase": "재판 불출석으로 의뢰인을 패소시킨 변호사가 배상금 지급을 권고한 법원 결정을 수용하지 않으면서, 사안이 다시 정식 재판으로 넘어간 상황을 문제로 제시한다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 3
+       },
+       "sentence_sha256": "3596fd27e7cf80e24d85150cf4e2e0ba5df9984b0a547aa931ae1c096780ddfc"
+      }
+     },
+     {
+      "claim_id": "claim:b52d45e8add1f5cecf7527883aabb1f732c13592f2e10afc3e2699d1ddbb65ac",
+      "code": "semantic_problem_definition",
+      "frame_family": "legal_institutional",
+      "variant_key": "semantic:problem_definition:family:legal_institutional",
+      "public_paraphrase": "재판 불출석으로 의뢰인을 패소시킨 변호사가 배상금 지급을 권고한 법원 결정을 수용하지 않으면서, 사안이 다시 정식 재판으로 넘어간 상황을 문제로 제시한다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 11
+       },
+       "sentence_sha256": "ee4d9d10ff2b05f0520e274375f5966523c1ecdf30cee171a69cad2dff01eddd"
+      }
+     }
+    ]
+   },
+   "causal_interpretation": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:338c376f3ee075d567b23f43d501148051989eda33cd723be39a0226ecdfce50",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "individual_action",
+      "variant_key": "semantic:causal_interpretation:family:individual_action",
+      "public_paraphrase": "변호사 개인이 변론기일에 거듭 나오지 않았고 그 결과를 수개월간 의뢰인에게 알리지 않은 행위가 상고 기회 상실과 패소 확정으로 이어졌다고 서술된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 20
+       },
+       "sentence_sha256": "7038a502b22e67426a9e6bf1b2b9deb096b4c5fe8f2401241c0e80b727f8d387"
+      }
+     },
+     {
+      "claim_id": "claim:338c376f3ee075d567b23f43d501148051989eda33cd723be39a0226ecdfce50",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "individual_action",
+      "variant_key": "semantic:causal_interpretation:family:individual_action",
+      "public_paraphrase": "변호사 개인이 변론기일에 거듭 나오지 않았고 그 결과를 수개월간 의뢰인에게 알리지 않은 행위가 상고 기회 상실과 패소 확정으로 이어졌다고 서술된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 14
+       },
+       "sentence_sha256": "742e8847a9084f46efedba22f4b34d6638df5543863fe4c4a58a8aa40aa36091"
+      }
+     }
+    ]
+   },
+   "responsibility_attribution": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:4eec5f7593666463894ee03357301a2c63129046c59d9a4bdf7f6e30c4e95eb2",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "individual_actor",
+      "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+      "public_paraphrase": "패소와 이후 배상 문제의 책임은 사건을 수임한 변호사 개인에게 있는 것으로 서술되며, 변호사단체의 징계 처분으로도 그 책임이 확인됐다고 전한다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 21
+       },
+       "sentence_sha256": "31aebe8dc2b0f6f4eaa7a9f6976293c090b6d052b2508fdc7c3abf80948cb246"
+      }
+     }
+    ]
+   },
+   "moral_evaluation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:c90ad06efed432fc3ed72e53c976efbf89a13e6ae40c9cec85ca5e5ec7ad2e67",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "유족 측은 합의 형식의 마무리를 거부하면서 변호사의 과오가 문서로 분명히 확인되어야 한다는 부정적 평가를 내놓는다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 9
+       },
+       "sentence_sha256": "a5324efda17633247483101b957b44d81bb07e2a8a398b483a94157586cafd0a"
+      }
+     },
+     {
+      "claim_id": "claim:c90ad06efed432fc3ed72e53c976efbf89a13e6ae40c9cec85ca5e5ec7ad2e67",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "유족 측은 합의 형식의 마무리를 거부하면서 변호사의 과오가 문서로 분명히 확인되어야 한다는 부정적 평가를 내놓는다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 10
+       },
+       "sentence_sha256": "16e12195eed5cae35138b7bb4bf92cae7d5b957b2468e48b3c3a3eaa82382233"
+      }
+     }
+    ]
+   },
+   "treatment_recommendation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:e0944629616f3530f47320461d4d9735d8941aea4f3909732b939b88a2fe24fb",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "investigation_accountability",
+      "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+      "public_paraphrase": "유족 측은 판결을 통한 잘못의 명시와 더불어 형사 고소 및 배상 추가 청구로 책임 규명 절차를 이어가겠다는 방침을 제시한다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 24
+       },
+       "sentence_sha256": "d37ca1ef441a53d26fe6d40d803472888f343dd77e870de8afd09e40a1e37f6c"
+      }
+     }
+    ]
+   }
+  },
+  "actors_and_sources": [
+   {
+    "actor_id": "actor:0d88e2d919113fa41303e5edabd135b0a5b02be44dc1a10c754da682de40ad4d",
+    "role": "affected_person",
+    "role_label": "당사자·시민",
+    "direct_quote_count": 2,
+    "indirect_attribution_count": 0,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 9
+      },
+      "sentence_sha256": "a5324efda17633247483101b957b44d81bb07e2a8a398b483a94157586cafd0a"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 10
+      },
+      "sentence_sha256": "16e12195eed5cae35138b7bb4bf92cae7d5b957b2468e48b3c3a3eaa82382233"
+     }
+    ]
+   }
+  ],
+  "context_depth": {
+   "level": "unknown"
+  },
+  "scope": {
+   "code": "unknown"
+  },
+  "secondary_descriptors": {
+   "generic_frames": [],
+   "policy_frames": [],
+   "controlled_associations": []
+  },
+  "framing_devices": [],
+  "review": {
+   "status": "automatic_draft",
+   "analysis_decision": "analyze",
+   "analysis_state": "succeeded",
+   "attempt_count": 1,
+   "idempotency_fingerprint": "20acc42aa55f9ffd71f814072434e83faf649013f0363cfc5651201e3ead3d9f",
+   "error_code": null,
+   "fallback_reason": null,
+   "requires_human_review": true,
+   "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+  }
+ }
+}

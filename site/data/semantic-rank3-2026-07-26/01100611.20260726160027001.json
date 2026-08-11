@@ -1,0 +1,239 @@
+{
+ "articleId": "01100611.20260726160027001",
+ "profile": {
+  "schema_version": "agendaframe.article-frame-profile.v2",
+  "lineage": {
+   "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+   "model_output_schema_version": 3,
+   "comparison_engine_version": "korean-evidence-rules-v2",
+   "approval": {
+    "authorization_id": "bigkinds-2026-07-26-rank-3-f87f13a7010f",
+    "fingerprint": "49b9b47e3211275d2ab63d0b409b07d71ad8442f820f3139cb12fbf693e0d2ae",
+    "cluster_id": "bigkinds-2026-07-26-rank-3",
+    "reviewer": "AgendaFrame agent-assisted evidence audit",
+    "reviewed_at": "2026-08-02T00:00:00+09:00",
+    "approved_urls_sha256": "5bad51a9594e6cf679cd775784227bf4bd41c6baad5e3cb36298f8031f057e8c"
+   }
+  },
+  "engine": {
+   "name": "AgendaFrame Claude evidence coder",
+   "version": "claude-sonnet-5x2-opus-5-adjudicated",
+   "approach": "semantic_evidence_bounded",
+   "semantic_ai": true,
+   "status": "semantic_draft",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": 3,
+   "evidence_storage": "locator_and_salted_sha256_only",
+   "limitations": [
+    "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+    "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+    "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+   ]
+  },
+  "article": {
+   "article_id": "01100611.20260726160027001",
+   "upstream_article_id": "01100611.20260726160027001",
+   "published_at": "2026-07-26T16:00:27+09:00",
+   "title_sha256": "30d80b409ea0680522d3c68530c978a864fb369008d6b5b851a968418a2ba31c",
+   "body_sha256": "b201a3f2e231ffcb99ff738bd7249286d195536923dd9ede57847363f6e83e01",
+   "body_character_count": 1099,
+   "body_word_count": 269,
+   "paragraph_count": 1,
+   "sentence_count": 27,
+   "raw_body_retained": false
+  },
+  "extraction": {
+   "text_scope": "transient_public_page_extract",
+   "analyzed_character_count": 1099,
+   "input_truncated": false
+  },
+  "genre": {
+   "code": "unknown",
+   "label": "자동 분류 안 함",
+   "evidence": []
+  },
+  "dimensions": {
+   "problem_definition": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:e856b87721d5aadde4e5dfe1a5aa27800870537395aba41c2bb9260fccc8b9ff",
+      "code": "semantic_problem_definition",
+      "frame_family": "safety_harm",
+      "variant_key": "semantic:problem_definition:family:safety_harm",
+      "public_paraphrase": "한 아파트 관리사무소에서 일어난 방화·폭발로 여덟 명이 죽거나 다친 강력범죄 피해가 문제의 핵심으로 제시된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 10
+       },
+       "sentence_sha256": "5585dd7a29c19f3103f469cb2b75327ba60c033c65a54c688f961795bf6bdea4"
+      }
+     }
+    ]
+   },
+   "causal_interpretation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:7c9ce2b0738e410015de44ede44d805bf4374f19d7295846091243d130354de4",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "individual_action",
+      "variant_key": "semantic:causal_interpretation:family:individual_action",
+      "public_paraphrase": "경찰 조사 내용에 따르면 피의자가 단지 운영을 둘러싼 불만과 관리 주체와의 반복된 마찰 끝에 범행에 이른 것으로 파악된다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 13
+       },
+       "sentence_sha256": "2705e6c26b774af48ec9cb84b81134ad9b39a2fd620674c4a8b4eeefada46821"
+      }
+     }
+    ]
+   },
+   "responsibility_attribution": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:e40530b1ae637f946dea70d29fc882d5afa8b9ee02b4c3843d9ff3302dc15df2",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "individual_actor",
+      "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+      "public_paraphrase": "경찰은 앙갚음을 노리고 불을 지른 개인 피의자에게 사건의 책임이 있다고 보고 수사를 진행한다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 20
+       },
+       "sentence_sha256": "8ca5a21782e03636964b0d2796bc42e64fa4c403532dbe210c2cd91e38668e14"
+      }
+     }
+    ]
+   },
+   "moral_evaluation": {
+    "status": "not_observed",
+    "model_status": "explicit_not_stated",
+    "outlet_narration_observed": false,
+    "items": []
+   },
+   "treatment_recommendation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:17d55aecc967e52f9c441f920b0ab907d61a70f4779421fe1e8141b5b19b6998",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "investigation_accountability",
+      "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+      "public_paraphrase": "경찰은 피의자 치료가 끝나면 신병을 확보하고 가중처벌 규정 적용까지 따져보는 방식으로 사건을 처리하겠다고 밝혔다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 21
+       },
+       "sentence_sha256": "8d3bb58f86ea966a8fbd8c067be5eb2152d066554585d911263fc50dbeb5b24e"
+      }
+     },
+     {
+      "claim_id": "claim:17d55aecc967e52f9c441f920b0ab907d61a70f4779421fe1e8141b5b19b6998",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "investigation_accountability",
+      "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+      "public_paraphrase": "경찰은 피의자 치료가 끝나면 신병을 확보하고 가중처벌 규정 적용까지 따져보는 방식으로 사건을 처리하겠다고 밝혔다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 25
+       },
+       "sentence_sha256": "0558b59cc4bde8812e6010338367a1906c933b1c5e1e89a857bdc39bf8446ff8"
+      }
+     }
+    ]
+   }
+  },
+  "actors_and_sources": [
+   {
+    "actor_id": "actor:cf36bb06f01e3ceccbf2baaa9cb040a9696d65dd639ecd3a99bda26e74e62641",
+    "role": "government_official",
+    "role_label": "정부·공공기관",
+    "direct_quote_count": 0,
+    "indirect_attribution_count": 3,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 11
+      },
+      "sentence_sha256": "211bcad2b658c0ba7b404776f9ca2f5d3f7418c9cbc6da6c6113adc785f7243b"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 20
+      },
+      "sentence_sha256": "8ca5a21782e03636964b0d2796bc42e64fa4c403532dbe210c2cd91e38668e14"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 21
+      },
+      "sentence_sha256": "8d3bb58f86ea966a8fbd8c067be5eb2152d066554585d911263fc50dbeb5b24e"
+     }
+    ]
+   }
+  ],
+  "context_depth": {
+   "level": "unknown"
+  },
+  "scope": {
+   "code": "unknown"
+  },
+  "secondary_descriptors": {
+   "generic_frames": [],
+   "policy_frames": [],
+   "controlled_associations": []
+  },
+  "framing_devices": [],
+  "review": {
+   "status": "automatic_draft",
+   "analysis_decision": "analyze",
+   "analysis_state": "succeeded",
+   "attempt_count": 1,
+   "idempotency_fingerprint": "832503f1fbfa84f4a54ded4164f66b22e0463cdf16a4182855d1df895da28187",
+   "error_code": null,
+   "fallback_reason": null,
+   "requires_human_review": true,
+   "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+  }
+ }
+}

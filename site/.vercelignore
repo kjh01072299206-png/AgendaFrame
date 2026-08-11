@@ -1,0 +1,11 @@
+node_modules
+.next
+.wrangler
+.vite
+dist
+private
+vercel-proxy
+*.tar.gz
+error.log
+.env
+.env.local

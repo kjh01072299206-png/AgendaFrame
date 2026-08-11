@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "2026-08-10.3",
+  "project": "AgendaFrame academic news collection",
+  "collectionWindow": {
+    "startDate": "2026-08-10",
+    "endDate": "2026-10-31",
+    "timezone": "Asia/Seoul",
+    "rawContentDeleteAfter": "2026-10-31T23:59:59+09:00"
+  },
+  "topics": ["politics", "economy", "society", "international"],
+  "topicLabels": {
+    "politics": "정치",
+    "economy": "경제",
+    "society": "사회",
+    "international": "국제"
+  },
+  "polling": {
+    "intervalMinutes": 360,
+    "runsPerDay": 4,
+    "scheduledHoursKst": [0, 6, 12, 18],
+    "reconciliationLookbackDays": 3,
+    "maxRequestsPerSourcePerRun": 30,
+    "minimumDelayMilliseconds": 3000,
+    "requestTimeoutMilliseconds": 15000,
+    "concurrency": 1,
+    "stopStatuses": [403, 429]
+  },
+  "retention": {
+    "rawBodyStorage": "private_r2",
+    "deleteRawBodies": true,
+    "deleteHtml": true,
+    "deletePromptPayloads": true,
+    "deleteBodyEmbeddings": true,
+    "retainMetadata": true,
+    "retainHashes": true,
+    "retainStructuredAnalysis": true
+  },
+  "inclusions": ["general_news", "analysis", "interview", "fact_check"],
+  "exclusions": ["opinion", "column", "editorial", "paywalled", "image_only", "video_only", "advertising", "comments"],
+  "outletWeight": "equal",
+  "activationState": "active",
+  "activationBlockers": [],
+  "sources": [
+    {
+      "id": "khan",
+      "name": "경향신문",
+      "sourceType": "general_daily",
+      "domains": ["khan.co.kr"],
+      "homepageUrl": "https://www.khan.co.kr/",
+      "articlePathPatterns": ["/article/"],
+      "endpointReview": { "status": "verified", "checkedAt": "2026-08-10", "evidenceUrl": "https://www.khan.co.kr/help/help_rss.html" },
+      "endpoints": [
+        { "id": "politics-rss", "method": "rss", "url": "https://www.khan.co.kr/rss/rssdata/politic_news.xml", "topic": "politics", "enabled": true },
+        { "id": "economy-rss", "method": "rss", "url": "https://www.khan.co.kr/rss/rssdata/economy_news.xml", "topic": "economy", "enabled": true },
+        { "id": "society-rss", "method": "rss", "url": "https://www.khan.co.kr/rss/rssdata/society_news.xml", "topic": "society", "enabled": true },
+        { "id": "international-rss", "method": "rss", "url": "https://www.khan.co.kr/rss/rssdata/kh_world.xml", "topic": "international", "enabled": true }
+      ]
+    },
+    {
+      "id": "kmib",
+      "name": "국민일보",
+      "sourceType": "general_daily",
+      "domains": ["kmib.co.kr"],
+      "homepageUrl": "https://www.kmib.co.kr/",
+      "articlePathPatterns": ["/article/view"],
+      "endpointReview": { "status": "verified", "checkedAt": "2026-08-10", "evidenceUrl": "https://www.kmib.co.kr/" },
+      "endpoints": [
+        { "id": "politics-section", "method": "section", "url": "https://www.kmib.co.kr/article/listing.asp?sid1=pol", "topic": "politics", "enabled": true },
+        { "id": "economy-section", "method": "section", "url": "https://www.kmib.co.kr/article/listing.asp?sid1=eco", "topic": "economy", "enabled": true },
+        { "id": "society-section", "method": "section", "url": "https://www.kmib.co.kr/article/listing.asp?sid1=soc", "topic": "society", "enabled": true },
+        { "id": "international-section", "method": "section", "url": "https://www.kmib.co.kr/article/listing.asp?sid1=int", "topic": "international", "enabled": true }
+      ]
+    },
+    {
+      "id": "donga",
+      "name": "동아일보",
+      "sourceType": "general_daily",
+      "domains": ["donga.com"],
+      "homepageUrl": "https://www.donga.com/",
+      "articlePathPatterns": ["/news/(?:[^/]+/)?article/"],
+      "endpointReview": { "status": "verified", "checkedAt": "2026-08-10", "evidenceUrl": "https://www.donga.com/" },
+      "endpoints": [
+        { "id": "politics-rss", "method": "rss", "url": "https://rss.donga.com/politics.xml", "topic": "mixed", "enabled": true },
+        { "id": "economy-rss", "method": "rss", "url": "https://rss.donga.com/economy.xml", "topic": "mixed", "enabled": true },
+        { "id": "society-rss", "method": "rss", "url": "https://rss.donga.com/national.xml", "topic": "mixed", "enabled": true },
+        { "id": "international-rss", "method": "rss", "url": "https://rss.donga.com/international.xml", "topic": "mixed", "enabled": true }
+      ]
+    },
+    {
+      "id": "munhwa",
+      "name": "문화일보",
+      "sourceType": "general_daily",
+      "domains": ["munhwa.com"],
+      "homepageUrl": "https://www.munhwa.com/",
+      "articlePathPatterns": ["/article/"],
+      "endpointReview": { "status": "verified", "checkedAt": "2026-08-10", "evidenceUrl": "https://www.munhwa.com/" },
+      "endpoints": [
+        { "id": "politics-section", "method": "section", "url": "https://www.munhwa.com/politics", "topic": "politics", "enabled": true },
+        { "id": "economy-section", "method": "section", "url": "https://www.munhwa.com/economy", "topic": "economy", "enabled": true },
+        { "id": "society-section", "method": "section", "url": "https://www.munhwa.com/society", "topic": "society", "enabled": true },
+        { "id": "international-section", "method": "section", "url": "https://www.munhwa.com/world", "topic": "international", "enabled": true }
+      ]
+    },
+    {
+      "id": "seoul",
+      "name": "서울신문",
+      "sourceType": "general_daily",
+      "domains": ["seoul.co.kr"],
+      "homepageUrl": "https://www.seoul.co.kr/",
+      "articlePathPatterns": ["/news/.+/2026/[0-9]{2}/[0-9]{2}/[0-9]+(?:$|\\?)"],
+      "endpointReview": { "status": "verified", "checkedAt": "2026-08-10", "evidenceUrl": "https://www.seoul.co.kr/" },
+      "endpoints": [
+        { "id": "politics-section", "method": "section", "url": "https://www.seoul.co.kr/newsList/politics/", "topic": "politics", "enabled": true },
+        { "id": "economy-section", "method": "section", "url": "https://www.seoul.co.kr/newsList/economy/", "topic": "economy", "enabled": true },
+        { "id": "society-section", "method": "section", "url": "https://www.seoul.co.kr/newsList/society/", "topic": "society", "enabled": true },
+        { "id": "international-section", "method": "section", "url": "https://www.seoul.co.kr/newsList/international/", "topic": "international", "enabled": true }
+      ]
+    },
+    {
+      "id": "segye",
+      "name": "세계일보",
+      "sourceType": "general_daily",
+      "domains": ["segye.com"],
+      "homepageUrl": "https://www.segye.com/",
+      "articlePathPatterns": ["/newsView/"],
+      "endpointReview": { "status": "verified", "checkedAt": "2026-08-10", "evidenceUrl": "https://www.segye.com/rssInfo" },
+      "endpoints": [
+        { "id": "politics-rss", "method": "rss", "url": "https://www.segye.com/Articles/RSSList/segye_politic.xml", "topic": "politics", "enabled": true },
+        { "id": "economy-rss", "method": "rss", "url": "https://www.segye.com/Articles/RSSList/segye_economy.xml", "topic": "economy", "enabled": true },
+        { "id": "society-rss", "method": "rss", "url": "https://www.segye.com/Articles/RSSList/segye_society.xml", "topic": "society", "enabled": true },
+        { "id": "international-rss", "method": "rss", "url": "https://www.segye.com/Articles/RSSList/segye_international.xml", "topic": "international", "enabled": true }
+      ]
+    },
+    {
+      "id": "chosun",
+      "name": "조선일보",
+      "sourceType": "general_daily",
+      "domains": ["chosun.com"],
+      "homepageUrl": "https://www.chosun.com/",
+      "articlePathPatterns": ["/(politics|economy|national|international)/"],
+      "endpointReview": { "status": "verified", "checkedAt": "2026-08-10", "evidenceUrl": "https://rssplus.chosun.com/" },
+      "endpoints": [
+        { "id": "politics-rss", "method": "rss", "url": "https://www.chosun.com/arc/outboundfeeds/rss/category/politics/?outputType=xml", "topic": "politics", "enabled": true },
+        { "id": "economy-rss", "method": "rss", "url": "https://www.chosun.com/arc/outboundfeeds/rss/category/economy/?outputType=xml", "topic": "economy", "enabled": true },
+        { "id": "society-rss", "method": "rss", "url": "https://www.chosun.com/arc/outboundfeeds/rss/category/national/?outputType=xml", "topic": "society", "enabled": true },
+        { "id": "international-rss", "method": "rss", "url": "https://www.chosun.com/arc/outboundfeeds/rss/category/international/?outputType=xml", "topic": "international", "enabled": true }
+      ]
+    },
+    {
+      "id": "joongang",
+      "name": "중앙일보",
+      "sourceType": "general_daily",
+      "domains": ["joongang.co.kr"],
+      "homepageUrl": "https://www.joongang.co.kr/",
+      "articlePathPatterns": ["/article/"],
+      "endpointReview": { "status": "verified", "checkedAt": "2026-08-10", "evidenceUrl": "https://www.joongang.co.kr/" },
+      "endpoints": [
+        { "id": "politics-section", "method": "section", "url": "https://www.joongang.co.kr/politics", "topic": "politics", "enabled": true },
+        { "id": "economy-section", "method": "section", "url": "https://www.joongang.co.kr/money", "topic": "economy", "enabled": true },
+        { "id": "society-section", "method": "section", "url": "https://www.joongang.co.kr/society", "topic": "society", "enabled": true },
+        { "id": "international-section", "method": "section", "url": "https://www.joongang.co.kr/world", "topic": "international", "enabled": true }
+      ]
+    },
+    {
+      "id": "hani",
+      "name": "한겨레",
+      "sourceType": "general_daily",
+      "domains": ["hani.co.kr"],
+      "homepageUrl": "https://www.hani.co.kr/",
+      "articlePathPatterns": ["/arti/.+/[0-9]+\\.html(?:$|\\?)"],
+      "endpointReview": { "status": "verified", "checkedAt": "2026-08-10", "evidenceUrl": "https://www.hani.co.kr/" },
+      "endpoints": [
+        { "id": "politics-section", "method": "section", "url": "https://www.hani.co.kr/arti/politics/home01.html", "topic": "politics", "enabled": true },
+        { "id": "economy-section", "method": "section", "url": "https://www.hani.co.kr/arti/economy/home01.html", "topic": "economy", "enabled": true },
+        { "id": "society-section", "method": "section", "url": "https://www.hani.co.kr/arti/society/home01.html", "topic": "society", "enabled": true },
+        { "id": "international-section", "method": "section", "url": "https://www.hani.co.kr/arti/international/home01.html", "topic": "international", "enabled": true }
+      ]
+    },
+    {
+      "id": "hankookilbo",
+      "name": "한국일보",
+      "sourceType": "general_daily",
+      "domains": ["hankookilbo.com"],
+      "homepageUrl": "https://www.hankookilbo.com/",
+      "articlePathPatterns": ["/news/article/"],
+      "endpointReview": { "status": "verified", "checkedAt": "2026-08-10", "evidenceUrl": "https://www.hankookilbo.com/" },
+      "endpoints": [
+        { "id": "politics-section", "method": "section", "url": "https://www.hankookilbo.com/news/politics", "topic": "politics", "enabled": true },
+        { "id": "economy-section", "method": "section", "url": "https://www.hankookilbo.com/news/economy", "topic": "economy", "enabled": true },
+        { "id": "society-section", "method": "section", "url": "https://www.hankookilbo.com/news/society", "topic": "society", "enabled": true },
+        { "id": "international-section", "method": "section", "url": "https://www.hankookilbo.com/news/world", "topic": "international", "enabled": true }
+      ]
+    },
+    {
+      "id": "kbs",
+      "name": "KBS",
+      "sourceType": "broadcaster",
+      "domains": ["kbs.co.kr"],
+      "homepageUrl": "https://news.kbs.co.kr/",
+      "articlePathPatterns": ["/news/(?:pc/)?view\\.do\\?ncd=[0-9]+"],
+      "endpointReview": { "status": "verified", "checkedAt": "2026-08-10", "evidenceUrl": "https://news.kbs.co.kr/robots.txt" },
+      "endpoints": [
+        { "id": "recent-news-sitemap", "method": "sitemap", "url": "https://news.kbs.co.kr/sitemap/recentNewsList.xml", "topic": "mixed", "allowDeferredTopic": true, "enabled": true }
+      ]
+    },
+    {
+      "id": "sbs",
+      "name": "SBS",
+      "sourceType": "broadcaster",
+      "domains": ["sbs.co.kr"],
+      "homepageUrl": "https://news.sbs.co.kr/",
+      "articlePathPatterns": ["/news/endPage.do"],
+      "endpointReview": { "status": "verified", "checkedAt": "2026-08-10", "evidenceUrl": "https://news.sbs.co.kr/news/rss.do" },
+      "endpoints": [
+        { "id": "politics-rss", "method": "rss", "url": "https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=01&plink=RSSREADER", "topic": "politics", "enabled": true },
+        { "id": "economy-rss", "method": "rss", "url": "https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=02&plink=RSSREADER", "topic": "economy", "enabled": true },
+        { "id": "society-rss", "method": "rss", "url": "https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=03&plink=RSSREADER", "topic": "society", "enabled": true },
+        { "id": "international-rss", "method": "rss", "url": "https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=07&plink=RSSREADER", "topic": "international", "enabled": true }
+      ]
+    }
+  ]
+}

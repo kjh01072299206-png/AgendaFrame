@@ -1,0 +1,329 @@
+{
+ "articleId": "01100701.20260726101351001",
+ "profile": {
+  "schema_version": "agendaframe.article-frame-profile.v2",
+  "lineage": {
+   "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+   "model_output_schema_version": 3,
+   "comparison_engine_version": "korean-evidence-rules-v2",
+   "approval": {
+    "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
+    "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
+    "cluster_id": "bigkinds-2026-07-26-rank-1",
+    "reviewer": "AgendaFrame agent-assisted evidence audit",
+    "reviewed_at": "2026-07-31T00:00:00+09:00",
+    "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753"
+   }
+  },
+  "engine": {
+   "name": "AgendaFrame Claude evidence coder",
+   "version": "claude-sonnet-5x2-opus-5-adjudicated",
+   "approach": "semantic_evidence_bounded",
+   "semantic_ai": true,
+   "status": "semantic_draft",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": 3,
+   "evidence_storage": "locator_and_salted_sha256_only",
+   "limitations": [
+    "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+    "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+    "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+   ]
+  },
+  "article": {
+   "article_id": "01100701.20260726101351001",
+   "upstream_article_id": "01100701.20260726101351001",
+   "published_at": "2026-07-26T10:13:51+09:00",
+   "title_sha256": "a4d00c9c7be2286d27c316a27930a38c160dce2ea8d15f4c29fd7f3e48b7d5e9",
+   "body_sha256": "a1f15cfbe98818019841668d5f4489a4acfebc9b07a4fe0a83e8c3e24c3b3bd9",
+   "body_character_count": 701,
+   "body_word_count": 152,
+   "paragraph_count": 1,
+   "sentence_count": 8,
+   "raw_body_retained": false
+  },
+  "extraction": {
+   "text_scope": "transient_public_page_extract",
+   "analyzed_character_count": 701,
+   "input_truncated": false
+  },
+  "genre": {
+   "code": "unknown",
+   "label": "자동 분류 안 함",
+   "evidence": []
+  },
+  "dimensions": {
+   "problem_definition": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:e177ef5247faceb388c9b26108ba442710a7f9292aa0079195f3524887f0a736",
+      "code": "semantic_problem_definition",
+      "frame_family": "political_conflict",
+      "variant_key": "semantic:problem_definition:family:political_conflict",
+      "public_paraphrase": "국민 생명·안전과 직결된 수사 제도 사안이 정치적 이해관계에 따른 거래 대상으로 다뤄지고 있다는 점이 문제로 규정된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 1
+       },
+       "sentence_sha256": "76b832cfbb396701ef1847d9f4a0dbf8eab7517c05f7622d26ba8bc7ff738fc6"
+      }
+     },
+     {
+      "claim_id": "claim:e177ef5247faceb388c9b26108ba442710a7f9292aa0079195f3524887f0a736",
+      "code": "semantic_problem_definition",
+      "frame_family": "political_conflict",
+      "variant_key": "semantic:problem_definition:family:political_conflict",
+      "public_paraphrase": "국민 생명·안전과 직결된 수사 제도 사안이 정치적 이해관계에 따른 거래 대상으로 다뤄지고 있다는 점이 문제로 규정된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 4
+       },
+       "sentence_sha256": "24620918d2a8d7977fa48a3183856e73a0e959b112577625186b85d0e94c1b1d"
+      }
+     }
+    ]
+   },
+   "causal_interpretation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:6cca21aa01baba083ec626dc5f37b61a2626445a9acb8e636193c048d7db65ec",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "political_incentive",
+      "variant_key": "semantic:causal_interpretation:family:political_incentive",
+      "public_paraphrase": "폐지를 지지할 때 예상되는 여론 역풍과 반대할 때 깨질 강경파와의 합의 사이에서 벌어지는 정치적 손익 계산이 현 상황의 원인으로 지목된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 5
+       },
+       "sentence_sha256": "197152d1751a38b2497ee3b406230307bd5209d842b56cf6be24f0d04ab53408"
+      }
+     },
+     {
+      "claim_id": "claim:6cca21aa01baba083ec626dc5f37b61a2626445a9acb8e636193c048d7db65ec",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "political_incentive",
+      "variant_key": "semantic:causal_interpretation:family:political_incentive",
+      "public_paraphrase": "폐지를 지지할 때 예상되는 여론 역풍과 반대할 때 깨질 강경파와의 합의 사이에서 벌어지는 정치적 손익 계산이 현 상황의 원인으로 지목된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 5
+       },
+       "sentence_sha256": "197152d1751a38b2497ee3b406230307bd5209d842b56cf6be24f0d04ab53408"
+      }
+     },
+     {
+      "claim_id": "claim:6cca21aa01baba083ec626dc5f37b61a2626445a9acb8e636193c048d7db65ec",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "political_incentive",
+      "variant_key": "semantic:causal_interpretation:family:political_incentive",
+      "public_paraphrase": "폐지를 지지할 때 예상되는 여론 역풍과 반대할 때 깨질 강경파와의 합의 사이에서 벌어지는 정치적 손익 계산이 현 상황의 원인으로 지목된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 7
+       },
+       "sentence_sha256": "830da1ad0f368462539dba21c3c3b443051e334f669db281abb469037f27fd2c"
+      }
+     }
+    ]
+   },
+   "responsibility_attribution": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:1febdcc235ecc664b6b1cfafbc18cf49dad3cf74a4c8f656d8bd78c73f5d6c10",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "shared_responsibility",
+      "variant_key": "semantic:responsibility_attribution:family:shared_responsibility",
+      "public_paraphrase": "책임 주체로 대통령 한 사람만이 아니라 집권당 의원들까지 함께 지목되며, 여권 전반이 사태의 책임을 진다고 규정된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 6
+       },
+       "sentence_sha256": "c7fb53042da8553ed3e17d6e218c26c133e4aacc8ef341a1ab49b3be513f7b45"
+      }
+     },
+     {
+      "claim_id": "claim:1febdcc235ecc664b6b1cfafbc18cf49dad3cf74a4c8f656d8bd78c73f5d6c10",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "shared_responsibility",
+      "variant_key": "semantic:responsibility_attribution:family:shared_responsibility",
+      "public_paraphrase": "책임 주체로 대통령 한 사람만이 아니라 집권당 의원들까지 함께 지목되며, 여권 전반이 사태의 책임을 진다고 규정된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 7
+       },
+       "sentence_sha256": "830da1ad0f368462539dba21c3c3b443051e334f669db281abb469037f27fd2c"
+      }
+     },
+     {
+      "claim_id": "claim:1febdcc235ecc664b6b1cfafbc18cf49dad3cf74a4c8f656d8bd78c73f5d6c10",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "shared_responsibility",
+      "variant_key": "semantic:responsibility_attribution:family:shared_responsibility",
+      "public_paraphrase": "책임 주체로 대통령 한 사람만이 아니라 집권당 의원들까지 함께 지목되며, 여권 전반이 사태의 책임을 진다고 규정된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 7
+       },
+       "sentence_sha256": "830da1ad0f368462539dba21c3c3b443051e334f669db281abb469037f27fd2c"
+      }
+     }
+    ]
+   },
+   "moral_evaluation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:ca743e3fc96edb553feae7e6457c51804aec8b913a9156488fff5b031be586bb",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "책임은 피하면서 개인의 이해만 앞세우는 국정 운영 태도가 비겁하고 정당성이 없다는 부정적 평가가 내려진다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 6
+       },
+       "sentence_sha256": "c7fb53042da8553ed3e17d6e218c26c133e4aacc8ef341a1ab49b3be513f7b45"
+      }
+     },
+     {
+      "claim_id": "claim:ca743e3fc96edb553feae7e6457c51804aec8b913a9156488fff5b031be586bb",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "책임은 피하면서 개인의 이해만 앞세우는 국정 운영 태도가 비겁하고 정당성이 없다는 부정적 평가가 내려진다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 6
+       },
+       "sentence_sha256": "c7fb53042da8553ed3e17d6e218c26c133e4aacc8ef341a1ab49b3be513f7b45"
+      }
+     }
+    ]
+   },
+   "treatment_recommendation": {
+    "status": "not_observed",
+    "model_status": "explicit_not_stated",
+    "outlet_narration_observed": false,
+    "items": []
+   }
+  },
+  "actors_and_sources": [
+   {
+    "actor_id": "actor:979ac35c3d160f5c037575ed8533bd87a5e0f8381cc66bc6c7b17f4187bc06d9",
+    "role": "political_actor",
+    "role_label": "정당·정치권",
+    "direct_quote_count": 3,
+    "indirect_attribution_count": 0,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 1
+      },
+      "sentence_sha256": "76b832cfbb396701ef1847d9f4a0dbf8eab7517c05f7622d26ba8bc7ff738fc6"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 4
+      },
+      "sentence_sha256": "24620918d2a8d7977fa48a3183856e73a0e959b112577625186b85d0e94c1b1d"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 4
+      },
+      "sentence_sha256": "24620918d2a8d7977fa48a3183856e73a0e959b112577625186b85d0e94c1b1d"
+     }
+    ]
+   }
+  ],
+  "context_depth": {
+   "level": "unknown"
+  },
+  "scope": {
+   "code": "unknown"
+  },
+  "secondary_descriptors": {
+   "generic_frames": [],
+   "policy_frames": [],
+   "controlled_associations": []
+  },
+  "framing_devices": [],
+  "review": {
+   "status": "automatic_draft",
+   "analysis_decision": "analyze",
+   "analysis_state": "succeeded",
+   "attempt_count": 1,
+   "idempotency_fingerprint": "3506b3f888b1a984a2402b42b464071215ba83dc66d8b144b89a8f5e9554cf49",
+   "error_code": null,
+   "fallback_reason": null,
+   "requires_human_review": true,
+   "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+  }
+ }
+}

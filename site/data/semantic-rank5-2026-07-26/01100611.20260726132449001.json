@@ -1,0 +1,255 @@
+{
+ "articleId": "01100611.20260726132449001",
+ "profile": {
+  "schema_version": "agendaframe.article-frame-profile.v2",
+  "lineage": {
+   "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+   "model_output_schema_version": 3,
+   "comparison_engine_version": "korean-evidence-rules-v2",
+   "approval": {
+    "authorization_id": "bigkinds-2026-07-26-rank-5-16619490411c",
+    "fingerprint": "c4af0c88ede8789712667db4872fbcec65949c563a8c15983add1b92f8291f50",
+    "cluster_id": "bigkinds-2026-07-26-rank-5",
+    "reviewer": "AgendaFrame agent-assisted evidence audit",
+    "reviewed_at": "2026-08-02T00:00:00+09:00",
+    "approved_urls_sha256": "4b223d11c96cbcd42f7b05d22baf9a563874cd549a404edb244611ef44bfa2fc"
+   }
+  },
+  "engine": {
+   "name": "AgendaFrame Claude evidence coder",
+   "version": "claude-sonnet-5x2-opus-5-adjudicated",
+   "approach": "semantic_evidence_bounded",
+   "semantic_ai": true,
+   "status": "semantic_draft",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": 3,
+   "evidence_storage": "locator_and_salted_sha256_only",
+   "limitations": [
+    "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+    "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+    "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+   ]
+  },
+  "article": {
+   "article_id": "01100611.20260726132449001",
+   "upstream_article_id": "01100611.20260726132449001",
+   "published_at": "2026-07-26T13:24:49+09:00",
+   "title_sha256": "2b565d53f648d12dd245216af84cb7b05c641891e0c0ac40b2f654529f055f49",
+   "body_sha256": "2474bdd4e3380abba2ea0af4b0928d7c1b0b55606101dc7658d123a2480c78ed",
+   "body_character_count": 485,
+   "body_word_count": 126,
+   "paragraph_count": 1,
+   "sentence_count": 14,
+   "raw_body_retained": false
+  },
+  "extraction": {
+   "text_scope": "transient_public_page_extract",
+   "analyzed_character_count": 485,
+   "input_truncated": false
+  },
+  "genre": {
+   "code": "unknown",
+   "label": "자동 분류 안 함",
+   "evidence": []
+  },
+  "dimensions": {
+   "problem_definition": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:ba70c3d8d5362dfeec3c0bb2cc58b0294b9aa75dcc72bf81827cdeec1c32cd2e",
+      "code": "semantic_problem_definition",
+      "frame_family": "safety_harm",
+      "variant_key": "semantic:problem_definition:family:safety_harm",
+      "public_paraphrase": "외국인 일행끼리 벌인 거리 집단 다툼에서 흉기가 사용돼 사망자와 부상자가 나온 강력범죄 사건으로 규정된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 6
+       },
+       "sentence_sha256": "59e4f36a1b81df4c01758b0fadc143c6281dec03a6c578501896caf459cf724b"
+      }
+     }
+    ]
+   },
+   "causal_interpretation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:b5dfc65e08b731e84b261681c37ba9fcbe09daa24bf35cd9db525708a46e64bf",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "individual_action",
+      "variant_key": "semantic:causal_interpretation:family:individual_action",
+      "public_paraphrase": "다수가 뒤엉킨 싸움 도중 피의자 한 명이 흉기를 빼 들어 휘두른 개인 행위가 사망의 직접 원인으로 전해진다.",
+      "voice": {
+       "kind": "uncertain_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 9
+       },
+       "sentence_sha256": "70434e47f44989a665dfd8c08a858c897d997a2635956496721259017661fc99"
+      }
+     }
+    ]
+   },
+   "responsibility_attribution": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:1d9185200d1a1cb02e7475f494937ab08db292728076581ae35b6e43c21fd472",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "individual_actor",
+      "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+      "public_paraphrase": "경찰 설명을 통해 살인 혐의의 책임 주체가 40대 남성 피의자 개인으로 특정된다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 8
+       },
+       "sentence_sha256": "8f201bbab90ea2e033fa29c365ed9599dc58dbbb35eafc3142f99ed2476ce3a1"
+      }
+     }
+    ]
+   },
+   "moral_evaluation": {
+    "status": "not_observed",
+    "model_status": "explicit_not_stated",
+    "outlet_narration_observed": false,
+    "items": []
+   },
+   "treatment_recommendation": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:a4cce9e42c35cc10caac50c643ee6b9c019f470615252dd48d827e745bf55c7b",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "investigation_accountability",
+      "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+      "public_paraphrase": "달아난 피의자를 검거한 데 이어 관련자들을 조사해 사건 경위를 규명하는 수사 절차가 후속 조치로 제시된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 12
+       },
+       "sentence_sha256": "baacba6cda583c8a073e4370d5b139034e4e40a317a6affb616436a9cd614de5"
+      }
+     },
+     {
+      "claim_id": "claim:a4cce9e42c35cc10caac50c643ee6b9c019f470615252dd48d827e745bf55c7b",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "investigation_accountability",
+      "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+      "public_paraphrase": "달아난 피의자를 검거한 데 이어 관련자들을 조사해 사건 경위를 규명하는 수사 절차가 후속 조치로 제시된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 11
+       },
+       "sentence_sha256": "b19c2bd0d869187203076f1a6bade79f9babf8efa3a07562278d7a46361ae81f"
+      }
+     }
+    ]
+   }
+  },
+  "actors_and_sources": [
+   {
+    "actor_id": "actor:b97ad7d9e2039a563b146a3af1396103ffade8a8540a2f3e624cc1b208215949",
+    "role": "judiciary_law_enforcement",
+    "role_label": "법조·수사기관",
+    "direct_quote_count": 0,
+    "indirect_attribution_count": 2,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 8
+      },
+      "sentence_sha256": "8f201bbab90ea2e033fa29c365ed9599dc58dbbb35eafc3142f99ed2476ce3a1"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 7
+      },
+      "sentence_sha256": "4de073458724b578dd7212a0fcc71bc6bac6acbf0d69969602afb0ed8c57098a"
+     }
+    ]
+   },
+   {
+    "actor_id": "actor:402eb49ae91d20fd54eaf0a6d9665649ebdbd15fcde5c3ce04c6f09746063e8c",
+    "role": "other",
+    "role_label": "기타 취재원",
+    "direct_quote_count": 0,
+    "indirect_attribution_count": 2,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 9
+      },
+      "sentence_sha256": "70434e47f44989a665dfd8c08a858c897d997a2635956496721259017661fc99"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 10
+      },
+      "sentence_sha256": "ba0f89e438719edeec4168b32c29d4592cccbc82ed1a6f038fdfb81159389863"
+     }
+    ]
+   }
+  ],
+  "context_depth": {
+   "level": "unknown"
+  },
+  "scope": {
+   "code": "unknown"
+  },
+  "secondary_descriptors": {
+   "generic_frames": [],
+   "policy_frames": [],
+   "controlled_associations": []
+  },
+  "framing_devices": [],
+  "review": {
+   "status": "automatic_draft",
+   "analysis_decision": "analyze",
+   "analysis_state": "succeeded",
+   "attempt_count": 1,
+   "idempotency_fingerprint": "18550456cd233e806921b05f47dd4836ba946cc73fa522ec90ac3c319066ff5c",
+   "error_code": null,
+   "fallback_reason": null,
+   "requires_human_review": true,
+   "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+  }
+ }
+}

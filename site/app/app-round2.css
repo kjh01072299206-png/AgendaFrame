@@ -1,0 +1,1103 @@
+/* 2차 수정: 표면 위계, 출처 표시, 예시 표시, 다크 파임 방향, 히트맵 칸 분리.
+   app-shell.css 의 토큰을 그대로 쓰고 값만 덧붙인다. */
+
+/* ── 표면 3단계 ──────────────────────────────────────────────────────────── */
+/* 화면마다 결론 카드 하나만 lead 를 쓴다. 카드 스킨이 하나뿐이면 8~9개가 같은
+   무게로 나열돼 어느 것이 결론인지 표면으로 구분되지 않는다. */
+
+.afs-card-lead {
+  border: 0;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--afs-ink) 7%, transparent), 0 10px 28px color-mix(in srgb, var(--afs-ink) 6%, transparent);
+}
+.afs-card-lead > h2 {
+  padding-top: 18px;
+  font-size: 18px;
+}
+:root[data-theme="dark"] .afs-card-lead,
+.afs-card-lead {
+  background: var(--afs-card);
+}
+@media (prefers-color-scheme: dark) {
+  .afs-card-lead {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+}
+:root[data-theme="dark"] .afs-card-lead {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+/* 이 층위에서 매체가 갈렸다는 사실을 표면으로도 드러낸다 */
+.afs-card-split {
+  border-left: 3px solid var(--afs-brand);
+}
+
+/* ── 다크에서 파임 방향 ──────────────────────────────────────────────────── */
+/* 라이트는 흰 카드보다 어두운 면이 "파임"이다. 다크에서 sunk 을 더 밝게 잡으면
+   파임이 오히려 솟아 보여 각주 상자가 카드와 구별되지 않는다. */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --afs-card: #151c28;
+    --afs-sunk: #0f1520;
+    --afs-rule: #2b3542;
+    --afs-heat-max: 74%;
+  }
+  .afs-card {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  }
+}
+:root[data-theme="dark"] {
+  --afs-card: #151c28;
+  --afs-sunk: #0f1520;
+  --afs-rule: #2b3542;
+  --afs-heat-max: 74%;
+}
+:root[data-theme="dark"] .afs-card {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+:root {
+  --afs-heat-max: 52%;
+}
+:root[data-theme="light"] {
+  --afs-heat-max: 52%;
+}
+
+/* ── 히트맵 칸 분리 ──────────────────────────────────────────────────────── */
+/* collapse + 배경색만으로는 같은 값이 나란히 오면 한 칸처럼 붙어 보여 열을 세로로
+   추적할 수 없다. */
+
+.afs-heat {
+  border-collapse: separate;
+  border-spacing: 3px 2px;
+}
+.afs-heat th,
+.afs-heat td {
+  border-bottom: 0;
+}
+.afs-heat td {
+  border-radius: 4px;
+  background-clip: padding-box;
+}
+.afs-heat thead th,
+.afs-heat tbody th {
+  border-bottom: 1px solid var(--afs-rule);
+}
+.afs-heat tbody tr:hover {
+  background: none;
+}
+.afs-heat tbody tr:hover th {
+  color: var(--afs-brand);
+}
+
+/* ── 출처 스트립 ─────────────────────────────────────────────────────────── */
+
+.afs-prov {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: -4px 0 0;
+  padding: 9px 14px;
+  border: 1px dashed var(--afs-rule-2);
+  border-radius: var(--afs-r-btn);
+  background: var(--afs-sunk);
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+}
+.afs-prov b {
+  padding: 1px 9px;
+  border: 1px solid color-mix(in srgb, var(--afs-warn) 40%, transparent);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--afs-warn-soft) 70%, var(--afs-card));
+  color: var(--afs-warn);
+  font-weight: 750;
+}
+
+/* ── 예시 표시 ───────────────────────────────────────────────────────────── */
+
+.afs-badge-ex {
+  padding: 1px 9px;
+  border: 1px solid color-mix(in srgb, var(--afs-warn) 40%, transparent);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--afs-warn-soft) 70%, var(--afs-card));
+  color: var(--afs-warn);
+  font-size: 11px;
+  font-weight: 750;
+}
+.afs-foot-ex {
+  border-top: 1px dashed color-mix(in srgb, var(--afs-warn) 40%, var(--afs-rule));
+  background: color-mix(in srgb, var(--afs-warn-soft) 34%, var(--afs-card));
+}
+.afs-foot-ex b {
+  color: var(--afs-warn);
+}
+
+/* ── 층위 카드 안쪽 ──────────────────────────────────────────────────────── */
+
+.afs-layer-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 16px 0 9px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--afs-rule);
+  font-size: 12.5px;
+  font-weight: 750;
+}
+.afs-layer-head:first-of-type {
+  margin-top: 4px;
+}
+.afs-layer-head b {
+  margin-left: auto;
+  color: var(--afs-ink-3);
+  font-weight: 700;
+}
+/* 취재원 발언 묶음은 번호까지 다르게 — 매체 서술과 합산하지 않는다는 표시 */
+.afs-patterns-no-src {
+  border: 1px dashed color-mix(in srgb, var(--afs-ink-3) 55%, transparent);
+  background: transparent;
+  color: var(--afs-ink-3);
+}
+.afs-chip-src {
+  border-style: dashed;
+  background: transparent;
+  color: var(--afs-ink-3);
+}
+
+/* ── 쟁점 축: 극의 색을 칩까지 잇는다 ────────────────────────────────────── */
+
+.afs-spectrum-lane-l li {
+  border-color: color-mix(in srgb, var(--n1) 48%, transparent);
+  background: color-mix(in srgb, var(--n1) 9%, var(--afs-card));
+}
+.afs-spectrum-lane-right li {
+  border-color: color-mix(in srgb, var(--n3) 48%, transparent);
+  background: color-mix(in srgb, var(--n3) 9%, var(--afs-card));
+}
+.afs-spectrum-lane-mid li {
+  border-color: color-mix(in srgb, var(--n0) 55%, transparent);
+  background: color-mix(in srgb, var(--n0) 10%, var(--afs-card));
+}
+.afs-spectrum-lane li.afs-spectrum-empty {
+  border-color: var(--afs-rule-2) !important;
+  background: transparent !important;
+}
+
+/* ── 목록을 옆으로 흘리는 변형 ───────────────────────────────────────────── */
+/* 한 단어짜리 항목 열 개를 세로로 쌓으면 카드 오른쪽 1000px 가 빈다. */
+
+.afs-facts-inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.afs-facts-inline li {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0;
+  padding: 3px 10px;
+  border: 1px solid var(--afs-rule);
+  border-radius: 20px;
+  background: var(--afs-sunk);
+  font-size: 12.5px;
+}
+.afs-facts-inline li::before {
+  display: none;
+}
+
+/* ── 격자가 서로 다른 방향으로 늘어나지 않게 ─────────────────────────────── */
+
+.afs-grid {
+  align-items: start;
+}
+@media (max-width: 1080px) {
+  .afs-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ── 카드 제목 안의 배지 정렬 ────────────────────────────────────────────── */
+
+.afs-card > h2 > .afs-chip,
+.afs-card > h2 > .afs-badge-ex {
+  align-self: center;
+}
+
+/* ── 스킵 링크 · 스크린리더 전용 ─────────────────────────────────────────── */
+
+.afs-skip {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 100;
+  padding: 10px 14px;
+  border-radius: var(--afs-r-btn);
+  background: var(--afs-brand);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  transform: translateY(-180%);
+  transition: transform 0.15s;
+}
+.afs-skip:focus-visible {
+  transform: translateY(0);
+}
+.afs-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.afs-nav-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ── 홈: 발견 문장과 제목 대비 ───────────────────────────────────────────── */
+
+.afs-finding {
+  margin: 0;
+  font-size: clamp(16px, 1.9vw, 20px);
+  font-weight: 700;
+  line-height: 1.55;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.afs-finding b {
+  color: var(--afs-brand);
+  font-weight: 800;
+}
+.afs-finding-sub {
+  margin: 9px 0 0;
+  max-width: 74ch;
+  color: var(--afs-ink-2);
+  font-size: 13.5px;
+}
+.afs-contrast {
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid var(--afs-rule);
+}
+.afs-contrast-q {
+  margin: 0 0 10px;
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.afs-contrast-pair {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+.afs-contrast-pair blockquote {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 13px 15px;
+  border-left: 3px solid var(--n0);
+  border-radius: 0 10px 10px 0;
+  background: var(--afs-sunk);
+}
+.afs-contrast-pair blockquote.l {
+  border-left-color: var(--n1);
+}
+.afs-contrast-pair blockquote.r {
+  border-left-color: var(--n3);
+}
+.afs-contrast-pair cite {
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+  font-style: normal;
+  font-weight: 750;
+}
+.afs-contrast-pair p {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 650;
+  line-height: 1.55;
+}
+.afs-contrast-foot {
+  margin: 11px 0 0;
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+}
+.afs-explore-poles b {
+  display: block;
+  margin-bottom: 3px;
+  padding-left: 0;
+  color: var(--afs-ink-3);
+  font-size: 11px;
+  font-weight: 750;
+}
+.afs-explore-poles b::before {
+  display: none;
+}
+
+/* 군집 표: 기본형과 같은 칸은 물러나게 */
+.afs-cell-same {
+  color: var(--afs-ink-3);
+}
+
+/* 취재원 발언까지 합쳐 셌을 때 늘어나는 몫 — 채우지 않고 테두리로만 둔다 */
+.afs-meter-dots i.ghost {
+  background: transparent;
+  border: 1px dashed var(--afs-ink-3);
+}
+.afs-ghost-num {
+  color: var(--afs-ink-3);
+  font-weight: 500;
+}
+
+/* 출처 줄의 링크는 좁은 화면에서도 24px 이상이어야 한다 (WCAG 2.5.8) */
+.afs-prov a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+}
+
+/* 글 시각은 11px 이라 --muted(2.9:1) 로는 본문 대비 기준에 못 미친다 */
+.afs-feed-head time,
+.afs-feed-replies time {
+  color: var(--afs-ink-3);
+}
+
+/* ── 프레이밍 화면 결론 배너 ────────────────────────────────────────────────
+   6,000px 을 스크롤해서 얻던 결론을 페이지 최대 타입으로 맨 위에 올린다.
+   가장 큰 글자가 가장 중요한 정보여야 한다. */
+.afs-conc {
+  padding: 18px 20px 14px;
+}
+.afs-conc-eyebrow {
+  margin: 0 0 6px;
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.afs-conc-h {
+  margin: 0;
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+.afs-conc-h-sub {
+  color: var(--afs-ink-2);
+  font-size: 16px;
+  font-weight: 650;
+}
+.afs-conc-sub {
+  margin: 8px 0 0;
+  color: var(--afs-ink-2);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.afs-conc-chip {
+  display: inline-block;
+  margin: 0 3px;
+  padding: 2px 9px;
+  border: 1px solid var(--afs-brand);
+  border-radius: 999px;
+  color: var(--afs-brand);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.afs-conc-chip:hover {
+  background: var(--afs-soft);
+}
+
+/* 다섯 층위 레일 — 앵커가 있는데 링크가 없어 죽어 있던 이동 장치를 살린다 */
+.afs-rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 6px;
+  margin: 14px 0 2px;
+}
+.afs-rail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid var(--afs-rule);
+  border-radius: var(--afs-r-btn);
+  background: var(--afs-card);
+  color: var(--afs-ink);
+  text-decoration: none;
+}
+.afs-rail-item:hover {
+  border-color: var(--afs-brand);
+}
+.afs-rail-item b {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.afs-rail-item small {
+  color: var(--afs-ink-3);
+  font-size: 11px;
+}
+.afs-rail-item.on {
+  border-left: 3px solid var(--afs-brand);
+  background: var(--afs-soft);
+}
+.afs-rail-item.on small {
+  color: var(--afs-brand);
+  font-weight: 650;
+}
+
+/* 층위 카드로 점프할 때 고정 바(59px) 뒤로 제목이 숨지 않게 한다 */
+.afs-card[id] {
+  scroll-margin-top: 76px;
+}
+
+/* 접기 — "차이가 없음"을 증명하는 3,500px 을 요약 한 줄로 줄인다 */
+.afs-fold {
+  margin-top: 10px;
+}
+.afs-fold > summary {
+  cursor: pointer;
+  padding: 7px 10px;
+  border: 1px solid var(--afs-rule);
+  border-radius: var(--afs-r-btn);
+  background: var(--afs-sunk);
+  color: var(--afs-ink-2);
+  font-size: 12px;
+  font-weight: 650;
+  list-style: none;
+}
+.afs-fold > summary::marker,
+.afs-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.afs-fold > summary::before {
+  content: "▸ ";
+  color: var(--afs-ink-3);
+}
+.afs-fold[open] > summary::before {
+  content: "▾ ";
+}
+.afs-fold > summary:hover {
+  border-color: var(--afs-brand);
+  color: var(--afs-brand);
+}
+
+/* 조합 표 — 산출(시그니처)이 밝고 매체 목록이 물러나야 한다. 이전에는 반대였다. */
+.afs-table-sig td b {
+  font-weight: 650;
+}
+.afs-table-sig .afs-sig-diff {
+  background: var(--afs-soft);
+}
+.afs-table-sig .afs-sig-diff b {
+  color: var(--afs-brand);
+  font-weight: 800;
+}
+.afs-table-sig .afs-sig-diff small {
+  display: block;
+  color: var(--afs-brand);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.afs-table-sig .afs-sig-outlets {
+  color: var(--afs-ink-3);
+  font-size: 12px;
+}
+.afs-cell-sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--afs-ink-3);
+  font-size: 11px;
+  font-weight: 400;
+}
+.afs-chip-link {
+  border-color: var(--afs-brand);
+  color: var(--afs-brand);
+  text-decoration: none;
+}
+
+/* 관측 범위만 다른 칸 — 판단 차이와 구별한다 */
+.afs-table-sig .afs-sig-part b {
+  color: var(--afs-ink-3);
+}
+.afs-table-sig .afs-sig-part small {
+  display: block;
+  color: var(--afs-ink-3);
+  font-size: 10.5px;
+  font-weight: 650;
+}
+/* 상단 이동 버튼은 첫 화면의 유일한 액션이므로 눌릴 수 있게 보여야 한다 */
+.afs-pill-go {
+  border-color: var(--afs-brand);
+  color: var(--afs-brand);
+  font-weight: 700;
+}
+
+/* 미관측은 값이 아니라 값이 없다는 사실이다. 다른 계열명과 같은 무게로 인쇄되면
+   "미관측이라는 계열"로 읽힌다. */
+.afs-unobs {
+  color: var(--afs-ink-3, #7c8798);
+  font-weight: 400;
+}
+
+/* 자가점검 — 결과는 버튼을 눌러야 나온다. 마지막 문항을 고르는 순간 아래에 결과가 뜨면
+   답을 고치는 동안 결과가 눈앞에서 계속 바뀐다. */
+.afs-quiz-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 14px 16px;
+}
+.afs-btn,
+.afs-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid var(--afs-brand, #2856c8);
+  background: var(--afs-brand, #2856c8);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.afs-btn-ghost {
+  background: transparent;
+  color: var(--afs-ink-2, #4a5566);
+  border-color: var(--afs-rule, #e2e6ec);
+  font-weight: 600;
+}
+/* 비활성 버튼도 읽혀야 한다 — ink-3 를 soft 배경에 올리면 3.07:1 로 AA(4.5)에 못 미친다.
+   "아직 누를 수 없다"는 것은 테두리와 커서로 알리고, 글자는 본문 대비를 지킨다. */
+.afs-btn:disabled {
+  background: var(--afs-sunk, #f2f4f8);
+  border-color: var(--afs-rule-2, #cfd6e0);
+  color: var(--afs-ink-2, #4a5566);
+  cursor: default;
+  font-weight: 600;
+}
+.afs-btn:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+.afs-btn-ghost:hover {
+  background: var(--afs-soft, #f1f3f7);
+}
+
+/* 표 칸에 계열 이름만 있으면 '공동 책임'이 누구와 누구인지 알 수 없다. 좁힌 주체를 아래 줄에 둔다.
+   계열 이름과 같은 무게로 인쇄하지 않는다 — 좁힌 값은 규칙 산출이고 계열은 이중코딩 산출이다. */
+.afs-cell-who {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--afs-ink-3, #7c8798);
+}
+
+/* 찜하기 — 계정 없는 서비스이므로 이 브라우저에만 남는다 */
+.afs-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 4px 10px;
+  border: 1px solid var(--afs-rule, #e2e6ec);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--afs-ink-3, #7c8798);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.afs-save.on {
+  border-color: color-mix(in srgb, var(--afs-brand, #2856c8) 40%, transparent);
+  background: color-mix(in srgb, var(--afs-brand, #2856c8) 10%, transparent);
+  color: var(--afs-brand, #2856c8);
+}
+.afs-save:hover {
+  border-color: var(--afs-rule-2, #cfd6e0);
+}
+.afs-save.compact {
+  min-height: 26px;
+  padding: 2px 7px;
+  margin-left: auto;
+}
+.afs-save span[aria-hidden] {
+  font-size: 13px;
+  line-height: 1;
+}
+.afs-saved-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.afs-saved-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 2px;
+}
+.afs-saved-list li + li {
+  border-top: 1px solid var(--afs-rule, #e2e6ec);
+}
+.afs-saved-list a {
+  font-weight: 650;
+  color: inherit;
+  text-decoration: none;
+}
+.afs-saved-list a:hover {
+  text-decoration: underline;
+}
+
+/* ── 확장 분석 화면 (무슨 일이었나 · 언론사 비교 · 프레이밍 분석 · 설정) ─────────
+   규칙 세 개를 지킨다.
+    · 설명 문장을 화면에 두지 않는다 — 표와 값이 스스로 읽히게 한다.
+    · 굵은 글씨는 이름에만 쓴다. 값은 tabular-nums 로 자리를 맞춘다.
+    · 칸을 나누는 선은 표 안에만 둔다. 카드 안에서 또 나누지 않는다. */
+
+.afs-hold {
+  margin: 0;
+  padding: 18px 0;
+  color: var(--afs-ink-3);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.afs-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 11px 0 0;
+}
+
+.afs-bullets {
+  margin: 0;
+  padding-left: 17px;
+  display: grid;
+  gap: 7px;
+  color: var(--afs-ink-2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* 보도 흐름 — 하루치라 이 세로선이 유일한 시간 축이다 */
+.afs-flow,
+.afs-vline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 15px;
+  border-left: 1px solid var(--afs-rule);
+  display: grid;
+  gap: 14px;
+}
+.afs-flow > li,
+.afs-vline > li {
+  position: relative;
+}
+.afs-flow > li::before,
+.afs-vline > li::before {
+  content: "";
+  position: absolute;
+  left: -19px;
+  top: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--n1);
+}
+.afs-flow > li {
+  display: grid;
+  grid-template-columns: 3.6em minmax(0, 1fr);
+  gap: 11px;
+  align-items: baseline;
+}
+.afs-flow time {
+  color: var(--afs-ink-3);
+  font-size: 12px;
+}
+.afs-flow > li > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.afs-flow b {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--afs-ink-3);
+}
+.afs-flow a,
+.afs-flow > li > div > span {
+  font-size: 13.5px;
+  color: inherit;
+  text-decoration: none;
+}
+.afs-flow a:hover {
+  text-decoration: underline;
+}
+
+/* 세로선 비교 — 매체마다 같은 네 칸을 보여 다른 칸이 눈에 남게 한다 */
+.afs-vline > li > b {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 13.5px;
+  font-weight: 750;
+}
+/* 값이 짧아 두 열로 세우면 오른쪽이 텅 빈다. 네 칸을 가로로 늘어놓아 폭을 다 쓰고,
+   좁아지면 칸이 접혀 내려간다. */
+.afs-vline dl {
+  margin: 0;
+  display: grid;
+  gap: 9px 20px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 175px), 1fr));
+}
+.afs-vline dl > div {
+  min-width: 0;
+}
+.afs-vline dt {
+  margin-bottom: 3px;
+  color: var(--afs-ink-3);
+  font-size: 11px;
+}
+.afs-vline dd {
+  margin: 0;
+  font-size: 13px;
+}
+.afs-vline .afs-keys {
+  margin: 0;
+}
+
+/* 갈래 카드 — 계열색은 왼쪽 선으로만 쓴다 */
+.afs-camps {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr));
+  margin: 0 0 16px;
+}
+.afs-camps > section {
+  padding-left: 11px;
+  border-left: 2px solid var(--cc, var(--n1));
+}
+.afs-camps b {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 750;
+}
+.afs-camps p {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--afs-ink-2);
+}
+.afs-camp-th {
+  border-top: 2px solid var(--cc, var(--n1));
+}
+.afs-camp-th small {
+  display: block;
+  margin-top: 2px;
+  color: var(--afs-ink-3);
+  font-weight: 600;
+  white-space: normal;
+}
+
+.afs-agreed,
+.afs-gloss {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.afs-agreed dt,
+.afs-gloss dt {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--afs-ink-3);
+}
+.afs-agreed dd,
+.afs-gloss dd {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.afs-gloss dt {
+  font-size: 13px;
+  color: var(--afs-ink);
+}
+
+/* 요소 조합 군집 */
+.afs-clus {
+  display: grid;
+  gap: 14px;
+}
+.afs-clus > section {
+  padding-left: 11px;
+  border-left: 2px solid var(--cc, var(--n1));
+}
+.afs-clus h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 7px;
+  font-size: 13px;
+  font-weight: 750;
+}
+.afs-clus h3 small {
+  color: var(--afs-ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.afs-clus p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0 5px;
+}
+.afs-clus p > span:first-child {
+  margin-right: 3px;
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+}
+
+/* 의미 연결망 */
+.afs-nets {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 268px), 1fr));
+}
+.afs-nets > section {
+  padding-left: 11px;
+  border-left: 2px solid var(--cc, var(--n1));
+}
+.afs-nets h3 {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 750;
+}
+.afs-nets h3 small {
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+/* 자유 배치는 좁은 화면에서 낱말이 겹친다. 중심 낱말을 고정하고 나머지를 원에 걸어
+   겹칠 자리를 없앤다. 세 프레임이 함께 쓴 낱말은 흐리게 둔다. */
+.afs-wnet {
+  width: 100%;
+  height: auto;
+}
+.afs-wnet .wn-e {
+  stroke: var(--cc, var(--n1));
+  stroke-opacity: 0.5;
+}
+.afs-wnet .wn-n {
+  fill: var(--afs-sunk);
+  stroke: var(--afs-rule);
+  stroke-width: 0.5;
+}
+.afs-wnet .wn-h {
+  fill: var(--cc, var(--n1));
+}
+.afs-wnet .wn-l {
+  font-size: 8px;
+  font-weight: 750;
+  fill: var(--afs-ink-2);
+  dominant-baseline: middle;
+}
+.afs-wnet .wn-l.sh {
+  font-weight: 600;
+  fill: var(--afs-ink-3);
+}
+.afs-wnet .wn-hl {
+  font-size: 8.5px;
+  font-weight: 850;
+  fill: #fff;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+/* 층위별 판정 */
+.afs-verdict {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 232px), 1fr));
+  column-gap: 20px;
+}
+.afs-verdict li {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--afs-rule);
+  font-size: 12.5px;
+}
+.afs-verdict li > span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.afs-verdict li > span:nth-child(2) {
+  color: var(--afs-ink-3);
+}
+
+/* 대화 */
+.afs-chat {
+  display: grid;
+  gap: 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 14px 16px;
+}
+.afs-turn {
+  display: flex;
+}
+.afs-turn > div,
+.afs-turn > p {
+  max-width: 88%;
+  margin: 0;
+  padding: 10px 13px;
+  border: 1px solid var(--afs-rule);
+  border-radius: var(--afs-r-card);
+  background: var(--afs-sunk);
+  font-size: 13.5px;
+  line-height: 1.68;
+}
+.afs-turn-me {
+  justify-content: flex-end;
+}
+.afs-turn-me > p {
+  border-color: color-mix(in srgb, var(--afs-brand) 26%, transparent);
+  background: var(--afs-soft);
+  color: var(--afs-brand);
+  font-weight: 650;
+}
+.afs-turn > div > p {
+  margin: 0 0 7px;
+  white-space: pre-line;
+}
+.afs-turn > div > p:last-child {
+  margin-bottom: 0;
+}
+.afs-cite-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid var(--afs-rule);
+}
+.afs-cite-chips a {
+  text-decoration: none;
+}
+.afs-cite-chips a:hover {
+  border-color: var(--afs-brand);
+  color: var(--afs-brand);
+}
+.afs-chat-issue {
+  margin-left: auto;
+  max-width: 58%;
+  padding: 3px 8px;
+  border: 1px solid var(--afs-rule);
+  border-radius: var(--afs-r-chip);
+  background: var(--afs-card);
+  color: var(--afs-ink-2);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 650;
+}
+.afs-chat-err {
+  margin: 0;
+  padding: 9px 16px;
+  border-top: 1px solid var(--afs-rule);
+  color: var(--afs-warn);
+  font-size: 12.5px;
+}
+
+/* 설정 */
+.afs-set-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  font-size: 13px;
+}
+.afs-set-row + .afs-set-row {
+  border-top: 1px solid var(--afs-rule);
+}
+.afs-set-row > span:nth-child(2) {
+  color: var(--afs-ink-3);
+  font-size: 12px;
+}
+
+/* 기사 원문 — 제목이 길어 칸으로 나누면 넉 줄씩 접힌다. 세로 목록으로 둔다. */
+.afs-articles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.afs-articles li {
+  display: grid;
+  grid-template-columns: minmax(0, 5.4em) minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 0;
+  font-size: 13.5px;
+}
+.afs-articles li + li {
+  border-top: 1px solid var(--afs-rule);
+}
+.afs-articles b {
+  color: var(--afs-ink-3);
+  font-size: 12px;
+  font-weight: 700;
+}
+.afs-articles a {
+  color: inherit;
+  text-decoration: none;
+}
+.afs-articles a:hover {
+  color: var(--afs-brand);
+  text-decoration: underline;
+}
+
+/* ── 채운 브랜드 버튼의 글자색 ────────────────────────────────────────────
+   라이트의 #2856c8 에는 흰 글자가 5.9:1 로 맞지만, 다크의 #6b92e2 에는 3.07:1 이라
+   AA(4.5)에 못 미친다. 계열색이 --n1-ink 를 갖는 것과 같이 짝을 만들어 쓴다. */
+:root {
+  --afs-on-brand: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --afs-on-brand: #0b1220;
+  }
+}
+:root[data-theme="dark"] {
+  --afs-on-brand: #0b1220;
+}
+:root[data-theme="light"] {
+  --afs-on-brand: #ffffff;
+}
+/* 브랜드로 채운 버튼만 — .afs-pill-go 는 배경이 투명하고 글자가 브랜드색이므로 제외한다
+   (여기에 넣으면 라이트에서 흰 글자가 흰 배경에 얹혀 1.00:1 이 된다). */
+.afs-btn,
+.afs-submit {
+  color: var(--afs-on-brand);
+}

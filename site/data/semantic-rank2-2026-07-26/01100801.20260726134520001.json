@@ -1,0 +1,344 @@
+{
+ "articleId": "01100801.20260726134520001",
+ "profile": {
+  "schema_version": "agendaframe.article-frame-profile.v2",
+  "lineage": {
+   "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+   "model_output_schema_version": 3,
+   "comparison_engine_version": "korean-evidence-rules-v2",
+   "approval": {
+    "authorization_id": "bigkinds-2026-07-26-rank-2-bd61980687cd",
+    "fingerprint": "ab93e3b58284e40bc01ccd710260787313a2b52613309a639a8d2b092aac5ade",
+    "cluster_id": "bigkinds-2026-07-26-rank-2",
+    "reviewer": "AgendaFrame agent-assisted evidence audit",
+    "reviewed_at": "2026-08-02T00:00:00+09:00",
+    "approved_urls_sha256": "15d2662921b661b9b34f1238e00abe9fc16b3e2a6de0be94b975c255808e52dc"
+   }
+  },
+  "engine": {
+   "name": "AgendaFrame Claude evidence coder",
+   "version": "claude-sonnet-5x2-opus-5-adjudicated",
+   "approach": "semantic_evidence_bounded",
+   "semantic_ai": true,
+   "status": "semantic_draft",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": 3,
+   "evidence_storage": "locator_and_salted_sha256_only",
+   "limitations": [
+    "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+    "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+    "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+   ]
+  },
+  "article": {
+   "article_id": "01100801.20260726134520001",
+   "upstream_article_id": "01100801.20260726134520001",
+   "published_at": "2026-07-26T13:45:20+09:00",
+   "title_sha256": "2f63d57b985892a32b38d4d7857389e605937b1447d10e4ef6f1c6f198e1d4dd",
+   "body_sha256": "c19bd074aea2f3ccbf2375a8e0b39f8a086f208d0102aa5df58bd8a2f0d9a84d",
+   "body_character_count": 825,
+   "body_word_count": 201,
+   "paragraph_count": 1,
+   "sentence_count": 13,
+   "raw_body_retained": false
+  },
+  "extraction": {
+   "text_scope": "transient_public_page_extract",
+   "analyzed_character_count": 825,
+   "input_truncated": false
+  },
+  "genre": {
+   "code": "unknown",
+   "label": "자동 분류 안 함",
+   "evidence": []
+  },
+  "dimensions": {
+   "problem_definition": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:b7f06baa712a9bb1559afe891b193640836d142fba4113b602c57556cbca8bf1",
+      "code": "semantic_problem_definition",
+      "frame_family": "political_conflict",
+      "variant_key": "semantic:problem_definition:family:political_conflict",
+      "public_paraphrase": "상임위 배정 결과에 항의하다 벌어진 여당 내 물리적 충돌이 당 지도부와 소속 의원 사이의 갈등 사안으로 규정된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 4
+       },
+       "sentence_sha256": "89eb281e7b62f98d5e95ddae0fa945d1139014454d096533f5cf48ed64d1ca0c"
+      }
+     },
+     {
+      "claim_id": "claim:b7f06baa712a9bb1559afe891b193640836d142fba4113b602c57556cbca8bf1",
+      "code": "semantic_problem_definition",
+      "frame_family": "political_conflict",
+      "variant_key": "semantic:problem_definition:family:political_conflict",
+      "public_paraphrase": "상임위 배정 결과에 항의하다 벌어진 여당 내 물리적 충돌이 당 지도부와 소속 의원 사이의 갈등 사안으로 규정된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 5
+       },
+       "sentence_sha256": "0d1cfab36b9748b15f44cdbb0c4f752dabc3278c963c5062379d04f38f57542d"
+      }
+     }
+    ]
+   },
+   "causal_interpretation": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:57d3243e2cad0528632a3d53d8dc075289388a37cdf9b3987274c01302697583",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "individual_action",
+      "variant_key": "semantic:causal_interpretation:family:individual_action",
+      "public_paraphrase": "후반기 상임위 배정 결과에 품은 개인적 불만이 해당 의원의 물리적 행동을 촉발한 원인으로 서술된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 8
+       },
+       "sentence_sha256": "b5c3652db4fe58d4a51e78c7282da6ae2b308e4042b3671a08103ba4fa3c0795"
+      }
+     },
+     {
+      "claim_id": "claim:57d3243e2cad0528632a3d53d8dc075289388a37cdf9b3987274c01302697583",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "individual_action",
+      "variant_key": "semantic:causal_interpretation:family:individual_action",
+      "public_paraphrase": "후반기 상임위 배정 결과에 품은 개인적 불만이 해당 의원의 물리적 행동을 촉발한 원인으로 서술된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 9
+       },
+       "sentence_sha256": "94adddf82b7effdfdd3d7a49508b8b7dd2f3c46c7c491593b451d69515c0f863"
+      }
+     }
+    ]
+   },
+   "responsibility_attribution": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:4e985d7026cdd9b243505a0698a0b6a2fc778144c9d1c762a8c0ce22832f2137",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "individual_actor",
+      "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+      "public_paraphrase": "당 원내지도부는 사태의 책임을 해당 의원 개인에게 두고 본인이 직접 거취를 결정할 것을 요구한다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 4
+       },
+       "sentence_sha256": "89eb281e7b62f98d5e95ddae0fa945d1139014454d096533f5cf48ed64d1ca0c"
+      }
+     },
+     {
+      "claim_id": "claim:4e985d7026cdd9b243505a0698a0b6a2fc778144c9d1c762a8c0ce22832f2137",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "individual_actor",
+      "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+      "public_paraphrase": "당 원내지도부는 사태의 책임을 해당 의원 개인에게 두고 본인이 직접 거취를 결정할 것을 요구한다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 7
+       },
+       "sentence_sha256": "b1cfc3f19f18747814fa23c5a5577a7d3ffadf4453b31d90d169160946aa35d9"
+      }
+     }
+    ]
+   },
+   "moral_evaluation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:d1f2904bdf3616b8fa9056d76189614e92381d5f473b00d4989430cda4bfaee1",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "전·현직 원내대표를 상대로 한 이번 행위는 이유를 막론하고 당에서 용납될 수 없는 일로 강하게 부정 평가된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 7
+       },
+       "sentence_sha256": "b1cfc3f19f18747814fa23c5a5577a7d3ffadf4453b31d90d169160946aa35d9"
+      }
+     },
+     {
+      "claim_id": "claim:d1f2904bdf3616b8fa9056d76189614e92381d5f473b00d4989430cda4bfaee1",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "전·현직 원내대표를 상대로 한 이번 행위는 이유를 막론하고 당에서 용납될 수 없는 일로 강하게 부정 평가된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 7
+       },
+       "sentence_sha256": "b1cfc3f19f18747814fa23c5a5577a7d3ffadf4453b31d90d169160946aa35d9"
+      }
+     }
+    ]
+   },
+   "treatment_recommendation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:486f8d9ac0d1a00b1a115f0ca1e3c0fa009499bd30af775da7264b49abfecafe",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "investigation_accountability",
+      "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+      "public_paraphrase": "재발 방지를 위한 강력한 조치와 공개 사과, 절차에 따른 책임 추궁이 필요하다는 요구가 제시된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 6
+       },
+       "sentence_sha256": "2f48ee31755cac2842129ba01916856951a0167f724a66777d3ff73d1d25924c"
+      }
+     },
+     {
+      "claim_id": "claim:486f8d9ac0d1a00b1a115f0ca1e3c0fa009499bd30af775da7264b49abfecafe",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "investigation_accountability",
+      "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+      "public_paraphrase": "재발 방지를 위한 강력한 조치와 공개 사과, 절차에 따른 책임 추궁이 필요하다는 요구가 제시된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 13
+       },
+       "sentence_sha256": "41c1676ddc47f05db4f0c1c031148340b087043c32c8a44e8b32396e70fb5b5f"
+      }
+     }
+    ]
+   }
+  },
+  "actors_and_sources": [
+   {
+    "actor_id": "actor:1cd6817703ec4b83e0da720029fcdd027557b3431a1e00d692a2fdcdd185ec57",
+    "role": "political_actor",
+    "role_label": "정당·정치권",
+    "direct_quote_count": 3,
+    "indirect_attribution_count": 2,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 4
+      },
+      "sentence_sha256": "89eb281e7b62f98d5e95ddae0fa945d1139014454d096533f5cf48ed64d1ca0c"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 5
+      },
+      "sentence_sha256": "0d1cfab36b9748b15f44cdbb0c4f752dabc3278c963c5062379d04f38f57542d"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 6
+      },
+      "sentence_sha256": "2f48ee31755cac2842129ba01916856951a0167f724a66777d3ff73d1d25924c"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 13
+      },
+      "sentence_sha256": "41c1676ddc47f05db4f0c1c031148340b087043c32c8a44e8b32396e70fb5b5f"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 10
+      },
+      "sentence_sha256": "6024e307a41fe4ec63ac8dd24e209d06a36f477a8d03c29a26133b8d3171122a"
+     }
+    ]
+   }
+  ],
+  "context_depth": {
+   "level": "unknown"
+  },
+  "scope": {
+   "code": "unknown"
+  },
+  "secondary_descriptors": {
+   "generic_frames": [],
+   "policy_frames": [],
+   "controlled_associations": []
+  },
+  "framing_devices": [],
+  "review": {
+   "status": "automatic_draft",
+   "analysis_decision": "analyze",
+   "analysis_state": "succeeded",
+   "attempt_count": 1,
+   "idempotency_fingerprint": "0d768da2913868364149ce17dd4e0851690d8e805512142ec46ebf3fe60e3388",
+   "error_code": null,
+   "fallback_reason": null,
+   "requires_human_review": true,
+   "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+  }
+ }
+}

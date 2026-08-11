@@ -1,0 +1,288 @@
+{
+ "articleId": "01100201.20260726155602001",
+ "profile": {
+  "schema_version": "agendaframe.article-frame-profile.v2",
+  "lineage": {
+   "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+   "model_output_schema_version": 3,
+   "comparison_engine_version": "korean-evidence-rules-v2",
+   "approval": {
+    "authorization_id": "bigkinds-2026-07-26-rank-4-00a35b874b22",
+    "fingerprint": "9601bb0520e2c8d760ee3ae0e38c6c324c052db0aaf1b8a8112ce5501beff5b7",
+    "cluster_id": "bigkinds-2026-07-26-rank-4",
+    "reviewer": "AgendaFrame agent-assisted evidence audit",
+    "reviewed_at": "2026-08-02T00:00:00+09:00",
+    "approved_urls_sha256": "815e7ea12b6ad20238a92fa219920094b9184b129e4c83e7c872f0a97f79be1e"
+   }
+  },
+  "engine": {
+   "name": "AgendaFrame Claude evidence coder",
+   "version": "claude-sonnet-5x2-opus-5-adjudicated",
+   "approach": "semantic_evidence_bounded",
+   "semantic_ai": true,
+   "status": "semantic_draft",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": 3,
+   "evidence_storage": "locator_and_salted_sha256_only",
+   "limitations": [
+    "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+    "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+    "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+   ]
+  },
+  "article": {
+   "article_id": "01100201.20260726155602001",
+   "upstream_article_id": "01100201.20260726155602001",
+   "published_at": "2026-07-26T15:56:02+09:00",
+   "title_sha256": "ffd9e81860bb0fb152a4dd7334b8369ed3c829f7f05e4c2e91155f02235fc9f8",
+   "body_sha256": "17c49b662b6969594ef924b68e7b8b89fe1a9ea2657d15abe8134619c5ce3719",
+   "body_character_count": 1641,
+   "body_word_count": 383,
+   "paragraph_count": 1,
+   "sentence_count": 27,
+   "raw_body_retained": false
+  },
+  "extraction": {
+   "text_scope": "transient_public_page_extract",
+   "analyzed_character_count": 1641,
+   "input_truncated": false
+  },
+  "genre": {
+   "code": "unknown",
+   "label": "자동 분류 안 함",
+   "evidence": []
+  },
+  "dimensions": {
+   "problem_definition": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:3271b7a68d596319d52f7f2fd593988ee65ddc89d2f1ca5afae43ff945f59eaa",
+      "code": "semantic_problem_definition",
+      "frame_family": "legal_institutional",
+      "variant_key": "semantic:problem_definition:family:legal_institutional",
+      "public_paraphrase": "변호사의 항소심 불출석으로 빚어진 손해배상 사건에서 화해권고가 무산돼 정식 재판을 통해 결론이 나게 된 상황이 문제로 규정된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 3
+       },
+       "sentence_sha256": "4839a4ecb645fb223085b5dce42328544f60817d0ed6ef97ba7c581e24e5f3cb"
+      }
+     }
+    ]
+   },
+   "causal_interpretation": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:1614ca173cf77722673c2ca403244c84aa929ceb634e7d26c3e14d043aa3615a",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "individual_action",
+      "variant_key": "semantic:causal_interpretation:family:individual_action",
+      "public_paraphrase": "담당 변호사가 항소심 변론에 연달아 나오지 않아 소가 취하된 것으로 처리되면서 1심 패소가 굳어진 것이 원인으로 제시된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 14
+       },
+       "sentence_sha256": "b694bfd35322ba9e57afb7f80f17958ec6f9d81fba89dde71ad9d187008046fd"
+      }
+     },
+     {
+      "claim_id": "claim:1614ca173cf77722673c2ca403244c84aa929ceb634e7d26c3e14d043aa3615a",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "individual_action",
+      "variant_key": "semantic:causal_interpretation:family:individual_action",
+      "public_paraphrase": "담당 변호사가 항소심 변론에 연달아 나오지 않아 소가 취하된 것으로 처리되면서 1심 패소가 굳어진 것이 원인으로 제시된다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 16
+       },
+       "sentence_sha256": "cc6e5880630c6774af4d975089405c371b8b04da45b23fe0faeffd63cf11bd36"
+      }
+     }
+    ]
+   },
+   "responsibility_attribution": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:91a8e5bf69cf45562446143028b0f62c1a10f1a80f0c3c5fb557a71be6daa06e",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "individual_actor",
+      "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+      "public_paraphrase": "패소에 따른 배상 책임은 사건을 맡은 변호사 본인과 그가 속한 법인에 있다고 법원 판단을 빌려 제시된다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 19
+       },
+       "sentence_sha256": "82e508fb88d0f61e29883b8120c3f7282ac4c51f23816899f660e5f995e18d80"
+      }
+     }
+    ]
+   },
+   "moral_evaluation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:1704d439f1ab984a5cb6eda1c2ad4c205563dcfd8ed9b4652084c65b05f2f31f",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "유족 측은 변호사의 부실한 소송 수행 탓에 재판을 받고 상고할 기회를 빼앗겼다며 부정적으로 평가한다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 18
+       },
+       "sentence_sha256": "2490215d11540fc44371393311f9476dafe584e202bb242c9cf3609c4cdd0876"
+      }
+     }
+    ]
+   },
+   "treatment_recommendation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:30215720b4f1c2a23ec6f0803bd64b7e1c66b36e161ec5244c00ac01b4ef9a77",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "investigation_accountability",
+      "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+      "public_paraphrase": "유족 측은 화해 대신 형사 고소를 진행하고 이를 근거로 배상 청구 금액을 늘리겠다는 대응 방향을 예고한다.",
+      "voice": {
+       "kind": "indirect_source",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 26
+       },
+       "sentence_sha256": "358d29d3f5570931bc32a187dc25bab74fa5130919d6bde7e379eac4886c8d2c"
+      }
+     }
+    ]
+   }
+  },
+  "actors_and_sources": [
+   {
+    "actor_id": "actor:9d8f2c9d4eda6a08e92a8d7adfe0b7acf1caebe810bdbb35344851826d933fd3",
+    "role": "affected_person",
+    "role_label": "당사자·시민",
+    "direct_quote_count": 3,
+    "indirect_attribution_count": 0,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 10
+      },
+      "sentence_sha256": "035869b8679c4f48228d3cc096303f2bfe6d5375c1e9b5c971390080f28315b7"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 10
+      },
+      "sentence_sha256": "035869b8679c4f48228d3cc096303f2bfe6d5375c1e9b5c971390080f28315b7"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 26
+      },
+      "sentence_sha256": "358d29d3f5570931bc32a187dc25bab74fa5130919d6bde7e379eac4886c8d2c"
+     }
+    ]
+   },
+   {
+    "actor_id": "actor:50fd38a82541bf0092e321ef4b0e6db9cc5d74c2106683ed5862f8f6639cc9ca",
+    "role": "judiciary_law_enforcement",
+    "role_label": "법조·수사기관",
+    "direct_quote_count": 0,
+    "indirect_attribution_count": 3,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 6
+      },
+      "sentence_sha256": "4b2a5b4831a28d88f9d3e9b1b270ee4ad0b1bc3813f20343af2dab68ec0e2ce1"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 20
+      },
+      "sentence_sha256": "457bc9b445ea10d264968901b53ee1c8141da13bbf70df7bd99681affcb224db"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 23
+      },
+      "sentence_sha256": "80cd8ae1bf532101b6609624a08379fd6813a88a51e87cd7538bebc619953059"
+     }
+    ]
+   }
+  ],
+  "context_depth": {
+   "level": "unknown"
+  },
+  "scope": {
+   "code": "unknown"
+  },
+  "secondary_descriptors": {
+   "generic_frames": [],
+   "policy_frames": [],
+   "controlled_associations": []
+  },
+  "framing_devices": [],
+  "review": {
+   "status": "automatic_draft",
+   "analysis_decision": "analyze",
+   "analysis_state": "succeeded",
+   "attempt_count": 1,
+   "idempotency_fingerprint": "b7179e47eebaf1277240d0a6c910aa9042bf9da870ee47c20e52f268c0e44ce6",
+   "error_code": null,
+   "fallback_reason": null,
+   "requires_human_review": true,
+   "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+  }
+ }
+}

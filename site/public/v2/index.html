@@ -1,0 +1,2762 @@
+<!doctype html>
+<html lang="ko" data-fs="m">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%232856c8%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-family=%27sans-serif%27 font-size=%2714%27 font-weight=%27800%27 text-anchor=%27middle%27 fill=%27white%27%3EAF%3C/text%3E%3C/svg%3E" />
+<title>AgendaFrame 미리보기 — 화면 설계 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   AgendaFrame 시안 v2 — 실배포 서비스의 이상형.
+   색·폰트·모서리 반경은 실배포(site/app/app-shell.css)와 동일 토큰을 쓴다.
+   내용은 화면 설계를 보여주기 위한 가상 예시다(상단에 명시).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bar:0px;
+  --stack:calc(var(--bar) + 60px);
+  --afs-paper:#f7f8fa; --afs-card:#ffffff; --afs-sunk:#f2f4f8;
+  --afs-ink:#172033; --afs-ink-2:#596579; --afs-ink-3:#616c7a;
+  --afs-rule:#e0e4ea; --afs-rule-2:#c7ced8; --afs-rule-3:#6b7480;
+  --afs-brand:#2856c8; --afs-brand-2:#1e45aa; --afs-soft:#edf2ff;
+  --afs-good:#087a5b; --afs-warn:#8a5a00; --afs-warn-soft:#fff4d6;
+  --afs-bad:#b3261e; --afs-bad-soft:#fdecea;
+  --afs-edge:rgba(23,32,51,.14);
+  --n1:#2856c8; --n2:#0d9488; --n3:#ea580c; --n4:#7c3aed; --n0:#94a3b8;
+  /* 데이터 계열색은 UI 크롬(브랜드·경고)과 겹치지 않게 따로 둔다.
+     겹치면 한 계열이 "기본값·정답"으로, 다른 계열이 "경고"로 읽힌다. */
+  --fam-a:#0d7d70; --fam-b:#6d3ad6;
+  --n3-text:#9a3412;
+  --n1-ink:#fff; --n2-ink:#0a0f14; --n3-ink:#0a0f14; --n4-ink:#fff; --n0-ink:#0a0f14;
+  --afs-r-card:12px; --afs-r-btn:8px; --afs-r-chip:5px;
+  --afs-sans:"Pretendard Variable",Pretendard,"Noto Sans KR","Apple SD Gothic Neo",system-ui,sans-serif;
+  --afs-mono:ui-monospace,SFMono-Regular,"Cascadia Mono",Consolas,monospace;
+  --fs:14.5px;
+}
+:root[data-fs="s"]{--fs:13.5px}
+:root[data-fs="l"]{--fs:16px}
+:root[data-fs="xl"]{--fs:17.5px}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --fam-a:#4ec9b0; --fam-b:#b79cff;
+  --n3-text:#ff9f5a;
+    --afs-paper:#0d1117; --afs-card:#161d27; --afs-sunk:#1c242f;
+    --afs-ink:#e6edf6; --afs-ink-2:#a9b6c6; --afs-ink-3:#96a3b3;
+    --afs-rule:#273140; --afs-rule-2:#3a4657; --afs-rule-3:#7f8b9a;
+    --afs-brand:#7ea6ff; --afs-brand-2:#a8c4ff; --afs-soft:#182238;
+    --afs-good:#4ec9a4; --afs-warn:#e0b355; --afs-warn-soft:#2b2312;
+    --afs-bad:#ff8a80; --afs-bad-soft:#2c1512;
+    --afs-edge:rgba(230,237,246,.16);
+    --n1:#7ea6ff; --n2:#4ec9b0; --n3:#ff9f5a; --n4:#b79cff; --n0:#64748b;
+    --n1-ink:#0a0f14; --n2-ink:#0a0f14; --n3-ink:#0a0f14; --n4-ink:#0a0f14;
+  }
+}
+:root[data-theme="dark"]{
+  --fam-a:#4ec9b0; --fam-b:#b79cff;
+  --n3-text:#ff9f5a;
+  --afs-paper:#0d1117; --afs-card:#161d27; --afs-sunk:#1c242f;
+  --afs-ink:#e6edf6; --afs-ink-2:#a9b6c6; --afs-ink-3:#96a3b3;
+  --afs-rule:#273140; --afs-rule-2:#3a4657; --afs-rule-3:#7f8b9a;
+  --afs-brand:#7ea6ff; --afs-brand-2:#a8c4ff; --afs-soft:#182238;
+  --afs-good:#4ec9a4; --afs-warn:#e0b355; --afs-warn-soft:#2b2312;
+  --afs-bad:#ff8a80; --afs-bad-soft:#2c1512;
+  --afs-edge:rgba(230,237,246,.16);
+  --n1:#7ea6ff; --n2:#4ec9b0; --n3:#ff9f5a; --n4:#b79cff; --n0:#64748b;
+  --n1-ink:#0a0f14; --n2-ink:#0a0f14; --n3-ink:#0a0f14; --n4-ink:#0a0f14;
+}
+:root[data-theme="light"]{
+  --afs-paper:#f7f8fa; --afs-card:#fff; --afs-sunk:#f2f4f8;
+  --afs-ink:#172033; --afs-ink-2:#596579; --afs-ink-3:#616c7a;
+  --afs-rule:#e0e4ea; --afs-rule-2:#c7ced8; --afs-rule-3:#6b7480;
+  --afs-brand:#2856c8; --afs-brand-2:#1e45aa; --afs-soft:#edf2ff;
+  --afs-good:#087a5b; --afs-warn:#8a5a00; --afs-warn-soft:#fff4d6;
+  --afs-bad:#b3261e; --afs-bad-soft:#fdecea;
+  --n1:#2856c8; --n2:#0d9488; --n3:#ea580c; --n4:#7c3aed; --n0:#94a3b8;
+  --n1-ink:#fff; --n2-ink:#0a0f14; --n3-ink:#0a0f14; --n4-ink:#fff;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+/* 점착 헤더가 앵커 대상을 덮지 않게 한다 (WCAG 2.2 SC 2.4.11) */
+html{scroll-padding-top:var(--stack)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+body{
+  background:var(--afs-paper); color:var(--afs-ink);
+  font-family:var(--afs-sans); font-size:var(--fs); line-height:1.65;
+  word-break:keep-all; overflow-wrap:break-word;
+  -webkit-font-smoothing:antialiased;
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+:root[data-motion="reduce"] *{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+
+/* ── 셸 ─────────────────────────────────────────────────────────────────── */
+.shell{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100dvh}
+.side{
+  position:sticky;top:var(--bar,0px);align-self:start;height:calc(100dvh - var(--bar,0px));background:var(--afs-card);
+  border-right:1px solid var(--afs-rule);display:flex;flex-direction:column;gap:14px;padding:16px 14px;overflow-y:auto;
+}
+.brand{display:flex;align-items:center;gap:9px;padding:4px 6px 10px;color:inherit;text-decoration:none}
+.brand i{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--afs-brand);color:var(--n1-ink);font-style:normal;font-size:12px;font-weight:800;letter-spacing:-.04em}
+.brand b{font-size:15px;font-weight:800;letter-spacing:-.02em;display:block}
+.brand small{display:block;color:var(--afs-ink-3);font-size:10.5px;font-weight:600}
+nav.nav{display:flex;flex-direction:column;gap:2px}
+.nav-group{font-size:10.5px;font-weight:800;color:var(--afs-ink-3);letter-spacing:.02em;margin:10px 8px 3px;text-transform:none}
+.nav a{display:flex;align-items:center;gap:9px;min-height:38px;padding:8px 10px;border-radius:var(--afs-r-btn);color:var(--afs-ink-2);text-decoration:none;font-size:13px;font-weight:650}
+.nav a svg{width:16px;height:16px;flex:0 0 16px;opacity:.8}
+.nav a:hover{background:var(--afs-sunk);color:var(--afs-ink)}
+.nav a[aria-current="page"]{background:var(--afs-soft);color:var(--afs-brand-2);font-weight:750}
+.nav a[aria-current="page"] svg{opacity:1}
+.side-foot{margin-top:auto;border-top:1px solid var(--afs-rule);padding-top:11px}
+.side-foot dl{display:grid;grid-template-columns:auto auto;gap:2px 10px;margin:0;font-size:11px;color:var(--afs-ink-3)}
+.side-foot dt{font-weight:650}
+.side-foot dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;color:var(--afs-ink-2)}
+
+.main{display:flex;flex-direction:column;min-width:0}
+.top{
+  position:sticky;top:var(--bar,0px);z-index:41;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:9px 20px;background:color-mix(in srgb,var(--afs-card) 92%,transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--afs-rule);
+}
+.top label{font-size:11.5px;font-weight:750;color:var(--afs-ink-3)}
+.top select{
+  font-family:inherit;font-size:12.5px;font-weight:650;color:var(--afs-ink);
+  background:var(--afs-card);border:1px solid var(--afs-rule-2);border-radius:var(--afs-r-btn);
+  padding:7px 9px;min-height:36px;max-width:min(52vw,340px)
+}
+.top .spacer{flex:1 1 auto}
+.iconbtn{
+  display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:7px 11px;
+  font-family:inherit;font-size:12.5px;font-weight:700;color:var(--afs-ink-2);
+  background:var(--afs-card);border:1px solid var(--afs-rule-2);border-radius:var(--afs-r-btn);cursor:pointer
+}
+.iconbtn:hover{background:var(--afs-sunk);color:var(--afs-ink)}
+.iconbtn svg{width:15px;height:15px}
+.wrap{padding:22px 20px 84px;max-width:1080px;width:100%;min-width:0}
+/* 긴 영문 토큰(해시 규칙 등)은 keep-all 때문에 줄바꿈되지 않아 화면을 넓힌다 */
+code,pre{overflow-wrap:anywhere;word-break:break-all}
+pre{white-space:pre-wrap}
+
+/* 본문 문맥의 링크는 색만으로 구분되지 않게 밑줄을 둔다 (SC 1.4.1) */
+.wrap p a,.wrap li a,.wrap caption a,table.t td a,table.t th a,.note a,.scene-f a{
+  text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
+.next a,.rail a,.nav a,.tabbar a,.brand,.btn{text-decoration:none}
+
+.skip{position:absolute;left:-9999px}
+.skip:focus,.skip:focus-visible{position:fixed;left:12px;top:10px;z-index:99;padding:12px 16px;background:var(--afs-brand);color:var(--n1-ink);border-radius:var(--afs-r-btn);text-decoration:none}
+:is(a,button,select,summary,input,textarea,[tabindex]):focus-visible{outline:2px solid var(--afs-brand);outline-offset:2px}
+
+/* ── 배너 ───────────────────────────────────────────────────────────────── */
+.mockbar{
+  position:sticky;top:0;z-index:40;
+  display:flex;gap:9px;align-items:flex-start;padding:9px 20px;
+  background:var(--afs-warn-soft);border-bottom:1px solid var(--afs-rule);
+  font-size:11.5px;color:var(--afs-warn);font-weight:650;line-height:1.5
+}
+.mockbar b{font-weight:850}
+
+/* ── 공통 조각 ──────────────────────────────────────────────────────────── */
+.head{margin:0 0 18px}
+.head .eyebrow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:7px}
+.head h1{margin:0 0 7px;font-size:clamp(20px,2.5vw,26px);font-weight:850;letter-spacing:-.025em;line-height:1.3;text-wrap:balance}
+.head p{margin:0;color:var(--afs-ink-2);font-size:0.93em;max-width:64ch}
+h2.sec{margin:26px 0 11px;font-size:1.07em;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* 헤딩 안에 칩·버튼을 넣으면 헤딩 접근명이 오염돼 헤딩 탐색이 무력해진다 */
+.sec-row{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin:26px 0 11px}
+.sec-row h2.sec{margin:0;display:flex;flex-direction:column;gap:1px}
+.sec-row .n2{font-size:16px;font-weight:850;letter-spacing:-.02em}
+.sec-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding-top:2px}
+h3.sub{margin:0 0 8px;font-size:0.93em;font-weight:800;letter-spacing:-.01em}
+p.note{margin:8px 0 0;font-size:max(11.5px,0.83em);color:var(--afs-ink-3);line-height:1.6}
+.card{background:var(--afs-card);border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);padding:15px 16px}
+.card + .card{margin-top:10px}
+.grid{display:grid;gap:10px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:var(--afs-r-chip);font-size:max(11px,0.74em);font-weight:750;background:var(--afs-sunk);color:var(--afs-ink-2);border:1px solid var(--afs-rule);white-space:nowrap}
+.chip.wrap{white-space:normal;text-align:left;line-height:1.5}
+/* 터치 타깃 — 인라인 term 은 레이아웃을 깨지 않고 히트 영역만 넓힌다 */
+.term{position:relative}
+.term::before{content:"";position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:24px;min-width:24px}
+.ev-f a,table.t td a,table.t th a,.scene-f a{display:inline-flex;align-items:center;min-height:40px}
+.prov{min-height:28px}
+.tinybtn{min-height:36px}
+table.t .chip{white-space:normal;text-align:left;line-height:1.45}
+.chip.brand{background:var(--afs-soft);color:var(--afs-brand-2);border-color:color-mix(in srgb,var(--afs-brand) 26%,transparent)}
+.chip.warn{background:var(--afs-warn-soft);color:var(--afs-warn);border-color:color-mix(in srgb,var(--afs-warn) 30%,transparent)}
+.chip.good{background:color-mix(in srgb,var(--afs-good) 10%,transparent);color:var(--afs-good);border-color:color-mix(in srgb,var(--afs-good) 30%,transparent)}
+.chip.bad{background:var(--afs-bad-soft);color:var(--afs-bad);border-color:color-mix(in srgb,var(--afs-bad) 30%,transparent)}
+
+/* 출처 배지 — 이 수치가 어느 파이프라인에서 왔는지 */
+.prov{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:max(11px,0.72em);font-weight:800;letter-spacing:-.01em;white-space:nowrap;cursor:pointer;border:1px solid;font-family:inherit;min-height:22px}
+.prov:hover{filter:brightness(.94)}
+.prov::after{content:"?";font-size:9px;opacity:.7;font-weight:900}
+.prov b{font-weight:800}
+.prov.p-code{background:color-mix(in srgb,var(--n1) 12%,transparent);color:var(--n1);border-color:color-mix(in srgb,var(--n1) 34%,transparent)}
+.prov.p-rule{background:color-mix(in srgb,var(--n3) 13%,transparent);color:var(--n3-text);border-color:color-mix(in srgb,var(--n3) 36%,transparent)}
+.prov.p-derive{background:var(--afs-sunk);color:var(--afs-ink-3);border-color:var(--afs-rule-2)}
+.prov::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;flex:0 0 5px}
+
+/* KPI */
+.kpi{background:var(--afs-card);border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);padding:13px 14px}
+.kpi .n{font-size:1.79em;font-weight:850;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .l{font-size:max(11.5px,0.79em);font-weight:750;color:var(--afs-ink-2);margin-top:2px}
+.kpi .h{font-size:max(11px,0.76em);color:var(--afs-ink-3);margin-top:5px;line-height:1.5;padding-top:5px;border-top:1px dashed var(--afs-rule)}
+
+/* 갈림 한 장면 — 홈 히어로 */
+.scene{background:var(--afs-card);border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);overflow:hidden}
+.scene-h{padding:13px 16px;border-bottom:1px solid var(--afs-rule);display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:var(--afs-sunk)}
+.scene-h b{font-size:13px;font-weight:800}
+.scene-b{display:grid;grid-template-columns:1fr auto 1fr}
+.scene-side{padding:16px}
+.scene-side + .scene-side{border-left:1px solid var(--afs-rule)}
+.scene-vs{display:grid;place-items:center;padding:0 4px;background:var(--afs-sunk);border-left:1px solid var(--afs-rule);border-right:1px solid var(--afs-rule)}
+.scene-vs span{font-size:10.5px;font-weight:850;color:var(--afs-ink-3);writing-mode:vertical-rl;letter-spacing:.08em}
+.scene-out{display:flex;align-items:center;gap:7px;margin-bottom:9px}
+.scene-out b{font-size:12.5px;font-weight:800}
+/* 의역 문장에는 따옴표를 쓰지 않는다. 따옴표는 원문 인용을 뜻하고,
+   이 서비스는 원문 문장을 저장하지도 표시하지도 않는다. 대신 왼쪽 괘선으로 묶는다. */
+.scene-q{margin:0 0 8px;font-size:1.03em;font-weight:700;line-height:1.62;letter-spacing:-.015em;
+  padding-left:11px;border-left:2px solid var(--afs-rule-2)}
+.scene-tag{display:inline-flex;align-items:center;gap:3px;font-size:max(11px,0.72em);font-weight:800;color:var(--afs-ink-3);margin-bottom:9px;letter-spacing:.01em}
+.scene-tag::before{content:"↳";font-weight:400}
+.scene-m{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:11px;color:var(--afs-ink-3)}
+.scene-f{padding:11px 16px;border-top:1px solid var(--afs-rule);font-size:12px;color:var(--afs-ink-2);display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--afs-sunk)}
+@media (max-width:720px){
+  .scene-b{grid-template-columns:1fr}
+  .scene-side + .scene-side{border-left:0;border-top:1px solid var(--afs-rule)}
+  .scene-vs{border:0;border-top:1px solid var(--afs-rule);padding:5px 0}
+  .scene-vs span{writing-mode:horizontal-tb}
+}
+
+/* 결론 배너 */
+.conc{background:var(--afs-card);border:1px solid var(--afs-rule);border-left:3px solid var(--afs-brand);border-radius:var(--afs-r-card);padding:16px 18px}
+.conc .lead{margin:0;font-size:clamp(17px,2.2vw,22px);font-weight:800;letter-spacing:-.025em;line-height:1.42;text-wrap:balance}
+.conc .why{margin:9px 0 0;font-size:12.5px;color:var(--afs-ink-2);line-height:1.62}
+.conc .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+/* 문장에 가까운 칩은 줄바꿈을 허용한다 — nowrap 이면 좁은 화면에서 밖으로 나간다 */
+.conc .meta .chip{white-space:normal;text-align:left;line-height:1.5}
+
+/* 층위 레일 */
+.legend{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:9px 12px;margin-bottom:14px;
+  background:var(--afs-sunk);border:1px solid var(--afs-rule);border-radius:var(--afs-r-btn);font-size:11px;color:var(--afs-ink-3)}
+.legend b{font-weight:800;color:var(--afs-ink-2)}
+.legend .sw{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:750;color:var(--afs-ink-2);cursor:pointer;min-height:28px}
+.legend .sw input{width:15px;height:15px;accent-color:var(--afs-brand)}
+
+/* 배지를 고지에서 기능으로 — AI 채점 산출만 남기고 나머지를 죽인다 */
+body.only-code [data-src]{opacity:.3;filter:grayscale(1)}
+body.only-code [data-src]::before{
+  content:"AI 채점 산출이 아님 — 필터로 가려짐";display:block;margin-bottom:7px;
+  font-size:11px;font-weight:800;color:var(--afs-warn);opacity:1;filter:none
+}
+
+.rail{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:calc(var(--bar) + 52px);z-index:19;padding:9px 0;background:var(--afs-paper)}
+.rail a{display:flex;flex-direction:column;gap:2px;min-width:118px;flex:1 1 118px;padding:8px 10px;border:1px solid var(--afs-rule);border-radius:var(--afs-r-btn);background:var(--afs-card);text-decoration:none;color:inherit}
+.rail a:hover{border-color:var(--afs-rule-2);background:var(--afs-sunk)}
+.rail a b{font-size:11.5px;font-weight:800}
+.rail a span{font-size:max(11px,0.72em);font-weight:750}
+.rail a[data-st="split"] span{color:var(--afs-brand)}
+.rail a[data-st="same"] span{color:var(--afs-good)}
+.rail a[data-st="src"] span{color:var(--afs-warn)}
+.rail a[data-st="none"] span{color:var(--afs-ink-3)}
+.rail a[data-st="split"]{border-left:3px solid var(--afs-brand)}
+.rail a[data-st="src"]{border-left:3px solid var(--afs-warn)}
+.rail a[data-here="1"]{background:var(--afs-soft);box-shadow:inset 0 0 0 1px var(--afs-brand)}
+
+/* 판정 기록 — 두 코더가 무엇을 다르게 봤고 판정에서 무엇이 확정됐는가 */
+.adj{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--afs-rule);border-radius:var(--afs-r-btn);overflow:hidden;font-size:12px}
+.adj > div{padding:10px 11px}
+.adj > div + div{border-left:1px solid var(--afs-rule)}
+.adj b{display:block;font-size:10.5px;font-weight:800;color:var(--afs-ink-3);margin-bottom:4px}
+.adj .val{font-weight:750}
+.adj .final{background:var(--afs-soft)}
+.adj .final .val{color:var(--afs-brand-2)}
+@media (max-width:600px){.adj{grid-template-columns:1fr}.adj > div + div{border-left:0;border-top:1px solid var(--afs-rule)}}
+
+/* 층위 카드 */
+.layer{scroll-margin-top:var(--stack)}
+.layer-h{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:3px}
+.layer-h h3{margin:0;font-size:16px;font-weight:850;letter-spacing:-.02em}
+.layer-h .q{font-size:12px;color:var(--afs-ink-3);font-weight:650}
+
+/* 문장 대조 */
+.duel{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);overflow:hidden;background:var(--afs-card)}
+.duel > div{padding:14px 15px}
+.duel > div + div{border-left:1px solid var(--afs-rule)}
+@media (max-width:680px){.duel{grid-template-columns:1fr}.duel > div + div{border-left:0;border-top:1px solid var(--afs-rule)}}
+.duel .fam{display:inline-flex;align-items:center;gap:5px;margin-bottom:8px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:800}
+.duel .fam.a{background:color-mix(in srgb,var(--fam-a) 14%,transparent);color:var(--fam-a)}
+.duel .fam.b{background:color-mix(in srgb,var(--fam-b) 15%,transparent);color:var(--fam-b)}
+.duel .para{margin:0 0 9px;font-size:0.93em;line-height:1.66;font-weight:600}
+.duel .who{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--afs-ink-3)}
+
+/* 근거 항목 */
+.ev{border:1px solid var(--afs-rule);border-radius:var(--afs-r-btn);padding:11px 12px;background:var(--afs-card)}
+.ev + .ev{margin-top:7px}
+.ev-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.ev-h b{font-size:12px;font-weight:800}
+.ev p{margin:0 0 7px;font-size:0.9em;line-height:1.64}
+.ev-f{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--afs-ink-3);font-family:var(--afs-mono)}
+.ev-f a{color:var(--afs-brand);text-decoration:none;font-family:var(--afs-sans);font-weight:700;min-height:26px;display:inline-flex;align-items:center;gap:3px}
+.ev-f a:hover{text-decoration:underline}
+a[aria-disabled="true"]{color:var(--afs-ink-3);text-decoration:line-through}
+.ev.narr{border-left:3px solid var(--afs-brand)}
+.ev.src{border-left:3px solid var(--afs-warn)}
+
+/* 코드북 팝오버 */
+.term{border:0;background:none;padding:0;font:inherit;color:inherit;font-weight:800;cursor:help;border-bottom:1px dashed currentColor}
+/* display:flex 를 무조건 주면 UA 의 display:none 을 덮어 닫힌 대화상자가 화면에 그려진다 */
+dialog.book{border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);background:var(--afs-card);color:var(--afs-ink);max-width:min(92vw,460px);max-height:min(85dvh,640px);padding:0;box-shadow:0 18px 48px rgba(0,0,0,.24)}
+dialog.book::backdrop{background:rgba(10,15,22,.42)}
+dialog.book[open]{display:flex;flex-direction:column}
+.book-h{padding:13px 16px;border-bottom:1px solid var(--afs-rule);display:flex;align-items:center;gap:8px;justify-content:space-between}
+.book-h b{font-size:14px;font-weight:850}
+.book-b{padding:14px 16px;font-size:0.9em;line-height:1.66;overflow:auto;overscroll-behavior:contain}
+.book-b dt{font-size:11px;font-weight:800;color:var(--afs-ink-3);margin-top:11px}
+.book-b dd{margin:3px 0 0;padding-left:11px;border-left:2px solid var(--afs-rule)}
+.book-b dl{margin:0}
+.x{border:0;background:var(--afs-sunk);color:var(--afs-ink-2);width:44px;height:44px;border-radius:50%;font-size:18px;cursor:pointer;line-height:1}
+
+
+/* 이산 축 — 계열은 범주형이므로 연속 좌표를 만들지 않는다.
+   매체는 관측된 계열의 칸에 놓이고, 결측은 축 밖으로 내린다. */
+.axis{background:var(--afs-card);border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);padding:16px}
+.axis-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--afs-rule);border-radius:var(--afs-r-btn);overflow:hidden}
+.axis-col{padding:12px 13px;min-height:104px}
+.axis-col + .axis-col{border-left:1px solid var(--afs-rule)}
+.axis-col h4{margin:0 0 3px;font-size:12.5px;font-weight:850;letter-spacing:-.01em}
+.axis-col .sub2{display:block;font-size:10.5px;font-weight:650;color:var(--afs-ink-3);margin-bottom:9px;line-height:1.45}
+.axis-col .who2{display:flex;flex-wrap:wrap;gap:5px}
+.axis-col.a h4{color:var(--fam-a)}
+.axis-col.b h4{color:var(--fam-b)}
+
+/* 결측은 축의 중점이 아니다. 점선 아래로 내려 축 바깥임을 형태로 못 박는다. */
+.axis-out{margin-top:10px;padding:10px 12px;border-top:2px dashed var(--afs-rule-2);
+  font-size:11.5px;color:var(--afs-ink-2);display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.axis-out b{font-weight:800;color:var(--afs-ink)}
+.chip.unobs{background:transparent;border:1px dashed var(--afs-rule-2);color:var(--afs-ink-2);opacity:1}
+.axis-rule{margin:11px 0 0;font-size:11px;color:var(--afs-ink-3);line-height:1.6;padding:9px 11px;background:var(--afs-sunk);border-radius:var(--afs-r-btn);font-family:var(--afs-mono)}
+@media (max-width:640px){
+  .axis-grid{grid-template-columns:1fr}
+  .axis-col + .axis-col{border-left:0;border-top:1px solid var(--afs-rule)}
+}
+
+/* 파이프라인 도식 — 앞 단계가 뒤 단계의 상한이라는 사실을 형태로 보여준다 */
+.pipe{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:0;align-items:stretch}
+.pipe .st{border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);background:var(--afs-card);padding:13px 14px}
+.pipe .st.s1{border-left:3px solid var(--n3)}
+.pipe .st.s2{border-left:3px solid var(--n1)}
+.pipe .st.s3{border-left:3px solid var(--afs-rule-2)}
+.pipe .ar{display:grid;place-items:center;padding:0 9px;color:var(--afs-ink-3);font-size:17px;font-weight:400}
+@media (max-width:760px){
+  .pipe{grid-template-columns:1fr}
+  .pipe .ar{padding:5px 0;transform:rotate(90deg)}
+}
+
+/* 층위별 구성 막대 — "0건"이 고립된 숫자가 아니라 추세의 종점임을 보여준다 */
+.comp{display:grid;grid-template-columns:auto 1fr;gap:7px 11px;align-items:center}
+.comp .nm2{font-size:12px;font-weight:750;white-space:nowrap}
+.comp .track{display:flex;height:1.5em;border-radius:4px;overflow:hidden;background:var(--afs-sunk)}
+.comp .track i{display:flex;align-items:center;justify-content:center;font-style:normal;
+  font-size:10.5px;font-weight:800;font-variant-numeric:tabular-nums;min-width:0;overflow:hidden}
+.comp .track i.narr{background:var(--afs-brand);color:#fff}
+.comp .track i.quot{background:transparent;color:var(--afs-ink-3);
+  background-image:repeating-linear-gradient(45deg,transparent 0 4px,color-mix(in srgb,var(--afs-ink-3) 16%,transparent) 4px 7px)}
+.comp .track i.zero{flex:0 0 3px;background:var(--afs-bad)}
+
+/* 감쇄 깔때기 — 이 서비스의 핵심 주장이 "줄어드는 것이 의도"이므로 폭으로 보인다 */
+.funnel{display:flex;flex-direction:column;gap:5px}
+.funnel > div{background:var(--afs-soft);border-left:3px solid var(--afs-brand);border-radius:0 var(--afs-r-btn) var(--afs-r-btn) 0;
+  padding:9px 12px;font-size:12.5px;min-width:180px}
+.funnel > div b{font-size:15px;font-variant-numeric:tabular-nums}
+.funnel > div small{display:block;font-size:11px;color:var(--afs-ink-3);margin-top:1px}
+
+/* 이 화면을 읽을 때 — 유보는 문장 사이에 흩지 않고 한 자리에 모은다.
+   본문에 괄호로 밀어 넣으면 독자가 문장마다 멈춘다. */
+.readnote{margin:16px 0 0;padding:12px 14px;border:1px solid var(--afs-rule);border-left:3px solid var(--afs-rule-2);
+  border-radius:var(--afs-r-btn);background:var(--afs-soft)}
+.readnote > b{display:block;margin-bottom:5px;font-size:max(11.5px,0.79em);font-weight:800;color:var(--afs-ink-2);
+  letter-spacing:.02em}
+.readnote p{margin:0;font-size:max(11.5px,0.83em);line-height:1.72;color:var(--afs-ink-2)}
+.readnote a{color:var(--afs-brand);font-weight:750}
+
+/* 등장하지 않은 취재원 — 배제는 결측이 아니라 관측이다. 죽은 행처럼 보이면 안 된다. */
+tr.absent th,tr.absent td{color:var(--afs-ink-3)}
+tr.absent th{position:relative}
+tr.absent th::before{content:"";position:absolute;left:0;top:50%;width:3px;height:14px;margin-top:-7px;
+  border-radius:2px;background:var(--afs-rule-2)}
+tr.absent td:last-child{font-weight:750}
+
+/* 이야기 이름 — 계열 코드는 코더의 말이고, 독자가 부를 수 있는 이름은 따로 필요하다.
+   Gamson & Modigliani(1989)의 미디어 패키지·핵심어(catchphrase)에 해당한다.
+   코드는 지우지 않고 이름 아래로 내린다 — 표와의 대조가 끊기면 안 되기 때문이다. */
+.pkg{display:block;font-size:1.03em;font-weight:800;letter-spacing:-.022em;line-height:1.42;margin:0 0 4px}
+.pkg::before{content:"\300C"} .pkg::after{content:"\300D"}
+.pkg.a{color:var(--fam-a)} .pkg.b{color:var(--fam-b)}
+.pkg-code{display:block;font-size:max(11px,0.75em);font-weight:700;color:var(--afs-ink-3);margin:0 0 9px}
+.pkg-key{display:block;margin:9px 0 0;padding:8px 10px;border-radius:var(--afs-r-btn);
+  background:var(--afs-soft);font-size:max(11px,0.78em);line-height:1.6;color:var(--afs-ink-2)}
+.pkg-key b{color:var(--afs-ink);font-weight:800}
+.pkg-key i{font-style:normal;color:var(--afs-ink-3)}
+.pkg-map{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:9px;
+  font-size:max(11px,0.76em);color:var(--afs-ink-3)}
+.pkg-map b{color:var(--afs-ink-2)}
+
+/* 미터 */
+.meter{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--afs-rule)}
+.meter:last-child{border-bottom:0}
+.meter .nm{flex:0 0 96px;font-size:12.5px;font-weight:750}
+.meter .dots{display:flex;gap:3px;flex:1 1 auto}
+.meter .dots i{width:0.92em;height:0.92em;border-radius:50%;background:transparent;border:1px dashed var(--afs-rule-3)}
+.meter .dots i.on{background:var(--afs-brand);border-color:var(--afs-brand)}
+.meter .dots i.ghost{background:transparent;border:1.5px dashed var(--afs-warn)}
+.meter .vl{flex:0 0 auto;font-size:11.5px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--afs-ink-2)}
+
+/* 표 */
+table.t{width:100%;border-collapse:collapse;font-size:max(12px,0.86em)}
+table.t caption{text-align:left;font-size:11.5px;color:var(--afs-ink-3);padding-bottom:7px}
+table.t th,table.t td{padding:8px 9px;border-bottom:1px solid var(--afs-rule);text-align:left;vertical-align:top;overflow-wrap:anywhere}
+table.t thead th{font-size:11px;font-weight:800;color:var(--afs-ink-3);background:var(--afs-sunk);white-space:nowrap}
+table.t tbody th{font-weight:750}
+table.t td.n{text-align:right;font-variant-numeric:tabular-nums}
+.tscroll{overflow-x:auto;border:1px solid var(--afs-rule);border-radius:var(--afs-r-card)}
+/* 다크에서 --afs-soft 는 카드색과 거의 같아 사라진다. 위치 인코딩을 더한다. */
+.diff{background:var(--afs-soft);font-weight:800;box-shadow:inset 3px 0 0 var(--afs-brand)}
+/* 캡션이 말한 빗금을 실제로 구현한다 — 색 단독 인코딩(색약)도 같이 해결된다 */
+.part{background:var(--afs-warn-soft);color:var(--afs-warn);font-weight:750;
+  background-image:repeating-linear-gradient(45deg,transparent 0 4px,
+    color-mix(in srgb,var(--afs-warn) 20%,transparent) 4px 7px)}
+
+/* 접기 */
+details.fold{border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);background:var(--afs-card);overflow:hidden}
+details.fold + details.fold{margin-top:8px}
+details.fold > summary{padding:11px 14px;cursor:pointer;font-size:12.5px;font-weight:750;display:flex;align-items:center;gap:8px;flex-wrap:wrap;list-style:none}
+details.fold > summary::-webkit-details-marker{display:none}
+details.fold > summary::before{content:"▸";font-size:10px;color:var(--afs-ink-3);transition:transform .12s}
+details.fold[open] > summary::before{transform:rotate(90deg)}
+details.fold > summary:hover{background:var(--afs-sunk)}
+details.fold .body{padding:0 14px 14px;border-top:1px solid var(--afs-rule);padding-top:12px}
+
+/* 발견 카드 */
+.find{background:var(--afs-card);border:1px solid var(--afs-rule);border-left:3px solid var(--afs-warn);border-radius:var(--afs-r-card);padding:15px 16px}
+/* 발견은 경고가 아니다. 관측 결과를 노랑으로 칠하면 실패로 읽힌다. */
+.find.discovery{border-left-color:var(--afs-good)}
+.find.discovery .big{color:var(--afs-good)}
+.find h3{margin:0 0 7px;font-size:14.5px;font-weight:850;letter-spacing:-.02em}
+.find p{margin:0;font-size:0.9em;color:var(--afs-ink-2);line-height:1.65}
+/* 보류 상태의 값에 good/warn 색을 주지 않는다. 마크 크기는 확신의 표현이다. */
+.find .big{font-size:26px;font-weight:850;letter-spacing:-.04em;line-height:1;color:var(--afs-ink);font-variant-numeric:tabular-nums}
+
+/* 다음 행동 */
+.next{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));margin-top:26px;padding-top:18px;border-top:1px solid var(--afs-rule)}
+.next a{display:block;padding:12px 14px;border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);background:var(--afs-card);text-decoration:none;color:inherit}
+.next a:hover{border-color:var(--afs-brand);background:var(--afs-soft)}
+.next a b{display:block;font-size:0.9em;font-weight:800;margin-bottom:2px}
+.next a span{font-size:max(11.5px,0.79em);color:var(--afs-ink-3)}
+.next a i{font-style:normal;font-size:max(11px,0.72em);font-weight:800;color:var(--afs-brand);display:block;margin-bottom:5px}
+
+/* 폼 */
+.field{display:block;margin-bottom:13px}
+.field > span,.field > label > span{display:block;font-size:max(11.5px,0.83em);font-weight:750;margin-bottom:5px}
+.field > small{display:block;font-size:11px;color:var(--afs-ink-3);margin-top:4px;line-height:1.55}
+input[type=text],input[type=email],textarea,select.fs{
+  width:100%;font-family:inherit;font-size:0.9em;color:var(--afs-ink);background:var(--afs-card);
+  border:1px solid var(--afs-rule-2);border-radius:var(--afs-r-btn);padding:9px 11px;min-height:40px
+}
+textarea{min-height:88px;resize:vertical;line-height:1.6}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:9px 16px;
+  font-family:inherit;font-size:0.9em;font-weight:800;border-radius:var(--afs-r-btn);cursor:pointer;
+  background:var(--afs-brand);color:var(--n1-ink);border:1px solid var(--afs-brand)
+}
+.btn:hover{background:var(--afs-brand-2);border-color:var(--afs-brand-2)}
+.btn.ghost{background:var(--afs-card);color:var(--afs-ink-2);border-color:var(--afs-rule-2)}
+.btn.ghost:hover{background:var(--afs-sunk);color:var(--afs-ink)}
+.btn.danger{background:var(--afs-card);color:var(--afs-bad);border-color:color-mix(in srgb,var(--afs-bad) 40%,transparent)}
+/* 포커스 링이 잘리지 않게 overflow:hidden 대신 자식에서 반경을 준다 */
+.seg{display:inline-flex;border:1px solid var(--afs-rule-2);border-radius:var(--afs-r-btn)}
+.seg button:first-child{border-radius:7px 0 0 7px}
+.seg button:last-child{border-radius:0 7px 7px 0}
+.seg button:focus-visible{outline-offset:-2px;position:relative;z-index:1}
+.seg button{border:0;background:var(--afs-card);color:var(--afs-ink-2);font-family:inherit;font-size:12px;font-weight:750;padding:8px 13px;min-height:38px;cursor:pointer}
+.seg button + button{border-left:1px solid var(--afs-rule)}
+.seg button[aria-pressed="true"],.seg button[aria-checked="true"]{background:var(--afs-soft);color:var(--afs-brand-2);font-weight:800}
+.rowset{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--afs-rule);flex-wrap:wrap}
+.rowset:last-child{border-bottom:0}
+.rowset .lbl b{display:block;font-size:0.9em;font-weight:750}
+.rowset .lbl span{display:block;font-size:max(11.5px,0.79em);color:var(--afs-ink-3);margin-top:2px;max-width:52ch}
+.code{font-family:var(--afs-mono);font-size:15px;font-weight:700;letter-spacing:.14em;background:var(--afs-sunk);border:1px dashed var(--afs-rule-2);border-radius:var(--afs-r-btn);padding:11px 13px;display:inline-block}
+
+/* 자가점검 */
+.demo{border-left:3px solid var(--afs-brand)}
+.demo .qb b{font-weight:850}
+
+.qbar{height:5px;background:var(--afs-sunk);box-shadow:inset 0 0 0 1px var(--afs-rule-3);border-radius:3px;overflow:hidden;margin-bottom:5px}
+.qbar i{display:block;height:100%;background:var(--afs-brand);border-radius:3px;transition:width .2s}
+.qopt{display:grid;gap:8px;margin-top:14px}
+.qopt button{
+  text-align:left;font-family:inherit;font-size:0.93em;font-weight:650;line-height:1.6;
+  padding:13px 15px;border:1px solid var(--afs-rule-2);border-radius:var(--afs-r-card);
+  background:var(--afs-card);color:var(--afs-ink);cursor:pointer;min-height:52px
+}
+.qopt button:hover{border-color:var(--afs-brand);background:var(--afs-soft)}
+.qopt button[aria-checked="true"]{border:2px solid var(--afs-brand);background:var(--afs-soft);font-weight:750}
+.qopt button[aria-checked="true"]::before{content:"✓ ";font-weight:900;color:var(--afs-brand)}
+.type{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start}
+.type .code4{font-family:var(--afs-mono);font-size:30px;font-weight:800;letter-spacing:.02em;color:var(--afs-brand);background:var(--afs-soft);border-radius:var(--afs-r-card);padding:14px 16px;text-align:center;line-height:1.2}
+.type .code4 small{display:block;font-family:var(--afs-sans);font-size:10.5px;font-weight:750;color:var(--afs-ink-3);letter-spacing:0;margin-top:3px}
+@media (max-width:560px){.type{grid-template-columns:1fr}}
+
+/* 커뮤니티 */
+.post{border:1px solid var(--afs-rule);border-radius:var(--afs-r-card);background:var(--afs-card);padding:13px 14px}
+.post + .post{margin-top:8px}
+.post-h{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:7px}
+.post-h b{font-size:12.5px;font-weight:800}
+.post-h time{font-size:11px;color:var(--afs-ink-3);margin-left:auto}
+.post p{margin:0 0 9px;font-size:0.9em;line-height:1.65}
+.post-f{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tinybtn{border:1px solid var(--afs-rule-2);background:var(--afs-card);color:var(--afs-ink-2);font-family:inherit;font-size:11.5px;font-weight:750;padding:5px 10px;min-height:32px;border-radius:var(--afs-r-btn);cursor:pointer}
+.tinybtn:hover{background:var(--afs-sunk)}
+.tinybtn[aria-pressed="true"]{background:var(--afs-soft);color:var(--afs-brand-2);border-color:color-mix(in srgb,var(--afs-brand) 34%,transparent)}
+.reply{margin:9px 0 0 16px;padding-left:12px;border-left:2px solid var(--afs-rule)}
+
+/* 빈 상태 */
+.empty{border:1px dashed var(--afs-rule-2);border-radius:var(--afs-r-card);padding:22px 18px;text-align:center;background:var(--afs-sunk)}
+.empty b{display:block;font-size:13.5px;font-weight:800;margin-bottom:5px}
+.empty span{font-size:12px;color:var(--afs-ink-3)}
+
+/* 진행률 */
+.prog{display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--afs-ink-3)}
+.prog .bar{flex:1 1 auto;height:6px;background:var(--afs-sunk);box-shadow:inset 0 0 0 1px var(--afs-rule-3);border-radius:3px;overflow:hidden;max-width:180px}
+.prog .bar i{display:block;height:100%;background:var(--afs-good)}
+
+/* 화면 전환 */
+section[data-screen]{display:none}
+section[data-screen].on{display:block}
+
+.cov{display:inline-grid;grid-template-columns:repeat(11,13px);gap:3px}
+.cov i{width:13px;height:13px;border-radius:2px;background:transparent;border:1px dashed var(--afs-rule-3)}
+.cov i.on{background:var(--afs-brand);border-color:var(--afs-brand)}
+
+.site-foot{margin-top:36px;padding-top:16px;border-top:1px solid var(--afs-rule);font-size:11.5px;color:var(--afs-ink-3)}
+.site-foot p{margin:0 0 4px;line-height:1.6}
+.site-foot a{color:var(--afs-brand);text-decoration:underline}
+
+/* 모바일 */
+.tabbar{display:none}
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .side{display:none}
+  .wrap{padding:14px 14px 96px}
+  /* 상단바는 한 줄을 넘지 않는다. 세 줄로 늘어나면 스크롤할 화면이 없어진다. */
+  .top{padding:7px 12px;flex-wrap:nowrap;gap:8px}
+  /* 라벨을 display:none 으로 지우면 스크린리더에서도 사라진다 */
+  .top > label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .top > .chip{display:none}
+  .top select{flex:1 1 auto;min-width:0;max-width:none;font-size:12px;padding:6px 7px;min-height:34px}
+  #fsBtn{display:none}
+  #themeBtn{flex:0 0 auto;padding:7px 9px}
+  #themeBtn span{display:none}
+  .mockbar{padding:6px 12px;font-size:10.5px;gap:5px}
+  .mockbar-more{display:none}
+  /* 모바일에서 레일 3행(192px)을 고정하면 읽을 화면이 남지 않는다. 가로 스크롤로. */
+  .rail{position:static;flex-wrap:nowrap;overflow-x:auto;padding:7px 0;scroll-snap-type:x mandatory}
+  .rail a{min-width:132px;flex:0 0 132px;scroll-snap-align:start}
+  .layer{scroll-margin-top:var(--stack)}
+  .head h1{font-size:19px}
+  .tabbar{
+    display:grid;grid-template-columns:repeat(5,1fr);position:fixed;bottom:0;left:0;right:0;z-index:30;
+    background:color-mix(in srgb,var(--afs-card) 96%,transparent);backdrop-filter:blur(10px);
+    border-top:1px solid var(--afs-rule);padding:5px 4px calc(5px + env(safe-area-inset-bottom))
+  }
+  .tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;min-height:48px;text-decoration:none;color:var(--afs-ink-3);font-size:max(10.5px,0.72em);font-weight:750;border-radius:var(--afs-r-btn)}
+  .tabbar a svg{width:19px;height:19px}
+  .tabbar a{position:relative}
+  .tabbar a[aria-current]{color:var(--afs-brand);font-weight:850}
+  .tabbar a[aria-current]::before{content:"";position:absolute;top:0;left:50%;
+    transform:translateX(-50%);width:22px;height:3px;border-radius:0 0 3px 3px;background:currentColor}
+  .mob-brand{display:flex;align-items:center;gap:7px}
+}
+@media (min-width:861px){.mob-brand{display:none}}
+
+/* ── 시안 반영 · 표 칸 안의 의역 문장 ────────────────────────────────────
+   계열 이름만 두면 여섯 줄 중 다수가 같아 보인다. 그 신문이 실제로 쓴 말을 한 줄 더 둔다. */
+.t td > b{display:block;font-size:12.5px;font-weight:800;letter-spacing:-.01em}
+.t td .said{display:block;margin-top:3px;font-size:11px;font-weight:500;line-height:1.55;color:var(--afs-ink-3)}
+.t td.un{color:var(--afs-ink-3)}
+
+/* [hidden] 은 UA 스타일이라 .comp{display:grid} 에 밀린다 — 토글이 두 블록을 함께 보이게 했다 */
+.comp[hidden]{display:none}
+
+/* 값 열 — 막대 오른쪽에 붙는 숫자 */
+.comp .nm3{font-size:11px;font-weight:700;color:var(--afs-ink-3);white-space:nowrap;
+  font-variant-numeric:tabular-nums;text-align:right}
+
+/* 역할색 — 같은 역할은 어느 막대에서도 같은 칸이어야 견줄 수 있다.
+   칸마다 숫자를 글자로 함께 두므로 색은 보조 표시다(색만으로 뜻을 전하지 않는다). */
+.comp .track i.r1{background:var(--afs-brand);color:#fff}
+.comp .track i.r2{background:var(--fam-a);color:#fff}
+.comp .track i.r3{background:var(--fam-b);color:#fff}
+.comp .track i.r4{background:var(--afs-sunk);color:var(--afs-ink-2);
+  background-image:repeating-linear-gradient(45deg,transparent 0 4px,color-mix(in srgb,var(--afs-ink-3) 30%,transparent) 4px 7px)}
+.comp .track i.r5{background:var(--afs-rule-3);color:#fff}
+.rolekey{display:flex;flex-wrap:wrap;gap:5px 14px;margin:0 0 11px;padding:0;list-style:none;
+  font-size:11px;color:var(--afs-ink-3)}
+.rolekey i{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px;vertical-align:-1px}
+.rolekey i.r1{background:var(--afs-brand)}
+.rolekey i.r2{background:var(--fam-a)}
+.rolekey i.r3{background:var(--fam-b)}
+.rolekey i.r4{background-image:repeating-linear-gradient(45deg,var(--afs-sunk) 0 3px,var(--afs-rule-3) 3px 5px)}
+.rolekey i.r5{background:var(--afs-rule-3)}
+
+/* ── 의미 연결망 — 중심 낱말 하나에서 바퀴살이 뻗는 형태 ─────────────── */
+.netgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,272px),1fr))}
+.net{padding-left:11px;border-left:2px solid var(--afs-rule-2)}
+.net.a{border-left-color:var(--fam-a)}
+.net.b{border-left-color:var(--fam-b)}
+.net-h{margin:0 0 4px;font-size:12.5px;font-weight:850;letter-spacing:-.01em}
+.net.a .net-h{color:var(--fam-a)}
+.net.b .net-h{color:var(--fam-b)}
+.net-h span{display:block;margin-top:2px;font-size:11px;font-weight:600;color:var(--afs-ink-3)}
+.net-h span b{font-weight:800;color:var(--afs-ink-2)}
+.wnet{display:block;width:100%;height:auto;margin-top:4px}
+.wnet .wn-e{stroke:var(--afs-rule-3);stroke-opacity:.5}
+.wnet .wn-n{fill:var(--afs-sunk);stroke:var(--afs-rule-2);stroke-width:.5}
+.wnet .wn-l{font-size:8px;font-weight:750;fill:var(--afs-ink-2)}
+.wnet .wn-c{font-size:7px;font-weight:600;fill:var(--afs-ink-3);font-variant-numeric:tabular-nums}
+.wnet .wn-hl{font-size:9px;font-weight:850;fill:#fff}
+.net.a .wnet .wn-h{fill:var(--fam-a)}
+.net.b .wnet .wn-h{fill:var(--fam-b)}
+.net.a .wnet .wn-e{stroke:var(--fam-a)}
+.net.b .wnet .wn-e{stroke:var(--fam-b)}
+
+/* ── 시안 패널 — 코드 · 제목 · 그림. 그 밖에는 아무것도 두지 않는다 ────── */
+.panel{margin:10px 0 0;padding:15px 17px 17px;border:1px solid var(--afs-rule);
+  border-radius:var(--afs-r-card);background:var(--afs-sunk)}
+.panel.ex{border-style:dashed;border-color:var(--afs-rule-2)}
+.panel-h{margin:0 0 13px}
+.panel-code{display:block;margin:0 0 4px;font-family:var(--afs-mono);font-size:10px;font-weight:700;
+  letter-spacing:.08em;color:var(--afs-ink-3)}
+.panel-h h3{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:0;
+  font-size:15px;font-weight:850;letter-spacing:-.02em}
+.panel-cite{font-family:var(--afs-mono);font-size:10.5px;font-weight:600;color:var(--afs-ink-3)}
+.panel-ex{padding:1px 7px;border-radius:999px;background:var(--afs-card);border:1px solid var(--afs-rule-2);
+  font-size:10px;font-weight:750;color:var(--afs-ink-3)}
+.panel-b{background:var(--afs-card);border:1px solid var(--afs-rule);border-radius:var(--afs-r-btn);padding:13px 14px}
+
+/* 패널 안 레전드 — 한 줄, 작은 글씨, 문장 없음 */
+.pkey{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px;padding:0;list-style:none;
+  font-size:11px;color:var(--afs-ink-3)}
+.panel-b .pkey:last-child{margin:10px 0 0}
+.pkey i{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px;vertical-align:-1px}
+.pkey i.f1,.comp .track i.f1{background:var(--fam-a)}
+.pkey i.f2,.comp .track i.f2{background:var(--fam-b)}
+.pkey i.f3,.comp .track i.f3{background:var(--afs-warn)}
+.pkey i.f4,.comp .track i.f4{background:var(--afs-brand)}
+.pkey i.f5,.comp .track i.f5{background:var(--afs-rule-3)}
+.pkey i.epi,.comp .track i.epi{background:var(--fam-b)}
+.pkey i.the,.comp .track i.the{background:var(--fam-a)}
+.pkey i.dq{background:var(--afs-sunk);border:1px solid var(--afs-rule-2)}
+.comp .track i.f1,.comp .track i.f2,.comp .track i.f3,.comp .track i.f4,.comp .track i.f5,
+.comp .track i.epi,.comp .track i.the{color:#fff}
+
+/* Entman 표 — 열 이름 아래 원어, 인용 칸은 회색 */
+.t-ent thead th i{display:block;margin-top:2px;font-family:var(--afs-mono);font-style:normal;
+  font-size:9.5px;font-weight:500;letter-spacing:0;color:var(--afs-ink-3);text-transform:none}
+.t-ent td.q{background:var(--afs-sunk)}
+
+/* 프레임 지형도 */
+.fmap{display:block;width:100%;max-width:560px;height:auto;margin:0 auto}
+.fmap .fr{fill:none;stroke:var(--afs-rule);stroke-width:1}
+.fmap .gl{stroke:var(--afs-rule-2);stroke-width:1;stroke-dasharray:3 4}
+.fmap .ax{font-size:10px;font-weight:700;fill:var(--afs-ink-3)}
+.fmap g.a circle{fill:var(--fam-a)}
+.fmap g.b circle{fill:var(--fam-b)}
+.fmap g text{font-size:11px;font-weight:750;fill:var(--afs-ink-2)}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+
+<header class="mockbar" role="banner">
+  <span aria-hidden="true">⚠︎</span>
+  <span><b>미리보기</b> — <span class="mockbar-more">의제·문장·매체 이름(A일보·B일보…)은 화면 구성을 보여주려고 </span><b>만들어 넣은 예시</b>입니다<span class="mockbar-more">. 다만 <b>방법론 화면의 일치율·항목 수·검증 상태는 실제 측정값</b>입니다</span>.<span class="mockbar-more">
+  진짜 분석은 <a href="/" style="color:inherit;font-weight:850">agendaframe-capstone.vercel.app</a> 에 있습니다.</span></span>
+</header>
+
+<div class="shell">
+
+  <!-- ══ 사이드바 ══ -->
+  <aside class="side">
+    <a class="brand" href="#/"><i>AF</i><span><b>AgendaFrame</b><small>같은 사건, 다른 설명</small></span></a>
+
+    <nav class="nav" aria-label="사이드바 주요 화면">
+      <a href="#/" data-nav="home"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 7l6-4.5L14 7v6.5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7z"/></svg>홈</a>
+      <a href="#/issues" data-nav="issues"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg>이슈 목록</a>
+
+      <h2 class="nav-group" id="ng1">고른 이슈 안에서</h2>
+      <a href="#/issue" data-nav="issue"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="5.5"/><path d="M8 5.5v5M5.5 8h5"/></svg>무슨 일이었나</a>
+      <a href="#/outlets" data-nav="outlets"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12V6M8 12V3.5M13 12V8"/></svg>언론사 비교</a>
+      <a href="#/framing" data-nav="framing"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M2.5 6h11M6 6v7.5"/></svg>프레이밍 분석</a>
+      <a href="#/report" data-nav="report"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 2.5h6l2.5 2.5v8.5H4z"/><path d="M6 8h4M6 10.5h4"/></svg>리포트</a>
+
+      <h2 class="nav-group" id="ng2">도구</h2>
+      <a href="#/self-check" data-nav="self-check"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="5.5"/><path d="M5.8 8.2l1.6 1.6 3-3.4"/></svg>내 읽기 유형</a>
+      <a href="#/ask" data-nav="ask"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13.5 9.5a1.5 1.5 0 0 1-1.5 1.5H6l-3 2.5V4a1.5 1.5 0 0 1 1.5-1.5h7.5A1.5 1.5 0 0 1 13.5 4z"/></svg>AI 대화</a>
+      <a href="#/community" data-nav="community"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="2.3"/><path d="M2 13c0-2.2 1.8-3.5 4-3.5s4 1.3 4 3.5"/><path d="M11 5.2a2 2 0 0 1 0 3.6M12.5 13c0-1.6-.7-2.7-2-3.2"/></svg>커뮤니티</a>
+      <a href="#/method" data-nav="method"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2.5h4M8 2.5v4.2L4.2 12.4a1 1 0 0 0 .85 1.6h5.9a1 1 0 0 0 .85-1.6L8 6.7"/></svg>방법론</a>
+      <a href="#/settings" data-nav="settings"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="2"/><path d="M8 1.8v1.6M8 12.6v1.6M2.6 8H4.2M11.8 8h1.6M4.2 4.2l1.1 1.1M10.7 10.7l1.1 1.1M11.8 4.2l-1.1 1.1M5.3 10.7l-1.1 1.1"/></svg>설정</a>
+    </nav>
+
+    <div class="side-foot">
+      <dl>
+        <dt>기준일</dt><dd>2026-07-26</dd>
+        <dt>의제</dt><dd>5개</dd>
+        <dt>기사</dt><dd>25건</dd>
+        <dt>매체</dt><dd>9곳</dd>
+      </dl>
+      <p style="margin:9px 0 0;font-size:11px;color:var(--afs-ink-3)">
+        <span class="prog"><span class="bar"><i style="width:0%"></i></span><span id="progTxt">아직 본 화면이 없습니다</span></span>
+      </p>
+    </div>
+  </aside>
+
+  <!-- ══ 본문 ══ -->
+  <div class="main">
+    <div class="top">
+      <span class="mob-brand"><i style="display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:var(--afs-brand);color:var(--n1-ink);font-style:normal;font-size:11px;font-weight:800">AF</i><b style="font-size:13.5px;font-weight:850">AgendaFrame</b></span>
+      <label for="issueSel" style="margin-left:6px">의제</label>
+      <select id="issueSel" aria-label="의제 선택 — 고르면 바로 이동합니다">
+        <option value="1">1위 · 특검 보완수사권 부여 논쟁</option>
+        <option value="2">2위 · 여당 지도부 내부 충돌 논란 (시안에서는 준비 중)</option>
+        <option value="3">3위 · 아파트 방화 보복범죄 수사 (시안에서는 준비 중)</option>
+        <option value="4">4위 · 소송 대리인 불출석 손해배상 조정 (시안에서는 준비 중)</option>
+        <option value="5">5위 · 외국인 집단 난투 사건 (시안에서는 준비 중)</option>
+      </select>
+      <span class="chip">2026-07-26</span>
+      <span class="spacer"></span>
+      <button class="iconbtn" id="fsBtn" type="button" aria-label="글씨 크기 바꾸기 — 현재 기본"><span aria-hidden="true">가<span style="font-size:10px">A</span></span></button>
+      <button class="iconbtn" id="themeBtn" type="button" aria-pressed="false">
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="3.2"/><path d="M8 1.4v1.5M8 13.1v1.5M1.4 8h1.5M13.1 8h1.5M3.5 3.5l1 1M11.5 11.5l1 1M12.5 3.5l-1 1M4.5 11.5l-1 1"/></svg>
+        <span id="themeTxt">어둡게 보기</span>
+      </button>
+    </div>
+
+    <main id="main" class="wrap" tabindex="-1">
+      <div id="routeStatus" role="status" aria-live="polite" class="sr-only"></div>
+
+      <!-- ═══════════ 홈 ═══════════ -->
+      <section data-screen="home" class="on">
+        <header class="head">
+          <div class="eyebrow">
+            <span class="chip brand">2026년 7월 26일</span>
+            <span class="chip">신문 9곳 · 기사 25건 · 의제 5개</span>
+          </div>
+          <h1>오늘 신문들은 같은 사건을 두 가지 이야기로 썼습니다</h1>
+          <p>특검에 보완수사권을 주는 문제를, 3곳은 <b>&lsquo;권한이 한 손에 모인다&rsquo;</b>는 이야기로 썼고
+          2곳은 <b>&lsquo;누가 특검을 쥐느냐&rsquo;</b>는 이야기로 썼습니다.</p>
+          <p>앞의 기사를 읽고 나면 다음 질문은 &ldquo;법을 어떻게 고칠까&rdquo;가 됩니다. 뒤의 기사를 읽고 나면 &ldquo;누가 이길까&rdquo;가 됩니다.
+          사실은 같은데 덮고 나서 남는 질문이 다릅니다. <b>당신이 오늘 읽은 기사는 어느 쪽이었습니까.</b></p>
+        </header>
+
+        <details class="fold" style="margin-bottom:18px" open>
+          <summary>이 사이트는 이렇게 봅니다</summary>
+          <div class="body" style="font-size:12.5px;line-height:1.72;color:var(--afs-ink-2)">
+            <p style="margin:0 0 9px"><b>기사마다 다섯 가지 질문의 답을 찾습니다.</b><br />
+            ① 무엇이 문제라고 했나 &nbsp;② 왜 그렇게 됐다고 했나 &nbsp;③ 누구 책임이라고 했나
+            &nbsp;④ 옳다/그르다고 했나 &nbsp;⑤ 어떻게 하자고 했나<br />
+            <b>답마다 기사 몇 번째 문장을 근거로 삼았는지 함께 붙입니다.</b></p>
+            <p style="margin:0 0 9px"><b>다섯 답을 이어 붙이면 하나의 &lsquo;이야기&rsquo;가 됩니다.</b>
+            &lsquo;권한이 한 손에 모인다&rsquo; 같은 이름은 그렇게 붙습니다 — 미리 만들어 둔 목록이 아니라,
+            그날 기사에서 실제로 나온 설명을 묶어 이름을 답니다. 사건이 바뀌면 이름도 바뀝니다.</p>
+            <p style="margin:0 0 9px"><b>신문끼리 비교할 때는 기자가 직접 쓴 문장만 셉니다.</b>
+            기사에 인용된 정치인·전문가의 말은 그 신문의 생각이 아니기 때문입니다. 그래서 비교에 쓰는 항목이 전체의 29%로 줄어듭니다 — 줄어드는 것이 의도입니다.</p>
+            <p style="margin:0 0 9px"><b>기사 원문을 그대로 퍼오지 않습니다.</b>
+            저작권 때문에, 뜻만 옮긴 요약문 + 기사 몇 번째 문장인지 + 원문 링크만 보여드립니다.</p>
+            <p style="margin:0"><b>그날 하루치만 봤습니다.</b> 2026년 7월 26일, 기사가 가장 많았던 주제 5개, 기사 25건입니다.</p>
+          </div>
+        </details>
+
+        <h2 class="sec">오늘부터 쓸 수 있는 네 가지 방법</h2>
+        <div class="card">
+          <ol style="margin:0;padding-left:19px;font-size:13.5px;line-height:1.78">
+            <li>같은 사건 기사 두 개를 놓고 <b>첫 세 문단만</b> 비교해보세요. 사건의 성격 규정은 대개 거기서 끝납니다.</li>
+            <li><b>&lsquo;어떻게 하자&rsquo;는 문장</b>을 먼저 찾아보세요. 진단이 달라도 처방이 같으면, 그 싸움은 목표 싸움이 아닙니다.</li>
+            <li><b>같은 행위를 부르는 낱말</b>을 견줘보세요. &lsquo;추진&rsquo;과 &lsquo;강행&rsquo; 중 무엇을 골랐는지가 그 기사의 시선을 가장 먼저 드러냅니다.</li>
+            <li><b>인용된 사람이 누구인지</b> 세어보세요. 정치인만 있고 전문가가 없으면, 그 기사는 사건을 정치 이벤트로 다루고 있습니다.</li>
+          </ol>
+        </div>
+
+        <h2 class="sec">이날의 한 장면 — 같은 사건, 이렇게 갈렸습니다 <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></h2>
+        <div class="scene">
+          <div class="scene-h">
+            <span class="chip brand">1위 의제</span>
+            <b>특검 보완수사권 부여 논쟁</b>
+            <span class="chip">질문: 무엇이 문제인가</span>
+          </div>
+          <div class="scene-b">
+            <div class="scene-side">
+              <div class="scene-out"><span class="chip" style="background:color-mix(in srgb,var(--fam-a) 14%,transparent);color:var(--fam-a);border-color:color-mix(in srgb,var(--fam-a) 34%,transparent)">A일보</span><b class="pkg a" style="margin:0">권한이 한 손에 모인다</b></div>
+              <span class="scene-tag"><button class="term" data-book="g-para" style="color:inherit;font-weight:800">뜻만 옮긴 요약 · 원문 아님</button></span><p class="scene-q">보완수사권을 특검에 주는 것은 수사와 기소를 한 기관에 몰아주는 구조 문제라고 짚었다</p>
+              <div class="scene-m"><span class="chip brand">이렇게 봤다 · <button class="term" data-book="g-family" style="color:inherit">법·제도 문제</button></span><span class="chip">기자 문장</span><span>근거 3문장</span></div>
+            </div>
+            <div class="scene-vs"><span>같은 사건 ↔</span></div>
+            <div class="scene-side">
+              <div class="scene-out"><span class="chip" style="background:color-mix(in srgb,var(--fam-b) 15%,transparent);color:var(--fam-b);border-color:color-mix(in srgb,var(--fam-b) 36%,transparent)">D신문</span><b class="pkg b" style="margin:0">누가 특검을 쥐느냐</b></div>
+              <span class="scene-tag">뜻만 옮긴 요약 · 원문 아님</span><p class="scene-q">여당의 반대가 특검 견제를 위한 정치 공세라는 점을 사안의 중심에 놓았다</p>
+              <div class="scene-m"><span class="chip brand">이렇게 봤다 · 정치 갈등</span><span class="chip">기자 문장</span><span>근거 2문장</span></div>
+            </div>
+          </div>
+          <div class="scene-f">
+            <span>두 문장에는 틀린 곳이 없습니다. 둘 다 실제로 일어난 일을 씁니다.
+            다른 것은 <b>무엇을 사건의 중심에 놓았는가</b>이고, 프레이밍은 정확히 그 선택을 가리키는 말입니다.<br />
+            <span style="color:var(--afs-ink-3)">왼쪽 문장에서 사건의 주인공은 <b>제도</b>이고, 오른쪽 문장에서는 <b>여당</b>입니다. 한쪽에서 주인공인 것이 다른 쪽에서는 배경으로 물러납니다.</span></span>
+            <a href="#/framing" style="color:var(--afs-brand);font-weight:800;margin-left:auto">이 사건의 다섯 질문 전부 보기 →</a>
+          </div>
+        </div>
+
+        <h2 class="sec">숫자로 보는 이날</h2>
+        <div class="grid g4">
+          <div class="kpi"><div class="n">25</div><div class="l">기사</div><div class="h">신문 9곳 · 의제 5개 · 2026년 7월 26일 하루치입니다.</div></div>
+          <div class="kpi"><div class="n">189</div><div class="l">채점된 항목</div><div class="h">같은 주장이 여러 문장에 걸친 것을 접으면 <b>115개</b>입니다.</div></div>
+          <div class="kpi"><div class="n">55<span style="font-size:15px;color:var(--afs-ink-3)">/189</span></div><div class="l">비교에 쓰는 항목</div><div class="h"><b>29%</b>. 남은 71%는 인용된 발언이라 신문 비교에서 뺍니다 — 줄어드는 것이 설계입니다.</div></div>
+          <div class="kpi"><div class="n">3<span style="font-size:15px;color:var(--afs-ink-3)">/5</span></div><div class="l">&lsquo;문제가 뭔지&rsquo;부터 달랐던 주제</div><div class="h">1·2·4위. 아래 표에서 센 값입니다. 주제별 기사 수는 7·6·4·4·4로 다릅니다.</div></div>
+        </div>
+        <p class="note">
+          AI가 두 번 채점했을 때의 일치율은 <b>89%</b>였습니다. 다만 이것은 카운트가 아니라 품질 지표이고,
+          <b>사람이 직접 채점해 확인하는 검증은 아직 하지 않았습니다</b> —
+          <a href="#/method" style="color:var(--afs-brand);font-weight:750">방법론에서 두 값을 나란히 봅니다 &rarr;</a>
+        </p>
+
+        <h2 class="sec">기자가 직접 쓴 문장은 어느 질문에서 사라지는가 <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></h2>
+        <div class="card">
+          <div class="comp">
+            <span class="nm2">문제 정의</span><span class="track" role="img" aria-label="기자 문장 28, 인용 9"><i class="narr" style="flex:0 0 68.3%">28</i><i class="quot" style="flex:0 0 22%">9</i></span>
+            <span class="nm2">원인 해석</span><span class="track" role="img" aria-label="기자 문장 16, 인용 23"><i class="narr" style="flex:0 0 39%">16</i><i class="quot" style="flex:0 0 56.1%">23</i></span>
+            <span class="nm2">책임 귀속</span><span class="track" role="img" aria-label="기자 문장 5, 인용 36"><i class="narr" style="flex:0 0 12.2%">5</i><i class="quot" style="flex:0 0 87.8%">36</i></span>
+            <span class="nm2">규범적 평가</span><span class="track" role="img" aria-label="기자 문장 0, 인용 33"><i class="zero"></i><i class="quot" style="flex:0 0 80.5%">33</i></span>
+            <span class="nm2">해법·처방</span><span class="track" role="img" aria-label="기자 문장 6, 인용 33"><i class="narr" style="flex:0 0 14.6%">6</i><i class="quot" style="flex:0 0 80.5%">33</i></span>
+          </div>
+          <p class="note" style="margin-top:11px">
+            <span style="display:inline-flex;align-items:center;gap:5px"><i style="display:inline-block;width:13px;height:11px;border-radius:2px;background:var(--afs-brand)"></i> 기자가 직접 쓴 문장</span> ·
+            <span style="display:inline-flex;align-items:center;gap:5px"><i style="display:inline-block;width:13px;height:11px;border-radius:2px;background-image:repeating-linear-gradient(45deg,transparent 0 3px,rgba(120,130,145,.35) 3px 5px);border:1px solid var(--afs-rule-2)"></i> 인용된 발언</span>
+            &nbsp;&mdash; 막대 길이는 항목 수이며 다섯 줄이 같은 축을 씁니다(최대 41).
+          </p>
+          <p class="note">
+            <b>위에서 아래로 내려갈수록 파란 칸이 줄어듭니다.</b> 기자는 &ldquo;무엇이 문제인가&rdquo;는 자기 문장으로 쓰지만,
+            &ldquo;누구 책임인가&rdquo;와 &ldquo;옳고 그른가&rdquo;로 갈수록 남의 말로 넘깁니다. 마지막 줄의 0은 고립된 숫자가 아니라 <b>이 기울기의 끝</b>입니다.
+          </p>
+        </div>
+
+        <h2 class="sec" data-src="derive">어느 질문에서 갈렸나 <button class="prov p-derive" type="button" aria-haspopup="dialog" data-book="p-derive">위 결과를 합친 계산</button></h2>
+        <div class="card">
+          <p class="note" style="margin:0 0 11px;padding-bottom:9px;border-bottom:1px solid var(--afs-rule)">
+            <b>읽는 법</b> — 점 5개는 <b>의제 5개</b>입니다.
+            <span style="display:inline-flex;align-items:center;gap:4px"><i style="display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--afs-brand)"></i> 기자 문장만 봐도 갈림</span> ·
+            <span style="display:inline-flex;align-items:center;gap:4px"><i style="display:inline-block;width:11px;height:11px;border-radius:50%;border:1.5px dashed var(--afs-warn)"></i> 인용까지 세면 갈림</span> ·
+            <span style="display:inline-flex;align-items:center;gap:4px"><i style="display:inline-block;width:11px;height:11px;border-radius:50%;border:1px dashed var(--afs-rule-2)"></i> 갈리지 않음</span>
+          </p>
+          <div class="meter"><span class="nm">문제 정의</span><span class="dots" role="img" aria-label="의제 5개 중 3개 갈림, 2개 동일"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="vl">5개 중 <b>3</b></span></div>
+          <div class="meter"><span class="nm">원인 해석</span><span class="dots" role="img" aria-label="의제 5개 중 1개 갈림, 1개는 인용 포함 시 갈림, 3개 동일"><i class="on"></i><i class="ghost"></i><i></i><i></i><i></i></span><span class="vl">5개 중 <b>1</b> <span style="color:var(--afs-warn)">(+1)</span></span></div>
+          <div class="meter"><span class="nm">책임 귀속</span><span class="dots" role="img" aria-label="의제 5개 중 1개 갈림, 4개는 인용 포함 시 갈림"><i class="on"></i><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i></span><span class="vl">5개 중 <b>1</b> <span style="color:var(--afs-warn)">(+4)</span></span></div>
+          <div class="meter"><span class="nm">규범적 평가</span><span class="dots" role="img" aria-label="의제 5개 전부 기자 문장 0건"><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i></span><span class="vl" style="color:var(--afs-warn)">기자 문장 0</span></div>
+          <div class="meter"><span class="nm">해법·처방</span><span class="dots" role="img" aria-label="의제 5개 중 1개 갈림, 2개는 인용 포함 시 갈림, 2개 동일"><i class="on"></i><i class="ghost"></i><i class="ghost"></i><i></i><i></i></span><span class="vl">5개 중 <b>1</b> <span style="color:var(--afs-warn)">(+2)</span></span></div>
+          <p class="note">
+            ● <b>색이 채워진 점</b> = 기자가 직접 쓴 문장만 봐도 신문끼리 달랐던 주제.
+            ○ <b>빈 점</b> = 인용된 말까지 세면 달라지는 주제. 아무것도 없는 칸 = 신문끼리 같았던 주제.<br />
+            이 가운데 <b>문제 정의·원인·해법 세 줄</b>은 <a href="#/issues" style="color:var(--afs-brand);font-weight:750">의제 탐색 화면의 표</a>를
+            세로로 센 값입니다 — 어긋나면 오류입니다. <b>책임·평가 두 줄</b>은 그 표에서 뺀 층위라 이 화면에서만 봅니다.
+          </p>
+        </div>
+
+        <div class="find" style="margin-top:12px">
+          <h3>기사 25건 중, 기자가 옳고 그름을 직접 쓴 문장은 0개였습니다</h3>
+          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:10px 0">
+            <span class="big">0<span style="font-size:19px;color:var(--afs-ink-3)">/33</span></span>
+            <p style="flex:1 1 260px">옳고 그름을 말한 문장 33개는 <b>전부 취재원의 입에서 나왔습니다.</b>
+            언론학은 이 방식에 이름을 붙여 두었습니다 — Tuchman(1972)은 기자가 판단을 인용에 실어 옮기는 것을
+            <b>&ldquo;객관성이라는 전략적 의례&rdquo;</b>라고 불렀습니다. 판단을 하지 않는 것이 아니라,
+            <b>판단할 사람을 고르는 방식으로</b> 합니다.</p>
+          </div>
+          <p style="margin:0;font-size:0.9em;line-height:1.7;color:var(--afs-ink-2)">
+            그래서 이 사이트는 &ldquo;누가 판단했나&rdquo; 대신 <b>&ldquo;누구의 판단을 실었나&rdquo;</b>를 셉니다.
+            <a href="#/outlets" style="color:var(--afs-brand);font-weight:750">언론사 비교 화면의 취재원 표</a>가 그것입니다.
+          </p>
+          <p class="note" style="margin-top:9px;padding-top:9px;border-top:1px dashed var(--afs-rule)">
+            이 표본에 <b>사설·칼럼은 없습니다.</b> 의견을 쓰라고 만든 지면을 뺀 25건이라는 뜻입니다.
+            같은 방식으로 사설 10건을 코딩하면 이 0건이 지면 종류의 문제인지 취재 관행인지 갈립니다 — 다음 회차 작업입니다.</p>
+        </div>
+
+        <h2 class="sec" data-src="rule">의제 순위 <button class="prov p-rule" type="button" aria-haspopup="dialog" data-book="p-rule">단어 규칙 자동 분류</button></h2>
+        <div class="card">
+          <div class="tscroll" tabindex="0" role="region" aria-label="표 — 좌우로 스크롤할 수 있습니다"><table class="t">
+            <caption>보도량·매체 참여·후속 보도를 가중한 순위입니다. 사안의 사회적 중요도가 아닙니다.</caption>
+            <thead><tr><th scope="col">순위</th><th scope="col">의제</th><th scope="col" class="n">기사</th><th scope="col" class="n">매체</th><th scope="col">어떻게 갈렸나</th><th scope="col">군집 품질</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">1</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">특검 보완수사권 부여 논쟁</a></td><td class="n">7</td><td class="n">6</td><td><b>권한이 한 손에 모인다</b> vs <b>누가 특검을 쥐느냐</b><br /><span style="font-size:11px;color:var(--afs-ink-3)">무엇이 문제인가·왜 그렇게 됐나에서 갈림</span></td><td><span class="chip warn">재검토 필요</span></td></tr>
+              <tr><th>2</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">여당 지도부 내부 충돌 논란</a></td><td class="n">6</td><td class="n">6</td><td><b>한 사람의 처신</b> vs <b>당이 관리하지 못한 일</b><br /><span style="font-size:11px;color:var(--afs-ink-3)">무엇이 문제인가에서 갈림</span></td><td><span class="chip good">응집</span></td></tr>
+              <tr><th>3</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">아파트 방화 보복범죄 수사</a></td><td class="n">4</td><td class="n">4</td><td><b>더 세게 처벌해야</b> vs <b>먼저 보호했어야</b><br /><span style="font-size:11px;color:var(--afs-ink-3)">무엇을 해야 하나에서 갈림</span></td><td><span class="chip good">응집</span></td></tr>
+              <tr><th>4</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">소송 대리인 불출석 손해배상 조정</a></td><td class="n">4</td><td class="n">4</td><td><b>변호사가 놓친 일</b> vs <b>막을 장치가 없던 일</b><br /><span style="font-size:11px;color:var(--afs-ink-3)">무엇이 문제인가·누구 책임인가에서 갈림</span></td><td><span class="chip warn">재검토 필요</span></td></tr>
+              <tr><th>5</th><td><a href="#/issue" style="color:var(--afs-brand);font-weight:750">외국인 집단 난투 사건</a></td><td class="n">4</td><td class="n">4</td><td>4곳이 같은 방식으로 규정<br /><span style="font-size:11px;color:var(--afs-ink-3)">사실 전달에 가까움</span></td><td><span class="chip good">응집</span></td></tr>
+            </tbody>
+          </table></div>
+          <p class="note"><b>군집 품질</b>을 같이 적는 이유: 1·4위는 규칙 군집이 "같은 사건"이라고 묶었지만 유사도가 임계값 아래였습니다. 그 의제의 비교는 조금 더 조심해서 읽어야 합니다.</p>
+        </div>
+
+        <div class="next">
+          <a href="#/framing"><i>가장 많이 보는 화면</i><b>프레이밍 분석</b><span>다섯 층위를 문장 근거와 함께</span></a>
+          <a href="#/self-check"><i>2분</i><b>내 읽기 유형 알아보기</b><span>12문항 · 놓치기 쉬운 질문을 알려줍니다</span></a>
+          <a href="#/method"><i>먼저 읽으면 좋은</i><b>방법론과 한계</b><span>어디까지 말할 수 있는지</span></a>
+        </div>
+      </section>
+
+      <!-- ═══════════ 프레이밍 분석 ═══════════ -->
+      <section data-screen="framing">
+        <header class="head">
+          <div class="eyebrow">
+            <span class="chip brand">1위 의제</span><span class="chip">기사 7건 · 매체 6곳</span>
+            <span class="chip warn">군집 재검토 필요</span>
+          </div>
+          <h1>특검 보완수사권 부여 논쟁</h1>
+          <p>프레이밍 분석 — 기사가 답하는 <button class="term" data-book="g-layer">다섯 가지 질문</button>에서 각 신문이 어떤 이야기를 썼는지, 문장 근거와 함께 봅니다.</p>
+        </header>
+
+        <div class="conc">
+          <p class="lead">신문들은 이 사건에 찬성하거나 반대하기 전에, <b>이것이 무슨 사건인지부터</b> 다르게 정했습니다.
+          3곳은 <b>&lsquo;권한이 한 손에 모인다&rsquo;</b>로, 2곳은 <b>&lsquo;누가 특검을 쥐느냐&rsquo;</b>로 썼습니다.</p>
+          <p class="why" data-basis
+             data-narr="두 이야기는 문제와 원인에서 갈라졌다가 &lt;b&gt;해법에서 만납니다&lt;/b&gt; — 관측된 4곳이 모두 제도적 견제를 처방했습니다. 대립하는 진단이 같은 처방으로 수렴했다는 것은, 이 논쟁이 목표가 아니라 진단에서 벌어지고 있다는 뜻입니다."
+             data-all="인용된 발언까지 세면 원인은 3:3, 책임은 3:2, 해법은 4:1로 갈립니다 — 갈린 질문이 2개에서 4개로 늘어납니다. 인용은 그 발언자의 이야기이고 신문이 자기 문장으로 채택한 것과는 다릅니다.">두 이야기는 문제와 원인에서 갈라졌다가 <b>해법에서 만납니다</b> — 관측된 4곳이 모두 제도적 견제를 처방했습니다.
+          대립하는 진단이 같은 처방으로 수렴했다는 것은, 이 논쟁이 목표가 아니라 진단에서 벌어지고 있다는 뜻입니다.</p>
+          <div class="meta">
+            <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button>
+            <span class="chip">기자가 직접 쓴 문장 기준</span>
+            <span class="chip">주장 28 · 근거 41문장</span>
+            <span class="chip">일치율 0.76</span>
+          </div>
+        </div>
+
+        <nav class="rail" aria-label="다섯 층위로 이동">
+          <a href="#L1" data-st="split"><b>문제 정의</b><span>● 갈림 3:2</span></a>
+          <a href="#L2" data-st="split"><b>원인 해석</b><span>● 갈림 2:2</span></a>
+          <a href="#L3" data-st="src"><b>책임 귀속</b><span>○ 인용만</span></a>
+          <a href="#L4" data-st="none"><b>규범적 평가</b><span>기자 문장 0</span></a>
+          <a href="#L5" data-st="same"><b>해법·처방</b><span>● 4곳 동일</span></a>
+        </nav>
+
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 4px">
+          <span style="font-size:12px;font-weight:750">민감도 확인 — 세는 기준을 바꿔보세요</span>
+          <span class="seg">
+            <button type="button" id="basisNarr" aria-pressed="true">기자가 직접 쓴 문장만</button>
+            <button type="button" id="basisAll" aria-pressed="false">인용된 발언까지</button>
+          </span>
+          <span class="chip" id="basisHint">비교 지표의 기본값입니다</span>
+        </div>
+        <div class="card" style="margin-top:8px;padding:12px 14px">
+          <p style="margin:0;font-size:12.5px;line-height:1.6">
+            <b>갈린 층위 <span id="basisCount">2개</span></b> · <span id="basisDelta" style="color:var(--afs-ink-3)">기자가 직접 쓴 문장만 셀 때</span>
+          </p>
+        </div>
+
+        <!-- 층위 1 -->
+        <div class="sec-row">
+          <h2 class="sec layer" id="L1"><span class="n2">1. 문제 정의</span><span class="q">무엇이 문제인가</span></h2>
+          <div class="sec-meta"><span class="chip brand">3:2 갈림</span>
+          <span class="chip">기자 문장 9건 / 관측 12건</span>
+          <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></div>
+        </div>
+
+        <div class="duel">
+          <div>
+            <b class="pkg a">권한이 한 손에 모인다</b>
+            <span class="pkg-code"><button class="term" data-book="legal">법·제도</button> 계열 · 3곳</span>
+            <p class="para">보완수사권을 특검에 주는 것은 수사와 기소를 한 기관에 몰아주는 구조 문제라고 짚었다</p>
+            <div class="who"><span class="chip">A일보</span><span class="chip">B일보</span><span class="chip">C일보</span></div>
+            <span class="pkg-key"><i>이 이야기의 핵심어</i> &mdash; <b>&ldquo;수사와 기소를 한 기관에&rdquo;</b><br />
+            <i>이야기의 결말</i> &mdash; 법으로 권한 범위를 자른다<br />
+            <i>기대는 원칙</i> &mdash; 권력은 나뉘어 있어야 한다</span>
+          </div>
+          <div>
+            <b class="pkg b">누가 특검을 쥐느냐</b>
+            <span class="pkg-code"><button class="term" data-book="political">정치 갈등</button> 계열 · 2곳</span>
+            <p class="para">여당의 반대가 특검 견제를 위한 정치 공세라는 점을 사안의 중심에 놓았다</p>
+            <div class="who"><span class="chip">D신문</span><span class="chip">E일보</span></div>
+            <span class="pkg-key"><i>이 이야기의 핵심어</i> &mdash; <b>&ldquo;특검 견제&rdquo;</b><br />
+            <i>이야기의 결말</i> &mdash; 이번 국면에서 누가 이긴다<br />
+            <i>기대는 원칙</i> &mdash; 수사는 정치에서 떨어져 있어야 한다</span>
+          </div>
+        </div>
+
+        <details class="fold" style="margin-top:11px">
+          <summary>근거 항목 보기 — 관측 7개 중 3개 예시 <span class="chip">전부 의역 · 원문 아님</span></summary>
+          <div class="body">
+            <div class="ev narr">
+              <div class="ev-h"><b>A일보</b><span class="chip">기자 문장</span><span class="chip brand"><button class="term" data-book="legal" style="font-weight:750">법·제도</button></span></div>
+              <p>보완수사권을 특검에 주는 것은 수사와 기소를 한 기관에 몰아주는 구조 문제라고 짚었다.</p>
+              <div class="ev-f"><span>발췌본 문장 4·7·9</span><span>·</span><span>근거 3문장</span><span>·</span><span><button class="term" data-book="g-hash" style="font-family:var(--afs-mono)">지문 a3f19c40…</button></span><a href="#" onclick="return false" aria-disabled="true">기사 원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></div>
+            </div>
+            <div class="ev narr">
+              <div class="ev-h"><b>B일보</b><span class="chip">기자 문장</span><span class="chip brand">법·제도</span></div>
+              <p>수사권 조정이 반복되며 기관 간 권한 경계가 흐려진 상태를 사안의 배경으로 서술했다.</p>
+              <div class="ev-f"><span>발췌본 문장 6·11</span><span>·</span><span>근거 2문장</span><span>·</span><span>지문 7b2e04d1…</span><a href="#" onclick="return false" aria-disabled="true">기사 원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></div>
+            </div>
+            <div class="ev src">
+              <div class="ev-h"><b>F신문</b><span class="chip warn">취재원 발언</span><span class="chip">역할: 정치 행위자</span></div>
+              <p>여당 관계자는 특검의 권한 확대가 견제 없는 수사로 이어질 수 있다고 말한 것으로 전해졌다.</p>
+              <div class="ev-f"><span>발췌본 문장 3</span><span>·</span><span>간접 전언</span><span>·</span><span>지문 c81f9a22…</span><a href="#" onclick="return false" aria-disabled="true">기사 원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></div>
+            </div>
+            <p class="note">모든 문장은 <b>의역</b>입니다. 원문 문장을 그대로 옮기지 않으며, 위치(문장 번호)와 비복원 지문으로 대조합니다.</p>
+          </div>
+        </details>
+
+        <details class="fold" style="margin-top:8px">
+          <summary>이 층위의 판정 기록 <span class="chip warn">두 코더가 갈린 층위 · 일치율 0.76</span></summary>
+          <div class="body">
+            <p style="margin:0 0 11px;font-size:12.5px;color:var(--afs-ink-2);line-height:1.66">
+              이 층위는 두 코더가 가장 많이 갈린 곳입니다(25건 중 19건 일치). 갈린 기사에서 무엇을 어떻게 확정했는지 그대로 공개합니다.
+            </p>
+            <h3 class="sub" style="margin-top:0">F신문 07-26 17:55</h3>
+            <div class="adj">
+              <div><b>코더 A · 코드북 순서</b><span class="val">정치 갈등</span></div>
+              <div><b>코더 B · 근거 문장 먼저</b><span class="val">미관측</span></div>
+              <div class="final"><b>판정 결과</b><span class="val">미관측</span></div>
+            </div>
+            <p class="note">A가 근거로 든 문장이 <b>취재원 발언</b>이었습니다. 기자가 직접 쓴 문장이 아니므로 판정에서 미관측으로 확정했습니다.</p>
+
+            <h3 class="sub" style="margin-top:14px">E일보 07-26 13:22</h3>
+            <div class="adj">
+              <div><b>코더 A · 코드북 순서</b><span class="val">정치 갈등</span></div>
+              <div><b>코더 B · 근거 문장 먼저</b><span class="val">법·제도</span></div>
+              <div class="final"><b>판정 결과</b><span class="val">정치 갈등</span></div>
+            </div>
+            <p class="note">B가 든 근거는 배경 설명 문단이었고, 기사가 사안을 규정한 문장은 리드에 있었습니다. 판정에서 리드 문장을 근거로 A를 채택했습니다.</p>
+
+            <p class="note" style="margin-top:13px;padding-top:11px;border-top:1px dashed var(--afs-rule)">
+              <b>왜 이걸 공개하나:</b> 라벨만 보여 주면 "AI가 그렇게 말했다"로 끝납니다. 갈린 기록과 판정 이유를 함께 두면
+              독자가 <b>판정에 동의하지 않을 수 있습니다.</b> 동의하지 않을 수 있어야 검증 가능한 분석입니다.
+            </p>
+          </div>
+        </details>
+
+        <!-- 층위 2 -->
+        <div class="sec-row">
+          <h2 class="sec layer" id="L2"><span class="n2">2. 원인 해석</span><span class="q">왜 그렇게 됐는가</span></h2>
+          <div class="sec-meta"><span class="chip brand">2:2 갈림</span><span class="chip">기자 문장 4건 / 관측 11건</span><button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></div>
+        </div>
+        <div class="duel">
+          <div>
+            <b class="pkg a">법을 만들 때 비워둔 자리</b>
+            <span class="pkg-code"><button class="term" data-book="design">제도 설계</button> 계열 · 2곳</span>
+            <p class="para">입법 단계에서 권한 범위를 정하지 않은 채 특검법을 통과시킨 것이 원인이라고 서술했다</p>
+            <div class="who"><span class="chip">A일보</span><span class="chip">C일보</span></div>
+          </div>
+          <div>
+            <b class="pkg b">각자에게 유리한 판을 짜려는 계산</b>
+            <span class="pkg-code"><button class="term" data-book="incentive">정치적 이해</button> 계열 · 2곳</span>
+            <p class="para">여야가 각자 유리한 수사 구도를 만들려 한 계산을 원인으로 지목했다</p>
+            <div class="who"><span class="chip">D신문</span><span class="chip">E일보</span></div>
+          </div>
+        </div>
+
+        <!-- 층위 3 -->
+        <div class="sec-row">
+          <h2 class="sec layer" id="L3"><span class="n2">3. 책임 귀속</span><span class="q">누구의 책임인가</span></h2>
+          <div class="sec-meta"><span class="chip warn">취재원 발언만 관측</span><span class="chip">기자 문장 0건 / 관측 9건</span><button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></div>
+        </div>
+        <div class="card">
+          <p style="margin:0 0 10px;font-size:13.5px" data-basis
+             data-narr="&lt;b&gt;6곳 모두 기자가 직접 책임을 지목하지 않았습니다.&lt;/b&gt; 관측된 책임 귀속 9개 항목은 전부 취재원 발언 인용입니다. 그래서 기자 문장 기준으로는 이 층위를 비교할 수 없습니다."
+             data-all="&lt;b&gt;인용된 발언까지 세면 3:2로 갈립니다.&lt;/b&gt; 3곳은 입법·정치권을, 2곳은 정부·여당을 책임 주체로 인용했습니다. 단 이것은 &lt;b&gt;매체의 판단이 아니라 인용된 발언의 분포&lt;/b&gt;입니다."><b>6곳 모두 기자가 직접 책임을 지목하지 않았습니다.</b> 관측된 책임 귀속 9개 항목은 전부 취재원 발언 인용입니다. 그래서 기자 문장 기준으로는 이 층위를 비교할 수 없습니다.</p>
+          <div class="tscroll">
+            <table class="t">
+              <caption>취재원이 지목한 책임 주체</caption>
+              <thead><tr><th scope="col">매체</th><th scope="col">인용된 책임 주체</th><th scope="col">발화 방식</th><th scope="col" class="n">항목</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">A일보</th><td>입법부·정치권</td><td>직접 인용</td><td class="n">2</td></tr>
+                <tr><th scope="row">D신문</th><td>정부·여당</td><td>직접 인용</td><td class="n">2</td></tr>
+                <tr><th scope="row">E일보</th><td>정부·여당</td><td>간접 전언</td><td class="n">1</td></tr>
+                <tr><th scope="row">B일보</th><td>입법부·정치권</td><td>직접 인용</td><td class="n">2</td></tr>
+                <tr><th scope="row">C일보</th><td>사법·수사기관</td><td>직접 인용</td><td class="n">1</td></tr>
+                <tr><th scope="row">F신문</th><td>공동 책임</td><td>간접 전언</td><td class="n">1</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 층위 4 -->
+        <div class="sec-row">
+          <h2 class="sec layer" id="L4"><span class="n2">4. 규범적 평가</span><span class="q">옳고 그름을 어떻게 봤는가</span></h2>
+          <div class="sec-meta"><span class="chip">기자 문장 0건 / 관측 7건</span><button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></div>
+        </div>
+        <div class="find discovery">
+          <h3>6곳 모두 판단을 취재원의 입으로 옮겼습니다</h3>
+          <p>이 의제 기사 7건에서 옳고 그름을 말한 문장은 전부 인용이었습니다. 25건 전체로 넓혀도 <b>33개 항목 모두</b> 그랬습니다.
+          Tuchman(1972)은 이것을 <b>&ldquo;객관성이라는 전략적 의례&rdquo;</b>라고 불렀습니다 — 기자는 판단하지 않는 대신 <b>판단할 사람을 고릅니다.</b></p>
+          <p style="margin:9px 0 0;font-size:0.9em;line-height:1.7">
+            그러므로 이 질문은 신문끼리 비교할 수 없는 빈 칸이 아니라, <b>비교의 대상이 옮겨간 자리</b>입니다.
+            누구의 판단을 실었는지는 <a href="#/outlets" style="color:var(--afs-brand);font-weight:750">취재원 구성 표</a>에서 봅니다.
+          </p>
+        </div>
+
+        <!-- 층위 5 -->
+        <div class="sec-row">
+          <h2 class="sec layer" id="L5"><span class="n2">5. 해법·처방</span><span class="q">무엇을 해야 하는가</span></h2>
+          <div class="sec-meta"><span class="chip good" data-basis data-narr="4곳 동일 계열" data-all="4:1 갈림">4곳 동일 계열</span><span class="chip">기자 문장 5건 / 관측 10건</span><button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></div>
+        </div>
+        <div class="card">
+          <p style="margin:0 0 9px;font-size:13.5px" data-basis
+             data-narr="&lt;b&gt;문제 정의가 갈렸는데 해법은 모였습니다.&lt;/b&gt; 관측된 4곳이 모두 &lt;b&gt;제도적 견제&lt;/b&gt; 계열로 같았습니다 — 권한 범위를 법으로 정하거나 외부 통제 장치를 두자는 서술입니다."
+             data-all="&lt;b&gt;인용된 발언까지 세면 4:1로 갈립니다.&lt;/b&gt; 기자 문장으로는 4곳이 모두 제도적 견제였지만, 인용에는 &lt;b&gt;수사·책임 추궁&lt;/b&gt; 처방이 한 곳 있었습니다. 다만 이것은 매체의 처방이 아니라 인용된 발언입니다."><b>문제 정의가 갈렸는데 해법은 모였습니다.</b> 관측된 4곳이 모두 <button class="term" data-book="check">제도적 견제</button> 계열로 같았습니다 — 권한 범위를 법으로 정하거나 외부 통제 장치를 두자는 서술입니다.</p>
+          <div class="who" style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip">A일보</span><span class="chip">B일보</span><span class="chip">D신문</span><span class="chip">C일보</span><span class="chip unobs">E일보 — 미관측</span><span class="chip unobs">F신문 — 미관측</span></div>
+        </div>
+
+        <h2 class="sec" data-src="derive">이 사건에 대해 신문들이 쓴 이야기는 둘이었습니다 <button class="prov p-derive" type="button" aria-haspopup="dialog" data-book="p-derive">위 결과를 합친 계산</button></h2>
+        <p style="margin:0 0 11px;font-size:0.93em;line-height:1.7;color:var(--afs-ink-2)">
+          다섯 질문의 답을 기사별로 이어 붙이면, 각 신문이 어떤 <b>완결된 설명</b>을 만들었는지가 나옵니다.
+          Gamson &amp; Modigliani(1989)는 이렇게 묶인 설명을 <b>미디어 패키지</b>라 불렀고, 패키지마다 핵심어와
+          그 이야기가 기대는 원칙이 따라온다고 봤습니다.
+        </p>
+        <div class="grid g2">
+          <div class="card" style="border-left:3px solid var(--fam-a)">
+            <b class="pkg a">권한이 한 손에 모인다</b>
+            <span class="pkg-code">A일보 &middot; B일보 &middot; C일보 — 3곳</span>
+            <table class="t" style="margin:0 0 4px"><tbody>
+              <tr><th style="width:96px;border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">무엇이 문제인가</th><td style="border:0;padding:3px 0"><b>수사와 기소가 한 기관에 모인 구조</b></td></tr>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">왜 그렇게 됐나</th><td style="border:0;padding:3px 0"><b>입법 단계에서 권한 범위를 정하지 않아서</b></td></tr>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">누가 판단하나</th><td style="border:0;padding:3px 0;color:var(--afs-ink-3)">기자가 아니라 취재원 — 인용으로 처리</td></tr>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">무엇을 해야 하나</th><td style="border:0;padding:3px 0"><b>법으로 범위를 자르거나 외부 통제를 둔다</b></td></tr>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">기대는 원칙</th><td style="border:0;padding:3px 0">권력은 나뉘어 있어야 한다</td></tr>
+            </tbody></table>
+          </div>
+          <div class="card" style="border-left:3px solid var(--fam-b)">
+            <b class="pkg b">누가 특검을 쥐느냐</b>
+            <span class="pkg-code">D신문 &middot; E일보 — 2곳</span>
+            <table class="t" style="margin:0 0 4px"><tbody>
+              <tr><th style="width:96px;border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">무엇이 문제인가</th><td style="border:0;padding:3px 0"><b>여야가 특검을 놓고 벌이는 견제</b></td></tr>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">왜 그렇게 됐나</th><td style="border:0;padding:3px 0"><b>각자 유리한 수사 구도를 만들려는 계산</b></td></tr>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">누가 판단하나</th><td style="border:0;padding:3px 0;color:var(--afs-ink-3)">기자가 아니라 취재원 — 인용으로 처리</td></tr>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">무엇을 해야 하나</th><td style="border:0;padding:3px 0">D신문 <b>제도적 견제</b> &middot; E일보는 쓰지 않음</td></tr>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">기대는 원칙</th><td style="border:0;padding:3px 0">수사는 정치에서 떨어져 있어야 한다</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+        <div class="card" style="margin-top:10px">
+          <p style="margin:0;font-size:0.93em;line-height:1.72">
+            <b>두 이야기는 문제와 원인에서 갈라졌다가 해법에서 만납니다.</b>
+            대립하는 진단이 같은 처방으로 수렴한다는 것은, 이 논쟁이 <b>목표 다툼이 아니라 진단 다툼</b>이라는 뜻입니다.
+            찬반 구도로만 보면 보이지 않는 지점입니다.
+          </p>
+        </div>
+
+        <h2 class="sec">신문별 요약 표</h2>
+        <div class="tscroll">
+          <table class="t">
+            <caption>신문 × 세 질문 &middot; 아래 작은 글씨는 그 신문이 쓴 말</caption>
+            <thead><tr><th scope="col">매체</th><th scope="col">문제 정의</th><th scope="col">원인</th><th scope="col">해법</th><th scope="col" class="n">기자 문장 / 관측 항목</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">A일보</th>
+                <td><b>법·제도</b><span class="said">수사와 기소를 한 기관에 몰아주는 구조 문제</span></td>
+                <td><b>제도 설계</b><span class="said">입법 단계에서 권한 범위를 정하지 않고 통과시켰다</span></td>
+                <td><b>제도적 견제</b><span class="said">법으로 권한 범위를 잘라야 한다</span></td>
+                <td class="n">5/11</td></tr>
+              <tr><th scope="row">B일보</th>
+                <td><b>법·제도</b><span class="said">수사권 조정이 반복되며 기관 간 권한 경계가 흐려졌다</span></td>
+                <td class="un">—</td>
+                <td><b>제도적 견제</b><span class="said">국회가 사후 통제 장치를 두어야 한다</span></td>
+                <td class="n">4/10</td></tr>
+              <tr><th scope="row">C일보</th>
+                <td><b>법·제도</b><span class="said">권한 범위를 법이 정하지 않은 채 특검에 넘겼다</span></td>
+                <td><b>제도 설계</b><span class="said">조정이 반복되며 경계를 그을 기준이 남지 않았다</span></td>
+                <td><b>제도적 견제</b><span class="said">권한 행사 요건을 법에 명시해야 한다</span></td>
+                <td class="n">3/7</td></tr>
+              <tr><th scope="row">D신문</th>
+                <td class="diff"><b>정치 갈등</b><span class="said">여당의 반대가 특검 견제를 위한 정치 공세다</span></td>
+                <td class="diff"><b>정치적 이해</b><span class="said">여야가 각자 유리한 수사 구도를 만들려 했다</span></td>
+                <td><b>제도적 견제</b><span class="said">특검을 견제할 기구를 함께 만들어야 한다</span></td>
+                <td class="n">4/10</td></tr>
+              <tr><th scope="row">E일보</th>
+                <td class="diff"><b>정치 갈등</b><span class="said">이번 국면에서 누가 수사를 쥐느냐의 싸움이다</span></td>
+                <td class="diff"><b>정치적 이해</b><span class="said">특검을 누가 통제하느냐에 양쪽의 이해가 걸렸다</span></td>
+                <td class="un">—</td>
+                <td class="n">2/8</td></tr>
+              <tr><th scope="row">F신문</th><td class="un">—</td><td class="un">—</td><td class="un">—</td><td class="n"><b>0/3</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <details class="fold" style="margin-top:16px" data-src="rule">
+          <summary>이 화면에 쓰지 않은 지표 <span class="chip warn">변별력 없음</span></summary>
+          <div class="body">
+            <p style="margin:0 0 10px;font-size:12.5px;color:var(--afs-ink-2)">아래 지표는 계산은 되지만 이 표본에서 <b>매체를 구분하지 못합니다.</b> 지우지 않고 접어 두는 이유는 다른 표본에서는 변별될 수 있기 때문입니다.</p>
+            <div class="tscroll" tabindex="0" role="region" aria-label="쓰지 않은 지표 표 — 좌우로 스크롤할 수 있습니다">
+            <table class="t">
+              <thead><tr><th scope="col">지표</th><th scope="col">출처</th><th scope="col">이 표본에서의 상태</th></tr></thead>
+              <tbody>
+                <tr><th>정책 프레임 5종</th><td><button class="prov p-rule" type="button" aria-haspopup="dialog" data-book="p-rule">단어 규칙 자동 분류</button></td><td>기사 7건 <b>전부</b>에 5종이 모두 부여됨 — 분류기 포화</td></tr>
+                <tr><th>일반 프레임 5종</th><td><button class="prov p-rule" type="button" aria-haspopup="dialog" data-book="p-rule">단어 규칙 자동 분류</button></td><td>매체를 가르지 못함 — 아래 &lsquo;겹쳐 읽을 것&rsquo; 참조</td></tr>
+                <tr><th>정책 프레임 비중(%)<br /><span style="font-size:11px;font-weight:600;color:var(--afs-ink-3)">시안 2번 그림</span></th><td><button class="prov p-rule" type="button" aria-haspopup="dialog" data-book="p-rule">단어 규칙 자동 분류</button></td><td><b>차원별 가중치가 없음.</b> 코딩이 차원의 있음·없음만 남겨 42%·28% 같은 비중을 만들 수 없음 — 위 &lsquo;정책 프레임 막대&rsquo;에 같은 형태로 그려 두었습니다</td></tr>
+                <tr><th>프레임 지형도 2축 산점도<br /><span style="font-size:11px;font-weight:600;color:var(--afs-ink-3)">시안 3번 그림</span></th><td><button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></td><td><b>가로축이 값 하나로 무너짐.</b> 시안의 가로축(책임 귀인 개인·기업 ↔ 정부)이 이 의제에서 계열 <b>1종</b>이라 6개 매체가 한 점에 겹칩니다. 세로축(시야)도 7건 전부 일화적이라 사분면이 성립하지 않습니다</td></tr>
+                <tr><th>논조 × 보도 방식 산점도<br /><span style="font-size:11px;font-weight:600;color:var(--afs-ink-3)">시안 3번 그림</span></th><td>없음</td><td><b>논조·감정 필드가 코드북에 없음.</b> 넣으려면 감정 코딩 스키마를 새로 설계해야 하고, &ldquo;매체의 이념·성향을 판정하지 않는다&rdquo;는 원칙과 부딪히므로 도입 전에 결정이 필요합니다</td></tr>
+              </tbody>
+            </table>
+            </div>
+            <p class="note">위 다섯 지표 중 넷은 <b>이중코딩·판정을 거치지 않았습니다.</b> 위쪽 다섯 층위와 같은 신뢰 수준으로 읽으면 안 됩니다 — 그래서 출처 배지를 다르게 칠했습니다.</p>
+          </div>
+        </details>
+
+        <h2 class="sec" data-src="rule">겹쳐 읽을 것 — 서술 방식과 책임 <button class="prov p-rule" type="button" aria-haspopup="dialog" data-book="p-rule">단어 규칙 자동 분류</button></h2>
+        <div class="grid g2">
+          <div class="card">
+            <h3 class="sub">7건 모두 &lsquo;장면&rsquo; 중심으로 쓰였습니다</h3>
+            <p style="margin:0 0 8px;font-size:0.9em;line-height:1.7">
+              누가 뭐라고 했고 어느 회의에서 부딪혔는지 — 이번 국면의 장면이 기사의 뼈대입니다.
+              Iyengar(1991)는 이런 서술을 <b>일화적 프레임</b>이라 불렀고,
+              일화적으로 쓰인 기사를 읽은 사람은 사건의 책임을 <b>제도가 아니라 개인에게</b> 돌리는 경향을 보였습니다.
+            </p>
+          </div>
+          <div class="card">
+            <h3 class="sub">갈등 7건, 사람 0건</h3>
+            <p style="margin:0 0 8px;font-size:0.9em;line-height:1.7">
+              Semetko &amp; Valkenburg(2000)의 일반 프레임 5종으로 보면 이 7건은 전부 <b>갈등 프레임</b>이고,
+              <b>인간적 흥미 프레임은 0건</b>입니다.
+            </p>
+          </div>
+        </div>
+
+        <h2 class="sec">방법론 층위</h2>
+        <section class="panel">
+          <div class="panel-h"><span class="panel-code">01 · ENTMAN 구조 분석</span>
+            <h3>프레임 4요소 비교<span class="panel-cite">Entman 1993</span></h3></div>
+          <div class="panel-b"><div class="tscroll"><table class="t t-ent">
+            <thead><tr><th scope="col">언론사</th>
+              <th scope="col">문제 정의<i>Problem definition</i></th>
+              <th scope="col">원인 진단<i>Causal attribution</i></th>
+              <th scope="col">도덕적 평가<i>Moral evaluation</i></th>
+              <th scope="col">해결책 제시<i>Treatment</i></th></tr></thead>
+            <tbody>
+              <tr><th scope="row">A일보</th><td><b>권한 집중</b><span class="said">수사와 기소를 한 기관에</span></td><td><b>입법 공백</b><span class="said">권한 범위를 정하지 않고 통과</span></td><td class="q"><b>법치 훼손</b><span class="said">근간을 흔드는 처사</span></td><td><b>범위 제한</b><span class="said">법으로 권한을 자른다</span></td></tr>
+              <tr><th scope="row">B일보</th><td><b>경계 소실</b><span class="said">기관 간 권한 경계가 흐려짐</span></td><td class="un">—</td><td class="q"><b>절차 무시</b><span class="said">절차를 건너뛴 입법</span></td><td><b>사후 통제</b><span class="said">국회가 통제 장치를 둔다</span></td></tr>
+              <tr><th scope="row">C일보</th><td><b>입법 공백</b><span class="said">법이 범위를 정하지 않음</span></td><td><b>조정 반복</b><span class="said">경계를 그을 기준이 없음</span></td><td class="q"><b>견제 부재</b><span class="said">견제 없는 권한은 위험</span></td><td><b>요건 명시</b><span class="said">행사 요건을 법에 쓴다</span></td></tr>
+              <tr><th scope="row">D신문</th><td><b>정치 공세</b><span class="said">여당 반대는 특검 견제</span></td><td><b>이해 계산</b><span class="said">유리한 수사 구도를 만들려 함</span></td><td class="q"><b>정치화</b><span class="said">수사를 정치에 끌어들임</span></td><td><b>견제 기구</b><span class="said">특검 견제 기구를 만든다</span></td></tr>
+              <tr><th scope="row">E일보</th><td><b>주도권 다툼</b><span class="said">누가 수사를 쥐느냐</span></td><td><b>이해 계산</b><span class="said">통제권에 양쪽 이해가 걸림</span></td><td class="q"><b>흔들기</b><span class="said">특검 흔들기라는 비판</span></td><td class="un">—</td></tr>
+              <tr><th scope="row">F신문</th><td class="un">—</td><td class="un">—</td><td class="q"><b>권한 우려</b><span class="said">견제 없는 수사로 이어질 우려</span></td><td class="un">—</td></tr>
+            </tbody></table></div>
+          <ul class="pkey"><li><i class="dq"></i>회색 칸 = 취재원 발언</li><li>— = 기자 문장 없음</li></ul></div>
+        </section>
+        <section class="panel ex">
+          <div class="panel-h"><span class="panel-code">02 · POLICY FRAMES</span>
+            <h3>프레임 구성 비교<span class="panel-cite">Boydstun et al. 2014</span><span class="panel-ex">예시 수치</span></h3></div>
+          <div class="panel-b"><ul class="pkey"><li><i class="f1"></i>법·제도</li><li><i class="f2"></i>정치·정쟁</li><li><i class="f3"></i>범죄·처벌</li><li><i class="f4"></i>정책 처방</li><li><i class="f5"></i>여론</li></ul>
+          <div class="comp" style="grid-template-columns:auto 1fr">
+            <span class="nm2">A일보</span><span class="track" role="img" aria-label="법·제도 42퍼센트, 정치·정쟁 22퍼센트, 범죄·처벌 16퍼센트, 정책 처방 14퍼센트, 여론 6퍼센트"><i class="f1" style="flex:0 0 42%">42</i><i class="f2" style="flex:0 0 22%">22</i><i class="f3" style="flex:0 0 16%">16</i><i class="f4" style="flex:0 0 14%">14</i><i class="f5" style="flex:0 0 6%">6</i></span>
+            <span class="nm2">B일보</span><span class="track" role="img" aria-label="법·제도 38퍼센트, 정치·정쟁 24퍼센트, 범죄·처벌 18퍼센트, 정책 처방 12퍼센트, 여론 8퍼센트"><i class="f1" style="flex:0 0 38%">38</i><i class="f2" style="flex:0 0 24%">24</i><i class="f3" style="flex:0 0 18%">18</i><i class="f4" style="flex:0 0 12%">12</i><i class="f5" style="flex:0 0 8%">8</i></span>
+            <span class="nm2">C일보</span><span class="track" role="img" aria-label="법·제도 35퍼센트, 정치·정쟁 28퍼센트, 범죄·처벌 15퍼센트, 정책 처방 16퍼센트, 여론 6퍼센트"><i class="f1" style="flex:0 0 35%">35</i><i class="f2" style="flex:0 0 28%">28</i><i class="f3" style="flex:0 0 15%">15</i><i class="f4" style="flex:0 0 16%">16</i><i class="f5" style="flex:0 0 6%">6</i></span>
+            <span class="nm2">D신문</span><span class="track" role="img" aria-label="법·제도 20퍼센트, 정치·정쟁 44퍼센트, 범죄·처벌 10퍼센트, 정책 처방 12퍼센트, 여론 14퍼센트"><i class="f1" style="flex:0 0 20%">20</i><i class="f2" style="flex:0 0 44%">44</i><i class="f3" style="flex:0 0 10%">10</i><i class="f4" style="flex:0 0 12%">12</i><i class="f5" style="flex:0 0 14%">14</i></span>
+            <span class="nm2">E일보</span><span class="track" role="img" aria-label="법·제도 18퍼센트, 정치·정쟁 48퍼센트, 범죄·처벌 8퍼센트, 정책 처방 10퍼센트, 여론 16퍼센트"><i class="f1" style="flex:0 0 18%">18</i><i class="f2" style="flex:0 0 48%">48</i><i class="f3" style="flex:0 0 8%">8</i><i class="f4" style="flex:0 0 10%">10</i><i class="f5" style="flex:0 0 16%">16</i></span>
+            <span class="nm2">F신문</span><span class="track" role="img" aria-label="법·제도 26퍼센트, 정치·정쟁 36퍼센트, 범죄·처벌 14퍼센트, 정책 처방 12퍼센트, 여론 12퍼센트"><i class="f1" style="flex:0 0 26%">26</i><i class="f2" style="flex:0 0 36%">36</i><i class="f3" style="flex:0 0 14%">14</i><i class="f4" style="flex:0 0 12%">12</i><i class="f5" style="flex:0 0 12%">12</i></span>
+          </div></div>
+        </section>
+        <section class="panel ex">
+          <div class="panel-h"><span class="panel-code">03 · FRAME MAP</span>
+            <h3>프레임 지형도 — 6개 언론사의 위치<span class="panel-cite">Iyengar 1991</span><span class="panel-ex">예시 수치</span></h3></div>
+          <div class="panel-b"><svg class="fmap" viewBox="0 0 420 300" role="img" aria-label="가로축은 책임 귀인, 세로축은 시야. 법·제도 계열 세 곳은 제도·주제 쪽에, 정치 갈등 계열 세 곳은 개인·일화 쪽에 모입니다.">
+            <line class="gl" x1="46" y1="150" x2="374" y2="150"/><line class="gl" x1="210" y1="46" x2="210" y2="254"/>
+            <rect class="fr" x="46" y="46" width="328" height="208"/>
+            <text class="ax" x="46" y="34">▲ 일화적 (사례 중심)</text>
+            <text class="ax" x="46" y="274">▼ 주제적 (구조 중심)</text>
+            <text class="ax" x="54" y="243">◀ 책임 · 개인</text>
+            <text class="ax" x="366" y="243" text-anchor="end">책임 · 제도 ▶</text>
+            <g class="a"><circle cx="282.2" cy="187.4" r="6.4"/><text x="271.2" y="191.2" text-anchor="end">A일보</text></g><g class="a"><circle cx="255.9" cy="150.0" r="6.4"/><text x="244.9" y="153.8" text-anchor="end">B일보</text></g><g class="a"><circle cx="308.4" cy="204.1" r="6.4"/><text x="297.4" y="207.9" text-anchor="end">C일보</text></g><g class="b"><circle cx="137.8" cy="100.1" r="6.4"/><text x="148.8" y="103.9" text-anchor="start">D신문</text></g><g class="b"><circle cx="105.0" cy="116.7" r="6.4"/><text x="116.0" y="120.5" text-anchor="start">E일보</text></g><g class="b"><circle cx="164.1" cy="75.1" r="6.4"/><text x="175.1" y="78.9" text-anchor="start">F신문</text></g></svg></div>
+        </section>
+        <section class="panel ex">
+          <div class="panel-h"><span class="panel-code">04 · IYENGAR 보도 시각</span>
+            <h3>일화적 ↔ 주제적 보도 비율<span class="panel-cite">일화 비중 순</span><span class="panel-ex">예시 수치</span></h3></div>
+          <div class="panel-b"><ul class="pkey"><li><i class="epi"></i>일화적 (사례 중심)</li><li><i class="the"></i>주제적 (구조 중심)</li></ul>
+          <div class="comp" style="grid-template-columns:auto 1fr">
+            <span class="nm2">F신문</span><span class="track" role="img" aria-label="일화 86퍼센트 주제 14퍼센트"><i class="epi" style="flex:0 0 86%">86</i><i class="the" style="flex:0 0 14%">14</i></span>
+            <span class="nm2">E일보</span><span class="track" role="img" aria-label="일화 78퍼센트 주제 22퍼센트"><i class="epi" style="flex:0 0 78%">78</i><i class="the" style="flex:0 0 22%">22</i></span>
+            <span class="nm2">D신문</span><span class="track" role="img" aria-label="일화 72퍼센트 주제 28퍼센트"><i class="epi" style="flex:0 0 72%">72</i><i class="the" style="flex:0 0 28%">28</i></span>
+            <span class="nm2">B일보</span><span class="track" role="img" aria-label="일화 54퍼센트 주제 46퍼센트"><i class="epi" style="flex:0 0 54%">54</i><i class="the" style="flex:0 0 46%">46</i></span>
+            <span class="nm2">A일보</span><span class="track" role="img" aria-label="일화 41퍼센트 주제 59퍼센트"><i class="epi" style="flex:0 0 41%">41</i><i class="the" style="flex:0 0 59%">59</i></span>
+            <span class="nm2">C일보</span><span class="track" role="img" aria-label="일화 35퍼센트 주제 65퍼센트"><i class="epi" style="flex:0 0 35%">35</i><i class="the" style="flex:0 0 65%">65</i></span>
+          </div></div>
+        </section>
+        <section class="panel">
+          <div class="panel-h"><span class="panel-code">05 · SEMANTIC NETWORK</span>
+            <h3>핵심 키워드 의미 연결망<span class="panel-cite">동시출현</span></h3></div>
+          <div class="panel-b"><div class="netgrid">
+            <div class="net a"><h4 class="net-h">권한이 한 손에 모인다<span>A · B · C일보</span></h4><svg class="wnet" viewBox="0 0 250 160" role="img" aria-label="권한이 한 손에 모인다 이야기의 핵심어 연결망. 중심은 권한(24회), 이어진 낱말은 수사·기소 18회, 경계 11회, 범위 9회, 입법 8회, 견제 장치 7회, 분리 5회."><g><line class="wn-e" x1="125.0" y1="80.0" x2="125.0" y2="28.0" stroke-width="1.90"><title>권한–수사·기소 14회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="177.0" y2="54.0" stroke-width="1.40"><title>권한–경계 9회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="177.0" y2="106.0" stroke-width="1.20"><title>권한–범위 7회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="125.0" y2="132.0" stroke-width="1.10"><title>권한–입법 6회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="73.0" y2="106.0" stroke-width="1.00"><title>권한–견제 장치 5회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="73.0" y2="54.0" stroke-width="0.90"><title>권한–분리 4회 동시출현</title></line></g><g><circle class="wn-n" cx="125.0" cy="28.0" r="10.8"><title>수사·기소 18회</title></circle><circle class="wn-n" cx="177.0" cy="54.0" r="7.8"><title>경계 11회</title></circle><circle class="wn-n" cx="177.0" cy="106.0" r="7.0"><title>범위 9회</title></circle><circle class="wn-n" cx="125.0" cy="132.0" r="6.6"><title>입법 8회</title></circle><circle class="wn-n" cx="73.0" cy="106.0" r="6.1"><title>견제 장치 7회</title></circle><circle class="wn-n" cx="73.0" cy="54.0" r="5.3"><title>분리 5회</title></circle></g><circle class="wn-h" cx="125" cy="80" r="13.3"><title>권한 24회</title></circle><text class="wn-hl" x="125" y="83.4" text-anchor="middle">권한</text><g><text class="wn-l" x="125.0" y="12.2" text-anchor="middle">수사·기소 <tspan class="wn-c">18</tspan></text><text class="wn-l" x="189.8" y="57.6" text-anchor="start">경계 <tspan class="wn-c">11</tspan></text><text class="wn-l" x="188.9" y="109.6" text-anchor="start">범위 <tspan class="wn-c">9</tspan></text><text class="wn-l" x="125.0" y="149.6" text-anchor="middle">입법 <tspan class="wn-c">8</tspan></text><text class="wn-l" x="61.9" y="109.6" text-anchor="end">견제 장치 <tspan class="wn-c">7</tspan></text><text class="wn-l" x="62.7" y="57.6" text-anchor="end">분리 <tspan class="wn-c">5</tspan></text></g></svg></div>
+            <div class="net b"><h4 class="net-h">누가 특검을 쥐느냐<span>D신문 · E일보</span></h4><svg class="wnet" viewBox="0 0 250 160" role="img" aria-label="누가 특검을 쥐느냐 이야기의 핵심어 연결망. 중심은 특검(21회), 이어진 낱말은 견제 16회, 여당 12회, 공세 9회, 국면 7회, 통제 6회, 셈법 4회."><g><line class="wn-e" x1="125.0" y1="80.0" x2="125.0" y2="28.0" stroke-width="1.80"><title>특검–견제 13회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="177.0" y2="54.0" stroke-width="1.50"><title>특검–여당 10회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="177.0" y2="106.0" stroke-width="1.20"><title>특검–공세 7회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="125.0" y2="132.0" stroke-width="1.00"><title>특검–국면 5회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="73.0" y2="106.0" stroke-width="0.90"><title>특검–통제 4회 동시출현</title></line><line class="wn-e" x1="125.0" y1="80.0" x2="73.0" y2="54.0" stroke-width="0.80"><title>특검–셈법 3회 동시출현</title></line></g><g><circle class="wn-n" cx="125.0" cy="28.0" r="9.9"><title>견제 16회</title></circle><circle class="wn-n" cx="177.0" cy="54.0" r="8.2"><title>여당 12회</title></circle><circle class="wn-n" cx="177.0" cy="106.0" r="7.0"><title>공세 9회</title></circle><circle class="wn-n" cx="125.0" cy="132.0" r="6.1"><title>국면 7회</title></circle><circle class="wn-n" cx="73.0" cy="106.0" r="5.7"><title>통제 6회</title></circle><circle class="wn-n" cx="73.0" cy="54.0" r="4.9"><title>셈법 4회</title></circle></g><circle class="wn-h" cx="125" cy="80" r="12.0"><title>특검 21회</title></circle><text class="wn-hl" x="125" y="83.4" text-anchor="middle">특검</text><g><text class="wn-l" x="125.0" y="13.1" text-anchor="middle">견제 <tspan class="wn-c">16</tspan></text><text class="wn-l" x="190.2" y="57.6" text-anchor="start">여당 <tspan class="wn-c">12</tspan></text><text class="wn-l" x="188.9" y="109.6" text-anchor="start">공세 <tspan class="wn-c">9</tspan></text><text class="wn-l" x="125.0" y="149.1" text-anchor="middle">국면 <tspan class="wn-c">7</tspan></text><text class="wn-l" x="62.3" y="109.6" text-anchor="end">통제 <tspan class="wn-c">6</tspan></text><text class="wn-l" x="63.2" y="57.6" text-anchor="end">셈법 <tspan class="wn-c">4</tspan></text></g></svg></div>
+          </div>
+          <ul class="pkey"><li>원 크기 = 등장 횟수</li><li>선 굵기 = 같은 문장 동시출현</li><li>두 이야기 공통어 제외</li></ul></div>
+        </section>
+
+        <div class="next">
+          <a href="#/outlets"><i>다음</i><b>언론사 비교</b><span>쟁점 축에서 각 매체의 위치</span></a>
+          <a href="#/report"><i>정리</i><b>리포트</b><span>이 의제를 문장으로 읽기</span></a>
+          <a href="#/community"><i>말하기</i><b>이 의제 커뮤니티</b><span>지금 글 12개</span></a>
+        </div>
+      </section>
+
+      <!-- ═══════════ 언론사 비교 ═══════════ -->
+      <section data-screen="outlets">
+        <header class="head">
+          <div class="eyebrow"><span class="chip brand">1위 의제</span><span class="chip">기사 7건 · 매체 6곳</span></div>
+          <h1>특검 보완수사권 부여 논쟁</h1>
+          <p>언론사 비교 — 이 사건에 대해 신문들이 쓴 두 이야기를 축의 양 끝에 놓고, 각 매체가 어디에 서 있는지 봅니다.
+          어느 쪽이 옳은 이야기인지는 여기서 정하지 않습니다.</p>
+        </header>
+
+        <h2 class="sec">쟁점 축 — 문제 정의 <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></h2>
+        <div class="axis">
+          <div class="axis-grid">
+            <div class="axis-col a">
+              <h4>권한이 한 손에 모인다</h4>
+              <span class="sub2">수사·기소 권한 구조가 사안의 핵심 &middot; <button class="term" data-book="legal" style="color:inherit">법·제도</button> 계열</span>
+              <div class="who2"><span class="chip">A일보</span><span class="chip">B일보</span><span class="chip">C일보</span></div>
+            </div>
+            <div class="axis-col b">
+              <h4>누가 특검을 쥐느냐</h4>
+              <span class="sub2">여야의 견제 구도가 사안의 핵심 &middot; <button class="term" data-book="political" style="color:inherit">정치 갈등</button> 계열</span>
+              <div class="who2"><span class="chip">D신문</span><span class="chip">E일보</span></div>
+            </div>
+          </div>
+          <div class="axis-out">
+            <b>축에 놓을 수 없는 매체</b> — 기자가 직접 쓴 문장이 0건이라 위치가 정의되지 않습니다
+            <span class="chip unobs">F신문</span>
+          </div>
+          <p class="axis-rule">배치 규칙 = 그 매체의 이 층위 <b>기자 문장 항목에서 다수를 차지한 계열</b>의 칸.
+          계열은 범주형이므로 칸 안에서의 좌우 위치나 칸 사이의 거리에는 <b>아무 의미가 없습니다.</b></p>
+        </div>
+
+        <h2 class="sec">다른 질문에서는</h2>
+        <div class="grid g2">
+          <div class="card">
+            <h3 class="sub">왜 그렇게 됐는가</h3>
+            <div class="axis-grid" style="margin-top:4px">
+              <div class="axis-col a" style="min-height:74px"><h4 style="font-size:11.5px">제도 설계</h4><div class="who2"><span class="chip">A일보</span><span class="chip">C일보</span></div></div>
+                <div class="axis-col b" style="min-height:74px"><h4 style="font-size:11.5px">정치적 이해</h4><div class="who2"><span class="chip">D신문</span><span class="chip">E일보</span></div></div>
+            </div>
+            <div class="axis-out" style="margin-top:8px">
+              <b>축 밖</b> — 기자 문장 미관측 <span class="chip unobs">B일보</span> <span class="chip unobs">F신문</span>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="sub">무엇을 해야 하는가 <span class="chip good">수렴</span></h3>
+            <p style="margin:0 0 9px;font-size:12.5px">관측된 4곳이 <b>모두 같은 처방</b>이라 축의 양 끝이 생기지 않았습니다.</p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip brand">제도적 견제 · 4곳</span><span class="chip unobs">미관측 · 2곳</span></div>
+          </div>
+        </div>
+
+        <h2 class="sec">같은 행위를 부른 이름 <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></h2>
+        <div class="card">
+          <p style="margin:0 0 11px;font-size:0.93em;line-height:1.68">
+            같은 날 같은 행위를 신문들이 <b>서로 다른 낱말</b>로 불렀습니다. 프레이밍이 가장 먼저 드러나는 자리입니다.
+          </p>
+          <div class="tscroll" tabindex="0" role="region" aria-label="지칭어 대조 표 — 좌우로 스크롤할 수 있습니다">
+          <table class="t">
+            <caption>여당의 법안 처리 행위를 가리킨 말</caption>
+            <thead><tr><th scope="col">표현</th><th scope="col" class="n">매체</th><th scope="col">쓴 곳</th><th scope="col">이 말이 전제하는 것</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">추진</th><td class="n">3</td><td>A일보 &middot; B일보 &middot; C일보</td><td>절차가 진행 중이다</td></tr>
+              <tr><th scope="row">강행</th><td class="n">2</td><td>D신문 &middot; E일보</td><td>반대가 있었고 그것을 밀어냈다</td></tr>
+              <tr><th scope="row">처리</th><td class="n">1</td><td>F신문</td><td>일상적 업무가 끝났다</td></tr>
+            </tbody>
+          </table>
+          </div>
+          <div class="tscroll" tabindex="0" role="region" aria-label="법안 지칭 표 — 좌우로 스크롤할 수 있습니다" style="margin-top:12px">
+          <table class="t">
+            <caption>같은 법안을 부른 이름</caption>
+            <thead><tr><th scope="col">표현</th><th scope="col" class="n">매체</th><th scope="col">무엇에 관한 이야기가 되는가</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">보완수사권 부여</th><td class="n">4</td><td>권한을 누구에게 주느냐는 <b>권한 이야기</b></td></tr>
+              <tr><th scope="row">특검법 개정</th><td class="n">2</td><td>법을 어떻게 고치느냐는 <b>절차 이야기</b></td></tr>
+            </tbody>
+          </table>
+          </div>
+        </div>
+
+        <h2 class="sec">누구의 목소리를 실었나 <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></h2>
+        <div class="tscroll">
+          <table class="t">
+            <caption>매체 × 취재원 역할 &middot; 발언 항목 수</caption>
+            <thead><tr><th scope="col">매체</th><th scope="col" class="n">정치 행위자</th><th scope="col" class="n">정부 관계자</th><th scope="col" class="n">사법·수사</th><th scope="col" class="n">전문가</th><th scope="col" class="n">시민사회</th><th scope="col" class="n">합</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">A일보</th><td class="n">3</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td class="n">0</td><td class="n"><b>7</b></td></tr>
+              <tr><th scope="row">B일보</th><td class="n">4</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n"><b>5</b></td></tr>
+              <tr><th scope="row">C일보</th><td class="n">2</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td class="n">0</td><td class="n"><b>6</b></td></tr>
+              <tr><th scope="row">D신문</th><td class="n">3</td><td class="n">2</td><td class="n">0</td><td class="n">1</td><td class="n">2</td><td class="n"><b>8</b></td></tr>
+              <tr><th scope="row">E일보</th><td class="n">4</td><td class="n">1</td><td class="n">1</td><td class="n">0</td><td class="n">1</td><td class="n"><b>7</b></td></tr>
+              <tr><th scope="row">F신문</th><td class="n">5</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n"><b>5</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card" style="margin-top:10px">
+          <div class="sec-row" style="margin:0 0 10px">
+            <h3 class="sub" style="margin:0">같은 표를 막대로</h3>
+            <span class="seg" id="srcSeg" role="radiogroup" aria-label="막대 보기 방식">
+              <button type="button" role="radio" aria-checked="false" tabindex="-1" data-src-view="abs">발언 개수</button>
+              <button type="button" role="radio" aria-checked="true" tabindex="0" data-src-view="pct">구성 비율</button>
+            </span>
+          </div>
+          <ul class="rolekey">
+            <li><i class="r1"></i>정치 행위자</li>
+            <li><i class="r2"></i>정부 관계자</li>
+            <li><i class="r3"></i>사법·수사</li>
+            <li><i class="r4"></i>전문가</li>
+            <li><i class="r5"></i>시민사회</li>
+          </ul>
+          <div class="comp" id="srcAbs" hidden style="grid-template-columns:auto 1fr auto">
+            <span class="nm2">A일보</span><span class="track" role="img" aria-label="정치 3, 정부 1, 사법 2, 전문가 1, 시민 0"><i class="r1" style="flex:0 0 21.4%">3</i><i class="r2" style="flex:0 0 7.1%">1</i><i class="r3" style="flex:0 0 14.3%">2</i><i class="r4" style="flex:0 0 7.1%">1</i></span><span class="nm3">7</span>
+            <span class="nm2">B일보</span><span class="track" role="img" aria-label="정치 4, 사법 1"><i class="r1" style="flex:0 0 28.6%">4</i><i class="r3" style="flex:0 0 7.1%">1</i></span><span class="nm3">5</span>
+            <span class="nm2">C일보</span><span class="track" role="img" aria-label="정치 2, 정부 1, 사법 2, 전문가 1"><i class="r1" style="flex:0 0 14.3%">2</i><i class="r2" style="flex:0 0 7.1%">1</i><i class="r3" style="flex:0 0 14.3%">2</i><i class="r4" style="flex:0 0 7.1%">1</i></span><span class="nm3">6</span>
+            <span class="nm2">D신문</span><span class="track" role="img" aria-label="정치 3, 정부 2, 전문가 1, 시민 2"><i class="r1" style="flex:0 0 21.4%">3</i><i class="r2" style="flex:0 0 14.3%">2</i><i class="r4" style="flex:0 0 7.1%">1</i><i class="r5" style="flex:0 0 14.3%">2</i></span><span class="nm3">8</span>
+            <span class="nm2">E일보</span><span class="track" role="img" aria-label="정치 4, 정부 1, 사법 1, 시민 1"><i class="r1" style="flex:0 0 28.6%">4</i><i class="r2" style="flex:0 0 7.1%">1</i><i class="r3" style="flex:0 0 7.1%">1</i><i class="r5" style="flex:0 0 7.1%">1</i></span><span class="nm3">7</span>
+            <span class="nm2">F신문</span><span class="track" role="img" aria-label="정치 5, 나머지 0"><i class="r1" style="flex:0 0 35.7%">5</i></span><span class="nm3">5</span>
+          </div>
+          <div class="comp" id="srcPct" style="grid-template-columns:auto 1fr auto">
+            <span class="nm2">A일보</span><span class="track" role="img" aria-label="정치 43%, 정부 14%, 사법 29%, 전문가 14%"><i class="r1" style="flex:0 0 42.9%">43</i><i class="r2" style="flex:0 0 14.3%">14</i><i class="r3" style="flex:0 0 28.6%">29</i><i class="r4" style="flex:0 0 14.3%">14</i></span><span class="nm3">7건</span>
+            <span class="nm2">B일보</span><span class="track" role="img" aria-label="정치 80%, 사법 20%"><i class="r1" style="flex:0 0 80%">80</i><i class="r3" style="flex:0 0 20%">20</i></span><span class="nm3">5건</span>
+            <span class="nm2">C일보</span><span class="track" role="img" aria-label="정치 33%, 정부 17%, 사법 33%, 전문가 17%"><i class="r1" style="flex:0 0 33.3%">33</i><i class="r2" style="flex:0 0 16.7%">17</i><i class="r3" style="flex:0 0 33.3%">33</i><i class="r4" style="flex:0 0 16.7%">17</i></span><span class="nm3">6건</span>
+            <span class="nm2">D신문</span><span class="track" role="img" aria-label="정치 38%, 정부 25%, 전문가 13%, 시민 25%"><i class="r1" style="flex:0 0 37.5%">38</i><i class="r2" style="flex:0 0 25%">25</i><i class="r4" style="flex:0 0 12.5%">13</i><i class="r5" style="flex:0 0 25%">25</i></span><span class="nm3">8건</span>
+            <span class="nm2">E일보</span><span class="track" role="img" aria-label="정치 57%, 정부 14%, 사법 14%, 시민 14%"><i class="r1" style="flex:0 0 57.1%">57</i><i class="r2" style="flex:0 0 14.3%">14</i><i class="r3" style="flex:0 0 14.3%">14</i><i class="r5" style="flex:0 0 14.3%">14</i></span><span class="nm3">7건</span>
+            <span class="nm2">F신문</span><span class="track" role="img" aria-label="정치 100%"><i class="r1" style="flex:0 0 100%">100</i></span><span class="nm3">5건</span>
+          </div>
+        </div>
+        <div class="card" style="margin-top:10px">
+          <h3 class="sub">논쟁은 국회 안에서 벌어졌고, 기사도 국회 안에서 취재됐습니다</h3>
+          <p style="margin:0 0 8px;font-size:0.9em;line-height:1.68">
+            정치인 <b>21회</b> &middot; 사법·수사 <b>6회</b> &middot; 정부 관계자 <b>5회</b> &middot; 전문가 <b>3회</b> &middot; 시민사회 <b>3회</b>.
+            발언 38건 중 <b>32건이 제도권 안쪽</b>에서 나왔습니다.
+          </p>
+        </div>
+
+        <h2 class="sec">문장을 쓰지 않고 프레임을 실은 경우 <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></h2>
+        <div class="tscroll">
+          <table class="t">
+            <caption><b>이 표가 이 분석의 반론 답변입니다.</b> &ldquo;누구를 인용할지 고르는 것 자체가 프레이밍&rdquo;이라는 반론은 옳습니다.
+            그래서 인용을 버리지 않고 <b>별도 지표로 셉니다</b> — 인용이 어느 계열의 프레임을 실었는지, 그것이 그 매체의 기자 문장과 같은 방향인지.</caption>
+            <thead><tr><th scope="col">매체</th><th scope="col">기자 문장 계열</th><th scope="col">인용의 최빈 계열</th><th scope="col">방향</th><th scope="col">반대 계열 인용에 반박이 붙었나</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">A일보</th><td>법·제도</td><td>법·제도</td><td><span class="chip">일치</span></td><td>반대 계열 인용 1건 — 반박 서술 있음</td></tr>
+              <tr><th scope="row">B일보</th><td>법·제도</td><td>법·제도</td><td><span class="chip">일치</span></td><td>반대 계열 인용 없음</td></tr>
+              <tr><th scope="row">C일보</th><td>법·제도</td><td>정치 갈등</td><td><span class="chip warn">불일치</span></td><td>반대 계열 인용 2건 — 반박 없이 병치</td></tr>
+              <tr><th scope="row">D신문</th><td>정치 갈등</td><td>정치 갈등</td><td><span class="chip">일치</span></td><td>반대 계열 인용 1건 — 반박 없이 병치</td></tr>
+              <tr><th scope="row">E일보</th><td>정치 갈등</td><td>정치 갈등</td><td><span class="chip">일치</span></td><td>반대 계열 인용 없음</td></tr>
+              <tr style="background:var(--afs-warn-soft)"><th>F신문</th><td>—<br /><span style="font-size:11px">기자 문장 0건</span></td><td>정치 갈등</td><td><span class="chip warn">비교 불가</span></td><td>반대 계열 인용 없음 — 한쪽 계열만 인용</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+
+        <div class="next">
+          <a href="#/framing"><i>더 깊이</i><b>프레이밍 분석</b><span>이 위치가 어느 문장에서 나왔는지</span></a>
+          <a href="#/report"><i>정리</i><b>리포트</b><span>이 의제를 문장으로 읽기</span></a>
+          <a href="#/issues"><i>다른 의제</i><b>의제 탐색</b><span>5개 의제 한눈에</span></a>
+        </div>
+      </section>
+
+      <!-- ═══════════ 사안 개요 ═══════════ -->
+      <section data-screen="issue">
+        <header class="head">
+          <div class="eyebrow"><span class="chip brand">1위 의제</span><span class="chip">기사 7건 · 매체 6곳</span><span class="chip warn">군집 재검토 필요</span></div>
+          <h1>특검 보완수사권 부여 논쟁</h1>
+          <p>사안 개요 — 무슨 일이 있었고, 매체들이 공통으로 전한 사실과 갈린 지점이 무엇인지.</p>
+        </header>
+
+        <h2 class="sec">6곳이 공통으로 전한 사실</h2>
+        <div class="card">
+          <p style="margin:0;font-size:13.5px;line-height:1.7">
+            여당 소속 한 의원이 특검에 보완수사권을 부여하는 문제를 공개적으로 제기했고, 여야가 이를 두고 대립했다.
+            <b>이 사실 관계는 6곳 모두 같게 전했습니다.</b> 갈린 것은 이 사건을 <b>무엇의 문제로 규정하는가</b>입니다.
+          </p>
+          <p class="note">공통 사실은 6곳 전부에서 관측된 서술만 넣습니다. 한 곳이라도 다르게 전한 내용은 아래 "갈린 지점"으로 내려갑니다.</p>
+        </div>
+
+        <h2 class="sec">어디에서 갈렸나</h2>
+        <div class="card">
+          <p class="note" style="margin:0 0 11px;padding-bottom:9px;border-bottom:1px solid var(--afs-rule)">
+            <b>읽는 법</b> — 점 6개는 <b>매체 6곳</b>입니다.
+            <span style="display:inline-flex;align-items:center;gap:4px"><i style="display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--afs-brand)"></i> 기자 문장 관측</span> ·
+            <span style="display:inline-flex;align-items:center;gap:4px"><i style="display:inline-block;width:11px;height:11px;border-radius:50%;border:1.5px dashed var(--afs-warn)"></i> 인용만 관측</span> ·
+            <span style="display:inline-flex;align-items:center;gap:4px"><i style="display:inline-block;width:11px;height:11px;border-radius:50%;border:1px dashed var(--afs-rule-2)"></i> 미관측</span>
+          </p>
+          <div class="meter"><span class="nm">문제 정의</span><span class="dots" role="img" aria-label="매체 6곳 중 5곳 기자 문장 관측, 1곳 인용만"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="ghost"></i></span><span class="vl">5곳 관측 · <b>3:2 갈림</b></span></div>
+          <div class="meter"><span class="nm">원인 해석</span><span class="dots" role="img" aria-label="매체 6곳 중 4곳 기자 문장 관측, 2곳 미관측"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="vl">4곳 관측 · <b>2:2 갈림</b></span></div>
+          <div class="meter"><span class="nm">책임 귀속</span><span class="dots" role="img" aria-label="매체 6곳 전부 인용만 관측"><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i></span><span class="vl" style="color:var(--afs-warn)">기자 문장 0곳</span></div>
+          <div class="meter"><span class="nm">규범적 평가</span><span class="dots" role="img" aria-label="매체 6곳 전부 인용만 관측"><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i></span><span class="vl" style="color:var(--afs-warn)">기자 문장 0곳</span></div>
+          <div class="meter"><span class="nm">해법·처방</span><span class="dots" role="img" aria-label="매체 6곳 중 4곳 기자 문장 관측, 2곳 미관측"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="vl" style="color:var(--afs-good)">4곳 관측 · 전부 동일</span></div>
+        </div>
+
+        <h2 class="sec">6곳 모두 말하지 않은 것 <button class="prov p-derive" type="button" aria-haspopup="dialog" data-book="p-derive">위 결과를 합친 계산</button></h2>
+        <div class="card">
+          <p style="margin:0 0 11px;font-size:0.93em;line-height:1.7">
+            기사에 무엇을 넣을지 고르는 것과 <b>무엇을 넣지 않을지 고르는 것</b>은 같은 선택의 앞뒤입니다.
+            Entman(1993)이 프레이밍을 <b>선택과 배제</b>로 정의한 이유입니다. 그래서 갈린 지점 옆에 빠진 자리를 함께 둡니다.
+          </p>
+          <div class="tscroll" tabindex="0" role="region" aria-label="등장·미등장 표 — 좌우로 스크롤할 수 있습니다">
+          <table class="t">
+            <caption>취재원 역할 9종 중 이 의제 기사 7건에 등장한 것과 등장하지 않은 것</caption>
+            <thead><tr><th scope="col">역할</th><th scope="col" class="n">발언</th><th scope="col">상태</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">정치 행위자</th><td class="n">21</td><td>등장</td></tr>
+              <tr><th scope="row">사법·수사기관</th><td class="n">6</td><td>등장</td></tr>
+              <tr><th scope="row">정부 관계자</th><td class="n">5</td><td>등장</td></tr>
+              <tr><th scope="row">전문가</th><td class="n">3</td><td>등장</td></tr>
+              <tr><th scope="row">시민사회</th><td class="n">3</td><td>등장</td></tr>
+              <tr class="absent"><th scope="row">피해 당사자</th><td class="n">0</td><td>등장하지 않음</td></tr>
+              <tr class="absent"><th scope="row">수사 대상이 될 사람</th><td class="n">0</td><td>등장하지 않음</td></tr>
+              <tr class="absent"><th scope="row">제도를 운용할 실무자</th><td class="n">0</td><td>등장하지 않음</td></tr>
+              <tr class="absent"><th scope="row">기업</th><td class="n">0</td><td>등장하지 않음</td></tr>
+            </tbody>
+          </table>
+          </div>
+          <p class="note" style="margin-top:10px">
+            <b>이 사안에서 아무도 묻지 않은 질문:</b> 보완수사권이 실제로 쓰일 사건의 당사자는 누구인가.
+            제도를 바꾸는 논의였지만, 그 제도가 적용될 사람의 말은 6곳 어디에도 없었습니다.
+          </p>
+          <p class="note">
+            빠진 자리를 세는 것은 있는 것을 세는 것보다 약합니다 &mdash;
+            그 기사에 실을 <b>기회가 있었는지</b>까지는 여기서 알 수 없기 때문입니다.
+            그래서 이 표는 &ldquo;안 실었다&rdquo;가 아니라 <b>&ldquo;이 7건에는 없었다&rdquo;</b>로 읽어 주십시오.
+          </p>
+        </div>
+
+        <h2 class="sec">이 표본의 성격</h2>
+        <div class="grid g3">
+          <div class="kpi"><div class="n">7</div><div class="l">기사</div><div class="h">한 매체가 2건을 썼습니다(6곳·7건).</div></div>
+          <div class="kpi"><div class="n">0.81</div><div class="l">이 의제 프롬프트 변형 간 일치율</div><div class="h">전체 평균 0.89보다 낮습니다. 문제 정의 층위에서 두 코더가 갈렸습니다.</div></div>
+          <div class="kpi"><div class="n">28</div><div class="l">근거가 붙은 주장</div><div class="h">근거 문장 41개. 한 주장에 여러 문장이 붙습니다.</div></div>
+        </div>
+
+        <details class="fold" style="margin-top:14px">
+          <summary>기사 7건 목록 <span class="chip">매체별로 접혀 있습니다</span></summary>
+          <div class="body">
+            <div class="tscroll">
+              <table class="t">
+                <thead><tr><th scope="col">매체</th><th scope="col">발행</th><th scope="col">이 기사에서 관측된 층위</th><th scope="col"><span class="sr-only">원문 링크</span></th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">A일보</th><td>07-26 11:31</td><td>문제 정의 · 원인 · 해법</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
+                  <tr><th scope="row">A일보</th><td>07-26 16:02</td><td>문제 정의 · 해법</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
+                  <tr><th scope="row">B일보</th><td>07-26 09:14</td><td>문제 정의 · 해법</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
+                  <tr><th scope="row">C일보</th><td>07-26 14:47</td><td>문제 정의 · 원인 · 해법</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
+                  <tr><th scope="row">D신문</th><td>07-26 10:08</td><td>문제 정의 · 원인 · 해법</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
+                  <tr><th scope="row">E일보</th><td>07-26 13:22</td><td>문제 정의 · 원인</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
+                  <tr><th scope="row">F신문</th><td>07-26 17:55</td><td>(취재원 발언만)</td><td><a href="#" onclick="return false" aria-disabled="true" style="color:var(--afs-brand);font-weight:700">원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </details>
+
+        <div class="next">
+          <a href="#/framing"><i>다음</i><b>프레이밍 분석</b><span>다섯 층위를 문장 근거와 함께</span></a>
+          <a href="#/outlets"><i>다음</i><b>언론사 비교</b><span>쟁점 축에서의 위치</span></a>
+          <a href="#/report"><i>정리</i><b>리포트</b><span>문장으로 읽기</span></a>
+        </div>
+      </section>
+
+      <!-- ═══════════ 의제 탐색 ═══════════ -->
+      <section data-screen="issues">
+        <header class="head">
+          <div class="eyebrow"><span class="chip brand">2026-07-26</span><span class="chip">의제 5개 · 기사 25건</span></div>
+          <h1>의제 탐색</h1>
+          <p>이날 보도량 의제 5개입니다. 어느 의제가 어느 층위에서 갈렸는지 한눈에 봅니다.</p>
+        </header>
+
+        <h2 class="sec" data-src="derive">의제 × 질문 <button class="prov p-derive" type="button" aria-haspopup="dialog" data-book="p-derive">위 결과를 합친 계산</button></h2>
+        <div class="tscroll">
+          <table class="t">
+            <caption>표시는 두 가지뿐입니다 — <span class="diff" style="padding:1px 5px">파란 칸</span> 매체가 갈린 층위,
+            <span class="part" style="padding:1px 5px">빗금 칸</span> 기자가 직접 쓴 문장이 관측되지 않은 층위.
+            <b>진하기 단계는 없습니다.</b> 갈린 정도는 칸 안의 숫자(3:2 등)가 나타냅니다.</caption>
+            <thead><tr><th scope="col">의제</th><th scope="col" class="n">기사</th><th scope="col">문제 정의</th><th scope="col">원인</th><th scope="col">해법</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">1위 · 보완수사권</th><td class="n">7</td><td class="diff">3:2</td><td class="diff">2:2</td><td>4곳 동일</td></tr>
+              <tr><th>2위 · 지도부 충돌</th><td class="n">6</td><td class="diff">4:2</td><td>동일</td><td class="part">인용만</td></tr>
+              <tr><th>3위 · 방화 보복범죄</th><td class="n">4</td><td>동일</td><td>동일</td><td class="diff">2:2</td></tr>
+              <tr><th>4위 · 불출석 조정</th><td class="n">4</td><td class="diff">2:2</td><td class="part">인용만</td><td class="part">인용만</td></tr>
+              <tr><th>5위 · 집단 난투</th><td class="n">4</td><td>동일</td><td>동일</td><td>동일</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          <b>책임·평가 두 질문은 열에서 뺐습니다.</b> 규범적 평가는 의제 5개 전부에서 기자 문장이 0건이고,
+          책임 귀속도 기사 25건 전체에서 5건뿐입니다. 두 층위 모두 칸마다 같은 값이 반복돼, 같은 사실이 증거 5개처럼 읽힙니다
+          (<a href="#/" style="color:var(--afs-brand)">홈의 발견 카드</a> 참조).<br />
+          <b>가로로 읽으면</b> 1·2·4위는 문제 정의부터 갈렸고, 3·5위는 사실 전달에 가까웠습니다.
+          다만 3~5위는 기사가 4건뿐이라 &ldquo;동일&rdquo;이 우연일 수 있습니다 — 그래서 기사 수 열을 옆에 뒀습니다.
+        </p>
+
+        <h2 class="sec">의제 카드</h2>
+        <div class="grid g2">
+          <div class="card">
+            <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:7px"><span class="chip brand">1위</span><span class="chip">7건 · 6곳</span><span class="chip warn">군집 재검토</span></div>
+            <h3 class="sub"><a href="#/issue" style="color:inherit;text-decoration:none">특검 보완수사권 부여 논쟁</a></h3>
+            <p style="margin:0;font-size:12.5px;color:var(--afs-ink-2)">3곳은 <b>&lsquo;권한이 한 손에 모인다&rsquo;</b>로, 2곳은 <b>&lsquo;누가 특검을 쥐느냐&rsquo;</b>로 썼습니다.
+            성격은 갈렸는데 해야 할 일에서는 4곳이 같았습니다.</p>
+            <div style="display:flex;gap:6px;margin-top:11px;flex-wrap:wrap">
+              <a href="#/framing" class="btn" style="font-size:12px;min-height:34px;padding:7px 12px">여기부터 · 프레이밍 분석</a>
+              <a href="#/issue" class="btn ghost" style="font-size:12px;min-height:34px;padding:7px 12px">사안 개요</a>
+              <a href="#/outlets" class="btn ghost" style="font-size:12px;min-height:34px;padding:7px 12px">언론사 비교</a>
+            </div>
+          </div>
+          <div class="card">
+            <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:7px"><span class="chip brand">2위</span><span class="chip">6건 · 6곳</span><span class="chip good">응집</span></div>
+            <h3 class="sub"><a href="#/issue" style="color:inherit;text-decoration:none">여당 지도부 내부 충돌 논란</a></h3>
+            <p style="margin:0;font-size:12.5px;color:var(--afs-ink-2)">4곳은 &lsquo;한 사람의 처신&rsquo;으로, 2곳은 &lsquo;당이 관리하지 못한 일&rsquo;로 썼습니다.</p>
+            <div style="display:flex;gap:6px;margin-top:11px;flex-wrap:wrap">
+              <a href="#/framing" class="btn" style="font-size:12px;min-height:34px;padding:7px 12px">여기부터 · 프레이밍 분석</a>
+              <a href="#/issue" class="btn ghost" style="font-size:12px;min-height:34px;padding:7px 12px">사안 개요</a>
+            </div>
+          </div>
+        </div>
+        <p class="note">나머지 3개 의제는 같은 형식으로 이어집니다.</p>
+      </section>
+
+      <!-- ═══════════ 리포트 ═══════════ -->
+      <section data-screen="report">
+        <header class="head">
+          <div class="eyebrow"><span class="chip brand">1위 의제</span><span class="chip">리포트</span></div>
+          <h1>특검 보완수사권 부여 논쟁</h1>
+          <p>이 의제의 분석을 문장으로 읽습니다. 모든 문장은 위 화면의 근거에 연결됩니다.</p>
+        </header>
+
+        <div class="card">
+          <h3 class="sub">리드</h3>
+          <p style="margin:0;font-size:14px;line-height:1.75">
+            신문들은 이 사건에 찬성하거나 반대하기 전에, <b>이것이 무슨 사건인지부터</b> 다르게 정했다.
+            3곳은 수사·기소 권한이 한 기관에 모이는 구조의 문제로 썼고, 2곳은 여야 견제 구도의 문제로 썼다.
+            나머지 1곳은 자기 문장 없이 취재원의 말만으로 사안을 전했다.
+            <a href="#/framing#L1" style="color:var(--afs-brand);font-weight:750;font-size:11.5px">→ 문제 정의 층위 근거</a>
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 class="sub">쟁점 구도</h3>
+          <p style="margin:0 0 9px;font-size:13.5px;line-height:1.72">
+            &lsquo;권한이 한 손에 모인다&rsquo;로 쓴 3곳은 원인도 입법 설계에서 찾았다. &lsquo;누가 특검을 쥐느냐&rsquo;로 쓴 2곳은 원인도 정치적 계산에서 찾았다.
+            <b>사건의 성격 규정과 원인 진단이 같은 방향으로 묶였다.</b> 한 이야기 안에서 문제와 원인은 원래 붙어 다니므로,
+            이 정합은 두 지표가 따로 맞아떨어진 것이 아니라 <b>하나의 이야기가 일관되게 서술된 것</b>이다.
+          </p>
+          <p style="margin:0;font-size:13.5px;line-height:1.72">
+            그런데 해법에서는 관측된 4곳이 모두 제도적 견제로 모였다. 대립하는 진단이 같은 처방으로 수렴한 것이다.
+            이 사안의 논쟁은 목표가 아니라 진단에서 벌어지고 있다.
+            <a href="#/framing#L5" style="color:var(--afs-brand);font-weight:750;font-size:11.5px">→ 해법 층위 근거</a>
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 class="sub">누구의 목소리인가</h3>
+          <p style="margin:0;font-size:13.5px;line-height:1.72">
+            책임과 평가는 6곳 모두 기자가 직접 쓰지 않았다. 관측된 항목은 전부 취재원 발언 인용이다.
+            판단을 인용에 실어 옮기는 것은 오래 알려진 취재 관행이다 &mdash; Tuchman(1972)은 이를 &lsquo;객관성이라는 전략적 의례&rsquo;라 불렀다.
+            취재원 구성에서는 차이가 있었다 — D신문은 시민사회·전문가를 함께 실었고, F신문은 정치 행위자 발언만으로 기사를 구성했다.
+            <b>기자가 문장을 쓰지 않아도 누구를 부르는지에서 편집 선택이 드러난다.</b>
+            <a href="#/outlets" style="color:var(--afs-brand);font-weight:750;font-size:11.5px">→ 취재원 구성 표</a>
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 class="sub">이렇게 읽어보세요</h3>
+          <ol style="margin:0;padding-left:19px;font-size:13.5px;line-height:1.8">
+            <li>&lsquo;권한이 한 손에 모인다&rsquo;로 쓴 기사와 &lsquo;누가 특검을 쥐느냐&rsquo;로 쓴 기사를 나란히 놓고, <b>첫 세 문단</b>만 비교해보세요. 규정은 대개 그 안에서 끝납니다.</li>
+            <li>같은 행위를 부르는 <b>낱말</b>을 찾아보세요. &lsquo;추진&rsquo;과 &lsquo;강행&rsquo; 중 어느 쪽을 썼는지가 그 기사의 시선을 가장 먼저 드러냅니다.</li>
+            <li>해법 문장을 먼저 찾아보세요. 진단이 달라도 처방이 같다면, 그 논쟁은 목표 다툼이 아닙니다.</li>
+            <li>인용된 사람의 <b>역할</b>을 세어보세요. 전문가가 없고 정치인만 있다면, 그 기사는 사안을 정치 이벤트로 다루고 있는 것입니다.</li>
+          </ol>
+        </div>
+
+        <div class="readnote">
+          <b>이 리포트를 읽을 때</b>
+          <p>2026년 7월 26일 하루, 이 사건을 쓴 기사 7건에 대한 관측이다. 그 신문의 평소 성향이 아니라 <b>이날 이 사건을 쓴 방식</b>이다.
+          이름과 계열은 AI 코더 둘이 따로 붙인 뒤 갈린 곳만 다시 봤고, 사람 코더 검증은 다음 회차다.
+          이 의제는 &ldquo;같은 사건&rdquo; 묶음 자체가 느슨한 편이라(군집 재검토 필요) 조금 더 조심해서 읽는 편이 좋다.
+          <a href="#/method">방법론 전체 &rarr;</a></p>
+        </div>
+
+        <div class="next">
+          <a href="#/community"><i>말하기</i><b>이 의제 커뮤니티</b><span>글 12개</span></a>
+          <a href="#/self-check"><i>2분</i><b>내 읽기 유형</b><span>내가 놓치는 질문 확인</span></a>
+          <a href="#/issues"><i>다른 의제</i><b>의제 탐색</b><span>5개 의제 한눈에</span></a>
+        </div>
+      </section>
+
+      <!-- ═══════════ AI 대화 ═══════════ -->
+      <section data-screen="ask">
+        <header class="head">
+          <div class="eyebrow"><span class="chip brand">AI 대화</span><span class="chip good">지어내지 않고 찾아옵니다</span></div>
+          <h1>근거가 있는 것만 답합니다</h1>
+          <p>이 대화는 문장을 지어내지 않습니다. 공개된 근거에서 찾아 답하고, 근거가 없으면 <b>보류</b>합니다.</p>
+        </header>
+
+        <div class="card">
+          <label class="field"><span>어느 의제에 대해 물어볼까요</span>
+            <select class="fs"><option>1위 · 특검 보완수사권 부여 논쟁</option><option>2위 · 여당 지도부 내부 충돌 논란</option></select>
+          </label>
+          <label class="field"><span>질문</span><textarea placeholder="예: 이 의제에서 매체들이 가장 크게 갈린 지점은 무엇인가요?">이 의제에서 매체들은 어디에서 갈렸나요?</textarea></label>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px">
+            <button class="tinybtn" type="button">이 사건을 신문들이 뭐라고 규정했나</button>
+            <button class="tinybtn" type="button">6곳이 공통으로 전한 사실은</button>
+            <button class="tinybtn" type="button">누구 말을 실었나</button>
+            <button class="tinybtn" type="button">해법도 갈렸나</button>
+            <button class="tinybtn" type="button">기자가 직접 쓴 문장은 몇 개인가</button>
+          </div>
+          <button class="btn">근거 찾기</button>
+        </div>
+
+        <h2 class="sec">답변</h2>
+        <div class="card" style="border-left:3px solid var(--afs-good)">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"><span class="chip good">근거 있음</span><span class="chip">근거 기사 3건</span><button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></div>
+          <p style="margin:0 0 12px;font-size:13.5px;line-height:1.72">
+            문제 정의 층위에서 갈렸습니다. 3곳(A·B·C)은 법·제도 계열로, 2곳(D·E)은 정치 갈등 계열로 규정했습니다.
+            해법 층위에서는 관측된 4곳이 모두 제도적 견제 계열로 같았습니다.
+          </p>
+          <h3 class="sub">이 답의 근거</h3>
+          <div class="ev narr">
+            <div class="ev-h"><b>A일보</b><span class="chip">기자 문장</span><span class="chip brand">법·제도</span></div>
+            <p>보완수사권을 특검에 주는 것은 수사와 기소를 한 기관에 몰아주는 구조 문제라고 짚었다.</p>
+            <div class="ev-f"><span>발췌본 문장 4</span><span>·</span><span>지문 a3f19c40…</span><a href="#" onclick="return false" aria-disabled="true">기사 원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></div>
+          </div>
+          <div class="ev narr">
+            <div class="ev-h"><b>D신문</b><span class="chip">기자 문장</span><span class="chip" style="background:color-mix(in srgb,var(--fam-b) 15%,transparent);color:var(--fam-b)">정치 갈등</span></div>
+            <p>여당의 반대가 특검 견제를 위한 정치 공세라는 점을 사안의 중심에 놓았다.</p>
+            <div class="ev-f"><span>발췌본 문장 7</span><span>·</span><span>지문 5c9d1b83…</span><a href="#" onclick="return false" aria-disabled="true">기사 원문 <span aria-hidden="true">↗</span><span class="sr-only">(시안에서는 연결되지 않습니다)</span></a></div>
+          </div>
+          <p class="note">답변은 위 근거에서 조합한 것입니다. 근거 밖의 내용은 넣지 않습니다.</p>
+        </div>
+
+        <h2 class="sec">답하지 않는 질문의 유형</h2>
+        <div class="tscroll">
+          <table class="t">
+            <caption>아래 유형은 근거를 찾지 못하는 것이 아니라, <b>이 표본으로는 답할 수 없는 질문</b>입니다. 규칙으로 보류합니다.</caption>
+            <thead><tr><th scope="col">유형</th><th scope="col">예시 질문</th><th scope="col">보류 이유</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">매체 성향 추론</th><td>A일보가 정부에 비판적인가요?</td><td>하루치 기사 7건은 성향을 판정할 표본이 아닙니다</td></tr>
+              <tr><th>표본 밖 기간</th><td>이 사안이 지난달부터 어떻게 바뀌었나요?</td><td>2026-07-26 하루만 분석했습니다</td></tr>
+              <tr><th>사실 판정</th><td>어느 기사가 맞나요?</td><td>이 분석은 설명 구조를 비교하며, 사실 여부를 판정하지 않습니다</td></tr>
+              <tr><th>의도 추정</th><td>왜 그렇게 썼나요?</td><td>관측된 것은 문장이고, 편집 의도는 관측 대상이 아닙니다</td></tr>
+              <tr><th>근거 0건</th><td>(그 외) 연결된 근거가 없는 질문</td><td>답을 만들어 내지 않고 보류합니다</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═══════════ 자가점검 ═══════════ -->
+      <section data-screen="self-check">
+        <header class="head">
+          <div class="eyebrow"><span class="chip brand">내 읽기 유형</span><span class="chip">12문항 · 약 2분</span></div>
+          <h1>나는 뉴스를 어떻게 읽고 있나</h1>
+          <p>맞고 틀리는 검사가 아닙니다. 네 개의 축에서 <b>어느 쪽으로 기울어 읽는지</b> 보여주고, <b>놓치기 쉬운 질문</b>을 알려줍니다.</p>
+        </header>
+
+        <div class="card demo" id="lexDemo">
+          <h3 class="sub" style="margin-top:0">먼저 하나만 — 어느 쪽이 더 &lsquo;중립적&rsquo;으로 느껴집니까?</h3>
+          <div class="qopt" role="radiogroup" aria-labelledby="lexQ" style="margin-top:10px">
+            <span id="lexQ" class="sr-only">두 문장 중 더 중립적으로 느껴지는 쪽을 고르세요</span>
+            <button type="button" role="radio" aria-checked="false" class="qb" data-lex="a">여당이 특검법 처리를 <b>추진</b>했다</button>
+            <button type="button" role="radio" aria-checked="false" class="qb" data-lex="b">여당이 특검법 처리를 <b>강행</b>했다</button>
+          </div>
+          <div id="lexRev" hidden>
+            <p style="margin:12px 0 0;font-size:0.93em;line-height:1.72">
+              <b>둘 다 틀입니다.</b> &lsquo;추진&rsquo;은 반대가 없었던 것처럼 읽히고, &lsquo;강행&rsquo;은 반대가 정당했던 것처럼 읽힙니다.
+              사전에는 둘 다 중립어로 올라 있습니다.
+            </p>
+            <p class="note" style="margin-top:8px">
+              중립적으로 느껴지는 쪽이 곧 <b>당신에게 익숙한 틀</b>입니다. 프레이밍은 틀린 말을 쓰는 일이 아니라,
+              틀리지 않은 여러 말 중에서 하나를 고르는 일입니다.
+              <a href="#/outlets" style="color:var(--afs-brand);font-weight:750">이날 신문 6곳이 고른 낱말 보기 &rarr;</a>
+            </p>
+          </div>
+        </div>
+
+        <div class="card" id="quizCard">
+          <div class="qbar"><i id="qbar" style="width:0%"></i></div>
+          <p style="margin:0 0 4px;font-size:11.5px;color:var(--afs-ink-3);display:flex;justify-content:space-between">
+            <span id="qcount">1 / 12</span><span id="qaxis">축 1 · 어디까지 읽나</span>
+          </p>
+          <h2 style="margin:12px 0 0;font-size:16px;font-weight:800;line-height:1.5;letter-spacing:-.02em" id="qtext">
+            기사를 볼 때 당신은?
+          </h2>
+          <div class="qopt" role="radiogroup" aria-labelledby="qtext" id="qopt">
+            <button type="button" role="radio" aria-checked="false" class="qb" data-v="a"></button>
+            <button type="button" role="radio" aria-checked="false" class="qb" data-v="b"></button>
+          </div>
+          <div style="display:flex;gap:7px;margin-top:14px;flex-wrap:wrap;align-items:center">
+            <button class="btn ghost" type="button" id="qPrev" style="min-height:40px;font-size:12px">← 이전</button>
+            <span style="flex:1"></span>
+            <button class="btn ghost" type="button" id="qReset" style="min-height:40px;font-size:12px">처음부터 다시</button>
+          </div>
+          <p class="note">답은 이 브라우저에만 저장됩니다. 서버로 보내지 않습니다.</p>
+        </div>
+
+        <div class="card" id="quizResult" hidden>
+          <div class="type">
+            <div class="code4" id="rCode">····<small id="rName">유형</small></div>
+            <div>
+              <p style="margin:0 0 9px;font-size:13.5px;line-height:1.7" id="rLine"></p>
+              <div class="grid g2" style="margin-top:11px">
+                <div style="background:var(--afs-sunk);border-radius:var(--afs-r-btn);padding:11px 12px">
+                  <b style="font-size:11.5px;color:var(--afs-good)">강점</b>
+                  <p style="margin:3px 0 0;font-size:12.5px;line-height:1.6" id="rGood"></p>
+                </div>
+                <div style="background:var(--afs-warn-soft);border-radius:var(--afs-r-btn);padding:11px 12px">
+                  <b style="font-size:11.5px;color:var(--afs-warn)">놓치기 쉬운 것</b>
+                  <p style="margin:3px 0 0;font-size:12.5px;line-height:1.6" id="rBlind"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:14px;padding-top:13px;border-top:1px solid var(--afs-rule)">
+            <button class="btn" type="button" id="rShare">링크 복사</button>
+            <button class="btn ghost" type="button" id="rAgain">다시 하기</button>
+            <span class="chip wrap">공유해도 12문항 응답은 담기지 않습니다 — 유형 코드만 들어갑니다</span>
+          </div>
+          <div class="next" style="margin-top:14px;padding-top:14px">
+            <a href="#/framing" id="rGoLayer"><i>당신이 놓치는 질문</i><b>내가 놓치는 질문 보기</b><span>1위 의제에서 확인합니다</span></a>
+            <a href="#/community"><i>같은 유형 12명</i><b>커뮤니티에서 이야기하기</b><span>유형 배지가 함께 붙습니다</span></a>
+            <a href="#/settings"><i>보관</i><b>다른 기기에서 이어보기</b><span>복구 코드로 결과를 옮깁니다</span></a>
+          </div>
+        </div>
+
+        <details class="fold" style="margin-top:12px">
+          <summary>16개 유형 전체 보기 <span class="chip">결과를 본 뒤에 펼치는 게 좋습니다</span></summary>
+          <div class="body">
+            <div class="tscroll">
+              <table class="t">
+                <thead><tr><th scope="col">코드</th><th scope="col">이름</th><th scope="col">한 줄</th></tr></thead>
+                <tbody>
+                  <tr><th>BMOR</th><td>정밀 대조가</td><td>본문·발언 구분·구조·유보</td></tr>
+                  <tr><th>BDCP</th><td>결론 검증가</td><td>본문·발언 통합·사례·결론</td></tr>
+                  <tr><th scope="row">HMOR</th><td>직관 대조가</td><td>제목·발언 구분·구조·유보</td></tr>
+                  <tr><th>HDCP</th><td>속도 판단가</td><td>제목·발언 통합·사례·결론</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="grid g2" style="margin-top:9px">
+              <div style="background:var(--afs-sunk);border-radius:var(--afs-r-btn);padding:10px 12px;font-size:12px;line-height:1.6"><b>B</b> 제목만 보지 않고 <b>본문까지</b> 읽는 편 &nbsp;↔&nbsp; <b>H</b> 제목에서 대체로 판단하는 편</div>
+              <div style="background:var(--afs-sunk);border-radius:var(--afs-r-btn);padding:10px 12px;font-size:12px;line-height:1.6"><b>M</b> 인용된 말과 기자 말을 <b>구분</b>하는 편 &nbsp;↔&nbsp; <b>D</b> 기사 전체를 한 목소리로 읽는 편</div>
+              <div style="background:var(--afs-sunk);border-radius:var(--afs-r-btn);padding:10px 12px;font-size:12px;line-height:1.6"><b>O</b> 사례보다 <b>구조·배경</b>을 보는 편 &nbsp;↔&nbsp; <b>C</b> 구체적 사례에서 이해하는 편</div>
+              <div style="background:var(--afs-sunk);border-radius:var(--afs-r-btn);padding:10px 12px;font-size:12px;line-height:1.6"><b>R</b> 결론을 <b>미루는</b> 편 &nbsp;↔&nbsp; <b>P</b> 읽고 나서 입장을 정하는 편</div>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <!-- ═══════════ 커뮤니티 ═══════════ -->
+      <section data-screen="community">
+        <header class="head">
+          <div class="eyebrow"><span class="chip brand">커뮤니티</span><span class="chip">1위 의제 · 글 12개</span></div>
+          <h1>다르게 읽은 사람들</h1>
+          <p>근거를 본 사람들이 남긴 글입니다. 글에는 그 사람이 어느 화면에서 무엇을 보고 썼는지가 함께 붙습니다.</p>
+        </header>
+
+        <div class="card" style="border-left:3px solid var(--afs-brand);margin-bottom:12px">
+          <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+            <span class="chip brand">운영자 질문</span><span class="chip">답 7개</span>
+          </div>
+          <p style="margin:0 0 10px;font-size:14.5px;font-weight:750;line-height:1.6">
+            기자들이 기사에서 자기 의견을 안 쓰는 게 원칙이라 그럴까요, 아니면 이번 25건이 우연일까요?
+          </p>
+          <button class="btn ghost" style="min-height:36px;font-size:12.5px">이 질문에 답하기</button>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:11px">
+            <span class="chip brand">밑줄</span><span class="chip">BMOR · 정밀 대조가</span>
+            <a href="#/settings" style="font-size:11.5px;color:var(--afs-brand);text-decoration:none;font-weight:700;margin-left:auto">이름·유형 바꾸기 →</a>
+          </div>
+          <label class="field"><span>이 이슈에 대해 — <b>한 줄이면 됩니다</b></span><textarea placeholder="예: 나는 이 사건을 정치 싸움으로만 봤는데, 제도 얘기로 쓴 기사가 있는 게 의외였다."></textarea></label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button class="btn" type="button">글 올리기</button>
+            <span class="chip wrap">내가 어느 화면을 보고 썼는지 함께 표시됩니다 (다른 사람이 근거를 확인할 수 있게)</span>
+          </div>
+          <p class="note">글을 올리면 <b>바로 공개됩니다.</b> 다만 이메일·전화번호처럼 개인정보로 보이는 내용이 있으면
+          검토 전까지 공개되지 않고, 신고가 3건 쌓이면 자동으로 숨겨집니다. 이름은 설정에서 한 번만 정하면 됩니다.</p>
+        </div>
+
+        <h2 class="sec">글 12개 <span class="seg" id="sortSeg" role="radiogroup" aria-label="글 정렬" style="margin-left:auto"><button type="button" role="radio" aria-checked="true" tabindex="0">공감순</button><button type="button" role="radio" aria-checked="false" tabindex="-1">최신순</button></span></h2>
+
+        <div class="post">
+          <div class="post-h"><b>가로등</b><span class="chip">BDCP</span><span class="chip">프레이밍 분석에서</span><time datetime="2026-07-26T14:00+09:00">3시간 전</time></div>
+          <p>F신문은 기자가 쓴 문장이 하나도 없다고 나오는데, 그럼 아무 입장이 없는 건가요? 누구 말을 실을지 고른 것도 결국 선택 같은데요.</p>
+          <div class="post-f"><button class="tinybtn" aria-pressed="true">♥ 공감 9</button><button class="tinybtn">답글 2</button><button class="tinybtn">신고</button></div>
+          <div class="reply">
+            <div class="post-h"><b>창가자리</b><span class="chip">BMOR</span><time datetime="2026-07-26T15:00+09:00">2시간 전</time></div>
+            <p>언론사 비교 화면 맨 아래 표 보시면 나와요. F신문은 정치인 말만 5번 실었더라고요. 전문가나 시민 얘기는 하나도 없고.</p>
+            <div class="post-f"><button class="tinybtn">♥ 공감 4</button></div>
+          </div>
+        </div>
+
+        <div class="post">
+          <div class="post-h"><b>야근중</b><span class="chip">HMCR</span><span class="chip">리포트에서</span><time datetime="2026-07-26T12:00+09:00">5시간 전</time></div>
+          <p>&ldquo;문제를 다르게 봤는데 해법은 같다&rdquo;는 게 제일 인상 깊었어요. 정치 기사 보면 늘 서로 딴 세상 사람 같은데, 어디까지가 진짜 싸움인지 선이 보이는 느낌.</p>
+          <div class="post-f"><button class="tinybtn">♥ 공감 7</button><button class="tinybtn">답글</button><button class="tinybtn">신고</button></div>
+        </div>
+
+
+      </section>
+
+      <!-- ═══════════ 설정 ═══════════ -->
+      <section data-screen="settings">
+        <header class="head">
+          <div class="eyebrow"><span class="chip brand">설정</span></div>
+          <h1>설정</h1>
+          <p>바꾼 값은 이 브라우저에 저장됩니다. 복구 코드를 만들면 다른 기기에서도 이어집니다.</p>
+        </header>
+
+        <h2 class="sec">표시 방식</h2>
+        <div class="card">
+          <div class="rowset">
+            <span class="lbl" id="lbl-theme"><b>화면 테마</b><span>시스템 설정을 따르거나 직접 고를 수 있습니다.</span></span>
+            <span class="seg" id="themeSeg" role="radiogroup" aria-labelledby="lbl-theme">
+              <button type="button" role="radio" data-th="system" aria-checked="true" tabindex="0">시스템</button>
+              <button type="button" role="radio" data-th="light" aria-checked="false" tabindex="-1">밝게</button>
+              <button type="button" role="radio" data-th="dark" aria-checked="false" tabindex="-1">어둡게</button>
+            </span>
+          </div>
+          <div class="rowset">
+            <span class="lbl" id="lbl-fs"><b>글씨 크기</b><span>본문 밀도가 높은 화면이 많습니다. 크게 두고 읽어도 표가 깨지지 않습니다.</span></span>
+            <span class="seg" id="fsSeg" role="radiogroup" aria-labelledby="lbl-fs">
+              <button type="button" role="radio" data-fs="s" aria-checked="false" tabindex="-1">작게</button>
+              <button type="button" role="radio" data-fs="m" aria-checked="true" tabindex="0">기본</button>
+              <button type="button" role="radio" data-fs="l" aria-checked="false" tabindex="-1">크게</button>
+              <button type="button" role="radio" data-fs="xl" aria-checked="false" tabindex="-1">아주 크게</button>
+            </span>
+          </div>
+          <div class="rowset">
+            <span class="lbl" id="lbl-motion"><b>애니메이션 줄이기</b><span>기기의 "동작 줄이기" 설정을 이미 따릅니다. 여기서 더 끌 수 있습니다.</span></span>
+            <span class="seg" id="motionSeg" role="radiogroup" aria-labelledby="lbl-motion"><button type="button" role="radio" data-mo="auto" aria-checked="true" tabindex="0">기기 설정 따르기</button><button type="button" role="radio" data-mo="reduce" aria-checked="false" tabindex="-1">항상 줄이기</button></span>
+          </div>
+        </div>
+
+        <h2 class="sec">나</h2>
+        <div class="card">
+          <div class="field">
+            <label for="dispName"><span>표시 이름</span></label>
+            <input id="dispName" type="text" value="밑줄" maxlength="40" aria-describedby="dispNameHelp" />
+            <small id="dispNameHelp">커뮤니티 글에 붙는 이름입니다. 여기서 한 번 정하면 글 쓸 때마다 다시 입력하지 않습니다.
+            같은 이름을 다른 사람도 쓸 수 있으므로, 이름만으로는 같은 사람임을 확인할 수 없습니다.</small>
+          </div>
+          <div class="rowset">
+            <span class="lbl"><b>읽기 유형 — BMOR 정밀 대조가</b><span>12문항 자가점검 결과입니다. 커뮤니티 글에 배지로 붙습니다.</span></span>
+            <span style="display:flex;gap:6px;flex-wrap:wrap"><a href="#/self-check" class="btn ghost" style="min-height:34px;font-size:12px">다시 하기</a><button class="btn danger" style="min-height:34px;font-size:12px">지우기</button></span>
+          </div>
+        </div>
+
+        <h2 class="sec">다른 기기에서 이어보기</h2>
+        <div class="card">
+          <p style="margin:0 0 12px;font-size:13px;line-height:1.7">
+            계정을 만들지 않습니다. 이메일도 비밀번호도 받지 않습니다.
+            대신 <b>복구 코드</b>를 발급해 두면, 다른 기기에 그 코드를 붙여넣어 <b>읽기 유형·내 글·읽은 기록</b>을 이어갈 수 있습니다.
+          </p>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:13px">
+            <span class="code">AF-7Q4K-2XM9</span>
+            <button class="btn ghost" style="min-height:38px;font-size:12px">복사</button>
+            <button class="btn ghost" style="min-height:38px;font-size:12px">코드 새로 발급</button>
+          </div>
+          <div class="field">
+            <label for="recCode"><span>다른 기기의 코드를 여기 붙여넣기</span></label>
+            <input id="recCode" type="text" placeholder="AF-XXXX-XXXX" aria-describedby="recCodeHelp" />
+            <small id="recCodeHelp">코드를 잃으면 복구할 방법이 없습니다. 그래서 이메일을 받지 않는 대신 코드를 안전한 곳에 옮겨 두시길 권합니다.</small>
+          </div>
+          <div class="rowset">
+            <span class="lbl"><b>이 기기에서 신원 초기화</b><span>이 브라우저에 저장된 익명 세션을 지웁니다. 이미 올린 글은 남지만, 그 글이 내 것임을 확인할 수 없게 됩니다.</span></span>
+            <button class="btn danger" style="min-height:34px;font-size:12px">이 기기 세션 지우기</button>
+          </div>
+        </div>
+
+        <h2 class="sec">읽기 기록</h2>
+        <div class="card">
+          <div class="rowset">
+            <span class="lbl"><b>진행률 — 화면 <span id="setProg">0 / 10</span></b><span>이 브라우저에서 열어 본 화면을 셉니다. 서버에 보내지 않습니다.</span></span>
+            <span class="prog" style="flex:0 0 auto"><span class="bar"><i id="setBar" style="width:0%"></i></span><b style="font-size:12px" id="setPct">0%</b></span>
+          </div>
+          <div class="rowset">
+            <span class="lbl"><b>안 본 화면으로 바로 가기</b><span id="setTodo">남은 화면 10개</span></span>
+            <a href="#/framing" class="btn ghost" style="min-height:34px;font-size:12px">이어 읽기</a>
+          </div>
+          <div class="rowset">
+            <span class="lbl"><b>기록 지우기</b><span>이 브라우저의 열람 기록만 지웁니다.</span></span>
+            <button class="btn danger" style="min-height:34px;font-size:12px" id="clearSeen">열람 기록 지우기</button>
+          </div>
+        </div>
+
+        <h2 class="sec">데이터</h2>
+        <div class="card">
+          <p style="margin:0 0 11px;font-size:13px">이 사이트가 저장하는 것 전부입니다.</p>
+          <div class="tscroll">
+            <table class="t">
+              <thead><tr><th scope="col">무엇</th><th scope="col">어디에</th><th scope="col">얼마나</th></tr></thead>
+              <tbody>
+                <tr><th>테마·글씨 크기</th><td>이 브라우저</td><td>지울 때까지</td></tr>
+                <tr><th>읽기 유형 · 12문항 응답</th><td>이 브라우저 + 익명 세션</td><td>지울 때까지</td></tr>
+                <tr><th>커뮤니티 글·공감</th><td>서버(익명 세션 단위)</td><td>지울 때까지</td></tr>
+                <tr><th>읽은 층위 기록</th><td>이 브라우저</td><td>지울 때까지</td></tr>
+                <tr><th>익명 세션 식별자</th><td>쿠키(1년) + 이 브라우저</td><td>초기화할 때까지</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">이름·이메일·전화번호를 받지 않습니다. 커뮤니티 글에서 개인정보로 보이는 내용이 감지되면 검토 전까지 공개되지 않습니다.</p>
+          <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn ghost" style="min-height:36px;font-size:12px">내 데이터 내려받기</button>
+            <button class="btn danger" style="min-height:36px;font-size:12px">내 데이터 모두 지우기</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ 방법론 ═══════════ -->
+      <section data-screen="method">
+        <header class="head">
+          <div class="eyebrow"><span class="chip brand">방법론</span><span class="chip warn">내부 릴리스 기준 미충족</span></div>
+          <h1>무엇을 비교하고, 무엇을 말하지 않는가</h1>
+          <p>화면에 올리는 모든 수치는 기사 본문의 특정 위치에 묶여 있습니다. 그 규칙과, 아직 성립하지 않은 조건을 함께 적습니다.</p>
+        </header>
+
+        <h2 class="sec">이 화면의 수치는 어디에서 오는가</h2>
+        <div class="pipe">
+          <div class="st s1">
+            <button class="prov p-rule" type="button" aria-haspopup="dialog" data-book="p-rule">단어 규칙 자동 분류</button>
+            <p style="margin:9px 0 0;font-size:12.5px;line-height:1.6"><b>어떤 기사가 같은 사건인가</b> — 의제 군집·순위, 정책 프레임, 일화적/주제적. 정규식 어휘 매칭이며 이중코딩을 거치지 않았습니다.</p>
+          </div>
+          <div class="ar" aria-hidden="true">→</div>
+          <div class="st s2">
+            <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button>
+            <p style="margin:9px 0 0;font-size:12.5px;line-height:1.6"><b>그 기사가 무엇을 어떻게 규정했나</b> — 다섯 층위 계열, 취재원 역할·발화 방식. 모델 코더 2명 독립 코딩 → 불일치 층위 판정 → 근거 반박 검증.</p>
+          </div>
+          <div class="ar" aria-hidden="true">→</div>
+          <div class="st s3">
+            <button class="prov p-derive" type="button" aria-haspopup="dialog" data-book="p-derive">위 결과를 합친 계산</button>
+            <p style="margin:9px 0 0;font-size:12.5px;line-height:1.6"><b>매체가 갈렸나</b> — 갈림 여부, 서사 묶음, 진행률. 앞의 두 산출을 집계·조합한 결정적 계산입니다.</p>
+          </div>
+        </div>
+        <p class="note" style="margin-top:10px;padding:10px 12px;background:var(--afs-warn-soft);border-radius:var(--afs-r-btn);color:var(--afs-warn)">
+          <b>앞 단계의 품질이 뒤 단계의 상한입니다.</b> 규칙 군집이 "같은 사건"을 잘못 묶으면 그 위의 층위 비교는 무의미해집니다.
+          그래서 군집 품질(응집 / 재검토 필요)을 의제마다 함께 적습니다 — 1·4위 의제는 재검토 필요입니다.
+        </p>
+        <p class="note">같은 화면에 섞여 있어도 <b>배지 색이 다르면 신뢰 수준이 다릅니다.</b></p>
+
+        <h2 class="sec">다섯 층위 <button class="prov p-code" type="button" aria-haspopup="dialog" data-book="p-code">AI가 두 번 채점</button></h2>
+        <div class="tscroll">
+          <table class="t">
+            <caption>Entman(1993)이 규정한 프레이밍의 네 기능(문제 정의·원인 진단·도덕 판단·해법 제시)을 코딩 단위로 옮기고,
+            <b>원인 진단을 기제(무엇이)와 행위자(누가)로 나눠</b> 다섯 층위로 운용합니다.
+            이 분리는 Entman에 없고, 책임 귀속을 독립 변수로 다루는 Iyengar(1991)·Semetko &amp; Valkenburg(2000)를 따릅니다.
+            층위 조합으로 서사를 도출하는 절차는 Matthes &amp; Kohring(2008)이지만, 그들은 책임 귀속을 원인 진단 안에 둡니다 — 이 점에서 다릅니다.</caption>
+            <thead><tr><th scope="col">층위</th><th scope="col">답하는 질문</th><th scope="col">계열 수</th><th scope="col">코드북</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">문제 정의</th><td>무엇이 문제인가</td><td class="n">7</td><td><button class="term" data-book="legal">2개 작성됨</button></td></tr>
+              <tr><th>원인 해석</th><td>왜 그렇게 됐는가</td><td class="n">8</td><td><button class="term" data-book="design">2개 작성됨</button></td></tr>
+              <tr><th>책임 귀속</th><td>누구의 책임인가</td><td class="n">8</td><td><button class="term" data-book="resp">층위 정의만</button></td></tr>
+              <tr><th>규범적 평가</th><td>옳고 그름을 어떻게 봤는가</td><td class="n">8</td><td><button class="term" data-book="eval">층위 정의만</button></td></tr>
+              <tr><th>해법·처방</th><td>무엇을 해야 하는가</td><td class="n">8</td><td><button class="term" data-book="check">1개 작성됨</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note"><b>계열 39개 중 정의문이 작성된 것은 5개이고, 층위 정의는 2개입니다.</b> 나머지는 코드 이름만 있습니다 — 코드북이 완성되기 전까지 이 분류는 재현 가능하다고 말할 수 없습니다.<br />취재원 역할·발화 방식은 프레이밍 다섯 층위와 <b>직교하는 별개 변수</b>로 코딩하며, 언론사 비교 화면에서 보여줍니다.</p>
+
+        <h2 class="sec" id="agree">두 코더가 얼마나 같게 판정했나</h2>
+        <div class="grid g2">
+          <div class="card" style="border-left:3px solid var(--afs-warn)">
+            <div style="display:flex;align-items:baseline;gap:9px"><span style="font-size:34px;font-weight:850;letter-spacing:-.04em;color:var(--afs-warn)">미측정</span></div>
+            <p style="margin:8px 0 0;font-size:12.5px;color:var(--afs-ink-2);line-height:1.65">
+              <b>사람 코더 간 신뢰도</b>입니다. 내용분석에서 요구되는 값은 이것이며, 아직 측정하지 않았습니다.
+              오른쪽 0.89는 사람 코더 간 신뢰도로 읽을 수 없습니다 — 두 코더가 공유하는 것은 프롬프트가 아니라 같은 사전학습입니다.
+            </p>
+          </div>
+          <div class="card">
+            <div style="display:flex;align-items:baseline;gap:9px"><span style="font-size:34px;font-weight:850;letter-spacing:-.04em;color:var(--afs-brand)">0.89</span><span style="font-size:12.5px;font-weight:750">프롬프트 변형 간 원 일치율 (p<sub>o</sub>)</span></div>
+            <p style="margin:8px 0 0;font-size:12.5px;color:var(--afs-ink-2);line-height:1.65">
+              같은 기저 모델에 서로 다른 두 프롬프트 구성(한쪽은 코드북 순서, 다른 쪽은 근거 문장 우선)을 적용해 같은 25건을 코딩하고, 판정 전에 계열이 일치한 비율입니다.
+            </p>
+            <p style="margin:8px 0 0;font-size:11.5px;color:var(--afs-ink-3);line-height:1.62">
+              <b>이 값이 무엇의 증거이고 무엇이 아닌지:</b> Krippendorff(2004)는 신뢰도를
+              <b>안정성</b>(같은 코더의 재측정) &lt; <b>재현성</b>(다른 코더 간) &lt; <b>정확성</b>(기준과의 일치)으로 구분합니다.
+              이 값은 <b>가장 약한 수준인 안정성</b>에 해당하고, 그것도 우연 보정 없는 원 일치율입니다.
+              두 프롬프트가 공유하는 것은 프롬프트가 아니라 같은 사전학습이므로 독립 관측자가 아닙니다.
+              낮으면 실격 사유이지만, <b>높다고 타당성이 확보되지는 않습니다.</b>
+            </p>
+            <p style="margin:8px 0 0;font-size:11.5px;color:var(--afs-ink-3);line-height:1.6;padding-top:8px;border-top:1px dashed var(--afs-rule)">
+              <b>판정 단위</b> 기사 25건 × 다섯 층위 = 125칸. <b>주의:</b> 이 값은 취재원 인용 항목까지 포함해 계산했습니다.
+              비교 지표에 실제로 쓰는 <b>기자가 직접 쓴 문장만으로 계산한 일치율은 아직 산출하지 않았습니다.</b>
+            </p>
+          </div>
+        </div>
+        <div class="tscroll" style="margin-top:10px">
+          <table class="t">
+            <caption>층위별 판정 전 일치율. 0.8 미만인 층위는 판정 단계에 더 의존합니다.
+            <br /><b>주의:</b> 이 표의 층위 이름은 코딩 산출 쪽 이름이고 화면의 층위 이름과 문자열이 다릅니다
+            (<code style="font-family:var(--afs-mono);font-size:10.5px">causal_attribution</code> ↔ 원인 해석,
+            <code style="font-family:var(--afs-mono);font-size:10.5px">evaluation</code> ↔ 규범적 평가).
+            두 이름의 대응은 사람이 판단한 것이며 <b>코드로 검증되지 않았습니다.</b></caption>
+            <thead><tr><th scope="col">층위</th><th scope="col" class="n">일치</th><th scope="col" class="n">원 일치율 p<sub>o</sub></th><th scope="col" class="n">κ</th><th scope="col" class="n">최빈 계열 비율</th><th scope="col" class="n">기자 문장 항목</th><th scope="col">읽는 법</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">문제 정의</th><td class="n">19/25</td><td class="n"><b>0.76</b></td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n">48%</td><td class="n">28</td><td><span class="chip warn">코더가 갈린 층위 — 결론이 이 층위에 서 있습니다</span></td></tr>
+              <tr><th>원인 해석</th><td class="n">25/25</td><td class="n">1.00</td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n"><b>92%</b></td><td class="n">16</td><td><span class="chip warn">계열이 한쪽으로 몰려 변별할 것이 거의 없었습니다 — "완벽한 일치"로 읽으면 안 됩니다</span></td></tr>
+              <tr><th>책임 귀속</th><td class="n">23/25</td><td class="n">0.92</td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n">61%</td><td class="n">5</td><td>대체로 같게 봤습니다</td></tr>
+              <tr><th>규범적 평가</th><td class="n">22/25</td><td class="n">0.88</td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n">70%</td><td class="n"><b>0</b></td><td><span class="chip warn">기자 문장 0건 · 계열이 거의 한 값이라 이 일치율은 해석하기 어렵습니다</span></td></tr>
+              <tr><th>해법·처방</th><td class="n">22/25</td><td class="n">0.88</td><td class="n" style="color:var(--afs-warn)">산출 불가</td><td class="n">55%</td><td class="n">6</td><td>대체로 같게 봤습니다</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          <b>코더는 사람이 아닙니다.</b> 두 코더는 서로 다른 프롬프트 각도의 모델 코더입니다.
+          쓴 통계는 <b>단순 일치율</b>이며, 우연 일치를 보정한 카파 계열 계수는 아직 산출하지 않았습니다 —
+          계열 분포가 편중된 층위에서는 단순 일치율이 <b>과대평가됩니다.</b>
+          그래서 <b>최빈 계열 비율</b> 열을 같이 뒀습니다. 원인 해석은 92%가 한 계열이었으므로 1.00은 "변별할 것이 없었다"에 가깝습니다.
+        </p>
+        <p class="note" style="margin-top:9px;padding:11px 13px;background:var(--afs-warn-soft);border-radius:var(--afs-r-btn);color:var(--afs-warn)">
+          <b>κ를 왜 &ldquo;산출 불가&rdquo;로 적었나:</b> 편중된 분포에서 카파가 필요하다는 것은 맞습니다. 그런데 지금 공개 파일에는
+          <b>코더별 라벨이 없고 일치 여부(참/거짓)만</b> 저장돼 있습니다. 카파는 두 코더의 <b>분류표(confusion matrix)</b>가 있어야 계산됩니다.
+          즉 이것은 통계를 안 쓴 것이 아니라 <b>데이터 구조가 그 계산을 허용하지 않는 것</b>입니다.
+          다음 코딩 회차에서 코더별 계열 라벨을 함께 저장하면 카파와 크리펜도르프 α를 이 표에 채웁니다.
+        </p>
+
+        <h2 class="sec">아직 성립하지 않은 조건</h2>
+        <div class="card">
+          <p style="margin:0 0 11px;font-size:13px">이 프로젝트에는 내부 릴리스 기준이 있고, <b>지금 산출은 그 기준을 충족하지 않습니다.</b> 조건 8개 중 <b>미충족 6개</b>를 그대로 적습니다.</p>
+          <div class="tscroll">
+            <table class="t">
+              <thead><tr><th scope="col">조건</th><th scope="col">상태</th></tr></thead>
+              <tbody>
+                <tr><th>사람 이중코딩 + 판정된 홀드아웃</th><td><span class="chip bad">미충족</span> 홀드아웃 27건(본 표본 25건과 별개) 전부 라벨 없음</td></tr>
+                <tr><th>계열 코드북(정의문 + 경계 예시)</th><td><span class="chip bad">미충족</span> 작성 중</td></tr>
+                <tr><th>카파 계열 우연 보정 계수</th><td><span class="chip bad">미산출</span></td></tr>
+                <tr><th>매체명을 가린 재코딩(익명화 검사)</th><td><span class="chip bad">미실시</span> — 모델이 매체 평판으로 라벨을 정하지 않는다는 증거</td></tr>
+                <tr><th>산출을 재생성하는 생성 스크립트</th><td><span class="chip bad">미보유</span> — 지금 데이터를 다시 만들 수 없습니다. 재현성의 최소 조건입니다</td></tr>
+                <tr><th>기자가 직접 쓴 문장만으로 계산한 일치율</th><td><span class="chip bad">미산출</span></td></tr>
+                <tr><th>근거 문장이 본문에 실재하는지 검증</th><td><span class="chip good">충족</span> 25/25 · 빌드 관문에서 매번 확인</td></tr>
+                <tr><th>화면·배포 산출물에 원문 전문 비저장</th><td><span class="chip good">충족</span> 의역·위치·지문만 · 금지 키 검사 통과</td></tr>
+              </tbody>
+            </table>
+          </div>
+          
+        </div>
+
+        <h2 class="sec">189개에서 55개로 — 무엇을 버렸나</h2>
+        <div class="card">
+          <div class="funnel">
+            <div style="width:100%">채점된 항목 <b>189</b><small>기사 25건 × 다섯 층위에서 근거 문장에 묶인 항목</small></div>
+            <div style="width:61%">고유 주장 <b>115</b><small>같은 주장이 여러 문장에 걸친 것을 접음 (완전 중복 18행 포함)</small></div>
+            <div style="width:29%">비교에 쓰는 항목 <b>55</b><small>기자가 직접 쓴 문장만 · 전체의 29%</small></div>
+          </div>
+          <p class="note" style="margin-top:11px">
+            <b>이 축소가 이 분석의 가장 비싼 선택이고, 가장 방어 가능한 선택입니다.</b>
+            인용된 발언은 그 발언자의 프레임이지 매체가 자기 진술로 채택한 것이 아닙니다.
+            다른 서비스는 기사 전체를 셉니다 — 그래서 표본이 커 보이고, 매체 비교가 쉬워 보입니다.
+          </p>
+          <p class="note">
+            <b>그리고 이 71%를 버린 것 자체가 관측입니다:</b> 한국 신문 기사에서 프레임 요소의 71%가 인용에 실려 있습니다.
+            그것은 한계가 아니라 이 표본이 보여준 기사 구성의 특징입니다.
+          </p>
+        </div>
+
+        <h2 class="sec">재는 것과 재지 않는 것</h2>
+        <div class="grid g2">
+          <div class="card"><h3 class="sub">현저성은 재지 않습니다</h3>
+            <p style="margin:0;font-size:12.5px;line-height:1.65">Entman의 프레이밍은 <b>선택</b>과 <b>현저성</b> 두 축입니다. 이 분석은 선택만 측정합니다 — 어떤 계열의 서술이 있었는지 여부입니다.
+            현저성(그 서술이 기사에서 얼마나 앞에 있고, 몇 번 반복되고, 반박 없이 놓였는지)은 측정하지 않습니다. 근거 문장의 문단 좌표가 전 항목 1로 기록돼 위치 기반 현저성을 계산할 수 없기 때문입니다.
+            따라서 같은 계열이라도 한 매체가 리드에서, 다른 매체가 마지막 문단에서 말했을 수 있고 <b>이 화면은 그 차이를 보여주지 못합니다.</b></p>
+          </div>
+          <div class="card"><h3 class="sub">왜 어떤 매체는 계속 &lsquo;미관측&rsquo;인가</h3>
+            <p style="margin:0;font-size:12.5px;line-height:1.65">비교 지표는 기자가 직접 쓴 문장 55개(전체 189개의 29%)만 씁니다. 나머지 <b>71%를 빼는 폭은 매체마다 다릅니다.</b>
+            인용 위주로 기사를 구성하는 매체는 기자 문장이 적어 여러 층위에서 미관측이 됩니다 — 이 표본에서 F신문이 그렇습니다.
+            그러므로 미관측이 많은 매체는 <b>프레임이 약한 매체가 아니라 문체가 다른 매체</b>입니다. 인용 비중 자체가 편집 선택이므로, &lsquo;—&rsquo;가 많다는 사실도 하나의 관측입니다.</p>
+          </div>
+          <div class="card" style="grid-column:1/-1"><h3 class="sub">채점자에게 실제로 준 제약</h3>
+            <p style="margin:0 0 8px;font-size:12.5px;line-height:1.65">채점 지침에 다음 조항이 있습니다 — 원문 그대로 옮깁니다.</p>
+            <pre lang="en" tabindex="0" style="margin:0 0 9px;padding:11px 12px;background:var(--afs-sunk);border-radius:var(--afs-r-btn);font-family:var(--afs-mono);font-size:11px;line-height:1.7;overflow-x:auto">Use only the supplied body. Do not infer ideology, outlet intent, or unstated causes.
+Do not return a person's or organization's name; return role codes only.
+A source's statement is not the outlet's own position.</pre>
+            <p style="margin:0;font-size:12.5px;line-height:1.65">첫 조항은 모델이 매체 성향을 추정해 라벨을 정하는 것을 막습니다. <b>다만 조항의 존재가 곧 증거는 아닙니다</b> — 매체명을 가린 재코딩으로 확인해야 하고, 아직 하지 않았습니다.
+            둘째 조항 때문에 이 분석은 인물 실명을 산출하지 않고 역할 코드만 남깁니다. 셋째 조항이 발화 주체 분리의 근거입니다.
+            <b>대가도 있습니다:</b> 첫 조항은 암묵적 가치 판단의 검출을 줄입니다. 그래서 규범적 평가 0건에 이 조항이 얼마나 기여했는지 아직 가려내지 못했습니다.</p>
+          </div>
+        </div>
+
+        <h2 class="sec">비슷한 서비스와 무엇이 다른가</h2>
+        <div class="tscroll">
+          <table class="t">
+            <caption>같은 문제를 다루는 서비스들과의 비교입니다. 우열이 아니라 <b>무엇을 관측 단위로 삼는가</b>의 차이입니다.</caption>
+            <thead><tr><th scope="col">서비스</th><th scope="col">무엇에 라벨을 붙이나</th><th scope="col">관측 단위</th><th scope="col">취재원 발언 처리</th><th scope="col">검증 공개</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">AllSides</th><td>매체의 정치 성향(좌·중·우)</td><td>매체</td><td>구분 없음</td><td>편집진 검토 + 독자 투표</td></tr>
+              <tr><th>Ground News</th><td>기사의 성향 분포·보도 편중</td><td>기사 묶음</td><td>구분 없음</td><td>제3자 성향 평가 인용</td></tr>
+              <tr><th>빅카인즈</th><td>키워드·연관어·보도량</td><td>기사</td><td>구분 없음</td><td>원문 제공</td></tr>
+              <tr style="background:var(--afs-soft)"><th>AgendaFrame</th><td><b>사건별 설명 구조</b>(다섯 층위 계열)</td><td><b>문장에 묶인 주장</b></td><td><b>비교에서 제외</b> — 기자가 직접 쓴 문장만</td><td>층위별 일치율·판정 기록·미충족 조건</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          <b>핵심 차이:</b> 다른 서비스는 <b>매체에 점수를 매깁니다.</b> 이 서비스는 매체에 점수를 매기지 않고,
+          <b>사건마다 축을 새로 만듭니다.</b> 그래서 같은 매체가 의제에 따라 축의 다른 쪽에 놓일 수 있습니다.
+          그리고 취재원 발언을 매체 서술과 섞지 않기 때문에, 비교에 쓰는 항목이 29%로 줄어듭니다 — 줄어드는 것이 설계 의도입니다.
+        </p>
+
+        <h2 class="sec">한계 고지</h2>
+        <div class="grid g2">
+          <div class="card"><h3 class="sub">표본 프레임</h3>
+            <p style="margin:0 0 8px;font-size:12.5px;line-height:1.65">2026-07-26 하루, 보도량 의제 5개, 기사 25건.</p>
+            <table class="t"><tbody>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3);width:96px">대상 매체</th><td style="border:0;padding:3px 0">중앙 일간 22곳 (방송·통신사 제외)</td></tr>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">이날 등장</th><td style="border:0;padding:3px 0"><b>9곳</b> — A일보 · B일보 · C일보 · D신문 · E일보 · F신문 · G일보 · H일보 · I신문</td></tr>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">미등장</th><td style="border:0;padding:3px 0">13곳 — 표본에 없다는 뜻이며 보도하지 않았다는 뜻이 아닙니다</td></tr>
+              <tr><th style="border:0;padding:6px 0 0;font-size:11px;color:var(--afs-ink-3)">커버리지</th><td style="border:0;padding:6px 0 0">
+                <span class="cov" role="img" aria-label="대상 22곳 중 9곳이 이 표본에 등장">
+                  <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                </span>
+                <span style="display:block;font-size:11px;color:var(--afs-ink-3);margin-top:4px">채워진 칸 9 = 이 표본에 등장한 매체 · 빈 칸 13 = 미등장</span>
+              </td></tr>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">군집 임계값</th><td style="border:0;padding:3px 0">Jaccard 0.25 이상 + 판별어 2개 이상 공유</td></tr>
+              <tr><th style="border:0;padding:3px 0;font-size:11px;color:var(--afs-ink-3)">군집 2차 확인</th><td style="border:0;padding:3px 0">제목·매체·발행시각만 봅니다 (본문 비열람)</td></tr>
+            </tbody></table>
+          </div>
+          <div class="card"><h3 class="sub">'미관측'의 뜻</h3><p style="margin:0;font-size:12.5px;line-height:1.65">쓰지 않은 것과 그렇게 생각하지 않은 것은 다릅니다. 미관측은 분석 가능한 본문에서 그 설명을 찾지 못했다는 뜻입니다. 마찬가지로 취재원의 발언은 그 매체의 입장이 아닙니다.</p></div>
+          <div class="card"><h3 class="sub">원문 처리</h3><p style="margin:0;font-size:12.5px;line-height:1.65">본문 전문을 저장하지 않습니다. 화면에는 의역·문장 번호·비복원 지문·원문 링크만 남습니다. 지문 규칙(<code style="font-family:var(--afs-mono);font-size:11px">agendaframe:evidence:v1:{기사id}:{정규화문장}</code>)을 공개하므로, 원문을 가진 제3자는 <b>지문을 재계산해 검증할 수 있습니다.</b></p></div>
+          <div class="card"><h3 class="sub">확장 예정</h3><p style="margin:0;font-size:12.5px;line-height:1.65">일별 보도량 추이, 매체별 보도량 비교, 프레임의 생애주기는 같은 의제를 여러 날 모아야 성립합니다. 하루치 표본에서는 계산하지 않습니다.</p></div>
+        </div>
+      </section>
+
+      <footer class="site-foot" role="contentinfo">
+        <p><b>AgendaFrame</b> — 같은 사건, 다른 설명. 2026년 7월 26일 표본.</p>
+        <p>이 화면은 설계 시안입니다. 실배포는 <a href="/">agendaframe-capstone.vercel.app</a>,
+        방법론과 한계는 <a href="#/method">방법론 화면</a>에 적어 두었습니다.</p>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<!-- 모바일 하단 탭 -->
+<nav class="tabbar" aria-label="하단 주요 화면">
+  <a href="#/" data-tab="home"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 7l6-4.5L14 7v6.5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7z"/></svg>홈</a>
+  <a href="#/issues" data-tab="issues"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg>의제</a>
+  <a href="#/framing" data-tab="framing"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M2.5 6h11M6 6v7.5"/></svg>분석</a>
+  <a href="#/self-check" data-tab="self-check"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="5.5"/><path d="M5.8 8.2l1.6 1.6 3-3.4"/></svg>내 유형</a>
+  <a href="#/settings" data-tab="settings"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="2"/><path d="M8 1.8v1.6M8 12.6v1.6M2.6 8H4.2M11.8 8h1.6M4.2 4.2l1.1 1.1M10.7 10.7l1.1 1.1M11.8 4.2l-1.1 1.1M5.3 10.7l-1.1 1.1"/></svg>설정</a>
+</nav>
+
+<!-- 코드북 팝오버 -->
+<dialog class="book" id="book" aria-labelledby="bookT">
+  <div class="book-h"><b id="bookT">계열 정의</b><button class="x" onclick="document.getElementById('book').close()" aria-label="닫기">×</button></div>
+  <div class="book-b" id="bookB"></div>
+</dialog>
+
+<script>
+/* ── 점착 헤더 높이 실측 동기화 — 하드코딩하면 배너 줄 수가 바뀔 때 컨트롤이 가려진다 ── */
+(function(){
+  var mb = document.querySelector('.mockbar'), rt = document.documentElement;
+  if (!mb) return;
+  function syncBar(){ rt.style.setProperty('--bar', mb.offsetHeight + 'px'); }
+  if ('ResizeObserver' in window) new ResizeObserver(syncBar).observe(mb);
+  window.addEventListener('resize', syncBar);
+  syncBar();
+})();
+
+/* ── 애니메이션 줄이기 — 라벨이 약속한 동작을 실제로 수행한다 ── */
+document.querySelectorAll('#motionSeg button').forEach(function(b){
+  b.addEventListener('click', function(){
+    var v = b.dataset.mo;
+    document.documentElement.setAttribute('data-motion', v);
+    try { localStorage.setItem('afs2-motion', v); } catch(e){}
+    document.querySelectorAll('#motionSeg button').forEach(function(o){
+      var on = o.dataset.mo === v;
+      o.setAttribute('aria-checked', String(on));
+      o.tabIndex = on ? 0 : -1;
+    });
+  });
+});
+(function(){
+  var v = 'auto';
+  try { v = localStorage.getItem('afs2-motion') || 'auto'; } catch(e){}
+  document.documentElement.setAttribute('data-motion', v);
+  document.querySelectorAll('#motionSeg button').forEach(function(o){
+    o.setAttribute('aria-pressed', String(o.dataset.mo === v));
+  });
+})();
+
+/* ── 코드북 ─────────────────────────────────────────────────────────────── */
+var BOOK = {
+  "g-layer":{t:"층위 — 기사가 답하는 다섯 가지 질문",d:"기사 하나를 다섯 조각으로 나눠 봅니다. 각 조각이 하나의 질문에 답합니다.",inc:["① 무엇이 문제라고 했나 ② 왜 그렇게 됐다고 했나 ③ 누구 책임이라고 했나 ④ 옳다/그르다고 했나 ⑤ 어떻게 하자고 했나","조각을 나눠야 \"어느 단계에서 신문이 갈렸는지\"를 말할 수 있습니다"],exc:["찬반이 아닙니다 — 같은 편이어도 문제를 다르게 규정할 수 있습니다"]},
+  "g-family":{t:"계열 — 그 질문에 어떻게 답했나의 종류 (화면에서는 '이야기')",d:"같은 질문에 대한 답을 몇 가지 묶음으로 정리한 것입니다. 예를 들어 \"무엇이 문제인가\"의 답은 법·제도 / 정치 갈등 / 안전·피해 같은 계열로 나뉩니다.",inc:["두 신문이 같은 계열이면 같은 방식으로 규정한 것","다른 계열이면 사건의 성격을 다르게 본 것"],exc:["옳고 그름의 등급이 아닙니다 — 계열 사이에 순서나 우열이 없습니다"]},
+  "g-unobs":{t:"미관측 — 그런 문장을 찾지 못했다",d:"그 신문이 그렇게 생각하지 않았다는 뜻이 아닙니다. 분석한 본문에서 그 설명을 하는 문장을 찾지 못했다는 뜻입니다.",inc:["인용만 있고 기자가 직접 쓴 문장이 없을 때","그 질문에 해당하는 서술 자체가 없을 때"],exc:["\"그 신문의 입장이 아니다\"로 읽으면 안 됩니다","미관측이 많은 신문은 프레임이 약한 것이 아니라 인용 위주 문체일 수 있습니다"]},
+  "g-para":{t:"의역 — 뜻만 옮긴 요약문",d:"기사 원문을 그대로 퍼오지 않습니다. 저작권 때문에 뜻만 다시 쓴 문장을 보여주고, 원문은 링크로 갑니다.",inc:["화면의 모든 인용처럼 보이는 문장은 전부 의역입니다","원문 몇 번째 문장인지는 함께 적습니다"],exc:["따옴표를 쓰지 않는 이유가 이것입니다 — 따옴표는 원문 그대로를 뜻합니다"]},
+  "g-hash":{t:"지문 — 원문 문장의 대조 코드",d:"원문을 저장하지 않으면서도 \"정말 그 문장인지\" 확인할 수 있게 만든 코드입니다. 문장을 되돌릴 수는 없습니다.",inc:["원문을 가진 사람은 같은 규칙으로 코드를 다시 계산해 검증할 수 있습니다","계산 규칙은 방법론 화면에 공개돼 있습니다"],exc:["이 코드로 문장을 복원할 수는 없습니다"]},
+  "p-code":{t:"AI가 두 번 채점 → 다른 곳만 재확인",d:"같은 기사를 AI 채점자 두 명이 서로 모르게 따로 채점했습니다. 한 명은 정의 목록 순서대로, 다른 한 명은 근거 문장을 먼저 고른 뒤 이름을 붙였습니다.",inc:["두 채점이 다른 항목만 다시 보고 확정했습니다","확정한 뒤 근거 문장이 기사에 실제로 있는지 반박 검증했습니다"],exc:["사람이 채점한 것이 아닙니다 — 사람 검증은 아직 하지 않았습니다","채점자 두 명은 같은 AI 모델이라 서로 완전히 독립적이지 않습니다"]},
+  "p-rule":{t:"단어 규칙 자동 분류",d:"AI 채점이 아니라, 미리 정한 단어 목록에 걸리는지로 자동 분류한 값입니다.",inc:["어떤 기사들이 같은 사건인지 묶는 일","정책 주제 딱지, 사례 중심/구조 중심 구분"],exc:["두 번 채점·재확인을 거치지 않았습니다","그래서 위쪽 다섯 항목과 같은 신뢰 수준으로 읽으면 안 됩니다"]},
+  "p-derive":{t:"위 결과를 합친 계산",d:"새로 판단한 값이 아니라, 앞의 두 결과를 더하고 비교해서 나온 숫자입니다.",inc:["신문끼리 달랐는지 세는 일","이야기 패턴 묶기, 읽은 화면 진행률"],exc:["여기서 새로운 해석이 들어가지 않습니다 — 같은 입력이면 항상 같은 값이 나옵니다"]},
+  legal:{t:"법·제도 (문제 정의) — 이 의제에서는 「권한이 한 손에 모인다」",d:"사안의 핵심을 법률·제도·기관 권한의 설계 문제로 규정한 경우. 핵심어는 \"수사와 기소를 한 기관에\"입니다.",inc:["권한 범위가 법에 정해지지 않았다는 서술","기관 간 권한 경계가 불명확하다는 서술"],exc:["특정 인물의 위법을 지적하는 서술 → 범죄·처벌","법 개정을 요구하는 서술 → 해법 층위에서 코딩"]},
+  political:{t:"정치 갈등 (문제 정의) — 이 의제에서는 「누가 특검을 쥐느냐」",d:"사안의 핵심을 정치 세력 간 대립·전략·유불리로 규정한 경우. 핵심어는 \"특검 견제\"입니다.",inc:["여야의 견제 구도가 사안의 중심이라는 서술","정치적 공세라는 성격 규정"],exc:["정치인의 개인 행위를 문제 삼는 서술 → 개인 일탈","선거 결과 보도 → 정치 과정(2차 분류)"]},
+  design:{t:"제도 설계 (원인) — 이 의제에서는 「법을 만들 때 비워둔 자리」",d:"결과의 원인을 제도·법률이 처음부터 그렇게 설계된 데서 찾은 경우.",inc:["입법 단계에서 범위를 정하지 않았다는 서술","제도가 상충하게 만들어졌다는 서술"],exc:["집행 과정의 실패 → 집행 실패","예산·인력 부족 → 자원 제약"]},
+  incentive:{t:"정치적 이해 (원인)",d:"결과의 원인을 행위자의 정치적 계산·유인에서 찾은 경우.",inc:["각자 유리한 구도를 만들려 했다는 서술","지지층을 겨냥한 행동이라는 해석"],exc:["개인의 성격·실수 → 개인 행위","구조적 조건 → 구조적 조건"]},
+  resp:{t:"책임 귀속 층위",d:"사안의 책임을 누구에게 돌리는가. 8개 계열(정부/입법·정치권/사법·수사기관/기업/기관/개인/공동 책임/기타).",inc:["\"~의 책임\"이라는 명시적 서술","책임 주체를 주어로 삼은 인과 서술"],exc:["원인 설명만 있고 책임 주체가 없으면 → 원인 층위만 코딩"]},
+  eval:{t:"규범적 평가 층위",d:"옳고 그름·정당성·공정성에 대한 판단. 8개 계열(정당성 부정/공정성 부정/안전 부정/경제 부정/효과 긍정/효과 부정/권리 긍정/기타).",inc:["\"부당하다\", \"납득하기 어렵다\" 류의 판단","정당성·공정성에 대한 명시적 평가"],exc:["사실 서술 → 문제 정의","해야 한다는 요구 → 해법 층위"]},
+  check:{t:"제도적 견제 (해법)",d:"권한을 법으로 제한하거나 외부 통제 장치를 두자는 처방.",inc:["권한 범위를 법으로 정하자는 서술","외부 감시·심의 기구를 두자는 서술"],exc:["정책을 강화하자 → 정책 강화","수사·처벌을 요구 → 수사·책임 추궁"]}
+};
+var dlg = document.getElementById('book');
+document.addEventListener('click', function(e){
+  var b = e.target.closest('.term,.prov');
+  if (!b) return;
+  var k = BOOK[b.dataset.book];
+  if (!k) return;
+  document.getElementById('bookT').textContent = k.t;
+  document.getElementById('bookB').innerHTML =
+    '<p style="margin:0 0 4px">'+k.d+'</p><dl>'+
+    '<dt>이렇게 쓰면 이 계열</dt>'+k.inc.map(function(s){return '<dd>'+s+'</dd>'}).join('')+
+    '<dt>이건 다른 계열</dt>'+k.exc.map(function(s){return '<dd>'+s+'</dd>'}).join('')+
+    '</dl><p style="margin:12px 0 0;font-size:11.5px;color:var(--afs-ink-3)">이 정의는 판정 기준을 사후 정리한 것이며, 코딩 프롬프트에 들어간 문서는 아닙니다 — 코드북 v1은 작성 중입니다.</p>';
+  dlg.showModal();
+});
+
+/* ── 읽기 기록 — 재방문 이유를 만드는 유일한 장치이므로 실제로 저장한다 ──── */
+var SEEN_KEY = 'afs2-seen';
+function seenSet(){
+  try { return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || '[]')); }
+  catch(e){ return new Set(); }
+}
+function markSeen(name){
+  var set = seenSet();
+  if (set.has(name)) return paintProgress();
+  set.add(name);
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify(Array.from(set))); } catch(e){}
+  paintProgress();
+}
+var TRACKED = ['home','issues','issue','outlets','framing','report','ask','self-check','community','method'];
+function paintProgress(){
+  var set = seenSet();
+  var n = TRACKED.filter(function(t){ return set.has(t); }).length;
+  var pct = Math.round((n / TRACKED.length) * 100);
+  var txt = document.getElementById('progTxt');
+  var bar = document.querySelector('.side-foot .bar i');
+  if (txt) txt.textContent = n === 0 ? '아직 본 화면이 없습니다' : TRACKED.length + '개 화면 중 ' + n + '개 봤습니다';
+  if (bar) bar.style.width = pct + '%';
+  // 설정 화면의 진행률도 같은 값으로
+  var sp = document.getElementById('setProg'), sb = document.getElementById('setBar'), sn = document.getElementById('setPct');
+  if (sp) sp.textContent = n + ' / ' + TRACKED.length;
+  if (sb) sb.style.width = pct + '%';
+  if (sn) sn.textContent = pct + '%';
+  var todo = document.getElementById('setTodo');
+  if (todo){
+    var left = TRACKED.filter(function(t){ return !set.has(t); });
+    todo.textContent = left.length ? ('남은 화면 ' + left.length + '개') : '모든 화면을 봤습니다';
+  }
+}
+var clearBtn = document.getElementById('clearSeen');
+if (clearBtn) clearBtn.addEventListener('click', function(){
+  try { localStorage.removeItem(SEEN_KEY); } catch(e){}
+  paintProgress();
+});
+paintProgress();
+
+/* ── 라우팅 ─────────────────────────────────────────────────────────────── */
+var MAP = {'/':'home','/issues':'issues','/issue':'issue','/outlets':'outlets','/framing':'framing',
+           '/report':'report','/ask':'ask','/self-check':'self-check','/community':'community',
+           '/method':'method','/settings':'settings'};
+function route(){
+  var h = location.hash.replace(/^#/,'') || '/';
+  var anchor = '';
+  var hashIdx = h.indexOf('#');
+  if (hashIdx > -1){ anchor = h.slice(hashIdx+1); h = h.slice(0,hashIdx); }
+  var name = MAP[h] || 'home';
+  document.querySelectorAll('section[data-screen]').forEach(function(s){
+    s.classList.toggle('on', s.dataset.screen === name);
+  });
+  document.querySelectorAll('.nav a[data-nav]').forEach(function(a){
+    if (a.dataset.nav === name) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
+  });
+  // 상위 개념 탭에 aria-current="page" 를 붙이면 거짓 상태가 된다.
+  // 정확히 일치할 때만 page, 하위 화면일 때는 시각 강조만 한다.
+  var tabOf = {home:'home',issues:'issues',issue:'issues',outlets:'framing',framing:'framing',
+               report:'framing','self-check':'self-check',community:'community',settings:'settings'};
+  document.querySelectorAll('.tabbar a[data-tab]').forEach(function(a){
+    var group = tabOf[name] || '';
+    a.removeAttribute('aria-current');
+    if (a.dataset.tab === name) a.setAttribute('aria-current','page');
+    else if (a.dataset.tab === group) a.setAttribute('aria-current','true');
+  });
+  if (typeof markSeen === 'function') markSeen(name);
+  var TITLES = {home:'홈',issues:'이슈 목록',issue:'무슨 일이었나',outlets:'언론사 비교',framing:'프레이밍 분석',
+                report:'리포트',ask:'AI 대화','self-check':'내 읽기 유형',community:'커뮤니티',method:'방법론',settings:'설정'};
+  document.title = (TITLES[name] || '홈') + ' — AgendaFrame 미리보기';
+  var rs = document.getElementById('routeStatus');
+  if (rs) rs.textContent = (TITLES[name] || '홈') + ' 화면으로 이동했습니다';
+  if (anchor){
+    var el = document.getElementById(anchor);
+    if (el){ el.scrollIntoView({block:'start'}); return; }
+  }
+  window.scrollTo({top:0});
+}
+
+/* 인용원 막대 — 발언 개수 / 구성 비율. 시안은 구성 비율로 그렸고, 개수는 인용량을 남긴다.
+   둘이 서로 다른 것을 말하므로 지표를 합치지 않고 보기를 나눈다. */
+(function(){
+  var seg = document.getElementById('srcSeg');
+  if (!seg) return;
+  var abs = document.getElementById('srcAbs'), pct = document.getElementById('srcPct');
+  var btns = seg.querySelectorAll('button');
+  var noteAbs = document.getElementById('srcNoteAbs'), notePct = document.getElementById('srcNotePct');
+  function show(view){
+    abs.hidden = view !== 'abs';
+    pct.hidden = view !== 'pct';
+    noteAbs.hidden = view !== 'abs';
+    notePct.hidden = view !== 'pct';
+    btns.forEach(function(b){
+      var on = b.dataset.srcView === view;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+    });
+  }
+  btns.forEach(function(b){ b.addEventListener('click', function(){ show(b.dataset.srcView); }); });
+  seg.addEventListener('keydown', function(e){
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    var list = Array.prototype.slice.call(btns);
+    var at = list.findIndex(function(b){ return b.getAttribute('aria-checked') === 'true'; });
+    var next = list[(at + (e.key === 'ArrowRight' ? 1 : list.length - 1)) % list.length];
+    show(next.dataset.srcView);
+    next.focus();
+  });
+})();
+
+window.addEventListener('hashchange', route);
+route();
+
+document.getElementById('issueSel').addEventListener('change', function(){
+  /* 고르면 바로 이동한다 — 버튼을 한 번 더 누르게 하지 않는다 */
+  var cur = location.hash.replace(/^#/,'').split('#')[0] || '/';
+  if (cur === '/' || cur === '/issues') location.hash = '#/issue';
+  else route();
+});
+
+/* ── 테마 ───────────────────────────────────────────────────────────────── */
+var root = document.documentElement;
+function applyTheme(mode){
+  if (mode === 'system') root.removeAttribute('data-theme');
+  else root.setAttribute('data-theme', mode);
+  try{ localStorage.setItem('afs2-theme', mode); }catch(e){}
+  var dark = mode === 'dark' || (mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.getElementById('themeTxt').textContent = dark ? '밝게 보기' : '어둡게 보기';
+  document.getElementById('themeBtn').setAttribute('aria-pressed', String(dark));
+  var rs0 = document.getElementById('routeStatus');
+  if (rs0) rs0.textContent = dark ? '어두운 테마로 바꿨습니다' : '밝은 테마로 바꿨습니다';
+  document.querySelectorAll('#themeSeg button').forEach(function(b){
+    var on = b.dataset.th === mode;
+    b.setAttribute('aria-checked', String(on));
+    b.tabIndex = on ? 0 : -1;
+  });
+}
+var saved = 'system';
+try{ saved = localStorage.getItem('afs2-theme') || 'system'; }catch(e){}
+applyTheme(saved);
+document.getElementById('themeBtn').addEventListener('click', function(){
+  var dark = root.getAttribute('data-theme') === 'dark' ||
+             (!root.hasAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+  applyTheme(dark ? 'light' : 'dark');
+});
+document.querySelectorAll('#themeSeg button').forEach(function(b){
+  b.addEventListener('click', function(){ applyTheme(b.dataset.th); });
+});
+
+/* ── 글씨 크기 ──────────────────────────────────────────────────────────── */
+var STEPS = ['s','m','l','xl'];
+function applyFs(v){
+  root.setAttribute('data-fs', v);
+  try{ localStorage.setItem('afs2-fs', v); }catch(e){}
+  document.querySelectorAll('#fsSeg button').forEach(function(b){
+    var on = b.dataset.fs === v;
+    b.setAttribute('aria-checked', String(on));
+    b.tabIndex = on ? 0 : -1;
+  });
+}
+var sfs = 'm';
+try{ sfs = localStorage.getItem('afs2-fs') || 'm'; }catch(e){}
+applyFs(sfs);
+document.querySelectorAll('#fsSeg button').forEach(function(b){
+  b.addEventListener('click', function(){ applyFs(b.dataset.fs); });
+});
+var FSNAME = {s:'작게', m:'기본', l:'크게', xl:'아주 크게'};
+document.getElementById('fsBtn').addEventListener('click', function(){
+  var i = STEPS.indexOf(root.getAttribute('data-fs') || 'm');
+  var v = STEPS[(i+1) % STEPS.length];
+  applyFs(v);
+  this.setAttribute('aria-label', '글씨 크기 바꾸기 — 현재 ' + FSNAME[v]);
+  var rs1 = document.getElementById('routeStatus');
+  if (rs1) rs1.textContent = '글씨 크기: ' + FSNAME[v];
+});
+
+/* ── 세는 기준 토글 ───────────────────────────────────────────────────── */
+var bN = document.getElementById('basisNarr'), bA = document.getElementById('basisAll'), bH = document.getElementById('basisHint');
+function setBasis(narr){
+  bN.setAttribute('aria-pressed', String(narr));
+  bA.setAttribute('aria-pressed', String(!narr));
+  bH.textContent = narr ? '비교 지표의 기본값입니다' : '인용된 발언까지 세면 갈림이 늘어납니다 — 매체 입장은 아닙니다';
+  bH.className = narr ? 'chip' : 'chip warn';
+  var r2 = document.querySelector('.rail a[href="#L2"] span');
+  var r3 = document.querySelector('.rail a[href="#L3"] span');
+  var r5 = document.querySelector('.rail a[href="#L5"] span');
+  if (r2) r2.textContent = narr ? '● 갈림 2:2' : '● 갈림 3:3';
+  if (r3) r3.textContent = narr ? '○ 인용만' : '● 갈림 3:2';
+  if (r5) r5.textContent = narr ? '● 4곳 동일' : '● 갈림 4:1';
+  var r3a = document.querySelector('.rail a[href="#L3"]');
+  if (r3a) r3a.setAttribute('data-st', narr ? 'src' : 'split');
+  // 레일만 바꾸면 본문과 서로 다른 말을 한다. 같은 기준으로 본문도 갱신한다.
+  document.querySelectorAll('[data-basis]').forEach(function(el){
+    el.innerHTML = narr ? el.dataset.narr : el.dataset.all;
+  });
+  var rs2 = document.getElementById('routeStatus');
+  if (rs2) rs2.textContent = narr
+    ? '기자가 직접 쓴 문장만 세는 기준입니다. 갈린 층위 2개.'
+    : '인용된 발언까지 세는 기준입니다. 갈린 층위 4개.';
+  var c = document.getElementById('basisCount'), d = document.getElementById('basisDelta');
+  if (c) c.textContent = narr ? '2개' : '4개';
+  if (d){
+    d.textContent = narr ? '기자가 직접 쓴 문장만 셀 때' : '인용된 발언까지 셀 때 (+2)';
+    d.style.color = narr ? 'var(--afs-ink-3)' : 'var(--afs-warn)';
+  }
+}
+if (bN){ bN.addEventListener('click', function(){ setBasis(true); }); bA.addEventListener('click', function(){ setBasis(false); }); }
+
+/* ── 자가점검 문항 ──────────────────────────────────────────────────────── */
+/* 라디오 그룹은 그룹 전체가 1 탭 스톱이고 화살표로 이동한다.
+   그리고 라디오는 다시 눌러 해제되지 않는다 — 12문항 설문이 빈 상태가 되면 안 된다. */
+document.querySelectorAll('[role="radiogroup"]').forEach(function(g){
+  var rs = [].slice.call(g.querySelectorAll('[role="radio"]'));
+  function select(i){
+    rs.forEach(function(r, j){
+      r.setAttribute('aria-checked', String(j === i));
+      r.tabIndex = j === i ? 0 : -1;
+    });
+    rs[i].focus();
+  }
+  var cur = -1;
+  rs.forEach(function(r, j){ if (r.getAttribute('aria-checked') === 'true') cur = j; });
+  rs.forEach(function(r, j){ r.tabIndex = (cur < 0 ? j === 0 : j === cur) ? 0 : -1; });
+  g.addEventListener('keydown', function(e){
+    var i = rs.indexOf(document.activeElement);
+    if (i < 0) return;
+    var n = {ArrowDown:1, ArrowRight:1, ArrowUp:-1, ArrowLeft:-1}[e.key];
+    if (n){ e.preventDefault(); select((i + n + rs.length) % rs.length); return; }
+    if (e.key === ' ' || e.key === 'Enter'){
+      e.preventDefault();
+      select(i);
+      rs[i].dispatchEvent(new Event('af-choose', {bubbles:true}));   // 저장 핸들러를 직접 깨운다
+    }
+  });
+  rs.forEach(function(r, i){ r.addEventListener('click', function(){ select(i); }); });
+});
+
+/* ── 레일: 지금 보는 층위 표시 ───────────────────────────────────────────── */
+(function(){
+  var layers = document.querySelectorAll('[data-screen="framing"] .layer');
+  if (!layers.length || !('IntersectionObserver' in window)) return;
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (!en.isIntersecting) return;
+      document.querySelectorAll('.rail a').forEach(function(a){ a.removeAttribute('data-here'); a.removeAttribute('aria-current'); });
+      var here = document.querySelector('.rail a[href="#' + en.target.id + '"]');
+      if (here){ here.setAttribute('data-here','1'); here.setAttribute('aria-current','location'); }
+    });
+  }, { rootMargin: '-118px 0px -62% 0px' });
+  layers.forEach(function(l){ io.observe(l); });
+})();
+
+/* 필터 대상이 없는 화면에서는 스위치를 감춘다 — 눌러도 아무 일이 없으면 고장으로 읽힌다 */
+(function(){
+  function sync(){
+    var on = document.querySelector('section[data-screen].on');
+    var has = on ? on.querySelector('[data-src]') : null;
+    document.querySelectorAll('.legend .sw').forEach(function(l){ l.hidden = !has; });
+  }
+  window.addEventListener('hashchange', sync);
+  sync();
+})();
+
+/* ── 배지 필터 ──────────────────────────────────────────────────────────── */
+document.querySelectorAll('.onlyCode').forEach(function(cb){
+  cb.addEventListener('change', function(){
+    document.body.classList.toggle('only-code', cb.checked);
+    document.querySelectorAll('.onlyCode').forEach(function(o){ o.checked = cb.checked; });
+  });
+});
+
+/* ── 자가점검 — 정적 시안이 아니라 실제로 동작해야 흐름을 볼 수 있다 ──────── */
+(function(){
+  var card = document.getElementById('quizCard');
+  if (!card) return;
+  /* 어휘 실험 — 고르고 나서야 답이 열린다. 먼저 보여주면 실험이 되지 않는다. */
+  (function(){
+    var box = document.getElementById('lexDemo');
+    if (!box) return;
+    var rev = document.getElementById('lexRev');
+    var btns = box.querySelectorAll('[data-lex]');
+    function pick(b){
+      for (var i=0;i<btns.length;i++){
+        btns[i].setAttribute('aria-checked', btns[i]===b ? 'true' : 'false');
+        btns[i].classList.toggle('on', btns[i]===b);
+      }
+      rev.hidden = false;
+    }
+    for (var i=0;i<btns.length;i++){
+      (function(b){ b.addEventListener('click', function(){ pick(b); }); })(btns[i]);
+    }
+    box.addEventListener('keydown', function(e){
+      if (e.key!=='ArrowRight' && e.key!=='ArrowLeft' && e.key!=='ArrowUp' && e.key!=='ArrowDown') return;
+      var cur = document.activeElement, list = [].slice.call(btns), i = list.indexOf(cur);
+      if (i < 0) return;
+      e.preventDefault();
+      var nx = list[(i + (e.key==='ArrowRight'||e.key==='ArrowDown' ? 1 : list.length-1)) % list.length];
+      nx.focus(); pick(nx);
+    });
+  })();
+
+  var AXES = [
+    {k:'focus', name:'어디까지 읽나',  a:'B', b:'H'},
+    {k:'voice', name:'인용을 어떻게 보나', a:'M', b:'D'},
+    {k:'range', name:'무엇에서 이해하나', a:'O', b:'C'},
+    {k:'aim',   name:'언제 결론을 내나', a:'R', b:'P'}
+  ];
+  var Q = [
+    [0,'기사를 열면 <b>본문을 끝까지</b> 읽는 편이다','제목과 첫 문단으로 <b>대체로 판단</b>하는 편이다'],
+    [0,'같은 사건이면 <b>다른 신문 기사도</b> 찾아 읽는다','하나를 읽으면 <b>대체로 충분</b>하다고 느낀다'],
+    [0,'기사 <b>아래쪽 문단</b>에 중요한 게 있다고 생각한다','중요한 건 <b>위쪽에 다 있다</b>고 생각한다'],
+    [1,'인용된 말은 <b>그 사람 생각</b>이지 신문 생각은 아니라고 본다','기사에 실렸으면 <b>신문도 그렇게 본다</b>고 느낀다'],
+    [1,'&ldquo;~라고 말했다&rdquo;와 기자가 쓴 문장을 <b>구분</b>하며 읽는다','읽고 나면 <b>누가 한 말인지</b> 잘 기억나지 않는다'],
+    [1,'익명 관계자 인용이 나오면 <b>한 번 멈춘다</b>','익명이든 실명이든 <b>내용이 중요</b>하다'],
+    [2,'이런 일이 <b>왜 반복되는지</b> — 통계와 제도가 궁금하다','이 일이 <b>어떻게 벌어졌는지</b> — 현장과 당사자가 궁금하다'],
+    [2,'개별 사건보다 <b>구조적 배경</b> 설명에 눈이 간다','구체적인 <b>사례와 인물</b>이 있어야 이해된다'],
+    [2,'&ldquo;몇 년째&rdquo;, &ldquo;전국적으로&rdquo; 같은 표현에 주목한다','&ldquo;피해자는&rdquo;, &ldquo;현장에서는&rdquo; 같은 표현에 주목한다'],
+    [3,'읽고 나서도 <b>판단을 미루는</b> 편이다','읽고 나면 <b>입장이 정해지는</b> 편이다'],
+    [3,'&ldquo;더 봐야 알겠다&rdquo;는 생각을 자주 한다','&ldquo;이건 이렇구나&rdquo; 하고 정리하는 편이다'],
+    [3,'반대 주장도 <b>일리가 있는지</b> 먼저 따져본다','반대 주장은 <b>왜 틀렸는지</b>가 먼저 보인다']
+  ];
+  var NAMES = {
+    BMOR:'정밀 대조가', BMOP:'구조 판단가', BMCR:'사례 대조가', BMCP:'현장 판단가',
+    BDOR:'맥락 탐색가', BDOP:'구조 결론가', BDCR:'이야기 탐색가', BDCP:'결론 검증가',
+    HMOR:'직관 대조가', HMOP:'요점 판단가', HMCR:'감각 대조가', HMCP:'현장 직관가',
+    HDOR:'흐름 관찰가', HDOP:'속도 결론가', HDCR:'인상 관찰가', HDCP:'속도 판단가'
+  };
+  var GOOD = {
+    B:'본문을 끝까지 읽기 때문에, 제목과 본문이 다른 기사에 잘 속지 않습니다.',
+    H:'많은 기사를 빠르게 훑어 전체 지형을 먼저 잡습니다.',
+    M:'인용된 발언을 그 신문의 입장으로 오인하지 않습니다. 이 사이트의 비교 기준과 같은 방식입니다.',
+    D:'기사를 하나의 이야기로 읽어 전체 인상을 빠르게 잡습니다.',
+    O:'개별 사건 뒤의 구조와 반복을 봅니다.',
+    C:'구체적인 사례에서 출발해 사안을 손에 잡히게 이해합니다.',
+    R:'근거가 모자라면 판단을 미룰 줄 압니다.',
+    P:'읽은 것을 정리해 자기 입장으로 만듭니다.'
+  };
+  var BLIND = [
+    {c:'H', layer:'L1', name:'문제 정의', why:'사건의 성격 규정은 제목이 아니라 본문 첫 세 문단에서 끝납니다. 제목만 보면 &ldquo;무엇이 문제인가&rdquo;가 갈린 것을 놓칩니다.'},
+    {c:'D', layer:'L3', name:'책임 귀속', why:'책임을 지목하는 문장은 대부분 인용입니다. 인용과 기자 문장을 구분하지 않으면 신문의 판단이 아닌 것을 신문의 판단으로 읽게 됩니다.'},
+    {c:'C', layer:'L2', name:'원인 해석', why:'사례에서 출발하면 &ldquo;왜 그렇게 됐는가&rdquo;를 제도 설계에서 찾는 서술을 건너뛰기 쉽습니다.'},
+    {c:'O', layer:'L5', name:'해법·처방', why:'구조를 먼저 보다 보면 &ldquo;그래서 무엇을 하자&rdquo;는 문장을 지나칩니다. 진단이 달라도 처방이 같은 경우를 놓칩니다.'},
+    {c:'P', layer:'L4', name:'규범적 평가', why:'결론을 빨리 내면, 기자가 직접 평가하지 않고 인용으로 처리한 자리를 자기 판단으로 메우게 됩니다.'}
+  ];
+  var KEY = 'afs2-quiz';
+  var ans = [];
+  try { ans = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch(e){ ans = []; }
+  if (!Array.isArray(ans)) ans = [];
+  var idx = 0;
+  var res = document.getElementById('quizResult');
+
+  function code(){
+    return AXES.map(function(ax, ai){
+      var a = 0, b = 0;
+      Q.forEach(function(q, qi){ if (q[0] === ai){ if (ans[qi] === 'a') a++; else if (ans[qi] === 'b') b++; } });
+      return a >= b ? ax.a : ax.b;
+    }).join('');
+  }
+  function done(){ return Q.every(function(_, i){ return ans[i] === 'a' || ans[i] === 'b'; }); }
+
+  function paintResult(){
+    var c = code();
+    document.getElementById('rCode').firstChild.nodeValue = c;
+    document.getElementById('rName').textContent = NAMES[c] || '유형';
+    document.getElementById('rLine').innerHTML =
+      '네 축에서 당신은 <b>' + c.split('').join(' · ') + '</b> 쪽입니다. ' +
+      c.split('').map(function(l){ return GOOD[l]; })[0];
+    document.getElementById('rGood').innerHTML = GOOD[c[1]] + ' ' + GOOD[c[0]];
+    var hit = null;
+    for (var i = 0; i < BLIND.length; i++){ if (c.indexOf(BLIND[i].c) >= 0){ hit = BLIND[i]; break; } }
+    if (!hit) hit = BLIND[4];
+    document.getElementById('rBlind').innerHTML = '<b>' + hit.name + '</b> 층위. ' + hit.why;
+    var go = document.getElementById('rGoLayer');
+    go.setAttribute('href', '#/framing#' + hit.layer);
+    go.querySelector('b').textContent = hit.name + ' 층위 보기';
+    try { localStorage.setItem('afs2-reader-type', c); } catch(e){}
+  }
+
+  function paint(){
+    if (done()){
+      card.hidden = true; res.hidden = false; paintResult();
+      var rs = document.getElementById('routeStatus');
+      if (rs) rs.textContent = '자가점검 결과가 나왔습니다: ' + code();
+      return;
+    }
+    card.hidden = false; res.hidden = true;
+    if (idx >= Q.length) idx = Q.length - 1;
+    var q = Q[idx], ax = AXES[q[0]];
+    document.getElementById('qbar').style.width = Math.round((ans.filter(Boolean).length / Q.length) * 100) + '%';
+    document.getElementById('qcount').textContent = (idx + 1) + ' / ' + Q.length;
+    document.getElementById('qaxis').textContent = '축 ' + (q[0] + 1) + ' · ' + ax.name;
+    document.getElementById('qtext').innerHTML = '다음 중 <b>당신에 가까운 쪽</b>은?';
+    var bs = document.querySelectorAll('#qopt .qb');
+    bs[0].innerHTML = q[1]; bs[1].innerHTML = q[2];
+    bs.forEach(function(btn){
+      var on = ans[idx] === btn.dataset.v;
+      btn.setAttribute('aria-checked', String(on));
+      btn.tabIndex = on || (!ans[idx] && btn.dataset.v === 'a') ? 0 : -1;
+    });
+    document.getElementById('qPrev').disabled = idx === 0;
+  }
+
+  document.querySelectorAll('#qopt .qb').forEach(function(btn){
+    function choose(){
+      ans[idx] = btn.dataset.v;
+      try { localStorage.setItem(KEY, JSON.stringify(ans)); } catch(e){}
+      if (idx < Q.length - 1 && !done()) idx++;
+      paint();
+    }
+    btn.addEventListener('click', choose);
+    btn.addEventListener('af-choose', choose);
+  });
+  document.getElementById('qPrev').addEventListener('click', function(){ if (idx > 0) idx--; paint(); });
+  document.getElementById('qReset').addEventListener('click', function(){
+    ans = []; idx = 0;
+    try { localStorage.removeItem(KEY); localStorage.removeItem('afs2-reader-type'); } catch(e){}
+    paint();
+  });
+  document.getElementById('rAgain').addEventListener('click', function(){
+    ans = []; idx = 0;
+    try { localStorage.removeItem(KEY); } catch(e){}
+    paint();
+  });
+  document.getElementById('rShare').addEventListener('click', function(){
+    var url = location.origin + location.pathname + '#/self-check?t=' + code();
+    if (navigator.clipboard) navigator.clipboard.writeText(url);
+    this.textContent = '복사했습니다';
+    var self = this;
+    setTimeout(function(){ self.textContent = '링크 복사'; }, 1600);
+  });
+  paint();
+})();
+
+/* ── 공감 토글 ──────────────────────────────────────────────────────────── */
+document.querySelectorAll('.post-f .tinybtn').forEach(function(b){
+  if (b.textContent.indexOf('공감') < 0) return;
+  b.addEventListener('click', function(){
+    var on = b.getAttribute('aria-pressed') === 'true';
+    b.setAttribute('aria-pressed', String(!on));
+    b.textContent = b.textContent.replace(/\d+/, function(n){ return String(Number(n) + (on ? -1 : 1)); });
+  });
+});
+</script>
+</body>
+</html>

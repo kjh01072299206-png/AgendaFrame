@@ -1,8 +1,8 @@
 # AgendaFrame 서비스
 
-22개 주요 종합일간지·경제매체·뉴스통신사의 실제 온라인 기사 메타데이터를 이슈로 묶고, 의제 점수·언론사별 보도량·6종 프레임·근거 리포트를 제공하는 React 대시보드입니다. TV 편성·영상 리포트와 온라인 기사 배열을 같은 기준으로 비교할 수 없어 방송사는 표본에서 제외합니다.
+22개 주요 종합일간지·경제매체·뉴스통신사의 실제 온라인 기사 메타데이터를 이슈로 묶고, 의제 점수·언론사별 보도량·프레임 분석·근거 리포트를 제공하는 웹 서비스입니다. TV 편성·영상 리포트와 온라인 기사 배열을 같은 기준으로 비교할 수 없어 방송사는 표본에서 제외합니다.
 
-- 공개 서비스: https://agendaframe-capstone.kjh01072299206.chatgpt.site
+- 공개 서비스: https://agendaframe-capstone.vercel.app
 - 관리자 화면: `/admin`
 - 상위 문서: [프로젝트 README](../README.md)
 
@@ -10,11 +10,11 @@
 
 - Next.js 16·React 19·TypeScript 사용자/관리자 화면
 - BigKinds Excel·CSV 가져오기와 100건 단위의 본문·제공자 발췌 구조화 분석
-- 19,999건 규모의 실제 기사 제목·원문 링크 조회, 검색, 필터, 페이지네이션
+- 39,023건 규모의 실제 기사 제목·원문 링크 조회, 검색, 필터, 페이지네이션
 - 제목 토큰 유사도 기반 일일 이슈 클러스터링
 - 최대 7일 기간 일괄 분석과 완료·실패·기사 없음 상태 조회
 - 이미 완료된 날짜를 건너뛰는 중단 후 재개 실행
-- 독립 미디어그룹 커버리지 35%·관측된 배치 30%·기사량 20%·동일 매체 후속 보도량 15%의 관측 의제성 점수
+- 독립 미디어그룹 커버리지 45%·기사량 30%·관측된 배치 15%·동일 매체 후속 보도량 10%의 관측 의제성 점수. 관측되지 않은 성분은 제외하고 남은 가중치로 재정규화한 뒤 커버리지 계수를 곱한다(`worker/analysis.mjs`의 `weightedAgendaScore`)
 - 문제 정의·원인·책임·평가·해법·취재원 구조와 기사별 근거 위치·비복원 해시
 - 매체별 Policy Frames 다중 라벨 구성, 인용원 역할, 기자 서술 범위·평가 표현 비교
 - 통제 어휘 기반 한국어 형태소 정규화, 품사·부정 표현·매체별 상위어 집계
@@ -26,7 +26,7 @@
 - 상위 50개 이슈의 사람 검토와 잘못 묶인 기사·누락 기사 영속화
 - 검토 결과 기반 추정 정밀도·재현율·의제·프레임 동의율 산출
 
-현재 분석 공급자는 `structured_extractive`, 분석 모델 버전은 `agenda-structure-v5`, 구조화 엔진은 `korean-morph-evidence-rules-v3`, 형태소 정규화기는 `ko-controlled-morph-v1`입니다. 공개 의제는 정치·경제·사회·국제를 우선하고 스포츠·생활·IT를 뒤에 배치하며, 공통 정책 개념이 확인된 기사 제목은 하나의 건조한 의제명 아래 묶습니다. 별도 유료 API를 호출하지 않습니다. BigKinds 행은 `article_body`와 `provider_excerpt`를 구분해 가져오며, 본문은 최대 200,000자, 제공자 발췌는 최대 5,000자로 검증합니다. 요청 안에서 구조화 결과만 저장하고 본문·발췌 원문은 저장하지 않으며, 텍스트가 없으면 제목 단서로 제한합니다. 분석 공급자를 바꾸더라도 [`docs/public-api.schema.json`](docs/public-api.schema.json)의 공개 계약과 결과 계보를 유지하도록 설계했습니다. 자동 결과는 사람 검토 전 초안으로 표시합니다. 현재 형태소 정규화는 재현 가능한 통제 어휘 폴백으로, 언어학적 형태소 분석과 동일하지 않으므로 운영 고도화 시 Kiwi 같은 한국어 분석기로 교체하되 공개 스키마는 유지합니다.
+현재 분석 공급자는 `structured_extractive`, 저장소의 분석 모델 버전은 `agenda-structure-v6`, 구조화 엔진은 `korean-evidence-rules-v1`입니다. **라이브 `/api/health`는 아직 `agenda-structure-v5`를 돌려줍니다** — 화면은 Vercel에 최신으로 올라가 있지만 `/api/*`를 받는 레거시 워커를 v6으로 재배포하지 않았기 때문입니다(`docs/deploy.md` 참고). 공개 의제는 정치·경제·사회·국제를 우선하고 스포츠·생활·IT를 뒤에 배치하며, 공통 정책 개념이 확인된 기사 제목은 하나의 건조한 의제명 아래 묶습니다. 별도 유료 API를 호출하지 않습니다. BigKinds 파일에 본문 발췌가 있으면 가져오기 요청 안에서 분석하고 전문·발췌 원문을 저장하지 않으며, 발췌가 없으면 제목 단서로 제한합니다. 분석 공급자를 바꾸더라도 [`docs/public-api.schema.json`](docs/public-api.schema.json)의 공개 계약과 결과 계보를 유지하도록 설계했습니다. 자동 결과는 사람 검토 전 초안으로 표시합니다.
 
 ## 운영 순서
 
@@ -42,6 +42,15 @@
 대표 도메인은 빌드 환경의 `NEXT_PUBLIC_SITE_URL`로 설정할 수 있습니다. 커스텀 프록시 도메인에서 관리자 쓰기 API를 사용할 때는 정확한 출처를 `PUBLIC_ORIGINS`에 쉼표로 구분해 등록합니다. `agendaframe.com`과 `www.agendaframe.com`은 기본 신뢰 주소에 포함돼 있으며, 실제 사용 전 도메인 등록과 Vercel DNS 연결이 필요합니다.
 
 ## API
+
+`/api/initial-five/*`와 `/version`은 Vercel의 Next 라우트 핸들러가 직접 응답하고, 나머지는 `next.config.ts`의 fallback rewrite로 레거시 워커 오리진에 넘어갑니다.
+
+| 경로 | 용도 | 보호 |
+| --- | --- | --- |
+| `GET /version` | 배포된 커밋 SHA | 공개 |
+| `GET /api/initial-five` | 7/26 상위 5개 의제 매니페스트 | 공개 |
+| `GET /api/initial-five/issues/:id` | 의제 하나의 분석 번들 | 공개 |
+| `POST /api/initial-five/ask` | 코딩된 분석 항목 기반 근거 응답(외부 모델 호출 없음) | 공개 |
 
 | 경로 | 용도 | 보호 |
 | --- | --- | --- |
@@ -80,4 +89,4 @@ npm run lint
 npm test
 ```
 
-`npm run build`는 Vite·vinext로 실제 React 클라이언트와 Workers 호환 서버를 `dist/`에 만들고, Sites용 호스팅 정보와 Drizzle 마이그레이션을 함께 패키징합니다. 비밀값과 서비스 계정 파일은 저장소에 커밋하지 않습니다.
+`npm run build`는 먼저 `data:build:initial-five`로 `public/initial-five` 산출물을 만든 뒤 Vite·vinext로 클라이언트와 Workers 호환 서버를 `dist/`에 빌드하고, 호스팅 정보와 Drizzle 마이그레이션을 함께 패키징합니다. 실배포는 Vercel이며 `main`에 push하면 자동으로 올라갑니다. 절차와 관문은 [`docs/deploy.md`](../docs/deploy.md)를 보십시오. 비밀값과 서비스 계정 파일은 저장소에 커밋하지 않습니다.

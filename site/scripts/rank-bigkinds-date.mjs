@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { parseBigKindsXlsx } from "../lib/bigkinds-xlsx.mjs";
+import { isBigKindsExcludedValue, parseBigKindsXlsx } from "../lib/bigkinds-xlsx.mjs";
 import { analyzeArticles, extractBodyFrameSignals } from "../worker/analysis.mjs";
 
 const [file, targetDate = "2026-07-26"] = process.argv.slice(2);
@@ -41,7 +41,7 @@ for (const required of ["뉴스 식별자", "일자", "언론사", "제목", "�
 const dateKey = targetDate.replaceAll("-", "");
 const articles = rows.slice(1)
   .filter((row) => String(row[column["일자"]] ?? "").replace(/\D/g, "") === dateKey)
-  .filter((row) => !String(row[column["분석제외 여부"]] ?? "").trim())
+  .filter((row) => !isBigKindsExcludedValue(row[column["분석제외 여부"]]))
   .flatMap((row) => {
     const source = String(row[column["언론사"]] ?? "").trim();
     const sourceConfig = SOURCE_IDS.get(source);

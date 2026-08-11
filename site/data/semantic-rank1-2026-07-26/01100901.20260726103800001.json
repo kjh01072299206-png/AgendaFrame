@@ -1,0 +1,400 @@
+{
+ "articleId": "01100901.20260726103800001",
+ "profile": {
+  "schema_version": "agendaframe.article-frame-profile.v2",
+  "lineage": {
+   "model_id": "claude-sonnet-5x2-opus-5-adjudicated",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+   "model_output_schema_version": 3,
+   "comparison_engine_version": "korean-evidence-rules-v2",
+   "approval": {
+    "authorization_id": "bigkinds-2026-07-26-rank-1-660bb4b5f190",
+    "fingerprint": "eefd00307c32abfe99bc771be9fc1267d22ff433a6fb2327972e05bae6e59d97",
+    "cluster_id": "bigkinds-2026-07-26-rank-1",
+    "reviewer": "AgendaFrame agent-assisted evidence audit",
+    "reviewed_at": "2026-07-31T00:00:00+09:00",
+    "approved_urls_sha256": "3eb237d3db5544c1bb53164dbae6ba03fd907498fbd7cf3d9ee26ea6f5e62753"
+   }
+  },
+  "engine": {
+   "name": "AgendaFrame Claude evidence coder",
+   "version": "claude-sonnet-5x2-opus-5-adjudicated",
+   "approach": "semantic_evidence_bounded",
+   "semantic_ai": true,
+   "status": "semantic_draft",
+   "prompt_version": "claude-framing-v1.0.0",
+   "analysis_schema_version": 3,
+   "evidence_storage": "locator_and_salted_sha256_only",
+   "limitations": [
+    "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+    "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+    "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+   ]
+  },
+  "article": {
+   "article_id": "01100901.20260726103800001",
+   "upstream_article_id": "01100901.20260726103800001",
+   "published_at": "2026-07-26T10:38:00+09:00",
+   "title_sha256": "05a96b245ceae28e9264d7d4a50d46877ac88e76d6a5ebac3f93e53b07d5c88b",
+   "body_sha256": "cd44d9571687266c86eb98757a601dd2cc1cfc6c2ec82a67ecdd2f62c491a110",
+   "body_character_count": 2672,
+   "body_word_count": 586,
+   "paragraph_count": 1,
+   "sentence_count": 28,
+   "raw_body_retained": false
+  },
+  "extraction": {
+   "text_scope": "transient_public_page_extract",
+   "analyzed_character_count": 2672,
+   "input_truncated": false
+  },
+  "genre": {
+   "code": "unknown",
+   "label": "자동 분류 안 함",
+   "evidence": []
+  },
+  "dimensions": {
+   "problem_definition": {
+    "status": "observed",
+    "model_status": "supported",
+    "outlet_narration_observed": true,
+    "items": [
+     {
+      "claim_id": "claim:4f4d7d59e01132c1225795ec18fe06b0279a9dd622a0ce42cad19295fa4aa959",
+      "code": "semantic_problem_definition",
+      "frame_family": "legal_institutional",
+      "variant_key": "semantic:problem_definition:family:legal_institutional",
+      "public_paraphrase": "검찰의 추가 수사 권한을 없애는 법 개정이 여당 당론으로 확정되면서, 형사사법 제도의 마지막 통제 장치가 무너진다는 문제 제기가 기사 전반을 이룬다.",
+      "voice": {
+       "kind": "journalist_narration",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 3
+       },
+       "sentence_sha256": "6a6bed0290d5096beb3095d933095e65c6d69674af405a23c04958e4c6b7d701"
+      }
+     }
+    ]
+   },
+   "causal_interpretation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:16b79874ad11d0a619e82775a10040fa2c12943b542338722e103865fe6fc5f5",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "political_incentive",
+      "variant_key": "semantic:causal_interpretation:family:political_incentive",
+      "public_paraphrase": "폐지 강행의 배경으로 강성 지지층 의식, 전당대회 표 계산, 공소 취소를 둘러싼 뒷거래 우려 같은 정치적 이해타산이 지목된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 9
+       },
+       "sentence_sha256": "547db6eb2f5540c54776dbf8a067a285e5eb5e677b8e58656f0e1f64275367a2"
+      }
+     },
+     {
+      "claim_id": "claim:16b79874ad11d0a619e82775a10040fa2c12943b542338722e103865fe6fc5f5",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "political_incentive",
+      "variant_key": "semantic:causal_interpretation:family:political_incentive",
+      "public_paraphrase": "폐지 강행의 배경으로 강성 지지층 의식, 전당대회 표 계산, 공소 취소를 둘러싼 뒷거래 우려 같은 정치적 이해타산이 지목된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 9
+       },
+       "sentence_sha256": "547db6eb2f5540c54776dbf8a067a285e5eb5e677b8e58656f0e1f64275367a2"
+      }
+     },
+     {
+      "claim_id": "claim:16b79874ad11d0a619e82775a10040fa2c12943b542338722e103865fe6fc5f5",
+      "code": "semantic_causal_interpretation",
+      "frame_family": "political_incentive",
+      "variant_key": "semantic:causal_interpretation:family:political_incentive",
+      "public_paraphrase": "폐지 강행의 배경으로 강성 지지층 의식, 전당대회 표 계산, 공소 취소를 둘러싼 뒷거래 우려 같은 정치적 이해타산이 지목된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 7
+       },
+       "sentence_sha256": "855c130a1e6653dd99ee871cb509b9e1dd32245227ba466302c7e087ce760add"
+      }
+     }
+    ]
+   },
+   "responsibility_attribution": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:35f8bce12f83a0f809daf1957ed76a55f133ae2ab85baa2e1d737382b8b09b94",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "shared_responsibility",
+      "variant_key": "semantic:responsibility_attribution:family:shared_responsibility",
+      "public_paraphrase": "대통령은 침묵으로 책임을 비켜서고 집권당 의원들은 지지층 눈치만 본다며, 책임 소재가 두 주체 모두에게 함께 돌려진다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 8
+       },
+       "sentence_sha256": "64548b243770c09eac7c4c49031b118facf36a0924ba2d2ce2d711ce505c012e"
+      }
+     },
+     {
+      "claim_id": "claim:35f8bce12f83a0f809daf1957ed76a55f133ae2ab85baa2e1d737382b8b09b94",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "shared_responsibility",
+      "variant_key": "semantic:responsibility_attribution:family:shared_responsibility",
+      "public_paraphrase": "대통령은 침묵으로 책임을 비켜서고 집권당 의원들은 지지층 눈치만 본다며, 책임 소재가 두 주체 모두에게 함께 돌려진다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 9
+       },
+       "sentence_sha256": "547db6eb2f5540c54776dbf8a067a285e5eb5e677b8e58656f0e1f64275367a2"
+      }
+     },
+     {
+      "claim_id": "claim:35f8bce12f83a0f809daf1957ed76a55f133ae2ab85baa2e1d737382b8b09b94",
+      "code": "semantic_responsibility_attribution",
+      "frame_family": "shared_responsibility",
+      "variant_key": "semantic:responsibility_attribution:family:shared_responsibility",
+      "public_paraphrase": "대통령은 침묵으로 책임을 비켜서고 집권당 의원들은 지지층 눈치만 본다며, 책임 소재가 두 주체 모두에게 함께 돌려진다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 10
+       },
+       "sentence_sha256": "5da303a572a4624998c0894d268f68b588bc8c171aac8c81126a25778ddd30fb"
+      }
+     }
+    ]
+   },
+   "moral_evaluation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:7000e5287d2ec6dee1616785e7ccb58a68de73ce6ff8541091dd46643e7902e0",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "명분을 갖추지 못한 사법 체계 훼손이자 안전장치를 걷어내는 위험한 밀어붙이기라는 부정적 평가가 반복해서 제시된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 13
+       },
+       "sentence_sha256": "c05de4be256ac8a8d492bbfed50ed5d40e810e6be8394c6b88f65e7bafe0ba47"
+      }
+     },
+     {
+      "claim_id": "claim:7000e5287d2ec6dee1616785e7ccb58a68de73ce6ff8541091dd46643e7902e0",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "명분을 갖추지 못한 사법 체계 훼손이자 안전장치를 걷어내는 위험한 밀어붙이기라는 부정적 평가가 반복해서 제시된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 20
+       },
+       "sentence_sha256": "c78e6ac8d8bc6a31dde0031f6c2ee878d5d229a4182bbeca31240d5773a8b989"
+      }
+     },
+     {
+      "claim_id": "claim:7000e5287d2ec6dee1616785e7ccb58a68de73ce6ff8541091dd46643e7902e0",
+      "code": "semantic_moral_evaluation",
+      "frame_family": "legitimacy_negative",
+      "variant_key": "semantic:moral_evaluation:family:legitimacy_negative",
+      "public_paraphrase": "명분을 갖추지 못한 사법 체계 훼손이자 안전장치를 걷어내는 위험한 밀어붙이기라는 부정적 평가가 반복해서 제시된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 13
+       },
+       "sentence_sha256": "c05de4be256ac8a8d492bbfed50ed5d40e810e6be8394c6b88f65e7bafe0ba47"
+      }
+     }
+    ]
+   },
+   "treatment_recommendation": {
+    "status": "source_attributed",
+    "model_status": "supported",
+    "outlet_narration_observed": false,
+    "items": [
+     {
+      "claim_id": "claim:09fd80e1f7c4018e048c56310ece94e3c78e1deae4ed31a4d2e2c0db70a9438d",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "institutional_check",
+      "variant_key": "semantic:treatment_recommendation:family:institutional_check",
+      "public_paraphrase": "무제한 토론을 포함한 본회의 저지 투쟁, 대통령의 재의요구 건의, 집권당 의원들의 반대표 행사가 해법으로 제시된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 16
+       },
+       "sentence_sha256": "3e420c9104783737bff2c8d84556f6e406e57b7b5f8c119b220127050975d244"
+      }
+     },
+     {
+      "claim_id": "claim:09fd80e1f7c4018e048c56310ece94e3c78e1deae4ed31a4d2e2c0db70a9438d",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "institutional_check",
+      "variant_key": "semantic:treatment_recommendation:family:institutional_check",
+      "public_paraphrase": "무제한 토론을 포함한 본회의 저지 투쟁, 대통령의 재의요구 건의, 집권당 의원들의 반대표 행사가 해법으로 제시된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 21
+       },
+       "sentence_sha256": "6c6a69f23ac65625cd094e8861bef888f6a3457f0a2e28f66139923a913e85d5"
+      }
+     },
+     {
+      "claim_id": "claim:09fd80e1f7c4018e048c56310ece94e3c78e1deae4ed31a4d2e2c0db70a9438d",
+      "code": "semantic_treatment_recommendation",
+      "frame_family": "institutional_check",
+      "variant_key": "semantic:treatment_recommendation:family:institutional_check",
+      "public_paraphrase": "무제한 토론을 포함한 본회의 저지 투쟁, 대통령의 재의요구 건의, 집권당 의원들의 반대표 행사가 해법으로 제시된다.",
+      "voice": {
+       "kind": "direct_quote",
+       "speaker_role": null
+      },
+      "evidence": {
+       "locator": {
+        "paragraph": 1,
+        "sentence": 16
+       },
+       "sentence_sha256": "3e420c9104783737bff2c8d84556f6e406e57b7b5f8c119b220127050975d244"
+      }
+     }
+    ]
+   }
+  },
+  "actors_and_sources": [
+   {
+    "actor_id": "actor:f044ef66e080d0f43098f5a89a9944325290aac26251200ff53a0503cfaaf61f",
+    "role": "government_official",
+    "role_label": "정부·공공기관",
+    "direct_quote_count": 0,
+    "indirect_attribution_count": 1,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 25
+      },
+      "sentence_sha256": "fbd743705fb02c4beb5d90f9b9ce88abdf1e596ebd7dd6d3b859881e6785f1dc"
+     }
+    ]
+   },
+   {
+    "actor_id": "actor:a6f64603cf38d9a8a19e06836513f782d461dbc206151ac43f155063d055163c",
+    "role": "political_actor",
+    "role_label": "정당·정치권",
+    "direct_quote_count": 3,
+    "indirect_attribution_count": 0,
+    "evidence": [
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 4
+      },
+      "sentence_sha256": "17035b08ff7e5d162b761248472d8f433321ad6ecc73d92b592ae970337de32f"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 4
+      },
+      "sentence_sha256": "17035b08ff7e5d162b761248472d8f433321ad6ecc73d92b592ae970337de32f"
+     },
+     {
+      "locator": {
+       "paragraph": 1,
+       "sentence": 16
+      },
+      "sentence_sha256": "3e420c9104783737bff2c8d84556f6e406e57b7b5f8c119b220127050975d244"
+     }
+    ]
+   }
+  ],
+  "context_depth": {
+   "level": "unknown"
+  },
+  "scope": {
+   "code": "unknown"
+  },
+  "secondary_descriptors": {
+   "generic_frames": [],
+   "policy_frames": [],
+   "controlled_associations": []
+  },
+  "framing_devices": [],
+  "review": {
+   "status": "automatic_draft",
+   "analysis_decision": "analyze",
+   "analysis_state": "succeeded",
+   "attempt_count": 1,
+   "idempotency_fingerprint": "a57746c84a9445ea24efb19ac91081b6d09782f45e09754299c301e1a8574e35",
+   "error_code": null,
+   "fallback_reason": null,
+   "requires_human_review": true,
+   "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+  }
+ }
+}

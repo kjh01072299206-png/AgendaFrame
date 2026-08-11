@@ -1,0 +1,2582 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#f7f8fa">
+  <title>AgendaFrame 프레이밍 분석 실험실 — 가상 사건</title>
+  <style>
+    :root {
+      --paper: #f7f8fa;
+      --paper-deep: #eef1f5;
+      --panel: #ffffff;
+      --ink: #172033;
+      --ink-soft: #334055;
+      --muted: #596579;
+      --line: #e0e4ea;
+      --line-strong: #c7ced8;
+      --accent: #2856c8;
+      --accent-hover: #1e45aa;
+      --accent-soft: #edf2ff;
+      --green: #087a5b;
+      --green-soft: #e9f7f1;
+      --amber: #795200;
+      --amber-soft: #fff4d6;
+      --critical: #9a2540;
+      --critical-soft: #fff0f3;
+      --purple: #7058a3;
+      --orange: #9b5b00;
+      --teal: #147589;
+      --slate: #657084;
+      --radius: 12px;
+      --header-height: 70px;
+      --font-sans: Pretendard, "Pretendard Variable", "Noto Sans KR", "Apple SD Gothic Neo", Inter, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--paper);
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    button,
+    textarea {
+      font: inherit;
+    }
+
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    :where(button, a, textarea, summary, .evidence-inspector, .timeline-inspector):focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--accent), white 35%);
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 100;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: var(--ink);
+      color: white;
+      transform: translateY(-160%);
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      min-height: var(--header-height);
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 32px;
+      padding: 11px max(22px, calc((100vw - 1440px) / 2));
+      border-bottom: 1px solid rgba(199, 206, 216, .9);
+      background: rgba(247, 248, 250, .94);
+      backdrop-filter: blur(16px) saturate(140%);
+    }
+
+    .brand {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      width: max-content;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      background: var(--ink);
+      color: white;
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: -.03em;
+    }
+
+    .brand-copy {
+      display: grid;
+      line-height: 1.08;
+    }
+
+    .brand-copy b {
+      font-size: 17px;
+      letter-spacing: -.025em;
+    }
+
+    .brand-copy small {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .top-nav {
+      min-width: 0;
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .top-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .top-nav button {
+      flex: none;
+      min-height: 44px;
+      padding: 8px 11px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .top-nav button:hover {
+      background: var(--paper-deep);
+      color: var(--ink);
+    }
+
+    .draft-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid #abd8c8;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .draft-badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    main {
+      overflow: clip;
+    }
+
+    .case-shell,
+    .analysis-section,
+    .review-section {
+      width: min(1440px, calc(100% - 48px));
+      margin-inline: auto;
+    }
+
+    .case-shell {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      margin-top: 34px;
+      border: 1px solid var(--line-strong);
+      border-radius: 16px;
+      background: var(--panel);
+      overflow: hidden;
+      scroll-margin-top: calc(var(--header-height) + 16px);
+    }
+
+    .case-index {
+      padding: 28px 24px;
+      border-right: 1px solid var(--line);
+      background: #f1f3f6;
+    }
+
+    .case-index h2 {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: -.01em;
+    }
+
+    .case-index dl {
+      margin: 20px 0 0;
+    }
+
+    .case-index dl div {
+      display: grid;
+      gap: 3px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .case-index dt {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .case-index dd {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 13px;
+      font-weight: 700;
+      word-break: keep-all;
+    }
+
+    .scope-note {
+      margin: 18px 0 0;
+      padding: 12px;
+      border: 1px solid #e3c77c;
+      border-radius: 9px;
+      background: var(--amber-soft);
+      color: #624400;
+      font-size: 11px;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    .case-main {
+      min-width: 0;
+      padding: clamp(30px, 4vw, 58px);
+    }
+
+    .fiction-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 15px;
+      padding: 6px 9px;
+      border-radius: 7px;
+      background: var(--amber-soft);
+      color: var(--amber);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .fiction-label::before {
+      content: "!";
+      display: grid;
+      place-items: center;
+      width: 17px;
+      height: 17px;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      font-size: 10px;
+    }
+
+    h1 {
+      max-width: 850px;
+      margin: 0;
+      font-size: 44px;
+      line-height: 1.17;
+      letter-spacing: -.035em;
+      text-wrap: balance;
+      word-break: keep-all;
+    }
+
+    .case-lead {
+      max-width: 75ch;
+      margin: 18px 0 0;
+      color: #4b576a;
+      font-size: 16px;
+      line-height: 1.75;
+      text-wrap: pretty;
+      word-break: keep-all;
+    }
+
+    .focus-question {
+      display: grid;
+      grid-template-columns: 126px minmax(0, 1fr);
+      gap: 20px;
+      margin-top: 28px;
+      padding: 18px 0;
+      border-top: 1px solid var(--line-strong);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .focus-question span {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .focus-question strong {
+      max-width: 78ch;
+      font-size: 15px;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    .outlet-filter {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .outlet-filter > span {
+      margin-right: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .filter-button {
+      min-height: 44px;
+      padding: 8px 13px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--ink-soft);
+      font-size: 12px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .filter-button:hover {
+      border-color: var(--ink);
+    }
+
+    .filter-button[aria-pressed="true"] {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: white;
+    }
+
+    .finding {
+      margin-top: 32px;
+      padding-top: 26px;
+      border-top: 1px solid var(--line-strong);
+    }
+
+    .finding-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .section-label {
+      margin: 0;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .finding h2,
+    .section-heading h2,
+    .review-section h2 {
+      margin: 6px 0 0;
+      font-size: 28px;
+      line-height: 1.25;
+      letter-spacing: -.025em;
+      text-wrap: balance;
+      word-break: keep-all;
+    }
+
+    .finding-summary {
+      max-width: 78ch;
+      margin: 12px 0 0;
+      color: var(--ink-soft);
+      line-height: 1.75;
+      word-break: keep-all;
+    }
+
+    .finding-status {
+      flex: none;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .definition-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 24px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .definition {
+      min-width: 0;
+      padding: 20px 22px;
+      transition: opacity .18s ease, background .18s ease;
+    }
+
+    .definition + .definition {
+      border-left: 1px solid var(--line);
+    }
+
+    .definition small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .definition h3 {
+      margin: 8px 0 7px;
+      font-size: 17px;
+      letter-spacing: -.015em;
+      word-break: keep-all;
+    }
+
+    .definition p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    .definition[data-outlet="haesol"] h3 {
+      color: var(--purple);
+    }
+
+    .definition[data-outlet="donghae"] h3 {
+      color: var(--orange);
+    }
+
+    .definition[data-outlet="citizen"] h3 {
+      color: var(--teal);
+    }
+
+    .shared-facts {
+      margin-top: 18px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .shared-facts summary {
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 11px 2px;
+      color: var(--ink-soft);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .shared-facts summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .shared-facts summary::after {
+      content: "+";
+      color: var(--accent);
+      font-size: 19px;
+      font-weight: 500;
+    }
+
+    .shared-facts[open] summary::after {
+      content: "−";
+    }
+
+    .shared-facts ul {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 28px;
+      margin: 0 0 18px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .shared-facts li {
+      position: relative;
+      padding-left: 17px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    .shared-facts li::before {
+      content: "";
+      position: absolute;
+      top: .7em;
+      left: 1px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .analysis-section {
+      scroll-margin-top: calc(var(--header-height) + 20px);
+      padding: 66px 0 4px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      padding-bottom: 19px;
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    .section-heading > div:first-child {
+      max-width: 820px;
+    }
+
+    .section-heading p:last-child {
+      max-width: 72ch;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    .method-chip {
+      flex: none;
+      padding: 6px 9px;
+      border-radius: 7px;
+      background: var(--paper-deep);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .matrix-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 310px;
+      gap: 26px;
+      padding-top: 24px;
+    }
+
+    .matrix-wrap {
+      min-width: 0;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel);
+    }
+
+    .frame-matrix {
+      width: 100%;
+      min-width: 840px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .frame-matrix th,
+    .frame-matrix td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.58;
+      transition: opacity .18s ease, background .18s ease;
+    }
+
+    .frame-matrix tr:last-child th,
+    .frame-matrix tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .frame-matrix th:last-child,
+    .frame-matrix td:last-child {
+      border-right: 0;
+    }
+
+    .frame-matrix thead th {
+      background: #f1f3f6;
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .frame-matrix thead th:first-child {
+      width: 130px;
+    }
+
+    .frame-matrix tbody th {
+      background: #fafbfc;
+      color: var(--ink);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .matrix-cell strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink-soft);
+      font-size: 12px;
+    }
+
+    .matrix-cell p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.6;
+      word-break: keep-all;
+    }
+
+    .matrix-cell .attribution {
+      display: inline-flex;
+      margin-top: 8px;
+      padding: 3px 6px;
+      border-radius: 5px;
+      background: var(--paper-deep);
+      color: #4f5b6e;
+      font-size: 10px;
+      font-weight: 750;
+    }
+
+    .matrix-cell.not-observed strong {
+      color: var(--muted);
+      font-weight: 650;
+    }
+
+    .matrix-aside {
+      align-self: start;
+      padding: 20px;
+      border: 1px solid #bdcaf0;
+      border-radius: 11px;
+      background: var(--accent-soft);
+    }
+
+    .matrix-aside h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .matrix-aside p {
+      margin: 10px 0 0;
+      color: #43516c;
+      font-size: 12px;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    .matrix-aside dl {
+      margin: 17px 0 0;
+      padding-top: 8px;
+      border-top: 1px solid #bdcaf0;
+    }
+
+    .matrix-aside dl div {
+      padding: 9px 0;
+    }
+
+    .matrix-aside dt {
+      color: #5b6880;
+      font-size: 10px;
+    }
+
+    .matrix-aside dd {
+      margin: 3px 0 0;
+      color: #263a66;
+      font-size: 12px;
+      font-weight: 750;
+      word-break: keep-all;
+    }
+
+    .matrix-caption {
+      margin: 10px 2px 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .language-layout {
+      display: grid;
+      grid-template-columns: minmax(0, .92fr) minmax(380px, 1.08fr);
+      gap: 34px;
+      padding-top: 26px;
+    }
+
+    .subsection {
+      min-width: 0;
+    }
+
+    .subsection > header {
+      min-height: 62px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .subsection h3 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -.015em;
+    }
+
+    .subsection header p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    .word-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .word-table th,
+    .word-table td {
+      padding: 15px 4px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .word-table th {
+      width: 112px;
+      font-size: 12px;
+    }
+
+    .keyword-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .keyword-list li {
+      padding: 4px 7px;
+      border-radius: 6px;
+      background: var(--paper-deep);
+      color: #415069;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .word-note {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    .voice-bars {
+      display: grid;
+      gap: 18px;
+      padding-top: 17px;
+    }
+
+    .voice-row {
+      transition: opacity .18s ease;
+    }
+
+    .voice-row-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .voice-row-header strong {
+      font-size: 12px;
+    }
+
+    .voice-row-header span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .voice-track {
+      display: flex;
+      min-height: 32px;
+      overflow: hidden;
+      border-radius: 7px;
+      background: var(--paper-deep);
+    }
+
+    .voice-track span {
+      min-width: 28px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .voice-official {
+      background: #3f5c96;
+    }
+
+    .voice-council {
+      background: #7a5aa8;
+    }
+
+    .voice-expert {
+      background: #28715c;
+    }
+
+    .voice-affected {
+      background: #147589;
+    }
+
+    .voice-business {
+      background: #9b6a18;
+    }
+
+    .voice-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px 15px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .voice-legend li {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .voice-legend i {
+      width: 9px;
+      height: 9px;
+      border-radius: 3px;
+    }
+
+    .voice-caution {
+      margin: 18px 0 0;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fafbfc;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .timeline-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
+      gap: 28px;
+      padding-top: 26px;
+    }
+
+    .timeline {
+      position: relative;
+      display: grid;
+      gap: 0;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      top: 24px;
+      bottom: 24px;
+      left: 20px;
+      width: 1px;
+      background: var(--line-strong);
+    }
+
+    .timeline button {
+      position: relative;
+      width: 100%;
+      min-height: 76px;
+      display: grid;
+      grid-template-columns: 40px 88px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 12px 4px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .timeline button:hover,
+    .timeline button[aria-pressed="true"] {
+      background: var(--panel);
+    }
+
+    .timeline-dot {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      width: 15px;
+      height: 15px;
+      margin-left: 13px;
+      border: 3px solid var(--paper);
+      border-radius: 50%;
+      background: var(--slate);
+      box-shadow: 0 0 0 1px var(--line-strong);
+    }
+
+    .timeline button[aria-pressed="true"] .timeline-dot {
+      background: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+
+    .timeline time {
+      color: var(--muted);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timeline strong {
+      font-size: 13px;
+      word-break: keep-all;
+    }
+
+    .timeline em {
+      color: var(--muted);
+      font-size: 11px;
+      font-style: normal;
+      white-space: nowrap;
+    }
+
+    .timeline-inspector {
+      align-self: start;
+      min-height: 292px;
+      padding: 22px;
+      border: 1px solid var(--line-strong);
+      border-radius: 11px;
+      background: var(--panel);
+    }
+
+    .timeline-inspector > span {
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .timeline-inspector h3 {
+      margin: 8px 0 0;
+      font-size: 19px;
+      letter-spacing: -.02em;
+    }
+
+    .timeline-inspector > p {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    .timeline-signals {
+      display: grid;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .timeline-signals div {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: 12px;
+      padding-top: 9px;
+      border-top: 1px solid var(--line);
+    }
+
+    .timeline-signals dt {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .timeline-signals dd {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 11px;
+      font-weight: 700;
+      word-break: keep-all;
+    }
+
+    .evidence-layout {
+      display: grid;
+      grid-template-columns: minmax(460px, 1fr) minmax(360px, .86fr);
+      gap: 28px;
+      padding-top: 26px;
+    }
+
+    .article-list {
+      min-width: 0;
+      border-top: 1px solid var(--line-strong);
+    }
+
+    .article-row {
+      display: grid;
+      grid-template-columns: 105px minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      min-height: 74px;
+      padding: 13px 4px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .article-row > span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .article-row > div {
+      min-width: 0;
+    }
+
+    .article-row strong {
+      display: block;
+      font-size: 13px;
+      line-height: 1.48;
+      word-break: keep-all;
+    }
+
+    .article-row small {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .article-row button {
+      min-height: 44px;
+      padding: 7px 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      background: var(--panel);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .article-row button:hover,
+    .article-row button[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .evidence-inspector {
+      align-self: start;
+      position: sticky;
+      top: calc(var(--header-height) + 18px);
+      min-height: 410px;
+      padding: 24px;
+      border: 1px solid var(--line-strong);
+      border-radius: 11px;
+      background: var(--panel);
+    }
+
+    .inspector-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .inspector-meta span {
+      padding: 3px 6px;
+      border-radius: 5px;
+      background: var(--paper-deep);
+    }
+
+    .evidence-inspector h3 {
+      margin: 13px 0 0;
+      font-size: 19px;
+      line-height: 1.45;
+      letter-spacing: -.015em;
+      word-break: keep-all;
+    }
+
+    .evidence-quote {
+      margin: 21px 0 0;
+      padding: 17px;
+      border: 1px solid #bdcaf0;
+      border-radius: 9px;
+      background: var(--accent-soft);
+      color: #263a66;
+      font-size: 14px;
+      font-weight: 650;
+      line-height: 1.75;
+      word-break: keep-all;
+    }
+
+    .evidence-quote::before,
+    .evidence-quote::after {
+      color: var(--accent);
+      font-weight: 850;
+    }
+
+    .evidence-quote::before {
+      content: "“";
+      margin-right: 2px;
+    }
+
+    .evidence-quote::after {
+      content: "”";
+      margin-left: 2px;
+    }
+
+    .interpretation {
+      margin: 18px 0 0;
+    }
+
+    .interpretation div {
+      display: grid;
+      grid-template-columns: 104px minmax(0, 1fr);
+      gap: 12px;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .interpretation dt {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .interpretation dd {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.55;
+      word-break: keep-all;
+    }
+
+    .inspector-caution {
+      margin: 17px 0 0;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.6;
+    }
+
+    .limitations {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, .58fr);
+      gap: 30px;
+      padding-top: 25px;
+    }
+
+    .limitation-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      border-top: 1px solid var(--line-strong);
+    }
+
+    .limitation-list li {
+      display: grid;
+      grid-template-columns: 126px minmax(0, 1fr);
+      gap: 20px;
+      padding: 15px 2px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .limitation-list strong {
+      font-size: 12px;
+    }
+
+    .limitation-list span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    .next-questions {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel);
+    }
+
+    .next-questions h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .next-questions ol {
+      margin: 13px 0 0;
+      padding-left: 21px;
+      color: var(--ink-soft);
+      font-size: 12px;
+      line-height: 1.75;
+    }
+
+    .review-section {
+      scroll-margin-top: calc(var(--header-height) + 20px);
+      margin-top: 72px;
+      margin-bottom: 64px;
+      padding: clamp(24px, 3vw, 36px);
+      border: 1px solid var(--line-strong);
+      border-radius: 14px;
+      background: var(--panel);
+    }
+
+    .review-intro {
+      max-width: 74ch;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    .review-form {
+      display: grid;
+      grid-template-columns: minmax(250px, .72fr) minmax(0, 1.28fr);
+      gap: 28px;
+      margin-top: 24px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+    }
+
+    .review-checks {
+      display: grid;
+      align-content: start;
+      gap: 8px;
+    }
+
+    .review-checks label {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      color: var(--ink-soft);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .review-checks label:hover {
+      background: var(--paper);
+    }
+
+    .review-checks input {
+      width: 17px;
+      height: 17px;
+      accent-color: var(--accent);
+    }
+
+    .review-note label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--ink-soft);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .review-note textarea {
+      width: 100%;
+      min-height: 150px;
+      resize: vertical;
+      padding: 13px;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: #fbfcfd;
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .review-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .review-actions button {
+      min-height: 44px;
+      padding: 8px 13px;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: var(--panel);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .review-actions .primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: white;
+    }
+
+    .review-actions .primary:hover {
+      border-color: var(--accent-hover);
+      background: var(--accent-hover);
+    }
+
+    .review-actions .secondary:hover {
+      border-color: var(--ink);
+    }
+
+    .review-status {
+      min-height: 20px;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 24px max(24px, calc((100vw - 1440px) / 2));
+      background: var(--ink);
+      color: #d8deea;
+      font-size: 11px;
+    }
+
+    footer strong {
+      color: white;
+    }
+
+    .is-dimmed {
+      opacity: .24;
+    }
+
+    .is-focused {
+      background: #f8faff !important;
+    }
+
+    @media (max-width: 1120px) {
+      .app-header {
+        grid-template-columns: auto 1fr auto;
+        gap: 16px;
+      }
+
+      .matrix-layout,
+      .language-layout,
+      .timeline-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .matrix-aside {
+        display: grid;
+        grid-template-columns: 170px minmax(0, 1fr);
+        gap: 16px;
+      }
+
+      .matrix-aside p {
+        margin-top: 0;
+      }
+
+      .matrix-aside dl {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .timeline-inspector {
+        min-height: 0;
+      }
+
+      .evidence-layout {
+        grid-template-columns: minmax(0, 1fr) 380px;
+      }
+    }
+
+    @media (max-width: 880px) {
+      :root {
+        --header-height: 116px;
+      }
+
+      .app-header {
+        grid-template-columns: 1fr auto;
+      }
+
+      .top-nav {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        justify-content: flex-start;
+        border-top: 1px solid var(--line);
+      }
+
+      .case-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .case-index {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .case-index dl {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .scope-note {
+        max-width: 72ch;
+      }
+
+      h1 {
+        font-size: 36px;
+      }
+
+      .definition-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .definition + .definition {
+        border-top: 1px solid var(--line);
+        border-left: 0;
+      }
+
+      .evidence-layout,
+      .limitations,
+      .review-form {
+        grid-template-columns: 1fr;
+      }
+
+      .evidence-inspector {
+        position: static;
+        min-height: 0;
+      }
+    }
+
+    @media (max-width: 640px) {
+      :root {
+        --header-height: 112px;
+      }
+
+      body {
+        font-size: 14px;
+      }
+
+      .app-header {
+        padding: 8px 12px;
+      }
+
+      .brand-copy small,
+      .draft-badge {
+        display: none;
+      }
+
+      .top-nav button {
+        min-height: 44px;
+        padding-inline: 9px;
+        font-size: 12px;
+      }
+
+      .case-shell,
+      .analysis-section,
+      .review-section {
+        width: calc(100% - 24px);
+      }
+
+      .case-shell {
+        margin-top: 12px;
+        border-radius: 11px;
+      }
+
+      .case-index,
+      .case-main {
+        padding: 20px 16px;
+      }
+
+      .case-index dl {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      h1 {
+        font-size: 29px;
+        line-height: 1.24;
+      }
+
+      .case-lead {
+        font-size: 14px;
+      }
+
+      .focus-question {
+        grid-template-columns: 1fr;
+        gap: 7px;
+      }
+
+      .finding-header,
+      .section-heading {
+        display: block;
+      }
+
+      .finding-status,
+      .method-chip {
+        display: inline-block;
+        margin-top: 12px;
+      }
+
+      .finding h2,
+      .section-heading h2,
+      .review-section h2 {
+        font-size: 23px;
+      }
+
+      .shared-facts ul {
+        grid-template-columns: 1fr;
+      }
+
+      .analysis-section {
+        padding-top: 48px;
+      }
+
+      .matrix-aside {
+        display: block;
+      }
+
+      .matrix-aside p {
+        margin-top: 10px;
+      }
+
+      .matrix-aside dl {
+        display: block;
+      }
+
+      .timeline button {
+        grid-template-columns: 34px 70px minmax(0, 1fr);
+        gap: 9px;
+      }
+
+      .timeline-dot {
+        margin-left: 10px;
+      }
+
+      .timeline em {
+        grid-column: 3;
+      }
+
+      .article-row {
+        grid-template-columns: 78px minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .article-row button {
+        grid-column: 2;
+        width: max-content;
+      }
+
+      .limitation-list li {
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
+
+      .review-section {
+        margin-top: 52px;
+        margin-bottom: 42px;
+        padding: 20px 16px;
+      }
+
+      footer {
+        display: grid;
+        padding: 22px 16px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">분석 본문으로 건너뛰기</a>
+
+  <header class="app-header">
+    <a class="brand" href="#overview" aria-label="AgendaFrame 프레이밍 분석 실험실 처음으로">
+      <span class="brand-mark" aria-hidden="true">AF</span>
+      <span class="brand-copy">
+        <b>AgendaFrame Lab</b>
+        <small>프레이밍 분석 방법 검토</small>
+      </span>
+    </a>
+
+    <nav class="top-nav" aria-label="분석 영역">
+      <button type="button" data-scroll="overview">핵심 결과</button>
+      <button type="button" data-scroll="matrix">분석 구조</button>
+      <button type="button" data-scroll="language">표현·인용원</button>
+      <button type="button" data-scroll="timeline">시간 흐름</button>
+      <button type="button" data-scroll="evidence">기사 근거</button>
+      <button type="button" data-scroll="review">검토 메모</button>
+    </nav>
+
+    <span class="draft-badge">방법론 초안 01</span>
+  </header>
+
+  <main id="main-content">
+    <section class="case-shell" id="overview" aria-labelledby="case-title">
+      <aside class="case-index" aria-label="분석 범위">
+        <h2>분석 범위</h2>
+        <dl>
+          <div>
+            <dt>사건</dt>
+            <dd>심야버스 노선 개편</dd>
+          </div>
+          <div>
+            <dt>관찰 기간</dt>
+            <dd>2026. 06. 18–22</dd>
+          </div>
+          <div>
+            <dt>표본</dt>
+            <dd>3개 매체 · 9건</dd>
+          </div>
+          <div>
+            <dt>텍스트 범위</dt>
+            <dd>제목·본문 발췌</dd>
+          </div>
+        </dl>
+        <p class="scope-note">이 페이지의 사건, 언론사, 기사, 수치는 모두 분석 방법을 논의하기 위해 만든 합성 예시입니다. 실제 보도 평가가 아닙니다.</p>
+      </aside>
+
+      <div class="case-main">
+        <span class="fiction-label">가상 사건 · 합성 기사</span>
+        <h1 id="case-title">해솔시 심야버스 N-7 노선 개편을 언론은 어떤 문제로 구성했나</h1>
+        <p class="case-lead">같은 노선 개편을 보도한 기사 9건을 사건 단위로 묶고, 문제 정의·원인·평가·해법과 표현·인용원·시간 흐름을 기사 근거에 연결해 비교한 이상적 분석 예시입니다.</p>
+
+        <div class="focus-question">
+          <span>이번 분석의 질문</span>
+          <strong>운영 효율을 높이려는 정책이라는 공통 사실 위에서, 각 매체는 누구의 불편과 어떤 책임·해결책을 더 선명하게 보이게 했는가?</strong>
+        </div>
+
+        <div class="outlet-filter" role="group" aria-label="언론사 선택">
+          <span>화면에서 집중해서 보기</span>
+          <button class="filter-button" type="button" data-filter="all" aria-pressed="true">전체 비교</button>
+          <button class="filter-button" type="button" data-filter="haesol" aria-pressed="false">해솔일보</button>
+          <button class="filter-button" type="button" data-filter="donghae" aria-pressed="false">동해경제</button>
+          <button class="filter-button" type="button" data-filter="citizen" aria-pressed="false">시민포커스</button>
+        </div>
+
+        <section class="finding" aria-labelledby="finding-title">
+          <div class="finding-header">
+            <div>
+              <p class="section-label">핵심 관찰</p>
+              <h2 id="finding-title">하나의 개편안이 세 가지 ‘문제’로 읽혔다</h2>
+            </div>
+            <span class="finding-status">기사 근거 31개 연결</span>
+          </div>
+          <p class="finding-summary" id="finding-summary">세 매체 모두 배차 간격 단축과 정류장 조정을 보도했지만, 해솔일보는 절차와 행정 책임, 동해경제는 재정과 운송 효율, 시민포커스는 외곽 주민·교대노동자의 이동권을 설명의 중심에 두었다.</p>
+
+          <div class="definition-strip" aria-label="매체별 중심 문제 정의">
+            <article class="definition" data-outlet="haesol">
+              <small>해솔일보 · 3건</small>
+              <h3>절차와 행정 책임</h3>
+              <p>의견수렴 기간, 산정자료 공개, 시의회 검증을 중심으로 개편의 정당성을 물었다.</p>
+            </article>
+            <article class="definition" data-outlet="donghae">
+              <small>동해경제 · 3건</small>
+              <h3>재정과 운송 효율</h3>
+              <p>탑승률, 추가 예산, 빈 차 운행 감소를 중심으로 정책의 지속 가능성을 설명했다.</p>
+            </article>
+            <article class="definition" data-outlet="citizen">
+              <small>시민포커스 · 3건</small>
+              <h3>야간 이동권의 격차</h3>
+              <p>폐지 정류장 이용자와 교대노동자의 귀가 경로가 어떻게 달라지는지 추적했다.</p>
+            </article>
+          </div>
+
+          <details class="shared-facts" open>
+            <summary>세 매체가 공통으로 보도한 사실 <span class="sr-only">펼치기 또는 접기</span></summary>
+            <ul>
+              <li>해솔시는 7월 1일부터 N-7 노선을 조정한다고 발표했다.</li>
+              <li>기존 정류장 4곳을 제외하고 산업단지 인근 정류장 6곳을 신설한다.</li>
+              <li>평균 배차 간격은 25분에서 18분으로 줄어든다.</li>
+              <li>운영 예산은 전년보다 약 12% 늘어날 전망이다.</li>
+            </ul>
+          </details>
+        </section>
+      </div>
+    </section>
+
+    <section class="analysis-section" id="matrix" aria-labelledby="matrix-title">
+      <header class="section-heading">
+        <div>
+          <p class="section-label">분석 구조</p>
+          <h2 id="matrix-title">문제 정의에서 해법까지, 같은 축으로 나란히 읽기</h2>
+          <p>Entman의 네 기능은 매체에 점수를 매기는 분류표가 아니라 기사에서 실제로 관측된 설명의 연결 구조를 비교하는 축으로 사용했습니다.</p>
+        </div>
+        <span class="method-chip">Entman 4기능 · 기사 단위 근거</span>
+      </header>
+
+      <div class="matrix-layout">
+        <div>
+          <div class="matrix-wrap">
+            <table class="frame-matrix">
+              <thead>
+                <tr>
+                  <th scope="col">분석축</th>
+                  <th scope="col" data-outlet="haesol">해솔일보</th>
+                  <th scope="col" data-outlet="donghae">동해경제</th>
+                  <th scope="col" data-outlet="citizen">시민포커스</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">문제 정의</th>
+                  <td class="matrix-cell" data-outlet="haesol">
+                    <strong>충분히 설명되지 않은 행정 절차</strong>
+                    <p>짧은 의견수렴과 노선 산정 근거의 비공개가 개편의 핵심 문제로 제시됨.</p>
+                    <span class="attribution">기자 서술 + 시의원 발언</span>
+                  </td>
+                  <td class="matrix-cell" data-outlet="donghae">
+                    <strong>수요와 어긋난 비효율 운행</strong>
+                    <p>낮은 구간별 탑승률과 긴 배차가 재정 투입 효과를 낮춘다고 설명함.</p>
+                    <span class="attribution">교통전문가 발언</span>
+                  </td>
+                  <td class="matrix-cell" data-outlet="citizen">
+                    <strong>귀가 선택지가 줄어드는 이동 격차</strong>
+                    <p>정류장 폐지 뒤 외곽 주민과 교대노동자의 추가 이동 부담을 문제로 제시함.</p>
+                    <span class="attribution">당사자 발언 + 기자 관찰</span>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">원인 진단</th>
+                  <td class="matrix-cell" data-outlet="haesol">
+                    <strong>이용자 조사와 공개 검증의 부족</strong>
+                    <p>시가 설명회 뒤 8일 만에 개편안을 확정한 과정을 원인으로 연결함.</p>
+                    <span class="attribution">기사 본문에서 명시</span>
+                  </td>
+                  <td class="matrix-cell" data-outlet="donghae">
+                    <strong>과거 수요에 고정된 노선 설계</strong>
+                    <p>산업단지 야간 수요 증가를 기존 노선이 반영하지 못했다고 설명함.</p>
+                    <span class="attribution">전문가 발언에 귀속</span>
+                  </td>
+                  <td class="matrix-cell" data-outlet="citizen">
+                    <strong>평균 이용량 중심의 의사결정</strong>
+                    <p>소수 이용자의 필수 이동이 전체 승하차 통계에서 가려졌다고 설명함.</p>
+                    <span class="attribution">기자 서술 + 노동자 발언</span>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">규범적 평가</th>
+                  <td class="matrix-cell" data-outlet="haesol">
+                    <strong>공공정책은 판단 근거를 공개해야 함</strong>
+                    <p>시의회 질의와 시민단체 논평을 통해 절차적 책임을 강조함.</p>
+                    <span class="attribution">인용된 평가</span>
+                  </td>
+                  <td class="matrix-cell" data-outlet="donghae">
+                    <strong>보조금에는 측정 가능한 효율이 필요함</strong>
+                    <p>추가 예산의 정당성은 탑승률 개선으로 검증돼야 한다고 제시함.</p>
+                    <span class="attribution">기자 해설</span>
+                  </td>
+                  <td class="matrix-cell" data-outlet="citizen">
+                    <strong>효율이 필수 이동을 지워서는 안 됨</strong>
+                    <p>야간 대체 교통수단이 없는 이용자의 권리를 평가 기준으로 제시함.</p>
+                    <span class="attribution">전문가·당사자 발언</span>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">해법 제시</th>
+                  <td class="matrix-cell" data-outlet="haesol">
+                    <strong>산정자료 공개와 추가 공청회</strong>
+                    <p>노선별 승하차 자료를 공개하고 확정 전 의견수렴을 반복하자는 제안.</p>
+                    <span class="attribution">시의회 제안</span>
+                  </td>
+                  <td class="matrix-cell" data-outlet="donghae">
+                    <strong>3개월 시범운행 뒤 수요 재조정</strong>
+                    <p>시간대별 탑승률과 운행비를 함께 공개해 노선을 조정하자는 제안.</p>
+                    <span class="attribution">전문가 제안</span>
+                  </td>
+                  <td class="matrix-cell" data-outlet="citizen">
+                    <strong>폐지 정류장 보완 셔틀</strong>
+                    <p>개편을 유지하되 4개 정류장 이용자를 위한 연계 수단을 두자는 제안.</p>
+                    <span class="attribution">주민·노조 제안</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="matrix-caption">‘기사 본문에서 명시’와 ‘취재원 발언에 귀속’을 구분했습니다. 기사에 나타나지 않은 요소는 임의로 채우지 않고 ‘미관측’으로 남기는 것이 원칙입니다.</p>
+        </div>
+
+        <aside class="matrix-aside" aria-live="polite">
+          <h3 id="matrix-aside-title">전체 비교에서 보이는 연결</h3>
+          <p id="matrix-aside-copy">세 매체는 모두 개편 필요성을 인정하지만, 정당성을 판단하는 기준이 절차·효율·이동권으로 갈린다. 이 차이는 서로 다른 해법 제안으로 이어진다.</p>
+          <dl>
+            <div>
+              <dt>공통 출발점</dt>
+              <dd id="matrix-common">현행 노선 조정 필요</dd>
+            </div>
+            <div>
+              <dt>주요 분기점</dt>
+              <dd id="matrix-split">무엇을 정책 성과로 볼 것인가</dd>
+            </div>
+            <div>
+              <dt>추가 확인</dt>
+              <dd id="matrix-check">시범운행 평가 지표와 보완책</dd>
+            </div>
+          </dl>
+        </aside>
+      </div>
+    </section>
+
+    <section class="analysis-section" id="language" aria-labelledby="language-title">
+      <header class="section-heading">
+        <div>
+          <p class="section-label">표현과 발화권</p>
+          <h2 id="language-title">어떤 단어를 반복하고, 누구의 목소리로 설명했나</h2>
+          <p>표현 빈도는 논조나 의도를 판정하는 점수가 아닙니다. 사건을 설명할 때 무엇이 더 자주 가시화됐는지 보여주는 관찰값입니다.</p>
+        </div>
+        <span class="method-chip">형태소 묶음 + 인용원 역할 코딩</span>
+      </header>
+
+      <div class="language-layout">
+        <section class="subsection" aria-labelledby="word-title">
+          <header>
+            <h3 id="word-title">매체별 반복 표현</h3>
+            <p>동의어와 활용형을 묶은 뒤 제목·본문 발췌에서 2회 이상 관측된 표현입니다.</p>
+          </header>
+          <table class="word-table">
+            <tbody>
+              <tr data-outlet="haesol">
+                <th scope="row">해솔일보</th>
+                <td>
+                  <ul class="keyword-list">
+                    <li>의견수렴 7</li>
+                    <li>공개 5</li>
+                    <li>절차 4</li>
+                    <li>책임 3</li>
+                  </ul>
+                  <p class="word-note">‘확정’ 앞에 ‘8일 만에’, ‘자료 공개 없이’ 같은 절차 표현이 반복됨.</p>
+                </td>
+              </tr>
+              <tr data-outlet="donghae">
+                <th scope="row">동해경제</th>
+                <td>
+                  <ul class="keyword-list">
+                    <li>탑승률 8</li>
+                    <li>효율 6</li>
+                    <li>예산 5</li>
+                    <li>수요 5</li>
+                  </ul>
+                  <p class="word-note">‘배차 단축’을 비용·수요·운송 성과와 연결하는 표현이 반복됨.</p>
+                </td>
+              </tr>
+              <tr data-outlet="citizen">
+                <th scope="row">시민포커스</th>
+                <td>
+                  <ul class="keyword-list">
+                    <li>퇴근 8</li>
+                    <li>도보 6</li>
+                    <li>외곽 5</li>
+                    <li>이동권 4</li>
+                  </ul>
+                  <p class="word-note">정류장 개수를 실제 귀가 거리와 대체수단 유무로 번역해 설명함.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="subsection" aria-labelledby="voice-title">
+          <header>
+            <h3 id="voice-title">인용된 목소리 구성</h3>
+            <p>직접·간접 인용으로 확인된 발화 횟수입니다. 숫자는 발언의 진실성이나 매체의 동의를 뜻하지 않습니다.</p>
+          </header>
+
+          <div class="voice-bars">
+            <div class="voice-row" data-outlet="haesol">
+              <div class="voice-row-header">
+                <strong>해솔일보</strong>
+                <span>확인된 발화 11회</span>
+              </div>
+              <div class="voice-track" role="img" aria-label="해솔일보: 시청 5회, 시의회 3회, 이용자 2회, 전문가 1회">
+                <span class="voice-official" style="flex:5" title="시청 5회">5</span>
+                <span class="voice-council" style="flex:3" title="시의회 3회">3</span>
+                <span class="voice-affected" style="flex:2" title="이용자 2회">2</span>
+                <span class="voice-expert" style="flex:1" title="전문가 1회">1</span>
+              </div>
+            </div>
+
+            <div class="voice-row" data-outlet="donghae">
+              <div class="voice-row-header">
+                <strong>동해경제</strong>
+                <span>확인된 발화 10회</span>
+              </div>
+              <div class="voice-track" role="img" aria-label="동해경제: 시청 4회, 전문가 3회, 운수업계 2회, 이용자 1회">
+                <span class="voice-official" style="flex:4" title="시청 4회">4</span>
+                <span class="voice-expert" style="flex:3" title="전문가 3회">3</span>
+                <span class="voice-business" style="flex:2" title="운수업계 2회">2</span>
+                <span class="voice-affected" style="flex:1" title="이용자 1회">1</span>
+              </div>
+            </div>
+
+            <div class="voice-row" data-outlet="citizen">
+              <div class="voice-row-header">
+                <strong>시민포커스</strong>
+                <span>확인된 발화 12회</span>
+              </div>
+              <div class="voice-track" role="img" aria-label="시민포커스: 이용자 6회, 노동조합 3회, 시청 2회, 전문가 1회">
+                <span class="voice-affected" style="flex:6" title="이용자 6회">6</span>
+                <span class="voice-council" style="flex:3" title="노동조합 3회">3</span>
+                <span class="voice-official" style="flex:2" title="시청 2회">2</span>
+                <span class="voice-expert" style="flex:1" title="전문가 1회">1</span>
+              </div>
+            </div>
+          </div>
+
+          <ul class="voice-legend" aria-label="인용원 범례">
+            <li><i class="voice-official"></i>시청·공공기관</li>
+            <li><i class="voice-council"></i>의회·노조</li>
+            <li><i class="voice-expert"></i>전문가</li>
+            <li><i class="voice-affected"></i>이용자·당사자</li>
+            <li><i class="voice-business"></i>운수업계</li>
+          </ul>
+
+          <p class="voice-caution">해솔일보와 동해경제는 기관·전문가 발언이, 시민포커스는 직접 영향을 받는 이용자 발언이 상대적으로 많이 관측됐습니다. ‘등장하지 않음’은 의도적 배제라는 뜻이 아닙니다.</p>
+        </section>
+      </div>
+    </section>
+
+    <section class="analysis-section" id="timeline" aria-labelledby="timeline-title">
+      <header class="section-heading">
+        <div>
+          <p class="section-label">프레임의 시간 흐름</p>
+          <h2 id="timeline-title">발표 당일의 ‘효율’이 책임과 이동권 논쟁으로 확장됐다</h2>
+          <p>최초 관측 시점은 프레임을 누가 만들었다는 판정이 아니라, 이번 표본에서 해당 설명이 처음 확인된 시점을 뜻합니다.</p>
+        </div>
+        <span class="method-chip">최초 관측 · 확산 · 전환</span>
+      </header>
+
+      <div class="timeline-layout">
+        <ol class="timeline" aria-label="보도 흐름">
+          <li>
+            <button type="button" data-timeline="announce" aria-pressed="true">
+              <span class="timeline-dot" aria-hidden="true"></span>
+              <time datetime="2026-06-18">06.18</time>
+              <strong>해솔시 개편안 발표</strong>
+              <em>효율·배차 개선</em>
+            </button>
+          </li>
+          <li>
+            <button type="button" data-timeline="hearing" aria-pressed="false">
+              <span class="timeline-dot" aria-hidden="true"></span>
+              <time datetime="2026-06-19">06.19</time>
+              <strong>주민설명회와 83건의 의견</strong>
+              <em>절차·이동권 등장</em>
+            </button>
+          </li>
+          <li>
+            <button type="button" data-timeline="council" aria-pressed="false">
+              <span class="timeline-dot" aria-hidden="true"></span>
+              <time datetime="2026-06-21">06.21</time>
+              <strong>시의회 자료 공개 요구</strong>
+              <em>행정 책임 확산</em>
+            </button>
+          </li>
+          <li>
+            <button type="button" data-timeline="pilot" aria-pressed="false">
+              <span class="timeline-dot" aria-hidden="true"></span>
+              <time datetime="2026-06-22">06.22</time>
+              <strong>시, 3개월 시범운행 발표</strong>
+              <em>보완책 경쟁</em>
+            </button>
+          </li>
+        </ol>
+
+        <aside class="timeline-inspector" aria-live="polite" tabindex="-1">
+          <span id="timeline-stage">최초 관측</span>
+          <h3 id="timeline-inspector-title">개편 필요성과 운영 효율이 공통 출발점</h3>
+          <p id="timeline-inspector-copy">발표 당일 세 매체 모두 배차 간격 단축과 산업단지 정류장 신설을 주요 변화로 전했다. 이 시점에는 절차와 폐지 정류장 이용자의 부담이 상대적으로 적게 보였다.</p>
+          <dl class="timeline-signals">
+            <div>
+              <dt>강한 표현</dt>
+              <dd id="timeline-words">배차 단축 · 수요 반영 · 노선 조정</dd>
+            </div>
+            <div>
+              <dt>주요 발화자</dt>
+              <dd id="timeline-voices">해솔시 교통정책과</dd>
+            </div>
+            <div>
+              <dt>확인할 변화</dt>
+              <dd id="timeline-next">다음 날 이용자 경험이 보도에 들어오는가</dd>
+            </div>
+          </dl>
+        </aside>
+      </div>
+    </section>
+
+    <section class="analysis-section" id="evidence" aria-labelledby="evidence-title">
+      <header class="section-heading">
+        <div>
+          <p class="section-label">기사 단위 근거</p>
+          <h2 id="evidence-title">분석 문장을 클릭하면 원문 발췌와 판단 경로가 이어진다</h2>
+          <p>모든 해석은 기사 ID, 발췌 문장, 발화 주체, 분석 요소로 되돌아갈 수 있어야 합니다. 아래 기사는 가상 예시이며 외부 링크를 사용하지 않습니다.</p>
+        </div>
+        <span class="method-chip">9건 · 근거 위치 보존</span>
+      </header>
+
+      <div class="evidence-layout">
+        <div class="article-list" aria-label="가상 기사 목록">
+          <article class="article-row" data-outlet="haesol" data-frame="responsibility">
+            <span>해솔일보 · H1</span>
+            <div>
+              <strong>해솔시, 심야버스 N-7 개편안 발표…4개 정류장 제외</strong>
+              <small>06.18 09:10 · 사회면</small>
+            </div>
+            <button type="button" data-evidence="H1" aria-pressed="false">근거 보기</button>
+          </article>
+          <article class="article-row" data-outlet="haesol" data-frame="responsibility">
+            <span>해솔일보 · H2</span>
+            <div>
+              <strong>의견수렴 8일 만에 확정? N-7 개편 절차 논란</strong>
+              <small>06.19 18:40 · 지역면</small>
+            </div>
+            <button type="button" data-evidence="H2" aria-pressed="true">근거 보기</button>
+          </article>
+          <article class="article-row" data-outlet="haesol" data-frame="responsibility">
+            <span>해솔일보 · H3</span>
+            <div>
+              <strong>시의회, 심야버스 노선 산정자료 공개 요구</strong>
+              <small>06.21 16:25 · 정치면</small>
+            </div>
+            <button type="button" data-evidence="H3" aria-pressed="false">근거 보기</button>
+          </article>
+
+          <article class="article-row" data-outlet="donghae" data-frame="economy">
+            <span>동해경제 · D1</span>
+            <div>
+              <strong>빈 차 줄이고 배차 늘린다…N-7 수요형 개편</strong>
+              <small>06.18 10:05 · 산업면</small>
+            </div>
+            <button type="button" data-evidence="D1" aria-pressed="false">근거 보기</button>
+          </article>
+          <article class="article-row" data-outlet="donghae" data-frame="economy">
+            <span>동해경제 · D2</span>
+            <div>
+              <strong>연 3억2천만원 추가 예산, 탑승률이 성패 가른다</strong>
+              <small>06.20 07:30 · 경제면</small>
+            </div>
+            <button type="button" data-evidence="D2" aria-pressed="false">근거 보기</button>
+          </article>
+          <article class="article-row" data-outlet="donghae" data-frame="policy">
+            <span>동해경제 · D3</span>
+            <div>
+              <strong>산단 정류장 6곳 신설…야간 고용 접근성 개선 기대</strong>
+              <small>06.22 08:15 · 산업면</small>
+            </div>
+            <button type="button" data-evidence="D3" aria-pressed="false">근거 보기</button>
+          </article>
+
+          <article class="article-row" data-outlet="citizen" data-frame="citizen">
+            <span>시민포커스 · C1</span>
+            <div>
+              <strong>막차 뒤 1.8km 더 걷는다…외곽 주민의 N-7</strong>
+              <small>06.19 21:10 · 현장</small>
+            </div>
+            <button type="button" data-evidence="C1" aria-pressed="false">근거 보기</button>
+          </article>
+          <article class="article-row" data-outlet="citizen" data-frame="citizen">
+            <span>시민포커스 · C2</span>
+            <div>
+              <strong>교대노동자 27명 “퇴근할 버스가 없다”</strong>
+              <small>06.20 19:55 · 노동</small>
+            </div>
+            <button type="button" data-evidence="C2" aria-pressed="false">근거 보기</button>
+          </article>
+          <article class="article-row" data-outlet="citizen" data-frame="policy">
+            <span>시민포커스 · C3</span>
+            <div>
+              <strong>신설 6곳·폐지 4곳, 누구의 이동이 늘고 줄었나</strong>
+              <small>06.22 11:35 · 데이터</small>
+            </div>
+            <button type="button" data-evidence="C3" aria-pressed="false">근거 보기</button>
+          </article>
+        </div>
+
+        <aside class="evidence-inspector" tabindex="-1" aria-live="polite">
+          <div class="inspector-meta">
+            <strong id="evidence-id">H2</strong>
+            <span id="evidence-outlet">해솔일보</span>
+            <span id="evidence-location">본문 5문단</span>
+          </div>
+          <h3 id="evidence-headline">의견수렴 8일 만에 확정? N-7 개편 절차 논란</h3>
+          <blockquote class="evidence-quote" id="evidence-quote">시는 지난 10일 주민설명회를 연 뒤 8일 만에 개편안을 확정했지만, 노선별 승하차 산정자료는 공개하지 않았다.</blockquote>
+          <dl class="interpretation">
+            <div>
+              <dt>관측 요소</dt>
+              <dd id="evidence-element">원인 진단 · 책임 프레임</dd>
+            </div>
+            <div>
+              <dt>발화 주체</dt>
+              <dd id="evidence-speaker">기자 서술</dd>
+            </div>
+            <div>
+              <dt>판단 근거</dt>
+              <dd id="evidence-reason">짧은 의견수렴 기간과 자료 비공개를 절차 논란의 원인으로 직접 연결한다.</dd>
+            </div>
+          </dl>
+          <p class="inspector-caution">이 발췌는 분석 구조를 보여주기 위해 작성한 합성 문장입니다. 실제 서비스에서는 원문 URL과 문단·문장 위치, 분석 버전을 함께 보존합니다.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="analysis-section" id="limits" aria-labelledby="limits-title">
+      <header class="section-heading">
+        <div>
+          <p class="section-label">해석 경계</p>
+          <h2 id="limits-title">이 화면이 말하는 것과 말하지 않는 것</h2>
+          <p>프레이밍 분석은 보도의 진실성이나 정치적 성향을 자동 판정하는 도구가 아닙니다. 관측 범위와 보류 기준을 결과와 같은 화면에 둡니다.</p>
+        </div>
+      </header>
+
+      <div class="limitations">
+        <ul class="limitation-list">
+          <li>
+            <strong>관측 단위</strong>
+            <span>이번 사건에 속한 기사 9건만 비교합니다. 언론사 전체의 고정된 성향으로 일반화하지 않습니다.</span>
+          </li>
+          <li>
+            <strong>인용과 기사 서술</strong>
+            <span>취재원의 평가는 해당 발화자에게 귀속하며, 매체 자체의 주장으로 자동 변환하지 않습니다.</span>
+          </li>
+          <li>
+            <strong>미관측의 의미</strong>
+            <span>본문에서 확인되지 않았다는 뜻입니다. 실제로 없거나 의도적으로 누락했다는 결론은 아닙니다.</span>
+          </li>
+          <li>
+            <strong>빈도 수치</strong>
+            <span>표현 단서와 발화 횟수의 가시성을 보여줍니다. 영향력·정확성·편향의 점수가 아닙니다.</span>
+          </li>
+        </ul>
+
+        <aside class="next-questions">
+          <h3>분석에서 이어지는 취재 질문</h3>
+          <ol>
+            <li>노선별 승하차 산정자료와 제외 기준은 공개 가능한가?</li>
+            <li>폐지 정류장 이용자의 추가 보행 거리는 시간대별로 얼마인가?</li>
+            <li>3개월 시범운행의 성공·중단 기준은 무엇인가?</li>
+            <li>대체수단이 없는 이용자에게 어떤 보완책이 적용되는가?</li>
+          </ol>
+        </aside>
+      </div>
+    </section>
+
+    <section class="review-section" id="review" aria-labelledby="review-title">
+      <p class="section-label">다음 버전을 위한 검토</p>
+      <h2 id="review-title">이 예시에서 유지할 것과 바꿀 것을 표시해 주세요</h2>
+      <p class="review-intro">선택과 메모는 이 브라우저에만 임시 저장됩니다. ‘피드백 복사’를 누르면 다음 대화에 붙여넣을 수 있는 문장으로 정리됩니다.</p>
+
+      <div class="review-form">
+        <div class="review-checks" role="group" aria-label="검토 항목">
+          <label><input type="checkbox" value="핵심 결과부터 보여주는 순서가 좋음"> 핵심 결과부터 보여주는 순서가 좋음</label>
+          <label><input type="checkbox" value="Entman 비교표가 이해하기 쉬움"> Entman 비교표가 이해하기 쉬움</label>
+          <label><input type="checkbox" value="표현과 인용원 분석이 유용함"> 표현과 인용원 분석이 유용함</label>
+          <label><input type="checkbox" value="시간 흐름 분석을 더 강조하고 싶음"> 시간 흐름 분석을 더 강조하고 싶음</label>
+          <label><input type="checkbox" value="기사 근거 화면을 더 단순하게 하고 싶음"> 기사 근거 화면을 더 단순하게 하고 싶음</label>
+        </div>
+
+        <div class="review-note">
+          <label for="review-note">자유 메모</label>
+          <textarea id="review-note" placeholder="예: 매체별 차이보다 사건 프레임의 생성·확산 과정이 먼저 보이면 좋겠어."></textarea>
+          <div class="review-actions">
+            <button class="primary" type="button" id="copy-review">피드백 복사</button>
+            <button class="secondary" type="button" id="clear-review">메모 지우기</button>
+            <span class="review-status" id="review-status" role="status" aria-live="polite"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span><strong>AgendaFrame Lab</strong> · 프레이밍 분석 방법론 협업용 초안</span>
+    <span>가상 사건 · 합성 기사 · 외부 통신 없음</span>
+  </footer>
+
+  <script>
+    const outletCopy = {
+      all: {
+        summary: "세 매체 모두 배차 간격 단축과 정류장 조정을 보도했지만, 해솔일보는 절차와 행정 책임, 동해경제는 재정과 운송 효율, 시민포커스는 외곽 주민·교대노동자의 이동권을 설명의 중심에 두었다.",
+        title: "전체 비교에서 보이는 연결",
+        copy: "세 매체는 모두 개편 필요성을 인정하지만, 정당성을 판단하는 기준이 절차·효율·이동권으로 갈린다. 이 차이는 서로 다른 해법 제안으로 이어진다.",
+        common: "현행 노선 조정 필요",
+        split: "무엇을 정책 성과로 볼 것인가",
+        check: "시범운행 평가 지표와 보완책"
+      },
+      haesol: {
+        summary: "해솔일보는 노선 개편 자체보다 의견수렴 기간과 자료 공개 여부를 반복해서 묻는다. 정책의 성패를 절차적 정당성과 행정의 설명 책임에서 판단하는 구성이다.",
+        title: "해솔일보의 설명 연결",
+        copy: "짧은 의견수렴과 자료 비공개를 원인으로 제시하고, 판단 근거 공개와 추가 공청회를 해법으로 연결한다.",
+        common: "노선 조정 필요성은 인정",
+        split: "결정 과정이 검증 가능했는가",
+        check: "승하차 산정자료 공개 범위"
+      },
+      donghae: {
+        summary: "동해경제는 노선의 탑승률과 추가 예산을 중심으로 개편을 설명한다. 효율을 핵심 평가 기준으로 두고 시범운행 뒤 수요에 따라 다시 조정하는 해법을 제시한다.",
+        title: "동해경제의 설명 연결",
+        copy: "과거 수요에 고정된 노선을 원인으로 진단하고, 탑승률과 운행비 공개를 통해 정책 효과를 검증하자고 제시한다.",
+        common: "배차 개선 목표는 수용",
+        split: "추가 예산이 효율을 만드는가",
+        check: "시간대별 탑승률과 운행비"
+      },
+      citizen: {
+        summary: "시민포커스는 평균 이용량에서 가려지는 외곽 주민과 교대노동자의 이동 부담을 전면에 둔다. 개편의 효율보다 대체수단이 없는 이용자의 권리를 판단 기준으로 삼는다.",
+        title: "시민포커스의 설명 연결",
+        copy: "평균 이용량 중심의 결정을 원인으로 보고, 폐지 정류장 이용자를 위한 보완 셔틀과 귀가 경로 검증을 해법으로 연결한다.",
+        common: "산업단지 접근 개선은 인정",
+        split: "누구의 이동이 줄어드는가",
+        check: "추가 보행 거리와 대체수단"
+      }
+    };
+
+    const evidenceData = {
+      H1: {
+        outlet: "해솔일보",
+        location: "본문 2문단",
+        headline: "해솔시, 심야버스 N-7 개편안 발표…4개 정류장 제외",
+        quote: "시는 이용량이 낮은 정류장 4곳을 노선에서 제외하고 산업단지 인근 6곳을 새로 포함한다고 밝혔다.",
+        element: "문제 사실 · 정책 효과",
+        speaker: "해솔시 발표 인용",
+        reason: "폐지·신설 정류장과 정책 변화를 구체적 사실로 제시한다."
+      },
+      H2: {
+        outlet: "해솔일보",
+        location: "본문 5문단",
+        headline: "의견수렴 8일 만에 확정? N-7 개편 절차 논란",
+        quote: "시는 지난 10일 주민설명회를 연 뒤 8일 만에 개편안을 확정했지만, 노선별 승하차 산정자료는 공개하지 않았다.",
+        element: "원인 진단 · 책임 프레임",
+        speaker: "기자 서술",
+        reason: "짧은 의견수렴 기간과 자료 비공개를 절차 논란의 원인으로 직접 연결한다."
+      },
+      H3: {
+        outlet: "해솔일보",
+        location: "본문 4문단",
+        headline: "시의회, 심야버스 노선 산정자료 공개 요구",
+        quote: "교통위원회는 정류장별 승하차 자료와 제외 기준을 공개한 뒤 추가 의견수렴을 진행하라고 요구했다.",
+        element: "해법 제시 · 책임 프레임",
+        speaker: "해솔시의회 발언",
+        reason: "자료 공개와 추가 의견수렴을 절차 문제의 해결책으로 제시한다."
+      },
+      D1: {
+        outlet: "동해경제",
+        location: "본문 3문단",
+        headline: "빈 차 줄이고 배차 늘린다…N-7 수요형 개편",
+        quote: "개편안은 이용자가 적은 외곽 구간을 줄이는 대신 야간 고용이 늘어난 산업단지 구간의 배차를 촘촘하게 한다.",
+        element: "문제 정의 · 경제 프레임",
+        speaker: "기자 해설",
+        reason: "노선 개편을 수요 변화에 대응하는 운송 효율 문제로 구성한다."
+      },
+      D2: {
+        outlet: "동해경제",
+        location: "본문 6문단",
+        headline: "연 3억2천만원 추가 예산, 탑승률이 성패 가른다",
+        quote: "교통경제연구소 연구원은 추가 예산의 효과는 시간대별 탑승률과 승객 1인당 운행비를 함께 공개해야 판단할 수 있다고 말했다.",
+        element: "규범적 평가 · 경제 프레임",
+        speaker: "교통경제연구소 연구원",
+        reason: "정책의 정당성을 측정 가능한 효율 지표와 연결한 취재원 발언이다."
+      },
+      D3: {
+        outlet: "동해경제",
+        location: "본문 2문단",
+        headline: "산단 정류장 6곳 신설…야간 고용 접근성 개선 기대",
+        quote: "시는 3개월 시범운행 동안 탑승률과 운행비를 매달 공개하고 수요가 낮은 시간대를 다시 조정할 계획이다.",
+        element: "해법 제시 · 정책 효과",
+        speaker: "해솔시 계획 인용",
+        reason: "시범운행과 지표 공개를 정책 효과 검증의 방법으로 제시한다."
+      },
+      C1: {
+        outlet: "시민포커스",
+        location: "본문 7문단",
+        headline: "막차 뒤 1.8km 더 걷는다…외곽 주민의 N-7",
+        quote: "솔빛마을 정류장이 빠지면 야간 이용자는 가장 가까운 대체 정류장까지 평균 1.8km를 더 걸어야 한다.",
+        element: "문제 정의 · 시민 영향",
+        speaker: "기자 현장 확인",
+        reason: "정류장 폐지를 실제 보행 거리 증가로 번역해 이동 부담을 가시화한다."
+      },
+      C2: {
+        outlet: "시민포커스",
+        location: "본문 4문단",
+        headline: "교대노동자 27명 “퇴근할 버스가 없다”",
+        quote: "밤 11시 40분에 일이 끝나면 새 정류장까지 걸어서 26분이 걸려 막차를 탈 수 없다는 게 노동자들의 설명이다.",
+        element: "원인 진단 · 시민 영향",
+        speaker: "산업단지 교대노동자 발언",
+        reason: "시간표와 보행 시간을 연결해 특정 이용자가 겪는 접근성 문제를 보여준다."
+      },
+      C3: {
+        outlet: "시민포커스",
+        location: "본문 9문단",
+        headline: "신설 6곳·폐지 4곳, 누구의 이동이 늘고 줄었나",
+        quote: "주민대책위는 개편을 전면 철회하기보다 폐지 정류장과 환승거점을 잇는 심야 보완 셔틀을 요구했다.",
+        element: "해법 제시 · 시민 영향",
+        speaker: "주민대책위 발언",
+        reason: "정책 유지와 이동권 보완을 함께 충족하는 구체적 대안을 제시한다."
+      }
+    };
+
+    const timelineData = {
+      announce: {
+        stage: "최초 관측",
+        title: "개편 필요성과 운영 효율이 공통 출발점",
+        copy: "발표 당일 세 매체 모두 배차 간격 단축과 산업단지 정류장 신설을 주요 변화로 전했다. 이 시점에는 절차와 폐지 정류장 이용자의 부담이 상대적으로 적게 보였다.",
+        words: "배차 단축 · 수요 반영 · 노선 조정",
+        voices: "해솔시 교통정책과",
+        next: "다음 날 이용자 경험이 보도에 들어오는가"
+      },
+      hearing: {
+        stage: "새 프레임 등장",
+        title: "주민 발언이 절차와 이동권을 보이게 함",
+        copy: "설명회 뒤 해솔일보는 8일이라는 확정 속도를, 시민포커스는 폐지 정류장 이용자의 추가 보행을 기사 중심에 배치했다. 같은 행사가 서로 다른 문제 정의의 근거가 됐다.",
+        words: "8일 만에 · 도보 1.8km · 대체수단",
+        voices: "외곽 주민 · 교대노동자 · 시청",
+        next: "개별 불편이 행정 책임 논쟁으로 확장되는가"
+      },
+      council: {
+        stage: "프레임 확산",
+        title: "자료 공개 요구와 함께 행정 책임이 확산",
+        copy: "시의회의 자료 공개 요구가 나오면서 절차 문제는 해솔일보 밖의 기사에도 등장했다. 다만 동해경제는 공개 자료를 책임보다 효율 검증 수단으로 해석했다.",
+        words: "산정자료 · 공개 · 검증",
+        voices: "시의회 · 교통전문가",
+        next: "공개 자료가 어떤 정책 평가 기준에 쓰이는가"
+      },
+      pilot: {
+        stage: "해법 경쟁",
+        title: "시범운행은 같지만 보완의 기준은 달랐다",
+        copy: "세 매체 모두 3개월 시범운행을 보도했다. 해솔일보는 공개 절차, 동해경제는 탑승률, 시민포커스는 폐지 정류장 보완책이 포함되는지를 각각 확인했다.",
+        words: "시범운행 · 성과 기준 · 보완 셔틀",
+        voices: "시청 · 전문가 · 주민대책위",
+        next: "시범운행 종료 뒤 어떤 지표가 실제 결정에 반영되는가"
+      }
+    };
+
+    const filterButtons = [...document.querySelectorAll("[data-filter]")];
+    const outletElements = [...document.querySelectorAll("[data-outlet]")];
+    const findingSummary = document.getElementById("finding-summary");
+    const matrixAsideTitle = document.getElementById("matrix-aside-title");
+    const matrixAsideCopy = document.getElementById("matrix-aside-copy");
+    const matrixCommon = document.getElementById("matrix-common");
+    const matrixSplit = document.getElementById("matrix-split");
+    const matrixCheck = document.getElementById("matrix-check");
+
+    function setOutletFilter(outlet) {
+      const copy = outletCopy[outlet] || outletCopy.all;
+      filterButtons.forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.filter === outlet));
+      });
+
+      outletElements.forEach((element) => {
+        const matches = outlet === "all" || element.dataset.outlet === outlet;
+        element.classList.toggle("is-dimmed", !matches);
+        element.classList.toggle("is-focused", outlet !== "all" && matches);
+      });
+
+      document.querySelectorAll(".article-row").forEach((row) => {
+        row.hidden = outlet !== "all" && row.dataset.outlet !== outlet;
+      });
+
+      findingSummary.textContent = copy.summary;
+      matrixAsideTitle.textContent = copy.title;
+      matrixAsideCopy.textContent = copy.copy;
+      matrixCommon.textContent = copy.common;
+      matrixSplit.textContent = copy.split;
+      matrixCheck.textContent = copy.check;
+    }
+
+    filterButtons.forEach((button) => {
+      button.addEventListener("click", () => setOutletFilter(button.dataset.filter));
+    });
+
+    document.querySelectorAll("[data-scroll]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById(button.dataset.scroll)?.scrollIntoView({ block: "start" });
+      });
+    });
+
+    const timelineButtons = [...document.querySelectorAll("[data-timeline]")];
+    const timelineInspector = document.querySelector(".timeline-inspector");
+    const timelineFields = {
+      stage: document.getElementById("timeline-stage"),
+      title: document.getElementById("timeline-inspector-title"),
+      copy: document.getElementById("timeline-inspector-copy"),
+      words: document.getElementById("timeline-words"),
+      voices: document.getElementById("timeline-voices"),
+      next: document.getElementById("timeline-next")
+    };
+
+    timelineButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const data = timelineData[button.dataset.timeline];
+        timelineButtons.forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+        Object.entries(timelineFields).forEach(([key, element]) => {
+          element.textContent = data[key];
+        });
+        if (window.matchMedia("(max-width: 880px)").matches) {
+          timelineInspector.focus({ preventScroll: true });
+        }
+      });
+    });
+
+    const evidenceButtons = [...document.querySelectorAll("[data-evidence]")];
+    const evidenceInspector = document.querySelector(".evidence-inspector");
+    const evidenceFields = {
+      outlet: document.getElementById("evidence-outlet"),
+      location: document.getElementById("evidence-location"),
+      headline: document.getElementById("evidence-headline"),
+      quote: document.getElementById("evidence-quote"),
+      element: document.getElementById("evidence-element"),
+      speaker: document.getElementById("evidence-speaker"),
+      reason: document.getElementById("evidence-reason")
+    };
+
+    function showEvidence(id, shouldFocus = true) {
+      const data = evidenceData[id];
+      if (!data) return;
+      document.getElementById("evidence-id").textContent = id;
+      Object.entries(evidenceFields).forEach(([key, element]) => {
+        element.textContent = data[key];
+      });
+      evidenceButtons.forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.evidence === id));
+      });
+      if (shouldFocus && window.matchMedia("(max-width: 880px)").matches) {
+        evidenceInspector.focus({ preventScroll: true });
+        evidenceInspector.scrollIntoView({ block: "nearest" });
+      }
+    }
+
+    evidenceButtons.forEach((button) => {
+      button.addEventListener("click", () => showEvidence(button.dataset.evidence));
+    });
+
+    const reviewNote = document.getElementById("review-note");
+    const reviewChecks = [...document.querySelectorAll(".review-checks input")];
+    const reviewStatus = document.getElementById("review-status");
+    const reviewStorageKey = "agendaframe-framing-lab-review-v1";
+
+    function saveReview() {
+      const payload = {
+        checks: reviewChecks.filter((check) => check.checked).map((check) => check.value),
+        note: reviewNote.value
+      };
+      try {
+        localStorage.setItem(reviewStorageKey, JSON.stringify(payload));
+      } catch {
+        // Local storage can be unavailable in a restricted browser context.
+      }
+    }
+
+    function loadReview() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(reviewStorageKey) || "null");
+        if (!saved) return;
+        reviewNote.value = saved.note || "";
+        reviewChecks.forEach((check) => {
+          check.checked = Array.isArray(saved.checks) && saved.checks.includes(check.value);
+        });
+      } catch {
+        // Invalid or unavailable local storage should not block the page.
+      }
+    }
+
+    reviewNote.addEventListener("input", saveReview);
+    reviewChecks.forEach((check) => check.addEventListener("change", saveReview));
+
+    document.getElementById("copy-review").addEventListener("click", async () => {
+      const selected = reviewChecks.filter((check) => check.checked).map((check) => `- ${check.value}`);
+      const text = [
+        "AgendaFrame 프레이밍 분석 예시 피드백",
+        "",
+        selected.length ? selected.join("\n") : "- 선택한 검토 항목 없음",
+        "",
+        reviewNote.value.trim() ? `자유 메모:\n${reviewNote.value.trim()}` : "자유 메모: 없음"
+      ].join("\n");
+
+      try {
+        await navigator.clipboard.writeText(text);
+        reviewStatus.textContent = "피드백을 클립보드에 복사했습니다.";
+      } catch {
+        reviewNote.focus();
+        reviewNote.select();
+        const copied = document.execCommand("copy");
+        reviewStatus.textContent = copied ? "메모를 복사했습니다." : "복사할 내용을 선택했습니다. Ctrl+C를 눌러 주세요.";
+      }
+    });
+
+    document.getElementById("clear-review").addEventListener("click", () => {
+      reviewNote.value = "";
+      reviewChecks.forEach((check) => {
+        check.checked = false;
+      });
+      try {
+        localStorage.removeItem(reviewStorageKey);
+      } catch {
+        // Clearing storage is optional.
+      }
+      reviewStatus.textContent = "저장된 검토 메모를 지웠습니다.";
+      reviewNote.focus();
+    });
+
+    loadReview();
+    showEvidence("H2", false);
+  </script>
+</body>
+</html>
