@@ -44,6 +44,7 @@ const RESEARCH_SCOPE_KEY = "academic_panel_12";
 const RESEARCH_COLLECTION_PROVIDER = "authorized_crawl";
 const RESEARCH_SOURCE_IDS = researchCollectionPolicy.sources.map((source) => source.id);
 const RESEARCH_SOURCE_NAMES = new Set(researchCollectionPolicy.sources.map((source) => source.name));
+const RESEARCH_FETCH_SOURCES = researchCollectionPolicy.sources.map((source) => ({ ...source, active: true }));
 const ISSUE_SCOPE_KEYS = new Set(["all", "general_daily_10", RESEARCH_SCOPE_KEY]);
 
 function resolveIssueScope(request) {
@@ -1183,8 +1184,9 @@ export function extractArticleBodyFromHtml(html) {
   return extractArticleBody(html).bodyText;
 }
 
-function sourceForArticle(article) {
-  return sourcePanel.sources.find((source) => source.id === article.sourceId || source.name === article.source);
+export function resolveArticleFetchSource(article) {
+  return sourcePanel.sources.find((source) => source.id === article.sourceId || source.name === article.source)
+    ?? RESEARCH_FETCH_SOURCES.find((source) => source.id === article.sourceId || source.name === article.source);
 }
 
 function validateArticleFetchUrl(value, source) {
@@ -2433,7 +2435,7 @@ async function handleTransientAnalyze(request, env) {
     const articles = selected.results ?? [];
     const results = await mapWithConcurrency(articles, ARTICLE_FETCH_CONCURRENCY, async (article) => {
       try {
-        const source = sourceForArticle(article);
+        const source = resolveArticleFetchSource(article);
         const { html } = await fetchArticleHtml(article.canonicalUrl, source, env);
         const extraction = extractArticleBody(html, {
           hostname: new URL(article.canonicalUrl).hostname,

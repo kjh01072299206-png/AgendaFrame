@@ -5,9 +5,18 @@ import test from "node:test";
 import sourcePanel from "../data/sources.json" with { type: "json" };
 import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, PUBLIC_AGENDA_CATEGORIES, analyzeArticles, classifyAgendaCategory, cleanHeadlineToIssueTitle, titleTokens } from "../worker/analysis.mjs";
 import { getAnalysisProvider } from "../worker/analysis-provider.mjs";
-import { approvedClusterApprovals, calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, clusterArticleSetSha256, clusterArticleSignature, configureSourcePanel, enumerateKstDates, extractArticleBodyFromHtml, handleApiRequest, resolveClusterApproval, validateAnalyzedImportRows, validateImportRows, validateStructuredImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
+import { approvedClusterApprovals, calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, clusterArticleSetSha256, clusterArticleSignature, configureSourcePanel, enumerateKstDates, extractArticleBodyFromHtml, handleApiRequest, resolveArticleFetchSource, resolveClusterApproval, validateAnalyzedImportRows, validateImportRows, validateStructuredImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
 
 configureSourcePanel(sourcePanel);
+
+test("resolves broadcaster article fetches through the approved research panel", () => {
+  const kbs = resolveArticleFetchSource({ sourceId: "kbs", source: "KBS" });
+  const sbs = resolveArticleFetchSource({ sourceId: "sbs", source: "SBS" });
+  assert.equal(kbs?.active, true);
+  assert.deepEqual(kbs?.domains, ["kbs.co.kr"]);
+  assert.equal(sbs?.active, true);
+  assert.deepEqual(sbs?.domains, ["sbs.co.kr"]);
+});
 
 test("builds the real React dashboard and admin application", async () => {
   const manifest = JSON.parse(await readFile(new URL("../dist/client/.vite/manifest.json", import.meta.url), "utf8"));
