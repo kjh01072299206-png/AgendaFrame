@@ -1666,6 +1666,16 @@ body > footer { gap: 24px; padding: 22px max(24px, calc((100vw - 1440px) / 2)); 
 .scope-distribution-legend { display: flex; flex-wrap: wrap; gap: 12px 22px; margin-top: 10px; color: var(--muted); font-size: 11px; }
 .scope-distribution-legend b { color: var(--ink); font-size: 14px; }
 .framing-scope-distribution > p { margin: 11px 0 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
+.framing-context-gaps { padding: 18px clamp(19px, 3vw, 30px); border: 1px solid #e5d6ad; background: #fffaf0; }
+.framing-context-gaps > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding-bottom: 11px; border-bottom: 1px solid #eadfca; }
+.framing-context-gaps > header h4 { margin: 4px 0 0; font-family: var(--font-serif); font-size: 19px; letter-spacing: -.025em; }
+.framing-context-gaps > header > span { padding-top: 4px; color: #8a6d36; font-size: 10px; }
+.framing-context-gaps > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.framing-context-gaps article { min-width: 0; padding: 11px 12px; background: rgba(255,255,255,.72); }
+.framing-context-gaps article strong { color: #6b562d; font-size: 12px; }
+.framing-context-gaps article p { margin: 5px 0 0; color: #5f4d2c; font-size: 11px; line-height: 1.55; word-break: keep-all; }
+.framing-context-gaps article small { display: block; margin-top: 7px; color: #8a7754; font-size: 9px; line-height: 1.5; word-break: keep-all; }
+.frame-function-title-signal { border-top: 1px dashed #cbd7e1; }
 .framing-axis-question { color: #286d61 !important; font-weight: 800; }
 .framing-axis-contrast .framing-contrast > div { align-content: start; }
 .comparison-evidence-disclosure { margin-top: 9px; border-top: 1px solid var(--line); }
@@ -1732,4 +1742,7 @@ body > footer { gap: 24px; padding: 22px max(24px, calc((100vw - 1440px) / 2)); 
   .framing-dimension-overview > header, .framing-scope-distribution > header { display: grid; gap: 8px; }
   .framing-dimension-grid { grid-template-columns: 1fr; }
   .framing-dimension-grid article { padding: 13px 0; }
+  .framing-context-gaps { padding: 16px; }
+  .framing-context-gaps > header { display: grid; gap: 8px; }
+  .framing-context-gaps > div { grid-template-columns: 1fr; }
 }
