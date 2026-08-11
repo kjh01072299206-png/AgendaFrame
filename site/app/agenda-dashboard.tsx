@@ -1377,7 +1377,6 @@ function ExtendedAnalysisView({ comparison }: { comparison: Comparison }) {
 }
 
 const frameFunctionDefinitions = [
-  ["problem_definition", "문제 정의", "무엇을 핵심 문제로 놓았나"],
   ["causal_attribution", "원인", "왜 이렇게 됐다고 설명했나"],
   ["responsibility_attribution", "책임", "누구에게 책임을 돌렸나"],
   ["evaluation", "평가", "어떤 가치 판단을 붙였나"],
@@ -1863,7 +1862,7 @@ function FramingEditorialView({ comparison, articles }: { comparison: Comparison
         </div>
         <div className="framing-report-section">
           <h4>프레임 4기능 비교</h4>
-          <p>문제 정의·원인·책임·평가·대응을 매체 간 표현으로 나눠 봅니다. 본문 근거가 없는 항목은 제목 단서와 분리해 판정을 보류합니다.</p>
+          <p>원인·책임·평가·대응을 매체 간 표현으로 나눠 봅니다. 문제 정의는 위 쟁점 구도에서 따로 확인하고, 본문 근거가 없는 항목은 제목 단서와 분리해 판정을 보류합니다.</p>
           <FrameFunctionTable axes={axes} />
         </div>
         <div className="framing-report-section">
