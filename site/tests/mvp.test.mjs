@@ -183,7 +183,17 @@ test("keeps the initial-five reader surface separate from site-wide tools", asyn
   assert.match(liveData, /payload\.run\.targetDate/);
   assert.match(shellChrome, /fetchLiveIssueList\(5\)/);
   assert.match(liveIssue, /fetchLiveIssueDetail\(issueId\)/);
-  assert.match(liveIssue, /본문 근거/);
+  assert.match(liveIssue, /프레이밍 분석 요약/);
+  assert.match(liveIssue, /프레임 4기능 비교/);
+  assert.match(liveIssue, /무엇이 문제인가/);
+  assert.match(liveIssue, /왜 이렇게 됐나/);
+  assert.match(liveIssue, /어떻게 평가하나/);
+  assert.match(liveIssue, /어떻게 하자는가/);
+  assert.match(liveIssue, /Entman \(1993\) · 기사 본문 구조화/);
+  assert.match(liveIssue, /명시 없음/);
+  assert.doesNotMatch(liveIssue, /이 사안의 프레이밍/);
+  assert.doesNotMatch(liveIssue, /현재 관측된 표현 근거/);
+  assert.doesNotMatch(liveIssue, /프레임 요소별 판단/);
   assert.doesNotMatch(home, /InitialFiveExperience/);
   // 단일 페이지 리더는 자기 라우트에만 남는다
   assert.match(legacyReaderRoute, /InitialFiveExperience/);

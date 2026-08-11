@@ -481,6 +481,81 @@ body:has(.afs-shell) {
   color: var(--afs-ink-3);
   font-size: 11.5px;
 }
+
+/* 프레이밍 분석은 2026-07-26 HTML 프로토타입의 문장·표 구조를 그대로 따른다. */
+.afs-frame-what {
+  max-width: 44em;
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.82;
+  letter-spacing: -0.018em;
+}
+.afs-frame-note {
+  margin: 10px 0 0;
+  color: var(--afs-ink-3);
+  font-size: 12px;
+}
+.afs-frame-note-intro {
+  margin: 0 0 11px;
+}
+.afs-frame-table {
+  width: 100%;
+  min-width: 860px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.afs-frame-outlet-col {
+  width: 92px;
+}
+.afs-frame-table th,
+.afs-frame-table td {
+  padding: 8px 11px;
+  border-bottom: 1px solid var(--afs-rule);
+  text-align: left;
+  vertical-align: top;
+}
+.afs-frame-table tbody tr:last-child th,
+.afs-frame-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.afs-frame-table th {
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.afs-frame-table thead th:not(:first-child) {
+  white-space: normal;
+}
+.afs-frame-table thead th b {
+  display: block;
+  color: var(--afs-ink);
+}
+.afs-frame-table thead th span {
+  display: block;
+  margin-top: 2px;
+  color: var(--afs-ink-3);
+  font-size: 10.5px;
+  font-weight: 500;
+}
+.afs-frame-table tbody th {
+  color: var(--afs-ink);
+  font-size: 13px;
+}
+.afs-frame-table td {
+  line-height: 1.45;
+}
+.afs-frame-cell {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.afs-frame-empty {
+  color: var(--afs-rule-2);
+}
 .afs-foot {
   margin: 0;
   padding: 10px 16px;

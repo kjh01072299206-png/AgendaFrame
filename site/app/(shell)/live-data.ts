@@ -38,6 +38,30 @@ export interface LiveFrameEvidence {
   sourceUrl: string;
 }
 
+export interface LiveComparisonEvidence {
+  claimId: string;
+  articleId: string;
+  source: string;
+  sourceUrl: string;
+  evidenceLocator: string | null;
+  evidenceHash: string | null;
+  voiceKind: string | null;
+}
+
+export interface LiveComparisonVariant {
+  groupId: string;
+  frameFamily: string | null;
+  claimIds: string[];
+  summary: string;
+  outlets: Array<LiveComparisonEvidence & { status?: string }>;
+}
+
+export interface LiveComparisonAxis {
+  dimension: string;
+  label: string;
+  variants: LiveComparisonVariant[];
+}
+
 export interface LiveIssueDetail {
   issue: LiveIssueSummary;
   articles: LiveArticle[];
@@ -59,6 +83,13 @@ export interface LiveIssueDetail {
     sourceVoices: string[];
     articleCount: number;
     sourceCount: number;
+    summary?: {
+      commonGround: string | null;
+      mainDifference: string | null;
+      whyItMatters: string | null;
+      sourceContext: string | null;
+    };
+    axes?: LiveComparisonAxis[];
   };
 }
 

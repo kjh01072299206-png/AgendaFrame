@@ -2,25 +2,37 @@
 
 import { useEffect, useState } from "react";
 import { IssueSubject } from "../../issue-subject";
-import { fetchLiveIssueDetail, fetchLiveIssueList, type LiveIssueDetail } from "../../live-data";
+import {
+  fetchLiveIssueDetail,
+  fetchLiveIssueList,
+  type LiveComparisonAxis,
+  type LiveIssueDetail,
+} from "../../live-data";
 
 type LiveView = "overview" | "outlets" | "framing" | "report";
 
-const FRAME_LABEL: Record<string, string> = {
-  law: "법·제도",
-  conflict: "갈등",
-  responsibility: "책임",
-  economy: "경제",
-  safety: "안전",
-  human_interest: "인간적 관심",
-};
+const FRAME_FUNCTIONS = [
+  { dimension: "problem_definition", label: "무엇이 문제인가", english: "Problem definition" },
+  { dimension: "causal_attribution", label: "왜 이렇게 됐나", english: "Causal attribution" },
+  { dimension: "evaluation", label: "어떻게 평가하나", english: "Moral evaluation" },
+  { dimension: "treatment_recommendation", label: "어떻게 하자는가", english: "Treatment recommendation" },
+] as const;
 
-const ELEMENT_LABEL: Record<string, string> = {
-  problem_definition: "문제 정의",
-  causal_attribution: "원인 설명",
-  evaluation: "평가",
-  treatment_recommendation: "해법 제시",
-};
+function frameAxis(axes: LiveComparisonAxis[], dimension: string) {
+  if (dimension === "evaluation") {
+    return axes.find((axis) => axis.dimension === "evaluation" || axis.dimension === "moral_evaluation");
+  }
+  return axes.find((axis) => axis.dimension === dimension);
+}
+
+function articleFrameSummary(axis: LiveComparisonAxis | undefined, articleId: string) {
+  if (!axis) return null;
+  const summaries = axis.variants
+    .filter((variant) => variant.outlets.some((outlet) => outlet.articleId === articleId))
+    .map((variant) => variant.summary.trim())
+    .filter(Boolean);
+  return [...new Set(summaries)].join(" / ") || null;
+}
 
 const formatDateTime = (value: number) => new Intl.DateTimeFormat("ko-KR", {
   dateStyle: "medium",
@@ -84,28 +96,43 @@ function Outlets({ detail }: { detail: LiveIssueDetail }) {
 }
 
 function Framing({ detail }: { detail: LiveIssueDetail }) {
+  const summary = detail.comparison.summary;
+  const summaryLine = [summary?.commonGround, summary?.mainDifference].filter(Boolean).join(" ") || detail.comparison.reason;
+  const axes = detail.comparison.axes ?? [];
+
   return (
     <>
       <section className="afs-card afs-card-lead">
-        <h2>이 사안의 프레이밍</h2>
-        <div className="afs-in afs-prose"><p>{detail.report.summary}</p><p className="afs-hold">{detail.comparison.reason}</p></div>
-      </section>
-      <section className="afs-card">
-        <h2>현재 관측된 표현 근거<small>{detail.frames.length}건</small></h2>
+        <h2>프레이밍 분석 요약</h2>
         <div className="afs-in">
-          {detail.frames.length ? <ul className="afs-facts">{detail.frames.map((frame) => (
-            <li key={`${frame.articleId}-${frame.frame}`}>
-              <b>{FRAME_LABEL[frame.frame] ?? frame.frame} · {frame.source}</b>
-              <span>{frame.evidenceText}</span>
-            </li>
-          ))}</ul> : <p className="afs-hold">확인된 본문 프레임 근거가 없습니다.</p>}
+          <p className="afs-frame-what">{summaryLine}</p>
+          {summary?.whyItMatters ? <p className="afs-frame-note">{summary.whyItMatters}</p> : null}
         </div>
       </section>
       <section className="afs-card">
-        <h2>프레임 요소별 판단</h2>
-        <div className="afs-in"><div className="afs-table-wrap"><table className="afs-table"><thead><tr><th>분석 요소</th><th>상태</th></tr></thead><tbody>
-          {detail.comparison.frameElements.map((row) => <tr key={row.element}><th>{ELEMENT_LABEL[row.element] ?? row.element}</th><td>{row.status === "not_assessed" ? "근거 부족으로 판단 보류" : row.status}</td></tr>)}
-        </tbody></table></div></div>
+        <h2>프레임 4기능 비교<small>Entman (1993) · 기사 본문 구조화</small></h2>
+        <div className="afs-in">
+          <p className="afs-frame-note afs-frame-note-intro">각 기사가 무엇을 문제로 규정하고, 원인을 어디에 귀인하며, 누구를 어떻게 평가하고, 어떤 해결책을 암시하는지 언론사 간 관점 차이를 문장 수준에서 비교합니다.</p>
+          <div className="afs-scroll">
+            <table className="afs-frame-table">
+              <colgroup><col className="afs-frame-outlet-col" /><col span={4} /></colgroup>
+              <thead><tr><th>언론사</th>{FRAME_FUNCTIONS.map((item) => (
+                <th key={item.dimension}><b>{item.label}</b><span>{item.english}</span></th>
+              ))}</tr></thead>
+              <tbody>{detail.articles.map((article) => (
+                <tr key={article.id}>
+                  <th scope="row" title={article.title}><b>{article.source}</b></th>
+                  {FRAME_FUNCTIONS.map((item) => {
+                    const text = articleFrameSummary(frameAxis(axes, item.dimension), article.id);
+                    return text
+                      ? <td key={item.dimension} title={text}><span className="afs-frame-cell">{text}</span></td>
+                      : <td key={item.dimension} className="afs-frame-empty">명시 없음</td>;
+                  })}
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </div>
       </section>
     </>
   );
