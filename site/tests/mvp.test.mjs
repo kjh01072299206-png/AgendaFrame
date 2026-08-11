@@ -128,8 +128,8 @@ test("keeps the public dashboard focused on date, issue, and outlet exploration"
     assert.match(dashboard, new RegExp(copy));
   }
   assert.match(dashboard, /학술연구 12개 매체/);
-  assert.match(dashboard, /fetch\(`\/api\/sources\?scope=\$\{ISSUE_SCOPE\}`/);
-  assert.match(dashboard, /fetch\(`\/api\/issues\/dates\?limit=31&scope=\$\{ISSUE_SCOPE\}`/);
+  assert.match(dashboard, /fetch\(`\/api\/sources\?scope=\$\{scope\}`/);
+  assert.match(dashboard, /fetch\(`\/api\/issues\/dates\?limit=31&scope=\$\{resolvedScope\}`/);
   assert.match(dashboard, /분석 기준일/);
   assert.match(dashboard, /archive-disclosure/);
   assert.doesNotMatch(dashboard, /핵심 의제 우선 · 스포츠·생활·IT 후순위/);
@@ -143,6 +143,8 @@ test("keeps the public dashboard focused on date, issue, and outlet exploration"
   assert.match(dashboard, /role="tab"/);
   assert.match(dashboard, /aria-controls={`analysis-panel-/);
   assert.match(dashboard, /academic_panel_12/);
+  assert.match(dashboard, /LEGACY_ISSUE_SCOPE = "general_daily_10"/);
+  assert.match(dashboard, /if \(!nextDates\.length\)/);
   assert.match(dashboard, /FramingEditorialView/);
   assert.doesNotMatch(dashboard, /\["chat", "AI 대화"\]/u);
   assert.doesNotMatch(dashboard, /\["selfcheck", "자기점검"\]/u);
