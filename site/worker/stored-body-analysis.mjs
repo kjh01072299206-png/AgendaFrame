@@ -170,13 +170,23 @@ function analysisPanel(policy) {
   };
 }
 
-export async function runStoredAnalysisForDates(env, policy, dates) {
+export async function runStoredAnalysisForDates(env, policy, dates, options = {}) {
   if (!Array.isArray(dates) || !dates.length) return [];
-  const { handleAnalyze } = await import("./runtime.mjs");
+  const analyzeImpl = options.analyzeImpl;
+  if (typeof analyzeImpl !== "function") {
+    return [...new Set(dates)].sort().map((date) => ({
+      date,
+      status: "failed",
+      httpStatus: 0,
+      runId: null,
+      issueCount: 0,
+      error: "ANALYSIS_IMPLEMENTATION_MISSING",
+    }));
+  }
   const results = [];
   for (const date of [...new Set(dates)].sort()) {
     try {
-      const response = await handleAnalyze(null, env, {
+      const response = await analyzeImpl(null, env, {
         internalPayload: { date },
         panelOverride: analysisPanel(policy),
         articleScope: {

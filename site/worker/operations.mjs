@@ -419,7 +419,7 @@ export function compactCollectionRunResult(result) {
   };
 }
 
-export async function handleOperationsAdminRequest(request, env = {}) {
+export async function handleOperationsAdminRequest(request, env = {}, options = {}) {
   const url = new URL(request.url);
   const managed = url.pathname === "/api/admin/operations"
     || url.pathname === "/api/admin/operations/recover"
@@ -449,9 +449,10 @@ export async function handleOperationsAdminRequest(request, env = {}) {
       if (!env?.CONTENT) return operationResponse(request, { error: { code: "UNAVAILABLE", message: "비공개 본문 저장소가 준비되지 않았습니다." } }, 503);
       const { runScheduledAgendaFrame } = await import("./content-retention.mjs");
       const collection = await runScheduledAgendaFrame(env, {
-          scheduledTime: Date.now(),
-          discoveryPolicy,
-        });
+        scheduledTime: Date.now(),
+        discoveryPolicy,
+        analyzeImpl: options.analyzeImpl,
+      });
       return operationResponse(request, { collection: compactCollectionRunResult(collection) });
     }
     if (url.pathname === "/api/admin/jobs/dead-letters" && request.method === "GET") {

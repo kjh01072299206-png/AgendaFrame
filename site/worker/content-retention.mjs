@@ -181,7 +181,9 @@ async function runLeasedAgendaFrame(env, options, scheduledTime, lease) {
               throw new TypeError("aggregateDateLimit must be an integer from 1 to 7.");
             }
             const aggregateDates = profileAnalysis.dates.slice(-aggregateDateLimit);
-            aggregateAnalysis = await runStoredAnalysisForDates(env, options.discoveryPolicy, aggregateDates);
+            aggregateAnalysis = await runStoredAnalysisForDates(env, options.discoveryPolicy, aggregateDates, {
+              analyzeImpl: options.analyzeImpl,
+            });
           }
         } catch (error) {
           profileAnalysis = { status: "failed", selected: 0, analyzed: 0, failed: 0, dates: [], results: [] };

@@ -3,7 +3,7 @@ import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } fr
 import handler from "vinext/server/app-router-entry";
 import discoveryPolicy from "../data/discovery-sources.json";
 import sourcePanel from "../data/sources.json";
-import { configureSourcePanel, handleApiRequest, withDocumentSecurityHeaders, withSecurityHeaders } from "./runtime.mjs";
+import { configureSourcePanel, handleAnalyze, handleApiRequest, withDocumentSecurityHeaders, withSecurityHeaders } from "./runtime.mjs";
 
 configureSourcePanel(sourcePanel);
 
@@ -45,6 +45,7 @@ const worker = {
       import("./content-retention.mjs").then(({ runScheduledAgendaFrame }) => runScheduledAgendaFrame(env, {
         scheduledTime: controller.scheduledTime,
         discoveryPolicy,
+        analyzeImpl: handleAnalyze,
       })),
     );
   },
@@ -54,7 +55,7 @@ const worker = {
 
     try {
       const { handleOperationsAdminRequest } = await import("./operations.mjs");
-      const operationsResponse = await handleOperationsAdminRequest(request, env);
+      const operationsResponse = await handleOperationsAdminRequest(request, env, { analyzeImpl: handleAnalyze });
       if (operationsResponse) return withSecurityHeaders(operationsResponse);
       const apiResponse = await handleApiRequest(request, env);
       if (apiResponse) return withSecurityHeaders(apiResponse);

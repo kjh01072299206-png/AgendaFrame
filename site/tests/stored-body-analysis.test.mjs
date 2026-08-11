@@ -94,7 +94,7 @@ test("scopes stored analysis to authorized crawl articles while leaving general 
   const policy = activePolicy();
   const token = "scope-test-token";
   const scopedEnv = environment([]);
-  const scopedResult = await runStoredAnalysisForDates(scopedEnv, policy, ["2026-08-10"]);
+  const scopedResult = await runStoredAnalysisForDates(scopedEnv, policy, ["2026-08-10"], { analyzeImpl: handleAnalyze });
   assert.deepEqual(scopedResult, [{
     date: "2026-08-10",
     status: "failed",

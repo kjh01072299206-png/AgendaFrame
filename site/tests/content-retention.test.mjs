@@ -9,6 +9,7 @@ import {
   purgeExpiredArticleContent,
   runScheduledAgendaFrame,
 } from "../worker/content-retention.mjs";
+import { handleAnalyze } from "../worker/runtime.mjs";
 
 function fakeEnvironment(selected, failKeys = new Set()) {
   const deletedKeys = [];
@@ -276,6 +277,7 @@ test("a scheduled run completes aggregate analysis without an internal admin tok
     discoveryFetchImpl: fetchImpl,
     sleepImpl: async () => {},
     workerId: "regression-test-worker",
+    analyzeImpl: handleAnalyze,
   });
 
   assert.equal(result.status, "completed");
@@ -302,7 +304,7 @@ test("a scheduled run completes aggregate analysis without an internal admin tok
 
 test("runStoredAnalysisForDates reports a missing database per date instead of throwing", async () => {
   const { runStoredAnalysisForDates } = await import("../worker/stored-body-analysis.mjs");
-  const failures = await runStoredAnalysisForDates({}, discoveryPolicy, ["2026-08-10"]);
+  const failures = await runStoredAnalysisForDates({}, discoveryPolicy, ["2026-08-10"], { analyzeImpl: handleAnalyze });
   assert.deepEqual(failures, [{
     date: "2026-08-10",
     status: "failed",
