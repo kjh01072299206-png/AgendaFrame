@@ -4,6 +4,9 @@ const MAX_BATCH_LIMIT = 500;
 const DEFAULT_DRAIN_BATCHES = 20;
 const COLLECTION_LEASE_MS = 60 * 60_000;
 const COLLECTION_RUN_LIMIT_MS = 12 * 60_000;
+const SCHEDULED_BODY_LIMIT = 5;
+const SCHEDULED_PROFILE_LIMIT = 5;
+const SCHEDULED_AGGREGATE_DATE_LIMIT = 1;
 
 function requireBindings(env) {
   if (!env?.DB || typeof env.DB.prepare !== "function") throw new TypeError("A D1-compatible DB binding is required.");
@@ -139,14 +142,17 @@ async function runLeasedAgendaFrame(env, options, scheduledTime, lease) {
         import("./article-discovery.mjs"),
         import("./discovery-store.mjs"),
       ]);
+      const { selectScheduledDiscoverySlice } = await import("./collection-work-slice.mjs");
+      const discoverySlice = selectScheduledDiscoverySlice(options.discoveryPolicy, scheduledTime);
       const fetchImpl = options.discoveryFetchImpl
         ?? (env?.ARTICLE_FETCHER?.fetch ? env.ARTICLE_FETCHER.fetch.bind(env.ARTICLE_FETCHER) : fetch);
-      discovery = await runDiscoveryCycle(options.discoveryPolicy, {
+      discovery = await runDiscoveryCycle(discoverySlice.policy, {
         fetchImpl,
         now: scheduledTime,
         deadlineTimestamp: runDeadline,
         beforeRequest: beforePublisherRequest,
       });
+      discovery.workSlice = discoverySlice.summary;
       if (["success", "partial"].includes(discovery.status)) {
         discoveryPersistence = await persistDiscoveryCycle(env.DB, options.discoveryPolicy, discovery);
       }
@@ -157,6 +163,7 @@ async function runLeasedAgendaFrame(env, options, scheduledTime, lease) {
           now: scheduledTime,
           deadlineTimestamp: runDeadline,
           beforeRequest: beforePublisherRequest,
+          limit: options.bodyCollectionLimit ?? SCHEDULED_BODY_LIMIT,
         });
       } else {
         bodyCollection = { status: "run_deadline_exceeded", selected: 0, stored: 0, failed: 0, results: [] };
@@ -166,9 +173,15 @@ async function runLeasedAgendaFrame(env, options, scheduledTime, lease) {
           const { analyzeStoredArticleBodies, runStoredAnalysisForDates } = await import("./stored-body-analysis.mjs");
           profileAnalysis = await analyzeStoredArticleBodies(env, options.discoveryPolicy, {
             now: scheduledTime,
+            limit: options.profileAnalysisLimit ?? SCHEDULED_PROFILE_LIMIT,
           });
           if (Date.now() < runDeadline) {
-            aggregateAnalysis = await runStoredAnalysisForDates(env, options.discoveryPolicy, profileAnalysis.dates);
+            const aggregateDateLimit = Number(options.aggregateDateLimit ?? SCHEDULED_AGGREGATE_DATE_LIMIT);
+            if (!Number.isSafeInteger(aggregateDateLimit) || aggregateDateLimit < 1 || aggregateDateLimit > 7) {
+              throw new TypeError("aggregateDateLimit must be an integer from 1 to 7.");
+            }
+            const aggregateDates = profileAnalysis.dates.slice(-aggregateDateLimit);
+            aggregateAnalysis = await runStoredAnalysisForDates(env, options.discoveryPolicy, aggregateDates);
           }
         } catch (error) {
           profileAnalysis = { status: "failed", selected: 0, analyzed: 0, failed: 0, dates: [], results: [] };
@@ -215,6 +228,12 @@ async function runLeasedAgendaFrame(env, options, scheduledTime, lease) {
     bodyCollection,
     profileAnalysis,
     aggregateAnalysis,
+    workBudget: {
+      discovery: discovery.workSlice ?? null,
+      bodyLimit: Number(options.bodyCollectionLimit ?? SCHEDULED_BODY_LIMIT),
+      profileLimit: Number(options.profileAnalysisLimit ?? SCHEDULED_PROFILE_LIMIT),
+      aggregateDateLimit: Number(options.aggregateDateLimit ?? SCHEDULED_AGGREGATE_DATE_LIMIT),
+    },
     stageErrors,
   };
 }

@@ -263,7 +263,7 @@ test("a scheduled run without an analysis token records the failure instead of c
       headers: { "content-type": "application/rss+xml" },
     });
   };
-  const scheduledTime = Date.parse("2026-08-10T06:00:00.000Z");
+  const scheduledTime = Date.parse("2026-08-09T15:00:00.000Z");
 
   const result = await runScheduledAgendaFrame({
     DB,
@@ -283,11 +283,15 @@ test("a scheduled run without an analysis token records the failure instead of c
   assert.equal(result.discoveryPersistence.inserted, 1);
   assert.equal(result.bodyCollection.stored, 1);
   assert.equal(result.profileAnalysis.analyzed, 1);
+  assert.equal(result.workBudget.discovery.endpointCount, 12);
+  assert.equal(result.workBudget.bodyLimit, 5);
+  assert.equal(result.workBudget.profileLimit, 5);
+  assert.equal(result.workBudget.aggregateDateLimit, 1);
   assert.deepEqual(result.stageErrors, [
     { stage: "aggregate_analysis", code: "ANALYSIS_TOKEN_MISSING", date: "2026-08-10" },
   ]);
   assert.equal(result.operations.processed, true);
-  assert.equal(requests.length, discoveryPolicy.sources.flatMap((source) => source.endpoints).length + 1);
+  assert.equal(requests.length, discoveryPolicy.sources.length + 1);
   assert.equal(CONTENT.objects.size, 1);
 });
 

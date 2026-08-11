@@ -80,6 +80,11 @@ export function validateDiscoveryPolicy(input) {
     throw new TypeError("Polling must run four times daily at 00:00, 06:00, 12:00, and 18:00 KST with a three-day reconciliation window.");
   }
   if (policy.polling?.concurrency !== 1) throw new TypeError("Discovery concurrency must remain 1.");
+  if (!Number.isSafeInteger(policy.polling?.maxRecordsPerSourcePerRun)
+    || policy.polling.maxRecordsPerSourcePerRun < 1
+    || policy.polling.maxRecordsPerSourcePerRun > 500) {
+    throw new TypeError("maxRecordsPerSourcePerRun must be an integer from 1 to 500.");
+  }
   if (policy.polling?.minimumDelayMilliseconds < 3000) throw new TypeError("Source requests must be at least three seconds apart.");
   if (!Number.isSafeInteger(policy.polling?.requestTimeoutMilliseconds)
     || policy.polling.requestTimeoutMilliseconds < 1000
@@ -446,7 +451,8 @@ export async function runDiscoveryCycle(policy, options = {}) {
   }
   let deadlineExceeded = false;
   for (const source of policy.sources) {
-    const result = { sourceId: source.id, status: "success", endpointsRequested: 0, discovered: 0, diagnostics: [] };
+    const result = { sourceId: source.id, status: "success", endpointsRequested: 0, discovered: 0, truncated: false, diagnostics: [] };
+    let sourceRecordCount = 0;
     const endpoints = source.endpoints.filter((endpoint) => endpoint.enabled);
     if (!endpoints.length) {
       result.status = "skipped_endpoint_review_required";
@@ -498,9 +504,19 @@ export async function runDiscoveryCycle(policy, options = {}) {
         contentType: fetched.contentType,
         discoveredAt,
       });
-      for (const record of found) {
+      const newestFirst = [...found].sort((left, right) => Date.parse(right.publishedAt ?? right.discoveredAt) - Date.parse(left.publishedAt ?? left.discoveredAt));
+      for (const record of newestFirst) {
         const current = records.get(record.canonicalUrl);
+        if (!current && sourceRecordCount >= policy.polling.maxRecordsPerSourcePerRun) {
+          result.truncated = true;
+          continue;
+        }
         records.set(record.canonicalUrl, current ? richerEntry(current, record) : record);
+        if (!current) sourceRecordCount += 1;
+      }
+      if (result.truncated) {
+        result.diagnostics.push({ endpointId: endpoint.id, status: fetched.status, code: "RECORD_LIMIT_REACHED" });
+        break;
       }
     }
     result.discovered = [...records.values()].filter((record) => record.sourceId === source.id).length;

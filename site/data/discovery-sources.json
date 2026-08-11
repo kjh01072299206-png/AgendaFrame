@@ -21,6 +21,7 @@
     "scheduledHoursKst": [0, 6, 12, 18],
     "reconciliationLookbackDays": 3,
     "maxRequestsPerSourcePerRun": 30,
+    "maxRecordsPerSourcePerRun": 120,
     "minimumDelayMilliseconds": 3000,
     "requestTimeoutMilliseconds": 15000,
     "concurrency": 1,

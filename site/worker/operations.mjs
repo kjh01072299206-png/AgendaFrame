@@ -390,10 +390,12 @@ export function compactCollectionRunResult(result) {
       status: result.discovery.status ?? "unknown",
       deadlineExceeded: result.discovery.deadlineExceeded === true,
       discovered: Array.isArray(result.discovery.records) ? result.discovery.records.length : 0,
+      workSlice: result.discovery.workSlice ?? null,
       sources: Array.isArray(result.discovery.sources) ? result.discovery.sources.map((source) => ({
         sourceId: source.sourceId,
         status: source.status,
         discovered: Number(source.discovered ?? 0),
+        truncated: source.truncated === true,
       })) : [],
     } : null,
     discoveryPersistence: result?.discoveryPersistence ?? null,
@@ -411,6 +413,7 @@ export function compactCollectionRunResult(result) {
       dates: Array.isArray(result.profileAnalysis.dates) ? result.profileAnalysis.dates : [],
     } : null,
     aggregateAnalysis: Array.isArray(result?.aggregateAnalysis) ? result.aggregateAnalysis : [],
+    workBudget: result?.workBudget ?? null,
     operations: result?.operations ?? null,
     stageErrors: Array.isArray(result?.stageErrors) ? result.stageErrors : [],
   };

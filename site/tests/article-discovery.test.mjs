@@ -40,6 +40,7 @@ test("locks the academic collection scope to 10 dailies, 2 broadcasters, and the
   assert.equal(policy.polling.runsPerDay, 4);
   assert.deepEqual(policy.polling.scheduledHoursKst, [0, 6, 12, 18]);
   assert.equal(policy.polling.requestTimeoutMilliseconds, 15000);
+  assert.equal(policy.polling.maxRecordsPerSourcePerRun, 120);
   assert.equal(policy.collectionWindow.rawContentDeleteAfter, "2026-10-31T23:59:59+09:00");
   assert.ok(policy.sources.every((entry) => entry.endpoints.every((item) => item.enabled === true)));
   assert.equal(policy.sources.filter((entry) => entry.endpointReview.status === "verified").length, 12);
@@ -107,6 +108,33 @@ test("discovers RSS metadata, applies date and content exclusions, and never ret
     topic: "politics",
   });
   assert.doesNotMatch(JSON.stringify(records), /기사 요약|description|document|body|html/i);
+});
+
+test("caps a large source feed per run and keeps the newest records", async () => {
+  const boundedPolicy = structuredClone(policy);
+  boundedPolicy.polling.maxRecordsPerSourcePerRun = 2;
+  boundedPolicy.sources = boundedPolicy.sources.map((entry) => ({
+    ...entry,
+    endpoints: entry.endpoints.slice(0, 1),
+  }));
+  const largeRss = `<?xml version="1.0"?><rss><channel>
+    <item><title>첫 기사</title><link>https://www.khan.co.kr/article/202608100000001</link><pubDate>Mon, 10 Aug 2026 01:00:00 GMT</pubDate></item>
+    <item><title>둘째 기사</title><link>https://www.khan.co.kr/article/202608100000002</link><pubDate>Mon, 10 Aug 2026 02:00:00 GMT</pubDate></item>
+    <item><title>셋째 기사</title><link>https://www.khan.co.kr/article/202608100000003</link><pubDate>Mon, 10 Aug 2026 03:00:00 GMT</pubDate></item>
+  </channel></rss>`;
+  const result = await runDiscoveryCycle(boundedPolicy, {
+    now: Date.parse("2026-08-10T05:00:00.000Z"),
+    beforeRequest: async () => {},
+    fetchImpl: async (url) => new Response(String(url).includes("khan.co.kr") ? largeRss : "<rss><channel></channel></rss>", {
+      status: 200,
+      headers: { "content-type": "application/rss+xml" },
+    }),
+  });
+  const khan = result.sources.find((entry) => entry.sourceId === "khan");
+  assert.equal(khan.discovered, 2);
+  assert.equal(khan.truncated, true);
+  assert.ok(khan.diagnostics.some((entry) => entry.code === "RECORD_LIMIT_REACHED"));
+  assert.deepEqual(result.records.map((entry) => entry.title), ["셋째 기사", "둘째 기사"]);
 });
 
 test("discovers homepage links, rejects cross-domain and excluded sections, and deduplicates canonical URLs", () => {

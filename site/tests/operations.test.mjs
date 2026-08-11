@@ -299,8 +299,9 @@ test("collection admin responses summarize records instead of returning article 
     lease: { acquired: true },
     discovery: {
       status: "success",
+      workSlice: { slot: 0, endpointCount: 12 },
       records: [{ title: "must not be returned", body: "must not be returned" }],
-      sources: [{ sourceId: "daily", status: "success", discovered: 1, diagnostics: [{ code: "OK" }] }],
+      sources: [{ sourceId: "daily", status: "success", discovered: 1, truncated: true, diagnostics: [{ code: "OK" }] }],
     },
     bodyCollection: { status: "success", selected: 1, stored: 1, failed: 0, results: [{ body: "private" }] },
     profileAnalysis: { status: "success", selected: 1, analyzed: 1, failed: 0, dates: ["2026-08-10"], results: [{ profile: "private" }] },
@@ -309,7 +310,8 @@ test("collection admin responses summarize records instead of returning article 
   });
 
   assert.equal(compact.discovery.discovered, 1);
-  assert.deepEqual(compact.discovery.sources, [{ sourceId: "daily", status: "success", discovered: 1 }]);
+  assert.deepEqual(compact.discovery.workSlice, { slot: 0, endpointCount: 12 });
+  assert.deepEqual(compact.discovery.sources, [{ sourceId: "daily", status: "success", discovered: 1, truncated: true }]);
   assert.equal(compact.bodyCollection.stored, 1);
   assert.equal(compact.profileAnalysis.analyzed, 1);
   assert.equal(JSON.stringify(compact).includes("must not be returned"), false);
