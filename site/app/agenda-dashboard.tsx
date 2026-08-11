@@ -543,6 +543,15 @@ function pilotHeadlineMorphology(pilotIssue: Top5PilotIssue): NonNullable<Compar
 
 function pilotComparisonToPublic(pilotIssue: Top5PilotIssue, articles: Article[]): Comparison {
   const pilot = pilotIssue.comparison;
+  const dimensionAliases: Record<string, { dimension: string; label: string }> = {
+    problem_definition: { dimension: "problem_definition", label: "문제 정의" },
+    causal_interpretation: { dimension: "causal_attribution", label: "원인" },
+    causal_attribution: { dimension: "causal_attribution", label: "원인" },
+    responsibility_attribution: { dimension: "responsibility_attribution", label: "책임" },
+    moral_evaluation: { dimension: "evaluation", label: "평가" },
+    evaluation: { dimension: "evaluation", label: "평가" },
+    treatment_recommendation: { dimension: "treatment_recommendation", label: "대응" },
+  };
   const metadataById = new Map(pilotIssue.articleMetadata.map((article) => [article.articleId, article]));
   const articleByUrl = new Map(articles.map((article) => [normalizedArticleUrl(article.url), article]));
   const sourceForArticle = (articleId: string) => {
@@ -565,21 +574,49 @@ function pilotComparisonToPublic(pilotIssue: Top5PilotIssue, articles: Article[]
       voiceKind: pattern.voice_scope === "outlet_narration" ? "journalist_narration" : "source_attributed",
     };
   });
-  const axes: ComparisonAxis[] = pilot.comparison_axes.map((axis) => ({
-    dimension: axis.dimension,
-    label: axis.label,
-    variants: axis.patterns.map((pattern) => ({
-      groupId: pattern.variant_key,
-      frameFamily: pattern.code,
-      claimIds: [pattern.variant_key],
-      summary: pattern.public_paraphrase,
-      outlets: toEvidence(pattern),
-      commitment: pattern.voice_scope === "outlet_narration" ? "explicit" : "source_attributed",
-      status: pattern.voice_scope === "outlet_narration" ? "supported" : "attributed_source",
-      evidenceLocator: pattern.evidence?.[0]?.locator ? `${pattern.evidence[0].locator.paragraph}문단 ${pattern.evidence[0].locator.sentence}문장` : null,
-      basis: "기사 본문 위치·비복원 지문 확인 · 원문 문장 미저장",
-    })),
-  }));
+  const axes: ComparisonAxis[] = pilot.comparison_axes.map((axis) => {
+    const alias = dimensionAliases[axis.dimension] ?? { dimension: axis.dimension, label: axis.label };
+    const grouped = new Map<string, {
+      groupId: string;
+      frameFamily: string | null;
+      claimIds: string[];
+      summary: string;
+      outlets: ComparisonSource[];
+      commitment: string;
+      status: string;
+      evidenceLocator: string | null;
+      basis: string;
+    }>();
+    for (const pattern of axis.patterns) {
+      // Keep journalist narration and source-attributed observations distinct:
+      // the latter is useful evidence, but is not an outlet position.
+      const voiceKey = pattern.voice_scope === "outlet_narration" ? "explicit" : "source_attributed";
+      const key = `${pattern.code}:${voiceKey}`;
+      const evidence = toEvidence(pattern);
+      const current = grouped.get(key);
+      if (current) {
+        current.outlets = [...new Map([...current.outlets, ...evidence].map((item) => [`${item.articleId}:${item.source}`, item])).values()];
+        current.claimIds = [...new Set([...current.claimIds, pattern.variant_key])];
+        continue;
+      }
+      grouped.set(key, {
+        groupId: `${pattern.variant_key}:${voiceKey}`,
+        frameFamily: pattern.code,
+        claimIds: [pattern.variant_key],
+        summary: pattern.public_paraphrase,
+        outlets: evidence,
+        commitment: voiceKey,
+        status: voiceKey === "explicit" ? "supported" : "attributed_source",
+        evidenceLocator: pattern.evidence?.[0]?.locator ? `${pattern.evidence[0].locator.paragraph}문단 ${pattern.evidence[0].locator.sentence}문장` : null,
+        basis: "기사 본문 위치·비복원 지문 확인 · 원문 문장 미저장",
+      });
+    }
+    return {
+      dimension: alias.dimension,
+      label: alias.label,
+      variants: [...grouped.values()].sort((left, right) => right.outlets.length - left.outlets.length || left.groupId.localeCompare(right.groupId)),
+    };
+  });
   const articleCountBySource = new Map<string, number>();
   for (const article of pilotIssue.articleMetadata) articleCountBySource.set(article.source, (articleCountBySource.get(article.source) ?? 0) + 1);
   const roleArticlesBySource = new Map<string, Map<string, Set<string>>>();
@@ -950,6 +987,7 @@ type HeadlineSignal = {
   responsibility: string;
   evaluation: string;
   remedy: string;
+  bodyFocus?: string[];
 };
 
 function headlineTokens(text: string) {
@@ -1016,6 +1054,136 @@ function headlineAxisText(signals: HeadlineSignal[]) {
   const left = withFocus[0];
   const right = [...withFocus].reverse().find((signal) => signal.source !== left.source) ?? withFocus[1];
   return `${left.source}는 ‘${left.focusTerms.join("·")}’ 표현을 앞세웠고, ${right.source}는 ‘${right.focusTerms.join("·")}’ 표현을 덧붙여 사건의 범위를 다르게 잡았습니다.`;
+}
+
+type AxisVariant = ComparisonAxis["variants"][number];
+
+const framingDimensionOverview = [
+  ["problem_definition", "무엇이 문제인가", "사건의 핵심을 무엇으로 잘라 보였나"],
+  ["causal_attribution", "왜 이렇게 됐나", "원인과 배경을 어디에 연결했나"],
+  ["responsibility_attribution", "누구 책임인가", "책임 주체를 누구로 제시했나"],
+  ["evaluation", "어떻게 평가하나", "정당성·공익 등의 판단을 붙였나"],
+  ["treatment_recommendation", "어떻게 하자는가", "대응·해법을 어떤 방향으로 열었나"],
+  ["source_lens", "누구 말을 실었나", "어떤 목소리를 중심에 놓았나"],
+] as const;
+
+function axisVariantKey(variant: AxisVariant) {
+  return variant.frameFamily || variant.groupId;
+}
+
+function mergedAxisVariants(axis?: ComparisonAxis | null): AxisVariant[] {
+  if (!axis) return [];
+  const groups = new Map<string, AxisVariant>();
+  for (const variant of axis.variants) {
+    const key = axisVariantKey(variant);
+    const current = groups.get(key);
+    if (!current) {
+      groups.set(key, { ...variant, outlets: [...variant.outlets], claimIds: [...variant.claimIds] });
+      continue;
+    }
+    const outlets = [...new Map([...current.outlets, ...variant.outlets].map((item) => [`${item.articleId}:${item.source}`, item])).values()];
+    const commitment = current.commitment === variant.commitment ? current.commitment : "mixed";
+    const status = current.status === variant.status ? current.status : "mixed";
+    const summary = current.commitment === "explicit" || variant.commitment !== "explicit" ? current.summary : variant.summary;
+    groups.set(key, {
+      ...current,
+      summary,
+      outlets,
+      claimIds: [...new Set([...current.claimIds, ...variant.claimIds])],
+      commitment,
+      status,
+      evidenceLocator: current.evidenceLocator ?? variant.evidenceLocator,
+    });
+  }
+  return [...groups.values()].sort((left, right) => right.outlets.length - left.outlets.length || left.summary.localeCompare(right.summary, "ko"));
+}
+
+function selectContrastAxis(axes: ComparisonAxis[]) {
+  const priority = ["problem_definition", "causal_attribution", "responsibility_attribution", "evaluation", "treatment_recommendation"];
+  const ordered = [...priority.map((dimension) => axes.find((axis) => axis.dimension === dimension)).filter((axis): axis is ComparisonAxis => Boolean(axis)), ...axes.filter((axis) => !priority.includes(axis.dimension))];
+  for (const axis of ordered) {
+    const variants = mergedAxisVariants(axis).filter((variant) => variant.summary.trim() && variant.outlets.length);
+    if (new Set(variants.map(axisVariantKey)).size >= 2) return { axis, variants: variants.slice(0, 2) };
+  }
+  return null;
+}
+
+function contrastQuestion(dimension: string) {
+  if (dimension === "problem_definition") return "무엇을 이 사건의 핵심 문제로 볼까?";
+  if (dimension === "causal_attribution") return "왜 이렇게 됐다고 설명할까?";
+  if (dimension === "responsibility_attribution") return "누구에게 해결의 책임을 돌릴까?";
+  if (dimension === "evaluation") return "같은 행동에 어떤 평가를 붙일까?";
+  if (dimension === "treatment_recommendation") return "어떻게 대응하자고 할까?";
+  return "같은 사건을 어떤 말로 구성했을까?";
+}
+
+function commitmentText(value: string) {
+  return readableCode(value, commitmentLabels) ?? "관측된 표현";
+}
+
+function ComparisonEvidenceDisclosure({ variant, articles }: { variant: AxisVariant; articles: Article[] }) {
+  const articleById = new Map(articles.map((article) => [article.id, article]));
+  const evidence = [...new Map(variant.outlets.map((outlet) => [`${outlet.articleId}:${outlet.source}`, outlet])).values()].slice(0, 8);
+  if (!evidence.length) return <p className="comparison-evidence-empty">연결된 원문 위치가 아직 없습니다.</p>;
+  return (
+    <details className="comparison-evidence-disclosure">
+      <summary>기사 근거 {evidence.length}건 열어 보기</summary>
+      <ul>
+        {evidence.map((outlet) => {
+          const article = articleById.get(outlet.articleId);
+          return <li key={`${outlet.articleId}:${outlet.source}`}><a href={outlet.sourceUrl} target="_blank" rel="noopener noreferrer"><strong>{outlet.source}</strong><span>{article?.title ?? `기사 ${outlet.articleId}`}</span></a><small>{outlet.evidenceLocator ?? "본문 위치 연결"}{outlet.evidenceHash ? ` · ${outlet.evidenceHash.slice(0, 12)}` : ""}</small></li>;
+        })}
+      </ul>
+    </details>
+  );
+}
+
+function FramingDimensionOverview({ axes, sourceLens, signals }: { axes?: ComparisonAxis[]; sourceLens?: Comparison["sourceLens"]; signals?: HeadlineSignal[] }) {
+  const axisByDimension = new Map((axes ?? []).map((axis) => [axis.dimension, axis]));
+  return (
+    <section className="framing-dimension-overview" aria-labelledby="framing-dimension-title">
+      <header><div><p className="context-label">읽기 기준</p><h4 id="framing-dimension-title">여섯 항목</h4></div><span>Entman 기반 · 관측 위치 분리</span></header>
+      <div className="framing-dimension-grid">
+        {framingDimensionOverview.map(([dimension, label, description], index) => {
+          const axis = axisByDimension.get(dimension);
+          const variants = mergedAxisVariants(axis);
+          const sourceValue = dimension === "source_lens" && sourceLens
+            ? sourceLens.sharedVoices.length ? `공통 목소리 · ${sourceLens.sharedVoices.slice(0, 2).join(" · ")}` : "매체별 취재원 구성 관측"
+            : null;
+          const headlineValue = !variants.length && signals?.length && dimension !== "source_lens"
+            ? "제목 단서만 확인 · 본문 판정 보류"
+            : null;
+          return (
+            <article key={dimension} className={variants.length || sourceValue || headlineValue ? "observed" : "not-observed"}>
+              <span className="framing-dimension-number">{String(index + 1).padStart(2, "0")}</span>
+              <strong>{label}</strong>
+              <small>{description}</small>
+              {variants.length ? <p>{variants.slice(0, 2).map((variant) => variant.summary).join(" / ")}</p> : sourceValue ? <p>{sourceValue}</p> : headlineValue ? <p>{headlineValue}</p> : <p>분석 본문에서 별도 단서 미관측</p>}
+            </article>
+          );
+        })}
+      </div>
+      <p className="framing-dimension-note">‘미관측’은 해당 표본에서 문장 근거를 찾지 못했다는 뜻입니다. 요소의 실제 부재나 매체의 의도를 뜻하지 않습니다.</p>
+    </section>
+  );
+}
+
+function ScopeDistribution({ comparison }: { comparison: Comparison }) {
+  const rows = (comparison.analysisModules?.reportingStyle.byOutlet ?? []).filter((entry) => entry.scope.status === "observed");
+  if (!rows.length) return null;
+  const episodic = rows.reduce((sum, row) => sum + row.scope.episodicSentenceCount, 0);
+  const thematic = rows.reduce((sum, row) => sum + row.scope.thematicSentenceCount, 0);
+  const total = episodic + thematic;
+  if (!total) return null;
+  const episodicShare = Math.round((episodic / total) * 100);
+  return (
+    <section className="framing-scope-distribution" aria-labelledby="framing-scope-title">
+      <header><div><p className="context-label">시야 분포</p><h4 id="framing-scope-title">사건을 앞세웠나, 맥락을 덧붙였나</h4></div><span>{total}문장 관측</span></header>
+      <div className="scope-distribution-bar" role="img" aria-label={`사건 중심 ${episodicShare}%, 맥락 중심 ${100 - episodicShare}%`}><i style={{ width: `${episodicShare}%` }} /><i style={{ width: `${100 - episodicShare}%` }} /></div>
+      <div className="scope-distribution-legend"><span><b>{episodicShare}%</b> 사건·인물 중심</span><span><b>{100 - episodicShare}%</b> 제도·맥락 중심</span></div>
+      <p>매체별 문장 범위를 합산한 관측치입니다. 기사 전체의 품질이나 균형 점수가 아닙니다.</p>
+    </section>
+  );
 }
 
 function SourcingBars({ byOutlet }: { byOutlet: NonNullable<Comparison["sourceLens"]>["byOutlet"] }) {
@@ -1386,7 +1554,7 @@ const frameFunctionDefinitions = [
 function FrameFunctionTable({ axes, signals }: { axes?: ComparisonAxis[]; signals?: HeadlineSignal[] }) {
   const rows = frameFunctionDefinitions.map(([dimension, label, description]) => {
     const axis = axes?.find((candidate) => candidate.dimension === dimension);
-    const variants = axis?.variants.filter((variant) => variant.summary || variant.outlets.length) ?? [];
+    const variants = mergedAxisVariants(axis).filter((variant) => variant.summary.trim() || variant.outlets.length);
     if (variants.length) {
       return { dimension, label, description, variants, sources: variants.flatMap((variant) => variant.outlets).slice(0, 8), observed: true, signalField: null, fallback: null };
     }
@@ -1443,31 +1611,80 @@ function FrameFunctionTable({ axes, signals }: { axes?: ComparisonAxis[]; signal
 function MediaComparisonView({ comparison, articles }: { comparison: Comparison; articles: Article[] }) {
   const headlineEvidence = comparison.availableHeadlineEvidence ?? articles.map((article) => ({ articleId: article.id, source: article.source, sourceUrl: article.url, text: article.title, evidenceType: "headline" }));
   const signals = buildHeadlineSignals(headlineEvidence, articles);
-  const bodyVariants = (comparison.axes ?? []).flatMap((axis) => axis.variants).filter((variant) => variant.summary);
+  const contrast = selectContrastAxis(comparison.axes ?? []);
   const commonTerms = signals[0]?.commonTerms.slice(0, 4) ?? [];
   const headlineLead = headlineAxisText(signals);
-  const lead = comparison.summary?.mainDifference || (bodyVariants.length >= 2 ? `${bodyVariants[0].summary} ↔ ${bodyVariants[1].summary}` : headlineLead);
+  const lead = comparison.summary?.mainDifference || (contrast ? `${contrast.variants[0].summary} ↔ ${contrast.variants[1].summary}` : headlineLead);
   const articleBySource = new Map(articles.map((article) => [article.source, article]));
   const sides = signals.filter((signal) => signal.focusTerms.length > 0).slice(0, 2);
-  const bodyContrastVariants = (comparison.axes ?? [])
-    .find((axis) => axis.dimension === "problem_definition")?.variants
-    .filter((variant) => variant.summary && variant.outlets.length)
-    .slice(0, 2) ?? [];
-  const hasBodyContrast = bodyContrastVariants.length >= 2;
-  const outletRows = signals.length ? signals : [...(comparison.sourceLens?.byOutlet ?? [])].map((entry) => ({
-    source: entry.source,
-    articleId: articleBySource.get(entry.source)?.id ?? `source:${entry.source}`,
-    sourceUrl: articleBySource.get(entry.source)?.url ?? "#",
-    title: articleBySource.get(entry.source)?.title ?? "대표 제목 확인 불가",
-    tokens: [],
-    focusTerms: [],
-    commonTerms: [],
-    problem: entry.voices?.length ? `${entry.voices.join("·")}의 목소리를 중심에 둠` : "본문 구조화 근거를 확인하는 중",
-    cause: "본문 원인 단서 확인 필요",
-    responsibility: "본문 책임 단서 확인 필요",
-    evaluation: "본문 평가 단서 확인 필요",
-    remedy: "본문 대응 단서 확인 필요",
-  } satisfies HeadlineSignal));
+  const bodyFocusBySource = new Map<string, string[]>();
+  for (const variant of contrast?.variants ?? []) {
+    for (const outlet of variant.outlets) {
+      const values = bodyFocusBySource.get(outlet.source) ?? [];
+      if (!values.includes(variant.summary)) values.push(variant.summary);
+      bodyFocusBySource.set(outlet.source, values);
+    }
+  }
+  const outletRows = [...new Set([
+    ...signals.map((signal) => signal.source),
+    ...(comparison.sourceLens?.byOutlet ?? []).map((entry) => entry.source),
+  ])].map((source) => {
+    const sourceSignals = signals.filter((signal) => signal.source === source);
+    const representative = sourceSignals[0] ?? (() => {
+      const article = articleBySource.get(source);
+      return {
+        source,
+        articleId: article?.id ?? `source:${source}`,
+        sourceUrl: article?.url ?? "#",
+        title: article?.title ?? "대표 제목 확인 불가",
+        tokens: [],
+        focusTerms: [],
+        commonTerms: [],
+        problem: "본문 구조화 근거를 확인하는 중",
+        cause: "본문 원인 단서 확인 필요",
+        responsibility: "본문 책임 단서 확인 필요",
+        evaluation: "본문 평가 단서 확인 필요",
+        remedy: "본문 대응 단서 확인 필요",
+      } satisfies HeadlineSignal;
+    })();
+    const focusTerms = [...new Set(sourceSignals.flatMap((signal) => signal.focusTerms))].slice(0, 4);
+    const bodyFocus = bodyFocusBySource.get(source) ?? [];
+    const firstSignal = sourceSignals[0];
+    return {
+      ...representative,
+      articleId: representative.articleId,
+      sourceUrl: representative.sourceUrl,
+      title: representative.title,
+      focusTerms,
+      problem: firstSignal?.problem ?? representative.problem,
+      cause: firstSignal?.cause ?? representative.cause,
+      responsibility: firstSignal?.responsibility ?? representative.responsibility,
+      evaluation: firstSignal?.evaluation ?? representative.evaluation,
+      remedy: firstSignal?.remedy ?? representative.remedy,
+      bodyFocus,
+    };
+  });
+  const hasBodyContrast = Boolean(contrast);
+
+  const sourceNames = (variant: AxisVariant) => [...new Set(variant.outlets.map((outlet) => outlet.source))];
+  const bodyCards = contrast?.variants.map((variant, index) => (
+    <article key={variant.groupId} className={`media-side media-side-${index}`}>
+      <span>보도 갈래 {String.fromCharCode(65 + index)} · {contrast.axis.label}</span>
+      <h5>{sourceNames(variant).join(" · ") || "연결 매체 확인 중"}</h5>
+      <strong>{variant.summary}</strong>
+      <p>{commitmentText(variant.commitment)}으로 확인된 표현입니다. 반대 갈래와 함께 읽어야 같은 사건의 초점 차이를 볼 수 있습니다.</p>
+      <ComparisonEvidenceDisclosure variant={variant} articles={articles} />
+    </article>
+  ));
+  const headlineCards = sides.map((side, index) => (
+    <article key={side.articleId} className={`media-side media-side-${index}`}>
+      <span>보도 갈래 {String.fromCharCode(65 + index)} · 제목 단서</span>
+      <h5>{side.source}</h5>
+      <strong>{side.focusTerms.join(" · ")}</strong>
+      <p>{side.source}는 제목에서 {side.focusTerms.join("·")} 표현을 앞세웠습니다. 같은 사건을 다른 범위로 읽게 만드는 지점입니다.</p>
+      <ComparisonSourceLinks outlets={[headlineSource(side)]} />
+    </article>
+  ));
 
   return (
     <div className="media-comparison-page">
@@ -1475,30 +1692,32 @@ function MediaComparisonView({ comparison, articles }: { comparison: Comparison;
         <div>
           <p className="context-label">같은 사건, 갈린 초점</p>
           <h3 id="media-compare-title">{lead || "매체별 제목과 본문에서 강조점이 갈리는 지점을 비교합니다."}</h3>
-          <p>한쪽은 특정 행위·인물·피해를 전면에 놓고, 다른 쪽은 제도·맥락·후속 절차를 덧붙이는 식으로 보도 초점이 갈릴 수 있습니다. 아래 문장은 확인된 기사 표현을 바탕으로 만든 비교입니다.</p>
+          <p>한쪽은 특정 행위·인물·피해를 전면에 놓고, 다른 쪽은 제도·맥락·후속 절차를 덧붙이는 식으로 보도 초점이 갈릴 수 있습니다. 아래 문장은 확인된 기사 표현과 그 표현이 귀속된 위치를 바탕으로 만든 비교입니다.</p>
         </div>
-        <div className="media-compare-meta"><span><b>{outletRows.length}</b>개 매체</span><span><b>{articles.length}</b>건 기사</span><span><b>{Math.min(3, hasBodyContrast ? bodyContrastVariants.length : sides.length || bodyVariants.length)}</b>개 갈림 축</span><span><b>{comparison.evidenceBasis === "headline_metadata_only" ? "제목" : "본문·제목"}</b> 근거</span></div>
+        <div className="media-compare-meta"><span><b>{outletRows.length}</b>개 매체</span><span><b>{articles.length}</b>건 기사</span><span><b>{contrast ? contrast.axis.label : sides.length >= 2 ? "제목" : "-"}</b> 갈림 축</span><span><b>{comparison.evidenceBasis === "headline_metadata_only" ? "제목" : "본문·제목"}</b> 근거</span></div>
       </section>
 
       <section className="media-compare-card media-compare-axis" aria-labelledby="media-axis-title">
-        <header><div><p className="context-label">보도 갈래</p><h4 id="media-axis-title">{hasBodyContrast || sides.length >= 2 ? "서로 다른 초점이 한 사건 안에서 맞섭니다" : "공통 보도와 갈린 표현을 함께 봅니다"}</h4></div><span className="media-axis-mark">A ↔ B</span></header>
-        <p className="media-compare-lead-text">{headlineLead}</p>
-        {commonTerms.length ? <p className="media-common-line"><b>공통으로 반복된 표현</b> {commonTerms.join(" · ")}</p> : null}
-        {hasBodyContrast ? <div className="media-contrast-grid">{bodyContrastVariants.map((variant, index) => <article key={variant.groupId} className={`media-side media-side-${index}`}><span>보도 갈래 {String.fromCharCode(65 + index)} · 본문 분석축</span><h5>{[...new Set(variant.outlets.map((outlet) => outlet.source))].join(" · ")}</h5><strong>{variant.summary}</strong><p>이 갈래는 문제 정의를 이렇게 묶어 설명합니다. 반대쪽 갈래와 함께 읽을 때 같은 사건의 초점 차이가 드러납니다.</p><ComparisonSourceLinks outlets={variant.outlets.slice(0, 4)} /></article>)}</div> : sides.length >= 2 ? <div className="media-contrast-grid">{sides.map((side, index) => <article key={side.articleId} className={`media-side media-side-${index}`}><span>보도 갈래 {String.fromCharCode(65 + index)} · 제목 단서</span><h5>{side.source}</h5><strong>{side.focusTerms.join(" · ")}</strong><p>{side.source}는 제목에서 {side.focusTerms.join("·")} 표현을 앞세웠습니다. 같은 사건을 다른 범위로 읽게 만드는 지점입니다.</p><ComparisonSourceLinks outlets={[headlineSource(side)]} /></article>)}</div> : <p className="media-compare-muted">현재 표본에서는 본문 갈림을 확정할 만큼 독립적인 본문 근거가 충분하지 않습니다. 대신 제목에서 실제로 달라진 단어와 범위를 아래에 남겼습니다.</p>}
+        <header><div><p className="context-label">논조 갈래 축</p><h4 id="media-axis-title">{contrast ? contrastQuestion(contrast.axis.dimension) : sides.length >= 2 ? "제목의 단어가 서로 다른 범위를 엽니다" : "공통 보도와 갈린 표현을 함께 봅니다"}</h4></div><span className="media-axis-mark">A ↔ B</span></header>
+        <div className="media-debate-question"><span>{contrast?.axis.label ?? "제목 단서"}</span><p>{contrast ? `‘${contrast.variants[0].summary}’로 읽을까, ‘${contrast.variants[1].summary}’로 읽을까?` : headlineLead}</p></div>
+        {comparison.summary?.commonGround ? <p className="media-common-line"><b>공통으로 본 것</b> {comparison.summary.commonGround}</p> : commonTerms.length ? <p className="media-common-line"><b>공통으로 반복된 제목 표현</b> {commonTerms.join(" · ")}</p> : null}
+        {hasBodyContrast ? <div className="media-contrast-grid">{bodyCards}</div> : sides.length >= 2 ? <div className="media-contrast-grid">{headlineCards}</div> : <p className="media-compare-muted">현재 표본에서는 본문 갈림을 확정할 만큼 독립적인 본문 근거가 충분하지 않습니다. 대신 제목에서 실제로 달라진 단어와 범위를 아래에 남겼습니다.</p>}
+        {comparison.summary?.sourceContext ? <p className="media-compare-attribution">근거 읽기: {comparison.summary.sourceContext}</p> : null}
       </section>
 
       <section className="media-compare-card" aria-labelledby="media-outlet-title">
         <header><div><p className="context-label">언론사별 비교</p><h4 id="media-outlet-title">각 매체는 무엇을 더 크게 보이게 했나</h4></div><span>{outletRows.length}개 매체 · 기사 근거 연결</span></header>
         <div className="media-outlet-table" role="table" aria-label="언론사별 초점 비교">
-          <div className="media-outlet-table-head" role="row"><span role="columnheader">매체·기사</span><span role="columnheader">앞세운 초점</span><span role="columnheader">프레임 단서</span></div>
-          {outletRows.map((row) => <article className="media-outlet-row" role="row" key={row.articleId}><div role="cell"><strong>{row.source}</strong><a href={row.sourceUrl} target="_blank" rel="noopener noreferrer">{row.title}</a></div><p role="cell"><b>{row.focusTerms.length ? row.focusTerms.join(" · ") : "공통 표현"}</b><small>{row.problem}</small></p><p role="cell"><span>원인 · {row.cause}</span><span>책임 · {row.responsibility}</span><span>평가 · {row.evaluation}</span><span>대응 · {row.remedy}</span></p></article>)}
+          <div className="media-outlet-table-head" role="row"><span role="columnheader">매체·대표 기사</span><span role="columnheader">앞세운 초점</span><span role="columnheader">프레임 단서</span></div>
+          {outletRows.map((row) => <article className="media-outlet-row" role="row" key={row.source}><div role="cell"><strong>{row.source}</strong><a href={row.sourceUrl} target="_blank" rel="noopener noreferrer">{row.title}</a></div><p role="cell"><b>{row.focusTerms.length ? row.focusTerms.join(" · ") : row.bodyFocus.length ? "본문 분석축" : "공통 표현"}</b><small>{row.bodyFocus.length ? row.bodyFocus.join(" / ") : row.problem}</small></p><p role="cell"><span>원인 · {row.cause}</span><span>책임 · {row.responsibility}</span><span>평가 · {row.evaluation}</span><span>대응 · {row.remedy}</span></p></article>)}
         </div>
-        <p className="media-compare-boundary">이 표는 언론사의 고정 성향을 판정하지 않습니다. 같은 사건을 어떤 말과 범위로 구성했는지, 기사별 원문에서 다시 확인할 수 있게 보여줍니다.</p>
+        <p className="media-compare-boundary">이 표는 언론사의 고정 성향을 판정하지 않습니다. 같은 사건을 어떤 말과 범위로 구성했는지, 매체의 서술인지 취재원 발언인지 구분해 원문에서 다시 확인할 수 있게 보여줍니다.</p>
       </section>
 
       <section className="media-compare-card" aria-labelledby="media-article-title">
-        <header><div><p className="context-label">기사 근거</p><h4 id="media-article-title">갈림을 만든 제목을 직접 비교하세요</h4></div><span>{headlineEvidence.length}건</span></header>
+        <header><div><p className="context-label">기사 근거</p><h4 id="media-article-title">갈림을 만든 제목과 본문 위치를 직접 비교하세요</h4></div><span>{headlineEvidence.length + (contrast ? contrast.variants.reduce((sum, variant) => sum + variant.outlets.length, 0) : 0)}건 연결</span></header>
         <div className="media-article-list">{headlineEvidence.map((item) => <a key={item.articleId} href={item.sourceUrl} target="_blank" rel="noopener noreferrer"><strong>{item.source}</strong><span>{item.text}</span><small>{item.evidenceType === "headline" ? "제목 단서 · 원문 열기 →" : "근거 위치 · 원문 열기 →"}</small></a>)}</div>
+        {contrast ? <div className="media-article-axis-links">{contrast.variants.map((variant) => <div key={variant.groupId}><b>{variant.summary}</b><ComparisonSourceLinks outlets={variant.outlets.slice(0, 6)} /></div>)}</div> : null}
       </section>
     </div>
   );
@@ -1513,8 +1732,9 @@ function HeadlineFramingView({ comparison, articles }: { comparison: Comparison;
       <section className="framing-lede headline-framing-lede" aria-labelledby="headline-framing-title">
         <div className="framing-lede-copy"><p className="context-label">제목 수준 프레이밍 비교</p><h3 id="headline-framing-title">{axisText}</h3><p>본문 전문이 없는 이슈도 제목에 실제로 들어간 행위·대상·평가어의 미세한 차이를 비교합니다. 제목만으로 원인·책임·의도를 확정하지 않고, 관측 수준을 분리해 표시합니다.</p><div className="framing-method-line"><span>제목 단서 {signals.length}건</span><span>본문 판정 보류</span><span>원문 링크 연결</span></div></div>
       </section>
+      <FramingDimensionOverview signals={signals} />
       <section className="framing-report" aria-labelledby="headline-framing-report-title">
-        <header><p className="context-label">프레이밍 분석 요약</p><h3 id="headline-framing-report-title">같은 사실을 어떤 말로 잘라 보여줬나</h3><p>아래 4기능은 제목에서 직접 관측되는 단서와, 제목만으로는 판단하지 않는 항목을 구분합니다.</p></header>
+        <header><p className="context-label">프레이밍 분석 요약</p><h3 id="headline-framing-report-title">같은 사실을 어떤 말로 잘라 보여줬나</h3><p>아래 4기능은 제목에서 직접 관측되는 단서와, 제목만으로는 판단하지 않는 항목을 구분합니다. 대립적인 표현은 남기되 제목만으로 의도·책임을 확정하지 않습니다.</p></header>
         <div className="framing-report-section"><h4>프레임 4기능 비교</h4><FrameFunctionTable signals={signals} /></div>
         <div className="framing-report-section"><h4>매체별 제목 단서</h4><div className="headline-framing-cards">{signals.map((signal) => <article key={signal.articleId}><header><strong>{signal.source}</strong><span>{signal.focusTerms.length ? signal.focusTerms.join(" · ") : "공통 표현"}</span></header><p>{signal.title}</p><small>{signal.problem}</small><ComparisonSourceLinks outlets={[headlineSource(signal)]} /></article>)}</div></div>
         <div className="framing-report-section"><h4>해석 경계</h4><p className="headline-framing-boundary">제목에서 확인되는 단어·범위 차이는 비교할 수 있지만, 원인·책임·도덕적 평가는 본문 근거가 없으면 확정하지 않습니다. 본문 분석이 추가되면 같은 표에 문장 위치와 취재원 귀속을 이어 붙입니다.</p></div>
@@ -1823,6 +2043,7 @@ function FramingEditorialView({ comparison, articles }: { comparison: Comparison
   const sourceLens = comparison.sourceLens;
   const issueMap = comparison.issueMap;
   const axes = comparison.axes ?? [];
+  const contrast = selectContrastAxis(axes);
   const readerQuestions = comparison.readerQuestions ?? [];
   const outletCards = new Map<string, { summary: string; outlets: ComparisonSource[] }>();
   for (const axis of axes) {
@@ -1853,13 +2074,18 @@ function FramingEditorialView({ comparison, articles }: { comparison: Comparison
         {issueMap && <IssueMapView issueMap={issueMap} isProviderExcerpt={comparison.sample?.textScope === "provider_excerpt"} />}
       </section>
 
+      <FramingDimensionOverview axes={axes} sourceLens={sourceLens} />
+      <ScopeDistribution comparison={comparison} />
+
       <section className="framing-report" aria-labelledby="framing-report-title">
-        <header><p className="context-label">이슈 리포트</p><h3 id="framing-report-title">무엇이 문제인가부터 달라집니다</h3><p>기사의 제목만으로 결론을 내리지 않고, 동일 사건에 연결된 본문 근거를 분석축별로 모아 읽을 수 있게 했습니다.</p></header>
+        <header><p className="context-label">프레이밍 분석 요약</p><h3 id="framing-report-title">무엇이 문제인가부터 달라집니다</h3><p>기사의 제목만으로 결론을 내리지 않고, 동일 사건에 연결된 본문 근거를 분석축별로 모아 읽을 수 있게 했습니다. 서로 다른 갈래는 A·B로 맞대어 읽고, 취재원 귀속 발언은 매체의 입장과 구분합니다.</p></header>
+        {(summary.commonGround || summary.mainDifference || summary.whyItMatters) && <div className="framing-summary-copy"><p><b>공통으로 본 것</b> {summary.commonGround ?? "공통으로 확인된 설명이 아직 요약되지 않았습니다."}</p><p><b>갈린 지점</b> {summary.mainDifference ?? "현재 표본에서 독립적인 갈림은 확정하지 않았습니다."}</p>{summary.whyItMatters && <small>{summary.whyItMatters}</small>}</div>}
         <div className="framing-report-section">
           <h4>쟁점 구도: ‘무엇이 문제인가’부터 다르다</h4>
           <p>{summary.mainDifference ?? (issueMap?.reason ?? "현재 표본에서 문제 정의의 양쪽을 안정적으로 연결할 근거가 충분하지 않습니다.")}</p>
           {issueMap?.leftAnchor && issueMap.rightAnchor && <div className="framing-contrast"><div><b>{issueMap.leftAnchor.label}</b><span>{issueMap.leftAnchor.articleCount}건 · {issueMap.leftAnchor.outletCount}개 매체</span></div><strong>↔</strong><div><b>{issueMap.rightAnchor.label}</b><span>{issueMap.rightAnchor.articleCount}건 · {issueMap.rightAnchor.outletCount}개 매체</span></div></div>}
         </div>
+        {!issueMap?.leftAnchor && contrast && <div className="framing-report-section framing-axis-contrast"><h4>{contrast.axis.label}: 두 갈래가 맞서는 지점</h4><p className="framing-axis-question">{contrastQuestion(contrast.axis.dimension)}</p><div className="framing-contrast"><div><b>{contrast.variants[0].summary}</b><span>{commitmentText(contrast.variants[0].commitment)} · {contrast.variants[0].outlets.length}건 근거</span><ComparisonEvidenceDisclosure variant={contrast.variants[0]} articles={articles} /></div><strong>↔</strong><div><b>{contrast.variants[1].summary}</b><span>{commitmentText(contrast.variants[1].commitment)} · {contrast.variants[1].outlets.length}건 근거</span><ComparisonEvidenceDisclosure variant={contrast.variants[1]} articles={articles} /></div></div></div>}
         <div className="framing-report-section">
           <h4>프레임 4기능 비교</h4>
           <p>원인·책임·평가·대응을 매체 간 표현으로 나눠 봅니다. 문제 정의는 위 쟁점 구도에서 따로 확인하고, 본문 근거가 없는 항목은 제목 단서와 분리해 판정을 보류합니다.</p>
@@ -1867,7 +2093,7 @@ function FramingEditorialView({ comparison, articles }: { comparison: Comparison
         </div>
         <div className="framing-report-section">
           <h4>두 개의 서사</h4>
-          {narratives.length >= 2 ? <div className="framing-story-grid">{narratives.slice(0, 2).map((narrative, index) => <article key={narrative.narrativeId}><span>서사 {index + 1}</span><h5>{narrative.problem.summary}</h5><p>{narrative.summary}</p><small>기사 {narrative.articleCount}건 · 매체 {narrative.outletCount}곳 · {readableCode(narrative.status, statusLabels)}</small><ComparisonSourceLinks outlets={narrative.evidence.slice(0, 4)} /></article>)}</div> : <p className="withheld">서로 다른 문제 정의와 후속 설명이 함께 확인된 서사가 두 개 미만이라, 대립하는 서사를 만들지 않았습니다.</p>}
+          {narratives.length >= 2 ? <div className="framing-story-grid">{narratives.slice(0, 2).map((narrative, index) => <article key={narrative.narrativeId}><span>서사 {index + 1}</span><h5>{narrative.problem.summary}</h5><p>{narrative.summary}</p><small>기사 {narrative.articleCount}건 · 매체 {narrative.outletCount}곳 · {readableCode(narrative.status, statusLabels)}</small><ComparisonSourceLinks outlets={narrative.evidence.slice(0, 4)} /></article>)}</div> : contrast ? <div className="framing-story-grid">{contrast.variants.map((variant, index) => <article key={variant.groupId}><span>갈래 {index + 1} · {contrast.axis.label}</span><h5>{variant.summary}</h5><p>{commitmentText(variant.commitment)}으로 관측된 본문 표현입니다. 매체의 고정 성향이 아니라 이 표본에서 확인된 설명 유형으로 읽습니다.</p><small>근거 {variant.outlets.length}건</small><ComparisonEvidenceDisclosure variant={variant} articles={articles} /></article>)}</div> : <p className="withheld">서로 다른 문제 정의와 후속 설명이 함께 확인된 서사가 두 개 미만이라, 대립하는 서사를 만들지 않았습니다.</p>}
         </div>
         <div className="framing-report-section">
           <h4>누구의 목소리로 말하는가</h4>
