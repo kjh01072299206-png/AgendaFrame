@@ -1577,14 +1577,16 @@ function ExtendedAnalysisView({ comparison }: { comparison: Comparison }) {
   const morphology = modules?.morphology;
   const hasEntmanMatrix = axes.length >= 2 && new Set(axes.flatMap((axis) => axis.variants.flatMap((variant) => variant.outlets.map((outlet) => outlet.source)))).size >= 2;
   const hasFrameComposition = Boolean(frameComposition?.byOutlet.some((entry) => entry.labels.some((label) => label.articleCount > 0)));
+  const hasFrameCompositionModule = Boolean(frameComposition);
   const hasReportingStyle = Boolean(reportingStyle?.byOutlet.some((entry) => entry.evaluation.status === "observed" || entry.scope.status === "observed"));
   const hasMorphology = Boolean(morphology?.byOutlet.length);
-  if (!hasEntmanMatrix && !hasFrameComposition && !hasReportingStyle && !hasMorphology) return null;
+  if (!hasEntmanMatrix && !hasFrameComposition && !hasFrameCompositionModule && !hasReportingStyle && !hasMorphology) return null;
   return (
     <section className="framing-report" aria-labelledby="extended-analysis-title">
       <header><p className="context-label">확장 분석</p><h3 id="extended-analysis-title">같은 근거를 매체별로 다시 배열했습니다</h3><p>본문 근거가 충분한 항목만 분석축·프레임 구성·보도 방식으로 나눠 보여줍니다.</p></header>
       {hasEntmanMatrix && <div className="framing-report-section"><h4>분석축별 매체 비교</h4><EntmanMatrix axes={axes} embedded /></div>}
       {hasFrameComposition && frameComposition && <div className="framing-report-section"><h4>매체별 프레임 구성</h4><FrameCompositionByOutlet module={frameComposition} embedded /></div>}
+      {hasFrameCompositionModule && !hasFrameComposition && frameComposition && <div className="framing-report-section framing-module-status"><h4>매체별 프레임 구성 <small>라벨 배정 상태</small></h4><p>이번 표본에서는 사전에 정의한 프레임 라벨이 매체별 기사에 배정되지 않았습니다. 이는 프레임이 없다는 뜻이 아니라, 현재 근거로 라벨을 확정하지 않았다는 뜻입니다.</p><small>{frameComposition.caution ?? "라벨 배정 전 단계의 구조화 분석입니다."}</small></div>}
       {hasReportingStyle && reportingStyle && <div className="framing-report-section"><h4>보도 방식 관측</h4><ReportingStyleByOutlet module={reportingStyle} /></div>}
       {hasMorphology && morphology && <div className="framing-report-section"><h4>프레임별 의미 연결망 <small>형태소·어휘 신호</small></h4><MorphologyPanel module={morphology} frameComposition={frameComposition} axes={axes} /></div>}
     </section>
@@ -1657,7 +1659,7 @@ function FrameFunctionTable({ axes, signals }: { axes?: ComparisonAxis[]; signal
   );
 }
 
-function MediaComparisonView({ comparison, articles }: { comparison: Comparison; articles: Article[] }) {
+function MediaComparisonView({ comparison, articles, issue }: { comparison: Comparison; articles: Article[]; issue: Issue }) {
   const headlineEvidence = comparison.availableHeadlineEvidence ?? articles.map((article) => ({ articleId: article.id, source: article.source, sourceUrl: article.url, text: article.title, evidenceType: "headline" }));
   const signals = buildHeadlineSignals(headlineEvidence, articles);
   const contrast = selectContrastAxis(comparison.axes ?? []);
@@ -1720,12 +1722,16 @@ function MediaComparisonView({ comparison, articles }: { comparison: Comparison;
   const hasBodyContrast = Boolean(contrast);
 
   const sourceNames = (variant: AxisVariant) => [...new Set(variant.outlets.map((outlet) => outlet.source))];
+  const contrastSideBySource = new Map<string, string>();
+  activeContrast?.variants.forEach((variant, index) => {
+    for (const outlet of variant.outlets) contrastSideBySource.set(outlet.source, `갈래 ${String.fromCharCode(65 + index)}`);
+  });
   const bodyCards = contrast?.variants.map((variant, index) => (
     <article key={variant.groupId} className={`media-side media-side-${index}`}>
       <span>보도 갈래 {String.fromCharCode(65 + index)} · {contrast.axis.label}</span>
       <h5>{sourceNames(variant).join(" · ") || "연결 매체 확인 중"}</h5>
       <strong>{variant.summary}</strong>
-      <p>{commitmentText(variant.commitment)}으로 확인된 표현입니다. 반대 갈래와 함께 읽어야 같은 사건의 초점 차이를 볼 수 있습니다.</p>
+      <p>{commitmentText(variant.commitment)}으로 확인된 한쪽 갈래입니다. 반대 갈래는 같은 사건을 다른 문제·범위로 잘라 보여 주므로 두 문장을 맞대어 읽으세요.</p>
       <ComparisonEvidenceDisclosure variant={variant} articles={articles} />
     </article>
   ));
@@ -1735,7 +1741,7 @@ function MediaComparisonView({ comparison, articles }: { comparison: Comparison;
         <span>보도 갈래 {String.fromCharCode(65 + index)} · 제목 단서</span>
         <h5>{sourceNames(variant).join(" · ")}</h5>
         <strong>{variant.summary}</strong>
-        <p>제목에서 관측된 초점 차이입니다. 본문 원인·책임·의도와는 분리해 읽습니다.</p>
+        <p>제목에서 먼저 갈린 한쪽 초점입니다. 반대편 제목과 대조하면 사건을 보게 하는 단어와 범위의 차이가 드러나지만, 본문 원인·책임·의도는 별도로 확인해야 합니다.</p>
         <ComparisonEvidenceDisclosure variant={variant} articles={articles} />
       </article>
     ))
@@ -1744,7 +1750,7 @@ function MediaComparisonView({ comparison, articles }: { comparison: Comparison;
         <span>보도 갈래 {String.fromCharCode(65 + index)} · 제목 단서</span>
         <h5>{side.source}</h5>
         <strong>{side.focusTerms.join(" · ")}</strong>
-        <p>{side.source}는 제목에서 {side.focusTerms.join("·")} 표현을 앞세웠습니다. 같은 사건을 다른 범위로 읽게 만드는 지점입니다.</p>
+        <p>{side.source}는 제목에서 {side.focusTerms.join("·")} 표현을 앞세웠습니다. 반대편 매체가 먼저 세운 단어와 맞대어 보면 같은 사건을 다른 범위로 읽게 만드는 지점이 드러납니다.</p>
         <ComparisonSourceLinks outlets={[headlineSource(side)]} />
       </article>
     ));
@@ -1753,11 +1759,17 @@ function MediaComparisonView({ comparison, articles }: { comparison: Comparison;
     <div className="media-comparison-page">
       <section className="media-compare-lede" aria-labelledby="media-compare-title">
         <div>
-          <p className="context-label">같은 사건, 갈린 초점</p>
+          <p className="context-label">같은 사건, 서로 다른 독해</p>
           <h3 id="media-compare-title">{lead || "매체별 제목과 본문에서 강조점이 갈리는 지점을 비교합니다."}</h3>
-          <p>한쪽은 특정 행위·인물·피해를 전면에 놓고, 다른 쪽은 제도·맥락·후속 절차를 덧붙이는 식으로 보도 초점이 갈릴 수 있습니다. 아래 문장은 확인된 기사 표현과 그 표현이 귀속된 위치를 바탕으로 만든 비교입니다.</p>
+          <p>이 화면은 어느 매체가 옳은지 판정하는 대신, 같은 사건을 서로 다른 논조와 범위로 잘라 보여 준 갈래를 A·B로 맞대어 읽게 합니다. 한쪽이 특정 행위·인물·피해를 전면에 놓으면, 반대쪽은 제도·맥락·후속 절차를 앞세울 수 있습니다. 아래 문장은 확인된 기사 표현과 그 표현이 귀속된 위치를 바탕으로 만든 비교입니다.</p>
         </div>
         <div className="media-compare-meta"><span><b>{outletRows.length}</b>개 매체</span><span><b>{articles.length}</b>건 기사</span><span><b>{activeContrast ? activeContrast.axis.label : sides.length >= 2 ? "제목" : "-"}</b> 갈림 축</span><span><b>{comparison.evidenceBasis === "headline_metadata_only" ? "제목" : "본문·제목"}</b> 근거</span></div>
+      </section>
+
+      <section className="media-compare-card media-compare-brief" aria-labelledby="media-brief-title">
+        <header><div><p className="context-label">사건 요약</p><h4 id="media-brief-title">비교하기 전에 같은 사건을 먼저 확인합니다</h4></div><span>{issue.category} · {issue.issueDate}</span></header>
+        <p className="media-brief-headline">{issue.title}</p>
+        <div className="media-brief-grid"><div><span>무슨 일이 있었나</span><p>{issue.summary || "이슈 설명이 별도로 제공되지 않았습니다."}</p></div><div><span>공통으로 반복된 출발점</span><p>{commonTerms.length ? commonTerms.join(" · ") : "공통으로 연결된 제목 표현을 확인하는 중입니다."}</p></div></div>
       </section>
 
       <section className="media-compare-card media-compare-axis" aria-labelledby="media-axis-title">
@@ -1772,7 +1784,7 @@ function MediaComparisonView({ comparison, articles }: { comparison: Comparison;
         <header><div><p className="context-label">언론사별 비교</p><h4 id="media-outlet-title">각 매체는 무엇을 더 크게 보이게 했나</h4></div><span>{outletRows.length}개 매체 · 기사 근거 연결</span></header>
         <div className="media-outlet-table" role="table" aria-label="언론사별 초점 비교">
           <div className="media-outlet-table-head" role="row"><span role="columnheader">매체·대표 기사</span><span role="columnheader">앞세운 초점</span><span role="columnheader">프레임 단서</span></div>
-          {outletRows.map((row) => <article className="media-outlet-row" role="row" key={row.source}><div role="cell"><strong>{row.source}</strong><a href={row.sourceUrl} target="_blank" rel="noopener noreferrer">{row.title}</a></div><p role="cell"><b>{row.focusTerms.length ? row.focusTerms.join(" · ") : row.bodyFocus.length ? "본문 분석축" : "공통 표현"}</b><small>{row.bodyFocus.length ? row.bodyFocus.join(" / ") : row.problem}</small></p><p role="cell"><span>원인 · {row.cause}</span><span>책임 · {row.responsibility}</span><span>평가 · {row.evaluation}</span><span>대응 · {row.remedy}</span></p></article>)}
+          {outletRows.map((row) => <article className="media-outlet-row" role="row" key={row.source}><div role="cell"><strong>{row.source}</strong><a href={row.sourceUrl} target="_blank" rel="noopener noreferrer">{row.title}</a></div><p role="cell"><b>{contrastSideBySource.get(row.source) ?? "공통"} · {row.focusTerms.length ? row.focusTerms.join(" · ") : row.bodyFocus.length ? "본문 분석축" : "공통 표현"}</b><small>{row.bodyFocus.length ? row.bodyFocus.join(" / ") : row.problem}</small></p><p role="cell"><span>원인 · {row.cause}</span><span>책임 · {row.responsibility}</span><span>평가 · {row.evaluation}</span><span>대응 · {row.remedy}</span></p></article>)}
         </div>
         <p className="media-compare-boundary">이 표는 언론사의 고정 성향을 판정하지 않습니다. 같은 사건을 어떤 말과 범위로 구성했는지, 매체의 서술인지 취재원 발언인지 구분해 원문에서 다시 확인할 수 있게 보여줍니다.</p>
       </section>
@@ -2154,6 +2166,10 @@ function FramingEditorialView({ comparison, articles }: { comparison: Comparison
       </section>
 
       <FramingDimensionOverview axes={axes} sourceLens={sourceLens} signals={headlineSignals} />
+      {titleOnlyContrast && headlineContrast && <section className="framing-headline-contrast" aria-labelledby="framing-headline-contrast-title">
+        <header><div><p className="context-label">제목에서 먼저 갈린 대립축</p><h4 id="framing-headline-contrast-title">본문 판정 전에도 두 논조의 출발점은 맞대어 볼 수 있습니다</h4></div><span>A ↔ B · 제목 단서</span></header>
+        <div className="framing-headline-contrast-grid">{headlineContrast.variants.map((variant, index) => <article className={`framing-headline-side framing-headline-side-${index}`} key={variant.groupId}><span>갈래 {String.fromCharCode(65 + index)}</span><strong>{variant.summary}</strong><p>반대 갈래가 먼저 세운 단어와 대조할 때 드러나는 제목 수준의 초점입니다. 본문 원인·책임·의도는 아직 확정하지 않습니다.</p><ComparisonEvidenceDisclosure variant={variant} articles={articles} /></article>)}</div>
+      </section>}
       <ScopeDistribution comparison={comparison} />
       <ContextGapOverview gaps={comparison.contextGaps ?? []} />
 
@@ -2586,7 +2602,7 @@ export default function AgendaDashboard() {
                     <FramingComparisonView comparison={detail.comparison} articles={detail.articles} openArticles={() => setTab("articles")} />
                   </div>
                 )}
-                {tab === "outlets" && <div id="analysis-panel-outlets" role="tabpanel" aria-labelledby="analysis-tab-outlets" className="outlet-list"><MediaComparisonView comparison={detail.comparison} articles={detail.articles} /></div>}
+                {tab === "outlets" && <div id="analysis-panel-outlets" role="tabpanel" aria-labelledby="analysis-tab-outlets" className="outlet-list"><MediaComparisonView comparison={detail.comparison} articles={detail.articles} issue={detail.issue} /></div>}
                 {tab === "frames" && <div id="analysis-panel-frames" role="tabpanel" aria-labelledby="analysis-tab-frames" className="frame-layout">{detail.frames.length ? <><p className="expert-note frame-note"><strong>레거시 보조 지표</strong> {bodyBackedFrameCount ? `본문에서 관측한 일반 표현 태그 ${bodyBackedFrameCount}개와 제목 단서를 구분해 표시합니다.` : "현재는 제목에 포함된 보조 표현 태그만 표시합니다."} 이 탭의 값은 이슈 전체 집계이며 매체별 프레임 구성으로 해석하지 않습니다. 새 기사별 Policy Frames 구성은 비교 탭에서 재분석 완료 후 표시됩니다.</p><div className="frame-chart">{detail.frames.map((frame) => <div className="frame-row" key={frame.frame}><span>{frameLabels[frame.frame] ?? frame.frame}</span><div aria-hidden="true"><i style={{ width: `${frame.score}%`, background: frameColors[frame.frame] }} /></div><b>{frame.score > 0 ? `${frame.score.toFixed(1)}%` : "검출 없음"}</b></div>)}</div><div className="evidence-panel"><h3>관측된 보조 표현 태그</h3>{detectedFrames.length ? detectedFrames.map((frame) => <article key={frame.frame}><span style={{ color: frameColors[frame.frame] }}>{frameLabels[frame.frame]}</span><p>{frame.evidenceText}</p><small><b>{frame.evidenceBasis === "headline" ? "제목 단서" : frame.evidenceBasis === "body_transient" ? "임시 본문 분석 · 전문 미저장" : frame.evidenceBasis === "body_public" ? "이용 허가 본문" : "비공개 본문·문장 검토 전"}</b>{frame.sourceUrl ? <> · <a href={frame.sourceUrl} target="_blank" rel="noopener noreferrer">{frame.source ?? "원문"}에서 확인 →</a></> : ` · ${frame.source ?? "출처 미확인"}`}</small></article>) : <p className="withheld">현재 근거 범위에서는 사전에 정의된 보조 표현 태그를 검출하지 못했습니다.</p>}</div></> : <p className="withheld">기존 분석은 근거 오류 가능성이 있어 숨겼습니다. 재분석 뒤 실제로 검출된 보조 태그만 표시합니다.</p>}</div>}
                 {tab === "articles" && <div id="analysis-panel-articles" role="tabpanel" aria-labelledby="analysis-tab-articles" className="article-table"><div className="article-tools"><div><strong>관련 원문 {detail.articles.length}건</strong><p>제목 유사도는 같은 사건을 묶기 위한 참고값이며 기사 신뢰도 점수가 아닙니다.</p></div></div><div>{detail.articles.map((article) => <article className="article-item" key={article.id}><span className="article-outlet">{article.source}</span><div><strong>{article.title}</strong><small>{formatDateTime(article.publishedAt)} · 대표 제목과 단어 유사도 {Math.round((article.similarity ?? 0) * 100)}% · {article.contentAvailable ? "본문 구조화 초안 있음" : "제목 근거만 있음"}</small></div><a className="article-link" href={article.url} target="_blank" rel="noopener noreferrer">원문 열기</a></article>)}</div></div>}
               </>
