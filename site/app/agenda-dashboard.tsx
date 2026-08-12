@@ -40,6 +40,7 @@ type Issue = {
   volumeScore: number;
   repetitionScore: number;
   followUpVolumeScore: number;
+  cohesionScore?: number;
   placementObservedCount: number;
   placementTotalCount: number;
   scoreStatus: "legacy_reanalysis_required" | "observed_components" | "scope_observed_components" | "placement_excluded";
@@ -2607,12 +2608,12 @@ export default function AgendaDashboard() {
                 }}>← 이슈 목록</button>
                 <div className="detail-kicker"><p>{detail.issue.category} · {detail.issue.issueDate} · {issueScopeLabel} {detail.issue.sourceCount}곳</p><span className="confidence review">{detail.issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 필요" : detail.issue.scoreStatus === "scope_observed_components" ? "표본 기준 자동 정렬" : "자동 분석 · 검토 전"}</span></div>
                 <div className="detail-title-row"><div><h2 ref={detailTitleRef} tabIndex={-1}>{naturalIssueTitle(detail.issue.title)}</h2><p className="detail-summary">{detail.issue.summary}</p></div><div className="big-score"><strong>{detail.issue.agendaScore === null ? "–" : Math.round(detail.issue.agendaScore)}</strong><span>{detail.issue.agendaScore === null ? "산출 보류" : `${issueScopeLabel} 확산 /100`}</span></div></div>
-                <div className="detail-metrics"><span>관련 제목 <b>{detail.issue.articleCount}건</b></span><span>포함 매체 <b>{detail.issue.sourceCount}/{configuredSourceCount}곳</b></span><span>본문 단서 <b>{detail.issue.contentAvailableCount}/{detail.issue.articleCount}건</b></span><span>사람 검토 <b>미완료</b></span></div>
+              <div className="detail-metrics"><span>관련 제목 <b>{detail.issue.articleCount}건</b></span><span>포함 매체 <b>{detail.issue.sourceCount}/{configuredSourceCount}곳</b></span><span>본문 단서 <b>{detail.issue.contentAvailableCount}/{detail.issue.articleCount}건</b></span><span>군집 응집도 <b>{Number.isFinite(detail.issue.cohesionScore) ? `${Math.round(detail.issue.cohesionScore ?? 0)}점` : "미산출"}</b></span></div>
                 {(() => {
                   const diagnostic = getClusterDiagnostic(detail);
                   return <aside className={`cluster-diagnostic ${diagnostic.tone}`} aria-label="기사 묶음 진단"><div className="cluster-diagnostic-heading"><strong>기사 묶음 진단</strong><span>{diagnostic.label}</span></div><p>{diagnostic.reason}</p><small>{diagnostic.articleCount}건 · 최저 제목 유사도 {diagnostic.minSimilarity === null ? "확인 불가" : `${diagnostic.minSimilarity}%`} · 중앙값 {diagnostic.medianSimilarity === null ? "확인 불가" : `${diagnostic.medianSimilarity}%`}</small></aside>;
                 })()}
-                <details className="score-details"><summary>점수 근거와 관측 범위</summary><div className="score-breakdown"><ScorePart label="독립 미디어그룹 커버리지" value={detail.issue.diversityScore} /><ScorePart label="홈페이지 배치" value={detail.issue.placementScore} note={`${detail.issue.placementObservedCount}/${detail.issue.placementTotalCount}건 관측`} /><ScorePart label="기사량" value={detail.issue.volumeScore} /><ScorePart label="후속 보도량" value={detail.issue.followUpVolumeScore} /></div><p>의제 점수는 독립 미디어그룹 커버리지 45%, 기사량 30%, 홈페이지 배치 15%, 후속 보도량 10%로 계산합니다. 관측되지 않은 항목은 빼고 남은 가중치를 다시 나눈 뒤 참여 매체 수에 따른 커버리지 계수를 곱합니다. 동일 미디어그룹은 커버리지에서 한 번만 셉니다. 이 점수는 중요도·진실성·여론을 뜻하지 않습니다.</p></details>
+              <details className="score-details"><summary>점수 근거와 관측 범위</summary><div className="score-breakdown"><ScorePart label="독립 미디어그룹 커버리지" value={detail.issue.diversityScore} /><ScorePart label="홈페이지 배치" value={detail.issue.placementScore} note={`${detail.issue.placementObservedCount}/${detail.issue.placementTotalCount}건 관측`} /><ScorePart label="기사량" value={detail.issue.volumeScore} /><ScorePart label="후속 보도량" value={detail.issue.followUpVolumeScore} /><ScorePart label="군집 응집도" value={detail.issue.cohesionScore ?? null} /></div><p>의제 점수는 독립 미디어그룹 커버리지 55%, 기사량 25%, 홈페이지 배치 15%, 후속 보도량 5%로 계산합니다. 관측되지 않은 항목은 빼고 남은 가중치를 다시 나눈 뒤 참여 매체 수에 따른 커버리지 계수를 곱합니다. 군집 응집도는 대표 기사와 각 기사의 제목·본문 증거 묶음 유사도를 진단하는 값이며 점수의 직접 가중치는 아닙니다. 동일 미디어그룹은 커버리지에서 한 번만 셉니다. 이 점수는 중요도·진실성·여론을 뜻하지 않습니다.</p></details>
                 {tab === "compare" && (
                   <div id="analysis-panel-compare" role="tabpanel" aria-labelledby="analysis-tab-compare" className="evidence-first">
                     <FramingComparisonView comparison={detail.comparison} articles={detail.articles} openArticles={() => setTab("articles")} />

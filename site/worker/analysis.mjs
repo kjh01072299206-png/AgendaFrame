@@ -1,7 +1,7 @@
 export const ANALYSIS_PROVIDER = "structured_extractive";
 export const ANALYSIS_MODEL_VERSION = "agenda-structure-v6";
 export const CLUSTERING_VERSION = "agenda-content-aware-complete-link-v7";
-export const SCORE_VERSION = "observed-agenda-v4";
+export const SCORE_VERSION = "observed-agenda-v5";
 export const FRAME_TAXONOMY_VERSION = "frame-elements-v5";
 export const PUBLIC_AGENDA_CATEGORIES = Object.freeze(["정치", "경제", "사회", "국제", "스포츠", "생활·IT"]);
 const SECONDARY_AGENDA_CATEGORIES = new Set(["스포츠", "생활·IT"]);
@@ -48,6 +48,11 @@ const genericEventTokens = new Set([
   "추진", "개최", "방문", "오늘", "내일", "전날", "지난", "이번", "속보", "종합",
 ]);
 
+const distinctiveEventTokens = new Set([
+  "내란", "내란선전", "횡령", "배임", "마약", "살인", "폭행", "사기", "성폭력", "유출", "해킹",
+  "화재", "산불", "지진", "참사", "추락", "충돌", "사망", "파업", "선거", "법안", "관세",
+]);
+
 // 본문은 API 요청 중 메모리에서만 사용한다. 조사·기사·보도처럼 거의 모든
 // 기사에 반복되는 단어는 본문 단서에서 제외하고, 사건을 구분하는 명사만
 // 제한된 수로 남겨 2,000건 규모에서도 비교 비용을 bounded 하게 유지한다.
@@ -58,7 +63,7 @@ const bodyStopwords = new Set([
   "전해", "알려", "밝혀", "말했다", "설명했다", "기자", "사진", "자료", "관련기사",
 ]);
 
-const actorRolePattern = /([가-힣]{2,4})(?:\s+전)?\s*(?:대통령|총리|장관|의원|대표|시장|도지사|교육감|회장|사장|감독|총장|검찰총장|감사위원|사령관|교수|기자|검사|판사)/gu;
+const actorRolePattern = /([가-힣]{2,4})(?:\s+전)?(?:\s+[A-Za-z0-9가-힣]{2,12})?\s*(?:대통령|총리|장관|의원|대표|시장|도지사|교육감|회장|사장|감독|총장|검찰총장|감사위원|사령관|교수|기자|검사|판사|원장)/gu;
 const actionDefinitions = {
   warrant: ["구속영장", "영장 청구", "영장청구"],
   search: ["압수수색"],
@@ -83,6 +88,18 @@ function cleanToken(value) {
     .trim();
 }
 
+const compoundRoleSuffixes = [
+  "검찰총장", "감사위원", "사령관", "교육감", "대통령", "총리", "장관", "의원", "대표", "시장", "도지사",
+  "회장", "사장", "감독", "총장", "교수", "기자", "검사", "판사", "원장",
+];
+
+function expandTitleToken(token) {
+  const suffix = compoundRoleSuffixes.find((candidate) => token.length > candidate.length + 1 && token.endsWith(candidate));
+  if (!suffix) return [token];
+  const stem = token.slice(0, -suffix.length);
+  return stem.length >= 2 ? [token, stem, suffix] : [token];
+}
+
 export function titleTokens(title) {
   const normalized = String(title ?? "")
     .normalize("NFKC")
@@ -92,7 +109,8 @@ export function titleTokens(title) {
   const tokens = normalized
     .split(/\s+/)
     .map(cleanToken)
-    .filter((token) => token.length >= 2 && !stopwords.has(token));
+    .filter((token) => token.length >= 2 && !stopwords.has(token))
+    .flatMap(expandTitleToken);
   return [...new Set(tokens)].slice(0, 20);
 }
 
@@ -150,7 +168,18 @@ function articleSimilarity(left, right) {
   const titleCompared = similarity(left._tokens, right._tokens);
   const leftBody = left._bodyTokens ?? [];
   const rightBody = right._bodyTokens ?? [];
-  if (!leftBody.length || !rightBody.length) return titleCompared;
+  if (!leftBody.length || !rightBody.length) {
+    return {
+      ...titleCompared,
+      titleJaccard: titleCompared.jaccard,
+      contentJaccard: null,
+      bodyOverlap: 0,
+    };
+  }
+  // The content component intentionally includes the retained headline and
+  // body anchors: the documented signal is the overlap of the title/body
+  // evidence bundle, while the title-only component still carries the larger
+  // 0.65 weight.
   const contentCompared = similarity(left._clusterTokens, right._clusterTokens);
   // 제목은 기자가 사건을 압축해 쓰는 신호라 본문보다 강하게 반영한다.
   return {
@@ -165,6 +194,43 @@ function articleSimilarity(left, right) {
 function overlapCount(left, right) {
   const rightSet = new Set(right);
   return left.reduce((count, value) => count + (rightSet.has(value) ? 1 : 0), 0);
+}
+
+function relatedTokenOverlap(left, right) {
+  const rightTokens = [...new Set(right)];
+  return left.reduce((count, token) => {
+    const related = rightTokens.some((candidate) => {
+      if (candidate === token) return true;
+      const shorter = token.length <= candidate.length ? token : candidate;
+      const longer = token.length <= candidate.length ? candidate : token;
+      return shorter.length >= 2 && longer.length >= shorter.length + 2 && longer.startsWith(shorter);
+    });
+    return count + (related ? 1 : 0);
+  }, 0);
+}
+
+function sharedDistinctiveEventTokens(left, right) {
+  const leftTokens = eventTopicTokens(left).filter((token) => distinctiveEventTokens.has(token));
+  const rightTokens = eventTopicTokens(right).filter((token) => distinctiveEventTokens.has(token));
+  return leftTokens.reduce((count, token) => count + (rightTokens.some((candidate) => {
+    if (candidate === token) return true;
+    const shorter = token.length <= candidate.length ? token : candidate;
+    const longer = token.length <= candidate.length ? candidate : token;
+    return longer.startsWith(shorter) && shorter.length >= 2;
+  }) ? 1 : 0), 0);
+}
+
+function hasConflictingDistinctiveEvent(left, right) {
+  const leftTokens = eventTopicTokens(left).filter((token) => distinctiveEventTokens.has(token));
+  const rightTokens = eventTopicTokens(right).filter((token) => distinctiveEventTokens.has(token));
+  return leftTokens.length > 0 && rightTokens.length > 0 && sharedDistinctiveEventTokens(left, right) === 0;
+}
+
+const roleTokens = new Set(compoundRoleSuffixes);
+
+function eventTopicTokens(article) {
+  return (article._event?.discriminators ?? article._tokens ?? [])
+    .filter((token) => !genericEventTokens.has(token) && !roleTokens.has(token) && token.length >= 2);
 }
 
 function normalizedTitle(title) {
@@ -240,6 +306,11 @@ function compatibleEvent(left, right) {
   const compared = articleSimilarity(left, right);
   const sharedConcepts = overlapCount(left._event.concepts, right._event.concepts);
   const sharedDiscriminators = overlapCount(left._event.discriminators, right._event.discriminators);
+  const sharedTopicTokens = Math.max(
+    overlapCount(eventTopicTokens(left), eventTopicTokens(right)),
+    relatedTokenOverlap(eventTopicTokens(left), eventTopicTokens(right)),
+  );
+  const sharedEventIdentity = Math.max(sharedDiscriminators, sharedTopicTokens);
   const sharedBodyTokens = overlapCount(left._bodyTokens ?? [], right._bodyTokens ?? []);
   const sharedBodyAnchors = overlapCount(left._bodyAnchorTokens ?? [], right._bodyAnchorTokens ?? []);
   const sharedTitleTokens = overlapCount(left._tokens, right._tokens);
@@ -249,8 +320,20 @@ function compatibleEvent(left, right) {
   const rightActions = right._event.actions;
 
   if (sharedConcepts > 0) return true;
-  if (leftActors.length >= 2 && rightActors.length >= 2 && overlapCount(leftActors, rightActors) === 0) return false;
-  if (leftActions.length && rightActions.length && overlapCount(leftActions, rightActions) === 0) return false;
+  if (leftActors.length && rightActors.length && overlapCount(leftActors, rightActors) === 0) return false;
+  if (hasConflictingDistinctiveEvent(left, right)) return false;
+  const stagedSameEvent = (
+    sharedTopicTokens >= 1
+      && sharedEventIdentity >= 2
+      && compared.titleJaccard >= 0.15
+      && sharedTitleTokens >= 3
+      && (overlapCount(leftActors, rightActors) >= 1 || sharedTopicTokens >= 2)
+  ) || (sharedBodyAnchors >= 2 && sharedTitleTokens >= 1);
+  // 수사→기소→재판처럼 같은 사건의 단계가 바뀐 후속 보도는, 행위어가
+  // 다르더라도 인물·기관·사건 단서가 충분히 겹칠 때만 같은 군집에 둔다.
+  // 단서가 두 개 이하인 경우에는 동명이인·반복 기관 보도를 합치지 않는다.
+  if (leftActions.length && rightActions.length && overlapCount(leftActions, rightActions) === 0 && !stagedSameEvent) return false;
+  if (stagedSameEvent && sharedTitleTokens >= 3 && compared.titleJaccard >= 0.18) return true;
   if (leftActors.length >= 2 && rightActors.length >= 2 && sharedDiscriminators < 1) return false;
   // 본문에 같은 장소·당사자·행위가 반복되면 제목 표현이 달라도 같은 사건으로
   // 연결한다. bodyOverlap을 단독 근거로 쓰지 않고 내용 유사도와 함께 요구한다.
@@ -259,7 +342,7 @@ function compatibleEvent(left, right) {
   if (sharedBodyAnchors >= 1 && sharedBodyTokens >= 4 && sharedTitleTokens >= 2 && compared.titleJaccard >= 0.15 && compared.contentJaccard >= 0.14) return true;
   if (leftActors.length !== rightActors.length && compared.jaccard < 0.35) return false;
 
-  return compared.overlap >= 2 && sharedDiscriminators >= 1 && compared.jaccard >= 0.25;
+  return compared.overlap >= 2 && sharedTopicTokens >= 1 && compared.jaccard >= 0.25;
 }
 
 function representativeArticle(articles) {
@@ -455,12 +538,16 @@ function placementScore(articles) {
   };
 }
 
-function weightedAgendaScore({ diversity, placement, volume, followUpVolume, sourceCount = 1, configuredSourceCount = 5 }) {
+export function weightedAgendaScore({ diversity, placement, volume, followUpVolume, sourceCount = 1, configuredSourceCount = 5 }) {
   const components = [
-    { value: diversity, weight: 0.45 },
-    { value: volume, weight: 0.30 },
+    // Agenda ranking should reward independent outlet coverage before repeat
+    // volume. Repeated updates from one outlet remain visible, but cannot
+    // outrank a similarly sized event covered by several outlets solely by
+    // virtue of follow-up count.
+    { value: diversity, weight: 0.55 },
+    { value: volume, weight: 0.25 },
     { value: placement.value, weight: 0.15 },
-    { value: followUpVolume, weight: 0.10 },
+    { value: followUpVolume, weight: 0.05 },
   ].filter((component) => Number.isFinite(component.value));
   const observedWeight = components.reduce((sum, component) => sum + component.weight, 0);
   let baseScore = components.reduce((sum, component) => sum + component.value * component.weight, 0) / observedWeight;
@@ -623,7 +710,12 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
     };
     prepared._clusterTokens = [...new Set([...prepared._tokens, ...prepared._bodyTokens])];
     return prepared;
-  }).filter(Boolean);
+  }).filter(Boolean).sort((left, right) =>
+    String(left.id ?? "").localeCompare(String(right.id ?? ""), "en")
+    || String(left.url ?? left.canonicalUrl ?? "").localeCompare(String(right.url ?? right.canonicalUrl ?? ""), "en")
+    || String(left.title ?? "").localeCompare(String(right.title ?? ""), "ko")
+    || String(left.sourceId ?? "").localeCompare(String(right.sourceId ?? ""), "en")
+  );
   filterBodyTokensByDocumentFrequency(articles);
   for (const article of articles) article._event = eventFeatures(article);
   const groups = clusterArticles(articles);
@@ -645,6 +737,11 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
       const scoreResult = weightedAgendaScore({ diversity, placement, volume, followUpVolume, sourceCount: sources.size, configuredSourceCount });
       const similarities = group.map((article) => article.id === representative.id ? 1 : articleSimilarity(representative, article).jaccard);
       const minimumSimilarity = Math.min(...similarities);
+      const averageSimilarity = similarities.reduce((sum, value) => sum + value, 0) / Math.max(1, similarities.length);
+      // Cohesion is a diagnostic/tie-break signal, not a substitute for
+      // coverage. A paraphrased but widely reported event can remain highly
+      // ranked while weaker same-sized clusters are ordered below it.
+      const cohesionScore = Math.round(((minimumSimilarity * 0.35 + averageSimilarity * 0.65) * 100) * 10) / 10;
       const issue = {
         title: synthesizeIssueTitle(group, representative),
         summary: `${sources.size}개 언론사의 관련 제목 ${group.length}건을 사건 인물·행위와 제목 유사도를 함께 확인해 묶었습니다.`,
@@ -662,6 +759,7 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
         volumeScore: Math.round(volume * 10) / 10,
         repetitionScore: Math.round(followUpVolume * 10) / 10,
         followUpVolumeScore: Math.round(followUpVolume * 10) / 10,
+        cohesionScore,
         confidence: null,
         calibrationStatus: "not_calibrated",
         clusterQuality: group.length < 2 ? "insufficient_evidence" : minimumSimilarity >= 0.35 ? "cohesive" : "review_required",
@@ -697,7 +795,10 @@ export function analyzeArticles(inputArticles, { configuredSourceCount = 5, conf
     .sort((left, right) =>
       Number(SECONDARY_AGENDA_CATEGORIES.has(left.category)) - Number(SECONDARY_AGENDA_CATEGORIES.has(right.category))
       || right.agendaScore - left.agendaScore
-      || right.articleCount - left.articleCount)
+      || right.sourceCount - left.sourceCount
+      || right.articleCount - left.articleCount
+      || right.cohesionScore - left.cohesionScore
+      || left.title.localeCompare(right.title, "ko"))
     .slice(0, maxIssues);
 }
 

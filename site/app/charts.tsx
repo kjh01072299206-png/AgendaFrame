@@ -368,10 +368,12 @@ export function RankList({
     category: string | null;
     articleCount: number;
     outletCount: number;
+    score?: number | null;
     lead?: string | null;
   }>;
 }) {
-  const max = Math.max(1, ...rows.map((r) => r.articleCount));
+  const scoreValues = rows.map((row) => Number(row.score)).filter(Number.isFinite);
+  const max = Math.max(1, ...(scoreValues.length ? scoreValues : rows.map((r) => r.articleCount)));
   return (
     <ol className="afs-rank">
       {rows.map((row) => (
@@ -384,9 +386,10 @@ export function RankList({
                 {row.category ? <em>{row.category}</em> : null}
                 <span className="afs-num">기사 {row.articleCount}</span>
                 <span className="afs-num">매체 {row.outletCount}</span>
+                {Number.isFinite(Number(row.score)) ? <span className="afs-num">점수 {Number(row.score).toFixed(1)}</span> : null}
               </span>
               <span className="afs-rank-track" aria-hidden="true">
-                <span style={{ width: `${(row.articleCount / max) * 100}%` }} />
+                <span style={{ width: `${((Number.isFinite(Number(row.score)) ? Number(row.score) : row.articleCount) / max) * 100}%` }} />
               </span>
             </span>
             <span className="afs-rank-go" aria-hidden="true">

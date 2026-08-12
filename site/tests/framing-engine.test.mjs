@@ -188,6 +188,33 @@ test("keeps expanded signals attributed when a source presents the interpretatio
   assert.ok(remedies.every((item) => item.voice.speaker_role === "expert_research"));
 });
 
+test("captures additional ordinary Korean assessment, responsibility, and remedy wording", async () => {
+  const profile = await analyzeArticleFraming({
+    articleId: "ordinary-korean-v4",
+    title: "감독기관 책임과 제도 개선",
+    bodyText: [
+      "감독기관에 책임을 물어야 한다는 지적이 나왔다.",
+      "대응이 부적절하다는 평가가 이어졌다.",
+      "제도를 개선할 필요가 있다는 의견도 제시됐다.",
+      "인력 부족이 문제의 원인으로 지목됐다.",
+      "새로운 쟁점으로 부상한 관리 공백을 확인해야 한다.",
+    ].join("\n\n"),
+  });
+
+  assert.ok(profile.dimensions.responsibility_attribution.items.some((item) => item.code === "responsibility_assignment"));
+  assert.ok(profile.dimensions.causal_interpretation.items.some((item) => item.code === "cause_as_background"));
+  assert.ok(profile.dimensions.moral_evaluation.items.some((item) => item.code === "reported_negative_assessment"));
+  assert.ok(profile.dimensions.treatment_recommendation.items.some((item) => item.code === "reform_need"));
+  assert.ok(profile.dimensions.problem_definition.items.some((item) => item.code === "issue_emergence_focus"));
+  for (const dimension of Object.values(profile.dimensions)) {
+    for (const item of dimension.items) {
+      assert.ok(item.evidence.locator.paragraph >= 1);
+      assert.match(item.evidence.sentence_sha256, /^[a-f0-9]{64}$/);
+    }
+  }
+  assert.doesNotMatch(JSON.stringify(profile), /감독기관에 책임을 물어야 한다/);
+});
+
 test("returns evidence fingerprints and never leaks raw body or exact sentences", async () => {
   const uniqueSentence = "절대로 공개 결과에 그대로 남으면 안 되는 고유 문장 7f9d입니다.";
   const bodyText = [
@@ -470,6 +497,42 @@ test("does not call multiple patterns inside one media group a cross-outlet dive
   );
   assert.equal(comparison.summary_30_seconds.divergence_detected, false);
   assert.match(comparison.summary_30_seconds.main_difference, /충분하지 않습니다/);
+});
+
+test("surfaces an observed expression contrast without overstating a media-group split", async () => {
+  const profiles = await Promise.all([
+    analyzeArticleFraming({
+      articleId: "shared-pattern-alpha-1",
+      title: "복합 정책 쟁점",
+      bodyText: "조사 절차의 공백이 문제로 지적됐다. 피해가 커지며 시민 불안이 확산됐다.",
+    }),
+    analyzeArticleFraming({
+      articleId: "shared-pattern-alpha-2",
+      title: "복합 정책 쟁점 후속",
+      bodyText: "조사 절차의 공백이 문제로 지적됐다.",
+    }),
+    analyzeArticleFraming({
+      articleId: "shared-pattern-beta-1",
+      title: "복합 정책 쟁점",
+      bodyText: "조사 절차의 공백이 문제로 지적됐다. 피해가 커지며 시민 불안이 확산됐다.",
+    }),
+    analyzeArticleFraming({
+      articleId: "shared-pattern-beta-2",
+      title: "복합 정책 쟁점 후속",
+      bodyText: "피해가 커지며 시민 불안이 확산됐다.",
+    }),
+  ]);
+  const comparison = buildIssueFrameComparison(profiles, [
+    { articleId: "shared-pattern-alpha-1", sourceId: "alpha-1", sourceName: "알파일보", mediaGroupId: "alpha" },
+    { articleId: "shared-pattern-alpha-2", sourceId: "alpha-2", sourceName: "알파2", mediaGroupId: "alpha" },
+    { articleId: "shared-pattern-beta-1", sourceId: "beta-1", sourceName: "베타신문", mediaGroupId: "beta" },
+    { articleId: "shared-pattern-beta-2", sourceId: "beta-2", sourceName: "베타2", mediaGroupId: "beta" },
+  ]);
+
+  assert.equal(comparison.summary_30_seconds.divergence_detected, false);
+  assert.match(comparison.summary_30_seconds.main_difference, /표본 안에 서로 다른 매체 서술이 함께 관측됩니다/);
+  assert.match(comparison.summary_30_seconds.main_difference, /대립으로는 아직 확정하지 않았습니다/);
+  assert.doesNotMatch(JSON.stringify(comparison), /조사 절차의 공백이 문제로 지적됐다/);
 });
 
 test("aggregates evidence-grounded analysis modules and suppresses unsupported values", async () => {

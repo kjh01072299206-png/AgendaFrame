@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "2026-08-10.3",
+  "project": "AgendaFrame academic news collection",
+  "collectionWindow": {
+    "startDate": "2026-08-10",
+    "endDate": "2026-10-31",
+    "timezone": "Asia/Seoul",
+    "rawContentDeleteAfter": "2026-10-31T23:59:59+09:00"
+  },
+  "topics": ["politics", "economy", "society", "international"],
+  "polling": { "intervalMinutes": 360, "runsPerDay": 4, "scheduledHoursKst": [0, 6, 12, 18] },
+  "retention": { "rawBodyStorage": "private_r2", "deleteRawBodies": true, "retainMetadata": true, "retainHashes": true, "retainStructuredAnalysis": true },
+  "sources": [
+    { "id": "khan", "name": "경향신문", "sourceType": "general_daily", "homepageUrl": "https://www.khan.co.kr/", "endpoints": [{ "enabled": true }] },
+    { "id": "kmib", "name": "국민일보", "sourceType": "general_daily", "homepageUrl": "https://www.kmib.co.kr/", "endpoints": [{ "enabled": true }] },
+    { "id": "donga", "name": "동아일보", "sourceType": "general_daily", "homepageUrl": "https://www.donga.com/", "endpoints": [{ "enabled": true }] },
+    { "id": "munhwa", "name": "문화일보", "sourceType": "general_daily", "homepageUrl": "https://www.munhwa.com/", "endpoints": [{ "enabled": true }] },
+    { "id": "seoul", "name": "서울신문", "sourceType": "general_daily", "homepageUrl": "https://www.seoul.co.kr/", "endpoints": [{ "enabled": true }] },
+    { "id": "segye", "name": "세계일보", "sourceType": "general_daily", "homepageUrl": "https://www.segye.com/", "endpoints": [{ "enabled": true }] },
+    { "id": "chosun", "name": "조선일보", "sourceType": "general_daily", "homepageUrl": "https://www.chosun.com/", "endpoints": [{ "enabled": true }] },
+    { "id": "joongang", "name": "중앙일보", "sourceType": "general_daily", "homepageUrl": "https://www.joongang.co.kr/", "endpoints": [{ "enabled": true }] },
+    { "id": "hani", "name": "한겨레", "sourceType": "general_daily", "homepageUrl": "https://www.hani.co.kr/", "endpoints": [{ "enabled": true }] },
+    { "id": "hankookilbo", "name": "한국일보", "sourceType": "general_daily", "homepageUrl": "https://www.hankookilbo.com/", "endpoints": [{ "enabled": true }] },
+    { "id": "kbs", "name": "KBS", "sourceType": "broadcaster", "homepageUrl": "https://news.kbs.co.kr/", "endpoints": [{ "enabled": true }] },
+    { "id": "sbs", "name": "SBS", "sourceType": "broadcaster", "homepageUrl": "https://news.sbs.co.kr/", "endpoints": [{ "enabled": true }] }
+  ]
+}

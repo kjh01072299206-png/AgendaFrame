@@ -18,7 +18,7 @@ import {
 export const ARTICLE_FRAME_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v1";
 export const AI_ARTICLE_FRAME_PROFILE_SCHEMA = "agendaframe.article-frame-profile.v2";
 export const ISSUE_FRAME_COMPARISON_SCHEMA = "agendaframe.issue-frame-comparison.v1";
-export const FRAMING_ENGINE_VERSION = "korean-evidence-rules-v3";
+export const FRAMING_ENGINE_VERSION = "korean-evidence-rules-v4";
 
 const DIMENSION_ORDER = Object.freeze([
   "problem_definition",
@@ -218,6 +218,11 @@ const CONTEXTUAL_DIMENSION_RULES = Object.freeze({
       pattern: /(?:피해|불안|혼란|혼선|차질|파장|후폭풍|우려).{0,20}(?:커|확산|증가|이어|불거|발생|번지|높아)|(?:커지|확산|증가|이어지|불거지).{0,20}(?:피해|불안|혼란|혼선|차질|파장|우려)/u,
       paraphrase: "사건이 시민·현장에 미친 피해와 파장을 핵심 문제로 다룹니다.",
     },
+    {
+      code: "issue_emergence_focus",
+      pattern: /(?:문제|쟁점|핵심|논란).{0,18}(?:로 지목|으로 지목|로 부상|으로 부상|로 떠올|으로 떠올|로 꼽히|으로 꼽히|로 제기|으로 제기)|(?:지목|부상|떠오|꼽히|제기).{0,18}(?:문제|쟁점|핵심|논란)/u,
+      paraphrase: "새롭게 부상하거나 지목된 쟁점을 사건의 핵심 문제로 다룹니다.",
+    },
   ],
   causal_interpretation: [
     {
@@ -235,6 +240,11 @@ const CONTEXTUAL_DIMENSION_RULES = Object.freeze({
       pattern: /(?:방치|묵인|무시|강행|늦장|소극적|무리한|잘못된).{0,24}(?:대응|결정|조치|행동|관리|정책|수사)|(?:대응|결정|조치|행동|관리|정책|수사).{0,24}(?:방치|묵인|무시|강행|늦장|소극적|무리한|잘못된)/u,
       paraphrase: "행위자의 대응·결정·조치를 사건 전개의 원인으로 연결합니다.",
     },
+    {
+      code: "cause_as_background",
+      pattern: /(?:원인|배경|계기|요인).{0,24}(?:지목|꼽히|거론|제시|분석)|(?:지목|꼽히|거론|제시|분석).{0,24}(?:원인|배경|계기|요인)/u,
+      paraphrase: "특정 조건이나 행위를 사건의 원인·배경으로 지목하거나 거론합니다.",
+    },
   ],
   responsibility_attribution: [
     {
@@ -246,6 +256,11 @@ const CONTEXTUAL_DIMENSION_RULES = Object.freeze({
       code: "accountability_demand",
       pattern: /(?:책임자|책임론|문책|사과|해명|진상규명|진상 규명|규명|감사|처벌).{0,22}(?:요구|촉구|필요|나서|해야|목소리|제기)|(?:요구|촉구|필요|나서|해야|목소리|제기).{0,22}(?:책임자|책임론|문책|사과|해명|진상규명|진상 규명|규명|감사|처벌)/u,
       paraphrase: "책임자 확인·해명·조사와 같은 사후 책임 조치를 쟁점으로 제시합니다.",
+    },
+    {
+      code: "responsibility_assignment",
+      pattern: /(?:정부|당국|기관|공공기관|기업|사업주|감독기관|정치권|여당|야당|국회|대통령|관계자).{0,18}(?:에|에게|측에)?\s*책임(?:을|이|은|도)?\s*(?:묻|물어|물을|돌리|전가|져야|있|담당)|책임(?:을|이|은|도)?\s*(?:묻|물어|물을|돌리|전가|져야).{0,18}(?:정부|당국|기관|공공기관|기업|사업주|감독기관|정치권|여당|야당|국회|대통령|관계자)/u,
+      paraphrase: "특정 기관·행위자에게 사건의 책임을 묻거나 부담시키는 설명이 제시됩니다.",
     },
   ],
   moral_evaluation: [
@@ -259,6 +274,11 @@ const CONTEXTUAL_DIMENSION_RULES = Object.freeze({
       pattern: /(?:우려|불안|혼란|피해|논란|파장).{0,18}(?:키우|가중|심화|확대|낳|부추|초래|보여|드러)/u,
       paraphrase: "사건의 결과를 공공의 우려·피해·혼란이라는 기준으로 평가합니다.",
     },
+    {
+      code: "reported_negative_assessment",
+      pattern: /(?:문제라는|부적절하다는|부당하다는|무책임하다는|졸속이라는|위법하다는).{0,20}(?:평가|지적|비판|판단|목소리)|(?:비판받|비난받|지적받|문제 삼|문제로 지적)/u,
+      paraphrase: "결정이나 대응이 문제라는 평가·지적·비판이 기사 안에서 제시됩니다.",
+    },
   ],
   treatment_recommendation: [
     {
@@ -270,6 +290,11 @@ const CONTEXTUAL_DIMENSION_RULES = Object.freeze({
       code: "institutional_response_remedy",
       pattern: /(?:지원|보상|구제|안전|감독|점검|관리|수습|협의|공론화).{0,24}(?:강화|확대|마련|보장|정비|철저|필요|해야|추진)|(?:강화|확대|마련|보장|정비|철저|필요|해야|추진).{0,24}(?:지원|보상|구제|안전|감독|점검|관리|수습|협의|공론화)/u,
       paraphrase: "지원·감독·협의 등 제도적 대응 경로를 해법으로 제시합니다.",
+    },
+    {
+      code: "reform_need",
+      pattern: /(?:제도|정책|법|규정|시스템|관행|대응|조치|절차).{0,18}(?:고칠|개선할|보완할|바꿀|정비할|바로잡을).{0,14}(?:필요|해야|것)|(?:고칠|개선할|보완할|바꿀|정비할|바로잡을).{0,14}(?:필요|해야|것).{0,18}(?:제도|정책|법|규정|시스템|관행|대응|조치|절차)/u,
+      paraphrase: "제도·정책·절차를 고치거나 보완해야 한다는 해법을 제시합니다.",
     },
   ],
 });
@@ -1475,6 +1500,47 @@ function divergencePair(patterns, metadataById) {
   return null;
 }
 
+function observedContrastPair(axis, metadataById) {
+  const patterns = axis.patterns
+    .filter((pattern) => pattern.voice_scope === "outlet_narration" && pattern.article_count > 0 && pattern.evidence.length > 0)
+    .sort((left, right) => right.article_count - left.article_count || left.variant_key.localeCompare(right.variant_key));
+  if (patterns.length < 2) return null;
+  for (let left = 0; left < patterns.length; left += 1) {
+    const leftIds = new Set(patterns[left].article_ids);
+    for (let right = left + 1; right < patterns.length; right += 1) {
+      const rightIds = new Set(patterns[right].article_ids);
+      const unionSize = new Set([...leftIds, ...rightIds]).size;
+      const overlapSize = [...leftIds].filter((articleId) => rightIds.has(articleId)).length;
+      // Same article coverage means parallel descriptors, not an observed
+      // expression contrast. Confirmed divergence still uses divergencePair().
+      if (unionSize === 0 || overlapSize / unionSize >= 0.85) continue;
+      const mediaGroups = new Set([...leftIds, ...rightIds].map((articleId) => mediaGroupForArticle(articleId, metadataById)));
+      if (mediaGroups.size < 2) continue;
+      return [patterns[left], patterns[right]];
+    }
+  }
+  return null;
+}
+
+function describeObservedContrast(axes, metadataById) {
+  const candidates = axes
+    .map((axis) => ({ axis, pair: observedContrastPair(axis, metadataById) }))
+    .filter(({ pair }) => pair)
+    .sort((left, right) => {
+      const dimensionPriority = DIMENSION_ORDER.indexOf(left.axis.dimension) - DIMENSION_ORDER.indexOf(right.axis.dimension);
+      const leftCoverage = left.pair.reduce((sum, pattern) => sum + pattern.article_count, 0);
+      const rightCoverage = right.pair.reduce((sum, pattern) => sum + pattern.article_count, 0);
+      return dimensionPriority || rightCoverage - leftCoverage;
+    });
+  if (!candidates.length) return null;
+  const { axis, pair } = candidates[0];
+  const labels = pair.map((pattern) => pattern.public_paraphrase.replace(/[.!?]+$/u, "")).join(" / ");
+  return {
+    detected: false,
+    text: `${axis.label}에서 표본 안에 서로 다른 매체 서술이 함께 관측됩니다: ${labels}. 이는 기사 표현의 관측 차이이며, 서로 다른 미디어그룹의 대립으로는 아직 확정하지 않았습니다.`,
+  };
+}
+
 function describeDivergence(axes, metadataById) {
   const candidates = axes
     .map((axis) => {
@@ -1487,6 +1553,8 @@ function describeDivergence(axes, metadataById) {
       return dimensionPriority || right.axis.observed_article_count - left.axis.observed_article_count;
     });
   if (!candidates.length) {
+    const observedContrast = describeObservedContrast(axes, metadataById);
+    if (observedContrast) return observedContrast;
     return {
       detected: false,
       text: "매체 서술로 확인된 요소만 놓고 볼 때, 서로 다른 미디어그룹의 설명 패턴이 갈렸다고 확정할 근거는 아직 충분하지 않습니다.",

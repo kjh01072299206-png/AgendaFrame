@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import sourcePanel from "../data/sources.json" with { type: "json" };
-import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, PUBLIC_AGENDA_CATEGORIES, analyzeArticles, classifyAgendaCategory, cleanHeadlineToIssueTitle, titleTokens } from "../worker/analysis.mjs";
+import { ANALYSIS_MODEL_VERSION, ANALYSIS_PROVIDER, PUBLIC_AGENDA_CATEGORIES, SCORE_VERSION, analyzeArticles, classifyAgendaCategory, cleanHeadlineToIssueTitle, titleTokens, weightedAgendaScore } from "../worker/analysis.mjs";
 import { getAnalysisProvider } from "../worker/analysis-provider.mjs";
 import { approvedClusterApprovals, calculateQualityMetrics, canonicalizeArticleUrl, classifySnapshotStatus, clusterArticleSetSha256, clusterArticleSignature, configureSourcePanel, enumerateKstDates, extractArticleBodyFromHtml, handleApiRequest, resolveClusterApproval, validateAnalyzedImportRows, validateImportRows, validateStructuredImportRows, withDocumentSecurityHeaders, withSecurityHeaders } from "../worker/runtime.mjs";
 
@@ -343,6 +343,48 @@ test("clusters real-looking article titles and produces explainable scores", () 
   assert.equal(ANALYSIS_MODEL_VERSION, "agenda-structure-v6");
   assert.equal(getAnalysisProvider().analyze, analyzeArticles);
   assert.throws(() => getAnalysisProvider("vertex_ai"), /지원하지 않는 분석 공급자/);
+});
+
+test("canonicalizes clustering input order and exposes cohesion for ranking audits", () => {
+  const articles = [
+    { id: "stable-3", sourceId: "source-c", source: "매체C", title: "음성 외국인 패싸움 2명 사상", section: "사회", bodyText: "충북 음성 외국인 패싸움에서 흉기가 사용돼 2명이 사상했고 경찰이 수사 중이다." },
+    { id: "stable-1", sourceId: "source-a", source: "매체A", title: "충북 음성서 외국인 집단 난투극", section: "사회", bodyText: "충북 음성 외국인 집단 난투극으로 사상자가 발생해 경찰이 수사 중이다." },
+    { id: "stable-2", sourceId: "source-b", source: "매체B", title: "음성 길거리 외국인 패싸움 흉기 사건", section: "사회", bodyText: "음성 길거리 외국인 패싸움 흉기 사건으로 사상자가 발생했고 경찰이 수사 중이다." },
+  ];
+  const signature = (issues) => issues.map((issue) => ({ title: issue.title, ids: issue.articles.map((article) => article.id).sort() }));
+  const forward = analyzeArticles(articles, { configuredSourceCount: 3, configuredSourceGroupCount: 3 });
+  const reverse = analyzeArticles(articles.slice().reverse(), { configuredSourceCount: 3, configuredSourceGroupCount: 3 });
+  assert.deepEqual(signature(forward), signature(reverse));
+  assert.ok(forward.every((issue) => Number.isFinite(issue.cohesionScore)));
+  assert.equal(SCORE_VERSION, "observed-agenda-v5");
+});
+
+test("keeps same-event action progression together but separates conflicting event anchors", () => {
+  const progression = [
+    { id: "progression-1", sourceId: "hani", source: "한겨레", title: "종합특검, 내란선전 혐의 이은우 전 KTV 원장 불구속 기소", section: "사회" },
+    { id: "progression-2", sourceId: "khan", source: "경향신문", title: "종합특검, 이은우 전 KTV원장 기소 내란 종료 시점은 12월 14일", section: "사회" },
+    { id: "progression-3", sourceId: "kmib", source: "국민일보", title: "이은우 전 KTV 원장 내란선전 혐의로 재판에 넘겨져", section: "사회" },
+    { id: "progression-4", sourceId: "kbs", source: "KBS", title: "특수단, 이은우 전 KTV 원장 수사 착수", section: "사회" },
+  ];
+  const sameEvent = analyzeArticles(progression, { configuredSourceCount: 4, configuredSourceGroupCount: 4 });
+  assert.equal(sameEvent.length, 1);
+  assert.equal(sameEvent[0].articleCount, 4);
+  assert.deepEqual(sameEvent[0].articles.map((article) => article.id).sort(), progression.map((article) => article.id).sort());
+
+  const hardNegative = analyzeArticles([
+    { id: "negative-1", sourceId: "a", source: "A", title: "KTV 원장 불구속 기소 내란선전 혐의", section: "사회" },
+    { id: "negative-2", sourceId: "b", source: "B", title: "KTV 원장 불구속 기소 횡령 혐의", section: "사회" },
+  ], { configuredSourceCount: 2, configuredSourceGroupCount: 2 });
+  assert.equal(hardNegative.length, 2);
+  assert.ok(hardNegative.every((issue) => issue.articleCount === 1));
+});
+
+test("ranks independent coverage above same-outlet repetition when other signals are equal", () => {
+  const placement = { value: null, observedCount: 0 };
+  const diverse = weightedAgendaScore({ diversity: 60, placement, volume: 100, followUpVolume: 0, sourceCount: 6, configuredSourceCount: 10 });
+  const repetitive = weightedAgendaScore({ diversity: 20, placement, volume: 100, followUpVolume: 100, sourceCount: 2, configuredSourceCount: 10 });
+  assert.ok(diverse.score > repetitive.score);
+  assert.equal(diverse.status, "placement_excluded");
 });
 
 test("uses transient body anchors to merge paraphrased reports without publishing the body", () => {
@@ -1115,7 +1157,7 @@ test("reports no-cost health and protects write endpoints", async () => {
   assert.equal(healthBody.collection.directCrawling, false);
   assert.equal(healthBody.collection.configuredSources, 22);
   assert.equal(healthBody.meta.clusteringVersion, "agenda-content-aware-complete-link-v7");
-  assert.equal(healthBody.meta.scoreVersion, "observed-agenda-v4");
+  assert.equal(healthBody.meta.scoreVersion, "observed-agenda-v5");
 
   const sources = await handleApiRequest(new Request("https://example.test/api/sources"));
   const sourceBody = await sources.json();
@@ -1466,6 +1508,58 @@ test("binds scoped issue metrics in the same order as their SQL placeholders", a
   const scopedMetrics = statements.find(({ sql }) => sql.includes("WITH scoped_issue_metrics"));
   assert.deepEqual(scopedMetrics.parameters.slice(0, 4), ["general_daily", "general_daily", 10, 10]);
   assert.equal(scopedMetrics.parameters.at(-1), 5);
+});
+
+test("serves the main academic 12-outlet scope with provider and source filters", async () => {
+  const statements = [];
+  const run = { id: "run-academic", targetDate: "2026-07-26", provider: ANALYSIS_PROVIDER, modelVersion: ANALYSIS_MODEL_VERSION, finishedAt: 100, articleCount: 12, issueCount: 1 };
+  const DB = {
+    prepare(sql) {
+      return {
+        bind(...parameters) {
+          statements.push({ sql, parameters });
+          return {
+            first: async () => sql.includes("FROM analysis_runs") ? run : ({ total: 1 }),
+            all: async () => sql.includes("WITH scoped_issue_metrics")
+              ? { results: [{ id: "academic-issue", issueDate: "2026-07-26", title: "학술 범위 의제", summary: "요약", category: "정치", articleCount: 2, sourceCount: 2, agendaScore: 18, diversityScore: 16.7, placementScore: null, volumeScore: 20, repetitionScore: 0, confidence: null, placementObservedCount: 0, placementTotalCount: 2, contentAvailableCount: 0, structuredProfileCount: 0 }] }
+              : { results: [{ category: "정치", count: 1 }] },
+          };
+        },
+      };
+    },
+  };
+  const response = await handleApiRequest(new Request("https://example.test/api/issues?date=2026-07-26&scope=academic_panel_12&limit=5"), { DB });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.scope.configuredSources, 12);
+  assert.equal(body.issues[0].scoreStatus, "scope_observed_components");
+  const scopedMetrics = statements.find(({ sql }) => sql.includes("WITH scoped_issue_metrics"));
+  assert.equal(scopedMetrics.parameters[0], "authorized_crawl");
+  assert.equal(scopedMetrics.parameters[13], "authorized_crawl");
+  assert.equal(scopedMetrics.parameters.at(-1), 5);
+});
+
+test("does not apply the coverage factor twice to current persisted agenda scores", async () => {
+  const run = { id: "run-current-score", targetDate: "2026-07-26", provider: ANALYSIS_PROVIDER, modelVersion: ANALYSIS_MODEL_VERSION, finishedAt: 100, articleCount: 10, issueCount: 1 };
+  const DB = {
+    prepare(sql) {
+      return {
+        bind() {
+          if (sql.includes("FROM analysis_runs")) return { first: async () => run };
+          if (sql.includes("SELECT COUNT(*) AS total FROM issues")) return { first: async () => ({ total: 1 }) };
+          if (sql.includes("SELECT category, COUNT(*) AS count")) return { all: async () => ({ results: [{ category: "정치", count: 1 }] }) };
+          if (sql.includes("FROM issues") && sql.includes("ORDER BY")) return {
+            all: async () => ({ results: [{ id: "issue-current-score", issueDate: "2026-07-26", title: "대표 제목", summary: "요약", category: "정치", articleCount: 2, sourceCount: 2, agendaScore: 40, diversityScore: 10, placementScore: null, volumeScore: 30, repetitionScore: 0, confidence: null, placementObservedCount: 0, placementTotalCount: 2, contentAvailableCount: 0, structuredProfileCount: 0 }] }),
+          };
+          throw new Error(`Unexpected SQL: ${sql}`);
+        },
+      };
+    },
+  };
+  const response = await handleApiRequest(new Request("https://example.test/api/issues?date=2026-07-26&limit=1"), { DB });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.issues[0].agendaScore, 40);
 });
 
 test("reports resumable per-day analysis status", async () => {

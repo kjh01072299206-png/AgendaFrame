@@ -5,6 +5,7 @@ import { IssueSubject } from "../../issue-subject";
 import {
   fetchLiveIssueDetail,
   fetchLiveIssueList,
+  LIVE_SCOPE_LABEL,
   type LiveComparisonAxis,
   type LiveComparisonNarrative,
   type LiveIssueDetail,
@@ -430,6 +431,7 @@ export function LiveIssueView({ issueId, view }: { issueId: string; view: LiveVi
         splitDimensions={detail.comparison.status === "ready" ? detail.comparison.divergenceQuestions.length : 0}
         analysisPending={detail.comparison.status !== "ready"}
       />
+      <p className="afs-scope-context"><b>{LIVE_SCOPE_LABEL}</b> 기준으로 집계한 의제입니다. 점수는 이 범위 안의 매체 확산·기사량을 반영하며, 사회적 중요도나 사실성 점수가 아닙니다.</p>
       <p className="afs-prov"><b>자동 분석 초안 · 사람 검토 전</b><span>본문 근거 {detail.issue.contentAvailableCount}/{detail.issue.articleCount}건</span></p>
       {view === "overview" ? <Overview detail={detail} /> : null}
       {view === "outlets" ? <Outlets detail={detail} /> : null}

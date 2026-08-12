@@ -52,6 +52,7 @@ export function LiveHome() {
                 category: issue.category,
                 articleCount: issue.articleCount,
                 outletCount: issue.sourceCount,
+                score: issue.agendaScore,
               }))} />
             </div>
           </section>

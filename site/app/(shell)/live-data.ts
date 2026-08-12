@@ -1,4 +1,5 @@
 export const LIVE_SCOPE = "academic_panel_12";
+export const LIVE_SCOPE_LABEL = "학술연구 12개 매체";
 
 export interface LiveIssueSummary {
   id: string;
@@ -9,6 +10,7 @@ export interface LiveIssueSummary {
   articleCount: number;
   sourceCount: number;
   agendaScore: number | null;
+  cohesionScore?: number | null;
   contentAvailableCount: number;
   structuredProfileCount: number;
   scoreStatus: string;
