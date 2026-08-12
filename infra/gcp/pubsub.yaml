@@ -1,0 +1,44 @@
+apiVersion: agenda.frame/v1
+kind: PubSubContract
+metadata:
+  name: agendaframe-article-analysis
+  implementationStatus: contract_only
+  externalCalls: false
+spec:
+  projectId: ${GCP_PROJECT_ID}
+  topic:
+    name: agenda-article-analysis
+    messageSchema: agenda.frame.article-analysis.v1
+    orderingKey: ${run_id}/${article_id}
+    exactlyOnceDelivery: true
+  subscription:
+    name: agenda-article-analysis-worker
+    ackDeadlineSeconds: 600
+    maximumBackoffSeconds: 600
+    minimumBackoffSeconds: 10
+    retryableStatuses: [429, 500, 502, 503, 504]
+    deadLetterTopic: agenda-article-analysis-dlq
+    maxDeliveryAttempts: 5
+  deadLetter:
+    topic: agenda-article-analysis-dlq
+    retentionDays: 14
+    reasonAttribute: error_code
+    rawBodyAllowed: false
+  message:
+    requiredFields:
+      - schemaVersion
+      - runId
+      - articleId
+      - canonicalUrl
+      - sourceId
+      - bodyHash
+      - privateBodyObject
+      - modelRevision
+      - promptVersion
+      - idempotencyKey
+    forbiddenFields: [bodyText, rawBody, html, sentenceText, promptPayload, accessToken]
+    privateBodyObject:
+      bucket: ${PRIVATE_BODY_BUCKET}
+      prefix: bodies/
+      public: false
+      deleteAfter: "2026-10-31T23:59:59+09:00"

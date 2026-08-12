@@ -1,0 +1,32 @@
+apiVersion: agendaframe.gcp/v1
+kind: CloudRunJobContract
+metadata:
+  name: agendaframe-collection-analysis
+  implementationStatus: contract_only
+  externalCalls: false
+spec:
+  command:
+    - python
+    - -m
+    - backend.gcp_job_entrypoint
+  sourcePolicy: site/data/discovery-sources.json
+  sourceCount: 12
+  scheduleOwner: migration-ownership.yaml
+  adapterBinding: AGENDAFRAME_ADAPTER_FACTORY
+  adapterMode: gcp
+  productionFactory:
+    module: backend.gcp_production_adapters:production_adapter_factory
+    stageFactory: backend.gcp_stage_adapters:production_stage_adapter_factory
+    stageFactoryEnv: AGENDAFRAME_STAGE_ADAPTER_FACTORY
+    stageDependenciesFactoryEnv: AGENDAFRAME_STAGE_DEPENDENCIES_FACTORY
+    explicitOnly: true
+    lazySdkImport: true
+  environment:
+    AGENDAFRAME_ADAPTER_MODE: gcp
+    AGENDAFRAME_ADAPTER_FACTORY: backend.gcp_production_adapters:production_adapter_factory
+  activeSnapshot:
+    schemaVersion: agenda.frame.active-snapshot.v1
+    pointerSchema: agenda.frame.active-snapshot-pointer.v1
+    requiresImmutableManifest: true
+    requiresRawBodyAbsent: true
+  failClosedWhenAdapterMissing: true

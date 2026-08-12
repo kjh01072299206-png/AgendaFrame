@@ -127,9 +127,9 @@ test("keeps the public dashboard focused on date, issue, and outlet exploration"
   for (const copy of ["어디서 갈렸나", "쟁점 지도", "기사들이 연결한 서사", "근거로 만든 독자 질문"]) {
     assert.match(dashboard, new RegExp(copy));
   }
-  assert.match(dashboard, /전체 수집 22개 매체 온라인 표본/);
-  assert.match(dashboard, /fetch\("\/api\/sources"/);
-  assert.match(dashboard, /fetch\(`\/api\/issues\/dates\?limit=31&scope=\$\{ISSUE_SCOPE\}`/);
+  assert.match(dashboard, /학술연구 12개 매체/);
+  assert.match(dashboard, /fetch\(`\/api\/sources\?scope=\$\{scope\}`/);
+  assert.match(dashboard, /fetch\(`\/api\/issues\/dates\?limit=31&scope=\$\{resolvedScope\}`/);
   assert.match(dashboard, /분석 기준일/);
   assert.match(dashboard, /archive-disclosure/);
   assert.doesNotMatch(dashboard, /핵심 의제 우선 · 스포츠·생활·IT 후순위/);
@@ -142,18 +142,33 @@ test("keeps the public dashboard focused on date, issue, and outlet exploration"
   assert.match(dashboard, /approvedUrlsSha256/);
   assert.match(dashboard, /role="tab"/);
   assert.match(dashboard, /aria-controls={`analysis-panel-/);
-  assert.match(dashboard, /general_daily_10/);
+  assert.match(dashboard, /academic_panel_12/);
+  assert.match(dashboard, /LEGACY_ISSUE_SCOPE = "general_daily_10"/);
+  assert.match(dashboard, /if \(!nextDates\.length\)/);
   assert.match(dashboard, /FramingEditorialView/);
   assert.doesNotMatch(dashboard, /\["chat", "AI 대화"\]/u);
   assert.doesNotMatch(dashboard, /\["selfcheck", "자기점검"\]/u);
   assert.doesNotMatch(dashboard, /\["community", "커뮤니티"\]/u);
   assert.doesNotMatch(dashboard, /신뢰도 \{/);
   assert.doesNotMatch(dashboard, /agenda-list" aria-live/);
+  assert.match(dashboard, /그날 언론이 가장 많이 다룬 분야/);
+  assert.match(dashboard, /DAY_CATEGORY_DIST/);
+  assert.match(dashboard, /DAY_CATEGORY_TOTAL/);
+  assert.match(dashboard, /DAY_CATEGORY_OUTLET_TOTAL = 10/);
+  assert.match(dashboard, /기존 수집본\(\{DAY_CATEGORY_OUTLET_TOTAL\}개 언론사\)/);
+  assert.doesNotMatch(dashboard, /22개 언론사 온라인 수집분/);
+  assert.match(styles, /\.day-category-dist/);
 
   assert.match(styles, /\.hero-copy, \.snapshot \{ min-width: 0; \}/);
   assert.match(styles, /@media \(max-width: 780px\)/);
   assert.match(styles, /\.live-filter-form input, \.live-filter-form select \{ font-size: 16px; \}/);
   assert.match(styles, /min-height: 44px/);
+});
+
+test("keeps the app shell font CSS local so CSP needs no remote stylesheet exception", async () => {
+  const styles = await readFile(new URL("../app/app-shell.css", import.meta.url), "utf8");
+
+  assert.doesNotMatch(styles, /@import\s+url\([\"']https?:\/\//i);
 });
 
 /* 화면 구성은 (shell) 라우트 그룹으로 옮겼다(홈 = 하루 단위 지형, 도구 = /tools/*).
@@ -170,8 +185,8 @@ test("keeps the initial-five reader surface separate from site-wide tools", asyn
   // 홈은 사안 하나를 설명하지 않고 그날 전체를 집계한다
   assert.match(home, /deriveDay/);
   assert.doesNotMatch(home, /InitialFiveExperience/);
-  // 단일 페이지 리더는 자기 라우트에만 남는다
-  assert.match(legacyReaderRoute, /InitialFiveExperience/);
+  // 단일 페이지 리더는 /initial-five로 이동하고 옛 경로 /top5-2026-07-26는 리다이렉트한다
+  assert.match(legacyReaderRoute, /redirect\("\/initial-five"\)/);
   assert.match(reader, /role="tablist"/);
   assert.match(reader, /role="tabpanel"/);
   // 도구 화면은 각자의 컴포넌트를 쓴다
@@ -1030,6 +1045,15 @@ test("reports no-cost health and protects write endpoints", async () => {
   }
   assert.equal(sourceBody.sources.find((source) => source.name === "조선일보").mediaGroupId, sourceBody.sources.find((source) => source.name === "조선비즈").mediaGroupId);
 
+  const researchSources = await handleApiRequest(new Request("https://example.test/api/sources?scope=academic_panel_12"));
+  const researchBody = await researchSources.json();
+  assert.equal(researchBody.panelLabel, "AgendaFrame 학술연구 12개 매체");
+  assert.equal(researchBody.method, "authorized_crawl");
+  assert.equal(researchBody.directCrawling, true);
+  assert.equal(researchBody.sources.length, 12);
+  assert.deepEqual(researchBody.sources.filter((source) => source.sourceType === "broadcaster").map((source) => source.name), ["KBS", "SBS"]);
+  assert.ok(researchBody.sources.every((source) => !("endpoints" in source) && !("domains" in source)));
+
   const unavailable = await handleApiRequest(new Request("https://example.test/api/analyze", { method: "POST" }));
   assert.equal(unavailable.status, 503);
   const unauthorized = await handleApiRequest(new Request("https://example.test/api/import", {
@@ -1058,6 +1082,29 @@ test("reports no-cost health and protects write endpoints", async () => {
   const missingBody = await missing.json();
   assert.equal(missingBody.error.code, "NOT_FOUND");
   assert.equal(typeof missingBody.requestId, "string");
+});
+
+test("selects public research snapshots from authorized 12-source runs", async () => {
+  const statements = [];
+  const DB = {
+    prepare(sql) {
+      return {
+        bind(...parameters) {
+          statements.push({ sql, parameters });
+          return { first: async () => null };
+        },
+      };
+    },
+  };
+
+  const response = await handleApiRequest(new Request("https://example.test/api/issues?scope=academic_panel_12&date=2026-08-10"), { DB });
+  assert.equal(response.status, 200);
+  assert.deepEqual((await response.json()).issues, []);
+  assert.equal(statements.length, 1);
+  assert.match(statements[0].sql, /scoped_run_i\.run_id = analysis_runs\.id/);
+  assert.match(statements[0].sql, /scoped_run_a\.provider = \?/);
+  assert.deepEqual(statements[0].parameters.slice(0, 2), ["2026-08-10", "authorized_crawl"]);
+  assert.equal(statements[0].parameters.length, 14);
 });
 
 test("keeps demo and live health response contracts identical", async () => {

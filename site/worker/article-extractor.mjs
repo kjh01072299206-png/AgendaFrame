@@ -65,7 +65,10 @@ const BODY_ATTRIBUTE_PATTERN =
   /(?:^|[\s_-])(?:article[-_ ]?(?:body|content|text)|articlebody(?:content)?|article[-_ ]?view[-_ ]?content(?:[-_ ]?div)?|content[-_ ]?body|news[-_ ]?(?:article[-_ ]?)?(?:body|content|text)|newsbody|news[-_ ]?body[-_ ]?id|story[-_ ]?(?:body|content)|view[-_ ]?content)(?:$|[\s_-])/i;
 
 const CHOSUN_BODY_PATTERN =
-  /(?:^|[\s_-])(?:news[-_ ]?body[-_ ]?id|article[-_ ]?body|articlebody|news[-_ ]?content)(?:$|[\s_-])/i;
+  /(?:^|[\s_-])(?:article|news[-_ ]?body[-_ ]?id|article[-_ ]?body|articlebody|news[-_ ]?content)(?:$|[\s_-])/i;
+
+const DONGA_BODY_PATTERN =
+  /(?:^|[\s_-])(?:view[-_ ]?body|article[-_ ]?body|news[-_ ]?content)(?:$|[\s_-])/i;
 
 const HANKOOKILBO_BODY_PATTERN =
   /(?:^|[\s_-])(?:article[-_ ]?body|article[-_ ]?body[-_ ]?content|article[-_ ]?view[-_ ]?content(?:[-_ ]?div)?|editor[-_ ]?content|news[-_ ]?body)(?:$|[\s_-])/i;
@@ -338,6 +341,116 @@ function recursiveArticleBodies(value, path = [], seen = new Set()) {
   return bodies;
 }
 
+function topicFromSection(value) {
+  const normalized = (Array.isArray(value) ? value.join(" ") : String(value ?? ""))
+    .normalize("NFC")
+    .trim()
+    .toLowerCase();
+  if (!normalized) return null;
+  if (/(?:정치|politics|government|assembly)/i.test(normalized)) return "politics";
+  if (/(?:경제|economy|business|finance|industry)/i.test(normalized)) return "economy";
+  if (/(?:사회|society|national|local|education|health)/i.test(normalized)) return "society";
+  if (/(?:국제|세계|international|world|foreign|global)/i.test(normalized)) return "international";
+  return "excluded";
+}
+
+function articleSectionFromJsonLd(value) {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = articleSectionFromJsonLd(item);
+      if (found !== null) return found;
+    }
+    return null;
+  }
+  if (!value || typeof value !== "object") return null;
+  const type = Array.isArray(value["@type"]) ? value["@type"].join(" ") : String(value["@type"] ?? "");
+  if (/(?:Article|NewsArticle|ReportageNewsArticle)/i.test(type) && value.articleSection !== undefined) {
+    return topicFromSection(value.articleSection);
+  }
+  for (const child of Object.values(value)) {
+    if (!child || typeof child !== "object") continue;
+    const found = articleSectionFromJsonLd(child);
+    if (found !== null) return found;
+  }
+  return null;
+}
+
+export function extractArticleTopic(source) {
+  for (const match of String(source ?? "").matchAll(
+    /<script\b[^>]*type\s*=\s*["']application\/ld\+json(?:\s*;\s*charset=[^"']+)?["'][^>]*>([\s\S]*?)<\/script>/gi,
+  )) {
+    const jsonText = decodeJsonScriptText(match[1]);
+    if (!jsonText) continue;
+    try {
+      const topic = articleSectionFromJsonLd(JSON.parse(jsonText));
+      if (topic !== null) return topic;
+    } catch {
+      // Malformed JSON-LD cannot establish a topic; callers can retry or reject it.
+    }
+  }
+  for (const match of String(source ?? "").matchAll(/<a\b[^>]*>/gi)) {
+    const openingTag = match[0];
+    if (!/(?:^|\s)category-name(?:\s|$)/i.test(attributeValue(openingTag, "class"))) continue;
+    const href = decodeHtmlEntities(attributeValue(openingTag, "href"));
+    const code = href.match(/[?&]ctcd=([0-9]{4})/i)?.[1];
+    if (!code) continue;
+    return ({
+      "0003": "politics",
+      "0004": "economy",
+      "0005": "society",
+      "0006": "international",
+    })[code] ?? "excluded";
+  }
+  return null;
+}
+
+function assignedJsonValue(source, assignmentName) {
+  const assignment = new RegExp(`(?:^|[;\\s])(?:window\\.)?${escapeRegExp(assignmentName)}\\s*=`, "m").exec(source);
+  if (!assignment) return null;
+  let start = assignment.index + assignment[0].length;
+  while (/\s/.test(source[start] ?? "")) start += 1;
+  if (!"[{".includes(source[start] ?? "")) return null;
+  const expectedClosers = [];
+  let quote = "";
+  let escaped = false;
+  for (let index = start; index < source.length; index += 1) {
+    const character = source[index];
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === quote) quote = "";
+      continue;
+    }
+    if (character === '"') {
+      quote = character;
+      continue;
+    }
+    if (character === "{") expectedClosers.push("}");
+    else if (character === "[") expectedClosers.push("]");
+    else if (character === "}" || character === "]") {
+      if (expectedClosers.pop() !== character) return null;
+      if (!expectedClosers.length) {
+        try {
+          return JSON.parse(source.slice(start, index + 1));
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function arcContentBody(value) {
+  if (!value || typeof value !== "object" || !Array.isArray(value.content_elements)) return "";
+  const paragraphs = [];
+  for (const element of value.content_elements) {
+    if (!element || typeof element !== "object") continue;
+    if (element.type === "text" && typeof element.content === "string") paragraphs.push(element.content);
+  }
+  return paragraphs.join("\n");
+}
+
 function inspectJsonLd(value, result) {
   if (Array.isArray(value)) {
     for (const item of value) inspectJsonLd(item, result);
@@ -389,6 +502,12 @@ function scriptStateCandidates(source) {
     const safeStateScript =
       type === "application/json" ||
       /^(?:__NEXT_DATA__|__NUXT_DATA__|__APOLLO_STATE__|__INITIAL_STATE__)$/i.test(id);
+    if (/^fusion-metadata$/i.test(id)) {
+      const globalContent = assignedJsonValue(match[2], "Fusion.globalContent");
+      const body = arcContentBody(globalContent);
+      if (body) candidates.push({ rawText: body, strategy: "script-state", sourceOffset: match.index });
+      continue;
+    }
     if (!safeStateScript) continue;
     const jsonText = decodeJsonScriptText(match[2]);
     if (!jsonText || jsonText.length > 4_000_000) continue;
@@ -465,6 +584,7 @@ function hasVisibleRestriction(source) {
 function sourceFamily(hostname, sourceId) {
   const normalized = `${hostname ?? ""} ${sourceId ?? ""}`.toLowerCase();
   if (/(?:^|[.\s_-])chosun(?:\.com|biz|$)|조선/.test(normalized)) return "chosun";
+  if (/(?:^|[.\s_-])donga(?:\.com|$)|동아일보/.test(normalized)) return "donga";
   if (/hankookilbo|한국일보/.test(normalized)) return "hankookilbo";
   return "generic";
 }
@@ -475,6 +595,8 @@ function selectorCandidates(source, hostname, sourceId) {
   const sourcePattern =
     family === "chosun"
       ? CHOSUN_BODY_PATTERN
+      : family === "donga"
+        ? DONGA_BODY_PATTERN
       : family === "hankookilbo"
         ? HANKOOKILBO_BODY_PATTERN
         : null;

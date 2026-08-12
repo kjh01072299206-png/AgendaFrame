@@ -7,7 +7,7 @@
 import { getInitialFiveIssueBundle, initialFiveManifest } from "./artifacts";
 // 취재원 역할 좁히기 규칙은 워커 API 와 공유한다 (lib/initial-five/subjects.mjs)
 import { actorParaphrases, narrowSubject, paraphrasesByLocator, subjectsIn } from "./subjects.mjs";
-import type { IssueAnalysisBundle } from "./types";
+import type { InitialFiveManifest, IssueAnalysisBundle } from "./types";
 
 export const DIM_ORDER = [
   "problem_definition",
@@ -932,12 +932,16 @@ export interface DayView {
   genres: Counter;
 }
 
-export function deriveDay(): DayView {
-  const issues = initialFiveManifest.issues
+export function deriveDay(source: { manifest: InitialFiveManifest; getIssueBundle: (issueId: string) => IssueAnalysisBundle | null } = {
+  manifest: initialFiveManifest,
+  getIssueBundle: getInitialFiveIssueBundle,
+}): DayView {
+  const { manifest, getIssueBundle } = source;
+  const issues = manifest.issues
     .slice()
     .sort((a, b) => a.rank - b.rank)
     .map((meta) => {
-      const bundle = getInitialFiveIssueBundle(meta.issueId);
+      const bundle = getIssueBundle(meta.issueId);
       // 번들 하나가 빠져도 셸(도구 화면 포함)은 살린다 — 던지면 전 라우트가 죽는다
       return bundle ? deriveIssue(bundle) : null;
     })
@@ -1024,11 +1028,11 @@ export function deriveDay(): DayView {
   };
 
   return {
-    basisDate: initialFiveManifest.basisDate,
-    issueCount: initialFiveManifest.issueCount,
-    articleCount: initialFiveManifest.articleCount,
+    basisDate: manifest.basisDate,
+    issueCount: manifest.issueCount,
+    articleCount: manifest.articleCount,
     outletCount: outletMap.size,
-    generatedAt: initialFiveManifest.generatedAt,
+    generatedAt: manifest.generatedAt,
     issues,
     categories: tally(issues.flatMap((i) => Array(i.articleCount).fill(i.category ?? "미분류") as string[]), {}),
     outlets: [...outletMap]

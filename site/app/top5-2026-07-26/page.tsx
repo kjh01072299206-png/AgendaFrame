@@ -1,5 +1,5 @@
-import InitialFiveExperience from "../initial-five";
+import { redirect } from "next/navigation";
 
 export default function TopFiveFramingPage() {
-  return <InitialFiveExperience />;
+  redirect("/initial-five");
 }

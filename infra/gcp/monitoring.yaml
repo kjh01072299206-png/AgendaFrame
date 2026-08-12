@@ -1,0 +1,36 @@
+apiVersion: agenda.frame/v1
+kind: CloudMonitoringContract
+metadata:
+  name: agendaframe-pipeline-alerts
+  implementationStatus: contract_only
+  externalCalls: false
+spec:
+  labels:
+    project: ${GCP_PROJECT_ID}
+    service: agendaframe
+    region: asia-northeast3
+  logFields: [run_id, stage, source_id, article_id, snapshot_id, code_version]
+  forbiddenLogFields: [body_text, raw_body, html, sentence_text, prompt_payload, authorization]
+  alerts:
+    - name: collection-run-failed
+      metric: logging.googleapis.com/user/agendaframe/collection_run_failed
+      condition: count > 0 within 5m
+      severity: critical
+      notification: ${ONCALL_NOTIFICATION_CHANNEL}
+    - name: collection-run-delayed
+      metric: logging.googleapis.com/user/agendaframe/collection_run_age_seconds
+      condition: latest_value > 5400 for 15m
+      severity: warning
+      notification: ${ONCALL_NOTIFICATION_CHANNEL}
+    - name: snapshot-age-too-old
+      metric: logging.googleapis.com/user/agendaframe/active_snapshot_age_seconds
+      condition: latest_value > 9000 for 30m
+      severity: critical
+      notification: ${ONCALL_NOTIFICATION_CHANNEL}
+    - name: quality-gate-failed
+      metric: logging.googleapis.com/user/agendaframe/quality_gate_failed
+      condition: count > 0 within 15m
+      severity: warning
+      notification: ${ONCALL_NOTIFICATION_CHANNEL}
+  dashboard:
+    requiredPanels: [run_status, stage_latency, source_success_rate, dlq_depth, active_snapshot_age]

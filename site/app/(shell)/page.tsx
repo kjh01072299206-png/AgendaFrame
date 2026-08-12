@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { RankList } from "../charts";
 import { deriveDay, DIM_LABEL } from "../../lib/initial-five/derive";
+import { getActiveSnapshot } from "../../lib/active-snapshot";
 import { SavedIssueList, SaveIssueButton } from "./saved-issues";
 
 const formatDate = (iso: string) => {
@@ -11,8 +12,25 @@ const formatDate = (iso: string) => {
 /* 첫 화면은 하나만 한다 — 이날 어떤 의제가 있었고, 그 안에서 신문이 어디에서 갈렸는지 미리 보여
    준다. 이전에는 KPI 4칸·분야 구성·매체 참여·인용 방식·시야·방법론 산문까지 한 화면에 있었다.
    전부 사이드바나 각 의제 화면에 이미 있는 값이라 여기서는 지운다. */
-export default function HomePage() {
-  const day = deriveDay();
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const active = await getActiveSnapshot();
+  const day = deriveDay(active);
+  const semanticTotals = active.manifest.issues.reduce(
+    (totals, issue) => {
+      totals.completed += issue.semantic.succeededArticleCount;
+      totals.expected += issue.articleCount;
+      if (issue.semantic.status === "succeeded" && issue.semantic.succeededArticleCount >= issue.articleCount) {
+        totals.completeIssues += 1;
+      }
+      return totals;
+    },
+    { completed: 0, expected: 0, completeIssues: 0 },
+  );
+  const semanticComplete =
+    semanticTotals.completeIssues === active.manifest.issues.length &&
+    semanticTotals.completed >= semanticTotals.expected;
 
   return (
     <>
@@ -22,6 +40,10 @@ export default function HomePage() {
         <p>
           이날 보도량이 가장 많았던 의제 {day.issueCount}개입니다. 하나를 고르면 그 사건에서 신문 사이의 설명이 어디에서
           갈라졌는지부터 봅니다.
+          <span className="afs-ai-status">
+            상위 5개 의제 AI 본문 {semanticTotals.completed}/{semanticTotals.expected}건 ·{" "}
+            {semanticComplete ? "분석 완료" : "분석 진행 중"}
+          </span>
         </p>
       </header>
 

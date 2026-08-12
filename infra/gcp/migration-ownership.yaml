@@ -1,0 +1,16 @@
+apiVersion: agendaframe.gcp/v1
+kind: MigrationOwnershipContract
+metadata:
+  name: agendaframe-gcp-scheduler-cutover
+  implementationStatus: contract_only
+  externalCalls: false
+spec:
+  owner: gcp
+  cloudflareCronEnabled: false
+  legacyScheduleEnabled: false
+  invariant: exactly_one_scheduler_owner
+  requiredEnv:
+    AGENDAFRAME_PIPELINE_OWNER: gcp
+    AGENDAFRAME_CLOUDFLARE_CRON_ENABLED: "false"
+    AGENDAFRAME_LEGACY_SCHEDULE_ENABLED: "false"
+  rollback: disable-gcp-job-before-restoring-cloudflare-or-legacy-schedule

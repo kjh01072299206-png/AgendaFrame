@@ -110,7 +110,7 @@ class CloudRuntimeTests(unittest.TestCase):
         self.assertEqual(self.config.vertex.thinking_budget, 0)
         self.assertLessEqual(self.config.vertex.max_articles_per_run, 50)
         self.assertLessEqual(self.config.vertex.max_articles_per_day, 200)
-        self.assertEqual(self.config.vertex.prompt_version, "2.5.0")
+        self.assertEqual(self.config.vertex.prompt_version, "2.6.0")
 
     def test_response_schema_constrains_voice_kinds(self) -> None:
         from ai.framing import _response_schema
@@ -127,6 +127,67 @@ class CloudRuntimeTests(unittest.TestCase):
             {"direct_quote", "indirect_source", "uncertain_quote"},
         )
         self.assertEqual(self.config.vertex.schema_version, 3)
+        self.assertIn("structured_context", schema["properties"])
+        self.assertIn("framing_devices", schema["properties"]["structured_context"]["properties"])
+
+    def test_structured_context_requires_evidence_for_observed_codes(self) -> None:
+        value = article()
+        result = supported_result(value)
+        context = {
+            "scope": {"code": "thematic", "evidence": []},
+        }
+        with self.assertRaisesRegex(ValueError, "Supported observations require evidence"):
+            validate_frame_result(value, replace(result, structured_context=context))
+
+    def test_structured_context_unknown_is_not_presented_as_observed(self) -> None:
+        value = article()
+        result = supported_result(value)
+        context = {
+            "scope": {"code": "unknown", "evidence": []},
+            "context_depth": {"code": "unknown", "evidence": []},
+            "generic_frames": [],
+            "policy_frames": [],
+            "framing_devices": [],
+        }
+        validate_frame_result(value, replace(result, structured_context=context))
+        published = publication_row(value, replace(result, structured_context=context))
+        self.assertEqual(published["profile"]["scope"]["code"], "unknown")
+
+    def test_structured_context_publication_preserves_only_validated_locators(self) -> None:
+        value = article()
+        result = supported_result(value)
+        excerpt = "안전 대책"
+        start = (value.body_text or "").index(excerpt)
+        span = {
+            "article_id": value.article_id,
+            "start": start,
+            "end": start + len(excerpt),
+            "text": excerpt,
+        }
+        context = {
+            "genre": {"code": "straight_news", "label": "스트레이트", "evidence": [span]},
+            "scope": {"code": "thematic", "label": "주제 중심", "evidence": [span]},
+            "context_depth": {"code": "moderate", "label": "중간", "evidence": [span]},
+            "generic_frames": [{"code": "responsibility", "label": "책임", "evidence": [span]}],
+            "policy_frames": [],
+            "framing_devices": [
+                {
+                    "code": "headline_emphasis",
+                    "label": "제목 강조",
+                    "appears_in_lead": True,
+                    "evidence": [span],
+                }
+            ],
+        }
+        published = publication_row(value, replace(result, structured_context=context))
+        profile = published["profile"]
+        self.assertEqual(profile["scope"]["code"], "thematic")
+        self.assertEqual(profile["context_depth"]["level"], "moderate")
+        self.assertEqual(
+            profile["secondary_descriptors"]["generic_frames"][0]["code"], "responsibility"
+        )
+        self.assertTrue(profile["framing_devices"][0]["appears_in_lead"])
+        self.assertNotIn(value.body_text, json.dumps(published, ensure_ascii=False))
 
     def test_source_registry_defaults_all_real_sources_to_metadata_only(self) -> None:
         registry = SourcePolicyRegistry.from_yaml(ROOT / "config" / "source-policies.yaml")

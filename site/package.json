@@ -9,12 +9,13 @@
     "dev": "vite",
     "build": "npm run data:build:initial-five && vite build",
     "start": "vite --host 127.0.0.1",
-    "test": "npm run build && node --test --test-isolation=none tests/mvp.test.mjs tests/article-extractor.test.mjs tests/framing-engine.test.mjs tests/bigkinds-xlsx.test.mjs tests/prepare-bigkinds-gcp-trial.test.mjs tests/durable-jobs.test.mjs tests/publication-outbox.test.mjs tests/operations.test.mjs tests/release-guard.test.mjs tests/release-admin.test.mjs tests/evidence-chat.test.mjs tests/community.test.mjs tests/initial-five-contract.test.mjs",
+    "test": "npm run build && node --test --test-isolation=none tests/mvp.test.mjs tests/article-extractor.test.mjs tests/article-discovery.test.mjs tests/request-limiter.test.mjs tests/collection-schedule.test.mjs tests/collection-run-lease.test.mjs tests/discovery-store.test.mjs tests/authorized-body-collector.test.mjs tests/stored-body-analysis.test.mjs tests/collection-status.test.mjs tests/content-retention.test.mjs tests/live-verifier.test.mjs tests/framing-engine.test.mjs tests/bigkinds-xlsx.test.mjs tests/prepare-bigkinds-gcp-trial.test.mjs tests/durable-jobs.test.mjs tests/publication-outbox.test.mjs tests/operations.test.mjs tests/release-guard.test.mjs tests/release-admin.test.mjs tests/evidence-chat.test.mjs tests/community.test.mjs tests/initial-five-contract.test.mjs tests/semantic-analysis-pages-contract.test.mjs tests/active-snapshot-contract.test.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "data:import:bigkinds": "node scripts/import-bigkinds.mjs",
-    "data:build:initial-five": "node scripts/build-initial-five.mjs --out public/initial-five"
+    "data:build:initial-five": "node scripts/build-initial-five.mjs --out public/initial-five",
+    "collection:verify": "node scripts/verify-discovery-endpoints.mjs"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",

@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
-import { getInitialFiveIssueBundle, initialFiveManifest } from "../../../../lib/initial-five/artifacts";
+import { getActiveSnapshot } from "../../../../lib/active-snapshot";
+import { getInitialFiveIssueBundle } from "../../../../lib/initial-five/artifacts";
 import { deriveIssue, safeDecode } from "../../../../lib/initial-five/derive";
 import { IssueSubject } from "../../issue-subject";
 
-export function generateStaticParams() {
-  return initialFiveManifest.issues.map((issue) => ({ issueId: issue.issueId }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function IssueLayout({
   children,
@@ -15,7 +14,9 @@ export default async function IssueLayout({
   params: Promise<{ issueId: string }>;
 }) {
   const { issueId } = await params;
-  const bundle = getInitialFiveIssueBundle(safeDecode(issueId));
+  const active = await getActiveSnapshot();
+  const decodedIssueId = safeDecode(issueId);
+  const bundle = active.getIssueBundle(decodedIssueId) ?? (active.mode === "demo" ? getInitialFiveIssueBundle(decodedIssueId) : null);
   if (!bundle) notFound();
   const issue = deriveIssue(bundle);
 

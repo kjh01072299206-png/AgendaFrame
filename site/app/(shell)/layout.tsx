@@ -1,11 +1,14 @@
-import { initialFiveManifest } from "../../lib/initial-five/artifacts";
+import { getActiveSnapshot } from "../../lib/active-snapshot";
 import { deriveDay } from "../../lib/initial-five/derive";
 import { ScrollTop } from "./scroll-top";
 import { ShellSide, ShellTop, type ShellIssue } from "./shell-chrome";
 
-export default function ShellLayout({ children }: { children: React.ReactNode }) {
-  const day = deriveDay();
-  const issues: ShellIssue[] = initialFiveManifest.issues
+export const dynamic = "force-dynamic";
+
+export default async function ShellLayout({ children }: { children: React.ReactNode }) {
+  const active = await getActiveSnapshot();
+  const day = deriveDay(active);
+  const issues: ShellIssue[] = active.manifest.issues
     .slice()
     .sort((a, b) => a.rank - b.rank)
     .map((issue) => ({ issueId: issue.issueId, rank: issue.rank, title: issue.title, category: issue.category }));

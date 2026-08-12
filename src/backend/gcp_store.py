@@ -25,13 +25,19 @@ def _result_state(result: FrameResult) -> AnalysisState:
 class GcpAnalysisStore:
     """BigQuery metadata/results plus private Cloud Storage for authorized bodies."""
 
-    def __init__(self, config: RuntimeConfig) -> None:
+    def __init__(
+        self,
+        config: RuntimeConfig,
+        *,
+        bigquery_client: Any | None = None,
+        storage_client: Any | None = None,
+    ) -> None:
         from google.cloud import bigquery, storage
 
         self.config = config
         self.bigquery = bigquery
-        self.bq = bigquery.Client(project=config.project_id, location=config.region)
-        self.storage = storage.Client(project=config.project_id)
+        self.bq = bigquery_client or bigquery.Client(project=config.project_id, location=config.region)
+        self.storage = storage_client or storage.Client(project=config.project_id)
         self.bucket = self.storage.bucket(config.bucket)
 
     def already_analyzed(self, analysis_key: str) -> bool:

@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   ArticleExtractionError,
   extractArticleBody,
+  extractArticleTopic,
 } from "../worker/article-extractor.mjs";
 
 function paragraphs(prefix, count = 10) {
@@ -66,6 +67,41 @@ test("extracts a Chosun-style body and removes nested ads and recommendations", 
   assert.ok(result.quality >= 0.75);
 });
 
+test("maps structured article sections only to the four approved research topics", () => {
+  const html = (articleSection) => `<script type="application/ld+json">${JSON.stringify({
+    "@type": "NewsArticle",
+    articleSection,
+  })}</script>`;
+  assert.equal(extractArticleTopic(html("정치")), "politics");
+  assert.equal(extractArticleTopic(html("경제")), "economy");
+  assert.equal(extractArticleTopic(html("사회")), "society");
+  assert.equal(extractArticleTopic(html("국제")), "international");
+  assert.equal(extractArticleTopic(html("문화")), "excluded");
+  assert.equal(
+    extractArticleTopic('<script type="application/ld+json">{malformed}</script><a class="category-name" href="/news/pc/category/category.do?ctcd&#x3D;0006">분류</a>'),
+    "international",
+  );
+  assert.equal(extractArticleTopic("<html></html>"), null);
+});
+
+test("extracts current Chosun and Donga body containers", () => {
+  const chosunBody = paragraphs("조선일보 공개 기사", 9);
+  const chosun = extractArticleBody(
+    `<div id="article">${chosunBody.map((paragraph) => `<p>${paragraph}</p>`).join("")}</div>`,
+    { hostname: "www.chosun.com", sourceId: "chosun" },
+  );
+  assert.equal(chosun.strategy, "source-selector");
+  assert.match(chosun.bodyText, /조선일보 공개 기사 9문단/);
+
+  const dongaBody = paragraphs("동아일보 공개 기사", 9);
+  const donga = extractArticleBody(
+    `<div class="view_body">${dongaBody.map((paragraph) => `<p>${paragraph}</p>`).join("")}</div>`,
+    { hostname: "www.donga.com", sourceId: "donga" },
+  );
+  assert.equal(donga.strategy, "source-selector");
+  assert.match(donga.bodyText, /동아일보 공개 기사 9문단/);
+});
+
 test("extracts a Hankookilbo article-view-content-div body", () => {
   const body = paragraphs("한국일보 공개 기사", 9);
   const html = `
@@ -101,6 +137,26 @@ test("extracts only article-shaped fields from inert Next.js JSON state", () => 
   assert.equal(result.strategy, "script-state");
   assert.match(result.bodyText, /상태 데이터 기사 8문단/);
   assert.doesNotMatch(result.bodyText, /회원가입/);
+});
+
+test("extracts Chosun Arc text elements from inert Fusion metadata without evaluating JavaScript", () => {
+  const body = paragraphs("조선일보 Fusion 기사", 9);
+  const globalContent = {
+    type: "story",
+    content_elements: body.map((content) => ({ type: "text", content: `<p>${content}</p>` })),
+    related_content: { content: "관련 기사 본문은 섞이면 안 됩니다." },
+  };
+  const html = `
+    <div id="article"></div>
+    <script id="fusion-metadata" type="application/javascript">
+      window.Fusion = window.Fusion || {};
+      Fusion.globalContent = ${JSON.stringify(globalContent)};
+      window.mustNotRun = true;
+    </script>`;
+  const result = extractArticleBody(html, { hostname: "www.chosun.com", sourceId: "chosun" });
+  assert.equal(result.strategy, "script-state");
+  assert.match(result.bodyText, /조선일보 Fusion 기사 9문단/);
+  assert.doesNotMatch(result.bodyText, /관련 기사 본문|mustNotRun/);
 });
 
 test("rejects a visible subscription gate and a contaminated article shell", () => {

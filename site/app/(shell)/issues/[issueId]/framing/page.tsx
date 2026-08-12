@@ -1,125 +1,19 @@
-import { notFound } from "next/navigation";
-import { protoIssue } from "../../../../../lib/proto";
-import {
-  Clusters,
-  DeviceTable,
-  DimMatrix,
-  GenericFrames,
-  LayerVerdict,
-  PolicyFrames,
-  SemanticNetworks,
-} from "../../../proto-parts";
-import { loadIssue } from "../load";
+import { deriveIssue } from "../../../../../lib/initial-five/derive";
+import { AnalysisPageIntro, FramingSemanticPage } from "../../../semantic-analysis-pages";
+import { loadIssueBundle } from "../load";
 
 export const metadata = { title: "프레이밍 분석 | AgendaFrame" };
 
-/* 프레이밍 분석은 이론에 붙은 층위만 모은다. 세는 것(인용원·인용 방식·형태소)은 언론사 비교로 갔다.
-   각 층위 제목 옆의 출처가 그 표를 왜 그렇게 그렸는지의 근거다. */
 export default async function FramingPage({ params }: { params: Promise<{ issueId: string }> }) {
-  const issue = await loadIssue(params);
-  const proto = protoIssue(issue.issueId);
-  if (!proto) notFound();
-
-  /* 계열 이름만으로는 "누구의 공동 책임" 인지 알 수 없다. 라이브 코딩본이 층위별 의역문에서
-     뽑아 둔 주체를 항목 칸에 붙인다. 두 산출물은 기사 순서가 같고 frames 만 기사 id 를 갖는다. */
-  const DIM_BY_ROW: Record<string, string> = {
-    "무엇이 문제인가": "problem_definition",
-    "왜 이렇게 됐나": "causal_interpretation",
-    "누구 책임인가": "responsibility_attribution",
-    "어떻게 평가하나": "moral_evaluation",
-    "어떻게 하자는가": "treatment_recommendation",
-  };
-  const liveByArticle = new Map(issue.articles.map((article) => [article.articleId, article]));
-  const subjects = proto.evidence.map((entry, index) => {
-    const live = proto.frames ? liveByArticle.get(proto.frames[index]?.article_id ?? "") : undefined;
-    const byRow: Record<string, string[]> = {};
-    for (const [rowLabel, dim] of Object.entries(DIM_BY_ROW)) byRow[rowLabel] = live?.subjects[dim] ?? [];
-    return byRow;
-  });
-
+  const bundle = await loadIssueBundle(params);
+  const issue = deriveIssue(bundle);
   return (
     <>
-      <section className="afs-card afs-card-lead">
-        <h2>이 사안의 프레이밍</h2>
-        <div className="afs-in afs-prose">
-          <p>{proto.agreedLine}</p>
-          <p>{proto.splitLine}</p>
-        </div>
-      </section>
-
-      <section className="afs-card">
-        <h2>
-          여섯 항목을 무엇으로 규정했나
-          <small>Entman 1993</small>
-        </h2>
-        <div className="afs-in">
-          <DimMatrix rows={proto.evidence} subjects={subjects} />
-        </div>
-      </section>
-
-      <section className="afs-card">
-        <h2>
-          요소 조합 군집
-          <small>Matthes &amp; Kohring 2008</small>
-        </h2>
-        <div className="afs-in">
-          <Clusters mk={proto.mk} />
-        </div>
-      </section>
-
-      {/* 열이 여덟이라 절반 폭에 두면 잘린다(관문 DESK-CLIP). 폭을 다 쓴다.
-          지배 프레임 도넛은 이 표의 '지배' 칸과 같은 값이고 의제마다 값이 하나뿐이어서 뺐다. */}
-      <section className="afs-card">
-        <h2>
-          정책 프레임
-          <small>Boydstun et al. 2014</small>
-        </h2>
-        <div className="afs-in">
-          {proto.frames ? <PolicyFrames frames={proto.frames} /> : <p className="afs-hold">코딩 진행 중</p>}
-        </div>
-      </section>
-
-      <section className="afs-card">
-        <h2>
-          보편 프레임 다섯 종
-          <small>Semetko &amp; Valkenburg 2000</small>
-        </h2>
-        <div className="afs-in">
-          {proto.frames ? <GenericFrames frames={proto.frames} /> : <p className="afs-hold">코딩 진행 중</p>}
-        </div>
-      </section>
-
-      <section className="afs-card">
-        <h2>
-          시야의 넓이와 지칭어
-          <small>Iyengar 1991</small>
-        </h2>
-        <div className="afs-in">
-          <DeviceTable rows={proto.devices} />
-        </div>
-      </section>
-
-      <section className="afs-card">
-        <h2>
-          프레임별 의미 연결망
-          <small>semantic network analysis</small>
-        </h2>
-        <div className="afs-in">
-          <SemanticNetworks groups={proto.frameGroups} />
-        </div>
-      </section>
-
-      <section className="afs-card">
-        <h2>
-          층위별 판정
-          <small className="afs-num">
-            {proto.splitLayers[0]}/{proto.splitLayers[1]} 갈림
-          </small>
-        </h2>
-        <div className="afs-in">
-          <LayerVerdict counts={proto.counts} />
-        </div>
-      </section>
+      <AnalysisPageIntro
+        title="프레이밍 분석"
+        description="예시 HTML의 프레임 4기능 순서를 따라, 실제 기사에서 관측된 문제 정의·원인 해석·책임 귀속·평가·해법과 취재원 배치를 근거 위치와 함께 읽습니다."
+      />
+      <FramingSemanticPage bundle={bundle} issue={issue} />
     </>
   );
 }

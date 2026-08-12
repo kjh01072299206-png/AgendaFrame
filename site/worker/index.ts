@@ -1,6 +1,7 @@
 /** Cloudflare Worker entry point for the vinext-starter template. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
+import discoveryPolicy from "../data/discovery-sources.json";
 import sourcePanel from "../data/sources.json";
 import { configureSourcePanel, handleApiRequest, withDocumentSecurityHeaders, withSecurityHeaders } from "./runtime.mjs";
 
@@ -9,6 +10,7 @@ configureSourcePanel(sourcePanel);
 interface ContentBucket {
   get(key: string): Promise<{ text(): Promise<string> } | null>;
   put(key: string, value: string, options?: Record<string, unknown>): Promise<unknown>;
+  delete(key: string): Promise<void>;
 }
 
 interface Env {
@@ -40,8 +42,9 @@ interface ExecutionContext {
 const worker = {
   scheduled(controller: { scheduledTime: number }, env: Env, ctx: ExecutionContext): void {
     ctx.waitUntil(
-      import("./operations.mjs").then(({ runScheduledOperations }) => runScheduledOperations(env, {
+      import("./content-retention.mjs").then(({ runScheduledAgendaFrame }) => runScheduledAgendaFrame(env, {
         scheduledTime: controller.scheduledTime,
+        discoveryPolicy,
       })),
     );
   },

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { FormEvent, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -19,7 +19,7 @@ type Source = {
   id: string;
   name: string;
   sampleOrder: number;
-  sourceType: "general_daily" | "business_media" | "news_agency";
+  sourceType: "general_daily" | "business_media" | "news_agency" | "broadcaster";
   sourceTypeLabel: string;
   mediaGroupId: string;
   mediaGroupLabel: string;
@@ -407,8 +407,10 @@ function formatAgendaDate(value?: string | null) {
   return `${Number(month)}월 ${Number(day)}일`;
 }
 
-const ISSUE_SCOPE = "general_daily_10";
-const ISSUE_SCOPE_LABEL = "국내 10대 종합일간지";
+const ISSUE_SCOPE = "academic_panel_12";
+const ISSUE_SCOPE_LABEL = "학술연구 12개 매체";
+const LEGACY_ISSUE_SCOPE = "general_daily_10";
+const LEGACY_ISSUE_SCOPE_LABEL = "국내 10대 종합일간지";
 type Top5PilotIssue = (typeof top5PilotData.issues)[number];
 
 function normalizedArticleUrl(value?: string | null) {
@@ -816,6 +818,21 @@ function normalizeAnalysisTab(value: string | null): AnalysisTab {
 }
 
 const agendaCategoryOrder = ["정치", "경제", "사회", "국제", "스포츠", "생활·IT"];
+
+// 2026-07-26 하루 수집분(NewsResult_20260426-20260726.xlsx)을 통합 분류로 집계한 상위 분야 분포.
+// `count`는 기사 수(건), `dayCategorySource`는 이 카드의 근거 자료를 그대로 적는다.
+const DAY_CATEGORY_TOTAL = 792;
+const DAY_CATEGORY_OUTLET_TOTAL = 10;
+const DAY_CATEGORY_OTHER = 111;
+const DAY_CATEGORY_DIST = [
+  { label: "사회", count: 174 },
+  { label: "경제", count: 156 },
+  { label: "지역", count: 101 },
+  { label: "문화", count: 92 },
+  { label: "정치", count: 81 },
+  { label: "국제", count: 77 },
+];
+const DAY_CATEGORY_DATE = "2026.07.26";
 
 const statusLabels: Record<string, string> = {
   available: "구조화 비교 가능",
@@ -1578,6 +1595,7 @@ export default function AgendaDashboard() {
   const [categories, setCategories] = useState<Array<{ category: string; count: number }>>([]);
   const [availableDates, setAvailableDates] = useState<IssueDateOption[]>([]);
   const [issueDate, setIssueDate] = useState("");
+  const [activeIssueScope, setActiveIssueScope] = useState(ISSUE_SCOPE);
   const [category, setCategory] = useState("전체");
   const [selectedIssueId, setSelectedIssueId] = useState("");
   const [detail, setDetail] = useState<IssueDetail | null>(null);
@@ -1593,6 +1611,7 @@ export default function AgendaDashboard() {
   const [articleError, setArticleError] = useState("");
   const [filters, setFilters] = useState<ArticleFilters>({ q: "", source: "", section: "", articleDate: "" });
   const [appliedFilters, setAppliedFilters] = useState<ArticleFilters>({ q: "", source: "", section: "", articleDate: "" });
+  const [articleSortMode, setArticleSortMode] = useState<"latest" | "outlet">("latest");
   const [urlReady, setUrlReady] = useState(false);
   const [healthError, setHealthError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -1612,41 +1631,50 @@ export default function AgendaDashboard() {
     }
   }, []);
 
-  const loadSources = useCallback(async () => {
+  const loadSources = useCallback(async (scope = activeIssueScope) => {
     try {
-      const response = await fetch("/api/sources", { cache: "force-cache" });
+      const response = await fetch(`/api/sources?scope=${scope}`, { cache: "force-cache" });
       if (!response.ok) throw new Error("sources unavailable");
       const payload = await response.json();
       setSources(Array.isArray(payload.sources) ? payload.sources.filter((source: Source) => source.active) : []);
     } catch {
       setSources([]);
     }
-  }, []);
+  }, [activeIssueScope]);
 
   const loadIssueDates = useCallback(async (preferredDate = "") => {
     try {
-      const response = await fetch(`/api/issues/dates?limit=31&scope=${ISSUE_SCOPE}`, { cache: "no-store" });
+      let resolvedScope = ISSUE_SCOPE;
+      let response = await fetch(`/api/issues/dates?limit=31&scope=${resolvedScope}`, { cache: "no-store" });
       if (!response.ok) throw new Error("issue dates unavailable");
-      const payload = await response.json();
-      const nextDates = Array.isArray(payload.dates) ? payload.dates : [];
+      let payload = await response.json();
+      let nextDates = Array.isArray(payload.dates) ? payload.dates : [];
+      if (!nextDates.length) {
+        resolvedScope = LEGACY_ISSUE_SCOPE;
+        response = await fetch(`/api/issues/dates?limit=31&scope=${resolvedScope}`, { cache: "no-store" });
+        if (!response.ok) throw new Error("fallback issue dates unavailable");
+        payload = await response.json();
+        nextDates = Array.isArray(payload.dates) ? payload.dates : [];
+      }
+      setActiveIssueScope(resolvedScope);
       setAvailableDates(nextDates);
       const resolvedDate = nextDates.some((entry: IssueDateOption) => entry.date === preferredDate)
         ? preferredDate
         : (nextDates[0]?.date ?? preferredDate);
       setIssueDate(resolvedDate);
-      return resolvedDate;
+      return { date: resolvedDate, scope: resolvedScope };
     } catch {
       setAvailableDates([]);
       setIssueDate(preferredDate);
-      return preferredDate;
+      return { date: preferredDate, scope: activeIssueScope };
     }
-  }, []);
+  }, [activeIssueScope]);
 
-  const loadIssues = useCallback(async (nextCategory = category, nextDate = issueDate) => {
+  const loadIssues = useCallback(async (nextCategory = category, nextDate = issueDate, scope = activeIssueScope) => {
     setLoadingIssues(true);
     setIssueError("");
     try {
-      const parameters = new URLSearchParams({ limit: "5", scope: ISSUE_SCOPE });
+      const parameters = new URLSearchParams({ limit: "5", scope });
       if (nextCategory !== "전체") parameters.set("category", nextCategory);
       if (nextDate) parameters.set("date", nextDate);
       const response = await fetch(`/api/issues?${parameters}`, { cache: "no-store" });
@@ -1663,7 +1691,7 @@ export default function AgendaDashboard() {
     } finally {
       setLoadingIssues(false);
     }
-  }, [category, issueDate]);
+  }, [activeIssueScope, category, issueDate]);
 
   const loadArticles = useCallback(async ({ append = false, nextFilters = appliedFilters } = {}) => {
     if (articleLoading) return;
@@ -1704,20 +1732,20 @@ export default function AgendaDashboard() {
     setAppliedFilters(initialFilters);
     setUrlReady(true);
     void (async () => {
-      const resolvedDate = await loadIssueDates(initialIssueDate);
-      await Promise.allSettled([loadHealth(), loadSources(), loadIssues(initialCategory, resolvedDate)]);
+      const resolved = await loadIssueDates(initialIssueDate);
+      await Promise.allSettled([loadHealth(), loadSources(resolved.scope), loadIssues(initialCategory, resolved.date, resolved.scope)]);
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!selectedIssueId) return;
     let cancelled = false;
-    fetch(`/api/issues/${encodeURIComponent(selectedIssueId)}?scope=${ISSUE_SCOPE}`, { cache: "no-store" })
+    fetch(`/api/issues/${encodeURIComponent(selectedIssueId)}?scope=${activeIssueScope}`, { cache: "no-store" })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error("detail unavailable")))
       .then((payload) => { if (!cancelled) setDetail(applyTop5Pilot(payload as IssueDetail)); })
       .catch(() => { if (!cancelled) { setDetail(null); setDetailError("이슈 근거를 불러오지 못했습니다."); } });
     return () => { cancelled = true; };
-  }, [detailRequestNonce, selectedIssueId]);
+  }, [activeIssueScope, detailRequestNonce, selectedIssueId]);
 
   useEffect(() => {
     if (!pendingDetailFocusRef.current || detail?.issue.id !== selectedIssueId) return;
@@ -1804,7 +1832,8 @@ export default function AgendaDashboard() {
     if (refreshing) return;
     setRefreshing(true);
     setRefreshMessage("");
-    await Promise.allSettled([loadHealth(), loadIssueDates(issueDate), loadIssues(category, issueDate), archiveRequestedRef.current ? loadArticles({ nextFilters: appliedFilters }) : Promise.resolve()]);
+    const resolved = await loadIssueDates(issueDate);
+    await Promise.allSettled([loadHealth(), loadSources(resolved.scope), loadIssues(category, resolved.date, resolved.scope), archiveRequestedRef.current ? loadArticles({ nextFilters: appliedFilters }) : Promise.resolve()]);
     setRefreshMessage(`${formatDateTime(Date.now())}에 화면 데이터를 확인했습니다.`);
     setRefreshing(false);
   };
@@ -1817,11 +1846,23 @@ export default function AgendaDashboard() {
   const detectedFrames = detail?.frames.filter((frame) => frame.score > 0 && frame.evidenceText) ?? [];
   const bodyBackedFrameCount = detail?.frames.filter((frame) => frame.evidenceBasis.startsWith("body_") && frame.score > 0).length ?? 0;
   const bodyEvidenceCount = health?.collection.bodyEvidenceCount ?? 0;
-  const configuredSourceCount = sources.filter((source) => source.sourceType === "general_daily").length || 10;
-  const sourceGroups = useMemo(() => ["general_daily", "business_media", "news_agency"].map((sourceType) => {
+  const issueScopeLabel = activeIssueScope === ISSUE_SCOPE ? ISSUE_SCOPE_LABEL : LEGACY_ISSUE_SCOPE_LABEL;
+  const configuredSourceCount = sources.length || (activeIssueScope === ISSUE_SCOPE ? 12 : 10);
+  const sourceGroups = useMemo(() => ["general_daily", "broadcaster", "business_media", "news_agency"].map((sourceType) => {
     const entries = sources.filter((source) => source.sourceType === sourceType).sort((a, b) => a.sampleOrder - b.sampleOrder);
     return { sourceType, label: entries[0]?.sourceTypeLabel ?? sourceType, entries };
   }).filter((group) => group.entries.length), [sources]);
+
+  const sortedDetailArticles = useMemo(() => {
+    if (!detail?.articles) return [];
+    const list = [...detail.articles];
+    if (articleSortMode === "latest") {
+      return list.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    } else if (articleSortMode === "outlet") {
+      return list.sort((a, b) => a.source.localeCompare(b.source, "ko"));
+    }
+    return list;
+  }, [detail, articleSortMode]);
 
   return (
     <>
@@ -1847,10 +1888,38 @@ export default function AgendaDashboard() {
           </dl>
         </section>
 
+        <section className="day-category-dist" aria-labelledby="day-category-title">
+          <div className="day-category-heading">
+            <div>
+              <p className="context-label">하루 기사 분야 분포 · {DAY_CATEGORY_DATE}</p>
+              <h2 id="day-category-title">그날 언론이 가장 많이 다룬 분야</h2>
+            </div>
+            <p className="day-category-total"><strong>{DAY_CATEGORY_TOTAL}</strong>건 기준</p>
+          </div>
+          <div className="frame-chart" role="group" aria-label="분야별 기사 수 분포">
+            {DAY_CATEGORY_DIST.map((entry) => {
+              const ratio = (entry.count / DAY_CATEGORY_TOTAL) * 100;
+              return (
+                <div className="frame-row" key={entry.label}>
+                  <span>{entry.label}</span>
+                  <div aria-hidden="true"><i style={{ width: `${ratio}%`, background: "var(--accent)" }} /></div>
+                  <b>{entry.count}건</b>
+                </div>
+              );
+            })}
+            <div className="frame-row">
+              <span>그 외</span>
+              <div aria-hidden="true"><i style={{ width: `${(DAY_CATEGORY_OTHER / DAY_CATEGORY_TOTAL) * 100}%`, background: "var(--muted)" }} /></div>
+              <b>{DAY_CATEGORY_OTHER}건</b>
+            </div>
+          </div>
+          <p className="panel-note"><span aria-hidden="true">ⓘ</span> 위 분야 분포는 현재 {issueScopeLabel} 분석과 별개인 7월 26일 기존 수집본({DAY_CATEGORY_OUTLET_TOTAL}개 언론사)의 고정 집계입니다. 최신 연구 수집 결과로 오해하지 않도록 분석 기준일과 분리해 표시합니다.</p>
+        </section>
+
         <section className="workspace" id="agenda-workspace" aria-label="뉴스 이슈 비교">
           <aside className="ranking-panel" aria-labelledby="ranking-title">
               <div className="section-heading agenda-heading">
-              <div><p className="context-label">{ISSUE_SCOPE_LABEL} · 보도 확산 상위</p><h2 id="ranking-title">{formatAgendaDate(basisDate)} 주요 의제</h2><p className="section-description">날짜를 고른 뒤 상위 5개 의제 중 하나를 선택하세요.</p></div>
+              <div><p className="context-label">{issueScopeLabel} · 보도 확산 상위</p><h2 id="ranking-title">{formatAgendaDate(basisDate)} 주요 의제</h2><p className="section-description">날짜를 고른 뒤 상위 5개 의제 중 하나를 선택하세요.</p></div>
               <label className="issue-date-control" htmlFor="issue-date">
                 <span>분석 기준일</span>
                 <select id="issue-date" value={issueDate} disabled={!availableDates.length} onChange={(event) => handleIssueDate(event.target.value)}>
@@ -1867,12 +1936,12 @@ export default function AgendaDashboard() {
               {loadingIssues ? <div className="skeleton-stack" role="status" aria-label="선택한 날짜의 의제를 불러오는 중">{[0, 1, 2, 3].map((item) => <i className="skeleton-row" key={item} aria-hidden="true" />)}</div> : issueError ? <div className="empty-state error-state" role="alert"><strong>의제를 불러오지 못했습니다.</strong><span>{issueError}</span><button type="button" onClick={() => loadIssues(category, issueDate)}>의제 다시 불러오기</button></div> : issues.length ? issues.map((issue, index) => (
                 <button key={issue.id} type="button" className={`agenda-card${issue.id === selectedIssueId ? " active" : ""}`} aria-pressed={issue.id === selectedIssueId} aria-current={issue.id === selectedIssueId ? "true" : undefined} aria-controls="issue-analysis-panel" onClick={() => selectIssue(issue.id)}>
                   <span className="agenda-rank">{index + 1}</span>
-                  <span className="agenda-copy"><span className="agenda-meta"><b className="category-tag">{issue.category}</b>{issue.sourceCount}/{configuredSourceCount}개 매체 · 관련 기사 {issue.articleCount}건</span><strong>{naturalIssueTitle(issue.title)}</strong><small>{issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 대기" : issue.scoreStatus === "scope_observed_components" ? "10대 종합일간지 기준" : "의제 자동 묶음 · 검토 전"}</small></span>
+                  <span className="agenda-copy"><span className="agenda-meta"><b className="category-tag">{issue.category}</b>{issue.sourceCount}/{configuredSourceCount}개 매체 · 관련 기사 {issue.articleCount}건</span><strong>{naturalIssueTitle(issue.title)}</strong><small>{issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 대기" : issue.scoreStatus === "scope_observed_components" ? "12개 연구매체 기준" : "의제 자동 묶음 · 검토 전"}</small></span>
                   <span className="agenda-score"><strong>{issue.agendaScore === null ? "–" : Math.round(issue.agendaScore)}</strong><small>{issue.agendaScore === null ? "보류" : "표본 확산"}</small></span>
                 </button>
               )) : <div className="empty-state"><strong>표시할 이슈가 없습니다.</strong><span>선택한 분야에 분석된 기사 제목이 아직 없습니다.</span></div>}
             </div>
-            <p className="panel-note"><span aria-hidden="true">ⓘ</span> 상위 5개는 {ISSUE_SCOPE_LABEL} 안의 기사 수·참여 매체를 기준으로 정렬합니다. 사회적 중요도·사실성·여론을 뜻하지 않습니다. 기사 수가 적은 경우에는 서로 다른 사건을 섞지 않도록 묶음을 분리한 결과일 수 있습니다.</p>
+            <p className="panel-note"><span aria-hidden="true">ⓘ</span> 상위 5개는 {issueScopeLabel} 안의 기사 수·참여 매체를 기준으로 정렬합니다. 사회적 중요도·사실성·여론을 뜻하지 않습니다. 기사 수가 적은 경우에는 서로 다른 사건을 섞지 않도록 묶음을 분리한 결과일 수 있습니다.</p>
           </aside>
 
           <article className="detail-panel" id="issue-analysis-panel" aria-live="polite">
@@ -1885,7 +1954,7 @@ export default function AgendaDashboard() {
                   const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
                   document.getElementById("ranking-title")?.scrollIntoView({ behavior, block: "start" });
                 }}>← 이슈 목록</button>
-                <div className="detail-kicker"><p>{detail.issue.category} · {detail.issue.issueDate} · {ISSUE_SCOPE_LABEL} {detail.issue.sourceCount}곳</p><span className="confidence review">{detail.issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 필요" : detail.issue.scoreStatus === "scope_observed_components" ? "표본 기준 자동 정렬" : "자동 분석 · 검토 전"}</span></div>
+                <div className="detail-kicker"><p>{detail.issue.category} · {detail.issue.issueDate} · {issueScopeLabel} {detail.issue.sourceCount}곳</p><span className="confidence review">{detail.issue.scoreStatus === "legacy_reanalysis_required" ? "재분석 필요" : detail.issue.scoreStatus === "scope_observed_components" ? "표본 기준 자동 정렬" : "자동 분석 · 검토 전"}</span></div>
                 <div className="detail-title-row"><div><h2 ref={detailTitleRef} tabIndex={-1}>{naturalIssueTitle(detail.issue.title)}</h2><p className="detail-summary">{detail.issue.summary}</p></div><div className="big-score"><strong>{detail.issue.agendaScore === null ? "–" : Math.round(detail.issue.agendaScore)}</strong><span>{detail.issue.agendaScore === null ? "산출 보류" : "10대 종합일간지 확산 /100"}</span></div></div>
                 <div className="detail-metrics"><span>관련 제목 <b>{detail.issue.articleCount}건</b></span><span>포함 매체 <b>{detail.issue.sourceCount}/{configuredSourceCount}곳</b></span><span>본문 단서 <b>{detail.issue.contentAvailableCount}/{detail.issue.articleCount}건</b></span><span>사람 검토 <b>미완료</b></span></div>
                 {(() => {
@@ -1902,7 +1971,7 @@ export default function AgendaDashboard() {
                 )}
                 {tab === "outlets" && <div id="analysis-panel-outlets" role="tabpanel" aria-labelledby="analysis-tab-outlets" className="outlet-list"><p className="expert-note"><strong>읽는 법</strong> 기사 수와 홈페이지 배치는 편향·사실성·논조를 판정하는 값이 아닙니다.</p><div className="outlet-head"><span>언론사</span><span>기사</span><span>홈 배치</span><span>대표 제목</span></div>{detail.outlets.map((outlet) => { const article = detail.articles.find((entry) => entry.source === outlet.source); const placement = outletPlacementLabels[outlet.placement] ?? outlet.placement; return <div className="outlet-row" key={outlet.source}><strong>{outlet.source}</strong><b>{outlet.articleCount}건</b><span className={`placement-badge${placement === "관측 없음" ? " unknown" : ""}`}>{placement}</span><p>{article ? <a href={article.url} target="_blank" rel="noopener noreferrer">{article.title}</a> : "대표 제목 미확인"}</p></div>; })}</div>}
                 {tab === "frames" && <div id="analysis-panel-frames" role="tabpanel" aria-labelledby="analysis-tab-frames" className="frame-layout">{detail.frames.length ? <><p className="expert-note frame-note"><strong>레거시 보조 지표</strong> {bodyBackedFrameCount ? `본문에서 관측한 일반 표현 태그 ${bodyBackedFrameCount}개와 제목 단서를 구분해 표시합니다.` : "현재는 제목에 포함된 보조 표현 태그만 표시합니다."} 이 탭의 값은 이슈 전체 집계이며 매체별 프레임 구성으로 해석하지 않습니다. 새 기사별 Policy Frames 구성은 비교 탭에서 재분석 완료 후 표시됩니다.</p><div className="frame-chart">{detail.frames.map((frame) => <div className="frame-row" key={frame.frame}><span>{frameLabels[frame.frame] ?? frame.frame}</span><div aria-hidden="true"><i style={{ width: `${frame.score}%`, background: frameColors[frame.frame] }} /></div><b>{frame.score > 0 ? `${frame.score.toFixed(1)}%` : "검출 없음"}</b></div>)}</div><div className="evidence-panel"><h3>관측된 보조 표현 태그</h3>{detectedFrames.length ? detectedFrames.map((frame) => <article key={frame.frame}><span style={{ color: frameColors[frame.frame] }}>{frameLabels[frame.frame]}</span><p>{frame.evidenceText}</p><small><b>{frame.evidenceBasis === "headline" ? "제목 단서" : frame.evidenceBasis === "body_transient" ? "임시 본문 분석 · 전문 미저장" : frame.evidenceBasis === "body_public" ? "이용 허가 본문" : "비공개 본문·문장 검토 전"}</b>{frame.sourceUrl ? <> · <a href={frame.sourceUrl} target="_blank" rel="noopener noreferrer">{frame.source ?? "원문"}에서 확인 →</a></> : ` · ${frame.source ?? "출처 미확인"}`}</small></article>) : <p className="withheld">현재 근거 범위에서는 사전에 정의된 보조 표현 태그를 검출하지 못했습니다.</p>}</div></> : <p className="withheld">기존 분석은 근거 오류 가능성이 있어 숨겼습니다. 재분석 뒤 실제로 검출된 보조 태그만 표시합니다.</p>}</div>}
-                {tab === "articles" && <div id="analysis-panel-articles" role="tabpanel" aria-labelledby="analysis-tab-articles" className="article-table"><div className="article-tools"><div><strong>관련 원문 {detail.articles.length}건</strong><p>제목 유사도는 같은 사건을 묶기 위한 참고값이며 기사 신뢰도 점수가 아닙니다.</p></div></div><div>{detail.articles.map((article) => <article className="article-item" key={article.id}><span className="article-outlet">{article.source}</span><div><strong>{article.title}</strong><small>{formatDateTime(article.publishedAt)} · 대표 제목과 단어 유사도 {Math.round((article.similarity ?? 0) * 100)}% · {article.contentAvailable ? "본문 구조화 초안 있음" : "제목 근거만 있음"}</small></div><a className="article-link" href={article.url} target="_blank" rel="noopener noreferrer">원문 열기</a></article>)}</div></div>}
+                {tab === "articles" && <div id="analysis-panel-articles" role="tabpanel" aria-labelledby="analysis-tab-articles" className="article-table"><div className="article-tools"><div><strong>관련 원문 {detail.articles.length}건</strong><p>제목 유사도는 같은 사건을 묶기 위한 참고값이며 기사 신뢰도 점수가 아닙니다.</p></div><div className="article-sort-controls" aria-label="기사 정렬 목록"><span className="sort-label">정렬:</span><button type="button" className={`filter-pill${articleSortMode === "latest" ? " active" : ""}`} aria-pressed={articleSortMode === "latest"} onClick={() => setArticleSortMode("latest")}>최신순</button><button type="button" className={`filter-pill${articleSortMode === "outlet" ? " active" : ""}`} aria-pressed={articleSortMode === "outlet"} onClick={() => setArticleSortMode("outlet")}>언론사순</button></div></div><div>{sortedDetailArticles.map((article) => <article className="article-item" key={article.id}><span className="article-outlet">{article.source}</span><div><strong>{article.title}</strong><small>{formatDateTime(article.publishedAt)} · 대표 제목과 단어 유사도 {Math.round((article.similarity ?? 0) * 100)}% · {article.contentAvailable ? "본문 구조화 초안 있음" : "제목 근거만 있음"}</small></div><a className="article-link" href={article.url} target="_blank" rel="noopener noreferrer">원문 열기</a></article>)}</div></div>}
               </>
             )}
           </article>
@@ -1933,7 +2002,7 @@ export default function AgendaDashboard() {
 
       </main>
 
-      <footer><div className="brand footer-brand"><span className="brand-mark" aria-hidden="true">AF</span><span className="brand-copy"><b>AgendaFrame</b><small>보도 근거 비교</small></span></div><p>전체 수집 22개 매체 온라인 표본 · 현재 비교 국내 10대 종합일간지 · 자동 분석 검토 전</p><a href="/tools/method" style={{ minHeight: "44px", display: "inline-flex", alignItems: "center", borderBottom: "1px solid #7b8494", color: "white", fontSize: "12px", fontWeight: 700 }}>분석 방법</a></footer>
+      <footer><div className="brand footer-brand"><span className="brand-mark" aria-hidden="true">AF</span><span className="brand-copy"><b>AgendaFrame</b><small>보도 근거 비교</small></span></div><p>{issueScopeLabel} · 정치·경제·사회·국제 기사 · 자동 분석 검토 전</p><a href="/tools/method" style={{ minHeight: "44px", display: "inline-flex", alignItems: "center", borderBottom: "1px solid #7b8494", color: "white", fontSize: "12px", fontWeight: 700 }}>분석 방법</a></footer>
     </>
   );
 }

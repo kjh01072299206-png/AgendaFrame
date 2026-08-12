@@ -1,5 +1,6 @@
 import vinext from "vinext";
 import { defineConfig } from "vite";
+import collectionSchedule from "./data/collection-schedule.json";
 import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
 
@@ -31,6 +32,9 @@ const localBindingConfig = {
         },
       ]
     : [],
+  triggers: {
+    crons: collectionSchedule.enabled ? collectionSchedule.cronsUtc : [],
+  },
 };
 
 export default defineConfig(async () => {

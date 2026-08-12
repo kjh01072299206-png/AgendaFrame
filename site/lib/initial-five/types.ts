@@ -123,6 +123,8 @@ export interface SemanticEvidenceSource {
 }
 
 export interface SemanticDimensionItem {
+  claim_id?: string;
+  variant_key?: string;
   public_paraphrase?: string;
   frame_family?: string;
   voice?: {
@@ -159,6 +161,40 @@ export interface SemanticPublicProfile {
     role_label?: string;
     direct_quote_count?: number;
     indirect_attribution_count?: number;
+    evidence?: SemanticEvidenceSource[];
+  }>;
+  genre?: {
+    code?: string;
+    label?: string;
+    evidence?: SemanticEvidenceSource[];
+    reason?: string;
+  };
+  scope?: {
+    code?: string;
+    label?: string;
+    level?: string;
+    evidence?: SemanticEvidenceSource[];
+    caution?: string;
+    reason?: string;
+  };
+  context_depth?: {
+    code?: string;
+    level?: string;
+    label?: string;
+    evidence?: SemanticEvidenceSource[];
+    caution?: string;
+    reason?: string;
+  };
+  secondary_descriptors?: {
+    generic_frames?: Array<{ code?: string; label?: string; evidence?: SemanticEvidenceSource[] }>;
+    policy_frames?: Array<{ code?: string; label?: string; evidence?: SemanticEvidenceSource[] }>;
+    controlled_associations?: Array<{ code?: string; label?: string; evidence?: SemanticEvidenceSource[] }>;
+  };
+  framing_devices?: Array<{
+    code?: string;
+    label?: string;
+    count?: number;
+    appears_in_lead?: boolean;
     evidence?: SemanticEvidenceSource[];
   }>;
   review?: {
