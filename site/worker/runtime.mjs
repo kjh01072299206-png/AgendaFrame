@@ -3511,7 +3511,19 @@ async function handleScopedIssues(request, env, scope, run, category, limit) {
         m.articleCount DESC,
         i.title ASC
       LIMIT ?
-    `).bind(...metricsPredicate.parameters, ...titlePredicate.parameters, scope.configuredCount, scope.configuredCount, scope.configuredCount, scope.configuredCount, scope.configuredCount, ...parameters, limit).all(),
+    `).bind(
+      ...metricsPredicate.parameters,
+      ...titlePredicate.parameters,
+      // SQL evaluates the SELECT-list placeholders before the WHERE values;
+      // the two ordering denominators come after the WHERE values.
+      scope.configuredCount,
+      scope.configuredCount,
+      scope.configuredCount,
+      ...parameters,
+      scope.configuredCount,
+      scope.configuredCount,
+      limit,
+    ).all(),
     env.DB.prepare(`SELECT i.category, COUNT(*) AS count FROM issues i WHERE i.run_id = ? AND i.category IN (${categoryPlaceholders}) AND ${scopeExists} GROUP BY i.category ORDER BY count DESC, i.category`).bind(run.id, ...PUBLIC_AGENDA_CATEGORIES, ...scopePredicate.parameters).all(),
   ]);
   const scopedIssues = (result.results ?? []).map((issue) => publicIssue(issue, run, scope.configuredCount, true));

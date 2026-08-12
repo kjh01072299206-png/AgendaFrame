@@ -1536,6 +1536,8 @@ test("serves the main academic 12-outlet scope with provider and source filters"
   const scopedMetrics = statements.find(({ sql }) => sql.includes("WITH scoped_issue_metrics"));
   assert.equal(scopedMetrics.parameters[0], "authorized_crawl");
   assert.equal(scopedMetrics.parameters[13], "authorized_crawl");
+  assert.deepEqual(scopedMetrics.parameters.slice(26, 29), [12, 12, 12]);
+  assert.deepEqual(scopedMetrics.parameters.slice(-3, -1), [12, 12]);
   assert.equal(scopedMetrics.parameters.at(-1), 5);
 });
 
