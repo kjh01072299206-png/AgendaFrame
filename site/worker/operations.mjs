@@ -7,6 +7,8 @@ import {
   PublicationOutboxError,
   createPublicationOutbox,
 } from "./publication-outbox.mjs";
+import discoveryPolicy from "../data/discovery-sources.json" with { type: "json" };
+import collectionSchedule from "../data/collection-schedule.json" with { type: "json" };
 
 export const OPERATIONS_QUEUE = "operations";
 export const PUBLICATION_DESTINATION = "public-site-local";
@@ -373,12 +375,58 @@ function safeJobId(value) {
   return jobId && jobId.length <= 200 ? jobId : null;
 }
 
-export async function handleOperationsAdminRequest(request, env = {}) {
+export function compactCollectionRunResult(result) {
+  return {
+    status: result?.status ?? "unknown",
+    scheduledTime: result?.scheduledTime ?? null,
+    lease: result?.lease ?? null,
+    retention: result?.retention ? {
+      selected: Number(result.retention.selected ?? 0),
+      deleted: Number(result.retention.deleted ?? 0),
+      failed: Number(result.retention.failed ?? 0),
+      drained: result.retention.drained === true,
+    } : null,
+    discovery: result?.discovery ? {
+      status: result.discovery.status ?? "unknown",
+      deadlineExceeded: result.discovery.deadlineExceeded === true,
+      discovered: Array.isArray(result.discovery.records) ? result.discovery.records.length : 0,
+      workSlice: result.discovery.workSlice ?? null,
+      sources: Array.isArray(result.discovery.sources) ? result.discovery.sources.map((source) => ({
+        sourceId: source.sourceId,
+        status: source.status,
+        discovered: Number(source.discovered ?? 0),
+        truncated: source.truncated === true,
+      })) : [],
+    } : null,
+    discoveryPersistence: result?.discoveryPersistence ?? null,
+    bodyCollection: result?.bodyCollection ? {
+      status: result.bodyCollection.status ?? "unknown",
+      selected: Number(result.bodyCollection.selected ?? 0),
+      stored: Number(result.bodyCollection.stored ?? 0),
+      failed: Number(result.bodyCollection.failed ?? 0),
+    } : null,
+    profileAnalysis: result?.profileAnalysis ? {
+      status: result.profileAnalysis.status ?? "unknown",
+      selected: Number(result.profileAnalysis.selected ?? 0),
+      analyzed: Number(result.profileAnalysis.analyzed ?? 0),
+      failed: Number(result.profileAnalysis.failed ?? 0),
+      dates: Array.isArray(result.profileAnalysis.dates) ? result.profileAnalysis.dates : [],
+    } : null,
+    aggregateAnalysis: Array.isArray(result?.aggregateAnalysis) ? result.aggregateAnalysis : [],
+    workBudget: result?.workBudget ?? null,
+    operations: result?.operations ?? null,
+    stageErrors: Array.isArray(result?.stageErrors) ? result.stageErrors : [],
+  };
+}
+
+export async function handleOperationsAdminRequest(request, env = {}, options = {}) {
   const url = new URL(request.url);
   const managed = url.pathname === "/api/admin/operations"
     || url.pathname === "/api/admin/operations/recover"
     || url.pathname === "/api/admin/operations/run"
     || url.pathname === "/api/admin/jobs/dead-letters"
+    || url.pathname === "/api/admin/collection/status"
+    || url.pathname === "/api/admin/collection/run"
     || /^\/api\/admin\/jobs\/[^/]+\/redrive$/.test(url.pathname);
   if (!managed) return null;
   if (!env?.DB) return operationResponse(request, { error: { code: "UNAVAILABLE", message: "운영 저장소가 준비되지 않았습니다." } }, 503);
@@ -388,6 +436,24 @@ export async function handleOperationsAdminRequest(request, env = {}) {
   try {
     if (url.pathname === "/api/admin/operations" && request.method === "GET") {
       return operationResponse(request, { operations: await readOperationsStatus(env) });
+    }
+    if (url.pathname === "/api/admin/collection/status" && request.method === "GET") {
+      const { readCollectionWorkflowStatus } = await import("./collection-status.mjs");
+      return operationResponse(request, {
+        collection: await readCollectionWorkflowStatus(env, discoveryPolicy, {
+          scheduleConfigured: collectionSchedule.enabled === true && collectionSchedule.cronsUtc.length > 0,
+        }),
+      });
+    }
+    if (url.pathname === "/api/admin/collection/run" && request.method === "POST") {
+      if (!env?.CONTENT) return operationResponse(request, { error: { code: "UNAVAILABLE", message: "비공개 본문 저장소가 준비되지 않았습니다." } }, 503);
+      const { runScheduledAgendaFrame } = await import("./content-retention.mjs");
+      const collection = await runScheduledAgendaFrame(env, {
+        scheduledTime: Date.now(),
+        discoveryPolicy,
+        analyzeImpl: options.analyzeImpl,
+      });
+      return operationResponse(request, { collection: compactCollectionRunResult(collection) });
     }
     if (url.pathname === "/api/admin/jobs/dead-letters" && request.method === "GET") {
       const limit = boundedInteger(Number(url.searchParams.get("limit") ?? 25), 25, 1, MAX_ADMIN_LIST);

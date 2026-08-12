@@ -1,48 +1,97 @@
 {
-  "version": "7",
-  "dialect": "sqlite",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "6",
-      "when": 1784011082946,
-      "tag": "0000_numerous_quasar",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1784076817122,
-      "tag": "0001_easy_dexter_bennett",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1784084280369,
-      "tag": "0002_colorful_master_mold",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1784417172266,
-      "tag": "0003_complex_mikhail_rasputin",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1784744873778,
-      "tag": "0004_colossal_kylun",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1784772000000,
-      "tag": "0005_structured_frame_profiles",
-      "breakpoints": true
-    }
-  ]
+    "version":  "7",
+    "dialect":  "sqlite",
+    "entries":  [
+                    {
+                        "version":  "6",
+                        "when":  1784011082946,
+                        "tag":  "0000_numerous_quasar",
+                        "breakpoints":  true,
+                        "idx":  0
+                    },
+                    {
+                        "version":  "6",
+                        "when":  1784076817122,
+                        "tag":  "0001_easy_dexter_bennett",
+                        "breakpoints":  true,
+                        "idx":  1
+                    },
+                    {
+                        "version":  "6",
+                        "when":  1784084280369,
+                        "tag":  "0002_colorful_master_mold",
+                        "breakpoints":  true,
+                        "idx":  2
+                    },
+                    {
+                        "version":  "6",
+                        "when":  1784417172266,
+                        "tag":  "0003_complex_mikhail_rasputin",
+                        "breakpoints":  true,
+                        "idx":  3
+                    },
+                    {
+                        "version":  "6",
+                        "when":  1784744873778,
+                        "tag":  "0004_colossal_kylun",
+                        "breakpoints":  true,
+                        "idx":  4
+                    },
+                    {
+                        "version":  "6",
+                        "when":  1784772000000,
+                        "tag":  "0005_structured_frame_profiles",
+                        "breakpoints":  true,
+                        "idx":  5
+                    },
+                    {
+                        "version":  "6",
+                        "when":  1784858400000,
+                        "tag":  "0006_analysis_query_indexes",
+                        "breakpoints":  true,
+                        "idx":  6
+                    },
+                    {
+                        "version":  "6",
+                        "when":  1784944800000,
+                        "tag":  "0007_durable_operations",
+                        "breakpoints":  true,
+                        "idx":  7
+                    },
+                    {
+                        "version":  "6",
+                        "when":  1785031200000,
+                        "tag":  "0008_community_guardrails",
+                        "breakpoints":  true,
+                        "idx":  8
+                    },
+                    {
+                        "version":  "6",
+                        "when":  1785117600000,
+                        "tag":  "0009_community_service",
+                        "breakpoints":  true,
+                        "idx":  9
+                    },
+                    {
+                        "version":  "6",
+                        "when":  1785204000000,
+                        "tag":  "0010_reaction_rate_limit",
+                        "breakpoints":  true,
+                        "idx":  10
+                    },
+                    {
+                        "version":  "6",
+                        "when":  1786368000000,
+                        "tag":  "0011_collection_execution_lock",
+                        "breakpoints":  true,
+                        "idx":  11
+                    },
+                    {
+                        "version":  "6",
+                        "when":  1786368600000,
+                        "tag":  "0012_article_collection_attempts",
+                        "breakpoints":  true,
+                        "idx":  12
+                    }
+                ]
 }

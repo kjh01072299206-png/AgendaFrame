@@ -338,6 +338,69 @@ function recursiveArticleBodies(value, path = [], seen = new Set()) {
   return bodies;
 }
 
+function topicFromSection(value) {
+  const normalized = (Array.isArray(value) ? value.join(" ") : String(value ?? ""))
+    .normalize("NFC")
+    .trim()
+    .toLowerCase();
+  if (!normalized) return null;
+  if (/(?:정치|politics|government|assembly)/i.test(normalized)) return "politics";
+  if (/(?:경제|economy|business|finance|industry)/i.test(normalized)) return "economy";
+  if (/(?:사회|society|national|local|education|health)/i.test(normalized)) return "society";
+  if (/(?:국제|세계|international|world|foreign|global)/i.test(normalized)) return "international";
+  return "excluded";
+}
+
+function articleSectionFromJsonLd(value) {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = articleSectionFromJsonLd(item);
+      if (found !== null) return found;
+    }
+    return null;
+  }
+  if (!value || typeof value !== "object") return null;
+  const type = Array.isArray(value["@type"]) ? value["@type"].join(" ") : String(value["@type"] ?? "");
+  if (/(?:Article|NewsArticle|ReportageNewsArticle)/i.test(type) && value.articleSection !== undefined) {
+    return topicFromSection(value.articleSection);
+  }
+  for (const child of Object.values(value)) {
+    if (!child || typeof child !== "object") continue;
+    const found = articleSectionFromJsonLd(child);
+    if (found !== null) return found;
+  }
+  return null;
+}
+
+export function extractArticleTopic(source) {
+  for (const match of String(source ?? "").matchAll(
+    /<script\b[^>]*type\s*=\s*["']application\/ld\+json(?:\s*;\s*charset=[^"']+)?["'][^>]*>([\s\S]*?)<\/script>/gi,
+  )) {
+    const jsonText = decodeJsonScriptText(match[1]);
+    if (!jsonText) continue;
+    try {
+      const topic = articleSectionFromJsonLd(JSON.parse(jsonText));
+      if (topic !== null) return topic;
+    } catch {
+      // Malformed JSON-LD cannot establish a topic; callers can retry or reject it.
+    }
+  }
+  for (const match of String(source ?? "").matchAll(/<a\b[^>]*>/gi)) {
+    const openingTag = match[0];
+    if (!/(?:^|\s)category-name(?:\s|$)/i.test(attributeValue(openingTag, "class"))) continue;
+    const href = decodeHtmlEntities(attributeValue(openingTag, "href"));
+    const code = href.match(/[?&]ctcd=([0-9]{4})/i)?.[1];
+    if (!code) continue;
+    return ({
+      "0003": "politics",
+      "0004": "economy",
+      "0005": "society",
+      "0006": "international",
+    })[code] ?? "excluded";
+  }
+  return null;
+}
+
 function inspectJsonLd(value, result) {
   if (Array.isArray(value)) {
     for (const item of value) inspectJsonLd(item, result);

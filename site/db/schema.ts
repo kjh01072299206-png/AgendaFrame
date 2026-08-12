@@ -506,6 +506,37 @@ export const durableJobs = sqliteTable(
   ],
 );
 
+export const articleCollectionAttempts = sqliteTable(
+  "article_collection_attempts",
+  {
+    articleId: text("article_id")
+      .primaryKey()
+      .references(() => articles.id, { onDelete: "cascade" }),
+    sourceId: text("source_id")
+      .notNull()
+      .references(() => mediaSources.id, { onDelete: "restrict" }),
+    attemptCount: integer("attempt_count").notNull().default(0),
+    nextAttemptAt: integer("next_attempt_at", { mode: "timestamp_ms" }).notNull(),
+    lastFailureCode: text("last_failure_code").notNull(),
+    lastHttpStatus: integer("last_http_status"),
+    status: text("status", { enum: ["retry_wait", "terminal"] }).notNull(),
+    createdAt,
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    index("article_collection_attempts_due_idx").on(table.status, table.nextAttemptAt, table.sourceId),
+  ],
+);
+
+export const collectionExecutionLocks = sqliteTable("collection_execution_locks", {
+  name: text("name").primaryKey(),
+  owner: text("owner").notNull(),
+  leaseToken: text("lease_token").notNull(),
+  leaseExpiresAt: integer("lease_expires_at", { mode: "timestamp_ms" }).notNull(),
+  acquiredAt: integer("acquired_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
 export const durableJobDeadLetters = sqliteTable(
   "durable_job_dead_letters",
   {
