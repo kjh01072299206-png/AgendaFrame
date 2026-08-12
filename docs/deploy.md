@@ -1,6 +1,36 @@
 # 배포 방법 (site — Next 앱)
 
+> 이 문서는 공개 Next 화면의 Vercel 배포 절차다. 기사 수집 예약 실행은 별도의 Sites/Cloudflare Worker 산출물(`site/vite.config.ts`, `site/worker/index.ts`)에만 포함된다. Vercel 배포 성공은 수집 크론·D1·R2 배포를 증명하지 않는다. 수집 활성화는 `docs/architecture/news-collection-activation.md`의 비운영 D1/R2 마이그레이션, 수동 1회, 실제 예약 이벤트 확인 절차를 별도로 통과해야 한다.
+
 실배포 주소: <https://agendaframe-capstone.vercel.app>
+
+## 재사용 가능한 실배포 순서 (main → Vercel)
+
+이 저장소의 운영 배포 주체는 Sites가 아니라 Vercel Git 연결이다. 따라서
+검증된 소스의 커밋을 `main`에 push하면 Vercel 프로젝트
+`agendaframe-capstone`이 저장소 루트의 `site/`를 빌드해
+`https://agendaframe-capstone.vercel.app`에 배포한다.
+
+매번 다음 순서를 그대로 사용한다.
+
+1. 저장소 루트에서 `git status --short`로 기존 변경을 확인하고, 이번 작업에
+   포함할 파일만 별도 release 커밋에 넣는다. 기존 사용자 변경이나 로그·임시
+   산출물은 함께 커밋하지 않는다.
+2. `cd site`에서 `npm run typecheck`, `npm run lint`, `npm test`, `npx next build`
+   순서로 검증한다.
+3. 저장소 루트에서 검증한 커밋을 `main`에 push한다. Vercel Git 연결이 켜져
+   있으면 별도 Vercel 토큰이나 Sites 전송을 실행하지 않는다.
+4. 최대 10분 동안
+   `https://agendaframe-capstone.vercel.app/version`의 `commit` 값이 push한
+   커밋 SHA와 같아질 때까지 확인한다. HTTP 200만으로 배포 완료로 판단하지
+   않는다.
+5. `/`, `/issues`, 실제 issue의 `/outlets`, `/framing`을 열어 새 화면과
+   데이터가 보이는지 확인한다. `site/` 밖의 문서만 바꾼 커밋은 Vercel의
+   Ignored Build Step 때문에 배포되지 않을 수 있다.
+
+수동 비상 배포가 필요하면 저장소 루트에서 `npx vercel deploy --prod --yes`를
+실행한다. `site/` 안에서 실행하면 Root Directory가 `site`인 프로젝트에
+`site/site`가 전달되므로 실패한다.
 
 ## 누가 어떻게 배포하는가
 
