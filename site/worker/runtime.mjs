@@ -50,6 +50,46 @@ const RESEARCH_SOURCE_IDS = researchCollectionPolicy.sources.map((source) => sou
 const RESEARCH_SOURCE_NAMES = new Set(researchCollectionPolicy.sources.map((source) => source.name));
 const ISSUE_SCOPE_KEYS = new Set(["all", "general_daily_10", RESEARCH_SCOPE_KEY]);
 
+// The public live surface is explicitly the academic 12-outlet sample. Keep
+// the analysis panel in lockstep with the read/query scope so a re-analysis
+// cannot silently use the legacy 22-outlet panel while the UI reports 12.
+const RESEARCH_SOURCE_PANEL = Object.freeze({
+  ...sourcePanel,
+  panelVersion: researchCollectionPolicy.policyVersion,
+  panelLabel: "AgendaFrame academic research 12 outlets",
+  collectionProvider: RESEARCH_COLLECTION_PROVIDER,
+  directCrawling: true,
+  sources: researchCollectionPolicy.sources.map((source, index) => {
+    const legacy = sourcePanel.sources.find((candidate) => candidate.id === source.id);
+    return {
+      ...(legacy ?? {}),
+      id: source.id,
+      name: source.name,
+      providerOutletName: source.name,
+      samplePosition: "academic_panel_12",
+      sampleOrder: index + 1,
+      sourceType: source.sourceType,
+      sourceTypeLabel: source.sourceType === "broadcaster" ? "broadcaster" : "general daily",
+      mediaGroupId: legacy?.mediaGroupId ?? `${source.id}_group`,
+      mediaGroupLabel: legacy?.mediaGroupLabel ?? source.name,
+      active: source.endpoints.some((endpoint) => endpoint.enabled),
+    };
+  }),
+});
+
+function resolveAnalysisScope(value = RESEARCH_SCOPE_KEY) {
+  const key = String(value ?? "").trim() || RESEARCH_SCOPE_KEY;
+  if (key === "all") return { key, panel: sourcePanel, articleScope: null };
+  if (key === RESEARCH_SCOPE_KEY) {
+    return {
+      key,
+      panel: RESEARCH_SOURCE_PANEL,
+      articleScope: { provider: RESEARCH_COLLECTION_PROVIDER, sourceIds: RESEARCH_SOURCE_IDS },
+    };
+  }
+  throw new TypeError("지원하지 않는 분석 표본입니다.");
+}
+
 function resolveIssueScope(request) {
   const value = new URL(request.url).searchParams.get("scope");
   const key = value?.trim() || "all";
@@ -229,13 +269,15 @@ export function classifySnapshotStatus({ targetDate = null, dataAsOf = null, col
   return { status: "normal", label: "정상", staleDays: 0 };
 }
 
-function analysisVersions(run, comparisonLineage = null) {
+function analysisVersions(run, comparisonLineage = null, scope = null) {
   const modelVersion = run?.modelVersion ?? ANALYSIS_MODEL_VERSION;
   const current = modelVersion === ANALYSIS_MODEL_VERSION;
   const versionFour = modelVersion === "agenda-rules-v4";
   const approval = comparisonLineage?.approval ?? null;
   return {
-    sourcePolicyVersion: sourcePanel.panelVersion ?? "unknown",
+    sourcePolicyVersion: scope?.key === RESEARCH_SCOPE_KEY
+      ? researchCollectionPolicy.policyVersion
+      : sourcePanel.panelVersion ?? "unknown",
     clusteringVersion: current ? CLUSTERING_VERSION : versionFour ? "event-anchors-complete-link-v2" : "legacy-v1-unverified",
     scoreVersion: current ? SCORE_VERSION : versionFour ? "observed-agenda-v3" : "legacy-v1-unverified",
     frameTaxonomyVersion: current ? FRAME_TAXONOMY_VERSION : versionFour ? "frame-signals-v4" : "legacy-v1-unverified",
@@ -253,7 +295,7 @@ function analysisVersions(run, comparisonLineage = null) {
   };
 }
 
-function responseMeta(run = null, runtimeMode = "demo", comparisonLineage = null) {
+function responseMeta(run = null, runtimeMode = "demo", comparisonLineage = null, scope = null) {
   return {
     schemaVersion: PUBLIC_API_SCHEMA_VERSION,
     runtimeMode,
@@ -261,7 +303,7 @@ function responseMeta(run = null, runtimeMode = "demo", comparisonLineage = null
     runId: run?.id ?? null,
     basisDate: run?.targetDate ?? null,
     publishedAt: run?.finishedAt ?? null,
-    ...analysisVersions(run, comparisonLineage),
+    ...analysisVersions(run, comparisonLineage, scope),
   };
 }
 
@@ -2370,7 +2412,8 @@ async function loadTransientBodySignals(db, start, end) {
   return signals;
 }
 
-async function transientAnalysisProgress(db, start, end, canonicalUrls = []) {
+async function transientAnalysisProgress(db, start, end, canonicalUrls = [], articleScope = null) {
+  const scopeClause = articleScopeFilter(articleScope);
   const targetClause = canonicalUrls.length
     ? ` AND a.canonical_url IN (${canonicalUrls.map(() => "?").join(", ")})`
     : "";
@@ -2386,6 +2429,7 @@ async function transientAnalysisProgress(db, start, end, canonicalUrls = []) {
       AND profiles.model_version = ?
       AND profiles.schema_version = ?
     WHERE a.published_at >= ? AND a.published_at < ?
+      ${scopeClause.sql}
       ${targetClause}
   `).bind(
     ARTICLE_EXTRACTOR_VERSION,
@@ -2393,6 +2437,7 @@ async function transientAnalysisProgress(db, start, end, canonicalUrls = []) {
     ARTICLE_FRAME_PROFILE_SCHEMA,
     start,
     end,
+    ...scopeClause.parameters,
     ...canonicalUrls,
   ).first();
   const total = Number(row?.total ?? 0);
@@ -2412,12 +2457,15 @@ async function handleTransientAnalysisStatus(request, env) {
   if (!(await adminAuthorized(request, env))) return jsonResponse({ error: "관리자 토큰이 올바르지 않습니다." }, 401, { request });
   if (!isSameSiteRequest(request, env)) return jsonResponse({ error: "허용된 AgendaFrame 주소에서 보낸 요청만 처리합니다." }, 403, { request });
   try {
-    const targetDate = await resolveAnalysisDate(env.DB, String(new URL(request.url).searchParams.get("date") ?? "").trim());
+    const scopeKey = new URL(request.url).searchParams.get("scope") || RESEARCH_SCOPE_KEY;
+    const analysisScope = resolveAnalysisScope(scopeKey);
+    const targetDate = await resolveAnalysisDate(env.DB, String(new URL(request.url).searchParams.get("date") ?? "").trim(), analysisScope.articleScope);
     const start = Date.parse(`${targetDate}T00:00:00+09:00`);
     const end = start + 86_400_000;
-    const progress = await transientAnalysisProgress(env.DB, start, end);
+    const progress = await transientAnalysisProgress(env.DB, start, end, [], analysisScope.articleScope);
     return jsonResponse({
       date: targetDate,
+      scope: analysisScope.key,
       extractorVersion: ARTICLE_EXTRACTOR_VERSION,
       taxonomyVersion: FRAME_TAXONOMY_VERSION,
       bodyStorageCount: 0,
@@ -2445,7 +2493,8 @@ async function handleTransientAnalyze(request, env) {
 
   try {
     if (payload.transient_analysis_acknowledged !== true) throw new Error("공개 기사만 임시 분석하고 접근 제한을 우회하지 않는 조건을 확인해야 합니다.");
-    const targetDate = await resolveAnalysisDate(env.DB, String(payload.date ?? "").trim());
+    const analysisScope = resolveAnalysisScope(payload.scope);
+    const targetDate = await resolveAnalysisDate(env.DB, String(payload.date ?? "").trim(), analysisScope.articleScope);
     const limit = integerInRange(payload.limit ?? ARTICLE_FETCH_BATCH_LIMIT, 1, ARTICLE_FETCH_BATCH_LIMIT, "배치당 임시 분석 건수");
     const retryFailed = payload.retry_failed === true;
     if (payload.canonical_urls !== undefined && !Array.isArray(payload.canonical_urls)) {
@@ -2457,6 +2506,7 @@ async function handleTransientAnalyze(request, env) {
     if (canonicalUrls.length > 50) throw new Error("한 번에 지정할 수 있는 원문 URL은 최대 50개입니다.");
     const start = Date.parse(`${targetDate}T00:00:00+09:00`);
     const end = start + 86_400_000;
+    const articleScopeClause = articleScopeFilter(analysisScope.articleScope);
     const targetClause = canonicalUrls.length
       ? ` AND a.canonical_url IN (${canonicalUrls.map(() => "?").join(", ")})`
       : "";
@@ -2476,6 +2526,7 @@ async function handleTransientAnalyze(request, env) {
         AND profiles.model_version = ?
         AND profiles.schema_version = ?
       WHERE a.published_at >= ? AND a.published_at < ?
+        ${articleScopeClause.sql}
         ${targetClause}
         AND (profiles.article_id IS NULL OR (? = 1 AND profiles.status = 'failed'))
       ORDER BY
@@ -2489,6 +2540,7 @@ async function handleTransientAnalyze(request, env) {
       ARTICLE_FRAME_PROFILE_SCHEMA,
       start,
       end,
+      ...articleScopeClause.parameters,
       ...canonicalUrls,
       retryFailed ? 1 : 0,
       limit,
@@ -2600,7 +2652,7 @@ async function handleTransientAnalyze(request, env) {
       await runBatches(env.DB, statements);
     }
 
-    const progress = await transientAnalysisProgress(env.DB, start, end, canonicalUrls);
+    const progress = await transientAnalysisProgress(env.DB, start, end, canonicalUrls, analysisScope.articleScope);
     const ready = results.filter((result) => result.status === "analyzed");
     let analysis = null;
     if (progress.remaining === 0 && (ready.length || payload.refresh_analysis === true)) {
@@ -2614,6 +2666,7 @@ async function handleTransientAnalyze(request, env) {
         headers: analysisHeaders,
         body: JSON.stringify({
           date: targetDate,
+          scope: analysisScope.key,
           approved_same_event_clusters: payload.approved_same_event_clusters,
         }),
       }), env);
@@ -2638,6 +2691,7 @@ async function handleTransientAnalyze(request, env) {
     return jsonResponse({
       date: targetDate,
       targeted: canonicalUrls.length > 0,
+      scope: analysisScope.key,
       targetCount: canonicalUrls.length,
       requested: articles.length,
       analyzedBodies: ready.length,
@@ -2866,8 +2920,12 @@ export async function handleAnalyze(request, env, { contentOverrides = new Map()
   let targetDate;
   let reviewedClusterApprovals;
   let normalizedArticleScope;
+  let resolvedAnalysisScope;
   try {
-    normalizedArticleScope = normalizeArticleScope(articleScope);
+    resolvedAnalysisScope = articleScope
+      ? { key: RESEARCH_SCOPE_KEY, panel: panelOverride ?? RESEARCH_SOURCE_PANEL, articleScope }
+      : resolveAnalysisScope(payload.scope);
+    normalizedArticleScope = normalizeArticleScope(resolvedAnalysisScope.articleScope);
     targetDate = await resolveAnalysisDate(db, String(payload.date ?? "").trim(), normalizedArticleScope);
     reviewedClusterApprovals = await approvedClusterApprovals(payload);
   } catch (error) {
@@ -2932,7 +2990,7 @@ export async function handleAnalyze(request, env, { contentOverrides = new Map()
     });
     placementByArticle.set(observation.articleId, values);
   }
-  const analysisPanel = panelOverride ?? sourcePanel;
+  const analysisPanel = panelOverride ?? resolvedAnalysisScope.panel;
   const sourcePolicyById = new Map(analysisPanel.sources.map((source) => [source.id, source]));
   const articles = (articleResult.results ?? []).map((article) => {
     const sourcePolicy = sourcePolicyById.get(article.sourceId);
@@ -3149,6 +3207,7 @@ export async function handleAnalyze(request, env, { contentOverrides = new Map()
           && (Boolean(content?.bodyText) || content?.bodyAnalysisAvailable === true))
         .length,
       issueCount: analyzed.length,
+      scope: resolvedAnalysisScope.key,
       approvedClusterCount: consumedClusterApprovals.size,
       paidServicesUsed: false,
     }, 201);
@@ -3265,6 +3324,12 @@ async function handleAnalysisRuns(request, env) {
   const url = new URL(request.url);
   const startDate = String(url.searchParams.get("start") ?? "").trim();
   const endDate = String(url.searchParams.get("end") ?? "").trim();
+  let analysisScope;
+  try {
+    analysisScope = resolveAnalysisScope(url.searchParams.get("scope") || "all");
+  } catch (error) {
+    return jsonResponse({ error: error.message }, 400);
+  }
   let dates;
   try {
     dates = enumerateKstDates(startDate, endDate, 31);
@@ -3274,6 +3339,8 @@ async function handleAnalysisRuns(request, env) {
 
   const start = Date.parse(`${startDate}T00:00:00+09:00`);
   const endExclusive = Date.parse(`${endDate}T00:00:00+09:00`) + 86_400_000;
+  const scopedRun = scopedRunExistsClause(analysisScope, "analysis_runs");
+  const articleScope = articleScopeFilter(analysisScope.articleScope);
   const [runResult, articleResult] = await Promise.all([
     env.DB.prepare(`
       SELECT id, target_date AS targetDate, status, provider, model_version AS modelVersion,
@@ -3282,18 +3349,18 @@ async function handleAnalysisRuns(request, env) {
       FROM (
         SELECT *, ROW_NUMBER() OVER (PARTITION BY target_date ORDER BY started_at DESC, created_at DESC) AS rowNumber
         FROM analysis_runs
-        WHERE target_date >= ? AND target_date <= ?
+        WHERE target_date >= ? AND target_date <= ?${scopedRun.sql}
       )
       WHERE rowNumber = 1
       ORDER BY targetDate
-    `).bind(startDate, endDate).all(),
+    `).bind(startDate, endDate, ...scopedRun.parameters).all(),
     env.DB.prepare(`
       SELECT date(published_at / 1000, 'unixepoch', '+9 hours') AS targetDate, COUNT(*) AS articleCount
       FROM articles
-      WHERE published_at >= ? AND published_at < ?
+      WHERE published_at >= ? AND published_at < ?${articleScope.sql}
       GROUP BY targetDate
       ORDER BY targetDate
-    `).bind(start, endExclusive).all(),
+    `).bind(start, endExclusive, ...articleScope.parameters).all(),
   ]);
   const runsByDate = new Map((runResult.results ?? []).map((run) => [run.targetDate, run]));
   const articleCountByDate = new Map((articleResult.results ?? []).map((entry) => [entry.targetDate, Number(entry.articleCount) || 0]));
@@ -3314,7 +3381,7 @@ async function handleAnalysisRuns(request, env) {
       errorMessage: run?.errorMessage ?? null,
     };
   });
-  return jsonResponse({ startDate, endDate, days, maxBatchDays: 7, resumable: true });
+  return jsonResponse({ startDate, endDate, scope: analysisScope.key, days, maxBatchDays: 7, resumable: true });
 }
 
 async function handleAnalysisRollback(request, runId, env) {
@@ -3443,7 +3510,7 @@ async function handleScopedIssues(request, env, scope, run, category, limit) {
     total: Number(count?.total ?? 0),
     categories: categoryResult.results ?? [],
     analysisDisclosure: "국내 10대 종합일간지 기사만으로 보도 확산과 설명 차이를 비교합니다. 이 점수는 사회적 중요도·사실성·여론을 뜻하지 않습니다.",
-    meta: responseMeta(run, "live_metadata"),
+    meta: responseMeta(run, "live_metadata", null, scope),
   }, 200, { request, etag: true, cacheControl: "public, max-age=60, must-revalidate" });
 }
 
@@ -3524,7 +3591,7 @@ async function handleIssues(request, env) {
     total: Number(count?.total ?? 0),
     categories: categoryResult.results ?? [],
     analysisDisclosure: "공개 본문을 저장하지 않고 근거 위치·해시와 구조화 프레임 요소를 추출한 자동 초안입니다. 사람 검토·사실성·편향 판정이 아닙니다.",
-    meta: responseMeta(run, "live_metadata"),
+    meta: responseMeta(run, "live_metadata", null, scope),
   }, 200, { request, etag: true, cacheControl: "public, max-age=60, must-revalidate" });
 }
 
@@ -3736,7 +3803,7 @@ async function handleIssueDetail(request, issueId, env) {
     report: publicReport,
     outlets: (outlets.results ?? []).map((outlet) => ({ ...outlet, placement: placementByWeight[outlet.placementWeight] ?? "미확인" })),
     comparison: structuredComparison ?? evidenceFirstComparison(issue, publicArticles),
-    meta: responseMeta(run, "live_metadata", structuredComparison?.lineage ?? null),
+    meta: responseMeta(run, "live_metadata", structuredComparison?.lineage ?? null, scope),
   }, 200, { request, etag: true, cacheControl: "public, max-age=300, immutable" });
 }
 

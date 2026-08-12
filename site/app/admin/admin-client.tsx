@@ -7,6 +7,7 @@ import { parseBigKindsXlsx } from "../../lib/bigkinds-xlsx.mjs";
 import QualityReview from "./quality-review";
 
 const ALLOWED_SOURCES = sourcePanel.sources.filter((source) => source.active).map((source) => source.name);
+const ANALYSIS_SCOPE = "academic_panel_12";
 const MAX_ROWS = 20_000;
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const IMPORT_BATCH_SIZE = 100;
@@ -318,7 +319,7 @@ export default function AdminClient() {
     setBusy(true);
     setStatus(`${analysisDate} 기사 분석 중…`);
     try {
-      const response = await fetch("/api/analyze", { method: "POST", headers: { authorization: `Bearer ${token.trim()}`, "content-type": "application/json" }, body: JSON.stringify({ date: analysisDate }) });
+      const response = await fetch("/api/analyze", { method: "POST", headers: { authorization: `Bearer ${token.trim()}`, "content-type": "application/json" }, body: JSON.stringify({ date: analysisDate, scope: ANALYSIS_SCOPE }) });
       const result = await response.json();
       if (!response.ok) throw new Error(apiError(result, "분석에 실패했습니다."));
       setStatus(`분석 완료: 기사 ${result.articleCount.toLocaleString("ko-KR")}건 · 본문 근거 ${Number(result.bodyEvidenceCount ?? 0).toLocaleString("ko-KR")}건 · 이슈 ${result.issueCount.toLocaleString("ko-KR")}개`);
@@ -346,6 +347,7 @@ export default function AdminClient() {
             limit: Number(transientLimit),
             refresh_analysis: true,
             transient_analysis_acknowledged: transientAnalysisAcknowledged,
+            scope: ANALYSIS_SCOPE,
           }),
         });
         const result = await response.json();
@@ -373,7 +375,7 @@ export default function AdminClient() {
 
   async function fetchBatchStatus() {
     batchDateRange(rangeStart, rangeEnd);
-    const response = await fetch(`/api/analysis/runs?start=${encodeURIComponent(rangeStart)}&end=${encodeURIComponent(rangeEnd)}`, {
+    const response = await fetch(`/api/analysis/runs?start=${encodeURIComponent(rangeStart)}&end=${encodeURIComponent(rangeEnd)}&scope=${ANALYSIS_SCOPE}`, {
       headers: { authorization: `Bearer ${token.trim()}` },
     });
     const result = await response.json();
@@ -426,7 +428,7 @@ export default function AdminClient() {
           const response = await fetch("/api/analyze", {
             method: "POST",
             headers: { authorization: `Bearer ${token.trim()}`, "content-type": "application/json" },
-            body: JSON.stringify({ date }),
+            body: JSON.stringify({ date, scope: ANALYSIS_SCOPE }),
           });
           const result = await response.json();
           if (!response.ok) {
