@@ -87,6 +87,18 @@ and no raw article/body/HTML/sentence fields.
   and the per-source limit. These are fixture-only tests; they make no network
   calls.
 
+### Cloud Run entrypoint review
+
+- `src/backend/Dockerfile` intentionally keeps the image default as
+  `backend.main validate-config` for the existing configuration-check job.
+- `scripts/gcp/deploy-runtime-job.ps1` explicitly overrides that image command
+  to `python -m backend.gcp_job_entrypoint` for the recurring collection job;
+  `infra/gcp/cloud-run-job.yaml` and its contract test assert the same command,
+  factory bindings, GCP-only ownership flags, and dry-run/clean-SHA guards.
+- The deployment script's local dry run was verified after commit
+  `1ce3539`. No image build, Cloud Run resource mutation, or billed execution
+  was performed, so this is wiring evidence—not a production deployment.
+
 ## Verification completed
 
 - `powershell -NoProfile -File scripts/check.ps1 -Mode quick` → **124 passed**;
@@ -117,8 +129,7 @@ owns real collection until a verified GCP cutover.
 
 Remaining order:
 
-1. Resolve the remaining Cloud Run image/entrypoint production wiring review.
-2. In the non-production GCP project, verify Workflows API, budget/spend cap,
+1. In the non-production GCP project, verify Workflows API, budget/spend cap,
    IAM, private bucket lifecycle, BigQuery schema/grants, and the reader service
    deployment plan. Apply only with explicit live authorization.
 3. Deploy a synthetic body-free snapshot-reader canary; verify `/healthz`,
@@ -141,8 +152,9 @@ site, replace the existing demo/API path, expose article bodies, or call news,
 Vertex, GCP, or deployment APIs during ordinary tests.
 
 First inspect the committed reader slice and run the offline gates. The parser
-datePublished/body-minimum fixture regressions are already implemented; next
-work only on the reviewed Cloud Run production wiring. Keep all GCP YAML
+datePublished/body-minimum fixture regressions and local Cloud Run entrypoint
+review are already implemented; next work is the explicitly authorized,
+non-production GCP canary preparation. Keep all GCP YAML
 contract_only/externalCalls:false until a non-production live authorization,
 budget cap, IAM, and rollback plan are explicitly available. If live approval
 is available, deploy reader canary before collector; verify body-free /active,
