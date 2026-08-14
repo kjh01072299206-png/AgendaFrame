@@ -218,6 +218,12 @@ class CloudDeploymentContractTests(unittest.TestCase):
             "roles/storage.objectViewer",
             (ROOT / "scripts" / "gcp" / "provision.ps1").read_text(encoding="utf-8"),
         )
+        provision = (ROOT / "scripts" / "gcp" / "provision.ps1").read_text(encoding="utf-8")
+        self.assertIn('"workflows.googleapis.com"', provision)
+        self.assertIn('"pubsub.googleapis.com"', provision)
+        self.assertIn('"monitoring.googleapis.com"', provision)
+        self.assertIn('"reader"', provision)
+        self.assertIn('"scheduler"', provision)
         self.assertIn("[switch]$Apply", script)
         self.assertIn("[switch]$FullGatePassed", script)
         self.assertIn("[switch]$AllowUnauthenticated", script)

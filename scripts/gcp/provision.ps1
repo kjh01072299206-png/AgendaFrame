@@ -41,7 +41,7 @@ $Plan = @(
     "Create a regional Artifact Registry repository",
     "Create a private Cloud Storage bucket with automatic body deletion",
     "Create partitioned BigQuery tables with required partition filters",
-    "Create separate collector, analyzer, and publisher service accounts",
+    "Create separate collector, analyzer, publisher, reader, and scheduler service accounts",
     "Grant least-privilege roles"
 )
 
@@ -91,9 +91,13 @@ $Services = @(
     "bigquery.googleapis.com",
     "cloudbuild.googleapis.com",
     "cloudscheduler.googleapis.com",
+    "logging.googleapis.com",
+    "monitoring.googleapis.com",
+    "pubsub.googleapis.com",
     "run.googleapis.com",
     "secretmanager.googleapis.com",
-    "storage.googleapis.com"
+    "storage.googleapis.com",
+    "workflows.googleapis.com"
 )
 & $Gcloud.Source services enable @Services --project $ProjectId
 if ($LASTEXITCODE -ne 0) { throw "Failed to enable required APIs." }
@@ -140,7 +144,7 @@ else {
     if ($LASTEXITCODE -ne 0) { throw "BigQuery schema creation failed." }
 }
 
-foreach ($Name in @("builder", "collector", "analyzer", "publisher", "reader")) {
+foreach ($Name in @("builder", "collector", "analyzer", "publisher", "reader", "scheduler")) {
     if (-not (Test-GcloudResource -Arguments @(
         "iam", "service-accounts", "describe",
         "$Name@$ProjectId.iam.gserviceaccount.com", "--project", $ProjectId

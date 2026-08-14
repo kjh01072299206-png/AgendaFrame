@@ -106,6 +106,10 @@ and no raw article/body/HTML/sentence fields.
   service account with Storage Object Viewer, keeps traffic at `--no-traffic`
   unless `-Promote` is explicit, and requires `-AllowUnauthenticated` before
   exposing the body-free `/active` boundary to Vercel.
+- `scripts/gcp/provision.ps1` now includes the Workflows, Pub/Sub, Monitoring,
+  and Logging APIs plus `reader` and `scheduler` service-account creation in
+  its guarded apply plan. It still remains dry-run by default; no API enable or
+  IAM mutation was made.
 
 ### Storage decision contract
 
