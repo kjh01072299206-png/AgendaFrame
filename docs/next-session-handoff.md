@@ -127,3 +127,20 @@ H. origin/main의 최신 이력과 현재 release 변경을 안전하게 통합�
 ## 체크포인트 저장 상태
 
 이 문서와 현재 의도된 staged 변경을 함께 별도 커밋으로 저장한다. 커밋 후에도 남는 `??` 파일은 기존 사용자 작업/출력물로 보존하며 건드리지 않는다.
+
+## 2026-08-14 릴리스 통합 체크포인트
+
+- `origin/main` 최신 변경과 기존 작업을 별도 릴리스 worktree에서 통합하고, 현재 작업 브랜치를 `9f1f627`까지 fast-forward했다. 기존 메인 화면과 live 비교/프레이밍 라우트는 유지했다.
+- 수집 창은 `2026-08-13`부터 `2026-10-31`까지, KST 00/06/12/18의 4회 실행, 10개 전국종합일간+KBS+SBS 12개 매체로 고정했다. `maxRecordsPerSourcePerRun=120`과 기사 추출기(조선·동아·Fusion) 회귀도 통합했다.
+- 검증 결과: 사이트 `npm test` 185 passed/0 failed, `npm run typecheck` 통과, `npm run lint` 0 errors(기존 warning 4개). Python은 Ruff 검사·포맷 통과, unit/contract 108 passed/1 skipped(준비된 pilot input 없음).
+- 릴리스 커밋에는 GCP 계약/오케스트레이션/어댑터/Cloud SQL 스키마와 semantic evidence UI 계약이 저장돼 있다. 생성된 `site/public/initial-five/*` 빌드 산출물은 커밋에서 제외했다.
+
+### 다음 작업 순서
+
+1. `src/backend/gcp_live_dependencies.py`의 RSS/HTML/datePublished/body 파서를 실제 저장 fixture로 더 검증한다.
+2. Cloud Run Job Docker CMD를 `gcp_job_entrypoint`에 연결하고, BigQuery·GCS·Vertex 의존성 factory를 non-production 환경에서 주입한다.
+3. private GCS current pointer를 읽는 body-free snapshot reader를 구현해 Vercel main/live-data와 `/issues/*/outlets`, `/framing`에 연결한다.
+4. GCP Scheduler/Workflows/Pub/Sub DLQ/Secret Manager/Monitoring은 비용·권한 확인 뒤에만 non-production에서 apply하고, 기존 Cloudflare cron과 ownership 중복을 막는다.
+5. 배포 전 `main` push 또는 저장소 루트의 `npx vercel deploy --prod --yes`를 사용하고, 공개 `/version`의 SHA와 `/`, `/issues`, 실제 `/outlets`, `/framing` 화면을 확인한다.
+
+현재는 코드·계약·오프라인 검증까지 완료된 상태이며, GCP 리소스 생성·외부 API 실행·Vercel production 반영은 아직 완료로 표시하지 않는다.
