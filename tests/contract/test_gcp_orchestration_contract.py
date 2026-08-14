@@ -86,7 +86,11 @@ class GcpOrchestrationContractTests(unittest.TestCase):
         self.assertEqual(publish["requires"], ["quality_gate.pass"])
         self.assertEqual(publish["publication"]["pointerUpdate"], "last_atomic")
         self.assertTrue(publish["publication"]["retainPreviousSnapshot"])
-        self.assertEqual(workflow["stores"]["transactionalMetadata"], "cloud_sql")
+        self.assertEqual(workflow["stores"]["metadataAndAnalysis"], "bigquery")
+        self.assertEqual(workflow["stores"]["transactionalMetadata"], "not_connected")
+        self.assertEqual(workflow["stores"]["futureMigration"]["target"], "cloud_sql")
+        self.assertEqual(workflow["stores"]["futureMigration"]["status"], "planned")
+        self.assertEqual(workflow["stores"]["futureMigration"]["runtimeAdapter"], "not_bound")
         self.assertEqual(workflow["publicSnapshotSchema"], "agenda.frame.active-snapshot.v1")
         self.assertIn("issueBundles", publish["publication"])
 

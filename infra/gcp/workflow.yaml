@@ -15,7 +15,11 @@ spec:
     forbiddenPublicKeys: [body_text, raw_body, html, sentence_text, full_article, prompt_payload]
   stores:
     metadataAndAnalysis: bigquery
-    transactionalMetadata: cloud_sql
+    transactionalMetadata: not_connected
+    futureMigration:
+      target: cloud_sql
+      status: planned
+      runtimeAdapter: not_bound
     privateBodyAndSnapshots: cloud_storage
     publicSnapshotPointer: snapshots/current.json
   publicSnapshotSchema: agenda.frame.active-snapshot.v1

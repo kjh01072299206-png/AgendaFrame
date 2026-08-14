@@ -102,6 +102,15 @@ and no raw article/body/HTML/sentence fields.
   `1ce3539`. No image build, Cloud Run resource mutation, or billed execution
   was performed, so this is wiring evidence—not a production deployment.
 
+### Storage decision contract
+
+- `infra/gcp/workflow.yaml` now states that the current metadata/analysis
+  store is BigQuery and the transactional store is not connected.
+- Cloud SQL is explicitly recorded as a planned future migration with no
+  runtime adapter. This matches `GcpAnalysisStore` and prevents a contract
+  file from implying that Cloud SQL is already serving production traffic.
+- The workflow contract test asserts all four fields and remains offline.
+
 ## Verification completed
 
 - `powershell -NoProfile -File scripts/check.ps1 -Mode quick` → **124 passed**;
