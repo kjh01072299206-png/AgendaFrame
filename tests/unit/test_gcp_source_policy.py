@@ -35,6 +35,11 @@ class GcpSourcePolicyTests(unittest.TestCase):
         with self.assertRaises(DiscoveryPolicyError):
             GcpDiscoveryPolicy.from_payload(payload)
 
+        payload = json.loads(POLICY_PATH.read_text(encoding="utf-8"))
+        payload["polling"]["maxRecordsPerSourcePerRun"] = 0
+        with self.assertRaises(DiscoveryPolicyError):
+            GcpDiscoveryPolicy.from_payload(payload)
+
 
 if __name__ == "__main__":
     unittest.main()
