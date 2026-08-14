@@ -55,7 +55,7 @@ test("stores only the extracted body in private R2 and fixes its usage expiry to
     id: "article-1",
     sourceId: "khan",
     title: "국회, 새 법안 심사 일정 확정",
-    canonicalUrl: "https://www.khan.co.kr/article/202608101200001",
+    canonicalUrl: "https://www.khan.co.kr/article/202608131200001",
   };
   const env = fakeEnvironment([article]);
   const body = longBody("공개 기사 본문");
@@ -65,7 +65,7 @@ test("stores only the extracted body in private R2 and fixes its usage expiry to
     articleBody: body,
   })}</script></head><body><nav>메뉴와 광고</nav></body></html>`;
   const result = await collectAuthorizedArticleBodies(env, activePolicy(), {
-    now: Date.parse("2026-08-10T15:00:00+09:00"),
+    now: Date.parse("2026-08-13T15:00:00+09:00"),
     fetchImpl: async () => new Response(html, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }),
     sleepImpl: async () => {},
   });
@@ -81,7 +81,7 @@ test("stores only the extracted body in private R2 and fixes its usage expiry to
   assert.match(selection.sql, /a\.published_at >= \?/);
   assert.match(selection.sql, /a\.published_at <= \?/);
   assert.equal(selection.values[1], "authorized_crawl");
-  const publishedStart = Date.parse("2026-08-10T00:00:00+09:00");
+  const publishedStart = Date.parse("2026-08-13T00:00:00+09:00");
   const publishedEnd = Date.parse("2026-10-31T23:59:59.999+09:00");
   const publishedStartIndex = selection.values.indexOf(publishedStart);
   assert.ok(publishedStartIndex >= 0);
@@ -99,7 +99,7 @@ test("stops requesting the same source after a 429 response", async () => {
   ]);
   let requests = 0;
   const result = await collectAuthorizedArticleBodies(env, activePolicy(), {
-    now: Date.parse("2026-08-10T15:00:00+09:00"),
+    now: Date.parse("2026-08-13T15:00:00+09:00"),
     fetchImpl: async () => {
       requests += 1;
       return new Response("rate limited", { status: 429 });
@@ -130,7 +130,7 @@ test("classifies deferred KBS sitemap records from article JSON-LD before storin
     articleBody: body,
   })}</script>`;
   const result = await collectAuthorizedArticleBodies(env, activePolicy(), {
-    now: Date.parse("2026-08-10T15:00:00+09:00"),
+    now: Date.parse("2026-08-13T15:00:00+09:00"),
     fetchImpl: async () => new Response(html, { status: 200, headers: { "content-type": "text/html" } }),
     sleepImpl: async () => {},
   });
@@ -154,7 +154,7 @@ test("marks a deferred KBS article outside the four topics without storing its b
     articleBody: longBody("범위 밖 기사 본문"),
   })}</script>`;
   const result = await collectAuthorizedArticleBodies(env, activePolicy(), {
-    now: Date.parse("2026-08-10T15:00:00+09:00"),
+    now: Date.parse("2026-08-13T15:00:00+09:00"),
     fetchImpl: async () => new Response(html, { status: 200, headers: { "content-type": "text/html" } }),
     sleepImpl: async () => {},
   });
@@ -178,7 +178,7 @@ test("is inert before approval and outside the fixed collection window", async (
     return new Response("", { status: 200 });
   };
   const reviewRequired = await collectAuthorizedArticleBodies(env, reviewPolicy, {
-    now: Date.parse("2026-08-10T15:00:00+09:00"),
+    now: Date.parse("2026-08-13T15:00:00+09:00"),
     fetchImpl,
   });
   const expired = await collectAuthorizedArticleBodies(env, activePolicy(), {
@@ -196,7 +196,7 @@ test("aborts a body request at its deadline and records a timeout", async () => 
     { id: "article-timeout", sourceId: "khan", title: "시간 초과 기사", canonicalUrl: "https://www.khan.co.kr/article/timeout" },
   ]);
   const result = await collectAuthorizedArticleBodies(env, activePolicy(), {
-    now: Date.parse("2026-08-10T15:00:00+09:00"),
+    now: Date.parse("2026-08-13T15:00:00+09:00"),
     requestTimeoutMilliseconds: 5,
     fetchImpl: async (_url, init) => new Promise((_resolve, reject) => {
       init.signal.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
@@ -218,7 +218,7 @@ test("does not start a body request after the overall run deadline", async () =>
   ]);
   let requests = 0;
   const result = await collectAuthorizedArticleBodies(env, activePolicy(), {
-    now: Date.parse("2026-08-10T15:00:00+09:00"),
+    now: Date.parse("2026-08-13T15:00:00+09:00"),
     deadlineTimestamp: 10,
     nowImpl: () => 10,
     fetchImpl: async () => { requests += 1; return new Response("", { status: 200 }); },

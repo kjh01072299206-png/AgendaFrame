@@ -40,16 +40,16 @@ function fakeDatabase(existing = []) {
 function sampleCycle() {
   return {
     status: "success",
-    discoveredAt: "2026-08-10T06:00:00.000Z",
+    discoveredAt: "2026-08-13T06:00:00.000Z",
     records: [
       {
         sourceId: "khan",
         sourceName: "경향신문",
         sourceType: "general_daily",
         title: "국회, 새 법안 심사 일정 확정",
-        canonicalUrl: "https://www.khan.co.kr/article/202608101200001",
-        publishedAt: "2026-08-10T03:00:00.000Z",
-        discoveredAt: "2026-08-10T06:00:00.000Z",
+        canonicalUrl: "https://www.khan.co.kr/article/202608131200001",
+        publishedAt: "2026-08-13T03:00:00.000Z",
+        discoveredAt: "2026-08-13T06:00:00.000Z",
         discoveryMethod: "rss",
         discoveryEndpointId: "politics-rss",
         topic: "politics",
@@ -76,7 +76,7 @@ test("persists discovery metadata without storing document or article body text"
 });
 
 test("reports an existing canonical URL as a duplicate and keeps the insert idempotent", async () => {
-  const url = "https://www.khan.co.kr/article/202608101200001";
+  const url = "https://www.khan.co.kr/article/202608131200001";
   const db = fakeDatabase([url]);
   const result = await persistDiscoveryCycle(db, policy, sampleCycle(), { runId: "discovery-run-2" });
   assert.equal(result.inserted, 0);

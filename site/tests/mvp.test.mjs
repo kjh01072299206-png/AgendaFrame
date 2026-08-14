@@ -1097,13 +1097,13 @@ test("selects public research snapshots from authorized 12-source runs", async (
     },
   };
 
-  const response = await handleApiRequest(new Request("https://example.test/api/issues?scope=academic_panel_12&date=2026-08-10"), { DB });
+  const response = await handleApiRequest(new Request("https://example.test/api/issues?scope=academic_panel_12&date=2026-08-13"), { DB });
   assert.equal(response.status, 200);
   assert.deepEqual((await response.json()).issues, []);
   assert.equal(statements.length, 1);
   assert.match(statements[0].sql, /scoped_run_i\.run_id = analysis_runs\.id/);
   assert.match(statements[0].sql, /scoped_run_a\.provider = \?/);
-  assert.deepEqual(statements[0].parameters.slice(0, 2), ["2026-08-10", "authorized_crawl"]);
+  assert.deepEqual(statements[0].parameters.slice(0, 2), ["2026-08-13", "authorized_crawl"]);
   assert.equal(statements[0].parameters.length, 14);
 });
 

@@ -54,17 +54,17 @@ test("turns a private stored body into a body-free structured frame profile", as
   const env = environment([{
     articleId: "article-1",
     title: "정부, 안전 대책과 법 개정안 발표",
-    publishedAt: Date.parse("2026-08-10T09:00:00+09:00"),
+    publishedAt: Date.parse("2026-08-13T09:00:00+09:00"),
     contentId: "content-1",
     objectKey: "article-content/article-1/hash.txt",
     bodyHash: "a".repeat(64),
     bodyCharacters: articleBody().length,
   }]);
   const result = await analyzeStoredArticleBodies(env, activePolicy(), {
-    now: Date.parse("2026-08-10T15:00:00+09:00"),
+    now: Date.parse("2026-08-13T15:00:00+09:00"),
   });
   assert.equal(result.analyzed, 1);
-  assert.deepEqual(result.dates, ["2026-08-10"]);
+  assert.deepEqual(result.dates, ["2026-08-13"]);
   const insert = env.calls.find((call) => call.operation === "run" && /INSERT INTO article_frame_profiles/.test(call.sql));
   assert.ok(insert);
   const serializedProfile = insert.values[4];
@@ -95,9 +95,9 @@ test("scopes stored analysis to authorized crawl articles while leaving general 
   const token = "scope-test-token";
   const scopedEnv = environment([]);
   scopedEnv.IMPORT_TOKEN = token;
-  const scopedResult = await runStoredAnalysisForDates(scopedEnv, policy, ["2026-08-10"]);
+  const scopedResult = await runStoredAnalysisForDates(scopedEnv, policy, ["2026-08-13"]);
   assert.deepEqual(scopedResult, [{
-    date: "2026-08-10",
+    date: "2026-08-13",
     status: "failed",
     httpStatus: 400,
     runId: null,
@@ -122,7 +122,7 @@ test("scopes stored analysis to authorized crawl articles while leaving general 
       authorization: `Bearer ${token}`,
       "content-type": "application/json",
     },
-    body: JSON.stringify({ date: "2026-08-10" }),
+    body: JSON.stringify({ date: "2026-08-13" }),
   }), generalEnv, {
     includeStoredContents: false,
     includeDerivedSignals: false,
@@ -133,7 +133,7 @@ test("scopes stored analysis to authorized crawl articles while leaving general 
   assert.doesNotMatch(generalArticleQuery.sql, /a\.provider = \?/);
   assert.doesNotMatch(generalArticleQuery.sql, /a\.source_id IN/);
   assert.deepEqual(generalArticleQuery.values, [
-    Date.parse("2026-08-10T00:00:00+09:00"),
-    Date.parse("2026-08-11T00:00:00+09:00"),
+    Date.parse("2026-08-13T00:00:00+09:00"),
+    Date.parse("2026-08-14T00:00:00+09:00"),
   ]);
 });

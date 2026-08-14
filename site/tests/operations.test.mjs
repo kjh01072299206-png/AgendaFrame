@@ -303,9 +303,9 @@ test("collection admin responses summarize records instead of returning article 
       sources: [{ sourceId: "daily", status: "success", discovered: 1, diagnostics: [{ code: "OK" }] }],
     },
     bodyCollection: { status: "success", selected: 1, stored: 1, failed: 0, results: [{ body: "private" }] },
-    profileAnalysis: { status: "success", selected: 1, analyzed: 1, failed: 0, dates: ["2026-08-10"], results: [{ profile: "private" }] },
-    aggregateAnalysis: [{ date: "2026-08-10", status: "failed", error: "ANALYSIS_RUNTIME_FAILED" }],
-    stageErrors: [{ stage: "aggregate_analysis", code: "ANALYSIS_RUNTIME_FAILED", date: "2026-08-10" }],
+    profileAnalysis: { status: "success", selected: 1, analyzed: 1, failed: 0, dates: ["2026-08-13"], results: [{ profile: "private" }] },
+    aggregateAnalysis: [{ date: "2026-08-13", status: "failed", error: "ANALYSIS_RUNTIME_FAILED" }],
+    stageErrors: [{ stage: "aggregate_analysis", code: "ANALYSIS_RUNTIME_FAILED", date: "2026-08-13" }],
   });
 
   assert.equal(compact.discovery.discovered, 1);

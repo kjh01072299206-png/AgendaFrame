@@ -34,7 +34,7 @@ test("reports body-free workflow progress for all 12 approved sources", async ()
     [{ articleCount: 4, sourceCount: 2, latestCollectedAt: 100 }],
     [{ activeCount: 3, expiredCount: 1, revokedCount: 0, nextExpiryAt: 200 }],
     [{ analyzedCount: 2, failedCount: 1, latestAnalyzedAt: 150 }],
-    [{ id: "analysis-1", targetDate: "2026-08-10", status: "success", articleCount: 4, issueCount: 2 }],
+    [{ id: "analysis-1", targetDate: "2026-08-13", status: "success", articleCount: 4, issueCount: 2 }],
     [{ sourceId: "khan", articleCount: 3, latestCollectedAt: 100 }, { sourceId: "kbs", articleCount: 1, latestCollectedAt: 90 }],
   ]);
   const status = await readCollectionWorkflowStatus({ DB: db }, policy, { now: 123, scheduleConfigured: false });

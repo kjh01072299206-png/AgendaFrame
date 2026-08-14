@@ -212,8 +212,8 @@ function discoveryRss() {
     <rss><channel>
       <item>
         <title>국회, 새 법안 심사 일정 확정</title>
-        <link>https://www.khan.co.kr/article/202608101200001</link>
-        <pubDate>Mon, 10 Aug 2026 03:00:00 GMT</pubDate>
+        <link>https://www.khan.co.kr/article/202608131200001</link>
+        <pubDate>Thu, 13 Aug 2026 03:00:00 GMT</pubDate>
         <description>발견 결과에 포함되면 안 되는 요약이다.</description>
       </item>
     </channel></rss>`;
@@ -255,7 +255,7 @@ test("a scheduled run without an analysis token records the failure instead of c
     if (target.includes("/rss/rssdata/politic_news.xml")) {
       return new Response(rss, { status: 200, headers: { "content-type": "application/rss+xml" } });
     }
-    if (target.includes("/article/202608101200001")) {
+    if (target.includes("/article/202608131200001")) {
       return new Response(html, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
     }
     return new Response("<rss><channel></channel></rss>", {
@@ -263,7 +263,7 @@ test("a scheduled run without an analysis token records the failure instead of c
       headers: { "content-type": "application/rss+xml" },
     });
   };
-  const scheduledTime = Date.parse("2026-08-10T06:00:00.000Z");
+  const scheduledTime = Date.parse("2026-08-13T06:00:00.000Z");
 
   const result = await runScheduledAgendaFrame({
     DB,
@@ -284,7 +284,7 @@ test("a scheduled run without an analysis token records the failure instead of c
   assert.equal(result.bodyCollection.stored, 1);
   assert.equal(result.profileAnalysis.analyzed, 1);
   assert.deepEqual(result.stageErrors, [
-    { stage: "aggregate_analysis", code: "ANALYSIS_TOKEN_MISSING", date: "2026-08-10" },
+    { stage: "aggregate_analysis", code: "ANALYSIS_TOKEN_MISSING", date: "2026-08-13" },
   ]);
   assert.equal(result.operations.processed, true);
   assert.equal(requests.length, discoveryPolicy.sources.flatMap((source) => source.endpoints).length + 1);
@@ -293,9 +293,9 @@ test("a scheduled run without an analysis token records the failure instead of c
 
 test("runStoredAnalysisForDates reports a missing token per date instead of throwing", async () => {
   const { runStoredAnalysisForDates } = await import("../worker/stored-body-analysis.mjs");
-  const failures = await runStoredAnalysisForDates({}, discoveryPolicy, ["2026-08-10"]);
+  const failures = await runStoredAnalysisForDates({}, discoveryPolicy, ["2026-08-13"]);
   assert.deepEqual(failures, [{
-    date: "2026-08-10",
+    date: "2026-08-13",
     status: "failed",
     httpStatus: 0,
     runId: null,
