@@ -9,6 +9,7 @@ def test_runtime_services_provisioner_is_dry_run_and_project_guarded() -> None:
     )
     assert "[switch]$Apply" in script
     assert "[switch]$SpendCapsConfirmed" in script
+    assert "[switch]$DeferMonitoring" in script
     assert "if (-not $Apply)" in script
     assert "$ExpectedProject" in script
     assert "NotificationChannel" in script
@@ -58,3 +59,4 @@ def test_runtime_services_metrics_are_valid_counter_and_absence_contract() -> No
     assert "no data for 150m" in monitoring
     assert "conditionAbsent" in script
     assert "conditionThreshold" in script
+    assert "Monitoring policies deferred" in script

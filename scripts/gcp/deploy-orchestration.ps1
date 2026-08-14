@@ -38,7 +38,9 @@ $SchedulerServiceAccount = "scheduler@$ProjectId.iam.gserviceaccount.com"
 function Resolve-CloudSdkCommand {
     param([Parameter(Mandatory)][string]$Name)
 
-    $Installed = Get-Command $Name -ErrorAction SilentlyContinue
+    # Prefer the native launcher over gcloud.ps1 on Windows.
+    $Installed = Get-Command "$Name.cmd" -ErrorAction SilentlyContinue
+    if (-not $Installed) { $Installed = Get-Command $Name -ErrorAction SilentlyContinue }
     if ($Installed) { return $Installed }
     $Local = Join-Path $RepoRoot "tmp\google-cloud-sdk\bin\$Name.cmd"
     if (Test-Path -LiteralPath $Local) { return Get-Command $Local -ErrorAction Stop }

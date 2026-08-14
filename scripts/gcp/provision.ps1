@@ -21,7 +21,10 @@ $Bucket = "$ProjectId-agendaframe-private"
 function Resolve-CloudSdkCommand {
     param([Parameter(Mandatory)][string]$Name)
 
-    $Installed = Get-Command $Name -ErrorAction SilentlyContinue
+    # PowerShell may resolve gcloud.ps1 before the native launcher. The
+    # .cmd launcher preserves the Cloud SDK argument/exit-code contract.
+    $Installed = Get-Command "$Name.cmd" -ErrorAction SilentlyContinue
+    if (-not $Installed) { $Installed = Get-Command $Name -ErrorAction SilentlyContinue }
     if ($Installed) {
         return $Installed
     }
@@ -119,6 +122,17 @@ if (-not (Test-GcloudResource -Arguments @(
         --project $ProjectId --location $Region `
         --uniform-bucket-level-access --public-access-prevention
     if ($LASTEXITCODE -ne 0) { throw "Failed to create private body bucket." }
+}
+# Existing pilot buckets may predate the hardening flags above. Inspect first;
+# only issue the mutating update when either control is absent. This keeps
+# re-runs safe on SDKs whose storage update endpoint is intermittently
+# unavailable while still failing closed before body collection.
+$BucketSecurity = (& $Gcloud.Source storage buckets describe "gs://$Bucket" `
+    --project $ProjectId --format="value(public_access_prevention,uniform_bucket_level_access)" 2>$null).Trim()
+if ($BucketSecurity -notmatch "^enforced\s+True$") {
+    & $Gcloud.Source storage buckets update "gs://$Bucket" `
+        --uniform-bucket-level-access --pap
+    if ($LASTEXITCODE -ne 0) { throw "Failed to enforce private bucket access controls." }
 }
 if ($DeferStorageLifecycle) {
     Write-Warning (

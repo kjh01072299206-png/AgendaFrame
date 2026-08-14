@@ -284,3 +284,47 @@ At every handoff report: changed files, exact tests, external calls (none unless
 explicitly authorized), what remains blocked, and the next task. Never say
 GCP-live or production deployed without public endpoint and resource evidence.
 ```
+
+## 2026-08-15 live non-production checkpoint (amendment)
+
+The previous "no GCP resource applied" statement above describes the earlier
+checkpoint only. On 2026-08-15, with `AGENDAFRAME_LIVE_TESTS=1`, the active
+non-production project `project-40bc06fc-fb4b-46b6-a10` was inspected and the
+following idempotent resources were applied and read back:
+
+- Workflows API, required Cloud Run/Artifact Registry/BigQuery/Storage/
+  Pub/Sub/Secret Manager/Logging/Monitoring APIs enabled.
+- Existing private bucket `gs://project-40bc06fc-fb4b-46b6-a10-agendaframe-private`
+  verified with public access prevention enforced, uniform bucket-level access,
+  and `bodies/` delete lifecycle.
+- Artifact Registry repository and `reader`, `workflow`, and `scheduler`
+  service accounts/IAM bindings applied.
+- Pub/Sub topic `agenda-article-analysis`, DLQ topic, and
+  `agenda-article-analysis-worker` subscription applied with five-attempt DLQ
+  policy and service-agent bindings.
+- Secret Manager containers `agendaframe-news-source-auth`,
+  `agendaframe-vertex-service-config`, and `agendaframe-site-import-token`
+  applied with accessor bindings. **No secret versions or values were added.**
+- Four body-free log metrics applied. Monitoring policies remain deferred
+  because the project has no approved notification channel; no arbitrary email
+  address was invented.
+- BigQuery `agendaframe` dataset and six partitioned metadata-only tables were
+  verified through the official REST API. The publisher table grant was applied
+  with `scripts/gcp/apply-bigquery-rest.ps1`, a guarded live fallback for the
+  local `bq` DNS failure.
+
+The first live attempts exposed and fixed two Windows/SDK issues: deployment
+scripts now prefer `gcloud.cmd` over `gcloud.ps1`, and Secret Manager IAM uses
+the valid `serviceAccount:` member prefix. `scripts/gcp/provision.ps1` also
+skips already-hardened bucket updates safely. No article fetch, Vertex model
+call, Cloud Run image build, Scheduler/Workflow deployment, Vercel change, or
+production cutover has happened yet. The remaining live order is: full gate and
+clean immutable commit, reader canary, runtime-job canary, workflow deploy,
+then scheduler creation and ownership cutover only after endpoint verification.
+
+Repeatable REST schema/grant command (non-production only):
+
+```powershell
+$env:AGENDAFRAME_LIVE_TESTS='1'; $env:HTTPS_PROXY=''; $env:HTTP_PROXY=''; $env:ALL_PROXY='';
+powershell -NoProfile -File scripts/gcp/apply-bigquery-rest.ps1 -Apply -SpendCapsConfirmed
+```

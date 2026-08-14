@@ -15,7 +15,8 @@ param(
     [string]$Region = "asia-northeast3",
     [string]$NotificationChannel = "",
     [switch]$Apply,
-    [switch]$SpendCapsConfirmed
+    [switch]$SpendCapsConfirmed,
+    [switch]$DeferMonitoring
 )
 
 Set-StrictMode -Version Latest
@@ -46,7 +47,9 @@ $AlertDefinitions = @(
 function Resolve-CloudSdkCommand {
     param([Parameter(Mandatory)][string]$Name)
 
-    $Installed = Get-Command $Name -ErrorAction SilentlyContinue
+    # Prefer the native launcher over gcloud.ps1 on Windows.
+    $Installed = Get-Command "$Name.cmd" -ErrorAction SilentlyContinue
+    if (-not $Installed) { $Installed = Get-Command $Name -ErrorAction SilentlyContinue }
     if ($Installed) { return $Installed }
     $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..\..")).Path
     $Local = Join-Path $RepoRoot "tmp\google-cloud-sdk\bin\$Name.cmd"
@@ -62,13 +65,14 @@ if (-not $Apply) {
     Write-Host "Secrets: $($SecretDefinitions.Id -join ', ') (containers only; no values)"
     Write-Host "Alerts:  $($AlertDefinitions.DisplayName -join ', ')"
     Write-Host "Re-run with -Apply -SpendCapsConfirmed -NotificationChannel <full channel name>."
+    Write-Host "Use -DeferMonitoring only when the project has no approved notification channel yet."
     exit 0
 }
 
 if (-not $SpendCapsConfirmed) {
     throw "Apply is blocked until Vertex AI and Cloud Run spend caps are confirmed."
 }
-if ($NotificationChannel -notmatch "^projects/$([regex]::Escape($ProjectId))/notificationChannels/[0-9]+$") {
+if (-not $DeferMonitoring -and $NotificationChannel -notmatch "^projects/$([regex]::Escape($ProjectId))/notificationChannels/[0-9]+$") {
     throw "NotificationChannel must be a full projects/$ProjectId/notificationChannels/<number> name."
 }
 
@@ -132,7 +136,7 @@ foreach ($Secret in $SecretDefinitions) {
     }
     Invoke-Gcloud -Arguments @(
         "secrets", "add-iam-policy-binding", $Secret.Id, "--project=$ProjectId",
-        "--member=serviceAccount=$($Secret.Account)@$ProjectId.iam.gserviceaccount.com",
+        "--member=serviceAccount:$($Secret.Account)@$ProjectId.iam.gserviceaccount.com",
         "--role=roles/secretmanager.secretAccessor"
     )
 }
@@ -163,6 +167,7 @@ foreach ($Metric in $MetricDefinitions) {
     }
 }
 
+if (-not $DeferMonitoring) {
 foreach ($Alert in $AlertDefinitions) {
     $DisplayFilter = 'displayName="{0}"' -f $Alert.DisplayName
     $Existing = (& $Gcloud.Source "monitoring" "policies" "list" "--project=$ProjectId" "--filter=$DisplayFilter" "--format=value(name)").Trim()
@@ -208,6 +213,10 @@ foreach ($Alert in $AlertDefinitions) {
     finally {
         Remove-Item -LiteralPath $TempPolicy -Force -ErrorAction SilentlyContinue
     }
+}
+}
+else {
+    Write-Warning "Monitoring policies deferred: no approved notification channel was supplied."
 }
 
 Write-Host "Recurring messaging, secret containers, log metrics, and alert policies are ready." -ForegroundColor Green
