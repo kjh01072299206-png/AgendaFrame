@@ -60,9 +60,6 @@ if (-not $Apply) {
     exit 0
 }
 if (-not $FullGatePassed) { throw "Deployment is blocked until the full offline gate has passed." }
-if (-not $AllowUnauthenticated) {
-    throw "The Vercel server fetch requires explicit -AllowUnauthenticated consent for this public read-only boundary."
-}
 if ($Promote -and -not $AllowUnauthenticated) {
     throw "-Promote requires the explicit public endpoint consent."
 }
@@ -80,8 +77,19 @@ $EnvVars = @(
     "GOOGLE_CLOUD_PROJECT=$ProjectId",
     "AGENDAFRAME_PRIVATE_BUCKET=$Bucket"
 )
-$TrafficArgs = @("--no-traffic")
-if ($Promote) { $TrafficArgs = @("--allow-unauthenticated") }
+$Existing = $false
+$PreviousPreference = $ErrorActionPreference
+try {
+    $ErrorActionPreference = "SilentlyContinue"
+    & $Gcloud.Source run services describe $ServiceName --project $ProjectId --region $Region *> $null
+    $Existing = $LASTEXITCODE -eq 0
+}
+finally {
+    $ErrorActionPreference = $PreviousPreference
+}
+$TrafficArgs = @()
+if ($Existing) { $TrafficArgs += "--no-traffic" }
+if ($AllowUnauthenticated) { $TrafficArgs += "--allow-unauthenticated" }
 # Current Cloud SDK exposes service deployment as `gcloud run deploy`; the
 # `run services deploy` alias is not available on all Windows installations.
 & $Gcloud.Source run deploy $ServiceName `
