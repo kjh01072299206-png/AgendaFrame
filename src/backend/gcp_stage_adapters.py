@@ -286,16 +286,32 @@ class PolicyCollectionAdapter(CollectionAdapter):
         articles: dict[str, ArticleDocument] = {}
         references: dict[str, str] = {}
         collected_at = self.clock()
+        source_budgets: dict[str, int | None] = {source.source_id: None for source in self.sources}
+        if self.max_articles_per_run is not None:
+            base_budget, remainder = divmod(self.max_articles_per_run, len(self.sources))
+            source_budgets = {
+                source.source_id: base_budget + (1 if index < remainder else 0)
+                for index, source in enumerate(self.sources)
+            }
+        source_counts: dict[str, int] = {source.source_id: 0 for source in self.sources}
         for source in self.sources:
+            source_budget = source_budgets[source.source_id]
+            if source_budget == 0:
+                continue
             for endpoint_url in source.endpoint_urls:
                 parser_source = source
-                if self.max_articles_per_run is not None:
-                    remaining = self.max_articles_per_run - len(articles)
-                    if remaining <= 0:
+                if source_budget is not None:
+                    remaining_global = self.max_articles_per_run - len(articles)
+                    remaining_source = source_budget - source_counts[source.source_id]
+                    if remaining_global <= 0 or remaining_source <= 0:
                         break
                     parser_source = replace(
                         source,
-                        max_records_per_run=min(source.max_records_per_run, remaining),
+                        max_records_per_run=min(
+                            source.max_records_per_run,
+                            remaining_global,
+                            remaining_source,
+                        ),
                     )
                 response = self.dependencies.fetcher.fetch(endpoint_url, source_id=source.source_id)
                 parsed = self.dependencies.parser.parse(
@@ -305,9 +321,9 @@ class PolicyCollectionAdapter(CollectionAdapter):
                     collected_at=collected_at,
                 )
                 for article in parsed:
-                    if (
-                        self.max_articles_per_run is not None
-                        and len(articles) >= self.max_articles_per_run
+                    if source_budget is not None and (
+                        len(articles) >= self.max_articles_per_run
+                        or source_counts[source.source_id] >= source_budget
                     ):
                         break
                     self._validate_article(article, source)
@@ -316,18 +332,16 @@ class PolicyCollectionAdapter(CollectionAdapter):
                     if article.article_id in articles:
                         continue
                     articles[article.article_id] = article
+                    source_counts[source.source_id] += 1
                     references[article.article_id] = self.dependencies.vault.put(
                         request.run_id, article
                     )
-                if (
-                    self.max_articles_per_run is not None
-                    and len(articles) >= self.max_articles_per_run
+                if source_budget is not None and (
+                    len(articles) >= self.max_articles_per_run
+                    or source_counts[source.source_id] >= source_budget
                 ):
                     break
-            if (
-                self.max_articles_per_run is not None
-                and len(articles) >= self.max_articles_per_run
-            ):
+            if source_budget is not None and len(articles) >= self.max_articles_per_run:
                 break
         metadata = [
             _metadata(articles[article_id], private_object_ref=references[article_id])
@@ -338,6 +352,7 @@ class PolicyCollectionAdapter(CollectionAdapter):
             "articles": metadata,
             "sourceCount": len(self.sources),
             "sourceIds": sorted(self.sources_by_id),
+            "sourceArticleCounts": source_counts,
             "privateBodyObjects": references,
             "idempotencyKey": idempotency_key,
         }
@@ -509,9 +524,7 @@ def _public_evidence(profile: Mapping[str, Any]) -> Mapping[str, Any] | None:
 _PUBLIC_SENTENCE_HASH = re.compile(r"^[0-9a-fA-F]{64}$")
 
 
-def _public_evidence_rows(
-    profile: Mapping[str, Any], *, article_id: str
-) -> list[dict[str, Any]]:
+def _public_evidence_rows(profile: Mapping[str, Any], *, article_id: str) -> list[dict[str, Any]]:
     """Collect only locator+hash evidence for the site's public contract."""
 
     found: list[dict[str, Any]] = []
@@ -566,7 +579,11 @@ def _public_evidence_rows(
     descriptors = profile.get("secondary_descriptors")
     if isinstance(descriptors, Mapping):
         for rows in descriptors.values():
-            for row in rows if isinstance(rows, Sequence) and not isinstance(rows, (str, bytes, bytearray)) else ():
+            for row in (
+                rows
+                if isinstance(rows, Sequence) and not isinstance(rows, (str, bytes, bytearray))
+                else ()
+            ):
                 if isinstance(row, Mapping):
                     for evidence in row.get("evidence", []):
                         add(evidence)
@@ -587,7 +604,9 @@ def _engine_metadata(
     engine = profile.get("engine") if isinstance(profile.get("engine"), Mapping) else {}
     lineage = profile.get("lineage") if isinstance(profile.get("lineage"), Mapping) else {}
     model = str(engine.get("version") or lineage.get("model_id") or request.model_revision)
-    prompt = str(engine.get("prompt_version") or lineage.get("prompt_version") or request.prompt_version)
+    prompt = str(
+        engine.get("prompt_version") or lineage.get("prompt_version") or request.prompt_version
+    )
     schema = engine.get("analysis_schema_version") or profile.get("schema_version") or 3
     return {
         "label": "ai_semantic",
@@ -648,7 +667,11 @@ def _comparison_axes(
                     continue
                 voice = item.get("voice") if isinstance(item.get("voice"), Mapping) else {}
                 voice_kind = str(voice.get("kind") or "")
-                scope = "outlet_narration" if voice_kind == "journalist_narration" else "attributed_source"
+                scope = (
+                    "outlet_narration"
+                    if voice_kind == "journalist_narration"
+                    else "attributed_source"
+                )
                 key = (scope, paraphrase)
                 groups = dimensions.setdefault(str(dimension), {})
                 group = groups.setdefault(
@@ -671,7 +694,12 @@ def _comparison_axes(
             evidence = []
             seen = set()
             for row in group["evidence"]:
-                key = (row.get("articleId"), row["locator"].get("paragraph"), row["locator"].get("sentence"), row["sentenceSha256"])
+                key = (
+                    row.get("articleId"),
+                    row["locator"].get("paragraph"),
+                    row["locator"].get("sentence"),
+                    row["sentenceSha256"],
+                )
                 if key in seen:
                     continue
                 seen.add(key)
@@ -696,7 +724,9 @@ def _comparison_axes(
                 "dimension": dimension,
                 "label": dimension,
                 "observed_article_count": len(observed.get(dimension, set())),
-                "not_observed_article_count": max(0, article_count - len(observed.get(dimension, set()))),
+                "not_observed_article_count": max(
+                    0, article_count - len(observed.get(dimension, set()))
+                ),
                 "patterns": patterns,
             }
         )
@@ -903,11 +933,7 @@ class FrameSemanticAdapter(SemanticAdapter):
                             "caution": "취재원 구성은 발화 가시성의 관측이지 매체의 의도 판정이 아닙니다.",
                         },
                     },
-                    "evidence": [
-                        evidence
-                        for entry in profiles
-                        for evidence in entry["evidence"]
-                    ],
+                    "evidence": [evidence for entry in profiles for evidence in entry["evidence"]],
                 },
                 "coderAgreement": None,
                 "lineage": {
@@ -1049,9 +1075,7 @@ def production_stage_adapter_factory(
         module = importlib.import_module(module_name)
         factory = getattr(module, attribute_name)
     except (ImportError, AttributeError) as error:
-        raise RuntimeAdapterUnavailable(
-            "cannot load stage dependencies factory"
-        ) from error
+        raise RuntimeAdapterUnavailable("cannot load stage dependencies factory") from error
     if not callable(factory):
         raise RuntimeAdapterUnavailable("stage dependencies factory is not callable")
     dependencies = factory(clients, config, runtime)

@@ -252,6 +252,34 @@ class GcpStageAdapterTests(unittest.TestCase):
         self.assertEqual(result["articleCount"], 1)
         self.assertEqual(self.vault.put_calls, 1)
 
+    def test_policy_collection_distributes_capped_rows_across_all_sources(self) -> None:
+        class ManyParser(Parser):
+            def parse(self, response, *, source, endpoint_url, collected_at):
+                self.calls += 1
+                if endpoint_url != source.endpoint_urls[0]:
+                    return ()
+                return tuple(
+                    article(
+                        source.source_id,
+                        self.calls * 100 + index,
+                        source.domains[0],
+                    )
+                    for index in range(20)
+                )
+
+        parser = ManyParser()
+        deps = StageDependencies(**{**self.dependencies.__dict__, "parser": parser})
+        adapter = PolicyCollectionAdapter(
+            deps,
+            clock=lambda: COLLECTED_AT,
+            max_articles_per_run=12,
+        )
+        result = adapter.collect(self.request, idempotency_key="balanced")
+        counts = result["sourceArticleCounts"]
+        self.assertEqual(result["articleCount"], 12)
+        self.assertEqual(len(counts), 12)
+        self.assertTrue(all(count == 1 for count in counts.values()))
+
     def test_persist_cluster_rank_and_semantic_produce_top5_evidence_contract(self) -> None:
         collected = PolicyCollectionAdapter(self.dependencies, clock=lambda: COLLECTED_AT).collect(
             self.request, idempotency_key="collect"
