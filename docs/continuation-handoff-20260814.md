@@ -118,7 +118,7 @@ and no raw article/body/HTML/sentence fields.
 
 ## Verification completed
 
-- `powershell -NoProfile -File scripts/check.ps1 -Mode quick` → **124 passed**;
+- `powershell -NoProfile -File scripts/check.ps1 -Mode quick` → **126 passed**;
   Ruff and formatting passed.
 - `powershell -NoProfile -File scripts/check.ps1 -Mode full` → **124 unit/
   contract tests and 3 integration/e2e tests passed**; evaluation assets remain
@@ -134,6 +134,9 @@ and no raw article/body/HTML/sentence fields.
 - Focused collection parser tests → **7 passed**, including JSON-LD
   `datePublished`, strict date-window boundaries, date-less rejection, body
   minimum, canonicalization/deduplication, and source-limit enforcement.
+- `powershell -NoProfile -File scripts/gcp/deploy-snapshot-reader.ps1` dry run
+  passed and printed no image build, deployment, traffic promotion, or GCP
+  resource mutation.
 
 ## Not completed — do not claim these as done
 
