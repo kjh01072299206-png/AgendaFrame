@@ -328,3 +328,124 @@ Repeatable REST schema/grant command (non-production only):
 $env:AGENDAFRAME_LIVE_TESTS='1'; $env:HTTPS_PROXY=''; $env:HTTP_PROXY=''; $env:ALL_PROXY='';
 powershell -NoProfile -File scripts/gcp/apply-bigquery-rest.ps1 -Apply -SpendCapsConfirmed
 ```
+
+## 2026-08-15 latest runtime checkpoint (handoff for the next model)
+
+### Saved repository state
+
+- Branch: `codex/initial-five-complete`.
+- Latest committed checkpoint: `f9f8652 fix(gcp): cap scheduled fetch latency`.
+- The intentional commits after the previous amendment are:
+  `1594e4e` (runtime clusterer accepts the configured 50-article cap),
+  `86ac0e8` (distribute the cap across all twelve sources), `bbfbf0d`
+  (isolate source-local network failures), `88d0ce1` (validate and bound
+  per-source discovery requests), and `f9f8652` (pass the per-source budget
+  to the parser and use a five-second production fetch timeout).
+- Latest offline evidence: `scripts/check.ps1 -Mode full` passed with **146
+  unit/contract tests and 3 integration/e2e tests**. Evaluation assets remain
+  synthetic/unlabeled (`release_eligible: false`). Site code was not changed
+  in this slice; prior site typecheck/lint/test evidence remains valid.
+- `docs/next-session-handoff.md` is an existing user/other-model dirty file;
+  do not stage or rewrite it. Existing untracked worktrees, logs, feedback,
+  outputs, and `.grok/` are also out of scope.
+
+### Non-production resources and live evidence
+
+- Project `project-40bc06fc-fb4b-46b6-a10` is the only live target. APIs,
+  private bucket hardening/lifecycle, BigQuery `agendaframe` metadata tables,
+  publisher grant, Pub/Sub topic/subscription/DLQ, Secret Manager containers
+  (no versions/values), and four body-free log metrics were applied and read
+  back. Monitoring alert policies remain deferred because no approved
+  notification channel exists.
+- GCS historical migration is readable: active pointer snapshot
+  `33751fe9c7eefaf20e59ccd35ae9a2d3`, seven immutable objects, five issues,
+  `qualityGate.status=pass`, `publicSnapshotReady=true`, and manifest SHA
+  `6810854ff752f95ca2e5e08884c2ba1cad3d029ad9c2b7317ea1c89c287b6c34`.
+  This is a historical body-free artifact, not proof of a live current-date
+  collection.
+- Snapshot-reader Cloud Run service `agendaframe-snapshot-reader` revision
+  `00001-rm9` is Ready and authenticated-only. The public URL and `/active`
+  response could not be verified from this network because `run.app` DNS /
+  proxy access failed; do not call the reader or production deployment live.
+- Runtime Cloud Run Job `agendaframe-collection-analysis` is deployed with
+  image `asia-northeast3-docker.pkg.dev/project-40bc06fc-fb4b-46b6-a10/agendaframe/runtime:f9f86523eb75aaeec1d9faf69b48b32c3d3b1955` and GCP-only
+  ownership flags. No Scheduler or Workflows deployment has been created.
+
+### Canary history (all non-production; no public cutover)
+
+1. `twllg` on `f28d99d`: collection/persist reached `cluster_rank`, then the
+   old 25-article `InitialFiveClusterer` limit rejected the 50-article run.
+   Fixed in `1594e4e` and covered by a 50-article regression test.
+2. `vxd9c` on `bd4978d`: collection, persistence, and clustering completed;
+   `top5_semantic` stopped because the model result did not produce exactly
+   five ranked issues (`semantic stage requires exactly five ranked issues`).
+   This is a quarantine/failure, not a publish.
+3. `j57kk` on `86ac0e8`: a source network exception escaped collection. Fixed
+   in `bbfbf0d`; collection now records body-free `sourceErrorCounts` and
+   continues other sources.
+4. `jklst` on `bbfbf0d`: the task reached the Cloud Run 900-second timeout and
+   was cancelled. The cause was unbounded candidate-page attempts when feeds
+   returned no valid rows. Fixed in `88d0ce1` and `f9f8652` by validating the
+   policy's 30-request limit, passing the source budget (4/5 for a 50-row
+   twelve-source run) into the parser, and using a five-second fetch timeout.
+5. `vhs68` on `f9f8652`: started asynchronously for a canary, then was
+   cancelled at handoff to protect the spend cap. There is **no successful
+   runtime canary or published current snapshot yet**.
+
+### Next model: exact next actions
+
+1. Start with `git status --short`, `git rev-parse HEAD`, and this section.
+   Preserve `docs/next-session-handoff.md` and all unrelated dirty/untracked
+   paths. Run the full offline gate once before any live call.
+2. Run one bounded non-production canary. Prefer adding a guarded
+   `AGENDAFRAME_MAX_ARTICLES_PER_RUN` override (maximum 50, canary-only) so a
+   12-source smoke run can use 12 articles (one per source) before spending on
+   50 body analyses. Keep the default production config at 50 until the
+   smaller run proves collection, source distribution, clustering, and Vertex
+   evidence. Do not fabricate a fifth issue: if fewer than five real clusters
+   exist, quarantine and record the reason.
+3. Inspect the body-free result payload and logs for per-source counts,
+   cluster count, Vertex review/error counts, quality-gate status, immutable
+   object writes, and pointer movement. A successful canary must prove exact
+   five issues, valid locator + 64-hex sentence hash for every public article
+   row, no raw body/HTML/sentence fields, and previous-pointer preservation on
+   failure.
+4. If the canary passes, deploy `infra/gcp/workflow-runtime.yaml` through
+   `scripts/gcp/deploy-orchestration.ps1` with `-Apply -FullGatePassed`, then
+   create the Scheduler only with `-CreateScheduler`. The UTC schedule is
+   `0 3,9,15,21 * * *` (00/06/12/18 KST). Do not create it while canary or
+   reader verification is incomplete.
+5. Verify the reader using an authenticated non-production path or approved
+   ingress; public `/healthz` and `/active` must be checked before setting
+   `AGENDAFRAME_DATA_MODE=live` or `AGENDAFRAME_ACTIVE_SNAPSHOT_URL` in Vercel.
+   The existing main site and its two semantic pages must remain unchanged
+   except for the explicit live snapshot boundary.
+6. Production is still blocked: no GitHub `main` push (DNS previously failed),
+   no Vercel env change/deploy, no public reader verification, no Scheduler,
+   and no Cloudflare-cron ownership cutover. Never report these as complete.
+
+### Prompt for another model
+
+```text
+Read AGENTS.md and docs/continuation-handoff-20260814.md. Continue from
+branch codex/initial-five-complete at commit f9f8652. Preserve every unrelated
+dirty/untracked file, especially docs/next-session-handoff.md; never reset or
+stage everything. The latest full offline gate is 146 tests + 3 integration/e2e
+and is green. GCP non-production resources exist, but there is no successful
+runtime canary, no Scheduler/Workflow deployment, no public reader verification,
+no Vercel change, and no production cutover.
+
+The runtime canary history and exact failure boundaries are in the latest
+section above. First add/use a guarded canary-only article-count override (max
+50) so a 12-source/12-article smoke run is cheap. Then execute one unique
+non-production run with AGENDAFRAME_LIVE_TESTS=1 and cleared proxy variables.
+Verify sourceArticleCounts/sourceErrorCounts, cluster count, Vertex evidence,
+quality gate, immutable GCS objects, pointer SHA, and rollback preservation.
+Do not fabricate fewer-than-five clusters and do not expose article bodies.
+Only after a successful canary verify the authenticated reader, deploy
+infra/gcp/workflow-runtime.yaml, create the 0/6/12/18 KST Scheduler via the
+guarded script, and then plan the Vercel preview/live env and public /version
+check. Keep Cloudflare ownership disabled only after GCP Scheduler is proven;
+never run both schedulers. At handoff, report exact changed files/tests,
+external calls, blocked items, and the next task.
+```
