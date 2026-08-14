@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "policyVersion": "2026-08-10.3",
+  "policyVersion": "2026-08-13.1",
   "project": "AgendaFrame academic news collection",
   "collectionWindow": {
-    "startDate": "2026-08-10",
+    "startDate": "2026-08-13",
     "endDate": "2026-10-31",
     "timezone": "Asia/Seoul",
     "rawContentDeleteAfter": "2026-10-31T23:59:59+09:00"

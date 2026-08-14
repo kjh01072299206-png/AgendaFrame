@@ -90,6 +90,21 @@ def _evidence_locator(
     }
 
 
+def _public_context_evidence(
+    article: ArticleDocument,
+    body: str,
+    spans: Any,
+    sentences: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    if not isinstance(spans, list):
+        return []
+    return [
+        _evidence_locator(article.article_id, body, span, sentences)
+        for span in spans
+        if isinstance(span, dict)
+    ]
+
+
 def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, Any]:
     validate_frame_result(article, result)
     body = article.body_text or ""
@@ -228,6 +243,38 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
             }
         )
 
+    raw_context = result.structured_context or {}
+    structured_context: dict[str, Any] = {}
+    for key in ("genre", "scope", "context_depth"):
+        value = raw_context.get(key)
+        if not isinstance(value, dict):
+            continue
+        structured_context[key] = {
+            "code": value.get("code", "unknown"),
+            "label": value.get("label"),
+            "evidence": _public_context_evidence(article, body, value.get("evidence", []), sentence_rows),
+            **({"reason": value["reason"]} if value.get("reason") else {}),
+        }
+        if key == "context_depth":
+            structured_context[key]["level"] = value.get("code", "unknown")
+    for source_key, public_key in (("generic_frames", "generic_frames"), ("policy_frames", "policy_frames"), ("framing_devices", "framing_devices")):
+        rows = raw_context.get(source_key, [])
+        if not isinstance(rows, list):
+            continue
+        public_rows: list[dict[str, Any]] = []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            public_row = {
+                "code": row.get("code", "unknown"),
+                "label": row.get("label"),
+                "evidence": _public_context_evidence(article, body, row.get("evidence", []), sentence_rows),
+            }
+            if source_key == "framing_devices":
+                public_row["appears_in_lead"] = bool(row.get("appears_in_lead", False))
+            public_rows.append(public_row)
+        structured_context[public_key] = public_rows
+
     return {
         "schema_version": PUBLIC_PROFILE_SCHEMA,
         "lineage": {
@@ -272,17 +319,17 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
             "analyzed_character_count": analyzed_character_count,
             "input_truncated": input_truncated,
         },
-        "genre": {"code": "unknown", "label": "자동 분류 안 함", "evidence": []},
+        "genre": structured_context.get("genre", {"code": "unknown", "label": "자동 분류 안 함", "evidence": []}),
         "dimensions": dimensions,
         "actors_and_sources": actors_and_sources,
-        "context_depth": {"level": "unknown"},
-        "scope": {"code": "unknown"},
+        "context_depth": structured_context.get("context_depth", {"level": "unknown"}),
+        "scope": structured_context.get("scope", {"code": "unknown"}),
         "secondary_descriptors": {
-            "generic_frames": [],
-            "policy_frames": [],
+            "generic_frames": structured_context.get("generic_frames", []),
+            "policy_frames": structured_context.get("policy_frames", []),
             "controlled_associations": [],
         },
-        "framing_devices": [],
+        "framing_devices": structured_context.get("framing_devices", []),
         "review": {
             "status": "automatic_draft",
             "analysis_decision": result.decision,

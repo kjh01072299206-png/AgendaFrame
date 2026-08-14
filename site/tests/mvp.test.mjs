@@ -1545,14 +1545,14 @@ test("forces admin analysis and transient analysis onto the academic 12-outlet s
   const runtime = await readFile(new URL("../worker/runtime.mjs", import.meta.url), "utf8");
   const admin = await readFile(new URL("../app/admin/admin-client.tsx", import.meta.url), "utf8");
   assert.match(runtime, /const RESEARCH_SOURCE_PANEL = Object\.freeze/);
-  assert.match(runtime, /resolvedAnalysisScope = articleScope\n\s*\? \{ key: RESEARCH_SCOPE_KEY/);
+  assert.match(runtime, /resolvedAnalysisScope = articleScope\r?\n\s*\? \{ key: RESEARCH_SCOPE_KEY/);
   assert.match(runtime, /scope: analysisScope\.key/);
   assert.match(runtime, /const scopeKey = new URL\(request\.url\)\.searchParams\.get\("scope"\) \|\| RESEARCH_SCOPE_KEY/);
-  assert.match(runtime, /scope: analysisScope\.key,\n\s*approved_same_event_clusters/);
+  assert.match(runtime, /scope: analysisScope\.key,\r?\n\s*approved_same_event_clusters/);
   assert.match(admin, /const ANALYSIS_SCOPE = "academic_panel_12"/);
   assert.match(admin, /body: JSON\.stringify\(\{ date: analysisDate, scope: ANALYSIS_SCOPE \}\)/);
   assert.match(admin, /body: JSON\.stringify\(\{ date, scope: ANALYSIS_SCOPE \}\)/);
-  assert.match(admin, /transient_analysis_acknowledged: transientAnalysisAcknowledged,\n\s*scope: ANALYSIS_SCOPE/);
+  assert.match(admin, /transient_analysis_acknowledged: transientAnalysisAcknowledged,\r?\n\s*scope: ANALYSIS_SCOPE/);
   assert.match(runtime, /const scopedRun = scopedRunExistsClause\(analysisScope, "analysis_runs"\)/);
   assert.match(runtime, /const articleScope = articleScopeFilter\(analysisScope\.articleScope\)/);
   assert.match(runtime, /return jsonResponse\(\{ startDate, endDate, scope: analysisScope\.key/);

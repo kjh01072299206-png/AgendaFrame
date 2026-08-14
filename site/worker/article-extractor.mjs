@@ -65,7 +65,10 @@ const BODY_ATTRIBUTE_PATTERN =
   /(?:^|[\s_-])(?:article[-_ ]?(?:body|content|text)|articlebody(?:content)?|article[-_ ]?view[-_ ]?content(?:[-_ ]?div)?|content[-_ ]?body|news[-_ ]?(?:article[-_ ]?)?(?:body|content|text)|newsbody|news[-_ ]?body[-_ ]?id|story[-_ ]?(?:body|content)|view[-_ ]?content)(?:$|[\s_-])/i;
 
 const CHOSUN_BODY_PATTERN =
-  /(?:^|[\s_-])(?:news[-_ ]?body[-_ ]?id|article[-_ ]?body|articlebody|news[-_ ]?content)(?:$|[\s_-])/i;
+  /(?:^|[\s_-])(?:article|news[-_ ]?body[-_ ]?id|article[-_ ]?body|articlebody|news[-_ ]?content)(?:$|[\s_-])/i;
+
+const DONGA_BODY_PATTERN =
+  /(?:^|[\s_-])(?:view[-_ ]?body|article[-_ ]?body|news[-_ ]?content)(?:$|[\s_-])/i;
 
 const HANKOOKILBO_BODY_PATTERN =
   /(?:^|[\s_-])(?:article[-_ ]?body|article[-_ ]?body[-_ ]?content|article[-_ ]?view[-_ ]?content(?:[-_ ]?div)?|editor[-_ ]?content|news[-_ ]?body)(?:$|[\s_-])/i;
@@ -401,6 +404,53 @@ export function extractArticleTopic(source) {
   return null;
 }
 
+function assignedJsonValue(source, assignmentName) {
+  const assignment = new RegExp(`(?:^|[;\\s])(?:window\\.)?${escapeRegExp(assignmentName)}\\s*=`, "m").exec(source);
+  if (!assignment) return null;
+  let start = assignment.index + assignment[0].length;
+  while (/\s/.test(source[start] ?? "")) start += 1;
+  if (!["{", "["].includes(source[start] ?? "")) return null;
+  const expectedClosers = [];
+  let quote = "";
+  let escaped = false;
+  for (let index = start; index < source.length; index += 1) {
+    const character = source[index];
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === quote) quote = "";
+      continue;
+    }
+    if (character === '"') {
+      quote = character;
+      continue;
+    }
+    if (character === "{") expectedClosers.push("}");
+    else if (character === "[") expectedClosers.push("]");
+    else if (character === "}" || character === "]") {
+      if (expectedClosers.pop() !== character) return null;
+      if (!expectedClosers.length) {
+        try {
+          return JSON.parse(source.slice(start, index + 1));
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function arcContentBody(value) {
+  if (!value || typeof value !== "object" || !Array.isArray(value.content_elements)) return "";
+  const paragraphs = [];
+  for (const element of value.content_elements) {
+    if (!element || typeof element !== "object") continue;
+    if (element.type === "text" && typeof element.content === "string") paragraphs.push(element.content);
+  }
+  return paragraphs.join("\n");
+}
+
 function inspectJsonLd(value, result) {
   if (Array.isArray(value)) {
     for (const item of value) inspectJsonLd(item, result);
@@ -452,6 +502,12 @@ function scriptStateCandidates(source) {
     const safeStateScript =
       type === "application/json" ||
       /^(?:__NEXT_DATA__|__NUXT_DATA__|__APOLLO_STATE__|__INITIAL_STATE__)$/i.test(id);
+    if (/^fusion-metadata$/i.test(id)) {
+      const globalContent = assignedJsonValue(match[2], "Fusion.globalContent");
+      const body = arcContentBody(globalContent);
+      if (body) candidates.push({ rawText: body, strategy: "script-state", sourceOffset: match.index });
+      continue;
+    }
     if (!safeStateScript) continue;
     const jsonText = decodeJsonScriptText(match[2]);
     if (!jsonText || jsonText.length > 4_000_000) continue;
@@ -528,6 +584,7 @@ function hasVisibleRestriction(source) {
 function sourceFamily(hostname, sourceId) {
   const normalized = `${hostname ?? ""} ${sourceId ?? ""}`.toLowerCase();
   if (/(?:^|[.\s_-])chosun(?:\.com|biz|$)|조선/.test(normalized)) return "chosun";
+  if (/(?:^|[.\s_-])donga(?:\.com|$)|동아일보/.test(normalized)) return "donga";
   if (/hankookilbo|한국일보/.test(normalized)) return "hankookilbo";
   return "generic";
 }
@@ -538,6 +595,8 @@ function selectorCandidates(source, hostname, sourceId) {
   const sourcePattern =
     family === "chosun"
       ? CHOSUN_BODY_PATTERN
+      : family === "donga"
+        ? DONGA_BODY_PATTERN
       : family === "hankookilbo"
         ? HANKOOKILBO_BODY_PATTERN
         : null;

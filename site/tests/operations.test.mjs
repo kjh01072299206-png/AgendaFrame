@@ -5,6 +5,7 @@ import test from "node:test";
 
 import {
   PUBLICATION_DESTINATION,
+  compactCollectionRunResult,
   handleOperationsAdminRequest,
   listOpenDeadLetters,
   readOperationsStatus,
@@ -231,6 +232,13 @@ test("admin operations endpoints fail closed and expose DLQ metadata without pay
     env,
   );
   assert.equal(unauthorized.status, 401);
+  const unauthorizedCollection = await handleOperationsAdminRequest(
+    new Request("https://example.test/api/admin/collection/status", {
+      headers: { authorization: "Bearer wrong" },
+    }),
+    env,
+  );
+  assert.equal(unauthorizedCollection.status, 401);
 
   const headers = {
     authorization: "Bearer test-admin-token",
@@ -282,4 +290,28 @@ test("additive migration creates durable jobs and publication outbox constraints
   } finally {
     database.close();
   }
+});
+
+test("collection admin responses summarize records instead of returning article payloads", () => {
+  const compact = compactCollectionRunResult({
+    status: "completed_with_errors",
+    scheduledTime: 123,
+    lease: { acquired: true },
+    discovery: {
+      status: "success",
+      records: [{ title: "must not be returned", body: "must not be returned" }],
+      sources: [{ sourceId: "daily", status: "success", discovered: 1, diagnostics: [{ code: "OK" }] }],
+    },
+    bodyCollection: { status: "success", selected: 1, stored: 1, failed: 0, results: [{ body: "private" }] },
+    profileAnalysis: { status: "success", selected: 1, analyzed: 1, failed: 0, dates: ["2026-08-13"], results: [{ profile: "private" }] },
+    aggregateAnalysis: [{ date: "2026-08-13", status: "failed", error: "ANALYSIS_RUNTIME_FAILED" }],
+    stageErrors: [{ stage: "aggregate_analysis", code: "ANALYSIS_RUNTIME_FAILED", date: "2026-08-13" }],
+  });
+
+  assert.equal(compact.discovery.discovered, 1);
+  assert.deepEqual(compact.discovery.sources, [{ sourceId: "daily", status: "success", discovered: 1, truncated: false }]);
+  assert.equal(compact.bodyCollection.stored, 1);
+  assert.equal(compact.profileAnalysis.analyzed, 1);
+  assert.equal(JSON.stringify(compact).includes("must not be returned"), false);
+  assert.equal(JSON.stringify(compact).includes("private"), false);
 });

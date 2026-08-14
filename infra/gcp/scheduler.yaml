@@ -1,0 +1,46 @@
+apiVersion: agenda.frame/v1
+kind: CloudSchedulerContract
+metadata:
+  name: agendaframe-collection-4x-kst
+  implementationStatus: contract_only
+  externalCalls: false
+spec:
+  # The source of truth is the repository policy consumed by the collector.
+  sourceSchedule: site/data/collection-schedule.json
+  sourcePolicy: site/data/discovery-sources.json
+  sourcePolicyVersion: 2026-08-13.1
+  sourceCount: 12
+  sourceComposition:
+    generalDaily: 10
+    broadcaster: 2
+  timezone: Etc/UTC
+  kst:
+    timezone: Asia/Seoul
+    runsPerDay: 4
+    scheduledHours: [0, 6, 12, 18]
+  # 00/06/12/18 KST equals 15/21/03/09 UTC. A comma list keeps one
+  # idempotent scheduler job and avoids four independently configured jobs.
+  schedule: "0 3,9,15,21 * * *"
+  target:
+    type: workflows
+    name: agendaframe-collection-analysis
+    region: asia-northeast3
+    oidcServiceAccount: scheduler@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+  request:
+    method: POST
+    path: /run
+    headers:
+      content-type: application/json
+    body:
+      schemaVersion: agenda.frame.collection.trigger.v1
+      runId: ${SCHEDULED_JOB_NAME}:${SCHEDULED_TIME}
+      sourcePolicyPath: site/data/discovery-sources.json
+      sourcePolicyVersion: 2026-08-13.1
+      collectionSchedulePath: site/data/collection-schedule.json
+      collectionWindowTimezone: Asia/Seoul
+      rawContentDeleteAfter: "2026-10-31T23:59:59+09:00"
+      idempotencyKey: ${SCHEDULED_JOB_NAME}:${SCHEDULED_TIME}
+  safety:
+    overlapPolicy: workflow_idempotency_and_run_lease
+    maxDispatchesPerMinute: 1
+    stopOnHttpStatus: [403, 429]

@@ -1,0 +1,108 @@
+apiVersion: agenda.frame/v1
+kind: WorkflowsContract
+metadata:
+  name: agendaframe-collection-analysis
+  implementationStatus: contract_only
+  externalCalls: false
+spec:
+  sourcePolicyPath: site/data/discovery-sources.json
+  sourcePolicyVersion: 2026-08-13.1
+  collectionSchedulePath: site/data/collection-schedule.json
+  rawContentDeleteAfter: "2026-10-31T23:59:59+09:00"
+  rawBodyPolicy:
+    storage: private_cloud_storage
+    publicPayload: metadata_hash_locator_only
+    forbiddenPublicKeys: [body_text, raw_body, html, sentence_text, full_article, prompt_payload]
+  stores:
+    metadataAndAnalysis: bigquery
+    transactionalMetadata: cloud_sql
+    privateBodyAndSnapshots: cloud_storage
+    publicSnapshotPointer: snapshots/current.json
+  publicSnapshotSchema: agenda.frame.active-snapshot.v1
+  stages:
+    - name: collect
+      target: cloud_run_job:collector
+      input: sourcePolicyPath
+      output: article_metadata_and_private_body_refs
+      retry:
+        maxAttempts: 3
+        backoffSeconds: [15, 60, 300]
+      idempotency:
+        key: ${run_id}:collect:${source_id}
+        duplicatePolicy: skip_existing_article_hash
+    - name: persist
+      target: bigquery:landing
+      input: collect.output
+      output: persisted_article_metadata
+      retry:
+        maxAttempts: 3
+        backoffSeconds: [5, 30, 120]
+      idempotency:
+        key: ${run_id}:persist:${article_id}
+        duplicatePolicy: merge_by_canonical_url_and_body_hash
+    - name: cluster_rank
+      target: cloud_run_job:cluster-ranker
+      input: persisted_article_metadata
+      output: ranked_issue_candidates
+      retry:
+        maxAttempts: 2
+        backoffSeconds: [30, 180]
+      idempotency:
+        key: ${run_id}:cluster-rank
+        duplicatePolicy: replace_unpublished_run_result
+    - name: top5_semantic
+      target: vertex_ai_structured_generation
+      input: ranked_issue_candidates.top5
+      constraints:
+        maxIssues: 5
+        evidenceRequired: true
+        preserveArticleIds: true
+        preserveEvidenceLocator: true
+        publicBodyText: false
+        analysisState: [queued, running, succeeded, review_needed, dead_letter]
+      retry:
+        maxAttempts: 3
+        backoffSeconds: [30, 120, 600]
+      idempotency:
+        key: ${run_id}:top5-semantic:${issue_id}:${article_id}:${model_revision}:${prompt_version}
+        duplicatePolicy: do_not_rerun_succeeded_article
+    - name: quality_gate
+      target: cloud_run_job:quality-gate
+      input: top5_semantic.output
+      output: approved_snapshot_candidate_or_quarantine
+      gates:
+        schemaValid: true
+        evidenceLineageComplete: true
+        unsupportedClaimRateAtMost: 0.02
+        rawBodyAbsent: true
+        allTop5HaveStatus: true
+      onFailure: quarantine_and_keep_previous_snapshot
+      retry:
+        maxAttempts: 1
+        backoffSeconds: []
+      idempotency:
+        key: ${run_id}:quality-gate
+        duplicatePolicy: immutable_gate_result
+    - name: publish
+      target: cloud_storage_snapshot_publisher
+      input: quality_gate.approved_snapshot_candidate
+      output: active_snapshot
+      requires: [quality_gate.pass]
+      publication:
+        immutablePrefix: snapshots/${basis_date}/${snapshot_id}/
+        manifest: snapshots/${basis_date}/${snapshot_id}/manifest.json
+        issueBundles: snapshots/${basis_date}/${snapshot_id}/issues/{issue_id}.json
+        currentPointer: snapshots/current.json
+        pointerUpdate: last_atomic
+        checksum: sha256
+        retainPreviousSnapshot: true
+      retry:
+        maxAttempts: 2
+        backoffSeconds: [30, 180]
+      idempotency:
+        key: ${run_id}:publish:${snapshot_id}
+        duplicatePolicy: no_pointer_change_after_same_checksum
+  terminalInvariants:
+    - failed_stage_does_not_replace_current_pointer
+    - raw_body_never_enters_public_snapshot
+    - raw_content_expires_at: "2026-10-31T23:59:59+09:00"

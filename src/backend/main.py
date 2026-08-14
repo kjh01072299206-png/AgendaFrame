@@ -10,6 +10,7 @@ from urllib.parse import urlsplit
 from ai.framing import VertexFrameAnalyzer
 from backend.config import RuntimeConfig
 from backend.cost_guard import CostGuard
+from backend.gcp_source_policy import GcpDiscoveryPolicy
 from backend.gcp_store import GcpAnalysisStore
 from backend.pilot import load_pilot_approvals, validate_pilot_articles
 from backend.pipeline import BatchPipeline
@@ -31,6 +32,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subcommands = parser.add_subparsers(dest="command", required=True)
     subcommands.add_parser("validate-config")
+    discovery = subcommands.add_parser(
+        "validate-discovery-policy",
+        help="Validate the 12-source, four-run GCP discovery contract without network calls.",
+    )
+    discovery.add_argument(
+        "--discovery-policy",
+        type=Path,
+        default=Path(
+            os.getenv(
+                "AGENDAFRAME_DISCOVERY_POLICY",
+                "site/data/discovery-sources.json",
+            )
+        ),
+    )
     estimate = subcommands.add_parser("estimate-cost")
     estimate.add_argument("--articles", type=int, required=True)
     estimate.add_argument("--characters-per-article", type=int, required=True)
@@ -67,6 +82,25 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     args = build_parser().parse_args()
     config = RuntimeConfig.from_yaml(args.config)
+    if args.command == "validate-discovery-policy":
+        policy = GcpDiscoveryPolicy.from_path(args.discovery_policy)
+        print(
+            json.dumps(
+                {
+                    "policy_version": policy.policy_version,
+                    "source_count": policy.source_count,
+                    "general_daily_count": policy.general_daily_count,
+                    "broadcaster_count": policy.broadcaster_count,
+                    "scheduled_hours_kst": list(policy.scheduled_hours_kst),
+                    "interval_minutes": policy.interval_minutes,
+                    "collection_window": [policy.collection_start, policy.collection_end],
+                    "raw_content_delete_after": policy.raw_content_delete_after,
+                    "network_calls": False,
+                },
+                ensure_ascii=False,
+            )
+        )
+        return 0
     policies = SourcePolicyRegistry.from_yaml(args.source_policy)
     if args.command == "validate-config":
         print(
