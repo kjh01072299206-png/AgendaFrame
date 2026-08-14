@@ -82,7 +82,9 @@ $EnvVars = @(
 )
 $TrafficArgs = @("--no-traffic")
 if ($Promote) { $TrafficArgs = @("--allow-unauthenticated") }
-& $Gcloud.Source run services deploy $ServiceName `
+# Current Cloud SDK exposes service deployment as `gcloud run deploy`; the
+# `run services deploy` alias is not available on all Windows installations.
+& $Gcloud.Source run deploy $ServiceName `
     --project $ProjectId --region $Region --image $Image `
     --service-account "reader@$ProjectId.iam.gserviceaccount.com" `
     --command python --args "-m,backend.gcp_snapshot_reader_service" `
