@@ -21,6 +21,7 @@ from datetime import UTC, date, datetime, timedelta, timezone
 from html.parser import HTMLParser
 from typing import Any, Mapping, Sequence
 
+from ai.event_synthesis import VertexEventSynthesizer
 from ai.framing import VertexFrameAnalyzer
 from ai.issue_clustering import InitialFiveClusterer
 from backend.config import RuntimeConfig
@@ -545,6 +546,9 @@ def build_stage_dependencies(
         max_articles=config.vertex.max_articles_per_run,
     )
     frame_analyzer = VertexFrameAnalyzer(config, client_factory=lambda _config: clients.vertex)
+    event_synthesizer = VertexEventSynthesizer(
+        config, client_factory=lambda _config: clients.vertex
+    )
     return StageDependencies(
         policy_path=policy_path,
         fetcher=fetcher,
@@ -556,6 +560,7 @@ def build_stage_dependencies(
         frame_analyzer=frame_analyzer,
         immutable_writer=snapshot_writer,
         pointer_store=pointer_store,
+        event_synthesizer=event_synthesizer,
     )
 
 

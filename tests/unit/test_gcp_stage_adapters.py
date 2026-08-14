@@ -334,6 +334,67 @@ class GcpStageAdapterTests(unittest.TestCase):
         self.assertEqual(gate["status"], "pass")
         assert_body_safe(semantic, context="test semantic")
         self.assertNotIn("Event 1 was described", json.dumps(semantic, ensure_ascii=False))
+        self.assertEqual(bundle["comparison"]["engine"]["source"], "gcp:public-profile-aggregation")
+        self.assertIn(
+            "집계합니다", bundle["comparison"]["data"]["summary_30_seconds"]["common_ground"]
+        )
+
+    def test_semantic_adapter_uses_bound_event_synthesis_when_injected(self) -> None:
+        class SynthesisFake:
+            def synthesize(self, request):
+                cited_rows = []
+                for entry in request["profiles"]:
+                    evidence = entry["evidence"][0]
+                    cited_rows.append(
+                        {
+                            "article_id": entry["articleId"],
+                            "locator": evidence["locator"],
+                            "sentence_sha256": evidence["sentenceSha256"],
+                        }
+                    )
+                first = cited_rows[0]
+                return {
+                    "what_happened": "같은 사건을 두 매체가 다르게 잘랐다",
+                    "what_happened_evidence": [first],
+                    "agreed_line": "원인 귀속은 공통으로 관측된다",
+                    "agreed_evidence": cited_rows,
+                    "split_line": "문제 정의가 정치 책임과 제도 약화로 갈린다",
+                    "split_evidence": cited_rows,
+                    "camps": [
+                        {
+                            "name": "정치 책임",
+                            "gist": "대통령 침묵을 문제로 둔다",
+                            "article_ids": [first["article_id"]],
+                            "evidence": [first],
+                        }
+                    ],
+                }
+
+        deps = StageDependencies(
+            **{**self.dependencies.__dict__, "event_synthesizer": SynthesisFake()}
+        )
+        collected = PolicyCollectionAdapter(deps, clock=lambda: COLLECTED_AT).collect(
+            self.request, idempotency_key="collect-synth"
+        )
+        persisted = MetadataPersistenceAdapter(deps).persist(
+            self.request, collected, idempotency_key="persist-synth"
+        )
+        ranked = MetadataClusterRankAdapter(deps).cluster_rank(
+            self.request, persisted, idempotency_key="rank-synth"
+        )
+        semantic = FrameSemanticAdapter(deps).analyze_top5(
+            self.request, ranked, idempotency_key="semantic-synth"
+        )
+        bundle = next(iter(semantic["bundles"].values()))
+        self.assertEqual(bundle["comparison"]["engine"]["source"], "gcp:event-synthesis")
+        self.assertTrue(bundle["comparison"]["engine"]["semanticAi"])
+        self.assertIn(
+            "공통 보도", bundle["comparison"]["data"]["summary_30_seconds"]["main_difference"]
+        )
+        self.assertFalse(bundle["comparison"]["data"]["synthesis"]["opposition"])
+        self.assertEqual(bundle["comparison"]["data"]["synthesis"]["camps"], [])
+        self.assertTrue(bundle["clusterAi"]["summary"])
+        assert_body_safe(bundle, context="synthesized public bundle")
 
     def test_publish_adapter_keeps_pointer_and_manifest_methods_injected(self) -> None:
         adapter = SnapshotPublishAdapter(self.store, self.store)

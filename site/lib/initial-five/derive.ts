@@ -7,7 +7,7 @@
 import { getInitialFiveIssueBundle, initialFiveManifest } from "./artifacts";
 // 취재원 역할 좁히기 규칙은 워커 API 와 공유한다 (lib/initial-five/subjects.mjs)
 import { actorParaphrases, narrowSubject, paraphrasesByLocator, subjectsIn } from "./subjects.mjs";
-import type { InitialFiveManifest, IssueAnalysisBundle } from "./types";
+import type { EventSynthesisData, InitialFiveManifest, IssueAnalysisBundle } from "./types";
 
 export const DIM_ORDER = [
   "problem_definition",
@@ -24,6 +24,12 @@ export const DIM_LABEL: Record<string, string> = {
   moral_evaluation: "규범적 평가",
   treatment_recommendation: "해법·처방",
 };
+
+function observedSynthesisText(claim?: { text?: string | null; status?: string } | null): string | null {
+  return claim?.status === "observed" && typeof claim.text === "string" && claim.text.trim()
+    ? claim.text
+    : null;
+}
 
 export const DIM_QUESTION: Record<string, string> = {
   problem_definition: "무엇이 문제인가",
@@ -843,7 +849,9 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
     category: bundle.issue.category,
     articleCount: bundle.issue.articleCount,
     outletCount: bundle.issue.outletCount,
-    lead: bundle.clusterAi.summary ?? null,
+    lead: bundle.clusterAi.summary
+      ?? observedSynthesisText((data.synthesis as EventSynthesisData | undefined)?.what_happened)
+      ?? null,
     commonGround: brief.common_ground ?? null,
     mainDifference: brief.main_difference ?? null,
     sourceContext: brief.source_context ?? null,

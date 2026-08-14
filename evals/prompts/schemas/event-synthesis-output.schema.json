@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "what_happened",
+    "agreed_line",
+    "split_line",
+    "so_what",
+    "camps",
+    "prompt_version",
+    "schema_version"
+  ],
+  "properties": {
+    "prompt_version": { "const": "1.0.0" },
+    "schema_version": { "const": "agendaframe.event-synthesis.v1" },
+    "what_happened": { "type": ["string", "null"], "maxLength": 280 },
+    "what_happened_evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+    "agreed_line": { "type": ["string", "null"], "maxLength": 280 },
+    "agreed_evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+    "split_line": { "type": ["string", "null"], "maxLength": 280 },
+    "split_evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+    "so_what": { "type": ["string", "null"], "maxLength": 280 },
+    "so_what_evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+    "camps": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": ["name", "gist", "article_ids", "evidence"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 40 },
+          "gist": { "type": "string", "maxLength": 280 },
+          "article_ids": { "type": "array", "items": { "type": "string" } },
+          "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+        }
+      }
+    },
+    "terms": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "required": ["term", "gloss", "evidence"],
+        "properties": {
+          "term": { "type": "string" },
+          "gloss": { "type": "string" },
+          "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+        }
+      }
+    },
+    "fact_rows": { "type": "array", "items": { "$ref": "#/$defs/row" } },
+    "split_rows": { "type": "array", "items": { "$ref": "#/$defs/row" } },
+    "frame_functions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["dimension", "summary", "evidence"],
+        "properties": {
+          "dimension": {
+            "enum": [
+              "problem_definition",
+              "causal_interpretation",
+              "responsibility_attribution",
+              "evaluation",
+              "treatment_recommendation"
+            ]
+          },
+          "summary": { "type": ["string", "null"] },
+          "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+        }
+      }
+    },
+    "proof_rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["article_id", "dimension", "text", "evidence"],
+        "properties": {
+          "article_id": { "type": "string" },
+          "dimension": { "type": "string" },
+          "text": { "type": "string" },
+          "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "required": ["article_id", "locator", "sentence_sha256"],
+      "properties": {
+        "article_id": { "type": "string" },
+        "locator": {
+          "type": "object",
+          "required": ["paragraph", "sentence"],
+          "properties": {
+            "paragraph": { "type": "integer" },
+            "sentence": { "type": "integer" }
+          }
+        },
+        "sentence_sha256": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "row": {
+      "type": "object",
+      "required": ["question"],
+      "properties": {
+        "question": { "type": "string" },
+        "common": { "type": ["string", "null"] },
+        "cells": { "type": ["array", "null"], "items": { "type": ["string", "object", "null"] } },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+      }
+    }
+  }
+}

@@ -424,21 +424,45 @@ powershell -NoProfile -File scripts/gcp/apply-bigquery-rest.ps1 -Apply -SpendCap
    no Vercel env change/deploy, no public reader verification, no Scheduler,
    and no Cloudflare-cron ownership cutover. Never report these as complete.
 
-### Prompt for another model
+### 2026-08-15 event synthesis slice
+
+The product gap is not another collection canary. Article-level Vertex
+profiles exist, but the public comparison was still a fixed sentence plus
+empty `source_lens.by_outlet`. The example HTML needs event-level prose:
+shared line, split line, 2–4 camps, four-function rows, and proof rows, each
+bound to article ID + locator + sentence hash.
+
+Added in this slice:
+
+- `src/ai/event_synthesis.py`: `bind_event_synthesis` drops uncited claims,
+  blocks ideology labels, and forbids A ↔ B unless two evidence groups
+  survive. `VertexEventSynthesizer` is injected and lazy.
+- `FrameSemanticAdapter` calls the synthesizer when present and falls back to
+  the old rule aggregation when the draft is unusable.
+- `evals/prompts/event-synthesis-v1.0.0.md` plus schema/manifest entry.
+- Semantic pages render `SynthesisNarrative` from `comparison.data.synthesis`.
+
+There is still no successful live Vertex synthesis and no published current
+snapshot. Do not call the comparison “HTML-complete” until a bound synthesis
+payload is on an active snapshot.
+
+## Prompt for another model
 
 ```text
 Read AGENTS.md and docs/continuation-handoff-20260814.md. Continue from
-branch codex/initial-five-complete at commit f9f8652. Preserve every unrelated
-dirty/untracked file, especially docs/next-session-handoff.md; never reset or
-stage everything. The latest full offline gate is 146 tests + 3 integration/e2e
-and is green. GCP non-production resources exist, but there is no successful
-runtime canary, no Scheduler/Workflow deployment, no public reader verification,
-no Vercel change, and no production cutover.
+branch codex/initial-five-complete. Preserve every unrelated dirty/untracked
+file, especially docs/next-session-handoff.md; never reset or stage everything.
+The product target is the example-HTML event comparison (camps, shared/split
+lines, four functions, proof rows), not a rule-aggregated screen. Event
+synthesis binding is in src/ai/event_synthesis.py; do not rebuild it.
 
-The runtime canary history and exact failure boundaries are in the latest
-section above. First add/use a guarded canary-only article-count override (max
-50) so a 12-source/12-article smoke run is cheap. Then execute one unique
-non-production run with AGENDAFRAME_LIVE_TESTS=1 and cleared proxy variables.
+GCP non-production resources exist, but there is no successful runtime canary,
+no live Vertex synthesis payload, no Scheduler/Workflow deployment, no public
+reader verification, no Vercel change, and no production cutover.
+
+Next: prove one bound synthesis on a real or fixture profile set, then a cheap
+12-article canary only if live authorization exists. Do not execute live
+Vertex/GCP calls without AGENDAFRAME_LIVE_TESTS=1.
 Verify sourceArticleCounts/sourceErrorCounts, cluster count, Vertex evidence,
 quality gate, immutable GCS objects, pointer SHA, and rollback preservation.
 Do not fabricate fewer-than-five clusters and do not expose article bodies.

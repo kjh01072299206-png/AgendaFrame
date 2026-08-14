@@ -14,3 +14,8 @@ prompts:
     version: 1.0.0
     path: report-generation-v1.0.0.md
     output_schema: schemas/report-output.schema.json
+  - id: event-synthesis
+    version: 1.0.0
+    path: event-synthesis-v1.0.0.md
+    output_schema: schemas/event-synthesis-output.schema.json
+    taxonomy_version: entman-event-comparison-v1

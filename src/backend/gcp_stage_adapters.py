@@ -21,6 +21,13 @@ from datetime import datetime
 from typing import Any, Callable, Mapping, Protocol, Sequence
 from urllib.parse import urlsplit
 
+from ai.event_synthesis import (
+    EventSynthesizer,
+    VertexEventSynthesizer,
+    bind_event_synthesis,
+    public_comparison_payload,
+    synthesis_request,
+)
 from ai.framing import FrameAnalyzer, FrameResult, VertexFrameAnalyzer
 from ai.issue_clustering import (
     InitialFiveClusterer,
@@ -245,6 +252,7 @@ class StageDependencies:
     frame_analyzer: FrameAnalyzer
     immutable_writer: ImmutableObjectWriter
     pointer_store: ActivePointerStore
+    event_synthesizer: EventSynthesizer | None = None
 
 
 def _metadata(article: ArticleDocument, *, private_object_ref: str) -> dict[str, Any]:
@@ -750,6 +758,96 @@ def _comparison_axes(
     return axes
 
 
+def _rule_comparison_data(
+    *,
+    article_count: int,
+    outlet_count: int,
+    comparison_axes: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    return {
+        "summary_30_seconds": {
+            "sample": f"{article_count}건 · {outlet_count}개 매체",
+            "common_ground": "AI 프로필에서 동일하게 관측된 항목만 집계합니다.",
+            "main_difference": "검증된 기사별 관측 항목과 취재원 귀속을 비교합니다.",
+            "source_context": "출처 배치와 공출현은 언론사의 의도·성향을 뜻하지 않습니다.",
+            "limit": "의도나 정치적 성향은 추론하지 않으며, locator와 hash가 있는 관측만 표시합니다.",
+            "divergence_detected": False,
+        },
+        "comparison_axes": list(comparison_axes),
+        "source_lens": {
+            "by_outlet": [],
+            "caution": "취재원 구성은 발화 가시성의 관측이지 매체의 의도 판정이 아닙니다.",
+        },
+    }
+
+
+def _synthesize_comparison(
+    dependencies: StageDependencies,
+    *,
+    issue_id: str,
+    title: str,
+    article_rows: Sequence[Mapping[str, Any]],
+    profiles: Sequence[Mapping[str, Any]],
+    comparison_axes: Sequence[Mapping[str, Any]],
+    request: Any,
+) -> tuple[dict[str, Any], dict[str, Any], str | None]:
+    """Prefer bound event synthesis; fall back to profile aggregation."""
+
+    article_count = len(article_rows)
+    outlet_count = len({str(row["outlet"]) for row in article_rows})
+    fallback = _rule_comparison_data(
+        article_count=article_count,
+        outlet_count=outlet_count,
+        comparison_axes=comparison_axes,
+    )
+    fallback_engine = {
+        "label": "rules_local",
+        "engineLabel": "rules_local",
+        "semanticAi": False,
+        "status": "succeeded",
+        "model": None,
+        "promptVersion": None,
+        "schemaVersion": "comparison-v1",
+        "source": "gcp:public-profile-aggregation",
+    }
+    synthesizer = dependencies.event_synthesizer
+    if synthesizer is None:
+        return fallback, fallback_engine, None
+    try:
+        draft = synthesizer.synthesize(
+            synthesis_request(
+                issue_id=issue_id,
+                title=title,
+                articles=article_rows,
+                profiles=profiles,
+            )
+        )
+        bound = bind_event_synthesis(draft, profiles=profiles, articles=article_rows)
+    except (TypeError, ValueError, KeyError):
+        return fallback, fallback_engine, None
+    if not bound.get("usable"):
+        return fallback, fallback_engine, None
+    payload = public_comparison_payload(
+        bound, article_count=article_count, outlet_count=outlet_count
+    )
+    payload["comparison_axes"] = list(comparison_axes)
+    payload["source_lens"] = fallback["source_lens"]
+    engine = {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": True,
+        "status": "succeeded",
+        "model": getattr(request, "model_revision", "vertex-configured"),
+        "promptVersion": bound.get("promptVersion"),
+        "schemaVersion": bound.get("schemaVersion"),
+        "source": "gcp:event-synthesis",
+        "requiresHumanReview": True,
+    }
+    what = bound.get("what_happened")
+    summary = what.get("text") if isinstance(what, Mapping) else None
+    return payload, engine, summary if isinstance(summary, str) else None
+
+
 class FrameSemanticAdapter(SemanticAdapter):
     """Analyze articles in the top five with the injected Vertex analyzer."""
 
@@ -847,6 +945,15 @@ class FrameSemanticAdapter(SemanticAdapter):
             article_count = len(article_rows)
             outlet_count = len({str(row["outlet"]) for row in article_rows})
             comparison_axes = _comparison_axes(profiles, article_count=article_count)
+            comparison_data, comparison_engine, event_summary = _synthesize_comparison(
+                self.dependencies,
+                issue_id=issue_id,
+                title=str(issue.get("title", issue_id)),
+                article_rows=article_rows,
+                profiles=profiles,
+                comparison_axes=comparison_axes,
+                request=request,
+            )
             semantic_engine = {
                 "label": "ai_semantic",
                 "engineLabel": "ai_semantic",
@@ -895,7 +1002,7 @@ class FrameSemanticAdapter(SemanticAdapter):
                     **cluster_engine,
                     "textScope": "title_source_published_at_only",
                     "fallbackReason": None,
-                    "summary": None,
+                    "summary": event_summary,
                     "commonSubjects": [],
                     "narrativeVariants": [],
                     "outlierArticleIds": [],
@@ -926,30 +1033,8 @@ class FrameSemanticAdapter(SemanticAdapter):
                     for row in article_rows
                 ],
                 "comparison": {
-                    "engine": {
-                        "label": "rules_local",
-                        "engineLabel": "rules_local",
-                        "semanticAi": False,
-                        "status": "succeeded",
-                        "model": None,
-                        "promptVersion": None,
-                        "schemaVersion": "comparison-v1",
-                        "source": "gcp:public-profile-aggregation",
-                    },
-                    "data": {
-                        "summary_30_seconds": {
-                            "sample": f"{article_count}건 · {outlet_count}개 매체",
-                            "common_ground": "AI 프로필에서 동일하게 관측된 항목만 집계합니다.",
-                            "main_difference": "검증된 기사별 관측 항목과 취재원 귀속을 비교합니다.",
-                            "source_context": "출처 배치와 공출현은 언론사의 의도·성향을 뜻하지 않습니다.",
-                            "limit": "의도나 정치적 성향은 추론하지 않으며, locator와 hash가 있는 관측만 표시합니다.",
-                        },
-                        "comparison_axes": comparison_axes,
-                        "source_lens": {
-                            "by_outlet": [],
-                            "caution": "취재원 구성은 발화 가시성의 관측이지 매체의 의도 판정이 아닙니다.",
-                        },
-                    },
+                    "engine": comparison_engine,
+                    "data": comparison_data,
                     "evidence": [evidence for entry in profiles for evidence in entry["evidence"]],
                 },
                 "coderAgreement": None,
@@ -1122,6 +1207,7 @@ __all__ = [
     "StageAdapterError",
     "StageDependencies",
     "build_stage_adapters",
+    "VertexEventSynthesizer",
     "build_vertex_frame_analyzer",
     "load_source_definitions",
     "production_stage_adapter_factory",

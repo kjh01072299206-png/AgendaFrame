@@ -287,7 +287,66 @@ export interface RuleComparisonData {
     caution?: string;
   };
   not_observed_statements?: string[];
+  synthesis?: EventSynthesisData;
   [key: string]: unknown;
+}
+
+export interface EventSynthesisEvidence {
+  article_id?: string;
+  locator?: { paragraph?: number; sentence?: number };
+  sentence_sha256?: string;
+}
+
+export interface EventSynthesisClaim {
+  text?: string | null;
+  status?: string;
+  evidence?: EventSynthesisEvidence[];
+  reason?: string;
+}
+
+export interface EventSynthesisCamp {
+  name?: string;
+  gist?: string;
+  outlets?: string[];
+  article_ids?: string[];
+  evidence?: EventSynthesisEvidence[];
+  index?: number;
+}
+
+export interface EventSynthesisRow {
+  question?: string;
+  common?: string | null;
+  cells?: Array<string | null>;
+  status?: string;
+  evidence?: EventSynthesisEvidence[];
+}
+
+export interface EventSynthesisData {
+  schemaVersion?: string;
+  promptVersion?: string;
+  usable?: boolean;
+  opposition?: boolean;
+  what_happened?: EventSynthesisClaim | null;
+  agreed_line?: EventSynthesisClaim | null;
+  split_line?: EventSynthesisClaim | null;
+  so_what?: EventSynthesisClaim | null;
+  camps?: EventSynthesisCamp[];
+  terms?: Array<{ term?: string; gloss?: string; evidence?: EventSynthesisEvidence[] }>;
+  fact_rows?: EventSynthesisRow[];
+  split_rows?: EventSynthesisRow[];
+  frame_functions?: Array<{
+    dimension?: string;
+    summary?: string | null;
+    status?: string;
+    evidence?: EventSynthesisEvidence[];
+  }>;
+  proof_rows?: Array<{
+    article_id?: string;
+    outlet?: string;
+    dimension?: string;
+    text?: string;
+    evidence?: EventSynthesisEvidence[];
+  }>;
 }
 
 export interface IssueAnalysisBundle {

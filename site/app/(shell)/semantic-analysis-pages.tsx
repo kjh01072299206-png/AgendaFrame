@@ -9,6 +9,7 @@ import {
   type LayerItem,
 } from "../../lib/initial-five/derive";
 import type {
+  EventSynthesisData,
   IssueAnalysisBundle,
   RuleComparisonAxis,
   SemanticDimensionItem,
@@ -168,6 +169,15 @@ function hasValidEvidence(
 function evidenceRefs(value: unknown): PublicEvidenceRef[] {
   if (!Array.isArray(value)) return [];
   return value.filter((entry): entry is PublicEvidenceRef => Boolean(entry && typeof entry === "object"));
+}
+
+function synthesisData(bundle: IssueAnalysisBundle): EventSynthesisData | null {
+  const value = bundle.comparison.data.synthesis;
+  return value && typeof value === "object" ? value : null;
+}
+
+function observedClaim(claim?: { text?: string | null; status?: string } | null): string | null {
+  return claim?.status === "observed" && typeof claim.text === "string" && claim.text.trim() ? claim.text : null;
 }
 
 function comparisonAxes(bundle: IssueAnalysisBundle): RuleComparisonAxis[] {
@@ -445,6 +455,56 @@ function Summary({ bundle, issue, analyses: dimensions }: { bundle: IssueAnalysi
         {stateText ? <p className="afp-summary-meta"><strong>판정 보류·상태:</strong> {stateText}</p> : null}
       </div>
       <EngineNote bundle={bundle} />
+    </section>
+  );
+}
+
+function SynthesisNarrative({ bundle }: { bundle: IssueAnalysisBundle }) {
+  const synthesis = synthesisData(bundle);
+  if (!synthesis?.usable) return null;
+  const what = observedClaim(synthesis.what_happened);
+  const agreed = observedClaim(synthesis.agreed_line);
+  const split = observedClaim(synthesis.split_line);
+  const soWhat = observedClaim(synthesis.so_what);
+  const camps = (synthesis.camps ?? []).filter((camp) => camp.gist && (camp.outlets?.length || camp.article_ids?.length));
+  const terms = (synthesis.terms ?? []).filter((term) => term.term && term.gloss);
+  const factRows = synthesis.fact_rows ?? [];
+  const splitRows = synthesis.split_rows ?? [];
+  return (
+    <section className="afs-card afp-synthesis">
+      <h2>사건 종합 비교 <small>기사별 근거에 묶인 사건 단위 AI</small></h2>
+      <div className="afs-in afs-prose">
+        {what ? <p>{what}</p> : null}
+        {agreed ? <p><strong>공통선:</strong> {agreed}</p> : null}
+        {synthesis.opposition && split ? <p><strong>갈라지는 선:</strong> {split}</p> : <p className="afp-state">서로 다른 근거 그룹이 없어 대립 구도로 표시하지 않습니다.</p>}
+        {soWhat ? <p><strong>읽기 차이:</strong> {soWhat}</p> : null}
+        {terms.length ? <ul className="afp-term-list">{terms.map((term) => <li key={term.term}><strong>{term.term}</strong> {term.gloss}<EvidenceRefs refs={term.evidence} label="용어 근거" /></li>)}</ul> : null}
+        {camps.length >= 2 ? (
+          <div className="afs-camps">
+            {camps.map((camp) => (
+              <article key={`${camp.index ?? camp.name}`}>
+                <h3>{camp.name}</h3>
+                <p>{camp.gist}</p>
+                <small>{(camp.outlets ?? []).join(" · ")}</small>
+                <EvidenceRefs refs={camp.evidence} label="캠프 근거" />
+              </article>
+            ))}
+          </div>
+        ) : null}
+        {factRows.length ? (
+          <div className="afp-fact-rows">
+            <strong>공통으로 본 항목</strong>
+            {factRows.map((row) => <p key={row.question}>{row.question}: {row.common}</p>)}
+          </div>
+        ) : null}
+        {synthesis.opposition && splitRows.length ? (
+          <div className="afp-split-rows">
+            <strong>캠프별 차이</strong>
+            {splitRows.map((row) => <p key={row.question}>{row.question}: {(row.cells ?? []).filter(Boolean).join(" / ")}</p>)}
+          </div>
+        ) : null}
+        <p className="afs-note">캠프 이름은 기사에서 관측된 강조의 묶음입니다. 언론사 이념이나 의도를 뜻하지 않으며, locator와 문장 해시가 없는 문장은 표시하지 않습니다.</p>
+      </div>
     </section>
   );
 }
@@ -734,6 +794,7 @@ export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
   const dimensions = analyses(bundle, issue);
   return <>
     <IssueThirtySecond issue={issue} />
+    <SynthesisNarrative bundle={bundle} />
     <Summary bundle={bundle} issue={issue} analyses={dimensions} />
     <AxisSection dimensions={dimensions} />
     <DebateSection issue={issue} dimensions={dimensions} />
@@ -749,6 +810,7 @@ export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
   const dimensions = analyses(bundle, issue);
   return <>
     <IssueThirtySecond issue={issue} />
+    <SynthesisNarrative bundle={bundle} />
     <Summary bundle={bundle} issue={issue} analyses={dimensions} />
     <DimensionGuide dimensions={dimensions} />
     <FourFunctionTable issue={issue} dimensions={dimensions} />
