@@ -166,7 +166,10 @@ and no raw article/body/HTML/sentence fields.
 - `src/backend/gcp_job_entrypoint.py` emits allow-listed structured JSON events
   for run success/failure, quality-gate quarantine, and active-snapshot
   publication. The records contain run metadata and timing/status only; they
-  never contain article body, prompt, HTML, or credential fields.
+  never contain article body, prompt, HTML, or credential fields. Stage and
+  wiring error messages in the process result are replaced by type plus a
+  short non-reversible fingerprint, so an adapter exception cannot leak a
+  body or secret through Cloud Run stdout.
 - `tests/contract/test_gcp_runtime_services_contract.py` locks the resource
   names, body-free contract, dry-run default, project guard, and secret-value
   boundary, metric/event names, and absence/threshold alert shape. PowerShell
@@ -178,10 +181,10 @@ and no raw article/body/HTML/sentence fields.
 
 ## Verification completed
 
-- Latest quick gate after the runtime-services logging contract: **136 passed**;
+- Latest quick gate after the runtime-services logging contract: **137 passed**;
   formatting and lint passed. The new contract tests and both orchestration
   dry runs were included.
-- Latest full gate: **136 unit/contract + 3 integration/e2e passed**;
+- Latest full gate: **137 unit/contract + 3 integration/e2e passed**;
   evaluation assets remain synthetic and `release_eligible: false`.
 - `site/npm run typecheck` → passed.
 - `site/npm run lint` → 0 errors; four pre-existing warnings remain.
@@ -192,7 +195,7 @@ and no raw article/body/HTML/sentence fields.
 - The live snapshot route regression test passed after the fail-closed guard;
   missing live issue IDs now resolve to `notFound()` instead of legacy data.
 - The root quick gate after the runtime-services logging contract passed
-  **136 tests**;
+  **137 tests**;
   verifier dry-run and its two contract tests passed without network access.
 - Focused snapshot-reader/service/contract tests passed; the site active-route
   and semantic-page contracts passed.
@@ -200,7 +203,7 @@ and no raw article/body/HTML/sentence fields.
   `datePublished`, strict date-window boundaries, date-less rejection, body
   minimum, canonicalization/deduplication, and source-limit enforcement.
 - Runtime-services provisioning PowerShell parse and dry-run passed; its
-  focused contract test passed **2 tests**. No `gcloud` resource call was made.
+  focused contract test passed **3 tests**. No `gcloud` resource call was made.
 - `powershell -NoProfile -File scripts/gcp/deploy-snapshot-reader.ps1` dry run
   passed and printed no image build, deployment, traffic promotion, or GCP
   resource mutation.

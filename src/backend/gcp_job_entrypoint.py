@@ -345,7 +345,8 @@ def _result_payload(config: GcpRuntimeConfig, result: OrchestrationResult) -> Ma
         "status": result.status,
         "snapshotId": result.snapshot_id,
         "currentPointer": result.current_pointer,
-        "error": result.error,
+        "error": "pipeline_failed" if result.error else None,
+        "errorFingerprint": _error_fingerprint(result.error),
         "stages": [
             {
                 "name": record.name,
@@ -353,11 +354,20 @@ def _result_payload(config: GcpRuntimeConfig, result: OrchestrationResult) -> Ma
                 "attempts": record.attempts,
                 "idempotencyKey": record.idempotency_key,
                 "reused": record.reused,
-                "error": record.error,
+                "error": "stage_failed" if record.error else None,
+                "errorFingerprint": _error_fingerprint(record.error),
             }
             for record in result.stage_records
         ],
     }
+
+
+def _error_fingerprint(error: str | None) -> str | None:
+    """Return a non-reversible correlation code without logging the message."""
+
+    if not error:
+        return None
+    return hashlib.sha256(error.encode("utf-8", errors="replace")).hexdigest()[:16]
 
 
 def _emit_runtime_event(
@@ -458,7 +468,17 @@ def main(
             duration_seconds=round(max(0.0, time.monotonic() - started), 3),
             error_type=type(error).__name__,
         )
-        print(json.dumps({"status": "not_started", "error": str(error)}, ensure_ascii=False))
+        print(
+            json.dumps(
+                {
+                    "status": "not_started",
+                    "error": "runtime_wiring_failed",
+                    "errorType": type(error).__name__,
+                    "errorFingerprint": _error_fingerprint(str(error)),
+                },
+                ensure_ascii=False,
+            )
+        )
         return 78
 
 

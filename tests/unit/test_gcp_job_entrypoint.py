@@ -167,6 +167,31 @@ class GcpJobEntrypointTests(unittest.TestCase):
             for forbidden in ("body_text", "raw_body", "html", "sentence_text", "prompt_payload"):
                 self.assertNotIn(forbidden, serialized)
 
+    def test_main_redacts_stage_error_messages_from_runtime_output(self) -> None:
+        snapshots = SnapshotFake()
+        safe = FakeAdapters(snapshots).as_pipeline()
+
+        class UnsafeCollection:
+            def collect(self, request, *, idempotency_key):
+                return {"body_text": "sensitive article body"}
+
+        adapters = PipelineAdapters(
+            UnsafeCollection(),
+            safe.persistence,
+            safe.cluster_rank,
+            safe.semantic,
+            snapshots,
+        )
+        output = io.StringIO()
+        with redirect_stdout(output):
+            exit_code = main(env=env(), adapter_factory=lambda _config: adapters)
+
+        self.assertEqual(exit_code, 75)
+        serialized = output.getvalue().casefold()
+        self.assertNotIn("sensitive article body", serialized)
+        self.assertNotIn("body_text", serialized)
+        self.assertIn('"error": "pipeline_failed"', serialized)
+
 
 if __name__ == "__main__":
     unittest.main()
