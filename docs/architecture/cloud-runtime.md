@@ -1,7 +1,7 @@
 # AgendaFrame Cloud Runtime Architecture
 
 - 상태: **목표 설계(as-planned)** — 아래 0장의 구분표를 먼저 읽을 것
-- 최초 작성: 2026-07-17 · 이행 현황 갱신: 2026-08-06
+- 최초 작성: 2026-07-17 · 이행 현황 갱신: 2026-08-14
 - 대상: 공개 데모, Google Cloud 라이브 서비스, 수집·분석 파이프라인
 
 ## 0. 이 문서와 실제 시스템의 관계
@@ -11,35 +11,39 @@
 
 | 구성요소 | 상태 | 근거 |
 | --- | --- | --- |
-| Vertex AI (Gemini) 분석 호출 | **가동** | 상위 5개 의제 클러스터링을 `gemini-2.5-flash-lite`로 산출 |
-| BigQuery 데이터셋·분석 상태 원장 | **코드·프로비저닝 스크립트 있음** | `src/backend/gcp_store.py`, `scripts/gcp/provision.ps1` |
-| Cloud Storage 비공개 버킷(수명주기 포함) | **프로비저닝 스크립트 있음** | `scripts/gcp/provision.ps1` |
-| Cloud Run Job (설정 점검·파일럿) | **배포 스크립트 있음** | `scripts/gcp/deploy.ps1`, `deploy-trial-jobs.ps1` |
+| Vertex AI (Gemini) 분석 호출 | **코드·정적 산출물·계약 테스트 있음; live 호출 미적용** | `src/backend/gcp_stage_adapters.py`, `src/backend/gcp_production_adapters.py`, `site/public/initial-five/` |
+| BigQuery 데이터셋·분석 상태 원장 | **어댑터·스키마·프로비저닝 경로 있음; GCP 적용 미확인** | `src/backend/gcp_store.py`, `src/backend/gcp_stage_adapters.py`, `scripts/gcp/provision.ps1` |
+| Cloud Storage 비공개 버킷(수명주기 포함) | **스냅샷·수명주기 계약과 배포 경로 있음; GCP 적용 미확인** | `src/backend/gcp_snapshot_reader.py`, `scripts/gcp/provision.ps1` |
+| Cloud Run Job (수집·분석·게시) | **실행 엔트리포인트·배포 스크립트 있음; 리소스 적용 미확인** | `src/backend/gcp_job_entrypoint.py`, `scripts/gcp/deploy-runtime-job.ps1` |
 | Artifact Registry · 예산 상한 | **적용** | 단일 프로젝트에 월 지출 상한 설정 |
-| 공개 서빙 (Cloud Run + LB + CDN + Armor) | **미구현 — 대체됨** | 서빙은 Vercel. 4장의 `src/frontend`는 현재 `site/`다 |
-| Cloud Scheduler · Workflows · Pub/Sub DLQ | **미구현 — 보류** | 상시 크롤링을 접었으므로 자동 수집 트리거가 없다 |
+| 공개 서빙 (Cloud Run + LB + CDN + Armor) | **GCP 서빙 미적용; Vercel 유지** | Vercel이 공개 서빙을 담당하고, GCP는 body-free reader 계약만 준비됨 |
+| Cloud Scheduler · Workflows · Pub/Sub DLQ | **계약·배포 스크립트 있음; 리소스 적용 미확인** | `infra/gcp/workflow-runtime.yaml`, `scripts/gcp/deploy-orchestration.ps1` |
 | Playwright 상시 크롤러 (3.2절) | **폐기** | 이용약관 검토 결과 BigKinds 가져오기로 피벗 |
 | Terraform · dev/stg/prod 3분리 · OpenTelemetry · SLO 대시보드 | **미구현 — 범위 밖** | 사용자 규모가 이를 정당화하지 않는다. PowerShell 프로비저닝 스크립트로 대신한다 |
-| `/api/v1/*` 경로, `AGENDAFRAME_DATA_MODE` | **미구현** | 실제 경로는 `/api/*`, 런타임 모드 스위치는 두지 않았다 |
+| `/api/v1/*` 경로 | **범위 밖** | 실제 경로는 `/api/*`이며 기존 API 호환을 유지한다 |
+| `AGENDAFRAME_DATA_MODE`·active snapshot 경계 | **코드 구현; live env 미설정** | `site/lib/active-snapshot.ts`, `site/app/(shell)/active-home.tsx` |
 
-### 실제 런타임 (as-built, 2026-08-06)
+### 실제 런타임 (as-built, 2026-08-14)
 
 ```text
 사용자 → Vercel (Next.js 16 / React 19)
-           ├─ 화면 + /api/initial-five/*  ← 빌드 시 포함된 정적 분석 산출물
-           └─ 그 밖의 /api/*  ── rewrite ──→ Cloudflare Worker + D1
-                                              (수집 가져오기, 이슈, 품질 검증)
+           ├─ demo(현재 기본) → 기존 화면 + D1/Cloudflare API + 정적 initial-five
+           └─ live(명시적 env 필요) → body-free GCP active snapshot reader
+                                  └─ main / outlets / framing이 동일 snapshot 사용
 
-오프라인 분석 (로컬/배치, 공개 요청 경로 밖)
+실제 수집 소유권(현재): Cloudflare Worker + D1/R2 cron
+GCP 수집·분석 소유권: 배포·canary 전환 전까지 비활성
+
+오프라인/계약 검증 (공개 요청 경로 밖)
    BigKinds Excel·CSV → 구조화 분석 → site/data/*.json → 빌드에 포함
-   Vertex AI Gemini    → 의제 클러스터링
+   GCP adapters       → 수집·클러스터·상위 5개 semantic·snapshot 계약
 ```
 
 - 공개 요청은 모델을 호출하지 않는다. 분석은 전부 사전 계산해 산출물로 넣는다.
   이 점은 2장 원칙 2·6과 12장 비목표를 그대로 지킨다.
 - 배포는 `main` push → Vercel 자동 빌드다. 절차와 관문은 [`../deploy.md`](../deploy.md).
-- 라이브 `/api/health`는 아직 `agenda-structure-v5`를 돌려준다. 워커를 v6으로
-  재배포하지 않았기 때문이며 프로덕트 백로그 PBL-29로 잡혀 있다.
+- 공개 GCP active snapshot reader와 Vercel live env는 아직 적용하지 않았다. 따라서
+  현재 공개 사이트는 demo/기존 Cloudflare 경로로 동작하며, GCP를 live라고 표시하지 않는다.
 
 ## 1. 결정 요약
 

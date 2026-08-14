@@ -102,7 +102,7 @@ and no raw article/body/HTML/sentence fields.
   default image invocation from silently running the old check instead of the
   GCP-owned pipeline.
 - The deployment script's local dry run was verified after commit
-  `1ce3539`. No image build, Cloud Run resource mutation, or billed execution
+  `c6061f9`. No image build, Cloud Run resource mutation, or billed execution
   was performed, so this is wiring evidence—not a production deployment.
 - `scripts/gcp/deploy-snapshot-reader.ps1` now provides the matching
   dry-run-by-default reader deployment path. It uses the dedicated `reader`
@@ -150,14 +150,8 @@ and no raw article/body/HTML/sentence fields.
 - Latest quick gate after the runtime image entrypoint changes: **130 passed**;
   formatting and lint passed. The new contract tests and both orchestration
   dry runs were included.
-- Latest full gate: **129 unit/contract + 3 integration/e2e passed**;
+- Latest full gate: **130 unit/contract + 3 integration/e2e passed**;
   evaluation assets remain synthetic and `release_eligible: false`.
-
-- `powershell -NoProfile -File scripts/check.ps1 -Mode quick` → **127 passed**;
-  Ruff and formatting passed.
-- `powershell -NoProfile -File scripts/check.ps1 -Mode full` → **124 unit/
-  contract tests and 3 integration/e2e tests passed**; evaluation assets remain
-  synthetic and `release_eligible: false`.
 - `site/npm run typecheck` → passed.
 - `site/npm run lint` → 0 errors; four pre-existing warnings remain.
 - `site/npm test` → **186 passed, 0 failed** (build included). The first
@@ -190,13 +184,13 @@ Remaining order:
 1. In the non-production GCP project, verify Workflows API, budget/spend cap,
    IAM, private bucket lifecycle, BigQuery schema/grants, and the reader service
    deployment plan. Apply only with explicit live authorization.
-3. Deploy a synthetic body-free snapshot-reader canary; verify `/healthz`,
+2. Deploy a synthetic body-free snapshot-reader canary; verify `/healthz`,
    `/active`, pointer/manifest SHA, exactly five issues, and no forbidden keys.
-4. Deploy/run one collector canary with unique `run_id`; inspect lease,
+3. Deploy/run one collector canary with unique `run_id`; inspect lease,
    idempotency, quality gate, immutable objects, and rollback pointer.
-5. Only after canary success, create Scheduler 00/06/12/18 KST + Workflows and
+4. Only after canary success, create Scheduler 00/06/12/18 KST + Workflows and
    cut ownership away from the Cloudflare cron. Never let both schedulers run.
-6. Set Vercel server env in preview, verify `/version`, `/`, `/outlets`, and
+5. Set Vercel server env in preview, verify `/version`, `/`, `/outlets`, and
    `/framing`, then promote through the documented deployment path while
    retaining the previous deployment for rollback.
 
