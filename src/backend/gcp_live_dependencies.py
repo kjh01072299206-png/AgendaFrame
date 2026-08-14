@@ -235,7 +235,11 @@ class NewsArticleParser:
         if response.status in {403, 429} or not response.body:
             return ()
         text = response.body.decode("utf-8", errors="replace")
-        candidates = self._rss_candidates(text) if self._looks_xml(text, response.content_type) else self._html_candidates(text, endpoint_url)
+        candidates = (
+            self._rss_candidates(text)
+            if self._looks_xml(text, response.content_type)
+            else self._html_candidates(text, endpoint_url)
+        )
         rows: list[ArticleDocument] = []
         seen: set[str] = set()
         for title, url, published in candidates:
@@ -247,7 +251,13 @@ class NewsArticleParser:
             if not is_domain_allowed(hostname, tuple(source.domains)) or canonical in seen:
                 continue
             seen.add(canonical)
-            page = self.fetcher.fetch(canonical, source_id=source.source_id)
+            try:
+                page = self.fetcher.fetch(canonical, source_id=source.source_id)
+            except RuntimeAdapterUnavailable:
+                # One article page can time out or exceed the bounded response
+                # size. Keep the source moving; the run records only a
+                # body-free source error rather than aborting all twelve feeds.
+                continue
             row = self._article_page(
                 page,
                 source_id=source.source_id,
@@ -266,7 +276,12 @@ class NewsArticleParser:
     @staticmethod
     def _looks_xml(text: str, content_type: str) -> bool:
         stripped = text.lstrip()
-        return "xml" in content_type.lower() or stripped.startswith("<?xml") or "<rss" in stripped[:300].lower() or "<urlset" in stripped[:300].lower()
+        return (
+            "xml" in content_type.lower()
+            or stripped.startswith("<?xml")
+            or "<rss" in stripped[:300].lower()
+            or "<urlset" in stripped[:300].lower()
+        )
 
     def _rss_candidates(self, text: str) -> list[tuple[str, str, datetime | None]]:
         try:
@@ -280,12 +295,16 @@ class NewsArticleParser:
             values = {child.tag.rsplit("}", 1)[-1].lower(): _xml_text(child) for child in item}
             link = values.get("link") or values.get("loc")
             title = values.get("title", "").strip()
-            published = _parse_datetime(values.get("pubdate") or values.get("published") or values.get("date"))
+            published = _parse_datetime(
+                values.get("pubdate") or values.get("published") or values.get("date")
+            )
             if link:
                 rows.append((title, link, published))
         return rows
 
-    def _html_candidates(self, text: str, endpoint_url: str) -> list[tuple[str, str, datetime | None]]:
+    def _html_candidates(
+        self, text: str, endpoint_url: str
+    ) -> list[tuple[str, str, datetime | None]]:
         parser = _LinkParser()
         parser.feed(text)
         return [
@@ -314,11 +333,15 @@ class NewsArticleParser:
             or " ".join(parser.title_parts)
             or fallback_title
         ).strip()
-        published = _jsonld_published_at(parser) or _parse_datetime(
-            parser.meta.get("article:published_time")
-            or parser.meta.get("datepublished")
-            or parser.meta.get("date")
-        ) or fallback_published
+        published = (
+            _jsonld_published_at(parser)
+            or _parse_datetime(
+                parser.meta.get("article:published_time")
+                or parser.meta.get("datepublished")
+                or parser.meta.get("date")
+            )
+            or fallback_published
+        )
         if published is None:
             # Strict mode: a date-less section link is a candidate, not a
             # collected article. Never label discovery time as publication time.
@@ -373,7 +396,9 @@ class GcsPrivateArticleVault(PrivateArticleVault):
         self.delete_after = delete_after
 
     def put(self, run_id: str, article: ArticleDocument) -> str:
-        object_name = f"bodies/{article.source_id}/{article.published_at:%Y/%m/%d}/{article.article_id}.txt"
+        object_name = (
+            f"bodies/{article.source_id}/{article.published_at:%Y/%m/%d}/{article.article_id}.txt"
+        )
         blob = self.bucket.blob(object_name)
         delete_at = datetime.fromisoformat(f"{self.delete_after}T23:59:59+09:00").astimezone(UTC)
         blob.custom_time = delete_at
@@ -419,7 +444,9 @@ class GcsImmutableSnapshotWriter(ImmutableObjectWriter):
     def put_immutable(self, objects: Mapping[str, Mapping[str, Any]]) -> None:
         for object_name, payload in objects.items():
             blob = self.bucket.blob(object_name)
-            body = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+            body = json.dumps(
+                payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+            ).encode()
             try:
                 blob.upload_from_string(
                     body,
@@ -495,7 +522,9 @@ def build_stage_dependencies(
         bucket_name=config.bucket,
         delete_after=policy.collection_end,
     )
-    store = GcpAnalysisStore(config, bigquery_client=clients.bigquery, storage_client=clients.storage)
+    store = GcpAnalysisStore(
+        config, bigquery_client=clients.bigquery, storage_client=clients.storage
+    )
     snapshot_writer = GcsImmutableSnapshotWriter(clients.storage, bucket_name=config.bucket)
     pointer_store = GcsActivePointerStore(clients.storage, bucket_name=config.bucket)
     clusterer = InitialFiveClusterer(

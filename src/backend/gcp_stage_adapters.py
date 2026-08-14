@@ -294,6 +294,7 @@ class PolicyCollectionAdapter(CollectionAdapter):
                 for index, source in enumerate(self.sources)
             }
         source_counts: dict[str, int] = {source.source_id: 0 for source in self.sources}
+        source_errors: dict[str, int] = {source.source_id: 0 for source in self.sources}
         for source in self.sources:
             source_budget = source_budgets[source.source_id]
             if source_budget == 0:
@@ -313,13 +314,22 @@ class PolicyCollectionAdapter(CollectionAdapter):
                             remaining_source,
                         ),
                     )
-                response = self.dependencies.fetcher.fetch(endpoint_url, source_id=source.source_id)
-                parsed = self.dependencies.parser.parse(
-                    response,
-                    source=parser_source,
-                    endpoint_url=endpoint_url,
-                    collected_at=collected_at,
-                )
+                try:
+                    response = self.dependencies.fetcher.fetch(
+                        endpoint_url,
+                        source_id=source.source_id,
+                    )
+                    parsed = self.dependencies.parser.parse(
+                        response,
+                        source=parser_source,
+                        endpoint_url=endpoint_url,
+                        collected_at=collected_at,
+                    )
+                except RuntimeAdapterUnavailable:
+                    # A single feed failure is source-local. Continue with the
+                    # remaining endpoints/sources and expose only a count.
+                    source_errors[source.source_id] += 1
+                    continue
                 for article in parsed:
                     if source_budget is not None and (
                         len(articles) >= self.max_articles_per_run
@@ -353,6 +363,7 @@ class PolicyCollectionAdapter(CollectionAdapter):
             "sourceCount": len(self.sources),
             "sourceIds": sorted(self.sources_by_id),
             "sourceArticleCounts": source_counts,
+            "sourceErrorCounts": source_errors,
             "privateBodyObjects": references,
             "idempotencyKey": idempotency_key,
         }

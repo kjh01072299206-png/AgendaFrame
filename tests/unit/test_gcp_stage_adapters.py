@@ -8,6 +8,7 @@ from typing import Any, Mapping, Sequence
 
 from ai.framing import FRAME_DIMENSIONS, FrameResult
 from ai.issue_clustering import MetadataIssueGroup
+from backend.gcp_job_entrypoint import RuntimeAdapterUnavailable
 from backend.gcp_orchestration import assert_body_safe, evaluate_quality_gate
 from backend.gcp_stage_adapters import (
     FrameSemanticAdapter,
@@ -279,6 +280,21 @@ class GcpStageAdapterTests(unittest.TestCase):
         self.assertEqual(result["articleCount"], 12)
         self.assertEqual(len(counts), 12)
         self.assertTrue(all(count == 1 for count in counts.values()))
+
+    def test_policy_collection_continues_after_source_local_fetch_failure(self) -> None:
+        class FailingFetcher(Fetcher):
+            def fetch(self, url: str, *, source_id: str) -> object:
+                if source_id == "khan":
+                    raise RuntimeAdapterUnavailable("network failure")
+                return super().fetch(url, source_id=source_id)
+
+        deps = StageDependencies(**{**self.dependencies.__dict__, "fetcher": FailingFetcher()})
+        result = PolicyCollectionAdapter(deps, clock=lambda: COLLECTED_AT).collect(
+            self.request,
+            idempotency_key="source-local-failure",
+        )
+        self.assertEqual(result["sourceErrorCounts"]["khan"], 4)
+        self.assertGreater(result["articleCount"], 0)
 
     def test_persist_cluster_rank_and_semantic_produce_top5_evidence_contract(self) -> None:
         collected = PolicyCollectionAdapter(self.dependencies, clock=lambda: COLLECTED_AT).collect(
