@@ -18,6 +18,10 @@ test("active snapshot loader is fail-closed and demo fallback is explicit", asyn
   assert.match(source, /throw new Error/);
   assert.match(source, /exactly five issues/);
   assert.match(source, /bundles do not match/);
+  assert.match(source, /ACTIVE_SNAPSHOT_SCHEMA/);
+  assert.match(source, /qualityGate/);
+  assert.match(source, /bundle issue IDs do not match/);
+  assert.match(source, /article_content/);
 });
 
 test("shell issue routes resolve through the active snapshot boundary", async () => {
