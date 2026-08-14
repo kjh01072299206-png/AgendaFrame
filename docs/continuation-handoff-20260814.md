@@ -9,7 +9,18 @@
   contract test, and this handoff update.
 - `origin/main` is an ancestor of this branch; the branch is ahead of it and
   does not require another merge at this checkpoint.
-- This handoff is intended to be committed with the reader slice below.
+- The current branch already contains the other-computer release merge
+  `9f1f627`, whose history includes `5d178d1`; do not re-run the abandoned
+  broad conflict merge. The current HEAD is the later runtime-observability
+  checkpoint (verify it with `git rev-parse HEAD`).
+- Current offline evidence: root full gate **137 unit/contract + 3
+  integration/e2e passed** and site `npm test` **186 passed**. Site typecheck
+  passes; lint has 0 errors and four pre-existing warnings.
+- A reviewed `git push origin HEAD:main` was attempted from this checkpoint
+  and failed because this environment could not resolve `github.com`; no
+  remote main or Vercel production deployment changed.
+- This handoff is committed with the current runtime/observability slices;
+  future changes should update it rather than rewriting prior checkpoints.
 - Preserve unrelated untracked worktrees, logs, feedback, `outputs/`, `.grok/`,
   and any user/other-model changes. Never use `git reset --hard`,
   `git checkout --`, or `git add -A`.
