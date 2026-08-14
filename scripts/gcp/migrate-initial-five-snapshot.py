@@ -135,6 +135,7 @@ def build_plan() -> MigrationPlan:
         "status": "pass",
         "rawBodyAbsent": True,
         "evidenceLineageComplete": True,
+        "publicSnapshotReady": True,
         "unsupportedClaimRate": 0.0,
         "source": "historical-public-artifact-contract",
     }
