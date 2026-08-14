@@ -188,6 +188,17 @@ class CloudDeploymentContractTests(unittest.TestCase):
             "builder@project-40bc06fc-fb4b-46b6-a10.iam.gserviceaccount.com",
         )
 
+    def test_runtime_image_defaults_to_recurring_entrypoint_and_config_check_overrides_it(
+        self,
+    ) -> None:
+        dockerfile = (ROOT / "src" / "backend" / "Dockerfile").read_text(encoding="utf-8")
+        self.assertIn('ENTRYPOINT ["python", "-m", "backend.gcp_job_entrypoint"]', dockerfile)
+        self.assertNotIn('CMD ["validate-config"]', dockerfile)
+
+        script = (ROOT / "scripts" / "gcp" / "deploy.ps1").read_text(encoding="utf-8")
+        self.assertIn("--command python", script)
+        self.assertIn('--args "-m,backend.main,validate-config"', script)
+
     def test_runtime_job_deployment_uses_real_entrypoint_and_cutover_guards(self) -> None:
         script = (ROOT / "scripts" / "gcp" / "deploy-runtime-job.ps1").read_text(encoding="utf-8")
         self.assertIn("backend.gcp_job_entrypoint", script)

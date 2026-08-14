@@ -92,12 +92,14 @@ and no raw article/body/HTML/sentence fields.
 
 ### Cloud Run entrypoint review
 
-- `src/backend/Dockerfile` intentionally keeps the image default as
-  `backend.main validate-config` for the existing configuration-check job.
-- `scripts/gcp/deploy-runtime-job.ps1` explicitly overrides that image command
-  to `python -m backend.gcp_job_entrypoint` for the recurring collection job;
-  `infra/gcp/cloud-run-job.yaml` and its contract test assert the same command,
-  factory bindings, GCP-only ownership flags, and dry-run/clean-SHA guards.
+- `src/backend/Dockerfile` now defaults to the recurring
+  `python -m backend.gcp_job_entrypoint` entrypoint.
+- `scripts/gcp/deploy.ps1` explicitly overrides the image command to
+  `python -m backend.main validate-config` for the legacy configuration-check
+  job, while `scripts/gcp/deploy-runtime-job.ps1` and
+  `infra/gcp/cloud-run-job.yaml` use the recurring entrypoint. This prevents a
+  default image invocation from silently running the old check instead of the
+  GCP-owned pipeline.
 - The deployment script's local dry run was verified after commit
   `1ce3539`. No image build, Cloud Run resource mutation, or billed execution
   was performed, so this is wiring evidence—not a production deployment.

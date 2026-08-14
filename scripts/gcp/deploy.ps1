@@ -73,6 +73,8 @@ if ($LASTEXITCODE -ne 0) { throw "Cloud Build failed." }
     --region $Region `
     --image $Image `
     --service-account "analyzer@$ProjectId.iam.gserviceaccount.com" `
+    --command python `
+    --args "-m,backend.main,validate-config" `
     --cpu 1 `
     --memory 512Mi `
     --tasks 1 `

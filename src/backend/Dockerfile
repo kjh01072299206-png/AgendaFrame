@@ -15,5 +15,4 @@ RUN python -m pip install --disable-pip-version-check --require-hashes -r requir
     && python -m pip install --disable-pip-version-check --no-deps .
 
 USER 65532:65532
-ENTRYPOINT ["python", "-m", "backend.main"]
-CMD ["validate-config"]
+ENTRYPOINT ["python", "-m", "backend.gcp_job_entrypoint"]
