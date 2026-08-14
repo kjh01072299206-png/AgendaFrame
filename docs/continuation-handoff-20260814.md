@@ -151,10 +151,10 @@ and no raw article/body/HTML/sentence fields.
 
 ## Verification completed
 
-- Latest quick gate after the runtime image entrypoint changes: **130 passed**;
+- Latest quick gate after the production verifier addition: **132 passed**;
   formatting and lint passed. The new contract tests and both orchestration
   dry runs were included.
-- Latest full gate: **130 unit/contract + 3 integration/e2e passed**;
+- Latest full gate: **132 unit/contract + 3 integration/e2e passed**;
   evaluation assets remain synthetic and `release_eligible: false`.
 - `site/npm run typecheck` → passed.
 - `site/npm run lint` → 0 errors; four pre-existing warnings remain.
