@@ -38,3 +38,23 @@ def test_runtime_services_provisioner_matches_body_free_contract_names() -> None
     assert "bodyText" not in script
     assert "rawBody" not in script
     assert "promptPayload" not in script
+
+
+def test_runtime_services_metrics_are_valid_counter_and_absence_contract() -> None:
+    script = (ROOT / "scripts" / "gcp" / "provision-runtime-services.ps1").read_text(
+        encoding="utf-8"
+    )
+    monitoring = (ROOT / "infra" / "gcp" / "monitoring.yaml").read_text(encoding="utf-8")
+    for metric in (
+        "agendaframe_collection_run_failed",
+        "agendaframe_collection_run_succeeded",
+        "agendaframe_active_snapshot_published",
+        "agendaframe_quality_gate_failed",
+    ):
+        assert metric in script
+        assert metric in monitoring
+    assert 'Kind = "GAUGE"' not in script
+    assert "no data for 90m" in monitoring
+    assert "no data for 150m" in monitoring
+    assert "conditionAbsent" in script
+    assert "conditionThreshold" in script

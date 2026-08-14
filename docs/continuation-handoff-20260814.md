@@ -159,20 +159,29 @@ and no raw article/body/HTML/sentence fields.
   policies. It checks the expected non-production project, requires
   `-SpendCapsConfirmed` and a full notification-channel name for apply, and
   never creates secret versions or prints secret values.
+- The log metrics use the supported Logging API configuration-file form and
+  DELTA/INT64 counters. Delay and snapshot-age alerts are absence conditions
+  on the success and publication counters, rather than unsupported GAUGE
+  flags.
+- `src/backend/gcp_job_entrypoint.py` emits allow-listed structured JSON events
+  for run success/failure, quality-gate quarantine, and active-snapshot
+  publication. The records contain run metadata and timing/status only; they
+  never contain article body, prompt, HTML, or credential fields.
 - `tests/contract/test_gcp_runtime_services_contract.py` locks the resource
   names, body-free contract, dry-run default, project guard, and secret-value
-  boundary. PowerShell parse and dry-run both pass; no `gcloud` resource call
-  was made.
+  boundary, metric/event names, and absence/threshold alert shape. PowerShell
+  parse, dry-run, and apply/project guards pass; no `gcloud` resource call was
+  made.
 - This adds an executable provisioning path, not evidence that the resources
   exist. Apply remains a separately authorized live step after budget, IAM,
   and rollback checks.
 
 ## Verification completed
 
-- Latest quick gate after the runtime-services contract: **134 passed**;
+- Latest quick gate after the runtime-services logging contract: **136 passed**;
   formatting and lint passed. The new contract tests and both orchestration
   dry runs were included.
-- Latest full gate: **134 unit/contract + 3 integration/e2e passed**;
+- Latest full gate: **136 unit/contract + 3 integration/e2e passed**;
   evaluation assets remain synthetic and `release_eligible: false`.
 - `site/npm run typecheck` → passed.
 - `site/npm run lint` → 0 errors; four pre-existing warnings remain.
@@ -182,7 +191,8 @@ and no raw article/body/HTML/sentence fields.
   API was called.
 - The live snapshot route regression test passed after the fail-closed guard;
   missing live issue IDs now resolve to `notFound()` instead of legacy data.
-- The root quick gate after the runtime-services contract passed **134 tests**;
+- The root quick gate after the runtime-services logging contract passed
+  **136 tests**;
   verifier dry-run and its two contract tests passed without network access.
 - Focused snapshot-reader/service/contract tests passed; the site active-route
   and semantic-page contracts passed.

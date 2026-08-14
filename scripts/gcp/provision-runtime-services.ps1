@@ -32,15 +32,15 @@ $SecretDefinitions = @(
 )
 $MetricDefinitions = @(
     @{ Name = "agendaframe_collection_run_failed"; Kind = "DELTA"; ValueType = "INT64"; Unit = "1"; Filter = 'jsonPayload.service="agendaframe" AND jsonPayload.event="collection_run_failed"' },
-    @{ Name = "agendaframe_collection_run_age_seconds"; Kind = "GAUGE"; ValueType = "DOUBLE"; Unit = "s"; Filter = 'jsonPayload.service="agendaframe" AND jsonPayload.event="collection_run_age"' },
-    @{ Name = "agendaframe_active_snapshot_age_seconds"; Kind = "GAUGE"; ValueType = "DOUBLE"; Unit = "s"; Filter = 'jsonPayload.service="agendaframe" AND jsonPayload.event="active_snapshot_age"' },
+    @{ Name = "agendaframe_collection_run_succeeded"; Kind = "DELTA"; ValueType = "INT64"; Unit = "1"; Filter = 'jsonPayload.service="agendaframe" AND jsonPayload.event="collection_run_succeeded"' },
+    @{ Name = "agendaframe_active_snapshot_published"; Kind = "DELTA"; ValueType = "INT64"; Unit = "1"; Filter = 'jsonPayload.service="agendaframe" AND jsonPayload.event="active_snapshot_published"' },
     @{ Name = "agendaframe_quality_gate_failed"; Kind = "DELTA"; ValueType = "INT64"; Unit = "1"; Filter = 'jsonPayload.service="agendaframe" AND jsonPayload.event="quality_gate_failed"' }
 )
 $AlertDefinitions = @(
-    @{ DisplayName = "AgendaFrame collection run failed"; Metric = "agendaframe_collection_run_failed"; Comparison = "COMPARISON_GT"; Threshold = 0; Duration = "300s"; Severity = "CRITICAL" },
-    @{ DisplayName = "AgendaFrame collection delayed"; Metric = "agendaframe_collection_run_age_seconds"; Comparison = "COMPARISON_GT"; Threshold = 5400; Duration = "900s"; Severity = "WARNING" },
-    @{ DisplayName = "AgendaFrame active snapshot too old"; Metric = "agendaframe_active_snapshot_age_seconds"; Comparison = "COMPARISON_GT"; Threshold = 9000; Duration = "1800s"; Severity = "CRITICAL" },
-    @{ DisplayName = "AgendaFrame quality gate failed"; Metric = "agendaframe_quality_gate_failed"; Comparison = "COMPARISON_GT"; Threshold = 0; Duration = "900s"; Severity = "WARNING" }
+    @{ DisplayName = "AgendaFrame collection run failed"; Metric = "agendaframe_collection_run_failed"; Kind = "threshold"; Comparison = "COMPARISON_GT"; Threshold = 0; Duration = "300s"; Severity = "CRITICAL" },
+    @{ DisplayName = "AgendaFrame collection delayed"; Metric = "agendaframe_collection_run_succeeded"; Kind = "absence"; Duration = "5400s"; Severity = "WARNING" },
+    @{ DisplayName = "AgendaFrame active snapshot too old"; Metric = "agendaframe_active_snapshot_published"; Kind = "absence"; Duration = "9000s"; Severity = "CRITICAL" },
+    @{ DisplayName = "AgendaFrame quality gate failed"; Metric = "agendaframe_quality_gate_failed"; Kind = "threshold"; Comparison = "COMPARISON_GT"; Threshold = 0; Duration = "900s"; Severity = "WARNING" }
 )
 
 function Resolve-CloudSdkCommand {
@@ -139,23 +139,45 @@ foreach ($Secret in $SecretDefinitions) {
 
 foreach ($Metric in $MetricDefinitions) {
     if (-not (Test-GcloudResource -Arguments @("logging", "metrics", "describe", $Metric.Name, "--project=$ProjectId"))) {
-        Invoke-Gcloud -Arguments @(
-            "logging", "metrics", "create", $Metric.Name, "--project=$ProjectId",
-            "--description=AgendaFrame $($Metric.Name)", "--log-filter=$($Metric.Filter)",
-            "--metric-kind=$($Metric.Kind)", "--value-type=$($Metric.ValueType)", "--unit=$($Metric.Unit)"
-        )
+        $MetricConfig = @{
+            name = $Metric.Name
+            description = "AgendaFrame $($Metric.Name)"
+            filter = $Metric.Filter
+            metricDescriptor = @{
+                metricKind = $Metric.Kind
+                valueType = $Metric.ValueType
+                unit = $Metric.Unit
+            }
+        } | ConvertTo-Json -Depth 8
+        $TempMetric = [IO.Path]::GetTempFileName()
+        try {
+            [IO.File]::WriteAllText($TempMetric, $MetricConfig, [Text.UTF8Encoding]::new($false))
+            Invoke-Gcloud -Arguments @(
+                "logging", "metrics", "create", $Metric.Name, "--project=$ProjectId",
+                "--config-from-file=$TempMetric"
+            )
+        }
+        finally {
+            Remove-Item -LiteralPath $TempMetric -Force -ErrorAction SilentlyContinue
+        }
     }
 }
 
 foreach ($Alert in $AlertDefinitions) {
     $DisplayFilter = 'displayName="{0}"' -f $Alert.DisplayName
     $Existing = (& $Gcloud.Source "monitoring" "policies" "list" "--project=$ProjectId" "--filter=$DisplayFilter" "--format=value(name)").Trim()
-    $Policy = @{
-        displayName = $Alert.DisplayName
-        combiner = "OR"
-        enabled = $true
-        notificationChannels = @($NotificationChannel)
-        conditions = @(@{
+    $Condition = if ($Alert.Kind -eq "absence") {
+        @{
+            displayName = "$($Alert.DisplayName) absence"
+            conditionAbsent = @{
+                filter = 'metric.type="logging.googleapis.com/user/{0}" resource.type="global"' -f $Alert.Metric
+                duration = $Alert.Duration
+                trigger = @{ count = 1 }
+            }
+        }
+    }
+    else {
+        @{
             displayName = "$($Alert.DisplayName) threshold"
             conditionThreshold = @{
                 filter = 'metric.type="logging.googleapis.com/user/{0}" resource.type="global"' -f $Alert.Metric
@@ -164,7 +186,14 @@ foreach ($Alert in $AlertDefinitions) {
                 duration = $Alert.Duration
                 trigger = @{ count = 1 }
             }
-        })
+        }
+    }
+    $Policy = @{
+        displayName = $Alert.DisplayName
+        combiner = "OR"
+        enabled = $true
+        notificationChannels = @($NotificationChannel)
+        conditions = @($Condition)
     } | ConvertTo-Json -Depth 10
     $TempPolicy = [IO.Path]::GetTempFileName()
     try {

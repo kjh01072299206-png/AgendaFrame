@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import io
+import json
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -8,6 +11,7 @@ from backend.gcp_job_entrypoint import (
     MigrationOwnershipError,
     RuntimeWiringError,
     build_runtime_config,
+    main,
     run_job,
 )
 from backend.gcp_orchestration import PipelineAdapters
@@ -140,6 +144,28 @@ class GcpJobEntrypointTests(unittest.TestCase):
     def test_missing_adapter_factory_is_not_silently_networked(self) -> None:
         with self.assertRaises(RuntimeWiringError):
             run_job(env())
+
+    def test_main_emits_body_free_structured_runtime_events(self) -> None:
+        snapshots = SnapshotFake()
+        adapters = FakeAdapters(snapshots).as_pipeline()
+
+        output = io.StringIO()
+        with redirect_stdout(output):
+            exit_code = main(env=env(), adapter_factory=lambda _config: adapters)
+
+        self.assertEqual(exit_code, 0)
+        records = [json.loads(line) for line in output.getvalue().splitlines()]
+        events = {record.get("event") for record in records if "event" in record}
+        self.assertTrue(
+            {
+                "collection_run_succeeded",
+                "active_snapshot_published",
+            }.issubset(events)
+        )
+        for record in records:
+            serialized = json.dumps(record, ensure_ascii=False).casefold()
+            for forbidden in ("body_text", "raw_body", "html", "sentence_text", "prompt_payload"):
+                self.assertNotIn(forbidden, serialized)
 
 
 if __name__ == "__main__":

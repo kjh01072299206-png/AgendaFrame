@@ -19,6 +19,7 @@ import json
 import os
 import re
 import sys
+import time
 from dataclasses import dataclass
 from datetime import date
 from typing import Any, Callable, Mapping, Sequence
@@ -229,7 +230,9 @@ def validate_active_snapshot_manifest(
         raise RuntimeWiringError("active snapshot pointer schema is invalid")
     snapshot_id = manifest.get("snapshotId")
     if not isinstance(snapshot_id, str) or not SNAPSHOT_ID_PATTERN.fullmatch(snapshot_id):
-        raise RuntimeWiringError("active snapshot manifest snapshotId must be a 32-character hex ID")
+        raise RuntimeWiringError(
+            "active snapshot manifest snapshotId must be a 32-character hex ID"
+        )
     if pointer.get("snapshotId") != snapshot_id:
         raise RuntimeWiringError("active snapshot pointer does not reference manifest snapshotId")
     for key, expected in (
@@ -291,7 +294,9 @@ def validate_active_snapshot_manifest(
         raise RuntimeWiringError("active snapshot pointer active reference is inconsistent")
     if not SHA256_PATTERN.fullmatch(manifest_sha256):
         raise RuntimeWiringError("active snapshot pointer manifestSha256 is invalid")
-    canonical = json.dumps(manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    canonical = json.dumps(
+        manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str
+    )
     if hashlib.sha256(canonical.encode("utf-8")).hexdigest() != manifest_sha256:
         raise RuntimeWiringError("active snapshot pointer manifestSha256 does not match manifest")
 
@@ -355,6 +360,46 @@ def _result_payload(config: GcpRuntimeConfig, result: OrchestrationResult) -> Ma
     }
 
 
+def _emit_runtime_event(
+    event: str,
+    *,
+    config: GcpRuntimeConfig | None = None,
+    status: str | None = None,
+    duration_seconds: float | None = None,
+    snapshot_id: str | None = None,
+    stage: str | None = None,
+    error_type: str | None = None,
+) -> None:
+    """Emit a body-free structured log record for Cloud Logging metrics.
+
+    Cloud Run forwards one JSON object per stdout line to ``jsonPayload``. Keep
+    this allow-listed so an adapter exception or future field cannot turn an
+    observability record into an article/body or credential log.
+    """
+
+    payload: dict[str, Any] = {"service": "agendaframe", "event": event}
+    if config is not None:
+        payload.update(
+            {
+                "run_id": config.request.run_id,
+                "basis_date": config.request.basis_date,
+                "source_policy_version": config.policy.policy_version,
+                "pipeline_owner": config.pipeline_owner,
+            }
+        )
+    for key, value in (
+        ("status", status),
+        ("duration_seconds", duration_seconds),
+        ("snapshot_id", snapshot_id),
+        ("stage", stage),
+        ("error_type", error_type),
+    ):
+        if value is not None:
+            payload[key] = value
+    assert_body_safe(payload, context="runtime event")
+    print(json.dumps(payload, ensure_ascii=False, sort_keys=True), flush=True)
+
+
 def main(
     argv: Sequence[str] | None = None,
     *,
@@ -364,11 +409,55 @@ def main(
     """Cloud Run-compatible process entrypoint; external calls stay injected."""
 
     values = dict(os.environ if env is None else env)
+    started = time.monotonic()
     try:
         config, result = run_job(values, adapter_factory=adapter_factory)
+        duration = round(max(0.0, time.monotonic() - started), 3)
+        failed_stage = next(
+            (record.name for record in reversed(result.stage_records) if record.status == "failed"),
+            None,
+        )
+        if result.status == "succeeded":
+            _emit_runtime_event(
+                "collection_run_succeeded",
+                config=config,
+                status=result.status,
+                duration_seconds=duration,
+                snapshot_id=result.snapshot_id,
+            )
+            _emit_runtime_event(
+                "active_snapshot_published",
+                config=config,
+                status=result.status,
+                snapshot_id=result.snapshot_id,
+            )
+        else:
+            _emit_runtime_event(
+                "collection_run_failed",
+                config=config,
+                status=result.status,
+                duration_seconds=duration,
+                stage=failed_stage,
+                error_type="QualityGateError"
+                if result.status == "quarantined"
+                else "StageExecutionError",
+            )
+            if result.status == "quarantined":
+                _emit_runtime_event(
+                    "quality_gate_failed",
+                    config=config,
+                    status=result.status,
+                    stage="quality_gate",
+                    error_type="QualityGateError",
+                )
         print(json.dumps(_result_payload(config, result), ensure_ascii=False, sort_keys=True))
         return 0 if result.status == "succeeded" else 75
     except RuntimeWiringError as error:
+        _emit_runtime_event(
+            "collection_run_failed",
+            duration_seconds=round(max(0.0, time.monotonic() - started), 3),
+            error_type=type(error).__name__,
+        )
         print(json.dumps({"status": "not_started", "error": str(error)}, ensure_ascii=False))
         return 78
 
