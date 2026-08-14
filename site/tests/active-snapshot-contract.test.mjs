@@ -27,3 +27,18 @@ test("shell issue routes resolve through the active snapshot boundary", async ()
   assert.match(shellSource, /getActiveSnapshot/);
   assert.match(shellSource, /dynamic = "force-dynamic"/);
 });
+
+test("live active snapshot is the shared source for the main and two analysis routes", async () => {
+  const home = await readFile(path.join(siteRoot, "app", "(shell)", "page.tsx"), "utf8");
+  const homeView = await readFile(path.join(siteRoot, "app", "(shell)", "active-home.tsx"), "utf8");
+  const outlets = await readFile(path.join(siteRoot, "app", "(shell)", "issues", "[issueId]", "outlets", "page.tsx"), "utf8");
+  const framing = await readFile(path.join(siteRoot, "app", "(shell)", "issues", "[issueId]", "framing", "page.tsx"), "utf8");
+  assert.match(home, /getActiveSnapshot/);
+  assert.match(home, /active\.mode === "live"/);
+  assert.match(homeView, /ActiveSnapshotHome/);
+  assert.match(outlets, /OutletsSemanticPage/);
+  assert.match(framing, /FramingSemanticPage/);
+  assert.match(outlets, /active\.mode === "live"/);
+  assert.match(framing, /active\.mode === "live"/);
+  assert.doesNotMatch(homeView, /raw_body|body_text|sentence_text/i);
+});

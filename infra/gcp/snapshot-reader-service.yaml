@@ -1,0 +1,37 @@
+apiVersion: agendaframe.gcp/v1
+kind: CloudRunServiceContract
+metadata:
+  name: agendaframe-snapshot-reader
+  implementationStatus: contract_only
+  externalCalls: false
+spec:
+  command:
+    - python
+    - -m
+    - backend.gcp_snapshot_reader_service
+  routes:
+    - path: /healthz
+      method: GET
+      response: status_only
+    - path: /active
+      method: GET
+      response: body_free_public_snapshot_envelope
+  storage:
+    bucket: ${AGENDAFRAME_PRIVATE_BUCKET}
+    currentPointer: snapshots/current.json
+    immutableObjectReadOnly: true
+    requiredManifestSha256: true
+  validation:
+    pointerSchema: agenda.frame.active-snapshot-pointer.v1
+    snapshotSchema: agenda.frame.active-snapshot.v1
+    exactTopIssueCount: 5
+    rawBodyAbsent: true
+    evidenceLineageComplete: true
+    manifestAndPointerMustConverge: true
+  auth:
+    gcsBucketPrivate: true
+    serviceAccountRole: roles/storage.objectViewer
+    publicEndpointMayExposeOnlyValidatedEnvelope: true
+  caching:
+    cacheControl: no-store
+  failClosedOnInvalidSnapshot: true

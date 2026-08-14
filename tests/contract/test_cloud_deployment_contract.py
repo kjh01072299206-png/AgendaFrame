@@ -188,6 +188,25 @@ class CloudDeploymentContractTests(unittest.TestCase):
             "builder@project-40bc06fc-fb4b-46b6-a10.iam.gserviceaccount.com",
         )
 
+    def test_runtime_job_deployment_uses_real_entrypoint_and_cutover_guards(self) -> None:
+        script = (ROOT / "scripts" / "gcp" / "deploy-runtime-job.ps1").read_text(encoding="utf-8")
+        self.assertIn("backend.gcp_job_entrypoint", script)
+        self.assertIn(
+            "AGENDAFRAME_ADAPTER_FACTORY=backend.gcp_production_adapters:production_adapter_factory",
+            script,
+        )
+        self.assertIn(
+            "AGENDAFRAME_STAGE_DEPENDENCIES_FACTORY=backend.gcp_live_dependencies:build_stage_dependencies",
+            script,
+        )
+        self.assertIn("AGENDAFRAME_PIPELINE_OWNER=gcp", script)
+        self.assertIn("AGENDAFRAME_CLOUDFLARE_CRON_ENABLED=false", script)
+        self.assertIn("AGENDAFRAME_LEGACY_SCHEDULE_ENABLED=false", script)
+        self.assertIn("[switch]$FullGatePassed", script)
+        self.assertIn("status --porcelain --untracked-files=no", script)
+        self.assertIn("-RunId and -ScheduledTime are required", script)
+        self.assertNotIn("scheduler jobs create", script)
+
 
 if __name__ == "__main__":
     unittest.main()

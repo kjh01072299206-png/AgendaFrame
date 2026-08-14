@@ -250,6 +250,18 @@ def _canonical_json(value: object) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
 
 
+def canonical_json_sha256(value: object) -> str:
+    """Return the digest used to bind a published manifest to its pointer.
+
+    The snapshot reader is intentionally kept independent from the storage
+    SDK.  Sharing this exact canonicalisation rule between the publisher and
+    reader prevents a stale or substituted manifest from being served under a
+    valid-looking ``current.json`` pointer.
+    """
+
+    return hashlib.sha256(_canonical_json(value).encode("utf-8")).hexdigest()
+
+
 def snapshot_id_for(*, request: OrchestrationRequest, public_payload: Mapping[str, Any]) -> str:
     material = {
         "basisDate": request.basis_date,
@@ -614,6 +626,8 @@ class GcpPipelineOrchestrator:
                 "basisDate": request.basis_date,
                 "prefix": prefix,
                 "manifest": f"{prefix}/manifest.json",
+                "active": f"{prefix}/active.json",
+                "manifestSha256": canonical_json_sha256(manifest),
                 "publishedAt": self.clock().isoformat(),
             }
             assert_body_safe(objects, context="snapshot objects")
@@ -678,6 +692,7 @@ __all__ = [
     "StagePolicy",
     "STAGE_ORDER",
     "assert_body_safe",
+    "canonical_json_sha256",
     "evaluate_quality_gate",
     "forbidden_body_paths",
     "snapshot_id_for",

@@ -24,6 +24,11 @@ spec:
   environment:
     AGENDAFRAME_ADAPTER_MODE: gcp
     AGENDAFRAME_ADAPTER_FACTORY: backend.gcp_production_adapters:production_adapter_factory
+    AGENDAFRAME_STAGE_DEPENDENCIES_FACTORY: backend.gcp_live_dependencies:build_stage_dependencies
+    AGENDAFRAME_PIPELINE_OWNER: gcp
+    AGENDAFRAME_CLOUDFLARE_CRON_ENABLED: "false"
+    AGENDAFRAME_LEGACY_SCHEDULE_ENABLED: "false"
+    AGENDAFRAME_SCHEDULED_TIME: injected_by_workflow
   activeSnapshot:
     schemaVersion: agenda.frame.active-snapshot.v1
     pointerSchema: agenda.frame.active-snapshot-pointer.v1

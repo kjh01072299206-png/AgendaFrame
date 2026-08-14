@@ -947,6 +947,18 @@ class SnapshotPublishAdapter(SnapshotStore):
         assert_body_safe(manifest, context="active snapshot manifest")
         return manifest
 
+    def read_public_object(self, reference: str) -> Mapping[str, Any]:
+        reader = getattr(self.writer, "read_public_object", None)
+        if not callable(reader):
+            raise StageAdapterError(
+                "immutable writer must expose read_public_object for snapshot serving"
+            )
+        payload = reader(reference)
+        if not isinstance(payload, Mapping):
+            raise StageAdapterError("active snapshot object must be an object")
+        assert_body_safe(payload, context="active snapshot object")
+        return payload
+
 
 def build_stage_adapters(
     dependencies: StageDependencies,

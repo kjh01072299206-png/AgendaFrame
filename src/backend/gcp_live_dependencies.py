@@ -393,6 +393,19 @@ class GcsImmutableSnapshotWriter(ImmutableObjectWriter):
         blob = self.bucket.blob(reference)
         return json.loads(blob.download_as_text(encoding="utf-8"))
 
+    def read_public_object(self, reference: str) -> Mapping[str, Any]:
+        """Read one immutable public JSON object for the snapshot-reader boundary."""
+
+        if not reference or reference.startswith("/") or "\\" in reference:
+            raise RuntimeAdapterUnavailable("snapshot object reference is unsafe")
+        if any(part in {"", ".", ".."} for part in reference.split("/")):
+            raise RuntimeAdapterUnavailable("snapshot object reference contains an unsafe path")
+        blob = self.bucket.blob(reference)
+        payload = json.loads(blob.download_as_text(encoding="utf-8"))
+        if not isinstance(payload, Mapping):
+            raise RuntimeAdapterUnavailable("snapshot object is not a JSON object")
+        return payload
+
 
 class GcsActivePointerStore:
     def __init__(self, storage_client: Any, *, bucket_name: str) -> None:

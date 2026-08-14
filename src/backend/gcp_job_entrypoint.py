@@ -13,6 +13,7 @@ the orchestration quality gate before publication.
 
 from __future__ import annotations
 
+import hashlib
 import importlib
 import json
 import os
@@ -35,6 +36,7 @@ from backend.gcp_source_policy import GcpDiscoveryPolicy
 SNAPSHOT_SCHEMA = "agenda.frame.active-snapshot.v1"
 POINTER_SCHEMA = "agenda.frame.active-snapshot-pointer.v1"
 SNAPSHOT_ID_PATTERN = re.compile(r"^[0-9a-f]{32}$")
+SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 OWNER_ENV = "AGENDAFRAME_PIPELINE_OWNER"
 CLOUDFLARE_CRON_ENV = "AGENDAFRAME_CLOUDFLARE_CRON_ENABLED"
 LEGACY_SCHEDULE_ENV = "AGENDAFRAME_LEGACY_SCHEDULE_ENABLED"
@@ -260,10 +262,25 @@ def validate_active_snapshot_manifest(
             raise RuntimeWiringError(f"active snapshot qualityGate.{key} is not publishable")
     prefix = pointer.get("prefix")
     manifest_ref = pointer.get("manifest")
-    if not isinstance(prefix, str) or not prefix or not isinstance(manifest_ref, str):
+    active_ref = pointer.get("active")
+    manifest_sha256 = pointer.get("manifestSha256")
+    if (
+        not isinstance(prefix, str)
+        or not prefix
+        or not isinstance(manifest_ref, str)
+        or not isinstance(active_ref, str)
+        or not isinstance(manifest_sha256, str)
+    ):
         raise RuntimeWiringError("active snapshot pointer is missing immutable references")
     if manifest_ref != f"{prefix}/manifest.json":
         raise RuntimeWiringError("active snapshot pointer manifest reference is inconsistent")
+    if active_ref != f"{prefix}/active.json":
+        raise RuntimeWiringError("active snapshot pointer active reference is inconsistent")
+    if not SHA256_PATTERN.fullmatch(manifest_sha256):
+        raise RuntimeWiringError("active snapshot pointer manifestSha256 is invalid")
+    canonical = json.dumps(manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    if hashlib.sha256(canonical.encode("utf-8")).hexdigest() != manifest_sha256:
+        raise RuntimeWiringError("active snapshot pointer manifestSha256 does not match manifest")
 
 
 def _read_manifest(snapshot_store: SnapshotStore, pointer: Mapping[str, Any]) -> Mapping[str, Any]:

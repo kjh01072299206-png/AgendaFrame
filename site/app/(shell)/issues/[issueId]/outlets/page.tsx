@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
+import { getActiveSnapshot } from "../../../../../lib/active-snapshot";
 import { getInitialFiveIssueBundle } from "../../../../../lib/initial-five/artifacts";
-import { safeDecode } from "../../../../../lib/initial-five/derive";
+import { deriveIssue, safeDecode } from "../../../../../lib/initial-five/derive";
 import { protoIssue } from "../../../../../lib/proto";
+import { OutletsSemanticPage } from "../../../semantic-analysis-pages";
 import {
   ArticleList,
   MorphologyTable,
@@ -19,6 +21,11 @@ export const metadata = { title: "언론사 비교 | AgendaFrame" };
 export default async function OutletsPage({ params }: { params: Promise<{ issueId: string }> }) {
   const { issueId } = await params;
   const decoded = safeDecode(issueId);
+  const active = await getActiveSnapshot();
+  const activeBundle = active.getIssueBundle(decoded);
+  if (active.mode === "live" && activeBundle) {
+    return <OutletsSemanticPage bundle={activeBundle} issue={deriveIssue(activeBundle)} />;
+  }
   if (!getInitialFiveIssueBundle(decoded)) return <LiveIssueView issueId={decoded} view="outlets" />;
   const issue = await loadIssue(Promise.resolve({ issueId }));
   const proto = protoIssue(issue.issueId);

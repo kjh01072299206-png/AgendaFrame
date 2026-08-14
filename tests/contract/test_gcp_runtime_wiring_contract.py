@@ -17,6 +17,15 @@ class GcpRuntimeWiringContractTests(unittest.TestCase):
         self.assertEqual(job["spec"]["sourceCount"], 12)
         self.assertTrue(job["spec"]["activeSnapshot"]["requiresImmutableManifest"])
         self.assertTrue(job["spec"]["activeSnapshot"]["requiresRawBodyAbsent"])
+        environment = job["spec"]["environment"]
+        self.assertEqual(
+            environment["AGENDAFRAME_STAGE_DEPENDENCIES_FACTORY"],
+            "backend.gcp_live_dependencies:build_stage_dependencies",
+        )
+        self.assertEqual(environment["AGENDAFRAME_PIPELINE_OWNER"], "gcp")
+        self.assertEqual(environment["AGENDAFRAME_CLOUDFLARE_CRON_ENABLED"], "false")
+        self.assertEqual(environment["AGENDAFRAME_LEGACY_SCHEDULE_ENABLED"], "false")
+        self.assertEqual(environment["AGENDAFRAME_SCHEDULED_TIME"], "injected_by_workflow")
 
         ownership = yaml.safe_load(
             (CONTRACT_DIR / "migration-ownership.yaml").read_text(encoding="utf-8")
