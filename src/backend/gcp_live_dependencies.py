@@ -43,6 +43,7 @@ USER_AGENT = "AgendaFrameAcademicResearch/1.0 (+https://agendaframe-capstone.ver
 # SourceDefinition carries the validated value; this fallback keeps the parser
 # safe when used directly in an isolated fixture.
 MAX_ARTICLES_PER_SOURCE = 120
+MAX_REQUESTS_PER_SOURCE = 30
 MAX_ENDPOINT_BYTES = 2_000_000
 
 
@@ -242,6 +243,11 @@ class NewsArticleParser:
         )
         rows: list[ArticleDocument] = []
         seen: set[str] = set()
+        requests_used = 0
+        max_requests = max(
+            1,
+            int(getattr(source, "max_requests_per_run", MAX_REQUESTS_PER_SOURCE)),
+        )
         for title, url, published in candidates:
             try:
                 canonical = canonicalize_url(url)
@@ -250,7 +256,10 @@ class NewsArticleParser:
             hostname = urllib.parse.urlsplit(canonical).hostname or ""
             if not is_domain_allowed(hostname, tuple(source.domains)) or canonical in seen:
                 continue
+            if requests_used >= max_requests:
+                break
             seen.add(canonical)
+            requests_used += 1
             try:
                 page = self.fetcher.fetch(canonical, source_id=source.source_id)
             except RuntimeAdapterUnavailable:

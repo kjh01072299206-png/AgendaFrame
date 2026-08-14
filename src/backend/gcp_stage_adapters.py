@@ -75,6 +75,7 @@ class SourceDefinition:
     domains: tuple[str, ...]
     endpoint_urls: tuple[str, ...]
     max_records_per_run: int = 120
+    max_requests_per_run: int = 30
 
 
 def load_source_definitions(path: str) -> tuple[SourceDefinition, ...]:
@@ -111,6 +112,7 @@ def load_source_definitions(path: str) -> tuple[SourceDefinition, ...]:
                 domains,
                 endpoints,
                 policy.max_records_per_source_per_run,
+                policy.max_requests_per_source_per_run,
             )
         )
     if len(definitions) != policy.source_count or len(definitions) != 12:

@@ -41,6 +41,7 @@ class GcpDiscoveryPolicy:
     topics: tuple[str, ...]
     scheduled_hours_kst: tuple[int, ...]
     interval_minutes: int
+    max_requests_per_source_per_run: int
     max_records_per_source_per_run: int
     source_count: int
     general_daily_count: int
@@ -101,13 +102,14 @@ class GcpDiscoveryPolicy:
 
         topics = payload.get("topics")
         if not isinstance(topics, list) or tuple(topics) != EXPECTED_TOPICS:
-            raise DiscoveryPolicyError(
-                f"topics{location} must be exactly {list(EXPECTED_TOPICS)}"
-            )
+            raise DiscoveryPolicyError(f"topics{location} must be exactly {list(EXPECTED_TOPICS)}")
 
         polling = required_mapping(payload.get("polling"), "polling")
         scheduled_hours = polling.get("scheduledHoursKst")
-        if not isinstance(scheduled_hours, list) or tuple(scheduled_hours) != EXPECTED_SCHEDULED_HOURS_KST:
+        if (
+            not isinstance(scheduled_hours, list)
+            or tuple(scheduled_hours) != EXPECTED_SCHEDULED_HOURS_KST
+        ):
             raise DiscoveryPolicyError(
                 f"polling.scheduledHoursKst{location} must be [0, 6, 12, 18]"
             )
@@ -118,6 +120,11 @@ class GcpDiscoveryPolicy:
         if not isinstance(max_records, int) or isinstance(max_records, bool) or max_records < 1:
             raise DiscoveryPolicyError(
                 "polling.maxRecordsPerSourcePerRun must be a positive integer"
+            )
+        max_requests = polling.get("maxRequestsPerSourcePerRun")
+        if not isinstance(max_requests, int) or isinstance(max_requests, bool) or max_requests < 1:
+            raise DiscoveryPolicyError(
+                "polling.maxRequestsPerSourcePerRun must be a positive integer"
             )
         if polling.get("runsPerDay") != 4:
             raise DiscoveryPolicyError("polling.runsPerDay must be 4")
@@ -166,6 +173,7 @@ class GcpDiscoveryPolicy:
             topics=EXPECTED_TOPICS,
             scheduled_hours_kst=EXPECTED_SCHEDULED_HOURS_KST,
             interval_minutes=interval_minutes,
+            max_requests_per_source_per_run=max_requests,
             max_records_per_source_per_run=max_records,
             source_count=len(sources),
             general_daily_count=type_counts["general_daily"],

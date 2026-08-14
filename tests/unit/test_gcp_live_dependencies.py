@@ -239,6 +239,43 @@ class GcpLiveDependencyTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(fetcher.calls, [first])
 
+    def test_source_request_limit_bounds_failed_or_empty_candidates(self) -> None:
+        urls = [f"https://khan.co.kr/article/request-{index}" for index in range(4)]
+        limited_source = SourceDefinition(
+            SOURCE.source_id,
+            SOURCE.domains,
+            SOURCE.endpoint_urls,
+            max_records_per_run=20,
+            max_requests_per_run=2,
+        )
+        fetcher = FakeFetcher(
+            {
+                url: FetchedResponse(
+                    url,
+                    200,
+                    "text/html",
+                    article_page(date_published=None),
+                )
+                for url in urls
+            }
+        )
+        response = FetchedResponse(
+            SOURCE.endpoint_urls[0],
+            200,
+            "application/rss+xml",
+            rss(*[(f"Candidate {index}", url) for index, url in enumerate(urls)]),
+        )
+
+        rows = parser(fetcher).parse(
+            response,
+            source=limited_source,
+            endpoint_url=SOURCE.endpoint_urls[0],
+            collected_at=COLLECTED_AT,
+        )
+
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(fetcher.calls, urls[:2])
+
 
 if __name__ == "__main__":
     unittest.main()

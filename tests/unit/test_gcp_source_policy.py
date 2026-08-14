@@ -19,6 +19,7 @@ class GcpSourcePolicyTests(unittest.TestCase):
         self.assertEqual(policy.broadcaster_count, 2)
         self.assertEqual(policy.scheduled_hours_kst, (0, 6, 12, 18))
         self.assertEqual(policy.interval_minutes, 360)
+        self.assertEqual(policy.max_requests_per_source_per_run, 30)
         self.assertEqual(policy.max_records_per_source_per_run, 120)
         self.assertEqual(policy.collection_start, "2026-08-13")
         self.assertEqual(policy.collection_end, "2026-10-31")
@@ -37,6 +38,11 @@ class GcpSourcePolicyTests(unittest.TestCase):
 
         payload = json.loads(POLICY_PATH.read_text(encoding="utf-8"))
         payload["polling"]["maxRecordsPerSourcePerRun"] = 0
+        with self.assertRaises(DiscoveryPolicyError):
+            GcpDiscoveryPolicy.from_payload(payload)
+
+        payload = json.loads(POLICY_PATH.read_text(encoding="utf-8"))
+        payload["polling"]["maxRequestsPerSourcePerRun"] = 0
         with self.assertRaises(DiscoveryPolicyError):
             GcpDiscoveryPolicy.from_payload(payload)
 
