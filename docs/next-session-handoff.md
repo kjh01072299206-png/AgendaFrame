@@ -66,6 +66,7 @@
 
 ## 아직 완료되지 않은 것
 
+0. `origin/main` 최신 이력과의 로컬 merge를 시험했으나 사이트/Worker 공통 파일 23개에서 충돌이 발생해 `git merge --abort`로 체크포인트에 복구했다. 현재 작업 손실은 없으며, 다음 릴리스 통합에서는 live-data 변경과 semantic/GCP 변경을 파일별로 수동 결합해야 한다.
 1. `gcp_live_dependencies.py`의 RSS/HTML strict date/body parser offline 회귀 테스트 추가.
 2. GCP workflow의 저장소 표기를 실제 BigQuery adapter와 일치시킴(Cloud SQL은 future migration으로 명시).
 3. private GCS active snapshot을 Vercel이 안전하게 읽도록 Cloud Run snapshot-reader 또는 동등한 public read boundary 구현.
