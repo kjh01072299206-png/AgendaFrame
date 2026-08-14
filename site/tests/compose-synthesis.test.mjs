@@ -49,6 +49,8 @@ test("withEventSynthesis attaches comparison fields without mutating the source 
   assert.equal(bundle.comparison.data.synthesis, undefined);
   assert.equal(attached.comparison.data.synthesis.usable, true);
   assert.ok(attached.comparison.data.source_lens.by_outlet.length >= 5);
+  assert.ok(attached.comparison.data.camps.length >= 2);
+  assert.match(attached.comparison.data.agreedLine, /책임/);
   assert.equal(attached.comparison.data.summary_30_seconds.divergence_detected, true);
   assert.doesNotMatch(attached.comparison.data.summary_30_seconds.common_ground, /집계합니다/);
 });

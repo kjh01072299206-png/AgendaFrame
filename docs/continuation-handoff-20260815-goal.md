@@ -92,11 +92,16 @@
 
 1. `git status --short`로 시작하고 기존 dirty/untracked를 보존한다.
 2. `powershell -NoProfile -File scripts/check.ps1 -Mode quick`로 오프라인 게이트를 한 번 돌린다.
-3. **제품:** 로더 부착은 끝났다(`site/lib/initial-five/compose-synthesis.mjs`).
-   브라우저에서 `/issues/bigkinds-2026-07-26-top-1`과 `/outlets`, `/framing`에
-   캠프 3개가 보이는지 확인한다. 가능하면 site 렌더 게이트를 돌린다.
-4. **제품:** Vertex 종합이 붙으면 작성기보다 그 초안을 우선한다. 바인딩 게이트는
-   유지한다.
+3. GCP `comparison.data` now also carries HTML aliases (`camps`, `agreedLine`,
+   `splitLine`, `soWhat`, `factRows`, `splitRows`, `whatHappened`) via
+   `public_comparison_payload` / `build_bound_comparison`. Dummy
+   `집계합니다` text is only the last-resort fallback when no evidenced
+   profile can be composed.
+4. Vertex event synthesis now sends a JSON schema and asks for the
+   A/B/C split-line shape. Live Vertex success is still unproven; the
+   offline rank-1 path already emits the three target camps.
+5. 브라우저에서 `/issues/bigkinds-2026-07-26-top-1` `/outlets` `/framing`
+   을 확인한다. 라이브 Vertex/canary는 승인 후에만.
 5. **라이브는 승인 후에만:** `AGENDAFRAME_MAX_ARTICLES_PER_RUN=12` canary.
    성공 시에만 Workflows → Scheduler → reader 검증 → Vercel live env.
    Cloudflare cron과 GCP를 동시에 켜지 않는다.

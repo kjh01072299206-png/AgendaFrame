@@ -8,6 +8,7 @@ from ai.event_synthesis import (
     SCHEMA_VERSION,
     EventSynthesisError,
     bind_event_synthesis,
+    build_bound_comparison,
     compose_event_synthesis,
     public_comparison_payload,
     source_lens_from_profiles,
@@ -222,6 +223,34 @@ class EventSynthesisBindingTests(unittest.TestCase):
         self.assertNotIn("raw_body", encoded)
         self.assertNotIn("진보", encoded)
         self.assertNotIn("보수", encoded)
+
+    def test_shipped_comparison_entry_emits_html_fields_for_rank1(self) -> None:
+        bundle = json.loads(RANK1.read_text(encoding="utf-8"))
+        bound = build_bound_comparison(
+            profiles=bundle["semanticProfiles"],
+            articles=bundle["articles"],
+            title=bundle["issue"]["title"],
+            issue_id=bundle["issue"]["issueId"],
+        )
+        self.assertIsNotNone(bound)
+        assert bound is not None
+        self.assertEqual(bound["source"], "gcp:profile-event-composition")
+        payload = public_comparison_payload(
+            bound,
+            article_count=len(bundle["articles"]),
+            outlet_count=bundle["issue"]["outletCount"],
+        )
+        self.assertGreaterEqual(len(payload["camps"]), 2)
+        self.assertTrue(payload["agreedLine"])
+        self.assertTrue(payload["whatHappened"])
+        self.assertTrue(payload["splitLine"])
+        self.assertTrue(payload["factRows"])
+        self.assertNotIn("집계합니다", json.dumps(payload, ensure_ascii=False))
+        self.assertNotIn(
+            "검증된 기사별 관측 항목과 취재원 귀속을 비교합니다",
+            json.dumps(payload, ensure_ascii=False),
+        )
+        self.assertTrue(all(camp.get("evidence") for camp in payload["camps"]))
 
 
 if __name__ == "__main__":

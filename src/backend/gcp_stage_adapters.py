@@ -24,11 +24,9 @@ from urllib.parse import urlsplit
 from ai.event_synthesis import (
     EventSynthesizer,
     VertexEventSynthesizer,
-    bind_event_synthesis,
-    compose_event_synthesis,
+    build_bound_comparison,
     public_comparison_payload,
     source_lens_from_profiles,
-    synthesis_request,
 )
 from ai.framing import FrameAnalyzer, FrameResult, VertexFrameAnalyzer
 from ai.issue_clustering import (
@@ -814,36 +812,16 @@ def _synthesize_comparison(
     }
     lens = source_lens_from_profiles(profiles, article_rows)
     fallback["source_lens"] = lens
-    bound = None
-    source = "gcp:profile-event-composition"
-    synthesizer = dependencies.event_synthesizer
-    if synthesizer is not None:
-        try:
-            draft = synthesizer.synthesize(
-                synthesis_request(
-                    issue_id=issue_id,
-                    title=title,
-                    articles=article_rows,
-                    profiles=profiles,
-                )
-            )
-            candidate = bind_event_synthesis(draft, profiles=profiles, articles=article_rows)
-        except (TypeError, ValueError, KeyError):
-            candidate = None
-        if candidate and candidate.get("usable"):
-            bound = candidate
-            source = "gcp:event-synthesis"
-    if bound is None:
-        try:
-            bound = bind_event_synthesis(
-                compose_event_synthesis(profiles=profiles, articles=article_rows, title=title),
-                profiles=profiles,
-                articles=article_rows,
-            )
-        except (TypeError, ValueError, KeyError):
-            bound = None
-    if not bound or not bound.get("usable"):
+    bound = build_bound_comparison(
+        profiles=profiles,
+        articles=article_rows,
+        title=title,
+        issue_id=issue_id,
+        synthesizer=dependencies.event_synthesizer,
+    )
+    if not bound:
         return fallback, fallback_engine, None
+    source = str(bound.get("source") or "gcp:profile-event-composition")
     payload = public_comparison_payload(
         bound, article_count=article_count, outlet_count=outlet_count
     )

@@ -852,8 +852,8 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
     lead: bundle.clusterAi.summary
       ?? observedSynthesisText((data.synthesis as EventSynthesisData | undefined)?.what_happened)
       ?? null,
-    commonGround: brief.common_ground ?? null,
-    mainDifference: brief.main_difference ?? null,
+    commonGround: brief.common_ground ?? (typeof data.agreedLine === "string" ? data.agreedLine : null),
+    mainDifference: brief.main_difference ?? (typeof data.splitLine === "string" ? data.splitLine : null),
     sourceContext: brief.source_context ?? null,
     commonSubjects: bundle.clusterAi.commonSubjects ?? [],
     clusters: (bundle.clusterAi.narrativeVariants ?? []).map((variant) => ({

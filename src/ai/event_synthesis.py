@@ -433,33 +433,137 @@ def bind_event_synthesis(
     }
 
 
+def _claim_text(claim: object) -> str | None:
+    if isinstance(claim, Mapping) and claim.get("status") == "observed":
+        value = claim.get("text")
+        return value if isinstance(value, str) else None
+    return None
+
+
+def html_event_fields(bound: Mapping[str, Any]) -> dict[str, Any]:
+    """Proto/HTML aliases so comparison.data can feed the example-page shape."""
+
+    camps = []
+    for camp in bound.get("camps") or []:
+        if not isinstance(camp, Mapping):
+            continue
+        camps.append(
+            {
+                "name": camp.get("name"),
+                "gist": camp.get("gist"),
+                "outlets": list(camp.get("outlets") or []),
+                "article_ids": list(camp.get("article_ids") or []),
+                "evidence": list(camp.get("evidence") or []),
+                "index": camp.get("index"),
+            }
+        )
+    fact_rows = []
+    for row in bound.get("fact_rows") or []:
+        if not isinstance(row, Mapping):
+            continue
+        fact_rows.append(
+            {
+                "question": row.get("question"),
+                "common": row.get("common"),
+                "cells": None,
+            }
+        )
+    split_rows = []
+    for row in bound.get("split_rows") or []:
+        if not isinstance(row, Mapping):
+            continue
+        split_rows.append(
+            {
+                "question": row.get("question"),
+                "common": None,
+                "cells": list(row.get("cells") or []),
+            }
+        )
+    terms = []
+    for row in bound.get("terms") or []:
+        if not isinstance(row, Mapping) or not row.get("term") or not row.get("gloss"):
+            continue
+        terms.append({"term": row.get("term"), "gloss": row.get("gloss")})
+    return {
+        "whatHappened": _claim_text(bound.get("what_happened")),
+        "agreedLine": _claim_text(bound.get("agreed_line")),
+        "splitLine": _claim_text(bound.get("split_line"))
+        if bound.get("opposition")
+        else "서로 다른 근거 그룹이 없어 대립 구도로 표시하지 않습니다.",
+        "soWhat": _claim_text(bound.get("so_what")),
+        "camps": camps,
+        "factRows": fact_rows,
+        "splitRows": split_rows,
+        "terms": terms,
+    }
+
+
 def public_comparison_payload(
     bound: Mapping[str, Any], *, article_count: int, outlet_count: int
 ) -> dict[str, Any]:
     """Project a bound synthesis into the site comparison.data shape."""
 
-    def text_of(claim: object) -> str | None:
-        if isinstance(claim, Mapping) and claim.get("status") == "observed":
-            value = claim.get("text")
-            return value if isinstance(value, str) else None
-        return None
-
-    split_text = text_of(bound.get("split_line"))
+    split_text = _claim_text(bound.get("split_line"))
     if not bound.get("opposition"):
         split_text = (
             "서로 다른 근거 그룹이 확인되지 않아 대립 구도로 표시하지 않고 공통 보도로 읽습니다."
         )
-    return {
+    payload = {
         "summary_30_seconds": {
             "sample": f"{article_count}건 · {outlet_count}개 매체",
-            "common_ground": text_of(bound.get("agreed_line")),
+            "common_ground": _claim_text(bound.get("agreed_line")),
             "main_difference": split_text,
-            "source_context": text_of(bound.get("so_what")),
+            "source_context": _claim_text(bound.get("so_what")),
             "limit": "기사 ID·locator·문장 해시가 연결된 관측만 표시합니다. 언론사 성향은 추론하지 않습니다.",
             "divergence_detected": bool(bound.get("opposition")),
         },
         "synthesis": bound,
     }
+    payload.update(html_event_fields(bound))
+    return payload
+
+
+def build_bound_comparison(
+    *,
+    profiles: Sequence[Mapping[str, Any]],
+    articles: Sequence[Mapping[str, Any]],
+    title: str = "",
+    issue_id: str = "",
+    synthesizer: EventSynthesizer | None = None,
+) -> dict[str, Any] | None:
+    """Vertex draft first, then profile composition.  None if neither is usable."""
+
+    if synthesizer is not None:
+        try:
+            draft = synthesizer.synthesize(
+                synthesis_request(
+                    issue_id=issue_id,
+                    title=title,
+                    articles=articles,
+                    profiles=profiles,
+                )
+            )
+            bound = bind_event_synthesis(draft, profiles=profiles, articles=articles)
+        except (TypeError, ValueError, KeyError):
+            bound = None
+        else:
+            if bound.get("usable"):
+                bound = dict(bound)
+                bound["source"] = "gcp:event-synthesis"
+                return bound
+    try:
+        bound = bind_event_synthesis(
+            compose_event_synthesis(profiles=profiles, articles=articles, title=title),
+            profiles=profiles,
+            articles=articles,
+        )
+    except (TypeError, ValueError, KeyError):
+        return None
+    if not bound.get("usable"):
+        return None
+    bound = dict(bound)
+    bound["source"] = "gcp:profile-event-composition"
+    return bound
 
 
 def synthesis_request(
@@ -564,6 +668,7 @@ class VertexEventSynthesizer:
                     temperature=0,
                     max_output_tokens=min(int(self.config.vertex.max_output_tokens), 4000),
                     response_mime_type="application/json",
+                    response_json_schema=_vertex_response_schema(),
                 ),
             )
             payload = json.loads(response.text)
@@ -574,17 +679,88 @@ class VertexEventSynthesizer:
         return dict(payload)
 
 
+def _vertex_response_schema() -> dict[str, Any]:
+    evidence = {
+        "type": "object",
+        "properties": {
+            "article_id": {"type": "string"},
+            "locator": {
+                "type": "object",
+                "properties": {
+                    "paragraph": {"type": "integer"},
+                    "sentence": {"type": "integer"},
+                },
+                "required": ["paragraph", "sentence"],
+            },
+            "sentence_sha256": {"type": "string"},
+        },
+        "required": ["article_id", "locator", "sentence_sha256"],
+    }
+    return {
+        "type": "object",
+        "properties": {
+            "prompt_version": {"type": "string"},
+            "schema_version": {"type": "string"},
+            "what_happened": {"type": "string"},
+            "what_happened_evidence": {"type": "array", "items": evidence},
+            "agreed_line": {"type": "string"},
+            "agreed_evidence": {"type": "array", "items": evidence},
+            "split_line": {"type": "string"},
+            "split_evidence": {"type": "array", "items": evidence},
+            "so_what": {"type": "string"},
+            "so_what_evidence": {"type": "array", "items": evidence},
+            "camps": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "gist": {"type": "string"},
+                        "article_ids": {"type": "array", "items": {"type": "string"}},
+                        "evidence": {"type": "array", "items": evidence},
+                    },
+                    "required": ["name", "gist", "article_ids", "evidence"],
+                },
+            },
+            "terms": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "term": {"type": "string"},
+                        "gloss": {"type": "string"},
+                        "evidence": {"type": "array", "items": evidence},
+                    },
+                    "required": ["term", "gloss", "evidence"],
+                },
+            },
+            "fact_rows": {"type": "array"},
+            "split_rows": {"type": "array"},
+            "frame_functions": {"type": "array"},
+            "proof_rows": {"type": "array"},
+        },
+        "required": [
+            "what_happened",
+            "agreed_line",
+            "split_line",
+            "so_what",
+            "camps",
+        ],
+    }
+
+
 def _build_prompt(request: Mapping[str, Any]) -> str:
     payload = json.dumps(request, ensure_ascii=False, sort_keys=True)
     return (
         "You synthesize one Korean news event from already-coded article profiles. "
-        "Write natural Korean. Do not infer outlet ideology or intent. "
+        "Write natural Korean comparison sentences, not ideology labels. "
+        "Do not call outlets progressive or conservative. "
+        "Preferred split_line shape: "
+        "A는 …를 앞세웠고, B는 …를 앞세웠으며, C는 …을 경고했다. "
         "Every public sentence must cite article_id, locator.paragraph, locator.sentence, "
         "and sentence_sha256 copied from the supplied profiles. "
         "Use 2-4 camps only when distinct evidence groups exist; otherwise leave camps empty "
         "and treat the coverage as shared. "
-        "Statuses must be one of observed, explicit_not_stated, insufficient_evidence, "
-        "analysis_failed, review_needed. "
         "Never copy article body text, HTML, or raw sentences. "
         "Return JSON with what_happened, agreed_line, split_line, so_what, camps, terms, "
         "fact_rows, split_rows, frame_functions, proof_rows, and evidence arrays. "
@@ -970,8 +1146,10 @@ __all__ = [
     "EventSynthesizer",
     "VertexEventSynthesizer",
     "bind_event_synthesis",
+    "build_bound_comparison",
     "compose_event_synthesis",
     "evidence_index",
+    "html_event_fields",
     "public_comparison_payload",
     "source_lens_from_profiles",
     "synthesis_request",
