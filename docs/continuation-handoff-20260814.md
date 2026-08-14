@@ -4,7 +4,7 @@
 
 - Repository: `C:\Users\강준혁\Desktop\구글캡디_문서`
 - Branch: `codex/initial-five-complete`
-- Current saved checkpoint: `64b837d` (live snapshot issue routes fail closed).
+- Current saved checkpoint: `bceb9a6` (explicit production verifier added).
 - `origin/main` is an ancestor of this branch; the branch is ahead of it and
   does not require another merge at this checkpoint.
 - This handoff is intended to be committed with the reader slice below.
@@ -62,6 +62,9 @@ and no raw article/body/HTML/sentence fields.
 - `site/tests/active-snapshot-contract.test.mjs`: route-boundary regression
   contract added, including a 404 guard when a live snapshot does not contain
   the requested issue. Live routes never fall back to the older D1/API path.
+- `scripts/verify-vercel-production.ps1`: dry-run-by-default public verifier;
+  with `-Execute`, it binds `/version` to the full release SHA and checks the
+  home, outlets, and framing routes without printing response bodies.
 
 ### Deployment repeatability
 
@@ -161,6 +164,8 @@ and no raw article/body/HTML/sentence fields.
   API was called.
 - The live snapshot route regression test passed after the fail-closed guard;
   missing live issue IDs now resolve to `notFound()` instead of legacy data.
+- The root quick gate after the verifier addition passed **132 tests**;
+  verifier dry-run and its two contract tests passed without network access.
 - Focused snapshot-reader/service/contract tests passed; the site active-route
   and semantic-page contracts passed.
 - Focused collection parser tests → **7 passed**, including JSON-LD
