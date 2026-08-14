@@ -4,7 +4,9 @@
 
 - Repository: `C:\Users\강준혁\Desktop\구글캡디_문서`
 - Branch: `codex/initial-five-complete`
-- Current saved checkpoint: `bceb9a6` (explicit production verifier added).
+- Current saved checkpoint: the latest commit on this branch (verify with
+  `git rev-parse HEAD`); it includes the guarded runtime-services provisioner,
+  contract test, and this handoff update.
 - `origin/main` is an ancestor of this branch; the branch is ahead of it and
   does not require another merge at this checkpoint.
 - This handoff is intended to be committed with the reader slice below.
@@ -149,12 +151,28 @@ and no raw article/body/HTML/sentence fields.
   `docs/gcp-orchestration-deploy.md`. No workflow, scheduler, IAM, or GCP
   resource was applied in this checkpoint.
 
+### Guarded runtime-services provisioning
+
+- `scripts/gcp/provision-runtime-services.ps1` is a separate dry-run-by-default
+  apply path for the recurring Pub/Sub topic/subscription and DLQ, Secret
+  Manager **containers only**, log-based metrics, and Monitoring alert
+  policies. It checks the expected non-production project, requires
+  `-SpendCapsConfirmed` and a full notification-channel name for apply, and
+  never creates secret versions or prints secret values.
+- `tests/contract/test_gcp_runtime_services_contract.py` locks the resource
+  names, body-free contract, dry-run default, project guard, and secret-value
+  boundary. PowerShell parse and dry-run both pass; no `gcloud` resource call
+  was made.
+- This adds an executable provisioning path, not evidence that the resources
+  exist. Apply remains a separately authorized live step after budget, IAM,
+  and rollback checks.
+
 ## Verification completed
 
-- Latest quick gate after the production verifier addition: **132 passed**;
+- Latest quick gate after the runtime-services contract: **134 passed**;
   formatting and lint passed. The new contract tests and both orchestration
   dry runs were included.
-- Latest full gate: **132 unit/contract + 3 integration/e2e passed**;
+- Latest full gate: **134 unit/contract + 3 integration/e2e passed**;
   evaluation assets remain synthetic and `release_eligible: false`.
 - `site/npm run typecheck` → passed.
 - `site/npm run lint` → 0 errors; four pre-existing warnings remain.
@@ -164,13 +182,15 @@ and no raw article/body/HTML/sentence fields.
   API was called.
 - The live snapshot route regression test passed after the fail-closed guard;
   missing live issue IDs now resolve to `notFound()` instead of legacy data.
-- The root quick gate after the verifier addition passed **132 tests**;
+- The root quick gate after the runtime-services contract passed **134 tests**;
   verifier dry-run and its two contract tests passed without network access.
 - Focused snapshot-reader/service/contract tests passed; the site active-route
   and semantic-page contracts passed.
 - Focused collection parser tests → **7 passed**, including JSON-LD
   `datePublished`, strict date-window boundaries, date-less rejection, body
   minimum, canonicalization/deduplication, and source-limit enforcement.
+- Runtime-services provisioning PowerShell parse and dry-run passed; its
+  focused contract test passed **2 tests**. No `gcloud` resource call was made.
 - `powershell -NoProfile -File scripts/gcp/deploy-snapshot-reader.ps1` dry run
   passed and printed no image build, deployment, traffic promotion, or GCP
   resource mutation.
@@ -198,13 +218,16 @@ Remaining order:
 1. In the non-production GCP project, verify Workflows API, budget/spend cap,
    IAM, private bucket lifecycle, BigQuery schema/grants, and the reader service
    deployment plan. Apply only with explicit live authorization.
-2. Deploy a synthetic body-free snapshot-reader canary; verify `/healthz`,
+2. With that authorization, run the guarded runtime-services apply for
+   Pub/Sub/DLQ, secret containers, log metrics, and alert policies; add secret
+   versions only through Secret Manager after IAM review.
+3. Deploy a synthetic body-free snapshot-reader canary; verify `/healthz`,
    `/active`, pointer/manifest SHA, exactly five issues, and no forbidden keys.
-3. Deploy/run one collector canary with unique `run_id`; inspect lease,
+4. Deploy/run one collector canary with unique `run_id`; inspect lease,
    idempotency, quality gate, immutable objects, and rollback pointer.
-4. Only after canary success, create Scheduler 00/06/12/18 KST + Workflows and
+5. Only after canary success, create Scheduler 00/06/12/18 KST + Workflows and
    cut ownership away from the Cloudflare cron. Never let both schedulers run.
-5. Set Vercel server env in preview, verify `/version`, `/`, `/outlets`, and
+6. Set Vercel server env in preview, verify `/version`, `/`, `/outlets`, and
    `/framing`, then promote through the documented deployment path while
    retaining the previous deployment for rollback.
 
@@ -218,9 +241,10 @@ site, replace the existing demo/API path, expose article bodies, or call news,
 Vertex, GCP, or deployment APIs during ordinary tests.
 
 First inspect the committed reader slice and run the offline gates. The parser
-datePublished/body-minimum fixture regressions and local Cloud Run entrypoint
-review are already implemented; next work is the explicitly authorized,
-non-production GCP canary preparation. Keep all GCP YAML
+datePublished/body-minimum fixture regressions, local Cloud Run entrypoint
+review, and the guarded runtime-services provisioner are already implemented;
+next work is the explicitly authorized, non-production GCP canary preparation.
+Keep all GCP YAML
 contract_only/externalCalls:false until a non-production live authorization,
 budget cap, IAM, and rollback plan are explicitly available. If live approval
 is available, deploy reader canary before collector; verify body-free /active,

@@ -10,6 +10,8 @@
 - `infra/gcp/workflow-runtime.yaml`: `gcloud workflows deploy`가 직접 읽는 실행 정의
 - `scripts/gcp/deploy-runtime-job.ps1`: `backend.gcp_job_entrypoint` Cloud Run Job 배포
 - `scripts/gcp/deploy-orchestration.ps1`: Workflows 배포 및 선택적 Scheduler 생성
+- `scripts/gcp/provision-runtime-services.ps1`: Pub/Sub/DLQ, Secret Manager 컨테이너,
+  로그 기반 지표와 알림 정책의 guarded 적용
 - `scripts/gcp/verify-snapshot-reader.ps1`: 공개 전 body-free snapshot canary 검증
 - Scheduler 시간: `0 3,9,15,21 * * *` UTC = 00/06/12/18 KST
 
@@ -25,6 +27,7 @@ powershell -NoProfile -File scripts/gcp/provision.ps1
 powershell -NoProfile -File scripts/gcp/deploy-runtime-job.ps1
 powershell -NoProfile -File scripts/gcp/deploy-snapshot-reader.ps1
 powershell -NoProfile -File scripts/gcp/deploy-orchestration.ps1
+powershell -NoProfile -File scripts/gcp/provision-runtime-services.ps1
 powershell -NoProfile -File scripts/gcp/verify-snapshot-reader.ps1
 powershell -NoProfile -File scripts/check.ps1 -Mode quick
 ```
@@ -39,25 +42,28 @@ powershell -NoProfile -File scripts/check.ps1 -Mode quick
 3. `provision.ps1 -Apply -SpendCapsConfirmed`로 기반 리소스와 service account를
    적용한다. `workflow`에는 Cloud Run 실행 권한, `scheduler`에는 Workflows Invoker
    권한만 부여한다.
-4. Cloud Run Job과 snapshot-reader를 배포한다. reader는 먼저 `--no-traffic`으로
+4. `provision-runtime-services.ps1 -Apply -SpendCapsConfirmed -NotificationChannel`
+   로 Pub/Sub/DLQ, secret **컨테이너**, log metric, alert policy를 적용한다. secret
+   값/버전은 저장소나 로그에 남기지 않고 Secret Manager에서 별도로 넣는다.
+5. Cloud Run Job과 snapshot-reader를 배포한다. reader는 먼저 `--no-traffic`으로
    배포하고 `/healthz`, `/active`를 검증한다.
-5. unique `run_id`로 collector canary를 한 번 실행해 lease, idempotency, 12개
+6. unique `run_id`로 collector canary를 한 번 실행해 lease, idempotency, 12개
    source 제한, 날짜 범위, quality gate, immutable pointer rollback을 확인한다.
-6. 아래 명령으로 Workflows만 배포한다.
+7. 아래 명령으로 Workflows만 배포한다.
 
 ```powershell
 powershell -NoProfile -File scripts/gcp/deploy-orchestration.ps1 `
   -Apply -FullGatePassed -CommitSha <40-character-reviewed-sha>
 ```
 
-7. canary가 통과한 뒤에만 Scheduler를 생성한다.
+8. canary가 통과한 뒤에만 Scheduler를 생성한다.
 
 ```powershell
 powershell -NoProfile -File scripts/gcp/deploy-orchestration.ps1 `
   -Apply -FullGatePassed -CreateScheduler -CommitSha <40-character-reviewed-sha>
 ```
 
-8. 마지막으로 Cloudflare cron을 끄고 GCP 단독 소유로 전환한다. 두 scheduler를
+9. 마지막으로 Cloudflare cron을 끄고 GCP 단독 소유로 전환한다. 두 scheduler를
    동시에 켜지 않는다. 장애 시 GCP Scheduler/Job을 먼저 끈 뒤 Cloudflare를
    복구하고, 이전 snapshot pointer를 유지한다.
 
