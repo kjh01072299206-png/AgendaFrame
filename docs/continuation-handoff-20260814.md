@@ -182,6 +182,12 @@ No live article fetch, Vertex call, GCS write, Vercel env change, main push, or
 production deployment was performed. The current Cloudflare Worker cron still
 owns real collection until a verified GCP cutover.
 
+The reviewed release push was attempted after the full offline gates passed,
+but this environment could not resolve `github.com` (`Could not resolve host`).
+No remote `main` or Vercel deployment changed. When network access is restored,
+rerun `git push origin HEAD:main`, then verify the deployed `/version` SHA before
+calling production deployment complete.
+
 Remaining order:
 
 1. In the non-production GCP project, verify Workflows API, budget/spend cap,
