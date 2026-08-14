@@ -28,6 +28,20 @@
    데이터가 보이는지 확인한다. `site/` 밖의 문서만 바꾼 커밋은 Vercel의
    Ignored Build Step 때문에 배포되지 않을 수 있다.
 
+검증을 반복할 때는 저장소 루트에서 다음 dry-run을 먼저 확인한 뒤, 배포한
+커밋 SHA와 실제 의제 ID를 넣어 실행한다. `-Execute` 없이는 네트워크 요청이
+발생하지 않는다.
+
+```powershell
+powershell -NoProfile -File scripts/verify-vercel-production.ps1
+powershell -NoProfile -File scripts/verify-vercel-production.ps1 `
+  -Execute -ExpectedCommit <40-character-reviewed-sha> `
+  -IssueId <published-issue-id>
+```
+
+이 검증기는 `/version`의 SHA가 일치하는지, 메인·언론사 비교·프레이밍
+라우트가 HTTP 200인지, 공개 응답에 원문 본문 필드명이 없는지를 확인한다.
+
 수동 비상 배포가 필요하면 저장소 루트에서 `npx vercel deploy --prod --yes`를
 실행한다. `site/` 안에서 실행하면 Root Directory가 `site`인 프로젝트에
 `site/site`가 전달되므로 실패한다.
