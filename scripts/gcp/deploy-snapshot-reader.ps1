@@ -87,7 +87,7 @@ if ($Promote) { $TrafficArgs = @("--allow-unauthenticated") }
 & $Gcloud.Source run deploy $ServiceName `
     --project $ProjectId --region $Region --image $Image `
     --service-account "reader@$ProjectId.iam.gserviceaccount.com" `
-    --command python --args "-m,backend.gcp_snapshot_reader_service" `
+    --command python "--args=-m,backend.gcp_snapshot_reader_service" `
     --cpu 1 --memory 256Mi --min 0 --max 2 `
     --set-env-vars ($EnvVars -join ",") @TrafficArgs --quiet
 if ($LASTEXITCODE -ne 0) { throw "Snapshot-reader Cloud Run deployment failed." }

@@ -85,7 +85,7 @@ $EnvVars = @(
 & $Gcloud.Source run jobs deploy $JobName `
     --project $ProjectId --region $Region --image $Image `
     --service-account "analyzer@$ProjectId.iam.gserviceaccount.com" `
-    --command python --args "-m,backend.gcp_job_entrypoint" `
+    --command python "--args=-m,backend.gcp_job_entrypoint" `
     --cpu 1 --memory 512Mi --tasks 1 --max-retries 1 --task-timeout 900s `
     --set-env-vars ($EnvVars -join ",") --quiet
 if ($LASTEXITCODE -ne 0) { throw "Cloud Run runtime job deployment failed." }
