@@ -272,11 +272,15 @@ class PolicyCollectionAdapter(CollectionAdapter):
         dependencies: StageDependencies,
         *,
         clock: Callable[[], datetime],
+        max_articles_per_run: int | None = None,
     ) -> None:
         self.dependencies = dependencies
         self.clock = clock
         self.sources = load_source_definitions(dependencies.policy_path)
         self.sources_by_id = {source.source_id: source for source in self.sources}
+        if max_articles_per_run is not None and max_articles_per_run < 1:
+            raise StageAdapterError("max_articles_per_run must be positive")
+        self.max_articles_per_run = max_articles_per_run
 
     def collect(self, request, *, idempotency_key: str) -> Mapping[str, Any]:
         articles: dict[str, ArticleDocument] = {}
@@ -292,6 +296,11 @@ class PolicyCollectionAdapter(CollectionAdapter):
                     collected_at=collected_at,
                 )
                 for article in parsed:
+                    if (
+                        self.max_articles_per_run is not None
+                        and len(articles) >= self.max_articles_per_run
+                    ):
+                        break
                     self._validate_article(article, source)
                     # First-writer wins gives deterministic deduplication when
                     # an RSS and a section endpoint expose the same URL.
@@ -301,6 +310,16 @@ class PolicyCollectionAdapter(CollectionAdapter):
                     references[article.article_id] = self.dependencies.vault.put(
                         request.run_id, article
                     )
+                if (
+                    self.max_articles_per_run is not None
+                    and len(articles) >= self.max_articles_per_run
+                ):
+                    break
+            if (
+                self.max_articles_per_run is not None
+                and len(articles) >= self.max_articles_per_run
+            ):
+                break
         metadata = [
             _metadata(articles[article_id], private_object_ref=references[article_id])
             for article_id in sorted(articles)
@@ -972,11 +991,16 @@ def build_stage_adapters(
     dependencies: StageDependencies,
     *,
     clock: Callable[[], datetime] | None = None,
+    max_articles_per_run: int | None = None,
 ) -> PipelineAdapters:
     """Construct all orchestration stages from explicit dependencies."""
 
     return PipelineAdapters(
-        collection=PolicyCollectionAdapter(dependencies, clock=clock or datetime.now),
+        collection=PolicyCollectionAdapter(
+            dependencies,
+            clock=clock or datetime.now,
+            max_articles_per_run=max_articles_per_run,
+        ),
         persistence=MetadataPersistenceAdapter(dependencies),
         cluster_rank=MetadataClusterRankAdapter(dependencies),
         semantic=FrameSemanticAdapter(dependencies),
@@ -1024,7 +1048,10 @@ def production_stage_adapter_factory(
     dependencies = factory(clients, config, runtime)
     if not isinstance(dependencies, StageDependencies):
         raise RuntimeAdapterUnavailable("stage dependencies factory returned an invalid object")
-    return build_stage_adapters(dependencies)
+    return build_stage_adapters(
+        dependencies,
+        max_articles_per_run=config.vertex.max_articles_per_run,
+    )
 
 
 __all__ = [

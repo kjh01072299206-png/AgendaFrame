@@ -242,6 +242,16 @@ class GcpStageAdapterTests(unittest.TestCase):
         with self.assertRaises(StageAdapterError):
             adapter.collect(self.request, idempotency_key="bad")
 
+    def test_policy_collection_honors_global_cost_cap(self) -> None:
+        adapter = PolicyCollectionAdapter(
+            self.dependencies,
+            clock=lambda: COLLECTED_AT,
+            max_articles_per_run=1,
+        )
+        result = adapter.collect(self.request, idempotency_key="capped")
+        self.assertEqual(result["articleCount"], 1)
+        self.assertEqual(self.vault.put_calls, 1)
+
     def test_persist_cluster_rank_and_semantic_produce_top5_evidence_contract(self) -> None:
         collected = PolicyCollectionAdapter(self.dependencies, clock=lambda: COLLECTED_AT).collect(
             self.request, idempotency_key="collect"
