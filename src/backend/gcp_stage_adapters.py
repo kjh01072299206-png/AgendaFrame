@@ -16,7 +16,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Any, Callable, Mapping, Protocol, Sequence
 from urllib.parse import urlsplit
@@ -288,10 +288,19 @@ class PolicyCollectionAdapter(CollectionAdapter):
         collected_at = self.clock()
         for source in self.sources:
             for endpoint_url in source.endpoint_urls:
+                parser_source = source
+                if self.max_articles_per_run is not None:
+                    remaining = self.max_articles_per_run - len(articles)
+                    if remaining <= 0:
+                        break
+                    parser_source = replace(
+                        source,
+                        max_records_per_run=min(source.max_records_per_run, remaining),
+                    )
                 response = self.dependencies.fetcher.fetch(endpoint_url, source_id=source.source_id)
                 parsed = self.dependencies.parser.parse(
                     response,
-                    source=source,
+                    source=parser_source,
                     endpoint_url=endpoint_url,
                     collected_at=collected_at,
                 )
