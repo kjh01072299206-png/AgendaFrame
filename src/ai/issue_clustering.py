@@ -397,6 +397,7 @@ INITIAL_FIVE_CLUSTER_PROMPT_VERSION = "2.0.0"
 INITIAL_FIVE_CLUSTER_SCHEMA_VERSION = "agendaframe.initial-five-cluster.v2"
 INITIAL_FIVE_CLUSTER_TEXT_SCOPE = "title_source_published_at_only"
 INITIAL_FIVE_MAX_ARTICLES = 25
+INITIAL_FIVE_MAX_RUNTIME_ARTICLES = 50
 INITIAL_FIVE_MAX_ATTEMPTS = 3
 INITIAL_FIVE_MAX_OUTPUT_TOKENS = 16000
 INITIAL_FIVE_RETRY_BACKOFF_SECONDS = (2.0, 4.0)
@@ -493,11 +494,18 @@ class InitialFiveClusterer:
         client_factory: Callable[[RuntimeConfig], Any] | None = None,
         sleep_fn: Callable[[float], None] = time.sleep,
         max_attempts: int = INITIAL_FIVE_MAX_ATTEMPTS,
+        max_articles: int = INITIAL_FIVE_MAX_ARTICLES,
     ) -> None:
         self.config = config
         self.client_factory = client_factory or _default_client
         self.sleep_fn = sleep_fn
         self.max_attempts = max(1, min(int(max_attempts), INITIAL_FIVE_MAX_ATTEMPTS))
+        self.max_articles = int(max_articles)
+        if not 1 <= self.max_articles <= INITIAL_FIVE_MAX_RUNTIME_ARTICLES:
+            raise ValueError(
+                "Initial-five max_articles must be between one and "
+                f"{INITIAL_FIVE_MAX_RUNTIME_ARTICLES}."
+            )
 
     def analyze(
         self,
@@ -506,7 +514,11 @@ class InitialFiveClusterer:
     ) -> InitialFiveClusteringResult:
         articles = tuple(articles)
         candidate_groups = tuple(candidate_groups)
-        _validate_initial_five_inputs(articles, candidate_groups)
+        _validate_initial_five_inputs(
+            articles,
+            candidate_groups,
+            max_articles=self.max_articles,
+        )
 
         try:
             client = self.client_factory(self.config)
@@ -519,7 +531,7 @@ class InitialFiveClusterer:
                 reason=f"client_initialization_{type(error).__name__}",
             )
 
-        base_prompt = build_initial_five_prompt(articles)
+        base_prompt = build_initial_five_prompt(articles, max_articles=self.max_articles)
         feedback: str | None = None
         last_error: Exception | None = None
 
@@ -537,7 +549,11 @@ class InitialFiveClusterer:
                 if not isinstance(raw_text, str) or not raw_text.strip():
                     raise InitialFivePayloadError("empty_response", "AI response text is empty.")
                 payload = _decode_initial_five_json(raw_text)
-                normalized = validate_initial_five_payload(articles, payload)
+                normalized = validate_initial_five_payload(
+                    articles,
+                    payload,
+                    max_articles=self.max_articles,
+                )
                 return _reconcile_initial_five_result(
                     articles,
                     candidate_groups,
@@ -575,12 +591,15 @@ class InitialFiveClusterer:
 
 
 def validate_initial_five_payload(
-    articles: Sequence[MetadataArticle], payload: Any
+    articles: Sequence[MetadataArticle],
+    payload: Any,
+    *,
+    max_articles: int = INITIAL_FIVE_MAX_ARTICLES,
 ) -> dict[str, Any]:
     """Validate and normalize the strict one-call cluster response."""
 
     expected_articles = tuple(articles)
-    _validate_initial_five_articles(expected_articles)
+    _validate_initial_five_articles(expected_articles, max_articles=max_articles)
     article_ids = {article.article_id for article in expected_articles}
     if not isinstance(payload, dict):
         raise InitialFivePayloadError("schema_validation_error", "Response must be an object.")
@@ -723,10 +742,14 @@ def _decode_initial_five_json(raw_text: str) -> Any:
         raise
 
 
-def build_initial_five_prompt(articles: Sequence[MetadataArticle]) -> str:
+def build_initial_five_prompt(
+    articles: Sequence[MetadataArticle],
+    *,
+    max_articles: int = INITIAL_FIVE_MAX_ARTICLES,
+) -> str:
     """Build the one-call prompt without candidate group IDs or article bodies."""
 
-    _validate_initial_five_articles(tuple(articles))
+    _validate_initial_five_articles(tuple(articles), max_articles=max_articles)
     metadata = [
         {
             "article_id": article.article_id,
@@ -1047,9 +1070,12 @@ def _initial_five_fallback_result(
 
 
 def _validate_initial_five_inputs(
-    articles: Sequence[MetadataArticle], candidate_groups: Sequence[MetadataIssueGroup]
+    articles: Sequence[MetadataArticle],
+    candidate_groups: Sequence[MetadataIssueGroup],
+    *,
+    max_articles: int = INITIAL_FIVE_MAX_ARTICLES,
 ) -> None:
-    _validate_initial_five_articles(tuple(articles))
+    _validate_initial_five_articles(tuple(articles), max_articles=max_articles)
     if not candidate_groups or len(candidate_groups) > 5:
         raise ValueError("Initial-five candidate groups must contain one to five groups.")
     _validate_groups(candidate_groups)
@@ -1061,9 +1087,18 @@ def _validate_initial_five_inputs(
         raise ValueError("Candidate groups must cover exactly the supplied articles.")
 
 
-def _validate_initial_five_articles(articles: Sequence[MetadataArticle]) -> None:
-    if not articles or len(articles) > INITIAL_FIVE_MAX_ARTICLES:
-        raise ValueError(f"Initial-five input must contain one to {INITIAL_FIVE_MAX_ARTICLES} articles.")
+def _validate_initial_five_articles(
+    articles: Sequence[MetadataArticle],
+    *,
+    max_articles: int = INITIAL_FIVE_MAX_ARTICLES,
+) -> None:
+    if not 1 <= max_articles <= INITIAL_FIVE_MAX_RUNTIME_ARTICLES:
+        raise ValueError(
+            "Initial-five max_articles must be between one and "
+            f"{INITIAL_FIVE_MAX_RUNTIME_ARTICLES}."
+        )
+    if not articles or len(articles) > max_articles:
+        raise ValueError(f"Initial-five input must contain one to {max_articles} articles.")
     article_ids = [article.article_id for article in articles]
     if len(article_ids) != len(set(article_ids)):
         raise ValueError("Initial-five article IDs must be unique.")

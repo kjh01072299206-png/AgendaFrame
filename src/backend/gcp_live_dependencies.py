@@ -498,7 +498,11 @@ def build_stage_dependencies(
     store = GcpAnalysisStore(config, bigquery_client=clients.bigquery, storage_client=clients.storage)
     snapshot_writer = GcsImmutableSnapshotWriter(clients.storage, bucket_name=config.bucket)
     pointer_store = GcsActivePointerStore(clients.storage, bucket_name=config.bucket)
-    clusterer = InitialFiveClusterer(config, client_factory=lambda _config: clients.vertex)
+    clusterer = InitialFiveClusterer(
+        config,
+        client_factory=lambda _config: clients.vertex,
+        max_articles=config.vertex.max_articles_per_run,
+    )
     frame_analyzer = VertexFrameAnalyzer(config, client_factory=lambda _config: clients.vertex)
     return StageDependencies(
         policy_path=policy_path,

@@ -254,6 +254,35 @@ class MetadataIssueClusteringTests(unittest.TestCase):
         self.assertIn("RETRY_VALIDATION_FEEDBACK", prompts[1])
         self.assertIn("json_decode_error", prompts[1])
 
+    def test_runtime_limit_accepts_fifty_metadata_articles(self) -> None:
+        articles = tuple(
+            MetadataArticle(
+                f"runtime-{index}",
+                f"런타임 기사 {index}",
+                "매체A",
+                "2026-08-15T00:00:00+09:00",
+            )
+            for index in range(50)
+        )
+        groups = (
+            MetadataIssueGroup(
+                issue_id="runtime-candidate",
+                issue_title="런타임 후보",
+                articles=articles,
+            ),
+        )
+
+        def fail_client(_: RuntimeConfig) -> object:
+            raise RuntimeError("offline")
+
+        result = InitialFiveClusterer(
+            self.config,
+            client_factory=fail_client,
+            max_articles=50,
+        ).analyze(articles, groups)
+        self.assertEqual(result.approval_status, "review_needed")
+        self.assertIn("client_initialization_RuntimeError", result.fallback_reason or "")
+
 
 if __name__ == "__main__":
     unittest.main()
