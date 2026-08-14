@@ -20,6 +20,7 @@ import os
 import re
 import sys
 from dataclasses import dataclass
+from datetime import date
 from typing import Any, Callable, Mapping, Sequence
 
 from backend.gcp_orchestration import (
@@ -139,6 +140,18 @@ def build_runtime_config(
     basis_date = values.get("AGENDAFRAME_BASIS_DATE", policy.collection_start).strip()
     if not basis_date:
         raise RuntimeWiringError("AGENDAFRAME_BASIS_DATE must not be empty")
+    try:
+        basis_date_value = date.fromisoformat(basis_date)
+    except ValueError as error:
+        raise RuntimeWiringError("AGENDAFRAME_BASIS_DATE must be an ISO date") from error
+    if not (
+        date.fromisoformat(policy.collection_start)
+        <= basis_date_value
+        <= date.fromisoformat(policy.collection_end)
+    ):
+        raise RuntimeWiringError(
+            "AGENDAFRAME_BASIS_DATE is outside the configured collection window"
+        )
     request = OrchestrationRequest(
         run_id=run_id,
         basis_date=basis_date,

@@ -108,6 +108,12 @@ class GcpJobEntrypointTests(unittest.TestCase):
         with self.assertRaises(MigrationOwnershipError):
             build_runtime_config(env(AGENDAFRAME_CLOUDFLARE_CRON_ENABLED="true"))
 
+    def test_basis_date_must_stay_inside_collection_window(self) -> None:
+        with self.assertRaises(RuntimeWiringError):
+            build_runtime_config(env(AGENDAFRAME_BASIS_DATE="2026-11-01"))
+        with self.assertRaises(RuntimeWiringError):
+            build_runtime_config(env(AGENDAFRAME_BASIS_DATE="not-a-date"))
+
     def test_run_job_publishes_and_validates_active_manifest_without_raw_body(self) -> None:
         snapshots = SnapshotFake()
         adapters = FakeAdapters(snapshots).as_pipeline()

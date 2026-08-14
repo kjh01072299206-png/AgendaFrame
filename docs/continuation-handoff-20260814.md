@@ -86,6 +86,9 @@ and no raw article/body/HTML/sentence fields.
   the collection window, short-body rejection, domain/deduplication guards,
   and the per-source limit. These are fixture-only tests; they make no network
   calls.
+- `src/backend/gcp_job_entrypoint.py` now rejects malformed or out-of-window
+  `AGENDAFRAME_BASIS_DATE` values before any production adapter is constructed,
+  so the post-2026-10-31 scheduler cannot perform unnecessary source requests.
 
 ### Cloud Run entrypoint review
 
