@@ -222,12 +222,39 @@ export function composeEventSynthesis(bundle) {
   };
 }
 
+function sourceLensFromProfiles(bundle) {
+  const byId = new Map((bundle?.articles ?? []).map((article) => [article.articleId, article]));
+  const outlets = new Map();
+  for (const entry of bundle?.semanticProfiles ?? []) {
+    const article = byId.get(entry.articleId);
+    const outlet = article?.outlet || article?.sourceId || entry.articleId;
+    const bucket = outlets.get(outlet) ?? { outlet, roles: new Map() };
+    for (const actor of entry.profile?.actors_and_sources ?? []) {
+      const label = actor.role_label || actor.role || "미분류";
+      const count = Number(actor.direct_quote_count || 0) + Number(actor.indirect_attribution_count || 0) || 1;
+      const current = bucket.roles.get(label) ?? { role: actor.role, role_label: label, count: 0 };
+      current.count += count;
+      bucket.roles.set(label, current);
+    }
+    outlets.set(outlet, bucket);
+  }
+  return {
+    by_outlet: [...outlets.values()].map((row) => ({
+      outlet: row.outlet,
+      roles: [...row.roles.values()].sort((left, right) => right.count - left.count || left.role_label.localeCompare(right.role_label)),
+    })),
+    caution: "취재원 구성은 발화 가시성의 관측이지 매체의 의도 판정이 아닙니다.",
+  };
+}
+
 export function withEventSynthesis(bundle) {
   if (!bundle) return bundle;
   if (bundle.comparison?.data?.synthesis?.usable) return bundle;
   const synthesis = composeEventSynthesis(bundle);
   if (!synthesis.usable) return bundle;
   const brief = bundle.comparison?.data?.summary_30_seconds ?? {};
+  const existingLens = bundle.comparison?.data?.source_lens;
+  const sourceLens = existingLens?.by_outlet?.length ? existingLens : sourceLensFromProfiles(bundle);
   const agreed = synthesis.agreed_line?.status === "observed" ? synthesis.agreed_line.text : brief.common_ground;
   const split = synthesis.opposition && synthesis.split_line?.status === "observed"
     ? synthesis.split_line.text
@@ -243,6 +270,7 @@ export function withEventSynthesis(bundle) {
       data: {
         ...bundle.comparison?.data,
         synthesis,
+        source_lens: sourceLens,
         summary_30_seconds: {
           ...brief,
           common_ground: agreed ?? brief.common_ground,
