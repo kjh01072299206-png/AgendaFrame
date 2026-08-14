@@ -4,8 +4,9 @@
 
 - Repository: `C:\Users\강준혁\Desktop\구글캡디_문서`
 - Branch: `codex/initial-five-complete`
-- Saved integration checkpoints: `9f1f627` (origin/main + live/GCP merge),
-  `1b2a483` (release integration handoff).
+- Current saved checkpoint: `c6061f9` (GCP runtime image entrypoint wiring).
+- `origin/main` is an ancestor of this branch; the branch is ahead of it and
+  does not require another merge at this checkpoint.
 - This handoff is intended to be committed with the reader slice below.
 - Preserve unrelated untracked worktrees, logs, feedback, `outputs/`, `.grok/`,
   and any user/other-model changes. Never use `git reset --hard`,
@@ -146,7 +147,7 @@ and no raw article/body/HTML/sentence fields.
 
 ## Verification completed
 
-- Latest quick gate after the deployable-workflow changes: **129 passed**;
+- Latest quick gate after the runtime image entrypoint changes: **130 passed**;
   formatting and lint passed. The new contract tests and both orchestration
   dry runs were included.
 - Latest full gate: **129 unit/contract + 3 integration/e2e passed**;
