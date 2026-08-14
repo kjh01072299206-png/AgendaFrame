@@ -14,6 +14,7 @@
 param(
     [string]$ReaderUrl = "",
     [string]$ExpectedSnapshotId = "",
+    [string]$BearerToken = "",
     [switch]$Execute
 )
 
@@ -73,7 +74,9 @@ function Get-Json {
     param([Parameter(Mandatory)][string]$Url)
 
     try {
-        $Response = Invoke-WebRequest -Uri $Url -Method Get -Headers @{ Accept = "application/json" } -TimeoutSec 30 -UseBasicParsing
+        $Headers = @{ Accept = "application/json" }
+        if ($BearerToken) { $Headers.Authorization = "Bearer $BearerToken" }
+        $Response = Invoke-WebRequest -Uri $Url -Method Get -Headers $Headers -TimeoutSec 30 -UseBasicParsing
     }
     catch {
         throw "Snapshot-reader request failed: $Url"

@@ -258,6 +258,8 @@ class CloudDeploymentContractTests(unittest.TestCase):
         self.assertIn("exactly five", script)
         self.assertIn("Assert-NoForbiddenKeys", script)
         self.assertIn("ExpectedSnapshotId", script)
+        self.assertIn("BearerToken", script)
+        self.assertIn("Authorization", script)
         self.assertIn("must use HTTPS", script)
 
     def test_orchestration_deployment_is_dry_run_and_scheduler_is_explicit(self) -> None:
