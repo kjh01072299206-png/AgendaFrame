@@ -72,10 +72,28 @@ and no raw article/body/HTML/sentence fields.
 - `docs/architecture/active-snapshot-reader.md`: reader contract, env names,
   cutover order, and public verification requirements.
 
+### Collection parser hardening
+
+- `src/backend/gcp_live_dependencies.py` now reads `datePublished` from
+  article JSON-LD as metadata, keeps the strict KST collection-window check,
+  rejects date-less pages instead of substituting discovery time, and enforces
+  the validated per-source record limit.
+- `src/backend/gcp_source_policy.py` and
+  `src/backend/gcp_stage_adapters.py` carry the policy's
+  `maxRecordsPerSourcePerRun` value (currently 120) into the parser.
+- `tests/unit/test_gcp_live_dependencies.py` covers JSON-LD publication dates,
+  tracking-query canonicalization, date-less HTML candidates, both sides of
+  the collection window, short-body rejection, domain/deduplication guards,
+  and the per-source limit. These are fixture-only tests; they make no network
+  calls.
+
 ## Verification completed
 
-- `powershell -NoProfile -File scripts/check.ps1 -Mode quick` → **119 passed**;
+- `powershell -NoProfile -File scripts/check.ps1 -Mode quick` → **124 passed**;
   Ruff and formatting passed.
+- `powershell -NoProfile -File scripts/check.ps1 -Mode full` → **124 unit/
+  contract tests and 3 integration/e2e tests passed**; evaluation assets remain
+  synthetic and `release_eligible: false`.
 - `site/npm run typecheck` → passed.
 - `site/npm run lint` → 0 errors; four pre-existing warnings remain.
 - `site/npm test` → **186 passed, 0 failed** (build included). The first
@@ -84,6 +102,9 @@ and no raw article/body/HTML/sentence fields.
   API was called.
 - Focused snapshot-reader/service/contract tests passed; the site active-route
   and semantic-page contracts passed.
+- Focused collection parser tests → **7 passed**, including JSON-LD
+  `datePublished`, strict date-window boundaries, date-less rejection, body
+  minimum, canonicalization/deduplication, and source-limit enforcement.
 
 ## Not completed — do not claim these as done
 
@@ -96,8 +117,7 @@ owns real collection until a verified GCP cutover.
 
 Remaining order:
 
-1. Add parser/datePublished/body-minimum fixture regression tests and resolve
-   the remaining Cloud Run image/entrypoint production wiring review.
+1. Resolve the remaining Cloud Run image/entrypoint production wiring review.
 2. In the non-production GCP project, verify Workflows API, budget/spend cap,
    IAM, private bucket lifecycle, BigQuery schema/grants, and the reader service
    deployment plan. Apply only with explicit live authorization.
@@ -120,9 +140,9 @@ AgendaFrame from branch codex/initial-five-complete. Do not rebuild the main
 site, replace the existing demo/API path, expose article bodies, or call news,
 Vertex, GCP, or deployment APIs during ordinary tests.
 
-First inspect the committed reader slice and run the offline gates. Then work
-only on the next incomplete item: parser/datePublished/body-minimum fixture
-regressions and the reviewed Cloud Run production wiring. Keep all GCP YAML
+First inspect the committed reader slice and run the offline gates. The parser
+datePublished/body-minimum fixture regressions are already implemented; next
+work only on the reviewed Cloud Run production wiring. Keep all GCP YAML
 contract_only/externalCalls:false until a non-production live authorization,
 budget cap, IAM, and rollback plan are explicitly available. If live approval
 is available, deploy reader canary before collector; verify body-free /active,

@@ -39,7 +39,10 @@ from crawler.models import ArticleDocument, canonicalize_url, is_domain_allowed
 
 KST = timezone(timedelta(hours=9))
 USER_AGENT = "AgendaFrameAcademicResearch/1.0 (+https://agendaframe-capstone.vercel.app)"
-MAX_ARTICLES_PER_SOURCE = 30
+# The repository policy permits up to 120 article records per source/run.
+# SourceDefinition carries the validated value; this fallback keeps the parser
+# safe when used directly in an isolated fixture.
+MAX_ARTICLES_PER_SOURCE = 120
 MAX_ENDPOINT_BYTES = 2_000_000
 
 
@@ -94,9 +97,12 @@ class _ArticleHtmlParser(HTMLParser):
         self.title_parts: list[str] = []
         self.body_parts: list[str] = []
         self.meta: dict[str, str] = {}
+        self.jsonld_parts: list[str] = []
         self._title_depth = 0
         self._body_depth = 0
         self._skip_depth = 0
+        self._jsonld_depth = 0
+        self._jsonld_buffer: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = {str(key).lower(): value or "" for key, value in attrs}
@@ -107,6 +113,12 @@ class _ArticleHtmlParser(HTMLParser):
             if key and content:
                 self.meta[key.lower()] = content
             return
+        if lowered == "script":
+            script_type = values.get("type", "").split(";", 1)[0].strip().lower()
+            if script_type == "application/ld+json":
+                self._jsonld_depth += 1
+                if self._jsonld_depth == 1:
+                    self._jsonld_buffer = []
         if lowered == "title":
             self._title_depth += 1
         if lowered in {"script", "style", "noscript", "svg", "nav", "footer", "header"}:
@@ -118,6 +130,11 @@ class _ArticleHtmlParser(HTMLParser):
 
     def handle_endtag(self, tag: str) -> None:
         lowered = tag.lower()
+        if lowered == "script" and self._jsonld_depth:
+            self._jsonld_depth -= 1
+            if self._jsonld_depth == 0:
+                self.jsonld_parts.append("".join(self._jsonld_buffer))
+                self._jsonld_buffer = []
         if lowered == "title":
             self._title_depth = max(0, self._title_depth - 1)
         if lowered in {"script", "style", "noscript", "svg", "nav", "footer", "header"}:
@@ -126,6 +143,9 @@ class _ArticleHtmlParser(HTMLParser):
             self._body_depth = max(0, self._body_depth - 1)
 
     def handle_data(self, data: str) -> None:
+        if self._jsonld_depth:
+            self._jsonld_buffer.append(data)
+            return
         text = " ".join(data.split())
         if not text or self._skip_depth:
             return
@@ -161,6 +181,33 @@ def _xml_text(node: ET.Element | None) -> str:
 
 def _article_id(url: str) -> str:
     return hashlib.sha256(url.encode("utf-8")).hexdigest()[:32]
+
+
+def _walk_json(value: Any):
+    """Yield mappings nested in a JSON-LD graph without interpreting prose."""
+
+    if isinstance(value, Mapping):
+        yield value
+        for child in value.values():
+            yield from _walk_json(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _walk_json(child)
+
+
+def _jsonld_published_at(parser: _ArticleHtmlParser) -> datetime | None:
+    for raw in parser.jsonld_parts:
+        try:
+            payload = json.loads(raw)
+        except (TypeError, json.JSONDecodeError):
+            continue
+        for node in _walk_json(payload):
+            value = node.get("datePublished")
+            if isinstance(value, str):
+                parsed = _parse_datetime(value)
+                if parsed is not None:
+                    return parsed
+    return None
 
 
 class NewsArticleParser:
@@ -211,7 +258,8 @@ class NewsArticleParser:
             )
             if row is not None:
                 rows.append(row)
-            if len(rows) >= MAX_ARTICLES_PER_SOURCE:
+            max_records = getattr(source, "max_records_per_run", MAX_ARTICLES_PER_SOURCE)
+            if len(rows) >= max_records:
                 break
         return tuple(rows)
 
@@ -266,7 +314,7 @@ class NewsArticleParser:
             or " ".join(parser.title_parts)
             or fallback_title
         ).strip()
-        published = _parse_datetime(
+        published = _jsonld_published_at(parser) or _parse_datetime(
             parser.meta.get("article:published_time")
             or parser.meta.get("datepublished")
             or parser.meta.get("date")

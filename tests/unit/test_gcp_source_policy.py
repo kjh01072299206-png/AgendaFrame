@@ -19,6 +19,7 @@ class GcpSourcePolicyTests(unittest.TestCase):
         self.assertEqual(policy.broadcaster_count, 2)
         self.assertEqual(policy.scheduled_hours_kst, (0, 6, 12, 18))
         self.assertEqual(policy.interval_minutes, 360)
+        self.assertEqual(policy.max_records_per_source_per_run, 120)
         self.assertEqual(policy.collection_start, "2026-08-13")
         self.assertEqual(policy.collection_end, "2026-10-31")
         self.assertEqual(policy.raw_content_delete_after, "2026-10-31T23:59:59+09:00")

@@ -1,0 +1,244 @@
+from __future__ import annotations
+
+import json
+import unittest
+from datetime import UTC, datetime
+
+from backend.gcp_live_dependencies import FetchedResponse, NewsArticleParser
+from backend.gcp_stage_adapters import SourceDefinition
+
+COLLECTED_AT = datetime(2026, 8, 13, 6, 0, tzinfo=UTC)
+SOURCE = SourceDefinition("khan", ("khan.co.kr",), ("https://khan.co.kr/rss",))
+LONG_BODY = " ".join(
+    [
+        "The article reports the verified event and identifies the relevant public actors.",
+        "It describes the timeline, the stated response, and the consequences for residents.",
+        "The remaining paragraphs preserve enough visible article text for transient analysis.",
+    ]
+)
+
+
+class FakeFetcher:
+    def __init__(self, pages: dict[str, FetchedResponse]) -> None:
+        self.pages = pages
+        self.calls: list[str] = []
+
+    def fetch(self, url: str, *, source_id: str) -> FetchedResponse:
+        del source_id
+        self.calls.append(url)
+        return self.pages[url]
+
+
+def rss(*links: tuple[str, str]) -> bytes:
+    items = "".join(
+        f"<item><title>{title}</title><link>{url}</link>"
+        "<pubDate>Thu, 13 Aug 2026 10:00:00 +0900</pubDate></item>"
+        for title, url in links
+    )
+    return f"<?xml version='1.0'?><rss><channel>{items}</channel></rss>".encode()
+
+
+def article_page(*, date_published: str | None, body: str = LONG_BODY) -> bytes:
+    jsonld = (
+        f'<script type="application/ld+json">'
+        f"{json.dumps({'@type': 'NewsArticle', 'datePublished': date_published})}"
+        "</script>"
+        if date_published is not None
+        else ""
+    )
+    return (
+        f"<html><head><title>Fallback article title</title>{jsonld}</head>"
+        f"<body><article><p>{body}</p></article></body></html>"
+    ).encode()
+
+
+def parser(fetcher: FakeFetcher) -> NewsArticleParser:
+    return NewsArticleParser(
+        fetcher,
+        collection_start="2026-08-13",
+        collection_end="2026-10-31",
+    )
+
+
+class GcpLiveDependencyTests(unittest.TestCase):
+    def test_jsonld_date_published_is_verified_and_tracking_query_is_removed(self) -> None:
+        canonical = "https://khan.co.kr/article/1"
+        fetcher = FakeFetcher(
+            {
+                canonical: FetchedResponse(
+                    canonical,
+                    200,
+                    "text/html",
+                    article_page(date_published="2026-08-13T10:30:00+09:00"),
+                )
+            }
+        )
+        response = FetchedResponse(
+            "https://khan.co.kr/rss",
+            200,
+            "application/rss+xml",
+            rss(("Event report", canonical + "?utm_source=fixture")),
+        )
+
+        rows = parser(fetcher).parse(
+            response,
+            source=SOURCE,
+            endpoint_url=SOURCE.endpoint_urls[0],
+            collected_at=COLLECTED_AT,
+        )
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(fetcher.calls, [canonical])
+        self.assertEqual(rows[0].canonical_url, canonical)
+        self.assertEqual(rows[0].published_at, datetime(2026, 8, 13, 1, 30, tzinfo=UTC))
+        self.assertEqual(rows[0].body_text, LONG_BODY)
+        self.assertEqual(rows[0].text_scope, "authorized_transient_body")
+
+    def test_date_less_html_candidate_is_not_assigned_discovery_time(self) -> None:
+        canonical = "https://khan.co.kr/article/date-less"
+        fetcher = FakeFetcher(
+            {
+                canonical: FetchedResponse(
+                    canonical,
+                    200,
+                    "text/html",
+                    article_page(date_published=None),
+                )
+            }
+        )
+        listing = FetchedResponse(
+            "https://khan.co.kr/section",
+            200,
+            "text/html",
+            f'<html><body><a href="{canonical}">A section candidate</a></body></html>'.encode(),
+        )
+
+        rows = parser(fetcher).parse(
+            listing,
+            source=SOURCE,
+            endpoint_url="https://khan.co.kr/section",
+            collected_at=COLLECTED_AT,
+        )
+
+        self.assertEqual(rows, ())
+        self.assertEqual(fetcher.calls, [canonical])
+
+    def test_out_of_window_and_short_body_candidates_are_rejected(self) -> None:
+        old_url = "https://khan.co.kr/article/old"
+        future_url = "https://khan.co.kr/article/future"
+        short_url = "https://khan.co.kr/article/short"
+        fetcher = FakeFetcher(
+            {
+                old_url: FetchedResponse(
+                    old_url,
+                    200,
+                    "text/html",
+                    article_page(date_published="2026-08-12T23:59:00+09:00"),
+                ),
+                future_url: FetchedResponse(
+                    future_url,
+                    200,
+                    "text/html",
+                    article_page(date_published="2026-11-01T00:00:00+09:00"),
+                ),
+                short_url: FetchedResponse(
+                    short_url,
+                    200,
+                    "text/html",
+                    article_page(
+                        date_published="2026-08-13T10:00:00+09:00",
+                        body="Too short.",
+                    ),
+                ),
+            }
+        )
+        response = FetchedResponse(
+            "https://khan.co.kr/rss",
+            200,
+            "application/rss+xml",
+            rss(("Old", old_url), ("Future", future_url), ("Short", short_url)),
+        )
+
+        rows = parser(fetcher).parse(
+            response,
+            source=SOURCE,
+            endpoint_url=SOURCE.endpoint_urls[0],
+            collected_at=COLLECTED_AT,
+        )
+
+        self.assertEqual(rows, ())
+        self.assertEqual(fetcher.calls, [old_url, future_url, short_url])
+
+    def test_disallowed_and_duplicate_urls_are_not_fetched_twice(self) -> None:
+        canonical = "https://khan.co.kr/article/duplicate"
+        fetcher = FakeFetcher(
+            {
+                canonical: FetchedResponse(
+                    canonical,
+                    200,
+                    "text/html",
+                    article_page(date_published="2026-08-13T10:00:00+09:00"),
+                )
+            }
+        )
+        response = FetchedResponse(
+            "https://khan.co.kr/rss",
+            200,
+            "application/rss+xml",
+            rss(
+                ("Other domain", "https://evil.example/article/1"),
+                ("First", canonical),
+                ("Tracking duplicate", canonical + "?gclid=removed"),
+            ),
+        )
+
+        rows = parser(fetcher).parse(
+            response,
+            source=SOURCE,
+            endpoint_url=SOURCE.endpoint_urls[0],
+            collected_at=COLLECTED_AT,
+        )
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(fetcher.calls, [canonical])
+
+    def test_source_policy_record_limit_is_respected(self) -> None:
+        first = "https://khan.co.kr/article/first"
+        second = "https://khan.co.kr/article/second"
+        limited_source = SourceDefinition(
+            SOURCE.source_id,
+            SOURCE.domains,
+            SOURCE.endpoint_urls,
+            max_records_per_run=1,
+        )
+        fetcher = FakeFetcher(
+            {
+                url: FetchedResponse(
+                    url,
+                    200,
+                    "text/html",
+                    article_page(date_published="2026-08-13T10:00:00+09:00"),
+                )
+                for url in (first, second)
+            }
+        )
+        response = FetchedResponse(
+            SOURCE.endpoint_urls[0],
+            200,
+            "application/rss+xml",
+            rss(("First", first), ("Second", second)),
+        )
+
+        rows = parser(fetcher).parse(
+            response,
+            source=limited_source,
+            endpoint_url=SOURCE.endpoint_urls[0],
+            collected_at=COLLECTED_AT,
+        )
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(fetcher.calls, [first])
+
+
+if __name__ == "__main__":
+    unittest.main()

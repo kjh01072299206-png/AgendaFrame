@@ -41,6 +41,7 @@ class GcpDiscoveryPolicy:
     topics: tuple[str, ...]
     scheduled_hours_kst: tuple[int, ...]
     interval_minutes: int
+    max_records_per_source_per_run: int
     source_count: int
     general_daily_count: int
     broadcaster_count: int
@@ -113,6 +114,11 @@ class GcpDiscoveryPolicy:
         interval_minutes = polling.get("intervalMinutes")
         if interval_minutes != 360:
             raise DiscoveryPolicyError("polling.intervalMinutes must be 360")
+        max_records = polling.get("maxRecordsPerSourcePerRun")
+        if not isinstance(max_records, int) or isinstance(max_records, bool) or max_records < 1:
+            raise DiscoveryPolicyError(
+                "polling.maxRecordsPerSourcePerRun must be a positive integer"
+            )
         if polling.get("runsPerDay") != 4:
             raise DiscoveryPolicyError("polling.runsPerDay must be 4")
         if polling.get("concurrency") != 1:
@@ -160,6 +166,7 @@ class GcpDiscoveryPolicy:
             topics=EXPECTED_TOPICS,
             scheduled_hours_kst=EXPECTED_SCHEDULED_HOURS_KST,
             interval_minutes=interval_minutes,
+            max_records_per_source_per_run=max_records,
             source_count=len(sources),
             general_daily_count=type_counts["general_daily"],
             broadcaster_count=type_counts["broadcaster"],

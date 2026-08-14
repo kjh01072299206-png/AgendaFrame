@@ -74,6 +74,7 @@ class SourceDefinition:
     source_id: str
     domains: tuple[str, ...]
     endpoint_urls: tuple[str, ...]
+    max_records_per_run: int = 120
 
 
 def load_source_definitions(path: str) -> tuple[SourceDefinition, ...]:
@@ -104,7 +105,14 @@ def load_source_definitions(path: str) -> tuple[SourceDefinition, ...]:
         )
         if not source_id or not domains or not endpoints:
             raise StageAdapterError(f"source definition is incomplete: {source_id or '<unknown>'}")
-        definitions.append(SourceDefinition(source_id, domains, endpoints))
+        definitions.append(
+            SourceDefinition(
+                source_id,
+                domains,
+                endpoints,
+                policy.max_records_per_source_per_run,
+            )
+        )
     if len(definitions) != policy.source_count or len(definitions) != 12:
         raise StageAdapterError("collection adapter requires exactly twelve source definitions")
     return tuple(definitions)
