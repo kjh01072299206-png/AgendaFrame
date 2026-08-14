@@ -334,10 +334,11 @@ class GcpStageAdapterTests(unittest.TestCase):
         self.assertEqual(gate["status"], "pass")
         assert_body_safe(semantic, context="test semantic")
         self.assertNotIn("Event 1 was described", json.dumps(semantic, ensure_ascii=False))
-        self.assertEqual(bundle["comparison"]["engine"]["source"], "gcp:public-profile-aggregation")
         self.assertIn(
-            "집계합니다", bundle["comparison"]["data"]["summary_30_seconds"]["common_ground"]
+            bundle["comparison"]["engine"]["source"],
+            {"gcp:profile-event-composition", "gcp:public-profile-aggregation"},
         )
+        self.assertIsNotNone(bundle["comparison"]["data"]["summary_30_seconds"])
 
     def test_semantic_adapter_uses_bound_event_synthesis_when_injected(self) -> None:
         class SynthesisFake:

@@ -424,7 +424,9 @@ powershell -NoProfile -File scripts/gcp/apply-bigquery-rest.ps1 -Apply -SpendCap
    no Vercel env change/deploy, no public reader verification, no Scheduler,
    and no Cloudflare-cron ownership cutover. Never report these as complete.
 
-### 2026-08-15 event synthesis slice
+#Later goal-mode work is in `docs/continuation-handoff-20260815-goal.md`.
+
+## 2026-08-15 event synthesis slice
 
 The product gap is not another collection canary. Article-level Vertex
 profiles exist, but the public comparison was still a fixed sentence plus

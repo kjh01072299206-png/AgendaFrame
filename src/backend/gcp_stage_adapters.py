@@ -25,7 +25,9 @@ from ai.event_synthesis import (
     EventSynthesizer,
     VertexEventSynthesizer,
     bind_event_synthesis,
+    compose_event_synthesis,
     public_comparison_payload,
+    source_lens_from_profiles,
     synthesis_request,
 )
 from ai.framing import FrameAnalyzer, FrameResult, VertexFrameAnalyzer
@@ -810,37 +812,54 @@ def _synthesize_comparison(
         "schemaVersion": "comparison-v1",
         "source": "gcp:public-profile-aggregation",
     }
+    lens = source_lens_from_profiles(profiles, article_rows)
+    fallback["source_lens"] = lens
+    bound = None
+    source = "gcp:profile-event-composition"
     synthesizer = dependencies.event_synthesizer
-    if synthesizer is None:
-        return fallback, fallback_engine, None
-    try:
-        draft = synthesizer.synthesize(
-            synthesis_request(
-                issue_id=issue_id,
-                title=title,
-                articles=article_rows,
-                profiles=profiles,
+    if synthesizer is not None:
+        try:
+            draft = synthesizer.synthesize(
+                synthesis_request(
+                    issue_id=issue_id,
+                    title=title,
+                    articles=article_rows,
+                    profiles=profiles,
+                )
             )
-        )
-        bound = bind_event_synthesis(draft, profiles=profiles, articles=article_rows)
-    except (TypeError, ValueError, KeyError):
-        return fallback, fallback_engine, None
-    if not bound.get("usable"):
+            candidate = bind_event_synthesis(draft, profiles=profiles, articles=article_rows)
+        except (TypeError, ValueError, KeyError):
+            candidate = None
+        if candidate and candidate.get("usable"):
+            bound = candidate
+            source = "gcp:event-synthesis"
+    if bound is None:
+        try:
+            bound = bind_event_synthesis(
+                compose_event_synthesis(profiles=profiles, articles=article_rows, title=title),
+                profiles=profiles,
+                articles=article_rows,
+            )
+        except (TypeError, ValueError, KeyError):
+            bound = None
+    if not bound or not bound.get("usable"):
         return fallback, fallback_engine, None
     payload = public_comparison_payload(
         bound, article_count=article_count, outlet_count=outlet_count
     )
     payload["comparison_axes"] = list(comparison_axes)
-    payload["source_lens"] = fallback["source_lens"]
+    payload["source_lens"] = lens
     engine = {
-        "label": "ai_semantic",
-        "engineLabel": "ai_semantic",
-        "semanticAi": True,
+        "label": "ai_semantic" if source == "gcp:event-synthesis" else "profile_composition",
+        "engineLabel": "ai_semantic" if source == "gcp:event-synthesis" else "profile_composition",
+        "semanticAi": source == "gcp:event-synthesis",
         "status": "succeeded",
-        "model": getattr(request, "model_revision", "vertex-configured"),
+        "model": getattr(request, "model_revision", None)
+        if source == "gcp:event-synthesis"
+        else None,
         "promptVersion": bound.get("promptVersion"),
         "schemaVersion": bound.get("schemaVersion"),
-        "source": "gcp:event-synthesis",
+        "source": source,
         "requiresHumanReview": True,
     }
     what = bound.get("what_happened")

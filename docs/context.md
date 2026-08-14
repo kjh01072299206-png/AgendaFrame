@@ -95,7 +95,7 @@ Cloudflare 수집 스테이징은 별도 경로로 이미 1회 돌아 본 적 �
 
 한 번에 하나만. **제품 다음 작업은 사건 종합 AI를 실제 Vertex 출력에 연결해 예시 HTML 밀도를 만드는 것**이다. 인프라 canary는 그 출력이 빈 문장이 아닐 때 의미가 있다.
 
-2026-08-15에 `src/ai/event_synthesis.py`와 `FrameSemanticAdapter` 연결, 근거 바인딩 테스트, 화면 `SynthesisNarrative`를 추가했다. 아직 산 종합 모델 호출 성공 사례는 없다.
+2026-08-15에 근거 바인딩 종합과 프로필 작성기를 넣었다. 7/26 1위 이슈는 오프라인에서 캠프 3개(침묵·거부권 / 경고 / 제도 안전장치)가 나온다. 상세 인수인계: `docs/continuation-handoff-20260815-goal.md`. Vertex 실호출과 정적 JSON 부착은 아직이다.
 
 ### 지금 할 일 (비용 0, 외부 호출 0)
 

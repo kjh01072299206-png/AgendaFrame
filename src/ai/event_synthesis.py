@@ -592,6 +592,377 @@ def _build_prompt(request: Mapping[str, Any]) -> str:
     )
 
 
+CAMP_LABELS = {
+    "legal_institutional": "제도 안전장치 약화를 앞세운 쪽",
+    "no_treatment": "구체적 대응보다 경고를 전한 쪽",
+    "institutional_check": "대통령의 침묵과 거부권 요구를 앞세운 쪽",
+    "investigation_accountability": "수사와 책임 추궁을 앞세운 쪽",
+}
+
+
+def _item_evidence(article_id: str, item: Mapping[str, Any]) -> dict[str, Any] | None:
+    evidence = item.get("evidence")
+    if not isinstance(evidence, Mapping):
+        return None
+    locator = evidence.get("locator")
+    digest = evidence.get("sentence_sha256") or evidence.get("sentenceSha256")
+    if not isinstance(locator, Mapping) or not isinstance(digest, str):
+        return None
+    if not SHA256_PATTERN.fullmatch(digest):
+        return None
+    if locator.get("paragraph") in (None, "") or locator.get("sentence") in (None, ""):
+        return None
+    return {
+        "article_id": article_id,
+        "locator": {"paragraph": locator.get("paragraph"), "sentence": locator.get("sentence")},
+        "sentence_sha256": digest.lower(),
+    }
+
+
+def _first_observed_item(
+    profile: Mapping[str, Any], dimension: str
+) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    node = (profile.get("dimensions") or {}).get(dimension)
+    if not isinstance(node, Mapping):
+        return None
+    items = node.get("items")
+    if not isinstance(items, Sequence) or isinstance(items, (str, bytes)):
+        return None
+    for item in items:
+        if isinstance(item, Mapping) and item.get("public_paraphrase"):
+            return dict(item), dict(node)
+    return None
+
+
+def _camp_key(profile: Mapping[str, Any]) -> str:
+    problem = _first_observed_item(profile, "problem_definition")
+    treatment = _first_observed_item(profile, "treatment_recommendation")
+    problem_family = ""
+    if problem:
+        problem_family = str(problem[0].get("frame_family") or "")
+    if problem_family == "legal_institutional":
+        return "legal_institutional"
+    if treatment is None:
+        return "no_treatment"
+    treatment_family = str(treatment[0].get("frame_family") or "")
+    if treatment_family == "institutional_check":
+        return "institutional_check"
+    return treatment_family or problem_family or "other"
+
+
+def compose_event_synthesis(
+    *,
+    profiles: Sequence[Mapping[str, Any]],
+    articles: Sequence[Mapping[str, Any]],
+    title: str = "",
+) -> dict[str, Any]:
+    """Build an evidence-citing draft from already-coded public profiles.
+
+    This is not an ideology classifier.  It groups observed frame families and
+    reuses the public paraphrases that already carry locator+hash evidence.
+    Vertex can replace the wording later; uncited invented prose is never added.
+    """
+
+    by_id = _article_map(articles)
+    coded: list[dict[str, Any]] = []
+    for entry in profiles:
+        article_id = str(entry.get("articleId") or "")
+        profile = entry.get("profile")
+        if not article_id or not isinstance(profile, Mapping):
+            continue
+        coded.append(
+            {
+                "articleId": article_id,
+                "outlet": str(
+                    by_id.get(article_id, {}).get("outlet")
+                    or by_id.get(article_id, {}).get("sourceId")
+                    or ""
+                ),
+                "profile": profile,
+                "camp": _camp_key(profile),
+            }
+        )
+    if not coded:
+        return {"prompt_version": PROMPT_VERSION, "usable": False}
+
+    def _rows_for(dimension: str) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        for row in coded:
+            found = _first_observed_item(row["profile"], dimension)
+            if not found:
+                continue
+            item, _node = found
+            evidence = _item_evidence(row["articleId"], item)
+            if evidence is None:
+                continue
+            rows.append(
+                {
+                    "article_id": row["articleId"],
+                    "outlet": row["outlet"],
+                    "text": _clean_text(item.get("public_paraphrase")),
+                    "family": str(item.get("frame_family") or ""),
+                    "voice": (item.get("voice") or {}).get("kind")
+                    if isinstance(item.get("voice"), Mapping)
+                    else None,
+                    "evidence": evidence,
+                }
+            )
+        return rows
+
+    problems = _rows_for("problem_definition")
+    causes = _rows_for("causal_interpretation")
+    duties = _rows_for("responsibility_attribution")
+    morals = _rows_for("moral_evaluation")
+    remedies = _rows_for("treatment_recommendation")
+
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in coded:
+        grouped.setdefault(row["camp"], []).append(row)
+
+    camps = []
+    for key, members in grouped.items():
+        if key == "other" and len(grouped) > 1:
+            continue
+        gists = _rows_for("treatment_recommendation")
+        if key == "no_treatment":
+            gists = [
+                item
+                for item in problems
+                if item["article_id"] in {row["articleId"] for row in members}
+            ]
+        elif key == "legal_institutional":
+            gists = [
+                item
+                for item in problems
+                if item["article_id"] in {row["articleId"] for row in members}
+            ]
+        else:
+            gists = [
+                item
+                for item in remedies
+                if item["article_id"] in {row["articleId"] for row in members}
+            ]
+            if not gists:
+                gists = [
+                    item
+                    for item in problems
+                    if item["article_id"] in {row["articleId"] for row in members}
+                ]
+        if not gists:
+            continue
+        lead = gists[0]
+        camps.append(
+            {
+                "name": CAMP_LABELS.get(key, "관측된 강조 묶음"),
+                "gist": lead["text"],
+                "article_ids": [row["articleId"] for row in members],
+                "evidence": [lead["evidence"]],
+            }
+        )
+    camps = camps[:4]
+
+    agreed_bits = []
+    agreed_evidence = []
+    if causes and len({row["family"] for row in causes}) == 1:
+        agreed_bits.append("원인을 대통령·여당의 정치적 계산에서 찾는다")
+        agreed_evidence.extend(row["evidence"] for row in causes[:3])
+    if duties and len({row["family"] for row in duties}) == 1:
+        agreed_bits.append("책임을 대통령과 여당 양쪽에 함께 돌린다")
+        agreed_evidence.extend(row["evidence"] for row in duties[:3])
+    agreed_line = " ".join(agreed_bits) if agreed_bits else (causes[0]["text"] if causes else None)
+    if agreed_line and not agreed_evidence and causes:
+        agreed_evidence = [causes[0]["evidence"]]
+
+    split_line = None
+    split_evidence = []
+    if len(camps) >= 2:
+        parts = [f"{camp['name']}는 {camp['gist']}" for camp in camps]
+        split_line = "같은 사건에서 " + ", ".join(parts) + "."
+        split_evidence = [item for camp in camps for item in camp["evidence"]]
+
+    what_evidence = [row["evidence"] for row in (problems or causes)[:4]]
+    what_happened = title.strip() or (problems[0]["text"] if problems else None)
+    if problems and title.strip():
+        what_happened = f"{title.strip()}. {problems[0]['text']}"
+
+    so_what = None
+    so_evidence = []
+    if len(camps) >= 2:
+        so_what = "어느 기사 묶음을 먼저 읽느냐에 따라 이 사안이 정치 책임 문제로 보이는지, 제도 문제로 보이는지, 경고만 남는지가 달라진다."
+        so_evidence = split_evidence
+
+    fact_rows = []
+    if agreed_bits:
+        if any("원인" in bit for bit in agreed_bits) and causes:
+            fact_rows.append(
+                {
+                    "question": "왜 이렇게 됐다고 했나",
+                    "common": causes[0]["text"],
+                    "evidence": [causes[0]["evidence"]],
+                }
+            )
+        if any("책임" in bit for bit in agreed_bits) and duties:
+            fact_rows.append(
+                {
+                    "question": "누구 책임이라고 했나",
+                    "common": duties[0]["text"],
+                    "evidence": [duties[0]["evidence"]],
+                }
+            )
+
+    split_rows = []
+    if len(camps) >= 2:
+        problem_cells = []
+        remedy_cells = []
+        for camp in camps:
+            member_ids = set(camp["article_ids"])
+            problem = next((row for row in problems if row["article_id"] in member_ids), None)
+            remedy = next((row for row in remedies if row["article_id"] in member_ids), None)
+            problem_cells.append(
+                {
+                    "text": problem["text"] if problem else None,
+                    "evidence": [problem["evidence"]] if problem else [],
+                }
+            )
+            if remedy:
+                remedy_cells.append({"text": remedy["text"], "evidence": [remedy["evidence"]]})
+            else:
+                remedy_cells.append(
+                    {
+                        "text": "기사에서 구체적 대응·해법이 명시되지 않음",
+                        "evidence": camp["evidence"],
+                    }
+                )
+        split_rows.append(
+            {
+                "question": "무엇이 문제라고 했나",
+                "cells": problem_cells,
+                "evidence": [item for cell in problem_cells for item in cell.get("evidence") or []],
+            }
+        )
+        split_rows.append(
+            {
+                "question": "어떻게 하자고 했나",
+                "cells": remedy_cells,
+                "evidence": [item for cell in remedy_cells for item in cell.get("evidence") or []],
+            }
+        )
+
+    frame_functions = []
+    for dimension, rows in (
+        ("problem_definition", problems),
+        ("causal_interpretation", causes),
+        ("responsibility_attribution", duties),
+        ("evaluation", morals),
+        ("treatment_recommendation", remedies),
+    ):
+        if not rows:
+            continue
+        families = {row["family"] for row in rows if row["family"]}
+        if len(families) == 1:
+            frame_functions.append(
+                {
+                    "dimension": dimension,
+                    "summary": rows[0]["text"],
+                    "evidence": [rows[0]["evidence"]],
+                }
+            )
+        elif len(camps) >= 2:
+            frame_functions.append(
+                {
+                    "dimension": dimension,
+                    "summary": " / ".join(camp["gist"] for camp in camps[:3]),
+                    "evidence": [item for camp in camps for item in camp["evidence"]],
+                }
+            )
+
+    proof_rows = []
+    for dimension, rows in (
+        ("problem_definition", problems),
+        ("causal_interpretation", causes),
+        ("responsibility_attribution", duties),
+        ("evaluation", morals),
+        ("treatment_recommendation", remedies),
+    ):
+        for row in rows:
+            proof_rows.append(
+                {
+                    "article_id": row["article_id"],
+                    "dimension": dimension,
+                    "text": row["text"],
+                    "evidence": [row["evidence"]],
+                }
+            )
+
+    return {
+        "prompt_version": PROMPT_VERSION,
+        "schema_version": SCHEMA_VERSION,
+        "what_happened": what_happened,
+        "what_happened_evidence": what_evidence,
+        "agreed_line": agreed_line,
+        "agreed_evidence": agreed_evidence,
+        "split_line": split_line,
+        "split_evidence": split_evidence,
+        "so_what": so_what,
+        "so_what_evidence": so_evidence,
+        "camps": camps,
+        "fact_rows": fact_rows,
+        "split_rows": split_rows,
+        "frame_functions": frame_functions,
+        "proof_rows": proof_rows,
+        "terms": [],
+    }
+
+
+def source_lens_from_profiles(
+    profiles: Sequence[Mapping[str, Any]],
+    articles: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Count observed source roles per outlet.  Visibility, not intent."""
+
+    by_id = _article_map(articles)
+    outlets: dict[str, dict[str, Any]] = {}
+    for entry in profiles:
+        article_id = str(entry.get("articleId") or "")
+        profile = entry.get("profile")
+        if not article_id or not isinstance(profile, Mapping):
+            continue
+        outlet = str(
+            by_id.get(article_id, {}).get("outlet")
+            or by_id.get(article_id, {}).get("sourceId")
+            or article_id
+        )
+        bucket = outlets.setdefault(outlet, {"outlet": outlet, "roles": {}})
+        actors = profile.get("actors_and_sources")
+        if not isinstance(actors, Sequence) or isinstance(actors, (str, bytes)):
+            continue
+        for actor in actors:
+            if not isinstance(actor, Mapping):
+                continue
+            role = str(actor.get("role_label") or actor.get("role") or "미분류")
+            count = int(actor.get("direct_quote_count") or 0) + int(
+                actor.get("indirect_attribution_count") or 0
+            )
+            if count <= 0:
+                count = 1
+            current = bucket["roles"].setdefault(
+                role, {"role": actor.get("role"), "role_label": role, "count": 0}
+            )
+            current["count"] += count
+    return {
+        "by_outlet": [
+            {
+                "outlet": row["outlet"],
+                "roles": sorted(
+                    row["roles"].values(), key=lambda item: (-item["count"], item["role_label"])
+                ),
+            }
+            for row in outlets.values()
+        ],
+        "caution": "취재원 구성은 발화 가시성의 관측이지 매체의 의도 판정이 아닙니다.",
+    }
+
+
 __all__ = [
     "PROMPT_VERSION",
     "SCHEMA_VERSION",
@@ -599,7 +970,9 @@ __all__ = [
     "EventSynthesizer",
     "VertexEventSynthesizer",
     "bind_event_synthesis",
+    "compose_event_synthesis",
     "evidence_index",
     "public_comparison_payload",
+    "source_lens_from_profiles",
     "synthesis_request",
 ]

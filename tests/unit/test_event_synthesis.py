@@ -1,14 +1,21 @@
 from __future__ import annotations
 
+import json
 import unittest
+from pathlib import Path
 
 from ai.event_synthesis import (
     SCHEMA_VERSION,
     EventSynthesisError,
     bind_event_synthesis,
+    compose_event_synthesis,
     public_comparison_payload,
+    source_lens_from_profiles,
     synthesis_request,
 )
+
+ROOT = Path(__file__).resolve().parents[2]
+RANK1 = ROOT / "site" / "public" / "initial-five" / "issues" / "bigkinds-2026-07-26-top-1.json"
 
 HASH_A = "a" * 64
 HASH_B = "b" * 64
@@ -180,6 +187,41 @@ class EventSynthesisBindingTests(unittest.TestCase):
         self.assertNotIn("raw_body", encoded)
         self.assertNotIn("body_text", encoded)
         self.assertEqual(request["profiles"][0]["items"][0]["sentence_sha256"], HASH_A)
+
+    def test_composer_builds_three_camps_from_rank1_profiles(self) -> None:
+        bundle = json.loads(RANK1.read_text(encoding="utf-8"))
+        draft = compose_event_synthesis(
+            profiles=bundle["semanticProfiles"],
+            articles=bundle["articles"],
+            title=bundle["issue"]["title"],
+        )
+        bound = bind_event_synthesis(
+            draft,
+            profiles=bundle["semanticProfiles"],
+            articles=bundle["articles"],
+        )
+        self.assertTrue(bound["usable"])
+        self.assertTrue(bound["opposition"])
+        names = [camp["name"] for camp in bound["camps"]]
+        self.assertEqual(len(bound["camps"]), 3)
+        self.assertTrue(any("거부권" in name or "침묵" in name for name in names))
+        self.assertTrue(any("제도" in name for name in names))
+        self.assertTrue(any("경고" in name for name in names))
+        self.assertEqual(bound["agreed_line"]["status"], "observed")
+        self.assertIn("책임", bound["agreed_line"]["text"] or "")
+        payload = public_comparison_payload(
+            bound,
+            article_count=bundle["issue"]["articleCount"],
+            outlet_count=bundle["issue"]["outletCount"],
+        )
+        self.assertTrue(payload["summary_30_seconds"]["divergence_detected"])
+        self.assertNotIn("집계합니다", payload["summary_30_seconds"]["common_ground"] or "")
+        lens = source_lens_from_profiles(bundle["semanticProfiles"], bundle["articles"])
+        self.assertGreaterEqual(len(lens["by_outlet"]), 5)
+        encoded = json.dumps(bound, ensure_ascii=False)
+        self.assertNotIn("raw_body", encoded)
+        self.assertNotIn("진보", encoded)
+        self.assertNotIn("보수", encoded)
 
 
 if __name__ == "__main__":
