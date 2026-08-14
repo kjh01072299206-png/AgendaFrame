@@ -4,7 +4,7 @@
 
 - Repository: `C:\Users\강준혁\Desktop\구글캡디_문서`
 - Branch: `codex/initial-five-complete`
-- Current saved checkpoint: `c6061f9` (GCP runtime image entrypoint wiring).
+- Current saved checkpoint: `64b837d` (live snapshot issue routes fail closed).
 - `origin/main` is an ancestor of this branch; the branch is ahead of it and
   does not require another merge at this checkpoint.
 - This handoff is intended to be committed with the reader slice below.
@@ -60,7 +60,8 @@ and no raw article/body/HTML/sentence fields.
   pages from the same active bundle; demo/static and existing live API paths
   remain intact.
 - `site/tests/active-snapshot-contract.test.mjs`: route-boundary regression
-  contract added.
+  contract added, including a 404 guard when a live snapshot does not contain
+  the requested issue. Live routes never fall back to the older D1/API path.
 
 ### Deployment repeatability
 
@@ -158,6 +159,8 @@ and no raw article/body/HTML/sentence fields.
   sandbox attempt hit Vite `spawn EPERM`; the same local build/test passed with
   the required local process permission escalation. No network or deployment
   API was called.
+- The live snapshot route regression test passed after the fail-closed guard;
+  missing live issue IDs now resolve to `notFound()` instead of legacy data.
 - Focused snapshot-reader/service/contract tests passed; the site active-route
   and semantic-page contracts passed.
 - Focused collection parser tests → **7 passed**, including JSON-LD
