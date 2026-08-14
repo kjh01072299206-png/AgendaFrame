@@ -495,6 +495,8 @@ def html_event_fields(bound: Mapping[str, Any]) -> dict[str, Any]:
         "factRows": fact_rows,
         "splitRows": split_rows,
         "terms": terms,
+        "frameFunctions": list(bound.get("frame_functions") or []),
+        "proofRows": list(bound.get("proof_rows") or []),
     }
 
 
@@ -774,6 +776,12 @@ CAMP_LABELS = {
     "institutional_check": "대통령의 침묵과 거부권 요구를 앞세운 쪽",
     "investigation_accountability": "수사와 책임 추궁을 앞세운 쪽",
 }
+CAMP_SPLIT_CLAUSES = {
+    "institutional_check": "대통령의 침묵과 정치적 책임을 앞세웠",
+    "legal_institutional": "제도적 안전장치 약화를 앞세웠",
+    "no_treatment": "구체적 대응보다 경고를 전했",
+    "investigation_accountability": "수사와 책임 추궁을 앞세웠",
+}
 
 
 def _item_evidence(article_id: str, item: Mapping[str, Any]) -> dict[str, Any] | None:
@@ -929,6 +937,7 @@ def compose_event_synthesis(
         lead = gists[0]
         camps.append(
             {
+                "key": key,
                 "name": CAMP_LABELS.get(key, "관측된 강조 묶음"),
                 "gist": lead["text"],
                 "article_ids": [row["articleId"] for row in members],
@@ -940,11 +949,11 @@ def compose_event_synthesis(
     agreed_bits = []
     agreed_evidence = []
     if causes and len({row["family"] for row in causes}) == 1:
-        agreed_bits.append("원인을 대통령·여당의 정치적 계산에서 찾는다")
-        agreed_evidence.extend(row["evidence"] for row in causes[:3])
+        agreed_bits.append(causes[0]["text"])
+        agreed_evidence.append(causes[0]["evidence"])
     if duties and len({row["family"] for row in duties}) == 1:
-        agreed_bits.append("책임을 대통령과 여당 양쪽에 함께 돌린다")
-        agreed_evidence.extend(row["evidence"] for row in duties[:3])
+        agreed_bits.append(duties[0]["text"])
+        agreed_evidence.append(duties[0]["evidence"])
     agreed_line = " ".join(agreed_bits) if agreed_bits else (causes[0]["text"] if causes else None)
     if agreed_line and not agreed_evidence and causes:
         agreed_evidence = [causes[0]["evidence"]]
@@ -952,8 +961,16 @@ def compose_event_synthesis(
     split_line = None
     split_evidence = []
     if len(camps) >= 2:
-        parts = [f"{camp['name']}는 {camp['gist']}" for camp in camps]
-        split_line = "같은 사건에서 " + ", ".join(parts) + "."
+        clauses = [
+            CAMP_SPLIT_CLAUSES.get(str(camp.get("key") or ""), "관측된 강조를 앞세웠")
+            for camp in camps
+        ]
+        if len(clauses) == 2:
+            split_line = f"한쪽은 {clauses[0]}고, 다른 쪽은 {clauses[1]}다."
+        else:
+            split_line = (
+                f"한쪽은 {clauses[0]}고, 다른 쪽은 {clauses[1]}으며, 또 다른 쪽은 {clauses[2]}다."
+            )
         split_evidence = [item for camp in camps for item in camp["evidence"]]
 
     what_evidence = [row["evidence"] for row in (problems or causes)[:4]]
@@ -968,23 +985,22 @@ def compose_event_synthesis(
         so_evidence = split_evidence
 
     fact_rows = []
-    if agreed_bits:
-        if any("원인" in bit for bit in agreed_bits) and causes:
-            fact_rows.append(
-                {
-                    "question": "왜 이렇게 됐다고 했나",
-                    "common": causes[0]["text"],
-                    "evidence": [causes[0]["evidence"]],
-                }
-            )
-        if any("책임" in bit for bit in agreed_bits) and duties:
-            fact_rows.append(
-                {
-                    "question": "누구 책임이라고 했나",
-                    "common": duties[0]["text"],
-                    "evidence": [duties[0]["evidence"]],
-                }
-            )
+    if causes and len({row["family"] for row in causes}) == 1:
+        fact_rows.append(
+            {
+                "question": "왜 이렇게 됐다고 했나",
+                "common": causes[0]["text"],
+                "evidence": [causes[0]["evidence"]],
+            }
+        )
+    if duties and len({row["family"] for row in duties}) == 1:
+        fact_rows.append(
+            {
+                "question": "누구 책임이라고 했나",
+                "common": duties[0]["text"],
+                "evidence": [duties[0]["evidence"]],
+            }
+        )
 
     split_rows = []
     if len(camps) >= 2:

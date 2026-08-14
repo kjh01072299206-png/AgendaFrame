@@ -20,7 +20,8 @@ test("rank-1 profiles compose the three target camps without ideology labels", a
   assert.match(names, /제도/);
   assert.match(names, /경고/);
   assert.equal(synthesis.agreed_line.status, "observed");
-  assert.match(synthesis.agreed_line.text, /책임/);
+  assert.match(synthesis.split_line.text, /앞세웠고/);
+  assert.match(synthesis.split_line.text, /경고를 전했/);
   for (const camp of synthesis.camps) {
     assert.ok(camp.evidence.length > 0);
     assert.match(camp.evidence[0].sentence_sha256, /^[0-9a-f]{64}$/);
@@ -38,6 +39,7 @@ test("rank-4 does not invent an opposition", async () => {
   assert.equal(synthesis.opposition, false);
   assert.deepEqual(synthesis.camps, []);
   assert.equal(synthesis.split_line.status, "explicit_not_stated");
+  assert.doesNotMatch(synthesis.agreed_line?.text ?? "", /대통령·여당/);
 });
 
 test("withEventSynthesis attaches comparison fields without mutating the source bundle", async () => {

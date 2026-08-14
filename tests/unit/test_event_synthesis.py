@@ -244,13 +244,47 @@ class EventSynthesisBindingTests(unittest.TestCase):
         self.assertTrue(payload["agreedLine"])
         self.assertTrue(payload["whatHappened"])
         self.assertTrue(payload["splitLine"])
+        self.assertRegex(payload["splitLine"], r"앞세웠고")
+        self.assertRegex(payload["splitLine"], r"경고를 전했")
+        self.assertNotIn("쪽는", payload["splitLine"])
         self.assertTrue(payload["factRows"])
+        self.assertTrue(payload["frameFunctions"])
         self.assertNotIn("집계합니다", json.dumps(payload, ensure_ascii=False))
         self.assertNotIn(
             "검증된 기사별 관측 항목과 취재원 귀속을 비교합니다",
             json.dumps(payload, ensure_ascii=False),
         )
         self.assertTrue(all(camp.get("evidence") for camp in payload["camps"]))
+
+    def test_shipped_comparison_entry_keeps_rank4_as_shared_coverage(self) -> None:
+        bundle = json.loads(
+            (
+                ROOT
+                / "site"
+                / "public"
+                / "initial-five"
+                / "issues"
+                / "bigkinds-2026-07-26-top-4.json"
+            ).read_text(encoding="utf-8")
+        )
+        bound = build_bound_comparison(
+            profiles=bundle["semanticProfiles"],
+            articles=bundle["articles"],
+            title=bundle["issue"]["title"],
+            issue_id=bundle["issue"]["issueId"],
+        )
+        self.assertIsNotNone(bound)
+        assert bound is not None
+        payload = public_comparison_payload(
+            bound,
+            article_count=len(bundle["articles"]),
+            outlet_count=bundle["issue"]["outletCount"],
+        )
+        self.assertFalse(bound["opposition"])
+        self.assertLess(len(payload["camps"]), 2)
+        self.assertIn("대립 구도", payload["splitLine"])
+        self.assertNotIn("집계합니다", json.dumps(payload, ensure_ascii=False))
+        self.assertNotIn("대통령·여당", payload["agreedLine"] or "")
 
 
 if __name__ == "__main__":

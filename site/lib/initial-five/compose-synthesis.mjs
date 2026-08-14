@@ -9,6 +9,12 @@ const CAMP_LABELS = {
   institutional_check: "대통령의 침묵과 거부권 요구를 앞세운 쪽",
   investigation_accountability: "수사와 책임 추궁을 앞세운 쪽",
 };
+const CAMP_SPLIT_CLAUSES = {
+  institutional_check: "대통령의 침묵과 정치적 책임을 앞세웠",
+  legal_institutional: "제도적 안전장치 약화를 앞세웠",
+  no_treatment: "구체적 대응보다 경고를 전했",
+  investigation_accountability: "수사와 책임 추궁을 앞세웠",
+};
 
 function cleanText(value, limit = 280) {
   if (typeof value !== "string") return "";
@@ -107,6 +113,7 @@ export function composeEventSynthesis(bundle) {
     if (!gists.length) continue;
     const lead = gists[0];
     camps.push({
+      key,
       name: CAMP_LABELS[key] || "관측된 강조 묶음",
       gist: lead.text,
       outlets: [...new Set(members.map((row) => row.outlet).filter(Boolean))],
@@ -122,28 +129,32 @@ export function composeEventSynthesis(bundle) {
   const agreedBits = [];
   const agreedEvidence = [];
   if (causes.length && new Set(causes.map((row) => row.family)).size === 1) {
-    agreedBits.push("원인을 대통령·여당의 정치적 계산에서 찾는다");
-    agreedEvidence.push(...causes.slice(0, 3).map((row) => row.evidence));
+    agreedBits.push(causes[0].text);
+    agreedEvidence.push(causes[0].evidence);
   }
   if (duties.length && new Set(duties.map((row) => row.family)).size === 1) {
-    agreedBits.push("책임을 대통령과 여당 양쪽에 함께 돌린다");
-    agreedEvidence.push(...duties.slice(0, 3).map((row) => row.evidence));
+    agreedBits.push(duties[0].text);
+    agreedEvidence.push(duties[0].evidence);
   }
   const agreedText = agreedBits.join(" ") || causes[0]?.text || null;
   if (agreedText && !agreedEvidence.length && causes[0]) agreedEvidence.push(causes[0].evidence);
 
-  const splitText = opposition
-    ? `같은 사건에서 ${publicCamps.map((camp) => `${camp.name}는 ${camp.gist}`).join(", ")}.`
-    : null;
+  let splitText = null;
+  if (opposition) {
+    const clauses = publicCamps.map((camp) => CAMP_SPLIT_CLAUSES[camp.key] || "관측된 강조를 앞세웠");
+    splitText = clauses.length === 2
+      ? `한쪽은 ${clauses[0]}고, 다른 쪽은 ${clauses[1]}다.`
+      : `한쪽은 ${clauses[0]}고, 다른 쪽은 ${clauses[1]}으며, 또 다른 쪽은 ${clauses[2]}다.`;
+  }
   const splitEvidence = opposition ? publicCamps.flatMap((camp) => camp.evidence) : [];
   const title = bundle?.issue?.title?.trim() || "";
   const whatText = title && problems[0] ? `${title}. ${problems[0].text}` : (title || problems[0]?.text || null);
 
   const factRows = [];
-  if (agreedBits.some((bit) => bit.includes("원인")) && causes[0]) {
+  if (causes.length && new Set(causes.map((row) => row.family)).size === 1 && causes[0]) {
     factRows.push({ question: "왜 이렇게 됐다고 했나", common: causes[0].text, cells: null, status: "observed", evidence: [causes[0].evidence] });
   }
-  if (agreedBits.some((bit) => bit.includes("책임")) && duties[0]) {
+  if (duties.length && new Set(duties.map((row) => row.family)).size === 1 && duties[0]) {
     factRows.push({ question: "누구 책임이라고 했나", common: duties[0].text, cells: null, status: "observed", evidence: [duties[0].evidence] });
   }
 
@@ -279,6 +290,8 @@ export function withEventSynthesis(bundle) {
         factRows: synthesis.fact_rows ?? [],
         splitRows: synthesis.opposition ? synthesis.split_rows ?? [] : [],
         terms: synthesis.terms ?? [],
+        frameFunctions: synthesis.frame_functions ?? [],
+        proofRows: synthesis.proof_rows ?? [],
         summary_30_seconds: {
           ...brief,
           common_ground: agreed ?? brief.common_ground,
