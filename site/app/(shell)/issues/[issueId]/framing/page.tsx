@@ -25,7 +25,8 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
   const decoded = safeDecode(issueId);
   const active = await getActiveSnapshot();
   const activeBundle = active.getIssueBundle(decoded);
-  if (active.mode === "live" && activeBundle) {
+  if (active.mode === "live") {
+    if (!activeBundle) notFound();
     return <FramingSemanticPage bundle={activeBundle} issue={deriveIssue(activeBundle)} />;
   }
   if (!getInitialFiveIssueBundle(decoded)) return <LiveIssueView issueId={decoded} view="framing" />;

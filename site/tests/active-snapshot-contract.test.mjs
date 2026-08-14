@@ -44,5 +44,9 @@ test("live active snapshot is the shared source for the main and two analysis ro
   assert.match(framing, /FramingSemanticPage/);
   assert.match(outlets, /active\.mode === "live"/);
   assert.match(framing, /active\.mode === "live"/);
+  assert.match(outlets, /if \(!activeBundle\) notFound\(\)/);
+  assert.match(framing, /if \(!activeBundle\) notFound\(\)/);
+  assert.doesNotMatch(outlets, /active\.mode === "live" && activeBundle/);
+  assert.doesNotMatch(framing, /active\.mode === "live" && activeBundle/);
   assert.doesNotMatch(homeView, /raw_body|body_text|sentence_text/i);
 });
