@@ -315,6 +315,10 @@ class PolicyCollectionAdapter(CollectionAdapter):
                             remaining_global,
                             remaining_source,
                         ),
+                        max_requests_per_run=min(
+                            source.max_requests_per_run,
+                            remaining_source,
+                        ),
                     )
                 try:
                     response = self.dependencies.fetcher.fetch(

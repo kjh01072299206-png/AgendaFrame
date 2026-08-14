@@ -520,7 +520,10 @@ def build_stage_dependencies(
 
     policy_path = os.environ.get("AGENDAFRAME_DISCOVERY_POLICY", "site/data/discovery-sources.json")
     policy = GcpDiscoveryPolicy.from_path(policy_path)
-    fetcher = UrlLibFeedFetcher()
+    # A scheduled run has a bounded per-source candidate budget. Keep network
+    # stalls from consuming the entire Cloud Run task timeout before Vertex
+    # analysis starts; individual sources are already isolated by the adapter.
+    fetcher = UrlLibFeedFetcher(timeout_seconds=5.0)
     parser = NewsArticleParser(
         fetcher,
         collection_start=policy.collection_start,
