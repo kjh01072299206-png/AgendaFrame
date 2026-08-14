@@ -234,6 +234,21 @@ class CloudDeploymentContractTests(unittest.TestCase):
         self.assertIn("CommitSha must match the checked-out commit", script)
         self.assertNotIn("scheduler jobs create", script)
 
+    def test_snapshot_reader_canary_verifier_is_explicit_and_body_free(self) -> None:
+        script = (ROOT / "scripts" / "gcp" / "verify-snapshot-reader.ps1").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("[switch]$Execute", script)
+        self.assertIn("Invoke-WebRequest", script)
+        self.assertIn("/healthz", script)
+        self.assertIn("/active", script)
+        self.assertIn("application/json", script)
+        self.assertIn("agenda.frame.active-snapshot.v1", script)
+        self.assertIn("exactly five", script)
+        self.assertIn("Assert-NoForbiddenKeys", script)
+        self.assertIn("ExpectedSnapshotId", script)
+        self.assertIn("must use HTTPS", script)
+
 
 if __name__ == "__main__":
     unittest.main()

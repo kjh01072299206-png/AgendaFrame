@@ -110,6 +110,11 @@ and no raw article/body/HTML/sentence fields.
   and Logging APIs plus `reader` and `scheduler` service-account creation in
   its guarded apply plan. It still remains dry-run by default; no API enable or
   IAM mutation was made.
+- `scripts/gcp/verify-snapshot-reader.ps1` now provides the explicit canary
+  verifier. It contacts `/healthz` and `/active` only with `-Execute`, requires
+  an HTTPS reader URL, and checks the five-issue manifest, quality gate,
+  snapshot ID, and recursive forbidden-field absence without printing the
+  public envelope.
 
 ### Storage decision contract
 
@@ -122,7 +127,7 @@ and no raw article/body/HTML/sentence fields.
 
 ## Verification completed
 
-- `powershell -NoProfile -File scripts/check.ps1 -Mode quick` → **126 passed**;
+- `powershell -NoProfile -File scripts/check.ps1 -Mode quick` → **127 passed**;
   Ruff and formatting passed.
 - `powershell -NoProfile -File scripts/check.ps1 -Mode full` → **124 unit/
   contract tests and 3 integration/e2e tests passed**; evaluation assets remain
@@ -141,6 +146,9 @@ and no raw article/body/HTML/sentence fields.
 - `powershell -NoProfile -File scripts/gcp/deploy-snapshot-reader.ps1` dry run
   passed and printed no image build, deployment, traffic promotion, or GCP
   resource mutation.
+- `powershell -NoProfile -File scripts/gcp/verify-snapshot-reader.ps1` dry run
+  passed without contacting a reader URL; `-Execute` correctly requires an
+  explicit reader URL.
 
 ## Not completed — do not claim these as done
 
