@@ -3,6 +3,7 @@
 작성일: 2026-08-13 (KST)
 현재 브랜치: `codex/initial-five-complete`
 배포 문서 커밋: `c4e6ad9 docs: record Vercel main deployment procedure`
+최근 체크포인트: `790e53f fix: satisfy GCP dependency lint gate`
 
 ## 사용 목적
 
@@ -36,7 +37,7 @@
 - 원문/임시 본문 삭제 시점: `2026-10-31T23:59:59+09:00`.
 - MBC는 현재 차단/정책 제외이며 12개 명단에 포함하지 않는다.
 - 정책 파일: `site/data/discovery-sources.json`, `site/data/collection-schedule.json`.
-- 기존 2026-08-10 fixture는 정책 시작일을 바꾼 뒤 일부 사이트 테스트에서 실패한다. in-window fixture는 2026-08-13으로 옮기고, 명시적인 out-of-window 회귀 케이스(8월 12일 이전)는 보존한다.
+- 기존 2026-08-10 fixture는 `eebfdea`에서 2026-08-13 기준으로 갱신했다. 명시적인 out-of-window 회귀 케이스(8월 12일 이전)는 보존했다.
 
 ### 4. GCP 코드/계약
 
@@ -59,23 +60,23 @@
 - `gcp_live_dependencies.py`, stage/production adapter import/compile smoke 통과.
 - 사이트 `npm run typecheck` 통과.
 - 사이트 `npm run lint`는 오류 0개, 기존 warning 4개.
+- 사이트 `npm test`: 빌드 성공, 170개 테스트 전부 통과.
+- 루트 `scripts/check.ps1 -Mode quick`: Python lint/format 및 unit·contract 109개 전부 통과.
 - semantic page/framing/initial-five 계약 테스트 31개 통과.
-- 루트 quick gate는 정책 시작일 변경 전 109개 통과했다.
 
 ## 아직 완료되지 않은 것
 
-1. 2026-08-13 정책 경계에 맞춘 site fixture 수정과 전체 site test 재실행.
-2. `gcp_live_dependencies.py`의 RSS/HTML strict date/body parser offline 회귀 테스트 추가.
-3. GCP workflow의 저장소 표기를 실제 BigQuery adapter와 일치시킴(Cloud SQL은 future migration으로 명시).
-4. private GCS active snapshot을 Vercel이 안전하게 읽도록 Cloud Run snapshot-reader 또는 동등한 public read boundary 구현.
-5. Dockerfile/Cloud Run Job의 실제 production entrypoint 연결. 현재 contract command만 있고 실제 배포 이미지 전환은 미완료.
-6. 실제 RSS/article parser, BigQuery sink, Vertex Gemini adapter, GCS snapshot writer의 injected dependency를 GCP 리소스에 연결.
-7. GCP Scheduler/Workflows/Pub/Sub/DLQ/Monitoring/Secret Manager 실제 생성. `infra/gcp`는 현재 `implementationStatus: contract_only`, `externalCalls: false`다.
-8. GCP apply 전 non-production project, budget/spend cap, service account, Workflows API, IAM을 명시적으로 확인한다. `scripts/gcp/provision.ps1 -Apply`는 안전 승인 없이는 실행하지 않는다.
-9. GCP canary 1회 → duplicate/lease 확인 → Cloudflare cron 중복 비활성화 → rollback pointer 확인.
-10. GCP active snapshot이 실제 main page, outlets, framing 모두 동일하게 갱신되는지 확인.
-11. 검토 커밋을 `origin/main`의 최신 이력과 안전하게 합친 뒤 Vercel production 배포.
-12. 공개 `/version`의 commit SHA가 배포 커밋과 일치하는지, `/`, `/issues`, 실제 issue `/outlets`, `/framing`을 브라우저로 확인.
+1. `gcp_live_dependencies.py`의 RSS/HTML strict date/body parser offline 회귀 테스트 추가.
+2. GCP workflow의 저장소 표기를 실제 BigQuery adapter와 일치시킴(Cloud SQL은 future migration으로 명시).
+3. private GCS active snapshot을 Vercel이 안전하게 읽도록 Cloud Run snapshot-reader 또는 동등한 public read boundary 구현.
+4. Dockerfile/Cloud Run Job의 실제 production entrypoint 연결. 현재 contract command만 있고 실제 배포 이미지 전환은 미완료.
+5. 실제 RSS/article parser, BigQuery sink, Vertex Gemini adapter, GCS snapshot writer의 injected dependency를 GCP 리소스에 연결.
+6. GCP Scheduler/Workflows/Pub/Sub/DLQ/Monitoring/Secret Manager 실제 생성. `infra/gcp`는 현재 `implementationStatus: contract_only`, `externalCalls: false`다.
+7. GCP apply 전 non-production project, budget/spend cap, service account, Workflows API, IAM을 명시적으로 확인한다. `scripts/gcp/provision.ps1 -Apply`는 안전 승인 없이는 실행하지 않는다.
+8. GCP canary 1회 → duplicate/lease 확인 → Cloudflare cron 중복 비활성화 → rollback pointer 확인.
+9. GCP active snapshot이 실제 main page, outlets, framing 모두 동일하게 갱신되는지 확인.
+10. 검토 커밋을 `origin/main`의 최신 이력과 안전하게 합친 뒤 Vercel production 배포.
+11. 공개 `/version`의 commit SHA가 배포 커밋과 일치하는지, `/`, `/issues`, 실제 issue `/outlets`, `/framing`을 브라우저로 확인.
 
 ## 기록된 Vercel 배포 방법
 
@@ -110,7 +111,7 @@ AgendaFrame 작업을 이전 상태에서 이어간다. 먼저 C:\\Users\\강준
 4) 검증된 release commit을 origin/main에 반영하고 Vercel production을 배포한 뒤 /version SHA와 실제 브라우저 화면을 확인한다.
 
 순서:
-A. site/tests의 2026-08-10 in-window fixture와 기대값을 2026-08-13으로 갱신하되, 8월 12일 이전을 명시적으로 거부하는 테스트는 유지한다. `cd site; npm run typecheck; npm run lint; npm test; npx next build`를 통과시킨다.
+A. 이미 `eebfdea`에서 site fixture를 2026-08-13으로 갱신했다. `cd site; npm run typecheck; npm run lint; npm test; npx next build`를 재확인하고, fixture를 다시 8월 10일로 되돌리지 않는다.
 B. gcp_live_dependencies parser에 RSS publication date, article JSON-LD datePublished, canonical/domain, body 최소 길이, date-less 거부 회귀 테스트를 추가한다. Python GCP contract/unit suite와 `powershell -NoProfile -File scripts/check.ps1 -Mode quick`를 실행한다.
 C. infra/gcp/workflow.yaml와 테스트에서 현재 저장소를 BigQuery+Cloud Storage로 일치시킨다. Cloud SQL은 future migration으로만 표시하고 runtime이 Cloud SQL을 쓴다고 주장하지 않는다.
 D. private GCS active snapshot을 읽는 최소 Cloud Run snapshot-reader 경계를 구현하고, response가 public bundle only인지(본문 필드 없음), current pointer와 manifest SHA가 일치하는지 계약 테스트한다. Vercel live 환경 변수 연결 전에는 static/demo 경계를 계속 표시한다.
