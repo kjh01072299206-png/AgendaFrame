@@ -1,0 +1,56 @@
+# Deployable Google Workflows source for the recurring AgendaFrame job.
+#
+# This file intentionally contains only the workflow source accepted by
+# `gcloud workflows deploy`; the stage/safety contract remains in
+# `infra/gcp/workflow.yaml`. It starts one Cloud Run Job per trigger. The
+# Cloud Run connector waits for the long-running job operation, so a failed
+# pipeline fails the workflow and never advances the public pointer.
+main:
+  params: [trigger]
+  steps:
+    - initialize:
+        assign:
+          - project_id: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+          - workflow_execution_id: ${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}
+          - scheduled_time_kst: ${time.format(sys.now(), "Asia/Seoul")}
+          - job_name: agendaframe-collection-analysis
+          - job_location: asia-northeast3
+          - source_policy_path: site/data/discovery-sources.json
+          - schedule_path: site/data/collection-schedule.json
+    - derive_run_metadata:
+        assign:
+          - basis_date: ${text.substring(scheduled_time_kst, 0, 10)}
+          - run_id: ${"gcp-workflow:" + workflow_execution_id}
+    - run_collection_analysis:
+        call: googleapis.run.v1.namespaces.jobs.run
+        args:
+          name: ${"namespaces/" + project_id + "/jobs/" + job_name}
+          location: ${job_location}
+          body:
+            overrides:
+              containerOverrides:
+                env:
+                  - name: AGENDAFRAME_RUN_ID
+                    value: ${run_id}
+                  - name: AGENDAFRAME_SCHEDULED_TIME
+                    value: ${scheduled_time_kst}
+                  - name: AGENDAFRAME_BASIS_DATE
+                    value: ${basis_date}
+                  - name: AGENDAFRAME_DISCOVERY_POLICY
+                    value: ${source_policy_path}
+                  - name: AGENDAFRAME_COLLECTION_SCHEDULE
+                    value: ${schedule_path}
+                  - name: AGENDAFRAME_PIPELINE_OWNER
+                    value: gcp
+                  - name: AGENDAFRAME_CLOUDFLARE_CRON_ENABLED
+                    value: "false"
+                  - name: AGENDAFRAME_LEGACY_SCHEDULE_ENABLED
+                    value: "false"
+        result: job_execution
+    - finish:
+        return:
+          workflowExecutionId: ${workflow_execution_id}
+          runId: ${run_id}
+          basisDate: ${basis_date}
+          scheduledTimeKst: ${scheduled_time_kst}
+          cloudRunExecution: ${job_execution}

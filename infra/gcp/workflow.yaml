@@ -8,6 +8,9 @@ spec:
   sourcePolicyPath: site/data/discovery-sources.json
   sourcePolicyVersion: 2026-08-13.1
   collectionSchedulePath: site/data/collection-schedule.json
+  deployableSource: infra/gcp/workflow-runtime.yaml
+  workflowServiceAccount: workflow@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+  schedulerServiceAccount: scheduler@${GCP_PROJECT_ID}.iam.gserviceaccount.com
   rawContentDeleteAfter: "2026-10-31T23:59:59+09:00"
   rawBodyPolicy:
     storage: private_cloud_storage

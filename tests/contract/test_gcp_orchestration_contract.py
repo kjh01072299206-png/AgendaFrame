@@ -68,6 +68,15 @@ class GcpOrchestrationContractTests(unittest.TestCase):
         self.assertEqual(workflow["sourcePolicyPath"], "site/data/discovery-sources.json")
         self.assertEqual(workflow["sourcePolicyVersion"], "2026-08-13.1")
         self.assertEqual(workflow["collectionSchedulePath"], "site/data/collection-schedule.json")
+        self.assertEqual(workflow["deployableSource"], "infra/gcp/workflow-runtime.yaml")
+        self.assertEqual(
+            workflow["workflowServiceAccount"],
+            "workflow@${GCP_PROJECT_ID}.iam.gserviceaccount.com",
+        )
+        self.assertEqual(
+            workflow["schedulerServiceAccount"],
+            "scheduler@${GCP_PROJECT_ID}.iam.gserviceaccount.com",
+        )
         self.assertEqual(workflow["rawContentDeleteAfter"], "2026-10-31T23:59:59+09:00")
         for stage in stages:
             self.assertIn("retry", stage, stage["name"])
@@ -93,6 +102,42 @@ class GcpOrchestrationContractTests(unittest.TestCase):
         self.assertEqual(workflow["stores"]["futureMigration"]["runtimeAdapter"], "not_bound")
         self.assertEqual(workflow["publicSnapshotSchema"], "agenda.frame.active-snapshot.v1")
         self.assertIn("issueBundles", publish["publication"])
+
+    def test_deployable_workflow_source_runs_the_guarded_job_with_runtime_metadata(self) -> None:
+        source_path = CONTRACT_DIR / "workflow-runtime.yaml"
+        source = yaml.safe_load(source_path.read_text(encoding="utf-8"))
+        self.assertEqual(source["main"]["params"], ["trigger"])
+        steps = source["main"]["steps"]
+        run_step = next(
+            step["run_collection_analysis"] for step in steps if "run_collection_analysis" in step
+        )
+        self.assertEqual(run_step["call"], "googleapis.run.v1.namespaces.jobs.run")
+        self.assertEqual(run_step["args"]["location"], "${job_location}")
+        init_assignments = next(
+            step["initialize"]["assign"] for step in steps if "initialize" in step
+        )
+        self.assertEqual(init_assignments[4]["job_location"], "asia-northeast3")
+        self.assertIn("AGENDAFRAME_RUN_ID", str(run_step))
+        env_names = {
+            item["name"]
+            for item in run_step["args"]["body"]["overrides"]["containerOverrides"]["env"]
+        }
+        self.assertTrue(
+            {
+                "AGENDAFRAME_RUN_ID",
+                "AGENDAFRAME_SCHEDULED_TIME",
+                "AGENDAFRAME_BASIS_DATE",
+                "AGENDAFRAME_PIPELINE_OWNER",
+                "AGENDAFRAME_CLOUDFLARE_CRON_ENABLED",
+                "AGENDAFRAME_LEGACY_SCHEDULE_ENABLED",
+            }
+            <= env_names
+        )
+        serialized = source_path.read_text(encoding="utf-8")
+        self.assertNotRegex(
+            serialized,
+            r"(?i)(body_text|raw_body|sentence_text|full_article|prompt_payload|html)",
+        )
 
     def test_pubsub_contract_has_retry_and_dead_letter_without_raw_body(self) -> None:
         spec = load("pubsub.yaml")["spec"]
@@ -136,6 +181,10 @@ class GcpOrchestrationContractTests(unittest.TestCase):
 
     def test_all_contracts_are_declared_offline_only_and_raw_body_safe(self) -> None:
         for path in sorted(CONTRACT_DIR.glob("*.yaml")):
+            # This is executable Google Workflows source, not one of the
+            # repository's metadata-bearing offline contract documents.
+            if path.name == "workflow-runtime.yaml":
+                continue
             document = yaml.safe_load(path.read_text(encoding="utf-8"))
             self.assertEqual(
                 document["metadata"]["implementationStatus"], "contract_only", path.name

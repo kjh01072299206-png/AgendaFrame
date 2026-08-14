@@ -249,6 +249,24 @@ class CloudDeploymentContractTests(unittest.TestCase):
         self.assertIn("ExpectedSnapshotId", script)
         self.assertIn("must use HTTPS", script)
 
+    def test_orchestration_deployment_is_dry_run_and_scheduler_is_explicit(self) -> None:
+        script = (ROOT / "scripts" / "gcp" / "deploy-orchestration.ps1").read_text(encoding="utf-8")
+        self.assertIn("workflow-runtime.yaml", script)
+        self.assertIn("$Gcloud.Source workflows deploy", script)
+        self.assertIn("[switch]$CreateScheduler", script)
+        self.assertIn("scheduler jobs create http", script)
+        self.assertIn("scheduler jobs update http", script)
+        self.assertIn("0 3,9,15,21 * * *", script)
+        self.assertIn("Etc/UTC", script)
+        self.assertIn("status --porcelain --untracked-files=no", script)
+        self.assertIn("CommitSha must match the checked-out commit.", script)
+        self.assertIn("Dry run only", script)
+
+        provision = (ROOT / "scripts" / "gcp" / "provision.ps1").read_text(encoding="utf-8")
+        self.assertIn('"workflow"', provision)
+        self.assertIn('@("workflow", "roles/run.admin")', provision)
+        self.assertIn('@("scheduler", "roles/workflows.invoker")', provision)
+
 
 if __name__ == "__main__":
     unittest.main()

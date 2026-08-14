@@ -125,7 +125,30 @@ and no raw article/body/HTML/sentence fields.
   file from implying that Cloud SQL is already serving production traffic.
 - The workflow contract test asserts all four fields and remains offline.
 
+### Deployable Workflows and Scheduler path
+
+- `infra/gcp/workflow-runtime.yaml` is the executable Google Workflows source;
+  it invokes `googleapis.run.v1.namespaces.jobs.run`, waits for the guarded
+  Cloud Run Job, and injects KST `basisDate`, workflow execution `runId`, and
+  the GCP-only ownership flags.
+- `scripts/gcp/deploy-orchestration.ps1` is dry-run by default. It deploys the
+  workflow only with `-Apply -FullGatePassed` and creates/updates the recurring
+  Scheduler job only when `-CreateScheduler` is also supplied.
+- The Scheduler contract remains `0 3,9,15,21 * * *` UTC (00/06/12/18 KST).
+  `workflow` has `roles/run.admin`; `scheduler` has only
+  `roles/workflows.invoker`. `provision.ps1` creates both accounts in its
+  guarded apply plan.
+- The reusable command sequence is recorded in
+  `docs/gcp-orchestration-deploy.md`. No workflow, scheduler, IAM, or GCP
+  resource was applied in this checkpoint.
+
 ## Verification completed
+
+- Latest quick gate after the deployable-workflow changes: **129 passed**;
+  formatting and lint passed. The new contract tests and both orchestration
+  dry runs were included.
+- Latest full gate: **129 unit/contract + 3 integration/e2e passed**;
+  evaluation assets remain synthetic and `release_eligible: false`.
 
 - `powershell -NoProfile -File scripts/check.ps1 -Mode quick` → **127 passed**;
   Ruff and formatting passed.
@@ -191,7 +214,10 @@ contract_only/externalCalls:false until a non-production live authorization,
 budget cap, IAM, and rollback plan are explicitly available. If live approval
 is available, deploy reader canary before collector; verify body-free /active,
 pointer SHA, exactly five issues, evidence lineage, lease/idempotency, and
-previous-pointer rollback. Only after that create 4/day Scheduler + Workflows
+previous-pointer rollback. The deployable source is
+`infra/gcp/workflow-runtime.yaml` and its guarded path is
+`scripts/gcp/deploy-orchestration.ps1`; use `-CreateScheduler` only after
+the canary. Only after that create 4/day Scheduler + Workflows
 and disable the Cloudflare cron through the ownership flags. Finally connect
 Vercel live env in preview and verify /version, /, /outlets, and /framing.
 

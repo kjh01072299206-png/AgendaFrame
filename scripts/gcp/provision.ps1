@@ -41,7 +41,7 @@ $Plan = @(
     "Create a regional Artifact Registry repository",
     "Create a private Cloud Storage bucket with automatic body deletion",
     "Create partitioned BigQuery tables with required partition filters",
-    "Create separate collector, analyzer, publisher, reader, and scheduler service accounts",
+    "Create separate collector, analyzer, publisher, reader, workflow, and scheduler service accounts",
     "Grant least-privilege roles"
 )
 
@@ -144,7 +144,7 @@ else {
     if ($LASTEXITCODE -ne 0) { throw "BigQuery schema creation failed." }
 }
 
-foreach ($Name in @("builder", "collector", "analyzer", "publisher", "reader", "scheduler")) {
+foreach ($Name in @("builder", "collector", "analyzer", "publisher", "reader", "workflow", "scheduler")) {
     if (-not (Test-GcloudResource -Arguments @(
         "iam", "service-accounts", "describe",
         "$Name@$ProjectId.iam.gserviceaccount.com", "--project", $ProjectId
@@ -169,7 +169,9 @@ $Bindings = @(
     @("publisher", "roles/bigquery.dataViewer"),
     @("publisher", "roles/bigquery.jobUser"),
     @("publisher", "roles/secretmanager.secretAccessor"),
-    @("reader", "roles/storage.objectViewer")
+    @("reader", "roles/storage.objectViewer"),
+    @("workflow", "roles/run.admin"),
+    @("scheduler", "roles/workflows.invoker")
 )
 foreach ($Binding in $Bindings) {
     $Member = "serviceAccount:$($Binding[0])@$ProjectId.iam.gserviceaccount.com"
