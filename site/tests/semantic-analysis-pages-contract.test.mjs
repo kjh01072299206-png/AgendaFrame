@@ -28,6 +28,7 @@ test("semantic pages enforce public evidence and state boundaries", async () => 
   assert.match(source, /장치 근거/);
   assert.match(source, /비교 원장: 축별 기사 근거/);
   assert.match(source, /사건 종합 비교/);
+  assert.match(source, /export function SynthesisNarrative/);
   assert.match(source, /서로 다른 근거 그룹이 없어 대립 구도로 표시하지 않습니다/);
   assert.match(source, /synthesis\?\.usable/);
   assert.match(source, /구조화 보조 관측/);

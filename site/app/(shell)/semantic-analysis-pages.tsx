@@ -459,7 +459,7 @@ function Summary({ bundle, issue, analyses: dimensions }: { bundle: IssueAnalysi
   );
 }
 
-function SynthesisNarrative({ bundle }: { bundle: IssueAnalysisBundle }) {
+export function SynthesisNarrative({ bundle }: { bundle: IssueAnalysisBundle }) {
   const synthesis = synthesisData(bundle);
   if (!synthesis?.usable) return null;
   const what = observedClaim(synthesis.what_happened);

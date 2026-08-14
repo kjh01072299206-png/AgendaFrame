@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { getActiveSnapshot } from "../../../../../lib/active-snapshot";
 import { getInitialFiveIssueBundle } from "../../../../../lib/initial-five/artifacts";
+import { withEventSynthesis } from "../../../../../lib/initial-five/compose-synthesis.mjs";
 import { deriveIssue, safeDecode } from "../../../../../lib/initial-five/derive";
 import { protoIssue } from "../../../../../lib/proto";
-import { OutletsSemanticPage } from "../../../semantic-analysis-pages";
+import { OutletsSemanticPage, SynthesisNarrative } from "../../../semantic-analysis-pages";
 import {
   ArticleList,
   MorphologyTable,
@@ -31,6 +32,7 @@ export default async function OutletsPage({ params }: { params: Promise<{ issueI
   const issue = await loadIssue(Promise.resolve({ issueId }));
   const proto = protoIssue(issue.issueId);
   if (!proto) notFound();
+  const synthesisBundle = withEventSynthesis(activeBundle ?? getInitialFiveIssueBundle(decoded));
 
   /* 취재원 역할과 발언이 다루는 주체는 라이브 코딩본에서 가져온다. 두 산출물은 기사 순서가 같고,
      frames 만 기사 id 를 갖고 있어 그것으로 잇는다. */
@@ -55,6 +57,7 @@ export default async function OutletsPage({ params }: { params: Promise<{ issueI
 
   return (
     <>
+      {synthesisBundle ? <SynthesisNarrative bundle={synthesisBundle} /> : null}
       <section className="afs-card afs-card-lead">
         <h2>
           세로선 비교

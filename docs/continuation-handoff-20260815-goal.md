@@ -79,8 +79,9 @@
 
 - Vertex가 실제로 종합 문장을 쓴 성공 사례 없음
 - 성공한 실시간 수집 canary 없음 (`vhs68` 취소). current snapshot 없음
-- 공개 initial-five JSON에는 아직 `comparison.data.synthesis`가 없음
-  (작성기는 런타임/테스트에서만 돈다. 정적 파일을 다시 쓰지는 않았다)
+- 공개 initial-five JSON 파일 자체는 아직 다시 쓰지 않았다. 대신 사이트 로더가
+  `withEventSynthesis`로 런타임에 붙인다. 데모의 이슈·비교·프레이밍 화면에
+  `SynthesisNarrative`가 붙는다.
 - Cloud Run reader `/active` 외부 검증 없음
 - Workflows / Scheduler / Vercel live env / main push 없음
 - `release_eligible: false`
@@ -91,12 +92,11 @@
 
 1. `git status --short`로 시작하고 기존 dirty/untracked를 보존한다.
 2. `powershell -NoProfile -File scripts/check.ps1 -Mode quick`로 오프라인 게이트를 한 번 돌린다.
-3. **제품:** 작성기 결과를 정적 initial-five 번들에 붙일지, 아니면 사이트 로더가
-   번들에 synthesis가 없을 때 서버에서 한 번 계산할지 결정한다. 거대한 JSON을
-   손으로 편집하지 말고, 작은 attach 함수 + 계약 테스트로 한다.
-4. **제품:** top-2/3의 “관측된 강조 묶음”이 남지 않게 패밀리 라벨을 더 다듬고,
-   화면에서 캠프 gist가 예시 HTML 문장 길이에 가깝게 읽히는지 semantic page를
-   브라우저 또는 렌더 테스트로 확인한다.
+3. **제품:** 로더 부착은 끝났다(`site/lib/initial-five/compose-synthesis.mjs`).
+   브라우저에서 `/issues/bigkinds-2026-07-26-top-1`과 `/outlets`, `/framing`에
+   캠프 3개가 보이는지 확인한다. 가능하면 site 렌더 게이트를 돌린다.
+4. **제품:** Vertex 종합이 붙으면 작성기보다 그 초안을 우선한다. 바인딩 게이트는
+   유지한다.
 5. **라이브는 승인 후에만:** `AGENDAFRAME_MAX_ARTICLES_PER_RUN=12` canary.
    성공 시에만 Workflows → Scheduler → reader 검증 → Vercel live env.
    Cloudflare cron과 GCP를 동시에 켜지 않는다.

@@ -14,6 +14,7 @@ test("active snapshot loader is fail-closed and demo fallback is explicit", asyn
   assert.match(source, /mode: "demo"/);
   assert.match(source, /cache: "no-store"/);
   assert.match(source, /getIssueBundle/);
+  assert.match(source, /withEventSynthesis/);
   assert.match(source, /공개 금지 필드/);
   assert.match(source, /throw new Error/);
   assert.match(source, /exactly five issues/);

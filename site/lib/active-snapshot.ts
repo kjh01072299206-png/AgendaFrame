@@ -1,4 +1,5 @@
 import { initialFiveManifest, getInitialFiveIssueBundle } from "./initial-five/artifacts";
+import { withEventSynthesis } from "./initial-five/compose-synthesis.mjs";
 import type { InitialFiveManifest, IssueAnalysisBundle } from "./initial-five/types";
 
 type SnapshotEnvelope = {
@@ -104,7 +105,7 @@ function demoSource(): ActiveSnapshotSource {
     mode: "demo",
     snapshotId: `demo:${initialFiveManifest.generatedAt ?? initialFiveManifest.basisDate}`,
     manifest: initialFiveManifest,
-    getIssueBundle: (issueId) => getInitialFiveIssueBundle(issueId),
+    getIssueBundle: (issueId) => withEventSynthesis(getInitialFiveIssueBundle(issueId)),
   };
 }
 
@@ -126,7 +127,7 @@ export async function getActiveSnapshot(fetcher: typeof fetch = fetch): Promise<
     mode: "live",
     snapshotId: envelope.snapshotId,
     manifest: envelope.manifest,
-    getIssueBundle: (issueId) => bundles[issueId] ?? null,
+    getIssueBundle: (issueId) => withEventSynthesis(bundles[issueId] ?? null),
   };
 }
 

@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { getActiveSnapshot } from "../../../../../lib/active-snapshot";
 import { getInitialFiveIssueBundle } from "../../../../../lib/initial-five/artifacts";
+import { withEventSynthesis } from "../../../../../lib/initial-five/compose-synthesis.mjs";
 import { deriveIssue, safeDecode } from "../../../../../lib/initial-five/derive";
 import { protoIssue } from "../../../../../lib/proto";
-import { FramingSemanticPage } from "../../../semantic-analysis-pages";
+import { FramingSemanticPage, SynthesisNarrative } from "../../../semantic-analysis-pages";
 import {
   Clusters,
   DeviceTable,
@@ -33,6 +34,7 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
   const issue = await loadIssue(Promise.resolve({ issueId }));
   const proto = protoIssue(issue.issueId);
   if (!proto) notFound();
+  const synthesisBundle = withEventSynthesis(activeBundle ?? getInitialFiveIssueBundle(decoded));
 
   /* 계열 이름만으로는 "누구의 공동 책임" 인지 알 수 없다. 라이브 코딩본이 층위별 의역문에서
      뽑아 둔 주체를 항목 칸에 붙인다. 두 산출물은 기사 순서가 같고 frames 만 기사 id 를 갖는다. */
@@ -53,6 +55,7 @@ export default async function FramingPage({ params }: { params: Promise<{ issueI
 
   return (
     <>
+      {synthesisBundle ? <SynthesisNarrative bundle={synthesisBundle} /> : null}
       <section className="afs-card afs-card-lead">
         <h2>이 사안의 프레이밍</h2>
         <div className="afs-in afs-prose">
