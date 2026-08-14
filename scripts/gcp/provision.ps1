@@ -140,7 +140,7 @@ else {
     if ($LASTEXITCODE -ne 0) { throw "BigQuery schema creation failed." }
 }
 
-foreach ($Name in @("builder", "collector", "analyzer", "publisher")) {
+foreach ($Name in @("builder", "collector", "analyzer", "publisher", "reader")) {
     if (-not (Test-GcloudResource -Arguments @(
         "iam", "service-accounts", "describe",
         "$Name@$ProjectId.iam.gserviceaccount.com", "--project", $ProjectId
@@ -164,7 +164,8 @@ $Bindings = @(
     @("analyzer", "roles/storage.objectAdmin"),
     @("publisher", "roles/bigquery.dataViewer"),
     @("publisher", "roles/bigquery.jobUser"),
-    @("publisher", "roles/secretmanager.secretAccessor")
+    @("publisher", "roles/secretmanager.secretAccessor"),
+    @("reader", "roles/storage.objectViewer")
 )
 foreach ($Binding in $Bindings) {
     $Member = "serviceAccount:$($Binding[0])@$ProjectId.iam.gserviceaccount.com"

@@ -22,6 +22,11 @@ class GcpSnapshotReaderContractTests(unittest.TestCase):
         self.assertEqual(spec["storage"]["currentPointer"], "snapshots/current.json")
         self.assertTrue(spec["storage"]["immutableObjectReadOnly"])
         self.assertTrue(spec["storage"]["requiredManifestSha256"])
+        self.assertEqual(
+            spec["auth"]["serviceAccount"],
+            "reader@${GCP_PROJECT_ID}.iam.gserviceaccount.com",
+        )
+        self.assertEqual(spec["auth"]["serviceAccountRole"], "roles/storage.objectViewer")
         self.assertTrue(spec["validation"]["rawBodyAbsent"])
         self.assertTrue(spec["validation"]["manifestAndPointerMustConverge"])
         self.assertTrue(spec["failClosedOnInvalidSnapshot"])

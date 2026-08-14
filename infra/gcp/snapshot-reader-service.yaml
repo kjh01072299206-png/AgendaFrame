@@ -30,6 +30,7 @@ spec:
     manifestAndPointerMustConverge: true
   auth:
     gcsBucketPrivate: true
+    serviceAccount: reader@${GCP_PROJECT_ID}.iam.gserviceaccount.com
     serviceAccountRole: roles/storage.objectViewer
     publicEndpointMayExposeOnlyValidatedEnvelope: true
   caching:

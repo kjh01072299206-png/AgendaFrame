@@ -101,6 +101,11 @@ and no raw article/body/HTML/sentence fields.
 - The deployment script's local dry run was verified after commit
   `1ce3539`. No image build, Cloud Run resource mutation, or billed execution
   was performed, so this is wiring evidence—not a production deployment.
+- `scripts/gcp/deploy-snapshot-reader.ps1` now provides the matching
+  dry-run-by-default reader deployment path. It uses the dedicated `reader`
+  service account with Storage Object Viewer, keeps traffic at `--no-traffic`
+  unless `-Promote` is explicit, and requires `-AllowUnauthenticated` before
+  exposing the body-free `/active` boundary to Vercel.
 
 ### Storage decision contract
 

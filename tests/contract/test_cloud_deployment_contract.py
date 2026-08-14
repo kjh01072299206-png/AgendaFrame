@@ -207,6 +207,27 @@ class CloudDeploymentContractTests(unittest.TestCase):
         self.assertIn("-RunId and -ScheduledTime are required", script)
         self.assertNotIn("scheduler jobs create", script)
 
+    def test_snapshot_reader_deployment_is_dry_run_and_read_only_by_default(self) -> None:
+        script = (ROOT / "scripts" / "gcp" / "deploy-snapshot-reader.ps1").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("agendaframe-snapshot-reader", script)
+        self.assertIn("backend.gcp_snapshot_reader_service", script)
+        self.assertIn("reader@$ProjectId.iam.gserviceaccount.com", script)
+        self.assertIn(
+            "roles/storage.objectViewer",
+            (ROOT / "scripts" / "gcp" / "provision.ps1").read_text(encoding="utf-8"),
+        )
+        self.assertIn("[switch]$Apply", script)
+        self.assertIn("[switch]$FullGatePassed", script)
+        self.assertIn("[switch]$AllowUnauthenticated", script)
+        self.assertIn("[switch]$Promote", script)
+        self.assertIn("--no-traffic", script)
+        self.assertIn("AGENDAFRAME_PRIVATE_BUCKET", script)
+        self.assertIn("status --porcelain --untracked-files=no", script)
+        self.assertIn("CommitSha must match the checked-out commit", script)
+        self.assertNotIn("scheduler jobs create", script)
+
 
 if __name__ == "__main__":
     unittest.main()
