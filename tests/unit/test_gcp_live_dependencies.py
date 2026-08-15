@@ -276,6 +276,42 @@ class GcpLiveDependencyTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(fetcher.calls, [canonical])
 
+    def test_article_path_patterns_skip_navigation_candidates(self) -> None:
+        canonical = "https://khan.co.kr/article/view/1"
+        navigation = "https://khan.co.kr/section"
+        source = SourceDefinition(
+            SOURCE.source_id,
+            SOURCE.domains,
+            SOURCE.endpoint_urls,
+            article_path_patterns=(r"/article/view/",),
+        )
+        fetcher = FakeFetcher(
+            {
+                canonical: FetchedResponse(
+                    canonical,
+                    200,
+                    "text/html",
+                    article_page(date_published="2026-08-13T10:00:00+09:00"),
+                ),
+            }
+        )
+        response = FetchedResponse(
+            "https://khan.co.kr/section",
+            200,
+            "text/html",
+            (f'<a href="{navigation}">Navigation</a><a href="{canonical}">Article</a>').encode(),
+        )
+
+        rows = parser(fetcher).parse(
+            response,
+            source=source,
+            endpoint_url="https://khan.co.kr/section",
+            collected_at=COLLECTED_AT,
+        )
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(fetcher.calls, [canonical])
+
     def test_source_policy_record_limit_is_respected(self) -> None:
         first = "https://khan.co.kr/article/first"
         second = "https://khan.co.kr/article/second"

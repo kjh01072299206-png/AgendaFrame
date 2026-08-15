@@ -84,6 +84,7 @@ class SourceDefinition:
     endpoint_urls: tuple[str, ...]
     max_records_per_run: int = 120
     max_requests_per_run: int = 30
+    article_path_patterns: tuple[str, ...] = ()
 
 
 def load_source_definitions(path: str) -> tuple[SourceDefinition, ...]:
@@ -113,6 +114,18 @@ def load_source_definitions(path: str) -> tuple[SourceDefinition, ...]:
             for endpoint in source.get("endpoints", [])
             if isinstance(endpoint, Mapping) and str(endpoint.get("url", "")).strip()
         )
+        article_path_patterns = tuple(
+            str(pattern).strip()
+            for pattern in source.get("articlePathPatterns", [])
+            if str(pattern).strip()
+        )
+        for pattern in article_path_patterns:
+            try:
+                re.compile(pattern)
+            except re.error as error:
+                raise StageAdapterError(
+                    f"source definition has invalid article path pattern: {source_id}"
+                ) from error
         if not source_id or not domains or not endpoints:
             raise StageAdapterError(f"source definition is incomplete: {source_id or '<unknown>'}")
         definitions.append(
@@ -122,6 +135,7 @@ def load_source_definitions(path: str) -> tuple[SourceDefinition, ...]:
                 endpoints,
                 policy.max_records_per_source_per_run,
                 policy.max_requests_per_source_per_run,
+                article_path_patterns,
             )
         )
     if len(definitions) != policy.source_count or len(definitions) != 12:

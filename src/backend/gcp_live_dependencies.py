@@ -283,6 +283,9 @@ class NewsArticleParser:
             hostname = urllib.parse.urlsplit(canonical).hostname or ""
             if not is_domain_allowed(hostname, tuple(source.domains)) or canonical in seen:
                 continue
+            path_patterns = tuple(getattr(source, "article_path_patterns", ()))
+            if path_patterns and not any(re.search(pattern, canonical) for pattern in path_patterns):
+                continue
             if requests_used >= max_requests:
                 break
             seen.add(canonical)
