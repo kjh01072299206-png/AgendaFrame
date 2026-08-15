@@ -13,10 +13,14 @@ type SnapshotEnvelope = {
 
 export type ActiveSnapshotSource = {
   mode: "demo" | "live";
+  publicationStatus: "published" | "pending";
   snapshotId: string;
   manifest: InitialFiveManifest;
   getIssueBundle: (issueId: string) => IssueAnalysisBundle | null;
 };
+
+const TITLE_FALLBACK_ISSUE = /^title-fallback-/i;
+const UNPUBLISHABLE_PREFIX = "active snapshot is not publishable";
 
 const FORBIDDEN_PUBLIC_KEYS = new Set([
   "body_text",
@@ -106,9 +110,42 @@ function validateEnvelope(value: unknown): SnapshotEnvelope {
   return envelope as SnapshotEnvelope;
 }
 
-function demoSource(): ActiveSnapshotSource {
+function unpublishable(message: string): Error {
+  return new Error(`${UNPUBLISHABLE_PREFIX}: ${message}`);
+}
+
+function assertLivePublishable(envelope: SnapshotEnvelope): void {
+  for (const [index, issue] of envelope.manifest.issues.entries()) {
+    const issueId = String(issue.issueId ?? "");
+    if (TITLE_FALLBACK_ISSUE.test(issueId)) {
+      throw unpublishable(`issue ${index + 1} uses a title-fallback id`);
+    }
+    if ((issue.articleCount ?? 0) < 3 || (issue.outletCount ?? 0) < 2) {
+      throw unpublishable(`issue ${issueId} has fewer than 3 articles or 2 outlets`);
+    }
+    const bundle = envelope.bundles[issueId] as
+      | { articles?: Array<{ outlet?: unknown; sourceId?: unknown }>; clusterAi?: { coherence?: unknown } }
+      | undefined;
+    const articles = Array.isArray(bundle?.articles) ? bundle.articles : [];
+    const outlets = new Set(
+      articles
+        .map((article) => String(article.outlet ?? article.sourceId ?? "").trim())
+        .filter(Boolean),
+    );
+    if (articles.length < 3 || outlets.size < 2) {
+      throw unpublishable(`issue ${issueId} bundle coverage is below the live publish bar`);
+    }
+    const coherence = String(bundle?.clusterAi?.coherence ?? "").toLowerCase();
+    if (coherence === "title_fallback") {
+      throw unpublishable(`issue ${issueId} still has title-fallback coherence`);
+    }
+  }
+}
+
+function demoSource(publicationStatus: "published" | "pending" = "pending"): ActiveSnapshotSource {
   return {
     mode: "demo",
+    publicationStatus,
     snapshotId: `demo:${initialFiveManifest.generatedAt ?? initialFiveManifest.basisDate}`,
     manifest: initialFiveManifest,
     getIssueBundle: (issueId) => withEventSynthesis(getInitialFiveIssueBundle(issueId)),
@@ -127,11 +164,22 @@ export async function getActiveSnapshot(fetcher: typeof fetch = fetch): Promise<
   if (!url) throw new Error("AGENDAFRAME_DATA_MODE=live requires AGENDAFRAME_ACTIVE_SNAPSHOT_URL.");
   const response = await fetcher(url, { cache: "no-store" });
   if (!response.ok) throw new Error(`활성 스냅샷을 읽지 못했습니다 (${response.status}).`);
-  const envelope = validateEnvelope(await response.json());
+  let envelope: SnapshotEnvelope;
+  try {
+    envelope = validateEnvelope(await response.json());
+    assertLivePublishable(envelope);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.startsWith(UNPUBLISHABLE_PREFIX)) {
+      return demoSource("pending");
+    }
+    throw error;
+  }
   const bundles = envelope.bundles;
 
   return {
     mode: "live",
+    publicationStatus: "published",
     snapshotId: envelope.snapshotId,
     manifest: envelope.manifest,
     getIssueBundle: (issueId) => withEventSynthesis(bundles[issueId] ?? null),

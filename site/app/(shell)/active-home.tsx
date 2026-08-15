@@ -18,7 +18,9 @@ export function ActiveSnapshotHome({ active }: { active: ActiveSnapshotSource })
         <span className="afs-eyebrow">{formatDate(day.basisDate)}</span>
         <h1>같은 사건을 언론사마다 어떻게 다르게 설명하나</h1>
         <p>
-          GCP active snapshot에서 검증을 통과한 상위 {issues.length}개 의제를 표시합니다.
+          {active.publicationStatus === "published"
+            ? `GCP active snapshot에서 검증을 통과한 상위 ${issues.length}개 의제를 표시합니다.`
+            : `${formatDate(day.basisDate)} 실제 기사로 구성한 의제 ${issues.length}개입니다. 비교·프레이밍 문장은 분석 검증 중입니다.`}
           본문은 공개하지 않고, 기사 메타데이터와 검증된 근거 위치만 제공합니다.
         </p>
       </header>
@@ -26,7 +28,7 @@ export function ActiveSnapshotHome({ active }: { active: ActiveSnapshotSource })
       <SavedIssueList />
 
       <section className="afs-card">
-        <h2>오늘의 의제 <small>GCP 상위 5개 snapshot</small></h2>
+        <h2>오늘의 의제 <small>{active.publicationStatus === "published" ? "GCP 상위 5개 snapshot" : "분석 검증 중"}</small></h2>
         <div className="afs-in">
           <RankList rows={issues.map((issue) => ({
             rank: issue.rank,

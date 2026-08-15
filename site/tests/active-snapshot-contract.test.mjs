@@ -23,6 +23,10 @@ test("active snapshot loader is fail-closed and demo fallback is explicit", asyn
   assert.match(source, /qualityGate/);
   assert.match(source, /bundle issue IDs do not match/);
   assert.match(source, /article_content/);
+  assert.match(source, /title-fallback/);
+  assert.match(source, /is not publishable/);
+  assert.match(source, /publicationStatus/);
+  assert.match(source, /fewer than 3 articles or 2 outlets/);
 });
 
 test("shell issue routes resolve through the active snapshot boundary", async () => {
@@ -39,8 +43,10 @@ test("live active snapshot is the shared source for the main and two analysis ro
   const outlets = await readFile(path.join(siteRoot, "app", "(shell)", "issues", "[issueId]", "outlets", "page.tsx"), "utf8");
   const framing = await readFile(path.join(siteRoot, "app", "(shell)", "issues", "[issueId]", "framing", "page.tsx"), "utf8");
   assert.match(home, /getActiveSnapshot/);
-  assert.match(home, /active\.mode === "live"/);
+  assert.match(home, /ActiveSnapshotHome/);
+  assert.doesNotMatch(home, /LiveHome/);
   assert.match(homeView, /ActiveSnapshotHome/);
+  assert.match(homeView, /publicationStatus/);
   assert.match(outlets, /OutletsSemanticPage/);
   assert.match(framing, /FramingSemanticPage/);
   assert.match(outlets, /active\.mode === "live"/);

@@ -75,5 +75,12 @@ npx vercel deploy --prod --yes
 - pointer 교체 후 reader/public 검증 실패: 직전 immutable snapshot ID로 pointer를 되돌린다.
 - Vercel 화면·commit 불일치: 직전 검증된 production deployment로 되돌린다.
 - 7월 26일 demo JSON이나 prototype issue를 live fallback으로 연결하지 않는다.
+- `title-fallback-*`이거나 의제당 기사 3건·매체 2곳 미만인 reader snapshot은
+  공개 live 화면으로 쓰지 않는다. 그 경우 사이트는 8월 15일 fail-closed
+  artifact를 유지한다.
+- Cloud Scheduler body는 `infra/gcp/scheduler-execution-body.json`의
+  `{"argument":"{}"}`와 `Content-Type: application/json`만 사용한다.
+  `{argument:{}}` 또는 `application/octet-stream`이면 Workflows가
+  INVALID_ARGUMENT로 거절한다.
 
 자세한 2026-08-15 상태와 현재 미완료 항목은 continuation-handoff-20260815-live-production.md를 참조한다.

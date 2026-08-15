@@ -168,10 +168,30 @@ terminals.
 
 ## 8. 남은 일과 다음 모델의 시작점
 
-1. 새 runtime image를 reviewed commit으로 배포하고 2026-08-15 실제 run을 실행한다.
-2. run 성공 시 새 manifest/pointer와 reader /healthz·/active를 확인한다.
-3. Vercel production env를 live reader로 설정하고 새 commit을 배포한다.
-4. 공개 /version과 실제 화면, 다섯 issue의 모든 링크를 브라우저에서 확인한다.
-5. 실제 결과에 대해 사람 검토를 수행하고, 품질 목표를 충족하지 못하면 pointer를 교체하지 않는다.
+확인된 추가 결함 (2026-08-15 21:33 KST):
+
+- 공개 사이트는 live reader를 읽고 있었고, 그 pointer는 2026-08-14
+  `title-fallback-*` 5개(기사 1·매체 1·점수 0.0)였다. 8월 15일 승격
+  보류는 맞았지만, 구형 canary가 공개 메인에 남아 있었다.
+- Scheduler `agendaframe-collection-4x-kst`의 18:00 KST 시도는
+  `INVALID_ARGUMENT`로 실패했다. 배포된 body가 `{argument:{}}`이고
+  Content-Type이 `application/octet-stream`이었다. Workflows executions
+  API는 `{"argument":"{}"}` 문자열과 `application/json`이 필요하다.
+- 최신 Vertex 진단(50기사, 3회)은 매번 후보 5개·publishable 3개였다.
+  20건/9매체 high 1개, 3·4건 high 2개, 2건 medium 1개, 3건 low 1개,
+  ambiguous 16건. 게이트를 낮추지 않고 프롬프트 2.1.0에서 거대 주제
+  군집을 쪼개 모든 사건을 반환하도록 바꿨다.
+
+1. 이 커밋으로 live scheduler body/header를 고친 뒤 다음 00/06/12/18
+   KST 실행이 실제로 Workflow를 시작하는지 확인한다.
+2. runtime image를 reviewed commit으로 배포하고 2026-08-15 실제 run을
+   다시 실행한다. 5개 publishable cluster가 나오기 전에는 current
+   pointer를 바꾸지 않는다.
+3. Vercel은 이 커밋을 배포하면 구형 title-fallback canary를 거부하고
+   8월 15일 fail-closed artifact를 표시한다. 홈은 D1 LiveHome으로
+   떨어지지 않는다.
+4. run 성공 시에만 reader /healthz·/active와 공개 화면을 승격한다.
+5. 실제 결과에 대해 사람 검토를 수행하고, 품질 목표를 충족하지 못하면
+   pointer를 교체하지 않는다.
 
 완료 보고는 실제 구현/배포, 오프라인 테스트, 실제 live 검증, 사람 검토가 필요한 항목을 분리해서 작성한다.

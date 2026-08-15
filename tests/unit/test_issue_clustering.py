@@ -179,6 +179,10 @@ class MetadataIssueClusteringTests(unittest.TestCase):
         self.assertNotIn("body_text", prompt)
         self.assertNotIn("issue_id", prompt)
         self.assertNotIn(groups[0].issue_title, prompt)
+        self.assertIn("Do not stop at five", prompt)
+        self.assertIn("complete-link", prompt)
+        self.assertIn("광복절", prompt)
+        self.assertIn("Prefer more precise smaller clusters", prompt)
 
     def test_initial_five_exact_partition_is_approved_and_public_shape_is_body_free(self) -> None:
         articles, groups = self._initial_five_fixture()

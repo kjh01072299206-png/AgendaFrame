@@ -84,13 +84,17 @@ if (-not $CreateScheduler) {
 }
 
 $ExecutionUri = "https://workflowexecutions.googleapis.com/v1/projects/$ProjectId/locations/$Region/workflows/$WorkflowName/executions"
-$MessageBody = '{"argument":"{}"}'
+$MessageBodyFile = Join-Path $RepoRoot "infra\gcp\scheduler-execution-body.json"
+if (-not (Test-Path -LiteralPath $MessageBodyFile -PathType Leaf)) {
+    throw "Scheduler execution body is missing: $MessageBodyFile"
+}
 $SchedulerArgs = @(
     "--location", $Region,
     "--schedule", $Schedule,
     "--time-zone", $Timezone,
     "--uri", $ExecutionUri,
-    "--message-body", $MessageBody,
+    "--http-method", "POST",
+    "--message-body-from-file", $MessageBodyFile,
     "--oauth-service-account-email", $SchedulerServiceAccount,
     "--quiet"
 )
@@ -107,10 +111,10 @@ finally {
 }
 
 if ($Existing) {
-    & $Gcloud.Source scheduler jobs update http $SchedulerJobName --project $ProjectId @SchedulerArgs
+    & $Gcloud.Source scheduler jobs update http $SchedulerJobName --project $ProjectId @SchedulerArgs --update-headers "Content-Type=application/json"
 }
 else {
-    & $Gcloud.Source scheduler jobs create http $SchedulerJobName --project $ProjectId @SchedulerArgs
+    & $Gcloud.Source scheduler jobs create http $SchedulerJobName --project $ProjectId @SchedulerArgs --headers "Content-Type=application/json"
 }
 if ($LASTEXITCODE -ne 0) { throw "Cloud Scheduler deployment failed." }
 
