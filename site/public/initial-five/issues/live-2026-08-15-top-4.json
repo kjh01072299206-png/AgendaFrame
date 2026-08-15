@@ -1,0 +1,1690 @@
+{
+  "schemaVersion": "agendaframe.initial-five.public.v1",
+  "basisDate": "2026-08-15",
+  "status": "succeeded",
+  "issue": {
+    "issueId": "live-2026-08-15-top-4",
+    "rank": 4,
+    "title": "이진숙 방통위원장 탄핵 심판 및 거취 공방 격화",
+    "category": "정치",
+    "lead": "국회 탄핵소추안 가결 이후 이진숙 방송통신위원장의 헌재 심판을 앞두고 여야 정치권 내에서 위원장 직무와 적격성을 둘러싼 공방이 가열되고 있다.",
+    "articleCount": 15,
+    "outletCount": 5
+  },
+  "articles": [
+    {
+      "articleId": "3cfb339885774be4f6a7454675e208e5",
+      "title": "국민의힘 내부서도 이진숙 비판···홍준표 “시대정신을 망각한 돈키호테인가”",
+      "outlet": "khan",
+      "url": "https://www.khan.co.kr/article/202608151447001/",
+      "publishedAt": "2026-08-15T05:47:00.000Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "a1c057bc5b5e291479997d530959a425",
+      "title": "“5·18 모독한 이진숙 제명하고 수사하라”···오월단체·시민사회 ‘분노’",
+      "outlet": "khan",
+      "url": "https://www.khan.co.kr/article/202608141555001/",
+      "publishedAt": "2026-08-14T06:55:00.000Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "b1f734b1749a99051c461b6afb12372a",
+      "title": "이진숙 “김정은 서울 방문 환영 모임보다 5·18 학술토론회를 더 비판”",
+      "outlet": "khan",
+      "url": "https://www.khan.co.kr/article/202608141551001/",
+      "publishedAt": "2026-08-14T06:51:00.000Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "c3ac00680d095396500bb4a465860c2c",
+      "title": "“동료라 하기도 부끄러워”···민주당, ‘5·18 토론회 강행’ 이진숙 제명 촉구 결의안 제출",
+      "outlet": "khan",
+      "url": "https://www.khan.co.kr/article/202608141519001/",
+      "publishedAt": "2026-08-14T06:19:00.000Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "130a8fa36e11b5cc739196d702e57df9",
+      "title": "민주당 “이진숙 역사 쿠데타 시도”…국민의힘 “매우 부적절한 토론회지만…강제로 막을 방법은 없어”",
+      "outlet": "khan",
+      "url": "https://www.khan.co.kr/article/202608141052001/",
+      "publishedAt": "2026-08-14T01:52:00.000Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "b2f3011d68f15fc3f7277fccd95dd088",
+      "title": "이진숙이 주최한 ‘국회 5·18 토론회’서 논란 “광주를 고립·분열시켜야”…전두환 옹호도",
+      "outlet": "khan",
+      "url": "https://www.khan.co.kr/article/202608132128015/",
+      "publishedAt": "2026-08-13T12:28:01.000Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "5b4e9ebb75e0271f35980b30558f5487",
+      "title": "이진숙 주최 ‘5·18 재조명’ 국회 토론회서 “광주 고립·분열시켜야”“대한민국 정통 주인은 이승만·박정희·전두환”",
+      "outlet": "khan",
+      "url": "https://www.khan.co.kr/article/202608131816001/",
+      "publishedAt": "2026-08-13T09:16:00.000Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "a2286755391b62d803507e142eef349c",
+      "title": "與, 이진숙 제명 촉구 결의안 제출…“역사 쿠데타”",
+      "outlet": "kmib",
+      "url": "https://www.kmib.co.kr/article/view.asp?arcid=9000003194&code=61111111&sid1=pol",
+      "publishedAt": "2026-08-15T06:28:56.952Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "c30482874a6f46f1b6d58c376c61ee9f",
+      "title": "與, ‘5·18 재조명 포럼’ 이진숙 제명 결의안 제출",
+      "outlet": "donga",
+      "url": "https://www.donga.com/news/Politics/article/all/20260814/134482505/2",
+      "publishedAt": "2026-08-14T16:40:00.000Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "a9af15a9a8a72f07015d1224625ab8af",
+      "title": "與, ‘5·18 재조명 포럼’ 이진숙 제명 결의안 제출",
+      "outlet": "donga",
+      "url": "https://www.donga.com/news/Politics/article/all/20260814/134479370/1",
+      "publishedAt": "2026-08-14T07:59:00.000Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "d289f052afb87167c4d64443a5d16581",
+      "title": "與, 이진숙 의원직 제명 결의안 제출…“5·18 폄훼, 함량미달 정치인”",
+      "outlet": "donga",
+      "url": "https://www.donga.com/news/Politics/article/all/20260814/134478870/2",
+      "publishedAt": "2026-08-14T05:51:00.000Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "035583ea6aadfae2a0f51060aad271d5",
+      "title": "與, ‘5·18 폄훼 논란’ 이진숙 제명 결의안 제출",
+      "outlet": "seoul",
+      "url": "https://www.seoul.co.kr/news/politics/2026/08/14/20260814500226",
+      "publishedAt": "2026-08-15T06:28:56.952Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "0feadcf38dd4a778bb31997e573954d7",
+      "title": "대구 민주당 “5·18 모독, 이진숙 제명하라”… 李 “성역화 강요 말라”",
+      "outlet": "seoul",
+      "url": "https://www.seoul.co.kr/news/politics/2026/08/14/20260814500254",
+      "publishedAt": "2026-08-15T06:28:56.952Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "060300cf7ea1b8f1fb67ab9955ed898c",
+      "title": "김민석, 이진숙 겨냥… 5·18 왜곡·폄훼 의원 1년 직무정지법 발의",
+      "outlet": "chosun",
+      "url": "https://www.chosun.com/politics/assembly/2026/08/15/PMO7HFHXVNBKJOX7VELDZS5P3Q/",
+      "publishedAt": "2026-08-14T15:47:00.000Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "articleId": "47218a5c80eaad8f870d07239ea0f475",
+      "title": "이진숙 ‘5·18 재조명 포럼’... 與, 제명 촉구 결의안 제출",
+      "outlet": "chosun",
+      "url": "https://www.chosun.com/politics/assembly/2026/08/14/BCOI3B2L5NDOFOHAPJO2G2LOGU/",
+      "publishedAt": "2026-08-14T05:32:48.000Z",
+      "section": "politics",
+      "roles": [
+        {
+          "label": "정부·공공기관",
+          "count": 2
+        },
+        {
+          "label": "정당·정치권",
+          "count": 3
+        }
+      ],
+      "passageSubjects": [
+        {
+          "label": "대통령",
+          "count": 2
+        },
+        {
+          "label": "야당",
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "analysisStatus": {
+    "state": "succeeded",
+    "cluster": {
+      "label": "ai_semantic",
+      "engineLabel": "ai_semantic",
+      "semanticAi": true,
+      "status": "succeeded",
+      "model": "gemini-2.5-flash-lite",
+      "promptVersion": "2.0.0",
+      "schemaVersion": 1,
+      "source": "live-crawl-2026-08-15",
+      "decision": "analyze",
+      "coherence": "high",
+      "textScope": "title_source_published_at_only",
+      "fallbackReason": null,
+      "requiresHumanReview": true,
+      "summary": "야당은 방송 장악 저지를 위한 당연한 탄핵이라고 주장하고, 여당은 공영방송 정상화를 가로막는 무리한 정치 공세라고 반박했습니다.",
+      "commonSubjects": [
+        "대통령",
+        "광복절",
+        "여야",
+        "정부",
+        "국민",
+        "2026-08-15"
+      ],
+      "narrativeVariants": [
+        {
+          "label": "방송 독립 훼손 책임 추궁",
+          "description": "2인 체제 방통위의 위법적 이사진 선임을 강행하며 공영방송을 장악하려 했다는 비판",
+          "article_ids": [
+            "3cfb339885774be4f6a7454675e208e5",
+            "a1c057bc5b5e291479997d530959a425",
+            "b1f734b1749a99051c461b6afb12372a",
+            "c3ac00680d095396500bb4a465860c2c"
+          ]
+        },
+        {
+          "label": "야당의 방송 장악용 표적 탄핵 규탄",
+          "description": "공영방송 개혁을 막기 위해 헌정 사상 유례없는 줄탄핵을 벌이고 있다는 여권의 반론",
+          "article_ids": [
+            "3cfb339885774be4f6a7454675e208e5",
+            "a1c057bc5b5e291479997d530959a425",
+            "b1f734b1749a99051c461b6afb12372a",
+            "c3ac00680d095396500bb4a465860c2c"
+          ]
+        }
+      ]
+    },
+    "semantic": {
+      "status": "succeeded",
+      "engineLabel": "ai_semantic",
+      "semanticAi": true,
+      "model": "gemini-2.5-flash-lite",
+      "promptVersion": "v2.6.0",
+      "schemaVersion": "agendaframe.article-frame-profile.v2",
+      "succeededArticleCount": 15,
+      "reviewNeededArticleCount": 0,
+      "requiresHumanReview": true
+    }
+  },
+  "clusterAi": {
+    "decision": "analyze",
+    "coherence": "high",
+    "summary": "야당은 방송 장악 저지를 위한 당연한 탄핵이라고 주장하고, 여당은 공영방송 정상화를 가로막는 무리한 정치 공세라고 반박했습니다."
+  },
+  "comparison": {
+    "engine": {
+      "semanticAi": true,
+      "version": "v2.6.0"
+    },
+    "data": {
+      "summary_30_seconds": {
+        "what_happened": "국회 탄핵소추안 가결 이후 이진숙 방송통신위원장의 헌재 심판을 앞두고 여야 정치권 내에서 위원장 직무와 적격성을 둘러싼 공방이 가열되고 있다.",
+        "main_difference": "야당은 방송 장악 저지를 위한 당연한 탄핵이라고 주장하고, 여당은 공영방송 정상화를 가로막는 무리한 정치 공세라고 반박했습니다.",
+        "why_it_matters": "국가적 기념일에 제시된 국정 기조에 대해 언론사별 시각과 강조점이 뚜렷하게 갈렸습니다."
+      },
+      "camps": [
+        {
+          "name": "방송 독립 훼손 책임 추궁",
+          "gist": "2인 체제 방통위의 위법적 이사진 선임을 강행하며 공영방송을 장악하려 했다는 비판",
+          "outlets": [
+            "hani",
+            "khan",
+            "seoul"
+          ],
+          "article_ids": [
+            "3cfb339885774be4f6a7454675e208e5",
+            "a1c057bc5b5e291479997d530959a425",
+            "b1f734b1749a99051c461b6afb12372a",
+            "c3ac00680d095396500bb4a465860c2c",
+            "130a8fa36e11b5cc739196d702e57df9",
+            "b2f3011d68f15fc3f7277fccd95dd088",
+            "5b4e9ebb75e0271f35980b30558f5487",
+            "035583ea6aadfae2a0f51060aad271d5",
+            "0feadcf38dd4a778bb31997e573954d7"
+          ]
+        },
+        {
+          "name": "야당의 방송 장악용 표적 탄핵 규탄",
+          "gist": "공영방송 개혁을 막기 위해 헌정 사상 유례없는 줄탄핵을 벌이고 있다는 여권의 반론",
+          "outlets": [
+            "chosun",
+            "donga",
+            "munhwa"
+          ],
+          "article_ids": [
+            "c30482874a6f46f1b6d58c376c61ee9f",
+            "a9af15a9a8a72f07015d1224625ab8af",
+            "d289f052afb87167c4d64443a5d16581",
+            "060300cf7ea1b8f1fb67ab9955ed898c",
+            "47218a5c80eaad8f870d07239ea0f475"
+          ]
+        }
+      ],
+      "terms": [
+        {
+          "term": "2인 체제 방통위",
+          "gloss": "5인 정원 중 대통령 추천 2인만으로 주요 안건을 의결하는 방통위 운영 구조",
+          "evidence": [
+            {
+              "article_id": "3cfb339885774be4f6a7454675e208e5",
+              "outlet": "khan",
+              "locator": "문단 1 · 문장 2",
+              "sentence_sha256": "5688fb0c944bc1e679cf633fcce8ba75"
+            }
+          ]
+        },
+        {
+          "term": "탄핵소추",
+          "gloss": "고위 공직자의 직무상 위법 행위에 대해 국회가 헌법재판소에 파면을 요구하는 절차",
+          "evidence": [
+            {
+              "article_id": "3cfb339885774be4f6a7454675e208e5",
+              "outlet": "khan",
+              "locator": "문단 1 · 문장 3",
+              "sentence_sha256": "2da78a8d49dedadfa6cee25d4ab223e5"
+            }
+          ]
+        }
+      ],
+      "fact_rows": [
+        {
+          "statement": "국회 탄핵소추안 가결 이후 이진숙 방송통신위원장의 헌재 심판을 앞두고 여야 정치권 내에서 위원장 직무와 적격성을 둘러싼 공방이 가열되고 있다.",
+          "evidence": [
+            {
+              "article_id": "3cfb339885774be4f6a7454675e208e5",
+              "outlet": "khan",
+              "locator": "문단 1 · 문장 1",
+              "sentence_sha256": "82b14ed0c0ccdb20c725d7acc0d65c2c"
+            }
+          ]
+        }
+      ],
+      "split_rows": [
+        {
+          "statement": "2인 체제 방통위의 위법적 이사진 선임을 강행하며 공영방송을 장악하려 했다는 비판",
+          "evidence": [
+            {
+              "article_id": "3cfb339885774be4f6a7454675e208e5",
+              "outlet": "khan",
+              "locator": "문단 2 · 문장 1",
+              "sentence_sha256": "eca70caa85d89f1a4ffe2d39bf8d325f"
+            }
+          ]
+        },
+        {
+          "statement": "공영방송 개혁을 막기 위해 헌정 사상 유례없는 줄탄핵을 벌이고 있다는 여권의 반론",
+          "evidence": [
+            {
+              "article_id": "a1c057bc5b5e291479997d530959a425",
+              "outlet": "khan",
+              "locator": "문단 2 · 문장 2",
+              "sentence_sha256": "6e70118cd1bf905e59dea40854dd554b"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "semanticProfiles": [
+    {
+      "articleId": "3cfb339885774be4f6a7454675e208e5",
+      "outlet": "khan",
+      "profile": {
+        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
+        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
+        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
+        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
+        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "generic_frames": [
+          "human_interest",
+          "morality"
+        ],
+        "policy_frames": [
+          "rights_liberties",
+          "external_relations"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "5152f7dba37c9b9dc2c2c03beb6ef72f",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "4a533dd6030587009f611b23f5eef063",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "5152f7dba37c9b9dc2c2c03beb6ef72f",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "4a533dd6030587009f611b23f5eef063",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "5152f7dba37c9b9dc2c2c03beb6ef72f",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "a1c057bc5b5e291479997d530959a425",
+      "outlet": "khan",
+      "profile": {
+        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
+        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
+        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
+        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
+        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "generic_frames": [
+          "human_interest",
+          "morality"
+        ],
+        "policy_frames": [
+          "rights_liberties",
+          "external_relations"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "2055f74dff393333207f3fc3e74d1e9d",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "95af90ca8199cc58e21b669cbba5e0a3",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "2055f74dff393333207f3fc3e74d1e9d",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "95af90ca8199cc58e21b669cbba5e0a3",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "2055f74dff393333207f3fc3e74d1e9d",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "b1f734b1749a99051c461b6afb12372a",
+      "outlet": "khan",
+      "profile": {
+        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
+        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
+        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
+        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
+        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "generic_frames": [
+          "human_interest",
+          "morality"
+        ],
+        "policy_frames": [
+          "rights_liberties",
+          "external_relations"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "49ae3280a7c8752f16932b54c774db88",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "e9f2cf9feb5a78ec0516b06a9e203f25",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "49ae3280a7c8752f16932b54c774db88",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "e9f2cf9feb5a78ec0516b06a9e203f25",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "49ae3280a7c8752f16932b54c774db88",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "c3ac00680d095396500bb4a465860c2c",
+      "outlet": "khan",
+      "profile": {
+        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
+        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
+        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
+        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
+        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "generic_frames": [
+          "human_interest",
+          "morality"
+        ],
+        "policy_frames": [
+          "rights_liberties",
+          "external_relations"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "56274aa6bc52020f39165bf233f37764",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "55da40f326dd343e4c6898cc9c1ae793",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "56274aa6bc52020f39165bf233f37764",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "55da40f326dd343e4c6898cc9c1ae793",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "56274aa6bc52020f39165bf233f37764",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "130a8fa36e11b5cc739196d702e57df9",
+      "outlet": "khan",
+      "profile": {
+        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
+        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
+        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
+        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
+        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "generic_frames": [
+          "human_interest",
+          "morality"
+        ],
+        "policy_frames": [
+          "rights_liberties",
+          "external_relations"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "e1e69fe71e984aeb2d9669c697e4e5b0",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "43b7e40bdf8fec197c67e73ff3fa38d0",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "e1e69fe71e984aeb2d9669c697e4e5b0",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "43b7e40bdf8fec197c67e73ff3fa38d0",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "e1e69fe71e984aeb2d9669c697e4e5b0",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "b2f3011d68f15fc3f7277fccd95dd088",
+      "outlet": "khan",
+      "profile": {
+        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
+        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
+        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
+        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
+        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "generic_frames": [
+          "human_interest",
+          "morality"
+        ],
+        "policy_frames": [
+          "rights_liberties",
+          "external_relations"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "7f12aae754736f7801739d6e46d7eeb7",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "912db02185c68c48b8a1aff6620a189f",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "7f12aae754736f7801739d6e46d7eeb7",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "912db02185c68c48b8a1aff6620a189f",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "7f12aae754736f7801739d6e46d7eeb7",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "5b4e9ebb75e0271f35980b30558f5487",
+      "outlet": "khan",
+      "profile": {
+        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
+        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
+        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
+        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
+        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "generic_frames": [
+          "human_interest",
+          "morality"
+        ],
+        "policy_frames": [
+          "rights_liberties",
+          "external_relations"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "4e4bbe631f428f6e7f599a3e2758c8e7",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "712654a1ee532858cb235276a6024711",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "4e4bbe631f428f6e7f599a3e2758c8e7",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "712654a1ee532858cb235276a6024711",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "4e4bbe631f428f6e7f599a3e2758c8e7",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "a2286755391b62d803507e142eef349c",
+      "outlet": "kmib",
+      "profile": {
+        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
+        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
+        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
+        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
+        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "generic_frames": [
+          "human_interest",
+          "morality"
+        ],
+        "policy_frames": [
+          "rights_liberties",
+          "external_relations"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "0578dd34c5c75f1525f09d647142c07d",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "bbce50b75aaefbea70777909a0dc1e9a",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "0578dd34c5c75f1525f09d647142c07d",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "bbce50b75aaefbea70777909a0dc1e9a",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "0578dd34c5c75f1525f09d647142c07d",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "c30482874a6f46f1b6d58c376c61ee9f",
+      "outlet": "donga",
+      "profile": {
+        "problem_definition": "야당 및 비판 진영의 안보·원칙 우려",
+        "causal_interpretation": "대북 굴종 및 정책적 편향",
+        "responsibility_attribution": "대통령실 및 정부 여당",
+        "moral_evaluation": "정치적 갈등 증폭 및 원칙 훼손",
+        "treatment_recommendation": "단호한 안보 태세 유지 및 원칙 준수",
+        "generic_frames": [
+          "conflict",
+          "economic_consequences"
+        ],
+        "policy_frames": [
+          "security_defense",
+          "political_strategy"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "16442867cde733a5f59f0130d019ecea",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "aed00370a71d6ec7d8abb53ef06b33c9",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "16442867cde733a5f59f0130d019ecea",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "aed00370a71d6ec7d8abb53ef06b33c9",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "16442867cde733a5f59f0130d019ecea",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "a9af15a9a8a72f07015d1224625ab8af",
+      "outlet": "donga",
+      "profile": {
+        "problem_definition": "야당 및 비판 진영의 안보·원칙 우려",
+        "causal_interpretation": "대북 굴종 및 정책적 편향",
+        "responsibility_attribution": "대통령실 및 정부 여당",
+        "moral_evaluation": "정치적 갈등 증폭 및 원칙 훼손",
+        "treatment_recommendation": "단호한 안보 태세 유지 및 원칙 준수",
+        "generic_frames": [
+          "conflict",
+          "economic_consequences"
+        ],
+        "policy_frames": [
+          "security_defense",
+          "political_strategy"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "16442867cde733a5f59f0130d019ecea",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "aed00370a71d6ec7d8abb53ef06b33c9",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "16442867cde733a5f59f0130d019ecea",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "aed00370a71d6ec7d8abb53ef06b33c9",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "16442867cde733a5f59f0130d019ecea",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "d289f052afb87167c4d64443a5d16581",
+      "outlet": "donga",
+      "profile": {
+        "problem_definition": "야당 및 비판 진영의 안보·원칙 우려",
+        "causal_interpretation": "대북 굴종 및 정책적 편향",
+        "responsibility_attribution": "대통령실 및 정부 여당",
+        "moral_evaluation": "정치적 갈등 증폭 및 원칙 훼손",
+        "treatment_recommendation": "단호한 안보 태세 유지 및 원칙 준수",
+        "generic_frames": [
+          "conflict",
+          "economic_consequences"
+        ],
+        "policy_frames": [
+          "security_defense",
+          "political_strategy"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "633933daabee7a20e381da9a262bf946",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "a917fe81eb71adf293420b762eb4b79d",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "633933daabee7a20e381da9a262bf946",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "a917fe81eb71adf293420b762eb4b79d",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "633933daabee7a20e381da9a262bf946",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "035583ea6aadfae2a0f51060aad271d5",
+      "outlet": "seoul",
+      "profile": {
+        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
+        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
+        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
+        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
+        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "generic_frames": [
+          "human_interest",
+          "morality"
+        ],
+        "policy_frames": [
+          "rights_liberties",
+          "external_relations"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "0632d7e2f348980558b1d05277eb6403",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "420749e0fb386ba7ba2e7bf992471a4e",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "0632d7e2f348980558b1d05277eb6403",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "420749e0fb386ba7ba2e7bf992471a4e",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "0632d7e2f348980558b1d05277eb6403",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "0feadcf38dd4a778bb31997e573954d7",
+      "outlet": "seoul",
+      "profile": {
+        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
+        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
+        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
+        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
+        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "generic_frames": [
+          "human_interest",
+          "morality"
+        ],
+        "policy_frames": [
+          "rights_liberties",
+          "external_relations"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "b303fe40e1b2242d45a3186923fb2cab",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "587e737daaa0fb7a7ae99ac0a814bb5f",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "b303fe40e1b2242d45a3186923fb2cab",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "587e737daaa0fb7a7ae99ac0a814bb5f",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "b303fe40e1b2242d45a3186923fb2cab",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "060300cf7ea1b8f1fb67ab9955ed898c",
+      "outlet": "chosun",
+      "profile": {
+        "problem_definition": "야당 및 비판 진영의 안보·원칙 우려",
+        "causal_interpretation": "대북 굴종 및 정책적 편향",
+        "responsibility_attribution": "대통령실 및 정부 여당",
+        "moral_evaluation": "정치적 갈등 증폭 및 원칙 훼손",
+        "treatment_recommendation": "단호한 안보 태세 유지 및 원칙 준수",
+        "generic_frames": [
+          "conflict",
+          "economic_consequences"
+        ],
+        "policy_frames": [
+          "security_defense",
+          "political_strategy"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "ac4a6959511f6bfe6c6ee1f9d3a430ce",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "369dfeeb05b58b84e220e5dbc89143b5",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "ac4a6959511f6bfe6c6ee1f9d3a430ce",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "369dfeeb05b58b84e220e5dbc89143b5",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "ac4a6959511f6bfe6c6ee1f9d3a430ce",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    },
+    {
+      "articleId": "47218a5c80eaad8f870d07239ea0f475",
+      "outlet": "chosun",
+      "profile": {
+        "problem_definition": "야당 및 비판 진영의 안보·원칙 우려",
+        "causal_interpretation": "대북 굴종 및 정책적 편향",
+        "responsibility_attribution": "대통령실 및 정부 여당",
+        "moral_evaluation": "정치적 갈등 증폭 및 원칙 훼손",
+        "treatment_recommendation": "단호한 안보 태세 유지 및 원칙 준수",
+        "generic_frames": [
+          "conflict",
+          "economic_consequences"
+        ],
+        "policy_frames": [
+          "security_defense",
+          "political_strategy"
+        ],
+        "scope": "structural",
+        "sourcing": [
+          {
+            "role": "정당·정치권",
+            "kind": "direct_quote"
+          },
+          {
+            "role": "정부·공공기관",
+            "kind": "indirect_attribution"
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "dimension": "problem_definition",
+          "locator": "문단 1 · 문장 2",
+          "sentence_sha256": "0449e8e27b00abde371156105176af91",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "causal_interpretation",
+          "locator": "문단 1 · 문장 4",
+          "sentence_sha256": "6ff2e9535671ffc019f8f7f61ed769bb",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "responsibility_attribution",
+          "locator": "문단 2 · 문장 1",
+          "sentence_sha256": "0449e8e27b00abde371156105176af91",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        },
+        {
+          "dimension": "moral_evaluation",
+          "locator": "문단 2 · 문장 3",
+          "sentence_sha256": "6ff2e9535671ffc019f8f7f61ed769bb",
+          "quote_type": "indirect_attribution",
+          "speaker_role": "취재원"
+        },
+        {
+          "dimension": "treatment_recommendation",
+          "locator": "문단 3 · 문장 1",
+          "sentence_sha256": "0449e8e27b00abde371156105176af91",
+          "quote_type": "reporter_narration",
+          "speaker_role": "기자"
+        }
+      ],
+      "review": {
+        "status": "automatic_draft",
+        "requires_human_review": true
+      }
+    }
+  ],
+  "lineage": {
+    "issueId": "live-2026-08-15-top-4",
+    "basisDate": "2026-08-15",
+    "generatedAt": "2026-08-15T06:29:37.104Z",
+    "source": {
+      "semanticDirectory": "gcp:vertex-live-batch-20260815"
+    }
+  }
+}
