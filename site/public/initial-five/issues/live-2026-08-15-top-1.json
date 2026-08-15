@@ -14,9 +14,12 @@
   "articles": [
     {
       "articleId": "ab218ed307da0b7ab5794d5d85dd3fa8",
+      "id": "ab218ed307da0b7ab5794d5d85dd3fa8",
       "title": "국힘, 이 대통령 광복절 경축사에 “안보 포기 선언···북 도발에 한마디도 없어”",
-      "outlet": "khan",
-      "url": "https://www.khan.co.kr/article/202608151514001/",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "mediaGroupId": "khan_group",
+      "canonicalUrl": "https://www.khan.co.kr/article/202608151514001/",
       "publishedAt": "2026-08-15T06:14:00.000Z",
       "section": "politics",
       "roles": [
@@ -42,9 +45,12 @@
     },
     {
       "articleId": "1a8e19527d2c84143819700959b02b86",
+      "id": "1a8e19527d2c84143819700959b02b86",
       "title": "“조국 사면 후회하지 않습니까?”···안철수, 광복절에 이 대통령 향해 직격",
-      "outlet": "khan",
-      "url": "https://www.khan.co.kr/article/202608151443001/",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "mediaGroupId": "khan_group",
+      "canonicalUrl": "https://www.khan.co.kr/article/202608151443001/",
       "publishedAt": "2026-08-15T05:43:00.000Z",
       "section": "politics",
       "roles": [
@@ -70,9 +76,12 @@
     },
     {
       "articleId": "b861c4e6a32783cc8d6dc086b300212f",
+      "id": "b861c4e6a32783cc8d6dc086b300212f",
       "title": "이 대통령, 북한에 “상호 위협 의사 내려놓고, 오랜 전쟁 끝내기 위한 논의하자”",
-      "outlet": "khan",
-      "url": "https://www.khan.co.kr/article/202608151122001/",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "mediaGroupId": "khan_group",
+      "canonicalUrl": "https://www.khan.co.kr/article/202608151122001/",
       "publishedAt": "2026-08-15T02:22:00.000Z",
       "section": "politics",
       "roles": [
@@ -98,9 +107,12 @@
     },
     {
       "articleId": "bac1bc8ce6573dfc8110303e13f151da",
+      "id": "bac1bc8ce6573dfc8110303e13f151da",
       "title": "북한, 한·미 ‘을지자유의 방패’ 연습에 “단호한 정당 방위권 행사할 것” 반발",
-      "outlet": "khan",
-      "url": "https://www.khan.co.kr/article/202608141102001/",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "mediaGroupId": "khan_group",
+      "canonicalUrl": "https://www.khan.co.kr/article/202608141102001/",
       "publishedAt": "2026-08-14T02:02:00.000Z",
       "section": "politics",
       "roles": [
@@ -126,9 +138,12 @@
     },
     {
       "articleId": "0677b2927edacdd18ebf1e7d7f888fca",
+      "id": "0677b2927edacdd18ebf1e7d7f888fca",
       "title": "81주년 광복절에도 여전한 고통···미쓰비시 상고에 시민모임 “재판 회피” 반발",
-      "outlet": "khan",
-      "url": "https://www.khan.co.kr/article/202608151031001/",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "mediaGroupId": "khan_group",
+      "canonicalUrl": "https://www.khan.co.kr/article/202608151031001/",
       "publishedAt": "2026-08-15T01:31:00.000Z",
       "section": "society",
       "roles": [
@@ -154,9 +169,12 @@
     },
     {
       "articleId": "1a701562b5d7b8c84072a00b6bb2870c",
+      "id": "1a701562b5d7b8c84072a00b6bb2870c",
       "title": "백범 김구의 ‘문화강국’ 꿈, K-컬처·반도체로 꽃피우다···제81주년 광복절 경축식 개최",
-      "outlet": "khan",
-      "url": "https://www.khan.co.kr/article/202608151000001/",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "mediaGroupId": "khan_group",
+      "canonicalUrl": "https://www.khan.co.kr/article/202608151000001/",
       "publishedAt": "2026-08-15T01:00:00.000Z",
       "section": "society",
       "roles": [
@@ -182,9 +200,12 @@
     },
     {
       "articleId": "fd107aaa9f8839dfe919aa7c18a390dd",
+      "id": "fd107aaa9f8839dfe919aa7c18a390dd",
       "title": "광복절에 우리 동네 한번 걸어볼까…서울 곳곳에 남은 독립운동의 흔적",
-      "outlet": "khan",
-      "url": "https://www.khan.co.kr/article/202608141652001/",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "mediaGroupId": "khan_group",
+      "canonicalUrl": "https://www.khan.co.kr/article/202608141652001/",
       "publishedAt": "2026-08-14T07:52:00.000Z",
       "section": "society",
       "roles": [
@@ -210,9 +231,12 @@
     },
     {
       "articleId": "010cd9ed24382a9bf2a382a30f9d47b8",
+      "id": "010cd9ed24382a9bf2a382a30f9d47b8",
       "title": "광복절 밤, 일제 강점기 사라졌다 복원된 ‘동해 부곡 돌담마을 해안 숲’에 음악 흐른다",
-      "outlet": "khan",
-      "url": "https://www.khan.co.kr/article/202608141103001/",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "mediaGroupId": "khan_group",
+      "canonicalUrl": "https://www.khan.co.kr/article/202608141103001/",
       "publishedAt": "2026-08-14T02:03:00.000Z",
       "section": "society",
       "roles": [
@@ -238,9 +262,12 @@
     },
     {
       "articleId": "ead879f5ebb764232f29a8eabd96271f",
+      "id": "ead879f5ebb764232f29a8eabd96271f",
       "title": "일 교도통신 “북한, 11월까지 러시아 파병 규모 5만명으로 확대 검토”",
-      "outlet": "khan",
-      "url": "https://www.khan.co.kr/article/202608131124001/",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "mediaGroupId": "khan_group",
+      "canonicalUrl": "https://www.khan.co.kr/article/202608131124001/",
       "publishedAt": "2026-08-13T02:24:00.000Z",
       "section": "international",
       "roles": [
@@ -266,9 +293,12 @@
     },
     {
       "articleId": "95489c90d521b04d24b8d2f5d53fdafa",
+      "id": "95489c90d521b04d24b8d2f5d53fdafa",
       "title": "합참 “북한, 원산 일대서 동해상으로 탄도미사일 발사”",
-      "outlet": "kmib",
-      "url": "https://www.kmib.co.kr/article/view.asp?arcid=9000002415&code=61111611&sid1=pol",
+      "outlet": "국민일보",
+      "sourceId": "kmib",
+      "mediaGroupId": "kmib_group",
+      "canonicalUrl": "https://www.kmib.co.kr/article/view.asp?arcid=9000002415&code=61111611&sid1=pol",
       "publishedAt": "2026-08-15T06:28:56.952Z",
       "section": "politics",
       "roles": [
@@ -294,9 +324,12 @@
     },
     {
       "articleId": "bcd84836e50abe6aaba48771ceb81e29",
+      "id": "bcd84836e50abe6aaba48771ceb81e29",
       "title": "여야, 광복절 맞아 한목소리…“선열 숭고한 희생 잊지 않겠다”",
-      "outlet": "kmib",
-      "url": "https://www.kmib.co.kr/article/view.asp?arcid=9000003291&code=61111111&sid1=pol",
+      "outlet": "국민일보",
+      "sourceId": "kmib",
+      "mediaGroupId": "kmib_group",
+      "canonicalUrl": "https://www.kmib.co.kr/article/view.asp?arcid=9000003291&code=61111111&sid1=pol",
       "publishedAt": "2026-08-15T06:28:56.952Z",
       "section": "politics",
       "roles": [
@@ -322,9 +355,12 @@
     },
     {
       "articleId": "350a96ac0a71fd236c6b116cf9631223",
+      "id": "350a96ac0a71fd236c6b116cf9631223",
       "title": "AI로 되살아난 순국선열…제81주년 광복절 경축식 개최",
-      "outlet": "kmib",
-      "url": "https://www.kmib.co.kr/article/view.asp?arcid=9000003290&code=61121111&sid1=soc",
+      "outlet": "국민일보",
+      "sourceId": "kmib",
+      "mediaGroupId": "kmib_group",
+      "canonicalUrl": "https://www.kmib.co.kr/article/view.asp?arcid=9000003290&code=61121111&sid1=soc",
       "publishedAt": "2026-08-15T06:28:56.952Z",
       "section": "society",
       "roles": [
@@ -350,9 +386,12 @@
     },
     {
       "articleId": "f500503d3222f974740ef76303651884",
+      "id": "f500503d3222f974740ef76303651884",
       "title": "日자민당 핵심 집행부, 광복절 야스쿠니 단체참배 추진",
-      "outlet": "kmib",
-      "url": "https://www.kmib.co.kr/article/view.asp?arcid=9000003225&code=61131111&sid1=int",
+      "outlet": "국민일보",
+      "sourceId": "kmib",
+      "mediaGroupId": "kmib_group",
+      "canonicalUrl": "https://www.kmib.co.kr/article/view.asp?arcid=9000003225&code=61131111&sid1=int",
       "publishedAt": "2026-08-15T06:28:56.952Z",
       "section": "international",
       "roles": [
@@ -378,9 +417,12 @@
     },
     {
       "articleId": "1de579ca87adee519bea992de2852aeb",
+      "id": "1de579ca87adee519bea992de2852aeb",
       "title": "‘北=주적’ 바꾸나… 李 신중론에도 통일부 “대체 표현 공론화 추진”",
-      "outlet": "donga",
-      "url": "https://www.donga.com/news/Politics/article/all/20260815/134483077/1",
+      "outlet": "동아일보",
+      "sourceId": "donga",
+      "mediaGroupId": "donga_group",
+      "canonicalUrl": "https://www.donga.com/news/Politics/article/all/20260815/134483077/1",
       "publishedAt": "2026-08-15T02:37:00.000Z",
       "section": "politics",
       "roles": [
@@ -406,9 +448,12 @@
     },
     {
       "articleId": "398120faff384005b6271b0ff5a1e7d4",
+      "id": "398120faff384005b6271b0ff5a1e7d4",
       "title": "李 “오래된 전쟁 끝낼 남북 당사자 논의 시작하자”",
-      "outlet": "donga",
-      "url": "https://www.donga.com/news/Politics/article/all/20260815/134482926/2",
+      "outlet": "동아일보",
+      "sourceId": "donga",
+      "mediaGroupId": "donga_group",
+      "canonicalUrl": "https://www.donga.com/news/Politics/article/all/20260815/134482926/2",
       "publishedAt": "2026-08-15T01:47:00.000Z",
       "section": "politics",
       "roles": [
@@ -514,9 +559,9 @@
           "name": "평화 공존 및 상호 위협 중단 강조",
           "gist": "오랜 분단과 적대를 끝내기 위해 상호 위협 의사를 내려놓고 실질적 평화공존과 대화 재개에 나서야 한다는 대통령의 경축사 취지를 부각",
           "outlets": [
-            "hani",
-            "khan",
-            "seoul"
+            "한겨레",
+            "경향신문",
+            "서울신문"
           ],
           "article_ids": [
             "ab218ed307da0b7ab5794d5d85dd3fa8",
@@ -534,10 +579,10 @@
           "name": "비핵화 없는 굴종 및 안보 위협 비판",
           "gist": "북한의 핵·미사일 도발에 대한 단호한 경고 없이 일방적 위협 중단과 대화를 요구하는 것은 안보 해체라는 야당의 비판을 부각",
           "outlets": [
-            "chosun",
-            "donga",
-            "munhwa",
-            "segye"
+            "조선일보",
+            "동아일보",
+            "문화일보",
+            "세계일보"
           ],
           "article_ids": [
             "1de579ca87adee519bea992de2852aeb",
@@ -552,9 +597,12 @@
           "evidence": [
             {
               "article_id": "ab218ed307da0b7ab5794d5d85dd3fa8",
-              "outlet": "khan",
-              "locator": "문단 1 · 문장 2",
-              "sentence_sha256": "f265d8524ab10608a7113d03864ccdea"
+              "outlet": "경향신문",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "f265d8524ab10608a7113d03864ccdea4bd0539a76b3f32793edc7777742127d"
             }
           ]
         },
@@ -564,9 +612,12 @@
           "evidence": [
             {
               "article_id": "ab218ed307da0b7ab5794d5d85dd3fa8",
-              "outlet": "khan",
-              "locator": "문단 1 · 문장 3",
-              "sentence_sha256": "54be41e44ff1907570b66418597481fd"
+              "outlet": "경향신문",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "54be41e44ff1907570b66418597481fd6d23690ed1473e05ea2cb63fa562865f"
             }
           ]
         },
@@ -576,9 +627,12 @@
           "evidence": [
             {
               "article_id": "ab218ed307da0b7ab5794d5d85dd3fa8",
-              "outlet": "khan",
-              "locator": "문단 1 · 문장 4",
-              "sentence_sha256": "105a99c8d3fed63fdc365859286cd893"
+              "outlet": "경향신문",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "105a99c8d3fed63fdc365859286cd8938fc7ffd77292492547444cfd8b91403a"
             }
           ]
         }
@@ -589,9 +643,12 @@
           "evidence": [
             {
               "article_id": "ab218ed307da0b7ab5794d5d85dd3fa8",
-              "outlet": "khan",
-              "locator": "문단 1 · 문장 1",
-              "sentence_sha256": "a45e9dca62005b9a3194ba6b43e67ebc"
+              "outlet": "경향신문",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "a45e9dca62005b9a3194ba6b43e67ebc924703906f33b86134acb697390e5f58"
             }
           ]
         }
@@ -602,9 +659,12 @@
           "evidence": [
             {
               "article_id": "ab218ed307da0b7ab5794d5d85dd3fa8",
-              "outlet": "khan",
-              "locator": "문단 2 · 문장 1",
-              "sentence_sha256": "5f847b6d38ae5d16b0ebc72090f12618"
+              "outlet": "경향신문",
+              "locator": {
+                "paragraph": 2,
+                "sentence": 1
+              },
+              "sentence_sha256": "5f847b6d38ae5d16b0ebc72090f12618c1cae0b713a09e7b13e15d15727ba57f"
             }
           ]
         },
@@ -613,9 +673,12 @@
           "evidence": [
             {
               "article_id": "1a8e19527d2c84143819700959b02b86",
-              "outlet": "khan",
-              "locator": "문단 2 · 문장 2",
-              "sentence_sha256": "365ea9403dc3e7b9a2087e33090a593f"
+              "outlet": "경향신문",
+              "locator": {
+                "paragraph": 2,
+                "sentence": 2
+              },
+              "sentence_sha256": "365ea9403dc3e7b9a2087e33090a593fa9d637f276be7944a7b422e701f21dd5"
             }
           ]
         }
@@ -625,13 +688,140 @@
   "semanticProfiles": [
     {
       "articleId": "ab218ed307da0b7ab5794d5d85dd3fa8",
-      "outlet": "khan",
+      "status": "succeeded",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "evidence": [
+        {
+          "articleId": "ab218ed307da0b7ab5794d5d85dd3fa8",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "dfccd5671c4eaae02a6dd7ae64b1d2937e4291dd65de50ec9d32782bb5c540b8"
+        },
+        {
+          "articleId": "ab218ed307da0b7ab5794d5d85dd3fa8",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "e0b5148bb84ff2475537058367091049b9f429f99c727b27ca805a2128cfd0d8"
+        },
+        {
+          "articleId": "ab218ed307da0b7ab5794d5d85dd3fa8",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "ac56140ff7eae32395ed6db3fdbf47ac76fe6a361b62ce859dfb40706625e1ca"
+        },
+        {
+          "articleId": "ab218ed307da0b7ab5794d5d85dd3fa8",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "621abb632addd1438b4238265b41bd2ca0101c5c9da0493c66f6eb53c1dd9514"
+        },
+        {
+          "articleId": "ab218ed307da0b7ab5794d5d85dd3fa8",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "8b94f7c1acb7980286263553547d1a2e00c27d9a0838f86fe6be85e4b411d464"
+        }
+      ],
       "profile": {
-        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
-        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
-        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
-        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
-        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:dfccd5671c4eaae02a6dd7ae64b1d2937e4291dd65de50ec9d32782bb5c540b8",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "대통령 및 정부의 정책적 결단과 대화 제안을 부각",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "dfccd5671c4eaae02a6dd7ae64b1d2937e4291dd65de50ec9d32782bb5c540b8"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:e0b5148bb84ff2475537058367091049b9f429f99c727b27ca805a2128cfd0d8",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "e0b5148bb84ff2475537058367091049b9f429f99c727b27ca805a2128cfd0d8"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:ac56140ff7eae32395ed6db3fdbf47ac76fe6a361b62ce859dfb40706625e1ca",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "ac56140ff7eae32395ed6db3fdbf47ac76fe6a361b62ce859dfb40706625e1ca"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:621abb632addd1438b4238265b41bd2ca0101c5c9da0493c66f6eb53c1dd9514",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "미래지향적 평화 구축 및 국가적 책임 이행을 긍정",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "621abb632addd1438b4238265b41bd2ca0101c5c9da0493c66f6eb53c1dd9514"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:8b94f7c1acb7980286263553547d1a2e00c27d9a0838f86fe6be85e4b411d464",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "적극적 대화 재개 및 제도적 보완을 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "8b94f7c1acb7980286263553547d1a2e00c27d9a0838f86fe6be85e4b411d464"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "human_interest",
           "morality"
@@ -652,43 +842,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "dfccd5671c4eaae02a6dd7ae64b1d293",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "e0b5148bb84ff2475537058367091049",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "dfccd5671c4eaae02a6dd7ae64b1d293",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "e0b5148bb84ff2475537058367091049",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "dfccd5671c4eaae02a6dd7ae64b1d293",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -696,13 +849,140 @@
     },
     {
       "articleId": "1a8e19527d2c84143819700959b02b86",
-      "outlet": "khan",
+      "status": "succeeded",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "evidence": [
+        {
+          "articleId": "1a8e19527d2c84143819700959b02b86",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "23f981bfddb38385e0878cfc89e5207d8cc5644cc80df1d3e004d860fac344bc"
+        },
+        {
+          "articleId": "1a8e19527d2c84143819700959b02b86",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "f6af98fef935d52338636325f5d995c15c7055f1a2706a068ff669f03c9b92eb"
+        },
+        {
+          "articleId": "1a8e19527d2c84143819700959b02b86",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "85bc9e1ff1d6a76d8943a9fcabc57761121b6dc5d2f6d9bd1e3a8a5ef3a3741f"
+        },
+        {
+          "articleId": "1a8e19527d2c84143819700959b02b86",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "ea8ee364a474f3301728262759f873d512c2e3dc770df6a1b67fe1b189a96a11"
+        },
+        {
+          "articleId": "1a8e19527d2c84143819700959b02b86",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "0f08c808e89eba06714809bed37fa9e26589a30ebc8e87b3b2aceea1f346a071"
+        }
+      ],
       "profile": {
-        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
-        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
-        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
-        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
-        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:23f981bfddb38385e0878cfc89e5207d8cc5644cc80df1d3e004d860fac344bc",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "대통령 및 정부의 정책적 결단과 대화 제안을 부각",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "23f981bfddb38385e0878cfc89e5207d8cc5644cc80df1d3e004d860fac344bc"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:f6af98fef935d52338636325f5d995c15c7055f1a2706a068ff669f03c9b92eb",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "f6af98fef935d52338636325f5d995c15c7055f1a2706a068ff669f03c9b92eb"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:85bc9e1ff1d6a76d8943a9fcabc57761121b6dc5d2f6d9bd1e3a8a5ef3a3741f",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "85bc9e1ff1d6a76d8943a9fcabc57761121b6dc5d2f6d9bd1e3a8a5ef3a3741f"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:ea8ee364a474f3301728262759f873d512c2e3dc770df6a1b67fe1b189a96a11",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "미래지향적 평화 구축 및 국가적 책임 이행을 긍정",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "ea8ee364a474f3301728262759f873d512c2e3dc770df6a1b67fe1b189a96a11"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:0f08c808e89eba06714809bed37fa9e26589a30ebc8e87b3b2aceea1f346a071",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "적극적 대화 재개 및 제도적 보완을 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "0f08c808e89eba06714809bed37fa9e26589a30ebc8e87b3b2aceea1f346a071"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "human_interest",
           "morality"
@@ -723,43 +1003,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "23f981bfddb38385e0878cfc89e5207d",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "f6af98fef935d52338636325f5d995c1",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "23f981bfddb38385e0878cfc89e5207d",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "f6af98fef935d52338636325f5d995c1",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "23f981bfddb38385e0878cfc89e5207d",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -767,13 +1010,140 @@
     },
     {
       "articleId": "b861c4e6a32783cc8d6dc086b300212f",
-      "outlet": "khan",
+      "status": "succeeded",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "evidence": [
+        {
+          "articleId": "b861c4e6a32783cc8d6dc086b300212f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "e5f1e47b5856349d07640ead837d29c304d20ab3e382f074eb40a5898e93b79a"
+        },
+        {
+          "articleId": "b861c4e6a32783cc8d6dc086b300212f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "f20ef850b5817c6b9588f70f1c1d4191f51018c2d9d308d465cd377ffceab71a"
+        },
+        {
+          "articleId": "b861c4e6a32783cc8d6dc086b300212f",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "aa7894e5cb1c31fdf485c75427f10a458f469b21d99c2b1e854b79018eeb86e9"
+        },
+        {
+          "articleId": "b861c4e6a32783cc8d6dc086b300212f",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "867b3b4a9cf320908ee9defaa6a85a51887655d6d0072b108ec080493eb1d2de"
+        },
+        {
+          "articleId": "b861c4e6a32783cc8d6dc086b300212f",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "49dc0ea4480e833083762093e302ed9ec1122aa44bdddc87b1e0675ca53b205e"
+        }
+      ],
       "profile": {
-        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
-        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
-        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
-        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
-        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:e5f1e47b5856349d07640ead837d29c304d20ab3e382f074eb40a5898e93b79a",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "대통령 및 정부의 정책적 결단과 대화 제안을 부각",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "e5f1e47b5856349d07640ead837d29c304d20ab3e382f074eb40a5898e93b79a"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:f20ef850b5817c6b9588f70f1c1d4191f51018c2d9d308d465cd377ffceab71a",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "f20ef850b5817c6b9588f70f1c1d4191f51018c2d9d308d465cd377ffceab71a"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:aa7894e5cb1c31fdf485c75427f10a458f469b21d99c2b1e854b79018eeb86e9",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "aa7894e5cb1c31fdf485c75427f10a458f469b21d99c2b1e854b79018eeb86e9"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:867b3b4a9cf320908ee9defaa6a85a51887655d6d0072b108ec080493eb1d2de",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "미래지향적 평화 구축 및 국가적 책임 이행을 긍정",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "867b3b4a9cf320908ee9defaa6a85a51887655d6d0072b108ec080493eb1d2de"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:49dc0ea4480e833083762093e302ed9ec1122aa44bdddc87b1e0675ca53b205e",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "적극적 대화 재개 및 제도적 보완을 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "49dc0ea4480e833083762093e302ed9ec1122aa44bdddc87b1e0675ca53b205e"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "human_interest",
           "morality"
@@ -794,43 +1164,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "e5f1e47b5856349d07640ead837d29c3",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "f20ef850b5817c6b9588f70f1c1d4191",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "e5f1e47b5856349d07640ead837d29c3",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "f20ef850b5817c6b9588f70f1c1d4191",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "e5f1e47b5856349d07640ead837d29c3",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -838,13 +1171,140 @@
     },
     {
       "articleId": "bac1bc8ce6573dfc8110303e13f151da",
-      "outlet": "khan",
+      "status": "succeeded",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "evidence": [
+        {
+          "articleId": "bac1bc8ce6573dfc8110303e13f151da",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "64282cdd465732f0c72a0b1eb7f9f9e715f2d96c3c0ce3e85d040f6531b249c2"
+        },
+        {
+          "articleId": "bac1bc8ce6573dfc8110303e13f151da",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "bedc1bda2ed6152a41f89ff10976d531a2a5b976dbe0603ada5bbc81334a31b1"
+        },
+        {
+          "articleId": "bac1bc8ce6573dfc8110303e13f151da",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "86b1dc034354d0bd867162b012bde506c89ac52ef3750e5cc1d71473d750c74c"
+        },
+        {
+          "articleId": "bac1bc8ce6573dfc8110303e13f151da",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "beb7627c3b5f27f1d11d2103c665f00567338571bdaed1036fb1108b07245acf"
+        },
+        {
+          "articleId": "bac1bc8ce6573dfc8110303e13f151da",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "5f4e57a11878792670c56ca23f12f4ebbce97eae18801d86f3ba974e6b0ead1f"
+        }
+      ],
       "profile": {
-        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
-        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
-        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
-        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
-        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:64282cdd465732f0c72a0b1eb7f9f9e715f2d96c3c0ce3e85d040f6531b249c2",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "대통령 및 정부의 정책적 결단과 대화 제안을 부각",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "64282cdd465732f0c72a0b1eb7f9f9e715f2d96c3c0ce3e85d040f6531b249c2"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:bedc1bda2ed6152a41f89ff10976d531a2a5b976dbe0603ada5bbc81334a31b1",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "bedc1bda2ed6152a41f89ff10976d531a2a5b976dbe0603ada5bbc81334a31b1"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:86b1dc034354d0bd867162b012bde506c89ac52ef3750e5cc1d71473d750c74c",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "86b1dc034354d0bd867162b012bde506c89ac52ef3750e5cc1d71473d750c74c"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:beb7627c3b5f27f1d11d2103c665f00567338571bdaed1036fb1108b07245acf",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "미래지향적 평화 구축 및 국가적 책임 이행을 긍정",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "beb7627c3b5f27f1d11d2103c665f00567338571bdaed1036fb1108b07245acf"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:5f4e57a11878792670c56ca23f12f4ebbce97eae18801d86f3ba974e6b0ead1f",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "적극적 대화 재개 및 제도적 보완을 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "5f4e57a11878792670c56ca23f12f4ebbce97eae18801d86f3ba974e6b0ead1f"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "human_interest",
           "morality"
@@ -865,43 +1325,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "64282cdd465732f0c72a0b1eb7f9f9e7",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "bedc1bda2ed6152a41f89ff10976d531",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "64282cdd465732f0c72a0b1eb7f9f9e7",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "bedc1bda2ed6152a41f89ff10976d531",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "64282cdd465732f0c72a0b1eb7f9f9e7",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -909,13 +1332,140 @@
     },
     {
       "articleId": "0677b2927edacdd18ebf1e7d7f888fca",
-      "outlet": "khan",
+      "status": "succeeded",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "evidence": [
+        {
+          "articleId": "0677b2927edacdd18ebf1e7d7f888fca",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "72684c60d221490ad06e91ba3061a59369040f2c67cfa8c4e11251d8e2bd6060"
+        },
+        {
+          "articleId": "0677b2927edacdd18ebf1e7d7f888fca",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "f86f064c5c12fa27fb850ab3dcc6730b9125564b8571e7ba3cbff37d1c7e0261"
+        },
+        {
+          "articleId": "0677b2927edacdd18ebf1e7d7f888fca",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "c670342965803877bac6237b41a98a014338e101b39efebae90acb65cd45ea32"
+        },
+        {
+          "articleId": "0677b2927edacdd18ebf1e7d7f888fca",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "75a6de8c9d2eade0aad01f7e72cc1a4b023c0d53144703a476ceb1f3bc967ea2"
+        },
+        {
+          "articleId": "0677b2927edacdd18ebf1e7d7f888fca",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "1a8fcdec6278710efab8bea10d6a573d4904c5b8d3d6328f2d92ad1e2d0d414e"
+        }
+      ],
       "profile": {
-        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
-        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
-        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
-        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
-        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:72684c60d221490ad06e91ba3061a59369040f2c67cfa8c4e11251d8e2bd6060",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "대통령 및 정부의 정책적 결단과 대화 제안을 부각",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "72684c60d221490ad06e91ba3061a59369040f2c67cfa8c4e11251d8e2bd6060"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:f86f064c5c12fa27fb850ab3dcc6730b9125564b8571e7ba3cbff37d1c7e0261",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "f86f064c5c12fa27fb850ab3dcc6730b9125564b8571e7ba3cbff37d1c7e0261"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:c670342965803877bac6237b41a98a014338e101b39efebae90acb65cd45ea32",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "c670342965803877bac6237b41a98a014338e101b39efebae90acb65cd45ea32"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:75a6de8c9d2eade0aad01f7e72cc1a4b023c0d53144703a476ceb1f3bc967ea2",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "미래지향적 평화 구축 및 국가적 책임 이행을 긍정",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "75a6de8c9d2eade0aad01f7e72cc1a4b023c0d53144703a476ceb1f3bc967ea2"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:1a8fcdec6278710efab8bea10d6a573d4904c5b8d3d6328f2d92ad1e2d0d414e",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "적극적 대화 재개 및 제도적 보완을 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "1a8fcdec6278710efab8bea10d6a573d4904c5b8d3d6328f2d92ad1e2d0d414e"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "human_interest",
           "morality"
@@ -936,43 +1486,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "72684c60d221490ad06e91ba3061a593",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "f86f064c5c12fa27fb850ab3dcc6730b",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "72684c60d221490ad06e91ba3061a593",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "f86f064c5c12fa27fb850ab3dcc6730b",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "72684c60d221490ad06e91ba3061a593",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -980,13 +1493,140 @@
     },
     {
       "articleId": "1a701562b5d7b8c84072a00b6bb2870c",
-      "outlet": "khan",
+      "status": "succeeded",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "evidence": [
+        {
+          "articleId": "1a701562b5d7b8c84072a00b6bb2870c",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "14dc8051b2aeaa0b763bcd6c3f46105166affc67b46753ed4521d0b90a9a82b3"
+        },
+        {
+          "articleId": "1a701562b5d7b8c84072a00b6bb2870c",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "853e4b685bc31844429cfd63f7a5e258ecf33894128ac5cf4577975f88c90689"
+        },
+        {
+          "articleId": "1a701562b5d7b8c84072a00b6bb2870c",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "36a48c7fcd90ec60b93774e4e22ae96bb1699fc894ae125fecb168ca03d9272f"
+        },
+        {
+          "articleId": "1a701562b5d7b8c84072a00b6bb2870c",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "4a9d01a143660aa295b7ff723ad57ff2c9963893edea2b26a099e80065d221c7"
+        },
+        {
+          "articleId": "1a701562b5d7b8c84072a00b6bb2870c",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "5318019a51f218f42bdde6733870f73307db27c9b7f78ec64ca508ca78643731"
+        }
+      ],
       "profile": {
-        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
-        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
-        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
-        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
-        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:14dc8051b2aeaa0b763bcd6c3f46105166affc67b46753ed4521d0b90a9a82b3",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "대통령 및 정부의 정책적 결단과 대화 제안을 부각",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "14dc8051b2aeaa0b763bcd6c3f46105166affc67b46753ed4521d0b90a9a82b3"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:853e4b685bc31844429cfd63f7a5e258ecf33894128ac5cf4577975f88c90689",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "853e4b685bc31844429cfd63f7a5e258ecf33894128ac5cf4577975f88c90689"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:36a48c7fcd90ec60b93774e4e22ae96bb1699fc894ae125fecb168ca03d9272f",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "36a48c7fcd90ec60b93774e4e22ae96bb1699fc894ae125fecb168ca03d9272f"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:4a9d01a143660aa295b7ff723ad57ff2c9963893edea2b26a099e80065d221c7",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "미래지향적 평화 구축 및 국가적 책임 이행을 긍정",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "4a9d01a143660aa295b7ff723ad57ff2c9963893edea2b26a099e80065d221c7"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:5318019a51f218f42bdde6733870f73307db27c9b7f78ec64ca508ca78643731",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "적극적 대화 재개 및 제도적 보완을 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "5318019a51f218f42bdde6733870f73307db27c9b7f78ec64ca508ca78643731"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "human_interest",
           "morality"
@@ -1007,43 +1647,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "14dc8051b2aeaa0b763bcd6c3f461051",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "853e4b685bc31844429cfd63f7a5e258",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "14dc8051b2aeaa0b763bcd6c3f461051",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "853e4b685bc31844429cfd63f7a5e258",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "14dc8051b2aeaa0b763bcd6c3f461051",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -1051,13 +1654,140 @@
     },
     {
       "articleId": "fd107aaa9f8839dfe919aa7c18a390dd",
-      "outlet": "khan",
+      "status": "succeeded",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "evidence": [
+        {
+          "articleId": "fd107aaa9f8839dfe919aa7c18a390dd",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "6a4f70d6ed4b4adc1569ecbfe6a1eeb895706916118de52056aa869197620db0"
+        },
+        {
+          "articleId": "fd107aaa9f8839dfe919aa7c18a390dd",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "1b50ee321e7b977bf870b5b81bdb712b896e764a20c9506bbb4619499f41bb40"
+        },
+        {
+          "articleId": "fd107aaa9f8839dfe919aa7c18a390dd",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "bf0121fed4cac54d3150e7d4f63822467962ad397b64a0f8e7651783f0702e96"
+        },
+        {
+          "articleId": "fd107aaa9f8839dfe919aa7c18a390dd",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "5a7676911a423159c438a654eff7ee8e9353a93fe38f421157f96e8657db87ca"
+        },
+        {
+          "articleId": "fd107aaa9f8839dfe919aa7c18a390dd",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "8d9fe6cfce8dfed8819a2ef466e69bd2a6123e9a5b6fc5e9e15b44dfe56552ac"
+        }
+      ],
       "profile": {
-        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
-        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
-        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
-        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
-        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:6a4f70d6ed4b4adc1569ecbfe6a1eeb895706916118de52056aa869197620db0",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "대통령 및 정부의 정책적 결단과 대화 제안을 부각",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "6a4f70d6ed4b4adc1569ecbfe6a1eeb895706916118de52056aa869197620db0"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:1b50ee321e7b977bf870b5b81bdb712b896e764a20c9506bbb4619499f41bb40",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "1b50ee321e7b977bf870b5b81bdb712b896e764a20c9506bbb4619499f41bb40"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:bf0121fed4cac54d3150e7d4f63822467962ad397b64a0f8e7651783f0702e96",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "bf0121fed4cac54d3150e7d4f63822467962ad397b64a0f8e7651783f0702e96"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:5a7676911a423159c438a654eff7ee8e9353a93fe38f421157f96e8657db87ca",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "미래지향적 평화 구축 및 국가적 책임 이행을 긍정",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "5a7676911a423159c438a654eff7ee8e9353a93fe38f421157f96e8657db87ca"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:8d9fe6cfce8dfed8819a2ef466e69bd2a6123e9a5b6fc5e9e15b44dfe56552ac",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "적극적 대화 재개 및 제도적 보완을 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "8d9fe6cfce8dfed8819a2ef466e69bd2a6123e9a5b6fc5e9e15b44dfe56552ac"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "human_interest",
           "morality"
@@ -1078,43 +1808,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "6a4f70d6ed4b4adc1569ecbfe6a1eeb8",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "1b50ee321e7b977bf870b5b81bdb712b",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "6a4f70d6ed4b4adc1569ecbfe6a1eeb8",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "1b50ee321e7b977bf870b5b81bdb712b",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "6a4f70d6ed4b4adc1569ecbfe6a1eeb8",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -1122,13 +1815,140 @@
     },
     {
       "articleId": "010cd9ed24382a9bf2a382a30f9d47b8",
-      "outlet": "khan",
+      "status": "succeeded",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "evidence": [
+        {
+          "articleId": "010cd9ed24382a9bf2a382a30f9d47b8",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "95aa4bfd16437cbf37df0a9823272864417d37f250374c44aa648a4b481066dc"
+        },
+        {
+          "articleId": "010cd9ed24382a9bf2a382a30f9d47b8",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "8d04682861ebb116cd0843cb692ff95cae4d89d1fcb533187d404cdd965bec74"
+        },
+        {
+          "articleId": "010cd9ed24382a9bf2a382a30f9d47b8",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "07a36b795e8f7bccfd834f2c29ebd3a1bd1a3bc2f1e3ec3bfcb8dbdecd47c240"
+        },
+        {
+          "articleId": "010cd9ed24382a9bf2a382a30f9d47b8",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "c9f53268eafe0f2831835423604243a0429152f676f29cc51a3d906d9e02ed00"
+        },
+        {
+          "articleId": "010cd9ed24382a9bf2a382a30f9d47b8",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "d77dd473dce8a969482b739e821363448963e80d34c951a02378645d8b0669d4"
+        }
+      ],
       "profile": {
-        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
-        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
-        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
-        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
-        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:95aa4bfd16437cbf37df0a9823272864417d37f250374c44aa648a4b481066dc",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "대통령 및 정부의 정책적 결단과 대화 제안을 부각",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "95aa4bfd16437cbf37df0a9823272864417d37f250374c44aa648a4b481066dc"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:8d04682861ebb116cd0843cb692ff95cae4d89d1fcb533187d404cdd965bec74",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "8d04682861ebb116cd0843cb692ff95cae4d89d1fcb533187d404cdd965bec74"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:07a36b795e8f7bccfd834f2c29ebd3a1bd1a3bc2f1e3ec3bfcb8dbdecd47c240",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "07a36b795e8f7bccfd834f2c29ebd3a1bd1a3bc2f1e3ec3bfcb8dbdecd47c240"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:c9f53268eafe0f2831835423604243a0429152f676f29cc51a3d906d9e02ed00",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "미래지향적 평화 구축 및 국가적 책임 이행을 긍정",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "c9f53268eafe0f2831835423604243a0429152f676f29cc51a3d906d9e02ed00"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:d77dd473dce8a969482b739e821363448963e80d34c951a02378645d8b0669d4",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "적극적 대화 재개 및 제도적 보완을 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "d77dd473dce8a969482b739e821363448963e80d34c951a02378645d8b0669d4"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "human_interest",
           "morality"
@@ -1149,43 +1969,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "95aa4bfd16437cbf37df0a9823272864",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "8d04682861ebb116cd0843cb692ff95c",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "95aa4bfd16437cbf37df0a9823272864",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "8d04682861ebb116cd0843cb692ff95c",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "95aa4bfd16437cbf37df0a9823272864",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -1193,13 +1976,140 @@
     },
     {
       "articleId": "ead879f5ebb764232f29a8eabd96271f",
-      "outlet": "khan",
+      "status": "succeeded",
+      "outlet": "경향신문",
+      "sourceId": "khan",
+      "evidence": [
+        {
+          "articleId": "ead879f5ebb764232f29a8eabd96271f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "1ee41b2dffc74894012119f37f7c400e70d25127ea6cee7d74ec814cb199d086"
+        },
+        {
+          "articleId": "ead879f5ebb764232f29a8eabd96271f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "b4118382786de933f14957594de57c6b116733ace938d8b79501975726dcff9a"
+        },
+        {
+          "articleId": "ead879f5ebb764232f29a8eabd96271f",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "8d0f69548f870dcc45d292047d944450e3fb6af26d10ff22e69b083d2fa855b2"
+        },
+        {
+          "articleId": "ead879f5ebb764232f29a8eabd96271f",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "a39631a3fcf0958d4aa1344d0631a208b56e9c39905f846ed496307483bca893"
+        },
+        {
+          "articleId": "ead879f5ebb764232f29a8eabd96271f",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "3f83492bede009e5920013fd879d9e4045af54de4f4ca90ae53817f080552765"
+        }
+      ],
       "profile": {
-        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
-        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
-        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
-        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
-        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:1ee41b2dffc74894012119f37f7c400e70d25127ea6cee7d74ec814cb199d086",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "대통령 및 정부의 정책적 결단과 대화 제안을 부각",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "1ee41b2dffc74894012119f37f7c400e70d25127ea6cee7d74ec814cb199d086"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:b4118382786de933f14957594de57c6b116733ace938d8b79501975726dcff9a",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "b4118382786de933f14957594de57c6b116733ace938d8b79501975726dcff9a"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:8d0f69548f870dcc45d292047d944450e3fb6af26d10ff22e69b083d2fa855b2",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "8d0f69548f870dcc45d292047d944450e3fb6af26d10ff22e69b083d2fa855b2"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:a39631a3fcf0958d4aa1344d0631a208b56e9c39905f846ed496307483bca893",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "미래지향적 평화 구축 및 국가적 책임 이행을 긍정",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "a39631a3fcf0958d4aa1344d0631a208b56e9c39905f846ed496307483bca893"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:3f83492bede009e5920013fd879d9e4045af54de4f4ca90ae53817f080552765",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "적극적 대화 재개 및 제도적 보완을 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "3f83492bede009e5920013fd879d9e4045af54de4f4ca90ae53817f080552765"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "human_interest",
           "morality"
@@ -1220,43 +2130,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "1ee41b2dffc74894012119f37f7c400e",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "b4118382786de933f14957594de57c6b",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "1ee41b2dffc74894012119f37f7c400e",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "b4118382786de933f14957594de57c6b",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "1ee41b2dffc74894012119f37f7c400e",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -1264,13 +2137,140 @@
     },
     {
       "articleId": "95489c90d521b04d24b8d2f5d53fdafa",
-      "outlet": "kmib",
+      "status": "succeeded",
+      "outlet": "국민일보",
+      "sourceId": "kmib",
+      "evidence": [
+        {
+          "articleId": "95489c90d521b04d24b8d2f5d53fdafa",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "79d47af5f55b61559fcf534f1b9a253817a408561da0b4615e9df1d21c66acda"
+        },
+        {
+          "articleId": "95489c90d521b04d24b8d2f5d53fdafa",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "b0e7d089cbfa3f9b60a2391107c3c6405c950b5bb3f28ded9cb1f5cafcee2bd2"
+        },
+        {
+          "articleId": "95489c90d521b04d24b8d2f5d53fdafa",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "c22d1089925cdcf90ab87a7a52ead6975a5f0a5df34fa793ffa71f03b4528d03"
+        },
+        {
+          "articleId": "95489c90d521b04d24b8d2f5d53fdafa",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "c08c044c0d662fbba8069e535b2225b63c90ab7b105867766c224ea507f95760"
+        },
+        {
+          "articleId": "95489c90d521b04d24b8d2f5d53fdafa",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "c02ae4b2027189b02adab0364f9a6e06e5d9f24476c4d26808f2d75dd712795f"
+        }
+      ],
       "profile": {
-        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
-        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
-        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
-        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
-        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:79d47af5f55b61559fcf534f1b9a253817a408561da0b4615e9df1d21c66acda",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "대통령 및 정부의 정책적 결단과 대화 제안을 부각",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "79d47af5f55b61559fcf534f1b9a253817a408561da0b4615e9df1d21c66acda"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:b0e7d089cbfa3f9b60a2391107c3c6405c950b5bb3f28ded9cb1f5cafcee2bd2",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "b0e7d089cbfa3f9b60a2391107c3c6405c950b5bb3f28ded9cb1f5cafcee2bd2"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:c22d1089925cdcf90ab87a7a52ead6975a5f0a5df34fa793ffa71f03b4528d03",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "c22d1089925cdcf90ab87a7a52ead6975a5f0a5df34fa793ffa71f03b4528d03"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:c08c044c0d662fbba8069e535b2225b63c90ab7b105867766c224ea507f95760",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "미래지향적 평화 구축 및 국가적 책임 이행을 긍정",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "c08c044c0d662fbba8069e535b2225b63c90ab7b105867766c224ea507f95760"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:c02ae4b2027189b02adab0364f9a6e06e5d9f24476c4d26808f2d75dd712795f",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "적극적 대화 재개 및 제도적 보완을 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "c02ae4b2027189b02adab0364f9a6e06e5d9f24476c4d26808f2d75dd712795f"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "human_interest",
           "morality"
@@ -1291,43 +2291,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "79d47af5f55b61559fcf534f1b9a2538",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "b0e7d089cbfa3f9b60a2391107c3c640",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "79d47af5f55b61559fcf534f1b9a2538",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "b0e7d089cbfa3f9b60a2391107c3c640",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "79d47af5f55b61559fcf534f1b9a2538",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -1335,13 +2298,140 @@
     },
     {
       "articleId": "bcd84836e50abe6aaba48771ceb81e29",
-      "outlet": "kmib",
+      "status": "succeeded",
+      "outlet": "국민일보",
+      "sourceId": "kmib",
+      "evidence": [
+        {
+          "articleId": "bcd84836e50abe6aaba48771ceb81e29",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "fb261d1075656988d7719908809c3c044865724725bdf0025888a92376c9d986"
+        },
+        {
+          "articleId": "bcd84836e50abe6aaba48771ceb81e29",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "6d63db1176f79ca56b677432b80431f98a3abbd1caa828e141187f57dbd6bd65"
+        },
+        {
+          "articleId": "bcd84836e50abe6aaba48771ceb81e29",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "f1641fe833f91a8245ae034e475c87c9b23842011d00e9f442b9f358135045e6"
+        },
+        {
+          "articleId": "bcd84836e50abe6aaba48771ceb81e29",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "80e4275548b80570239651f1a2dbc25f2a39435df2440882db5d00558d702838"
+        },
+        {
+          "articleId": "bcd84836e50abe6aaba48771ceb81e29",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "01486fef2ce79b0e51c7f30ace92edace391a8a0addf3396ce57536ae524a509"
+        }
+      ],
       "profile": {
-        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
-        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
-        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
-        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
-        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:fb261d1075656988d7719908809c3c044865724725bdf0025888a92376c9d986",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "대통령 및 정부의 정책적 결단과 대화 제안을 부각",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "fb261d1075656988d7719908809c3c044865724725bdf0025888a92376c9d986"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:6d63db1176f79ca56b677432b80431f98a3abbd1caa828e141187f57dbd6bd65",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "6d63db1176f79ca56b677432b80431f98a3abbd1caa828e141187f57dbd6bd65"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:f1641fe833f91a8245ae034e475c87c9b23842011d00e9f442b9f358135045e6",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "f1641fe833f91a8245ae034e475c87c9b23842011d00e9f442b9f358135045e6"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:80e4275548b80570239651f1a2dbc25f2a39435df2440882db5d00558d702838",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "미래지향적 평화 구축 및 국가적 책임 이행을 긍정",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "80e4275548b80570239651f1a2dbc25f2a39435df2440882db5d00558d702838"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:01486fef2ce79b0e51c7f30ace92edace391a8a0addf3396ce57536ae524a509",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "적극적 대화 재개 및 제도적 보완을 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "01486fef2ce79b0e51c7f30ace92edace391a8a0addf3396ce57536ae524a509"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "human_interest",
           "morality"
@@ -1362,43 +2452,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "fb261d1075656988d7719908809c3c04",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "6d63db1176f79ca56b677432b80431f9",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "fb261d1075656988d7719908809c3c04",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "6d63db1176f79ca56b677432b80431f9",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "fb261d1075656988d7719908809c3c04",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -1406,13 +2459,140 @@
     },
     {
       "articleId": "350a96ac0a71fd236c6b116cf9631223",
-      "outlet": "kmib",
+      "status": "succeeded",
+      "outlet": "국민일보",
+      "sourceId": "kmib",
+      "evidence": [
+        {
+          "articleId": "350a96ac0a71fd236c6b116cf9631223",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "67b1dfa7b304577b4b1223478f53b5848079571adbb36bb9541d6df9664abfdf"
+        },
+        {
+          "articleId": "350a96ac0a71fd236c6b116cf9631223",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "cea272aaff4a60bf037ebdad58f66d4d99b983626988b1a3de8c6c295b53cf6b"
+        },
+        {
+          "articleId": "350a96ac0a71fd236c6b116cf9631223",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "d6e93139467e9453a7686071441286860995de3695d4cd4bea176eae4f3bc5a1"
+        },
+        {
+          "articleId": "350a96ac0a71fd236c6b116cf9631223",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "0b5dc196d3c1683a94b146c9b0b0a156adfe1bf847a17f04824e69fae9efd56a"
+        },
+        {
+          "articleId": "350a96ac0a71fd236c6b116cf9631223",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "0b3667f195ed9bf8da411cbe1f625ffb6bff06dccff5d202a44c869bb132056b"
+        }
+      ],
       "profile": {
-        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
-        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
-        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
-        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
-        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:67b1dfa7b304577b4b1223478f53b5848079571adbb36bb9541d6df9664abfdf",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "대통령 및 정부의 정책적 결단과 대화 제안을 부각",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "67b1dfa7b304577b4b1223478f53b5848079571adbb36bb9541d6df9664abfdf"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:cea272aaff4a60bf037ebdad58f66d4d99b983626988b1a3de8c6c295b53cf6b",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "cea272aaff4a60bf037ebdad58f66d4d99b983626988b1a3de8c6c295b53cf6b"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:d6e93139467e9453a7686071441286860995de3695d4cd4bea176eae4f3bc5a1",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "d6e93139467e9453a7686071441286860995de3695d4cd4bea176eae4f3bc5a1"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:0b5dc196d3c1683a94b146c9b0b0a156adfe1bf847a17f04824e69fae9efd56a",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "미래지향적 평화 구축 및 국가적 책임 이행을 긍정",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "0b5dc196d3c1683a94b146c9b0b0a156adfe1bf847a17f04824e69fae9efd56a"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:0b3667f195ed9bf8da411cbe1f625ffb6bff06dccff5d202a44c869bb132056b",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "적극적 대화 재개 및 제도적 보완을 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "0b3667f195ed9bf8da411cbe1f625ffb6bff06dccff5d202a44c869bb132056b"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "human_interest",
           "morality"
@@ -1433,43 +2613,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "67b1dfa7b304577b4b1223478f53b584",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "cea272aaff4a60bf037ebdad58f66d4d",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "67b1dfa7b304577b4b1223478f53b584",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "cea272aaff4a60bf037ebdad58f66d4d",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "67b1dfa7b304577b4b1223478f53b584",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -1477,13 +2620,140 @@
     },
     {
       "articleId": "f500503d3222f974740ef76303651884",
-      "outlet": "kmib",
+      "status": "succeeded",
+      "outlet": "국민일보",
+      "sourceId": "kmib",
+      "evidence": [
+        {
+          "articleId": "f500503d3222f974740ef76303651884",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "5e965c5dc2c9ec23b5f4000b1369b717978b079981ca886783ba6b6c210196d0"
+        },
+        {
+          "articleId": "f500503d3222f974740ef76303651884",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "a65a7b67f26b64235bda08189b5923b4fcc8a1db79496d984229fabdb058dfa3"
+        },
+        {
+          "articleId": "f500503d3222f974740ef76303651884",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "9bc1d2458e9c9ac1f6ba51de30b2946e8d81d4ce3ec5faad4fb192fb7dd1eba1"
+        },
+        {
+          "articleId": "f500503d3222f974740ef76303651884",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "74270444c5e6cc302c7e2a89e39d28a5673512bc583d93978ffce813f7437ecc"
+        },
+        {
+          "articleId": "f500503d3222f974740ef76303651884",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "891740724670fa79264ce3f1e9a82e0850e91b8985a1470f3fe90b50db330b15"
+        }
+      ],
       "profile": {
-        "problem_definition": "대통령 및 정부의 정책적 결단과 대화 제안",
-        "causal_interpretation": "남북 평화 공존 및 역사 정의 실현",
-        "responsibility_attribution": "상대 진영 및 과거사 미청산 주체",
-        "moral_evaluation": "미래지향적 평화 구축 및 국가적 책임 이행",
-        "treatment_recommendation": "적극적 대화 재개 및 제도적 보완",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:5e965c5dc2c9ec23b5f4000b1369b717978b079981ca886783ba6b6c210196d0",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "대통령 및 정부의 정책적 결단과 대화 제안을 부각",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "5e965c5dc2c9ec23b5f4000b1369b717978b079981ca886783ba6b6c210196d0"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:a65a7b67f26b64235bda08189b5923b4fcc8a1db79496d984229fabdb058dfa3",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "a65a7b67f26b64235bda08189b5923b4fcc8a1db79496d984229fabdb058dfa3"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:9bc1d2458e9c9ac1f6ba51de30b2946e8d81d4ce3ec5faad4fb192fb7dd1eba1",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "9bc1d2458e9c9ac1f6ba51de30b2946e8d81d4ce3ec5faad4fb192fb7dd1eba1"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:74270444c5e6cc302c7e2a89e39d28a5673512bc583d93978ffce813f7437ecc",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "미래지향적 평화 구축 및 국가적 책임 이행을 긍정",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "74270444c5e6cc302c7e2a89e39d28a5673512bc583d93978ffce813f7437ecc"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:891740724670fa79264ce3f1e9a82e0850e91b8985a1470f3fe90b50db330b15",
+                "frame_family": "institutional_check",
+                "public_paraphrase": "적극적 대화 재개 및 제도적 보완을 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "891740724670fa79264ce3f1e9a82e0850e91b8985a1470f3fe90b50db330b15"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "human_interest",
           "morality"
@@ -1504,43 +2774,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "5e965c5dc2c9ec23b5f4000b1369b717",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "a65a7b67f26b64235bda08189b5923b4",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "5e965c5dc2c9ec23b5f4000b1369b717",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "a65a7b67f26b64235bda08189b5923b4",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "5e965c5dc2c9ec23b5f4000b1369b717",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -1548,13 +2781,140 @@
     },
     {
       "articleId": "1de579ca87adee519bea992de2852aeb",
-      "outlet": "donga",
+      "status": "succeeded",
+      "outlet": "동아일보",
+      "sourceId": "donga",
+      "evidence": [
+        {
+          "articleId": "1de579ca87adee519bea992de2852aeb",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "342a94ff45857c92868045d970cfe67c4a679f4f5949f082995d4651248b36e7"
+        },
+        {
+          "articleId": "1de579ca87adee519bea992de2852aeb",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "1bb4f41352dd89e928b6c1204710389448e1414d15d9a7d0171acdcf5e0553e9"
+        },
+        {
+          "articleId": "1de579ca87adee519bea992de2852aeb",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "8865c4784f16efb5ceafcf2d9b938e7bce92d4b0f5cdaa5aac04b2d49980c6ac"
+        },
+        {
+          "articleId": "1de579ca87adee519bea992de2852aeb",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "ea136067feb9a946f67fa36d5b2710c4c527796f824d141984945683b9d097c3"
+        },
+        {
+          "articleId": "1de579ca87adee519bea992de2852aeb",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "6d56afa0976ec158a66cab8d33f4e24bfc791c352f5dd23bb1fd82aa9e86b938"
+        }
+      ],
       "profile": {
-        "problem_definition": "야당 및 비판 진영의 안보·원칙 우려",
-        "causal_interpretation": "대북 굴종 및 정책적 편향",
-        "responsibility_attribution": "대통령실 및 정부 여당",
-        "moral_evaluation": "정치적 갈등 증폭 및 원칙 훼손",
-        "treatment_recommendation": "단호한 안보 태세 유지 및 원칙 준수",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:342a94ff45857c92868045d970cfe67c4a679f4f5949f082995d4651248b36e7",
+                "frame_family": "legal_institutional",
+                "public_paraphrase": "야당 및 비판 진영의 안보·원칙 우려를 지목",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "342a94ff45857c92868045d970cfe67c4a679f4f5949f082995d4651248b36e7"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:1bb4f41352dd89e928b6c1204710389448e1414d15d9a7d0171acdcf5e0553e9",
+                "frame_family": "legal_institutional",
+                "public_paraphrase": "대북 굴종 및 정책적 편향을 배경으로 지목",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "1bb4f41352dd89e928b6c1204710389448e1414d15d9a7d0171acdcf5e0553e9"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:8865c4784f16efb5ceafcf2d9b938e7bce92d4b0f5cdaa5aac04b2d49980c6ac",
+                "frame_family": "legal_institutional",
+                "public_paraphrase": "대통령실 및 정부 여당에 정책적 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "8865c4784f16efb5ceafcf2d9b938e7bce92d4b0f5cdaa5aac04b2d49980c6ac"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:ea136067feb9a946f67fa36d5b2710c4c527796f824d141984945683b9d097c3",
+                "frame_family": "legal_institutional",
+                "public_paraphrase": "정치적 갈등 증폭 및 국가 안보 원칙 훼손을 비판",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "ea136067feb9a946f67fa36d5b2710c4c527796f824d141984945683b9d097c3"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:6d56afa0976ec158a66cab8d33f4e24bfc791c352f5dd23bb1fd82aa9e86b938",
+                "frame_family": "legal_institutional",
+                "public_paraphrase": "단호한 안보 태세 유지 및 원칙 준수를 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "6d56afa0976ec158a66cab8d33f4e24bfc791c352f5dd23bb1fd82aa9e86b938"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "conflict",
           "economic_consequences"
@@ -1575,43 +2935,6 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "342a94ff45857c92868045d970cfe67c",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "1bb4f41352dd89e928b6c12047103894",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "342a94ff45857c92868045d970cfe67c",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "1bb4f41352dd89e928b6c12047103894",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "342a94ff45857c92868045d970cfe67c",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
@@ -1619,13 +2942,140 @@
     },
     {
       "articleId": "398120faff384005b6271b0ff5a1e7d4",
-      "outlet": "donga",
+      "status": "succeeded",
+      "outlet": "동아일보",
+      "sourceId": "donga",
+      "evidence": [
+        {
+          "articleId": "398120faff384005b6271b0ff5a1e7d4",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "2504cd7fd9669d16264c4f64be2dd92aa6e0b51f10a430bd2766ae6f1bff83b5"
+        },
+        {
+          "articleId": "398120faff384005b6271b0ff5a1e7d4",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "6440e02ae1689a2f606eb3843387285db708b2f243063892ca0893335f385932"
+        },
+        {
+          "articleId": "398120faff384005b6271b0ff5a1e7d4",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 1
+          },
+          "sentenceSha256": "b875396b66e77c62136f3ff191bf3ac1bae584247996f66ad7e79b9328d05ef0"
+        },
+        {
+          "articleId": "398120faff384005b6271b0ff5a1e7d4",
+          "locator": {
+            "paragraph": 2,
+            "sentence": 3
+          },
+          "sentenceSha256": "8ff092c4afeb8eda5f12b5e81e5aec39625f58e19cee965eaaf21966a7a73979"
+        },
+        {
+          "articleId": "398120faff384005b6271b0ff5a1e7d4",
+          "locator": {
+            "paragraph": 3,
+            "sentence": 1
+          },
+          "sentenceSha256": "af2d9e64fc99dcf9628f10c57b4c1b4e686a586999dbfdb2e775006d5007ed47"
+        }
+      ],
       "profile": {
-        "problem_definition": "야당 및 비판 진영의 안보·원칙 우려",
-        "causal_interpretation": "대북 굴종 및 정책적 편향",
-        "responsibility_attribution": "대통령실 및 정부 여당",
-        "moral_evaluation": "정치적 갈등 증폭 및 원칙 훼손",
-        "treatment_recommendation": "단호한 안보 태세 유지 및 원칙 준수",
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:2504cd7fd9669d16264c4f64be2dd92aa6e0b51f10a430bd2766ae6f1bff83b5",
+                "frame_family": "legal_institutional",
+                "public_paraphrase": "야당 및 비판 진영의 안보·원칙 우려를 지목",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "2504cd7fd9669d16264c4f64be2dd92aa6e0b51f10a430bd2766ae6f1bff83b5"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:6440e02ae1689a2f606eb3843387285db708b2f243063892ca0893335f385932",
+                "frame_family": "legal_institutional",
+                "public_paraphrase": "대북 굴종 및 정책적 편향을 배경으로 지목",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "6440e02ae1689a2f606eb3843387285db708b2f243063892ca0893335f385932"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:b875396b66e77c62136f3ff191bf3ac1bae584247996f66ad7e79b9328d05ef0",
+                "frame_family": "legal_institutional",
+                "public_paraphrase": "대통령실 및 정부 여당에 정책적 책임이 있음을 진단",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "b875396b66e77c62136f3ff191bf3ac1bae584247996f66ad7e79b9328d05ef0"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:8ff092c4afeb8eda5f12b5e81e5aec39625f58e19cee965eaaf21966a7a73979",
+                "frame_family": "legal_institutional",
+                "public_paraphrase": "정치적 갈등 증폭 및 국가 안보 원칙 훼손을 비판",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 2,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "8ff092c4afeb8eda5f12b5e81e5aec39625f58e19cee965eaaf21966a7a73979"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "items": [
+              {
+                "claim_id": "claim:af2d9e64fc99dcf9628f10c57b4c1b4e686a586999dbfdb2e775006d5007ed47",
+                "frame_family": "legal_institutional",
+                "public_paraphrase": "단호한 안보 태세 유지 및 원칙 준수를 촉구",
+                "evidence": {
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "af2d9e64fc99dcf9628f10c57b4c1b4e686a586999dbfdb2e775006d5007ed47"
+                }
+              }
+            ]
+          }
+        },
         "generic_frames": [
           "conflict",
           "economic_consequences"
@@ -1646,53 +3096,17 @@
           }
         ]
       },
-      "evidence": [
-        {
-          "dimension": "problem_definition",
-          "locator": "문단 1 · 문장 2",
-          "sentence_sha256": "2504cd7fd9669d16264c4f64be2dd92a",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "causal_interpretation",
-          "locator": "문단 1 · 문장 4",
-          "sentence_sha256": "6440e02ae1689a2f606eb3843387285d",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "responsibility_attribution",
-          "locator": "문단 2 · 문장 1",
-          "sentence_sha256": "2504cd7fd9669d16264c4f64be2dd92a",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        },
-        {
-          "dimension": "moral_evaluation",
-          "locator": "문단 2 · 문장 3",
-          "sentence_sha256": "6440e02ae1689a2f606eb3843387285d",
-          "quote_type": "indirect_attribution",
-          "speaker_role": "취재원"
-        },
-        {
-          "dimension": "treatment_recommendation",
-          "locator": "문단 3 · 문장 1",
-          "sentence_sha256": "2504cd7fd9669d16264c4f64be2dd92a",
-          "quote_type": "reporter_narration",
-          "speaker_role": "기자"
-        }
-      ],
       "review": {
         "status": "automatic_draft",
         "requires_human_review": true
       }
     }
   ],
+  "ruleProfiles": [],
   "lineage": {
     "issueId": "live-2026-08-15-top-1",
     "basisDate": "2026-08-15",
-    "generatedAt": "2026-08-15T06:29:37.083Z",
+    "generatedAt": "2026-08-15T06:35:58.246Z",
     "source": {
       "semanticDirectory": "gcp:vertex-live-batch-20260815"
     }

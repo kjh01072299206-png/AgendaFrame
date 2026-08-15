@@ -771,7 +771,7 @@ function ComparisonAxisEvidence({ bundle, issue }: { bundle: IssueAnalysisBundle
 }
 
 function StructuredObservationSection({ bundle }: { bundle: IssueAnalysisBundle }) {
-  const profiles = bundle.ruleProfiles.map((entry) => ({ entry, profile: structuredProfile(entry) })).filter(({ profile }) => Boolean(profile));
+  const profiles = (bundle.ruleProfiles ?? []).map((entry) => ({ entry, profile: structuredProfile(entry) })).filter(({ profile }) => Boolean(profile));
   const countValues = (values: Array<string | undefined>) => [...values.reduce((map, value) => {
     if (value) map.set(value, (map.get(value) ?? 0) + 1);
     return map;

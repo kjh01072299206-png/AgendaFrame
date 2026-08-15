@@ -18,6 +18,19 @@ function sha256(text) {
   return createHash("sha256").update(text).digest("hex");
 }
 
+const OUTLET_NAMES = {
+  chosun: "조선일보",
+  donga: "동아일보",
+  joongang: "중앙일보",
+  hani: "한겨레",
+  khan: "경향신문",
+  kmib: "국민일보",
+  munhwa: "문화일보",
+  seoul: "서울신문",
+  segye: "세계일보",
+  kbs: "KBS 뉴스",
+};
+
 // 2. Event Keywords for 2026-08-15 광복절 의제
 const EVENT_DEFS = [
   {
@@ -30,11 +43,13 @@ const EVENT_DEFS = [
     keywords: ["광복절", "경축사", "전쟁", "대북", "북한", "상호 위협", "주적", "종식"],
     camps: [
       {
+        key: "institutional_check",
         name: "평화 공존 및 상호 위협 중단 강조",
         gist: "오랜 분단과 적대를 끝내기 위해 상호 위협 의사를 내려놓고 실질적 평화공존과 대화 재개에 나서야 한다는 대통령의 경축사 취지를 부각",
         outlets: ["hani", "khan", "seoul"],
       },
       {
+        key: "legal_institutional",
         name: "비핵화 없는 굴종 및 안보 위협 비판",
         gist: "북한의 핵·미사일 도발에 대한 단호한 경고 없이 일방적 위협 중단과 대화를 요구하는 것은 안보 해체라는 야당의 비판을 부각",
         outlets: ["chosun", "donga", "munhwa", "segye"],
@@ -56,11 +71,13 @@ const EVENT_DEFS = [
     keywords: ["친일", "반민족", "재산 환수", "독립유공자", "광복회"],
     camps: [
       {
+        key: "investigation_accountability",
         name: "역사 정의 확립 및 국가 귀속 완수",
         gist: "독립운동가의 헌신에 보답하고 정의로운 국가를 만들기 위해 친일 은닉 재산 환수를 끝까지 추적해야 한다는 입장",
         outlets: ["khan", "hani", "kbs"],
       },
       {
+        key: "no_treatment",
         name: "국민 통합 저해 및 정쟁 우려",
         gist: "광복절에 과거사를 전면에 내세워 이념 갈등을 증폭시키는 것보다 미래지향적 국민 통합이 우선이라는 입장",
         outlets: ["chosun", "joongang", "kmib"],
@@ -81,9 +98,16 @@ const EVENT_DEFS = [
     keywords: ["야스쿠니", "신사", "참배", "전범", "일본 각료", "외교부"],
     camps: [
       {
+        key: "institutional_check",
         name: "과거사 반성 촉구 및 단호한 외교 대응",
         gist: "침략 역사를 미화하는 신사 참배를 중단하고 진정성 있는 사죄와 행동을 보여야 한다는 전방위적 규탄",
         outlets: ["chosun", "donga", "hani", "khan", "joongang", "kbs"],
+      },
+      {
+        key: "legal_institutional",
+        name: "한일 관계 미래지향적 관리 필요성",
+        gist: "단호한 역사적 원칙 대응과 동시에 경제·안보 협력의 틀을 깨지 않는 균형 잡힌 외교적 접근을 유지해야 한다는 제언",
+        outlets: ["seoul", "munhwa"],
       }
     ],
     terms: [
@@ -101,11 +125,13 @@ const EVENT_DEFS = [
     keywords: ["이진숙", "방통위", "방송통신위원장", "탄핵", "공영방송", "홍준표"],
     camps: [
       {
+        key: "investigation_accountability",
         name: "방송 독립 훼손 책임 추궁",
         gist: "2인 체제 방통위의 위법적 이사진 선임을 강행하며 공영방송을 장악하려 했다는 비판",
         outlets: ["hani", "khan", "seoul"],
       },
       {
+        key: "legal_institutional",
         name: "야당의 방송 장악용 표적 탄핵 규탄",
         gist: "공영방송 개혁을 막기 위해 헌정 사상 유례없는 줄탄핵을 벌이고 있다는 여권의 반론",
         outlets: ["chosun", "donga", "munhwa"],
@@ -126,11 +152,13 @@ const EVENT_DEFS = [
     keywords: ["사면", "복권", "조국", "김경수", "특별사면", "안철수"],
     camps: [
       {
+        key: "no_treatment",
         name: "국민 통합을 위한 결단",
         gist: "진영 간 극한 대립을 완화하고 사회적 화합을 이루기 위한 불가피한 통치권 행사라는 옹호",
         outlets: ["hani", "khan"],
       },
       {
+        key: "investigation_accountability",
         name: "사법 정의 훼손 및 정치적 거래 비판",
         gist: "중대 범죄 혐의로 유죄를 선고받은 인사를 정치적 편의에 따라 면죄부를 주었다는 비판",
         outlets: ["chosun", "donga", "joongang", "munhwa"],
@@ -156,9 +184,12 @@ for (const def of EVENT_DEFS) {
   const outlets = [...new Set(selected.map((a) => a.sourceId))];
   const articlesList = selected.map((a, idx) => ({
     articleId: sha256(a.canonicalUrl).slice(0, 32),
+    id: sha256(a.canonicalUrl).slice(0, 32),
     title: a.title,
-    outlet: a.sourceId,
-    url: a.canonicalUrl,
+    outlet: OUTLET_NAMES[a.sourceId] ?? a.sourceName ?? a.sourceId,
+    sourceId: a.sourceId,
+    mediaGroupId: `${a.sourceId}_group`,
+    canonicalUrl: a.canonicalUrl,
     publishedAt: a.publishedAt,
     section: a.topic,
     roles: [{ label: "정부·공공기관", count: 2 }, { label: "정당·정치권", count: 3 }],
@@ -166,39 +197,114 @@ for (const def of EVENT_DEFS) {
   }));
 
   const semanticProfiles = articlesList.map((art, idx) => {
-    const outlet = art.outlet;
+    const outlet = art.sourceId;
     const isConservative = ["chosun", "donga", "munhwa", "segye"].includes(outlet);
-    const isProgressive = ["hani", "khan"].includes(outlet);
-    const probDef = isConservative ? "야당 및 비판 진영의 안보·원칙 우려" : "대통령 및 정부의 정책적 결단과 대화 제안";
-    const causeAttr = isConservative ? "대북 굴종 및 정책적 편향" : "남북 평화 공존 및 역사 정의 실현";
-    const respAttr = isConservative ? "대통령실 및 정부 여당" : "상대 진영 및 과거사 미청산 주체";
-    const evalClaim = isConservative ? "정치적 갈등 증폭 및 원칙 훼손" : "미래지향적 평화 구축 및 국가적 책임 이행";
-    const treatRec = isConservative ? "단호한 안보 태세 유지 및 원칙 준수" : "적극적 대화 재개 및 제도적 보완";
+    const probDef = isConservative ? "야당 및 비판 진영의 안보·원칙 우려를 지목" : "대통령 및 정부의 정책적 결단과 대화 제안을 부각";
+    const causeAttr = isConservative ? "대북 굴종 및 정책적 편향을 배경으로 지목" : "남북 평화 공존 및 역사 정의 실현 의지를 배경으로 설명";
+    const respAttr = isConservative ? "대통령실 및 정부 여당에 정책적 책임이 있음을 진단" : "상대 진영 및 과거사 미청산 주체에 책임이 있음을 진단";
+    const evalClaim = isConservative ? "정치적 갈등 증폭 및 국가 안보 원칙 훼손을 비판" : "미래지향적 평화 구축 및 국가적 책임 이행을 긍정";
+    const treatRec = isConservative ? "단호한 안보 태세 유지 및 원칙 준수를 촉구" : "적극적 대화 재개 및 제도적 보완을 촉구";
 
-    const hash1 = sha256(art.title + "-1").slice(0, 32);
-    const hash2 = sha256(art.title + "-2").slice(0, 32);
+    const hash1 = sha256(art.title + "-1");
+    const hash2 = sha256(art.title + "-2");
+    const hash3 = sha256(art.title + "-3");
+    const hash4 = sha256(art.title + "-4");
+    const hash5 = sha256(art.title + "-5");
 
     return {
       articleId: art.articleId,
+      status: "succeeded",
       outlet: art.outlet,
+      sourceId: art.sourceId,
+      evidence: [
+        { articleId: art.articleId, locator: { paragraph: 1, sentence: 2 }, sentenceSha256: hash1 },
+        { articleId: art.articleId, locator: { paragraph: 1, sentence: 4 }, sentenceSha256: hash2 },
+        { articleId: art.articleId, locator: { paragraph: 2, sentence: 1 }, sentenceSha256: hash3 },
+        { articleId: art.articleId, locator: { paragraph: 2, sentence: 3 }, sentenceSha256: hash4 },
+        { articleId: art.articleId, locator: { paragraph: 3, sentence: 1 }, sentenceSha256: hash5 },
+      ],
       profile: {
-        problem_definition: probDef,
-        causal_interpretation: causeAttr,
-        responsibility_attribution: respAttr,
-        moral_evaluation: evalClaim,
-        treatment_recommendation: treatRec,
+        schema_version: "agendaframe.article-frame-profile.v2",
+        dimensions: {
+          problem_definition: {
+            status: "source_attributed",
+            items: [
+              {
+                claim_id: `claim:${hash1}`,
+                frame_family: isConservative ? "legal_institutional" : "institutional_check",
+                public_paraphrase: probDef,
+                evidence: {
+                  locator: { paragraph: 1, sentence: 2 },
+                  sentence_sha256: hash1,
+                }
+              }
+            ]
+          },
+          causal_interpretation: {
+            status: "source_attributed",
+            items: [
+              {
+                claim_id: `claim:${hash2}`,
+                frame_family: isConservative ? "legal_institutional" : "institutional_check",
+                public_paraphrase: causeAttr,
+                evidence: {
+                  locator: { paragraph: 1, sentence: 4 },
+                  sentence_sha256: hash2,
+                }
+              }
+            ]
+          },
+          responsibility_attribution: {
+            status: "source_attributed",
+            items: [
+              {
+                claim_id: `claim:${hash3}`,
+                frame_family: isConservative ? "legal_institutional" : "institutional_check",
+                public_paraphrase: respAttr,
+                evidence: {
+                  locator: { paragraph: 2, sentence: 1 },
+                  sentence_sha256: hash3,
+                }
+              }
+            ]
+          },
+          moral_evaluation: {
+            status: "source_attributed",
+            items: [
+              {
+                claim_id: `claim:${hash4}`,
+                frame_family: isConservative ? "legal_institutional" : "institutional_check",
+                public_paraphrase: evalClaim,
+                evidence: {
+                  locator: { paragraph: 2, sentence: 3 },
+                  sentence_sha256: hash4,
+                }
+              }
+            ]
+          },
+          treatment_recommendation: {
+            status: "source_attributed",
+            items: [
+              {
+                claim_id: `claim:${hash5}`,
+                frame_family: isConservative ? "legal_institutional" : "institutional_check",
+                public_paraphrase: treatRec,
+                evidence: {
+                  locator: { paragraph: 3, sentence: 1 },
+                  sentence_sha256: hash5,
+                }
+              }
+            ]
+          }
+        },
         generic_frames: isConservative ? ["conflict", "economic_consequences"] : ["human_interest", "morality"],
         policy_frames: isConservative ? ["security_defense", "political_strategy"] : ["rights_liberties", "external_relations"],
         scope: "structural",
-        sourcing: [{ role: "정당·정치권", kind: "direct_quote" }, { role: "정부·공공기관", kind: "indirect_attribution" }],
+        sourcing: [
+          { role: "정당·정치권", kind: "direct_quote" },
+          { role: "정부·공공기관", kind: "indirect_attribution" }
+        ],
       },
-      evidence: [
-        { dimension: "problem_definition", locator: "문단 1 · 문장 2", sentence_sha256: hash1, quote_type: "reporter_narration", speaker_role: "기자" },
-        { dimension: "causal_interpretation", locator: "문단 1 · 문장 4", sentence_sha256: hash2, quote_type: "indirect_attribution", speaker_role: "취재원" },
-        { dimension: "responsibility_attribution", locator: "문단 2 · 문장 1", sentence_sha256: hash1, quote_type: "reporter_narration", speaker_role: "기자" },
-        { dimension: "moral_evaluation", locator: "문단 2 · 문장 3", sentence_sha256: hash2, quote_type: "indirect_attribution", speaker_role: "취재원" },
-        { dimension: "treatment_recommendation", locator: "문단 3 · 문장 1", sentence_sha256: hash1, quote_type: "reporter_narration", speaker_role: "기자" },
-      ],
       review: {
         status: "automatic_draft",
         requires_human_review: true,
@@ -275,8 +381,8 @@ for (const def of EVENT_DEFS) {
         camps: def.camps.map((c) => ({
           name: c.name,
           gist: c.gist,
-          outlets: c.outlets,
-          article_ids: articlesList.filter((a) => c.outlets.includes(a.outlet)).map((a) => a.articleId),
+          outlets: c.outlets.map((o) => OUTLET_NAMES[o] ?? o),
+          article_ids: articlesList.filter((a) => c.outlets.includes(a.sourceId)).map((a) => a.articleId),
         })),
         terms: def.terms.map((t, idx) => ({
           term: t.term,
@@ -284,9 +390,9 @@ for (const def of EVENT_DEFS) {
           evidence: [
             {
               article_id: articlesList[0]?.articleId ?? "",
-              outlet: articlesList[0]?.outlet ?? "kbs",
-              locator: `문단 1 · 문장 ${idx + 2}`,
-              sentence_sha256: sha256(t.term).slice(0, 32),
+              outlet: articlesList[0]?.outlet ?? "KBS 뉴스",
+              locator: { paragraph: 1, sentence: idx + 2 },
+              sentence_sha256: sha256(t.term),
             }
           ]
         })),
@@ -296,9 +402,9 @@ for (const def of EVENT_DEFS) {
             evidence: [
               {
                 article_id: articlesList[0]?.articleId ?? "",
-                outlet: articlesList[0]?.outlet ?? "kbs",
-                locator: "문단 1 · 문장 1",
-                sentence_sha256: sha256(def.lead).slice(0, 32),
+                outlet: articlesList[0]?.outlet ?? "KBS 뉴스",
+                locator: { paragraph: 1, sentence: 1 },
+                sentence_sha256: sha256(def.lead),
               }
             ]
           }
@@ -308,15 +414,16 @@ for (const def of EVENT_DEFS) {
           evidence: [
             {
               article_id: articlesList[idx]?.articleId ?? "",
-              outlet: articlesList[idx]?.outlet ?? "chosun",
-              locator: `문단 2 · 문장 ${idx + 1}`,
-              sentence_sha256: sha256(c.gist).slice(0, 32),
+              outlet: articlesList[idx]?.outlet ?? "조선일보",
+              locator: { paragraph: 2, sentence: idx + 1 },
+              sentence_sha256: sha256(c.gist),
             }
           ]
         })),
       }
     },
     semanticProfiles,
+    ruleProfiles: [],
     lineage: {
       issueId: def.issueId,
       basisDate: "2026-08-15",
