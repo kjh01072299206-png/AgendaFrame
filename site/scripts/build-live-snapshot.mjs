@@ -162,6 +162,14 @@ function buildBundle(issue, rank) {
       issueId,
       clusteringVersion: "agenda-content-aware-complete-link-v7",
       scoreVersion: "observed-agenda-v5",
+      source: {
+        top5SchemaVersion: "agendaframe.top5-framing-gcp.v1",
+        top5GeneratedAt: null,
+        metadataSchemaVersion: "agendaframe.metadata-issue-cluster.v1",
+        metadataGeneratedAt: null,
+        semanticDirectory: "pending-vertex",
+        semanticFileCount: 0,
+      },
     },
   };
 }

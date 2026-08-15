@@ -399,11 +399,12 @@ function EngineNote({ bundle }: { bundle: IssueAnalysisBundle }) {
   const semantic = bundle.analysisStatus.semantic;
   const clusterAi = bundle.analysisStatus.cluster ?? bundle.clusterAi;
   const comparison = bundle.comparison.engine;
-  const reviewStatuses = [...new Set(bundle.semanticProfiles.map((entry) => richProfile(entry)?.review?.status).filter(Boolean))];
-  const reviewRequired = semantic.requiresHumanReview || bundle.semanticProfiles.some((entry) => Boolean(richProfile(entry)?.review?.requires_human_review));
+  const profiles = bundle.semanticProfiles ?? [];
+  const reviewStatuses = [...new Set(profiles.map((entry) => richProfile(entry)?.review?.status).filter(Boolean))];
+  const reviewRequired = semantic.requiresHumanReview || profiles.some((entry) => Boolean(richProfile(entry)?.review?.requires_human_review));
   const isVertexDirect = Boolean(semantic.semanticAi && !bundle.clusterAi?.fallbackReason);
   const comparisonLabel = comparison.semanticAi ? "semantic AI 비교" : "규칙·구조화 비교 (rules_local)";
-  const artifactSource = bundle.lineage.source.semanticDirectory || "공개 산출물 출처 미상";
+  const artifactSource = bundle.lineage?.source?.semanticDirectory || "공개 산출물 출처 미상";
   return (
     <p className="afp-method-note">
       <span className={`afs-chip ${isVertexDirect ? "afs-chip-brand" : "afs-badge-ex"}`}>
@@ -1016,7 +1017,49 @@ function MethodologyDisclaimer() {
   );
 }
 
+function PendingAnalysisShell({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
+  return (
+    <>
+      <section className="afs-card afs-card-lead">
+        <h2>{issue.title}</h2>
+        <div className="afs-in afs-prose">
+          <p>
+            기사 {issue.articleCount}건 · 매체 {issue.outletCount}곳
+            {typeof (bundle.issue as { agendaScore?: number }).agendaScore === "number"
+              ? ` · 점수 ${(bundle.issue as { agendaScore?: number }).agendaScore!.toFixed(1)}`
+              : ""}
+          </p>
+        </div>
+      </section>
+      <SynthesisNarrative bundle={bundle} />
+      <section className="afs-card">
+        <h2>이 의제에 묶인 기사</h2>
+        <div className="afs-in">
+          <ul>
+            {issue.articles.map((article) => (
+              <li key={article.articleId}>
+                {article.outlet} · {article.title}
+                {article.url ? (
+                  <>
+                    {" "}
+                    <a href={article.url} target="_blank" rel="noreferrer">원문 ↗</a>
+                  </>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function isPendingLiveAnalysis(bundle: IssueAnalysisBundle) {
+  return bundle.basisDate === "2026-08-15" && (bundle.semanticProfiles?.length ?? 0) === 0;
+}
+
 export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
+  if (isPendingLiveAnalysis(bundle)) return <PendingAnalysisShell bundle={bundle} issue={issue} />;
   const dimensions = analyses(bundle, issue);
   return (
     <>
@@ -1066,6 +1109,7 @@ export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
 }
 
 export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
+  if (isPendingLiveAnalysis(bundle)) return <PendingAnalysisShell bundle={bundle} issue={issue} />;
   const dimensions = analyses(bundle, issue);
   return (
     <>

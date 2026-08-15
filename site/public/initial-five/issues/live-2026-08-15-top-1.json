@@ -177,6 +177,14 @@
     "basisDate": "2026-08-15",
     "issueId": "live-2026-08-15-top-1",
     "clusteringVersion": "agenda-content-aware-complete-link-v7",
-    "scoreVersion": "observed-agenda-v5"
+    "scoreVersion": "observed-agenda-v5",
+    "source": {
+      "top5SchemaVersion": "agendaframe.top5-framing-gcp.v1",
+      "top5GeneratedAt": null,
+      "metadataSchemaVersion": "agendaframe.metadata-issue-cluster.v1",
+      "metadataGeneratedAt": null,
+      "semanticDirectory": "pending-vertex",
+      "semanticFileCount": 0
+    }
   }
 }
