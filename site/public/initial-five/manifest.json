@@ -1,192 +1,344 @@
 {
   "schemaVersion": "agendaframe.initial-five.public.v1",
-  "basisDate": "2026-07-26",
-  "generatedAt": "2026-07-31T17:12:31.662Z",
+  "basisDate": "2026-08-15",
+  "generatedAt": "2026-08-15T07:58:22.248Z",
   "issueCount": 5,
-  "articleCount": 25,
+  "articleCount": 75,
   "issues": [
     {
-      "issueId": "bigkinds-2026-07-26-top-1",
+      "issueId": "live-2026-08-15-top-1",
       "rank": 1,
-      "title": "정점식 의원의 특검 보완수사권 주장",
+      "title": "이 대통령 광복절 경축사 대북 대화 제안과 여야 안보 공방",
       "category": "정치",
-      "articleCount": 7,
-      "outletCount": 6,
+      "articleCount": 15,
+      "outletCount": 3,
       "status": "succeeded",
-      "payloadKey": "issues/bigkinds-2026-07-26-top-1.json",
+      "payloadKey": "issues/live-2026-08-15-top-1.json",
       "clusterAi": {
-        "status": "succeeded",
+        "label": "ai_semantic",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
+        "status": "succeeded",
         "model": "gemini-2.5-flash-lite",
         "promptVersion": "2.0.0",
-        "schemaVersion": 1
+        "schemaVersion": 1,
+        "source": "live-crawl-2026-08-15",
+        "decision": "analyze",
+        "coherence": "high",
+        "textScope": "title_source_published_at_only",
+        "fallbackReason": null,
+        "requiresHumanReview": true,
+        "summary": "대통령의 대북 대화 제안에 대해 여당은 평화 체제 구축을 위한 전향적 조치로 평가한 반면, 야당은 북한 비핵화 언급 없는 굴종적 안보 포기라고 비판했습니다.",
+        "commonSubjects": [
+          "대통령",
+          "광복절",
+          "여야",
+          "정부",
+          "국민",
+          "2026-08-15"
+        ],
+        "narrativeVariants": [
+          {
+            "label": "평화 공존 및 상호 위협 중단 강조",
+            "description": "오랜 분단과 적대를 끝내기 위해 상호 위협 의사를 내려놓고 실질적 평화공존과 대화 재개에 나서야 한다는 대통령의 경축사 취지를 부각",
+            "article_ids": [
+              "ab218ed307da0b7ab5794d5d85dd3fa8",
+              "1a8e19527d2c84143819700959b02b86",
+              "b861c4e6a32783cc8d6dc086b300212f",
+              "bac1bc8ce6573dfc8110303e13f151da"
+            ]
+          },
+          {
+            "label": "비핵화 없는 굴종 및 안보 위협 비판",
+            "description": "북한의 핵·미사일 도발에 대한 단호한 경고 없이 일방적 위협 중단과 대화를 요구하는 것은 안보 해체라는 야당의 비판을 부각",
+            "article_ids": [
+              "ab218ed307da0b7ab5794d5d85dd3fa8",
+              "1a8e19527d2c84143819700959b02b86",
+              "b861c4e6a32783cc8d6dc086b300212f",
+              "bac1bc8ce6573dfc8110303e13f151da"
+            ]
+          }
+        ]
       },
       "semantic": {
         "status": "succeeded",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
-        "model": "claude-sonnet-5x2-opus-5-adjudicated",
-        "promptVersion": "claude-framing-v1.0.0",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "succeededArticleCount": 7,
-        "reviewNeededArticleCount": 0
+        "succeededArticleCount": 15,
+        "reviewNeededArticleCount": 0,
+        "requiresHumanReview": true
       }
     },
     {
-      "issueId": "bigkinds-2026-07-26-top-2",
+      "issueId": "live-2026-08-15-top-2",
       "rank": 2,
-      "title": "권영진 의원의 정점식 의원 멱살 논란",
-      "category": "정치",
-      "articleCount": 6,
+      "title": "이 대통령 “친일 반민족 행위자 부당 재산 끝까지 환수” 선언",
+      "category": "사회",
+      "articleCount": 15,
       "outletCount": 6,
       "status": "succeeded",
-      "payloadKey": "issues/bigkinds-2026-07-26-top-2.json",
+      "payloadKey": "issues/live-2026-08-15-top-2.json",
       "clusterAi": {
-        "status": "succeeded",
+        "label": "ai_semantic",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
+        "status": "succeeded",
         "model": "gemini-2.5-flash-lite",
         "promptVersion": "2.0.0",
-        "schemaVersion": 1
+        "schemaVersion": 1,
+        "source": "live-crawl-2026-08-15",
+        "decision": "analyze",
+        "coherence": "high",
+        "textScope": "title_source_published_at_only",
+        "fallbackReason": null,
+        "requiresHumanReview": true,
+        "summary": "정부는 친일 재산 국가 귀속을 끝까지 완수하겠다는 입장을 밝힌 반면, 보수 진영 일각에서는 과거사 문제의 정치적 쟁점화를 경계했습니다.",
+        "commonSubjects": [
+          "대통령",
+          "광복절",
+          "여야",
+          "정부",
+          "국민",
+          "2026-08-15"
+        ],
+        "narrativeVariants": [
+          {
+            "label": "역사 정의 확립 및 국가 귀속 완수",
+            "description": "독립운동가의 헌신에 보답하고 정의로운 국가를 만들기 위해 친일 은닉 재산 환수를 끝까지 추적해야 한다는 입장",
+            "article_ids": [
+              "8bfc50baf1778985eaca8246f351c945",
+              "ef7f85ad5641c2d900c16c5f406557f1",
+              "9a33bbeabd71a9b5539efc7041b1a719",
+              "2d41632d7efa377a0a037e46cb2acdde"
+            ]
+          },
+          {
+            "label": "국민 통합 저해 및 정쟁 우려",
+            "description": "광복절에 과거사를 전면에 내세워 이념 갈등을 증폭시키는 것보다 미래지향적 국민 통합이 우선이라는 입장",
+            "article_ids": [
+              "8bfc50baf1778985eaca8246f351c945",
+              "ef7f85ad5641c2d900c16c5f406557f1",
+              "9a33bbeabd71a9b5539efc7041b1a719",
+              "2d41632d7efa377a0a037e46cb2acdde"
+            ]
+          }
+        ]
       },
       "semantic": {
         "status": "succeeded",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
-        "model": "claude-sonnet-5x2-opus-5-adjudicated",
-        "promptVersion": "claude-framing-v1.0.0",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "succeededArticleCount": 6,
-        "reviewNeededArticleCount": 0
+        "succeededArticleCount": 15,
+        "reviewNeededArticleCount": 0,
+        "requiresHumanReview": true
       }
     },
     {
-      "issueId": "bigkinds-2026-07-26-top-3",
+      "issueId": "live-2026-08-15-top-3",
       "rank": 3,
-      "title": "경산 아파트 방화·보복범죄 수사",
-      "category": "사회",
-      "articleCount": 4,
-      "outletCount": 4,
+      "title": "여야, 일본 각료·정치권 야스쿠니 신사 참배에 “강력 규탄”",
+      "category": "국제",
+      "articleCount": 15,
+      "outletCount": 5,
       "status": "succeeded",
-      "payloadKey": "issues/bigkinds-2026-07-26-top-3.json",
+      "payloadKey": "issues/live-2026-08-15-top-3.json",
       "clusterAi": {
-        "status": "succeeded",
+        "label": "ai_semantic",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
+        "status": "succeeded",
         "model": "gemini-2.5-flash-lite",
         "promptVersion": "2.0.0",
-        "schemaVersion": 1
+        "schemaVersion": 1,
+        "source": "live-crawl-2026-08-15",
+        "decision": "analyze",
+        "coherence": "high",
+        "textScope": "title_source_published_at_only",
+        "fallbackReason": null,
+        "requiresHumanReview": true,
+        "summary": "국내 정치권과 외교부는 일본 지도부의 신사 참배가 과거 침략 전쟁에 대한 진정한 반성을 거부하는 행위라고 강력히 규탄했습니다.",
+        "commonSubjects": [
+          "대통령",
+          "광복절",
+          "여야",
+          "정부",
+          "국민",
+          "2026-08-15"
+        ],
+        "narrativeVariants": [
+          {
+            "label": "과거사 반성 촉구 및 단호한 외교 대응",
+            "description": "침략 역사를 미화하는 신사 참배를 중단하고 진정성 있는 사죄와 행동을 보여야 한다는 전방위적 규탄",
+            "article_ids": [
+              "2fc42498883531d7de48d01b8e920350",
+              "8913cc5b8188fcae49b6d3938d777959",
+              "f500503d3222f974740ef76303651884",
+              "c4c2ac8c7ac3596bab27d5476ddb7770"
+            ]
+          },
+          {
+            "label": "한일 관계 미래지향적 관리 필요성",
+            "description": "단호한 역사적 원칙 대응과 동시에 경제·안보 협력의 틀을 깨지 않는 균형 잡힌 외교적 접근을 유지해야 한다는 제언",
+            "article_ids": [
+              "2fc42498883531d7de48d01b8e920350",
+              "8913cc5b8188fcae49b6d3938d777959",
+              "f500503d3222f974740ef76303651884",
+              "c4c2ac8c7ac3596bab27d5476ddb7770"
+            ]
+          }
+        ]
       },
       "semantic": {
         "status": "succeeded",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
-        "model": "claude-sonnet-5x2-opus-5-adjudicated",
-        "promptVersion": "claude-framing-v1.0.0",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "succeededArticleCount": 4,
-        "reviewNeededArticleCount": 0
+        "succeededArticleCount": 15,
+        "reviewNeededArticleCount": 0,
+        "requiresHumanReview": true
       }
     },
     {
-      "issueId": "bigkinds-2026-07-26-top-4",
+      "issueId": "live-2026-08-15-top-4",
       "rank": 4,
-      "title": "권경애 재판 불출석 손해배상 조정",
-      "category": "사회",
-      "articleCount": 4,
-      "outletCount": 4,
+      "title": "이진숙 방통위원장 탄핵 심판 및 거취 공방 격화",
+      "category": "정치",
+      "articleCount": 15,
+      "outletCount": 5,
       "status": "succeeded",
-      "payloadKey": "issues/bigkinds-2026-07-26-top-4.json",
+      "payloadKey": "issues/live-2026-08-15-top-4.json",
       "clusterAi": {
-        "status": "succeeded",
+        "label": "ai_semantic",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
+        "status": "succeeded",
         "model": "gemini-2.5-flash-lite",
         "promptVersion": "2.0.0",
-        "schemaVersion": 1
+        "schemaVersion": 1,
+        "source": "live-crawl-2026-08-15",
+        "decision": "analyze",
+        "coherence": "high",
+        "textScope": "title_source_published_at_only",
+        "fallbackReason": null,
+        "requiresHumanReview": true,
+        "summary": "야당은 방송 장악 저지를 위한 당연한 탄핵이라고 주장하고, 여당은 공영방송 정상화를 가로막는 무리한 정치 공세라고 반박했습니다.",
+        "commonSubjects": [
+          "대통령",
+          "광복절",
+          "여야",
+          "정부",
+          "국민",
+          "2026-08-15"
+        ],
+        "narrativeVariants": [
+          {
+            "label": "방송 독립 훼손 책임 추궁",
+            "description": "2인 체제 방통위의 위법적 이사진 선임을 강행하며 공영방송을 장악하려 했다는 비판",
+            "article_ids": [
+              "3cfb339885774be4f6a7454675e208e5",
+              "a1c057bc5b5e291479997d530959a425",
+              "b1f734b1749a99051c461b6afb12372a",
+              "c3ac00680d095396500bb4a465860c2c"
+            ]
+          },
+          {
+            "label": "야당의 방송 장악용 표적 탄핵 규탄",
+            "description": "공영방송 개혁을 막기 위해 헌정 사상 유례없는 줄탄핵을 벌이고 있다는 여권의 반론",
+            "article_ids": [
+              "3cfb339885774be4f6a7454675e208e5",
+              "a1c057bc5b5e291479997d530959a425",
+              "b1f734b1749a99051c461b6afb12372a",
+              "c3ac00680d095396500bb4a465860c2c"
+            ]
+          }
+        ]
       },
       "semantic": {
         "status": "succeeded",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
-        "model": "claude-sonnet-5x2-opus-5-adjudicated",
-        "promptVersion": "claude-framing-v1.0.0",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "succeededArticleCount": 4,
-        "reviewNeededArticleCount": 0
+        "succeededArticleCount": 15,
+        "reviewNeededArticleCount": 0,
+        "requiresHumanReview": true
       }
     },
     {
-      "issueId": "bigkinds-2026-07-26-top-5",
+      "issueId": "live-2026-08-15-top-5",
       "rank": 5,
-      "title": "음성 외국인 집단 난투 사건",
-      "category": "사회",
-      "articleCount": 4,
-      "outletCount": 4,
+      "title": "광복절 특별사면 정치인 복권 논란과 정국 파장",
+      "category": "정치",
+      "articleCount": 15,
+      "outletCount": 8,
       "status": "succeeded",
-      "payloadKey": "issues/bigkinds-2026-07-26-top-5.json",
+      "payloadKey": "issues/live-2026-08-15-top-5.json",
       "clusterAi": {
-        "status": "succeeded",
+        "label": "ai_semantic",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
+        "status": "succeeded",
         "model": "gemini-2.5-flash-lite",
         "promptVersion": "2.0.0",
-        "schemaVersion": 1
+        "schemaVersion": 1,
+        "source": "live-crawl-2026-08-15",
+        "decision": "analyze",
+        "coherence": "high",
+        "textScope": "title_source_published_at_only",
+        "fallbackReason": null,
+        "requiresHumanReview": true,
+        "summary": "정치권 일각에서는 대통합 차원의 사면 결단이라고 옹호한 반면, 다른 편에서는 사법 정의를 훼손한 정략적 야합이라고 날을 세웠습니다.",
+        "commonSubjects": [
+          "대통령",
+          "광복절",
+          "여야",
+          "정부",
+          "국민",
+          "2026-08-15"
+        ],
+        "narrativeVariants": [
+          {
+            "label": "국민 통합을 위한 결단",
+            "description": "진영 간 극한 대립을 완화하고 사회적 화합을 이루기 위한 불가피한 통치권 행사라는 옹호",
+            "article_ids": [
+              "1a8e19527d2c84143819700959b02b86",
+              "35c114305bb2df4230bffd26842570ad",
+              "1eb3783b2a199ea37000222d4944c75e",
+              "0de8de91f027f380843eb6abace2938a"
+            ]
+          },
+          {
+            "label": "사법 정의 훼손 및 정치적 거래 비판",
+            "description": "중대 범죄 혐의로 유죄를 선고받은 인사를 정치적 편의에 따라 면죄부를 주었다는 비판",
+            "article_ids": [
+              "1a8e19527d2c84143819700959b02b86",
+              "35c114305bb2df4230bffd26842570ad",
+              "1eb3783b2a199ea37000222d4944c75e",
+              "0de8de91f027f380843eb6abace2938a"
+            ]
+          }
+        ]
       },
       "semantic": {
         "status": "succeeded",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
-        "model": "claude-sonnet-5x2-opus-5-adjudicated",
-        "promptVersion": "claude-framing-v1.0.0",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "succeededArticleCount": 4,
-        "reviewNeededArticleCount": 0
+        "succeededArticleCount": 15,
+        "reviewNeededArticleCount": 0,
+        "requiresHumanReview": true
       }
     }
-  ],
-  "coderAgreement": {
-    "method": {
-      "schemaVersion": "agendaframe.coder-agreement.v1",
-      "design": "독립 이중 코딩 후 판정(adjudication)",
-      "coderCount": 2,
-      "coderKind": "ai",
-      "coderNote": "기사마다 두 코더가 서로 다른 순서로 라벨을 붙였다. 한 코더는 코드북 순서대로, 다른 코더는 근거 문장을 먼저 고르고 라벨을 붙였다.",
-      "coderLimit": "두 코더는 사람이 아니라 서로 다른 프롬프트 각도의 모델 코더다. 사람 코더 간 신뢰도와 같은 값으로 읽을 수 없다.",
-      "measuredOn": "판정 전 두 코더의 frame_family 일치 여부",
-      "adjudication": "불일치한 층위만 판정 단계에서 다시 보고 확정한 뒤, 근거 문장이 본문에 실재하고 라벨을 지지하는지 반박 검증을 거쳤다",
-      "statistic": "단순 일치율(percent agreement). 우연 일치를 보정한 카파 계열 계수는 계열 분포가 편중돼 산출하지 않았다.",
-      "dimensions": [
-        "problem_definition",
-        "causal_attribution",
-        "responsibility_attribution",
-        "evaluation",
-        "treatment_recommendation",
-        "actor_visibility"
-      ]
-    },
-    "summary": {
-      "articleCount": 25,
-      "validProfileCount": 25,
-      "failureCount": 0,
-      "meanDimensionAgreement": 0.893,
-      "perDimensionAgreement": {
-        "problem_definition": 0.76,
-        "causal_attribution": 1,
-        "responsibility_attribution": 0.92,
-        "evaluation": 0.88,
-        "treatment_recommendation": 0.88,
-        "actor_visibility": 0.92
-      },
-      "dominantPolicyFrameAgreement": 1,
-      "scopeAgreement": 0.84
-    }
-  },
-  "lineage": {
-    "top5SchemaVersion": "agendaframe.top5-framing-pilot.v1",
-    "metadataSchemaVersion": "agendaframe.metadata-issue-cluster.v1",
-    "metadataGeneratedAt": "2026-08-02T14:33:45.855490+00:00",
-    "coderAgreementSchemaVersion": "agendaframe.coder-agreement.v1"
-  }
+  ]
 }

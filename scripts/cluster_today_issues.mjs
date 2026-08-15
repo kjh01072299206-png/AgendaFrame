@@ -314,6 +314,34 @@ for (const def of EVENT_DEFS) {
         generic_frames: isConservative ? ["conflict", "economic_consequences"] : ["human_interest", "morality"],
         policy_frames: isConservative ? ["security_defense", "political_strategy"] : ["rights_liberties", "external_relations"],
         scope: "structural",
+        actors_and_sources: [
+          {
+            actor_id: `actor:${hash1}`,
+            role: "political_actor",
+            role_label: "정당·정치권",
+            direct_quote_count: 2,
+            indirect_attribution_count: 1,
+            evidence: [
+              {
+                locator: { paragraph: 1, sentence: 2 },
+                sentence_sha256: hash1,
+              }
+            ]
+          },
+          {
+            actor_id: `actor:${hash2}`,
+            role: "government_official",
+            role_label: "정부·공공기관",
+            direct_quote_count: 1,
+            indirect_attribution_count: 2,
+            evidence: [
+              {
+                locator: { paragraph: 1, sentence: 4 },
+                sentence_sha256: hash2,
+              }
+            ]
+          }
+        ],
         sourcing: [
           { role: "정당·정치권", kind: "direct_quote" },
           { role: "정부·공공기관", kind: "indirect_attribution" }

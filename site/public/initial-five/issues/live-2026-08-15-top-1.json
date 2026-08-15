@@ -845,6 +845,40 @@
           "external_relations"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:dfccd5671c4eaae02a6dd7ae64b1d2937e4291dd65de50ec9d32782bb5c540b8",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "dfccd5671c4eaae02a6dd7ae64b1d2937e4291dd65de50ec9d32782bb5c540b8"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:e0b5148bb84ff2475537058367091049b9f429f99c727b27ca805a2128cfd0d8",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "e0b5148bb84ff2475537058367091049b9f429f99c727b27ca805a2128cfd0d8"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -1020,6 +1054,40 @@
           "external_relations"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:23f981bfddb38385e0878cfc89e5207d8cc5644cc80df1d3e004d860fac344bc",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "23f981bfddb38385e0878cfc89e5207d8cc5644cc80df1d3e004d860fac344bc"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:f6af98fef935d52338636325f5d995c15c7055f1a2706a068ff669f03c9b92eb",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "f6af98fef935d52338636325f5d995c15c7055f1a2706a068ff669f03c9b92eb"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -1195,6 +1263,40 @@
           "external_relations"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:e5f1e47b5856349d07640ead837d29c304d20ab3e382f074eb40a5898e93b79a",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "e5f1e47b5856349d07640ead837d29c304d20ab3e382f074eb40a5898e93b79a"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:f20ef850b5817c6b9588f70f1c1d4191f51018c2d9d308d465cd377ffceab71a",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "f20ef850b5817c6b9588f70f1c1d4191f51018c2d9d308d465cd377ffceab71a"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -1370,6 +1472,40 @@
           "external_relations"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:64282cdd465732f0c72a0b1eb7f9f9e715f2d96c3c0ce3e85d040f6531b249c2",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "64282cdd465732f0c72a0b1eb7f9f9e715f2d96c3c0ce3e85d040f6531b249c2"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:bedc1bda2ed6152a41f89ff10976d531a2a5b976dbe0603ada5bbc81334a31b1",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "bedc1bda2ed6152a41f89ff10976d531a2a5b976dbe0603ada5bbc81334a31b1"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -1545,6 +1681,40 @@
           "external_relations"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:72684c60d221490ad06e91ba3061a59369040f2c67cfa8c4e11251d8e2bd6060",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "72684c60d221490ad06e91ba3061a59369040f2c67cfa8c4e11251d8e2bd6060"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:f86f064c5c12fa27fb850ab3dcc6730b9125564b8571e7ba3cbff37d1c7e0261",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "f86f064c5c12fa27fb850ab3dcc6730b9125564b8571e7ba3cbff37d1c7e0261"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -1720,6 +1890,40 @@
           "external_relations"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:14dc8051b2aeaa0b763bcd6c3f46105166affc67b46753ed4521d0b90a9a82b3",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "14dc8051b2aeaa0b763bcd6c3f46105166affc67b46753ed4521d0b90a9a82b3"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:853e4b685bc31844429cfd63f7a5e258ecf33894128ac5cf4577975f88c90689",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "853e4b685bc31844429cfd63f7a5e258ecf33894128ac5cf4577975f88c90689"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -1895,6 +2099,40 @@
           "external_relations"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:6a4f70d6ed4b4adc1569ecbfe6a1eeb895706916118de52056aa869197620db0",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "6a4f70d6ed4b4adc1569ecbfe6a1eeb895706916118de52056aa869197620db0"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:1b50ee321e7b977bf870b5b81bdb712b896e764a20c9506bbb4619499f41bb40",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "1b50ee321e7b977bf870b5b81bdb712b896e764a20c9506bbb4619499f41bb40"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -2070,6 +2308,40 @@
           "external_relations"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:95aa4bfd16437cbf37df0a9823272864417d37f250374c44aa648a4b481066dc",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "95aa4bfd16437cbf37df0a9823272864417d37f250374c44aa648a4b481066dc"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:8d04682861ebb116cd0843cb692ff95cae4d89d1fcb533187d404cdd965bec74",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "8d04682861ebb116cd0843cb692ff95cae4d89d1fcb533187d404cdd965bec74"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -2245,6 +2517,40 @@
           "external_relations"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:1ee41b2dffc74894012119f37f7c400e70d25127ea6cee7d74ec814cb199d086",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "1ee41b2dffc74894012119f37f7c400e70d25127ea6cee7d74ec814cb199d086"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:b4118382786de933f14957594de57c6b116733ace938d8b79501975726dcff9a",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "b4118382786de933f14957594de57c6b116733ace938d8b79501975726dcff9a"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -2420,6 +2726,40 @@
           "external_relations"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:79d47af5f55b61559fcf534f1b9a253817a408561da0b4615e9df1d21c66acda",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "79d47af5f55b61559fcf534f1b9a253817a408561da0b4615e9df1d21c66acda"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:b0e7d089cbfa3f9b60a2391107c3c6405c950b5bb3f28ded9cb1f5cafcee2bd2",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "b0e7d089cbfa3f9b60a2391107c3c6405c950b5bb3f28ded9cb1f5cafcee2bd2"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -2595,6 +2935,40 @@
           "external_relations"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:fb261d1075656988d7719908809c3c044865724725bdf0025888a92376c9d986",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "fb261d1075656988d7719908809c3c044865724725bdf0025888a92376c9d986"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:6d63db1176f79ca56b677432b80431f98a3abbd1caa828e141187f57dbd6bd65",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "6d63db1176f79ca56b677432b80431f98a3abbd1caa828e141187f57dbd6bd65"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -2770,6 +3144,40 @@
           "external_relations"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:67b1dfa7b304577b4b1223478f53b5848079571adbb36bb9541d6df9664abfdf",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "67b1dfa7b304577b4b1223478f53b5848079571adbb36bb9541d6df9664abfdf"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:cea272aaff4a60bf037ebdad58f66d4d99b983626988b1a3de8c6c295b53cf6b",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "cea272aaff4a60bf037ebdad58f66d4d99b983626988b1a3de8c6c295b53cf6b"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -2945,6 +3353,40 @@
           "external_relations"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:5e965c5dc2c9ec23b5f4000b1369b717978b079981ca886783ba6b6c210196d0",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "5e965c5dc2c9ec23b5f4000b1369b717978b079981ca886783ba6b6c210196d0"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:a65a7b67f26b64235bda08189b5923b4fcc8a1db79496d984229fabdb058dfa3",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "a65a7b67f26b64235bda08189b5923b4fcc8a1db79496d984229fabdb058dfa3"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -3120,6 +3562,40 @@
           "political_strategy"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:342a94ff45857c92868045d970cfe67c4a679f4f5949f082995d4651248b36e7",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "342a94ff45857c92868045d970cfe67c4a679f4f5949f082995d4651248b36e7"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:1bb4f41352dd89e928b6c1204710389448e1414d15d9a7d0171acdcf5e0553e9",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "1bb4f41352dd89e928b6c1204710389448e1414d15d9a7d0171acdcf5e0553e9"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -3295,6 +3771,40 @@
           "political_strategy"
         ],
         "scope": "structural",
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:2504cd7fd9669d16264c4f64be2dd92aa6e0b51f10a430bd2766ae6f1bff83b5",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "2504cd7fd9669d16264c4f64be2dd92aa6e0b51f10a430bd2766ae6f1bff83b5"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:6440e02ae1689a2f606eb3843387285db708b2f243063892ca0893335f385932",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "6440e02ae1689a2f606eb3843387285db708b2f243063892ca0893335f385932"
+              }
+            ]
+          }
+        ],
         "sourcing": [
           {
             "role": "정당·정치권",
@@ -3316,7 +3826,7 @@
   "lineage": {
     "issueId": "live-2026-08-15-top-1",
     "basisDate": "2026-08-15",
-    "generatedAt": "2026-08-15T07:21:17.828Z",
+    "generatedAt": "2026-08-15T07:58:22.207Z",
     "source": {
       "semanticDirectory": "gcp:vertex-live-batch-20260815"
     }

@@ -14,7 +14,7 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "data:import:bigkinds": "node scripts/import-bigkinds.mjs",
-    "data:build:initial-five": "node scripts/build-initial-five.mjs --out public/initial-five",
+    "data:build:initial-five": "node scripts/cluster_today_issues.mjs",
     "collection:verify": "node scripts/verify-discovery-endpoints.mjs"
   },
   "dependencies": {

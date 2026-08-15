@@ -6,7 +6,7 @@ import issueFourJson from "../../public/initial-five/issues/live-2026-08-15-top-
 import issueFiveJson from "../../public/initial-five/issues/live-2026-08-15-top-5.json";
 import type { InitialFiveManifest, IssueAnalysisBundle } from "./types";
 
-export const initialFiveManifest = manifestJson as InitialFiveManifest;
+export const initialFiveManifest = manifestJson as unknown as InitialFiveManifest;
 
 const issueBundles = new Map<string, IssueAnalysisBundle>([
   [issueOneJson.issue.issueId, issueOneJson as unknown as IssueAnalysisBundle],

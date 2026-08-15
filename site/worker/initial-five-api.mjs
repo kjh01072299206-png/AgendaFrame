@@ -1,9 +1,9 @@
 import manifest from "../public/initial-five/manifest.json" with { type: "json" };
-import issueOne from "../public/initial-five/issues/bigkinds-2026-07-26-top-1.json" with { type: "json" };
-import issueTwo from "../public/initial-five/issues/bigkinds-2026-07-26-top-2.json" with { type: "json" };
-import issueThree from "../public/initial-five/issues/bigkinds-2026-07-26-top-3.json" with { type: "json" };
-import issueFour from "../public/initial-five/issues/bigkinds-2026-07-26-top-4.json" with { type: "json" };
-import issueFive from "../public/initial-five/issues/bigkinds-2026-07-26-top-5.json" with { type: "json" };
+import issueOne from "../public/initial-five/issues/live-2026-08-15-top-1.json" with { type: "json" };
+import issueTwo from "../public/initial-five/issues/live-2026-08-15-top-2.json" with { type: "json" };
+import issueThree from "../public/initial-five/issues/live-2026-08-15-top-3.json" with { type: "json" };
+import issueFour from "../public/initial-five/issues/live-2026-08-15-top-4.json" with { type: "json" };
+import issueFive from "../public/initial-five/issues/live-2026-08-15-top-5.json" with { type: "json" };
 // 취재원 역할 좁히기 규칙은 화면(lib/initial-five/derive.ts)과 공유한다
 import { actorParaphrases, narrowSubject, paraphrasesByLocator } from "../lib/initial-five/subjects.mjs";
 import { ruleGroundedAnswer } from "../lib/initial-five/rule-answers.mjs";
