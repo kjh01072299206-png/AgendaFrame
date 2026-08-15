@@ -1,6 +1,6 @@
 # AgendaFrame 현재 스냅샷
 
-작성: 2026-08-14. 이 파일은 히스토리가 아니라 **지금**의 인수인계다.
+작성: 2026-08-15. 이 파일은 히스토리가 아니라 **지금**의 인수인계다.
 다음 세션은 이 문서와 `AGENTS.md`를 먼저 읽고, `git status --short`로 기존 수정을 확인한다.
 이미 있는 코드를 다시 만들지 말고, 완료/미완료 경계를 지킨다.
 
@@ -32,8 +32,8 @@ AgendaFrame은 클릭/추천이 아니라 **언론사 편집 배치와 보도 �
 
 ## 2. 지금 어디까지인가
 
-브랜치: `codex/initial-five-complete` (`1b2a483`, origin보다 37 커밋 앞섬).
-`origin/main`은 `1c9e34f`. 로컬 `main`은 더 오래된 `1a31f8a`이므로 로컬 main을 기준으로 삼지 않는다.
+브랜치: `codex/initial-five-complete` (`2e3dde4`). `origin/main`은 아직 `1c9e34f`.
+Vercel production은 이 브랜치 커밋 `2e3dde4`를 직접 배포한 상태다. Git `main` 반영은 아직 아니다.
 
 ### 이미 끝난 것 (다시 만들지 말 것)
 
@@ -42,7 +42,7 @@ AgendaFrame은 클릭/추천이 아니라 **언론사 편집 배치와 보도 �
 - 수집 정책 fixture: `site/data/discovery-sources.json`, `site/data/collection-schedule.json` (8/13 기준, `eebfdea`).
 - GCP **코드·계약**: collect → persist → cluster_rank → top5_semantic → quality_gate → publish. retry/idempotency, exact top5, body-safe, immutable snapshot.
 - 릴리스 통합: `9f1f627`에서 live collection + GCP runtime을 합쳤고, 사이트 테스트 185 passed, Python unit/contract 108 passed / 1 skipped.
-- 공개 사이트는 Vercel. 배포 절차는 `docs/deploy.md`. 라이브는 아직 **정적/데모·기존 Worker 데이터**다. GCP live라고 말하지 않는다.
+- 공개 사이트는 Vercel. 2026-08-15부터 production이 GCP active snapshot을 읽는다 (`AGENDAFRAME_DATA_MODE=live`).
 
 ### 작업 트리에 이미 있는 미커밋 (버리지 말 것)
 
@@ -79,15 +79,20 @@ AgendaFrame은 클릭/추천이 아니라 **언론사 편집 배치와 보도 �
 4. snapshot-reader 파일은 있지만 커밋되지 않았고, Cloud Run 서비스도 없다.
 5. `infra/gcp/*` 전부 `implementationStatus: contract_only`, `externalCalls: false`.
 
-### 외부에 없는 것 (완료라고 말하지 말 것)
+### 2026-08-15에 실제로 끝난 라이브 경로
 
-- GCP Scheduler / Workflows / Pub/Sub DLQ / Secret Manager / Monitoring 실자원
-- Cloud Run Job이 `gcp_job_entrypoint`로 도는 운영 이미지
-- private GCS current pointer를 읽는 배포된 snapshot-reader
-- Vercel live env
-- Cloudflare cron과 GCP scheduler의 ownership cutover
-- `origin/main` + Vercel production에 이번 브랜치 반영
-- 사람 코더 실측, `release_eligible: true`
+- Job 이미지 `runtime:e4cf810`. 12편 카나리 `canary-12-20260814-f` / 실행 `agendaframe-collection-analysis-tf4pc` 성공.
+- 6단계 전부 성공. snapshot `6eccfe4f6c90ad12966b0e9b22eacfdf`. 근거 locator+hash 있음. 원문 필드 없음.
+- Reader `https://agendaframe-snapshot-reader-2zut37vwaq-du.a.run.app/active` 공개 GET 200. `/healthz`는 404(검증 스크립트는 아직 실패).
+- Workflows `agendaframe-collection-analysis` ACTIVE. Scheduler `agendaframe-collection-4x-kst` ENABLED, 다음 시각 `2026-08-15T09:00:00Z`.
+- Vercel production live env + 이 브랜치 배포. `/`·`/issues`·outlets·framing이 `2026-08-14` / `title-fallback-1`을 표시.
+
+### 아직 완료라고 말하지 말 것
+
+- Cloudflare cron cutover. `site/data/collection-schedule.json`은 아직 `enabled: true`. Scheduler 첫 예약 실행(09:00 UTC) 성공을 보기 전에는 끄지 않는다.
+- `origin/main` fast-forward. production은 Vercel 직접 배포로 올라갔다.
+- Scheduler가 50편 전체 수집을 돌린 증거. 카나리는 12편.
+- `/healthz` 200, 사람 코더 실측, `release_eligible: true`
 
 Cloudflare 수집 스테이징은 별도 경로로 이미 1회 돌아 본 적 있다(2026-08-10, 기사 2,186건). GCP와 동시에 켜지 않는다. ownership flag를 확인하기 전에 cron을 켜지 않는다.
 
@@ -97,7 +102,14 @@ Cloudflare 수집 스테이징은 별도 경로로 이미 1회 돌아 본 적 �
 
 2026-08-15에 근거 바인딩 종합과 프로필 작성기를 넣었다. 7/26 1위 이슈는 오프라인에서 캠프 3개(침묵·거부권 / 경고 / 제도 안전장치)가 나온다. 상세 인수인계: `docs/continuation-handoff-20260815-goal.md`. Vertex 실호출과 정적 JSON 부착은 아직이다.
 
-### 지금 할 일 (비용 0, 외부 호출 0)
+### 지금 할 일
+
+1. 2026-08-15 09:00 UTC Scheduler 실행 로그를 보고 quality_gate+publish가 다시 성공하는지 확인한다.
+2. 그 증거가 있으면 Cloudflare cron을 끈다. 두 스케줄을 동시에 켜 두지 않는다.
+3. Reader `/healthz` 404를 고친 뒤 `verify-snapshot-reader.ps1`을 다시 통과시킨다.
+4. 검증된 커밋을 `origin/main`에 합친다.
+
+### 예전에 적었던 오프라인 할 일 (비용 0, 외부 호출 0)
 
 목표: “한 active snapshot을 홈·비교·프레이밍이 같이 읽는다”가 **코드·테스트로** 참이 되게 만든다.
 
