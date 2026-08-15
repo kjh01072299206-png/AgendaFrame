@@ -196,15 +196,18 @@ test("keeps the initial-five reader surface separate from site-wide tools", asyn
   const selfCheck = await readFile(new URL("../app/(shell)/tools/self-check/page.tsx", import.meta.url), "utf8");
   const community = await readFile(new URL("../app/(shell)/tools/community/page.tsx", import.meta.url), "utf8");
 
-  // 기존 메인 화면 구조를 유지한 채 최신 12개 매체 기사·분석 데이터만 교체한다.
-  assert.match(home, /<LiveHome \/>/);
+  // 공개 홈은 D1 LiveHome이 아니라 활성 스냅샷 한 경로만 렌더한다.
+  assert.match(home, /<ActiveSnapshotHome active=\{active\} \/>/);
+  assert.match(home, /getActiveSnapshot/);
+  assert.doesNotMatch(home, /<LiveHome \/>/);
   assert.doesNotMatch(home, /redirect\(/);
   assert.match(liveHome, /afs-head/);
   assert.match(liveHome, /afs-cards/);
   assert.match(liveData, /scope=\$\{LIVE_SCOPE\}/);
   assert.match(liveData, /issueListCache/);
   assert.match(liveData, /payload\.run\.targetDate/);
-  assert.match(shellChrome, /fetchLiveIssueList\(5\)/);
+  assert.match(shellChrome, /fallbackIssues/);
+  assert.doesNotMatch(shellChrome, /fetchLiveIssueList/);
   assert.match(liveIssue, /fetchLiveIssueDetail\(issueId\)/);
   assert.match(liveIssue, /프레이밍 분석 요약/);
   assert.match(liveIssue, /프레임 4기능 비교/);
