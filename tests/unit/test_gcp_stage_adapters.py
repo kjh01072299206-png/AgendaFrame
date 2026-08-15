@@ -319,6 +319,33 @@ class GcpStageAdapterTests(unittest.TestCase):
         self.assertEqual(len(counts), 12)
         self.assertTrue(all(count == 1 for count in counts.values()))
 
+    def test_policy_collection_redistributes_unused_budget_to_available_sources(self) -> None:
+        class SparseParser(Parser):
+            def parse(self, response, *, source, endpoint_url, collected_at):
+                if source.source_id not in {"khan", "donga"}:
+                    return ()
+                return tuple(
+                    article(
+                        source.source_id,
+                        index + (100 if endpoint_url != source.endpoint_urls[0] else 0),
+                        source.domains[0],
+                    )
+                    for index in range(20)
+                )
+
+        parser = SparseParser()
+        deps = StageDependencies(**{**self.dependencies.__dict__, "parser": parser})
+        adapter = PolicyCollectionAdapter(
+            deps,
+            clock=lambda: COLLECTED_AT,
+            max_articles_per_run=20,
+        )
+
+        result = adapter.collect(self.request, idempotency_key="redistributed")
+
+        self.assertEqual(result["articleCount"], 20)
+        self.assertGreater(max(result["sourceArticleCounts"].values()), 2)
+
     def test_policy_collection_continues_after_source_local_fetch_failure(self) -> None:
         class FailingFetcher(Fetcher):
             def fetch(self, url: str, *, source_id: str) -> object:

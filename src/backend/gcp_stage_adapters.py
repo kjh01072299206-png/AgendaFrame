@@ -370,6 +370,61 @@ class PolicyCollectionAdapter(CollectionAdapter):
                     break
             if source_budget is not None and len(articles) >= self.max_articles_per_run:
                 break
+        # The first pass gives every configured source a bounded opportunity.
+        # If some sources are blocked or empty, keep the remaining global
+        # budget useful by sequentially reading more endpoints from sources
+        # that actually returned articles. This preserves outlet breadth while
+        # avoiding an artificially small Vertex input on a partially available
+        # source set.
+        if self.max_articles_per_run is not None and len(articles) < self.max_articles_per_run:
+            for source in self.sources:
+                if len(articles) >= self.max_articles_per_run:
+                    break
+                source_id = source.source_id
+                if source_counts[source_id] <= 0:
+                    continue
+                for endpoint_url in source.endpoint_urls:
+                    if (
+                        len(articles) >= self.max_articles_per_run
+                        or source_counts[source_id] >= source.max_records_per_run
+                    ):
+                        break
+                    remaining_global = self.max_articles_per_run - len(articles)
+                    remaining_source = source.max_records_per_run - source_counts[source_id]
+                    parser_source = replace(
+                        source,
+                        max_records_per_run=min(remaining_global, remaining_source),
+                        max_requests_per_run=min(source.max_requests_per_run, remaining_source),
+                    )
+                    try:
+                        response = self.dependencies.fetcher.fetch(
+                            endpoint_url,
+                            source_id=source_id,
+                        )
+                        parsed = self.dependencies.parser.parse(
+                            response,
+                            source=parser_source,
+                            endpoint_url=endpoint_url,
+                            collected_at=collected_at,
+                        )
+                    except RuntimeAdapterUnavailable:
+                        source_errors[source_id] += 1
+                        continue
+                    for article in parsed:
+                        if (
+                            len(articles) >= self.max_articles_per_run
+                            or source_counts[source_id] >= source.max_records_per_run
+                        ):
+                            break
+                        self._validate_article(article, source)
+                        if article.article_id in articles:
+                            continue
+                        articles[article.article_id] = article
+                        source_counts[source_id] += 1
+                        references[article.article_id] = self.dependencies.vault.put(
+                            request.run_id, article
+                        )
+
         metadata = [
             _metadata(articles[article_id], private_object_ref=references[article_id])
             for article_id in sorted(articles)
