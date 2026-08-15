@@ -245,7 +245,7 @@ function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
       section: article.section,
       publishedAt: article.publishedAt,
       url: article.canonicalUrl,
-      evidenceCount: entry?.engine.evidenceCount ?? 0,
+      evidenceCount: entry?.engine?.evidenceCount ?? entry?.evidence?.length ?? 0,
       families,
       familyItems,
       narratedFamilies,

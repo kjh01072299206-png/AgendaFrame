@@ -691,6 +691,20 @@
       "status": "succeeded",
       "outlet": "경향신문",
       "sourceId": "khan",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "ab218ed307da0b7ab5794d5d85dd3fa8",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "ab218ed307da0b7ab5794d5d85dd3fa8",
@@ -852,6 +866,20 @@
       "status": "succeeded",
       "outlet": "경향신문",
       "sourceId": "khan",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "1a8e19527d2c84143819700959b02b86",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "1a8e19527d2c84143819700959b02b86",
@@ -1013,6 +1041,20 @@
       "status": "succeeded",
       "outlet": "경향신문",
       "sourceId": "khan",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "b861c4e6a32783cc8d6dc086b300212f",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "b861c4e6a32783cc8d6dc086b300212f",
@@ -1174,6 +1216,20 @@
       "status": "succeeded",
       "outlet": "경향신문",
       "sourceId": "khan",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "bac1bc8ce6573dfc8110303e13f151da",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "bac1bc8ce6573dfc8110303e13f151da",
@@ -1335,6 +1391,20 @@
       "status": "succeeded",
       "outlet": "경향신문",
       "sourceId": "khan",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "0677b2927edacdd18ebf1e7d7f888fca",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "0677b2927edacdd18ebf1e7d7f888fca",
@@ -1496,6 +1566,20 @@
       "status": "succeeded",
       "outlet": "경향신문",
       "sourceId": "khan",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "1a701562b5d7b8c84072a00b6bb2870c",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "1a701562b5d7b8c84072a00b6bb2870c",
@@ -1657,6 +1741,20 @@
       "status": "succeeded",
       "outlet": "경향신문",
       "sourceId": "khan",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "fd107aaa9f8839dfe919aa7c18a390dd",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "fd107aaa9f8839dfe919aa7c18a390dd",
@@ -1818,6 +1916,20 @@
       "status": "succeeded",
       "outlet": "경향신문",
       "sourceId": "khan",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "010cd9ed24382a9bf2a382a30f9d47b8",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "010cd9ed24382a9bf2a382a30f9d47b8",
@@ -1979,6 +2091,20 @@
       "status": "succeeded",
       "outlet": "경향신문",
       "sourceId": "khan",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "ead879f5ebb764232f29a8eabd96271f",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "ead879f5ebb764232f29a8eabd96271f",
@@ -2140,6 +2266,20 @@
       "status": "succeeded",
       "outlet": "국민일보",
       "sourceId": "kmib",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "95489c90d521b04d24b8d2f5d53fdafa",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "95489c90d521b04d24b8d2f5d53fdafa",
@@ -2301,6 +2441,20 @@
       "status": "succeeded",
       "outlet": "국민일보",
       "sourceId": "kmib",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "bcd84836e50abe6aaba48771ceb81e29",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "bcd84836e50abe6aaba48771ceb81e29",
@@ -2462,6 +2616,20 @@
       "status": "succeeded",
       "outlet": "국민일보",
       "sourceId": "kmib",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "350a96ac0a71fd236c6b116cf9631223",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "350a96ac0a71fd236c6b116cf9631223",
@@ -2623,6 +2791,20 @@
       "status": "succeeded",
       "outlet": "국민일보",
       "sourceId": "kmib",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "f500503d3222f974740ef76303651884",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "f500503d3222f974740ef76303651884",
@@ -2784,6 +2966,20 @@
       "status": "succeeded",
       "outlet": "동아일보",
       "sourceId": "donga",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "1de579ca87adee519bea992de2852aeb",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "1de579ca87adee519bea992de2852aeb",
@@ -2945,6 +3141,20 @@
       "status": "succeeded",
       "outlet": "동아일보",
       "sourceId": "donga",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "v2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "live-crawl-2026-08-15",
+        "articleId": "398120faff384005b6271b0ff5a1e7d4",
+        "evidenceCount": 5,
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
       "evidence": [
         {
           "articleId": "398120faff384005b6271b0ff5a1e7d4",
@@ -3106,7 +3316,7 @@
   "lineage": {
     "issueId": "live-2026-08-15-top-1",
     "basisDate": "2026-08-15",
-    "generatedAt": "2026-08-15T06:35:58.246Z",
+    "generatedAt": "2026-08-15T06:38:51.951Z",
     "source": {
       "semanticDirectory": "gcp:vertex-live-batch-20260815"
     }
