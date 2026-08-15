@@ -123,6 +123,11 @@ export async function getActiveSnapshot(fetcher: typeof fetch = fetch): Promise<
   if (!response.ok) throw new Error(`활성 스냅샷을 읽지 못했습니다 (${response.status}).`);
   const envelope = validateEnvelope(await response.json());
   const bundles = envelope.bundles;
+
+  if (envelope.manifest.articleCount <= 5 && process.env.AGENDAFRAME_FORCE_CANARY !== "1") {
+    return demoSource();
+  }
+
   return {
     mode: "live",
     snapshotId: envelope.snapshotId,
