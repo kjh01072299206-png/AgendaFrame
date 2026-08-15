@@ -15,7 +15,7 @@ from ai.framing import (
     _align_payload_evidence,
     validate_frame_result,
 )
-from backend.config import RuntimeConfig
+from backend.config import RuntimeConfig, resolve_max_articles_per_run
 from backend.cost_guard import CostGuard, CostLimitExceeded
 from backend.main import _validate_publication_rows_against_approval
 from backend.memory_store import MemoryAnalysisStore
@@ -111,6 +111,25 @@ class CloudRuntimeTests(unittest.TestCase):
         self.assertLessEqual(self.config.vertex.max_articles_per_run, 50)
         self.assertLessEqual(self.config.vertex.max_articles_per_day, 200)
         self.assertEqual(self.config.vertex.prompt_version, "2.6.0")
+
+    def test_canary_env_can_lower_but_not_raise_articles_per_run(self) -> None:
+        configured = self.config.vertex.max_articles_per_run
+        self.assertEqual(resolve_max_articles_per_run(configured, {}), configured)
+        self.assertEqual(
+            resolve_max_articles_per_run(configured, {"AGENDAFRAME_MAX_ARTICLES_PER_RUN": "12"}),
+            12,
+        )
+        lowered = RuntimeConfig.from_yaml(
+            ROOT / "config" / "gcp-runtime.yaml",
+            env={"AGENDAFRAME_MAX_ARTICLES_PER_RUN": "12"},
+        )
+        self.assertEqual(lowered.vertex.max_articles_per_run, 12)
+        with self.assertRaises(ValueError):
+            resolve_max_articles_per_run(configured, {"AGENDAFRAME_MAX_ARTICLES_PER_RUN": "0"})
+        with self.assertRaises(ValueError):
+            resolve_max_articles_per_run(configured, {"AGENDAFRAME_MAX_ARTICLES_PER_RUN": "51"})
+        with self.assertRaises(ValueError):
+            resolve_max_articles_per_run(configured, {"AGENDAFRAME_MAX_ARTICLES_PER_RUN": "all"})
 
     def test_response_schema_constrains_voice_kinds(self) -> None:
         from ai.framing import _response_schema

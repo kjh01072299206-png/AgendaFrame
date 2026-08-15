@@ -34,7 +34,7 @@ from ai.issue_clustering import (
     MetadataArticle,
     MetadataIssueGroup,
 )
-from backend.config import RuntimeConfig
+from backend.config import RuntimeConfig, resolve_max_articles_per_run
 from backend.gcp_job_entrypoint import GcpRuntimeConfig, RuntimeAdapterUnavailable
 from backend.gcp_orchestration import (
     ClusterRankAdapter,
@@ -1182,7 +1182,7 @@ def production_stage_adapter_factory(
         raise RuntimeAdapterUnavailable("stage dependencies factory returned an invalid object")
     return build_stage_adapters(
         dependencies,
-        max_articles_per_run=config.vertex.max_articles_per_run,
+        max_articles_per_run=resolve_max_articles_per_run(config.vertex.max_articles_per_run),
     )
 
 

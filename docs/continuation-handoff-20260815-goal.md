@@ -31,10 +31,9 @@
 ## 지금 HEAD와 저장 상태
 
 - 브랜치: `codex/initial-five-complete`
-- 이전 종합 단계 커밋: `0b8f87d feat: add evidence-bound event synthesis`
-- 이 슬라이스에서 추가한 것: 프로필 기반 사건 작성기 + rank-1 실데이터 회귀
-- 사용량: 이 환경에서는 주간 사용량 퍼센트를 읽을 수 없다. 목표 슬라이스 하나를
-  닫고 여기서 넘긴다. 호출 측에서 50% 잔여를 확인한 뒤 이어서 실행하면 된다.
+- 사건 종합 HTML 필드: `0e5000c`
+- 카나리 기사 수 제한: `AGENDAFRAME_MAX_ARTICLES_PER_RUN` (1..YAML 상한, 기본 50).
+  운영 Job 환경에는 넣지 않았다. 12기사 스모크는 실행 시 env로만 내린다.
 
 ## 완료된 제품 코드
 
@@ -102,7 +101,8 @@
    offline rank-1 path already emits the three target camps.
 5. 브라우저에서 `/issues/bigkinds-2026-07-26-top-1` `/outlets` `/framing`
    을 확인한다. 라이브 Vertex/canary는 승인 후에만.
-5. **라이브는 승인 후에만:** `AGENDAFRAME_MAX_ARTICLES_PER_RUN=12` canary.
+5. **라이브는 승인 후에만:** Job 실행에 `AGENDAFRAME_MAX_ARTICLES_PER_RUN=12`를
+   넣고 12소스·12기사 canary. YAML 기본값 50을 올리지 말 것. 0/51은 거절된다.
    성공 시에만 Workflows → Scheduler → reader 검증 → Vercel live env.
    Cloudflare cron과 GCP를 동시에 켜지 않는다.
 6. Vertex 종합은 프로필 작성기를 대체할 수 있지만, 바인딩 게이트를 우회하면 안 된다.

@@ -1,9 +1,31 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Mapping
 
 import yaml
+
+MAX_ARTICLES_PER_RUN_ENV = "AGENDAFRAME_MAX_ARTICLES_PER_RUN"
+
+
+def resolve_max_articles_per_run(configured: int, env: Mapping[str, str] | None = None) -> int:
+    """Apply a canary-only article cap without raising the reviewed YAML limit."""
+
+    if configured < 1:
+        raise ValueError("configured max_articles_per_run must be positive")
+    values = os.environ if env is None else env
+    raw = str(values.get(MAX_ARTICLES_PER_RUN_ENV, "")).strip()
+    if not raw:
+        return configured
+    try:
+        override = int(raw)
+    except ValueError as error:
+        raise ValueError(f"{MAX_ARTICLES_PER_RUN_ENV} must be an integer") from error
+    if override < 1 or override > configured:
+        raise ValueError(f"{MAX_ARTICLES_PER_RUN_ENV} must be between 1 and {configured}")
+    return override
 
 
 @dataclass(frozen=True)
@@ -35,7 +57,7 @@ class RuntimeConfig:
     publication_endpoint_path: str
 
     @classmethod
-    def from_yaml(cls, path: str | Path) -> RuntimeConfig:
+    def from_yaml(cls, path: str | Path, env: Mapping[str, str] | None = None) -> RuntimeConfig:
         payload = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
         if payload.get("schema_version") != 1:
             raise ValueError("Unsupported runtime schema version.")
@@ -55,7 +77,11 @@ class RuntimeConfig:
                 model=vertex["model"],
                 prompt_version=vertex["prompt_version"],
                 schema_version=int(vertex["schema_version"]),
-                max_articles_per_run=int(vertex["max_articles_per_run"]),
+                max_articles_per_run=(
+                    resolve_max_articles_per_run(int(vertex["max_articles_per_run"]), env)
+                    if env is not None
+                    else int(vertex["max_articles_per_run"])
+                ),
                 max_articles_per_day=int(vertex["max_articles_per_day"]),
                 max_input_characters_per_article=int(vertex["max_input_characters_per_article"]),
                 max_output_tokens=int(vertex["max_output_tokens"]),

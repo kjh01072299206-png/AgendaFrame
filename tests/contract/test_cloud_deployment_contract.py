@@ -21,6 +21,16 @@ class CloudDeploymentContractTests(unittest.TestCase):
         self.assertFalse(config["publication"]["include_article_body"])
         self.assertFalse(config["publication"]["include_original_html"])
 
+    def test_runtime_job_documents_canary_article_cap_override(self) -> None:
+        contract = yaml.safe_load(
+            (ROOT / "infra" / "gcp" / "cloud-run-job.yaml").read_text(encoding="utf-8")
+        )
+        override = contract["spec"]["canaryOverride"]
+        self.assertEqual(override["env"], "AGENDAFRAME_MAX_ARTICLES_PER_RUN")
+        self.assertEqual(override["min"], 1)
+        self.assertTrue(override["maxFromRuntimeYaml"])
+        self.assertNotIn("AGENDAFRAME_MAX_ARTICLES_PER_RUN", contract["spec"]["environment"])
+
     def test_storage_lifecycle_deletes_body_objects_by_custom_time(self) -> None:
         lifecycle = json.loads(
             (ROOT / "config" / "gcp" / "storage-lifecycle.json").read_text(encoding="utf-8")

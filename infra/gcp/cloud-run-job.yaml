@@ -29,6 +29,12 @@ spec:
     AGENDAFRAME_CLOUDFLARE_CRON_ENABLED: "false"
     AGENDAFRAME_LEGACY_SCHEDULE_ENABLED: "false"
     AGENDAFRAME_SCHEDULED_TIME: injected_by_workflow
+  canaryOverride:
+    env: AGENDAFRAME_MAX_ARTICLES_PER_RUN
+    min: 1
+    maxFromRuntimeYaml: true
+    appliedWhenSet: true
+    defaultWhenUnset: runtime_yaml_max_articles_per_run
   activeSnapshot:
     schemaVersion: agenda.frame.active-snapshot.v1
     pointerSchema: agenda.frame.active-snapshot-pointer.v1
