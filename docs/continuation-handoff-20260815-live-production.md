@@ -113,9 +113,10 @@ was saved with a legacy Korean encoding and is displayed as mojibake in some
 terminals.
 
 - Reviewed code commits pushed to `origin/main`: `b014326` (real-AI/evidence
-  fail-closed gate), `232081c` (global outlier coverage validation), and
-  `de73d2d` (redistribute the collection budget after source gaps).
-- The offline full gate after the implementation changes passed: 165 tests,
+  fail-closed gate), `232081c` (global outlier coverage validation), `de73d2d`
+  (redistribute the collection budget after source gaps), and `40b05ee`
+  (honor source-specific article path patterns).
+- The offline full gate after the implementation changes passed: 166 tests,
   including 3 integration/offline end-to-end checks. The evaluation asset still
   reports `model_quality_measured=false`, `dataset_status=synthetic_schema_only`,
   and `release_eligible=false`; this is not a real-model quality certificate.
@@ -135,6 +136,17 @@ terminals.
   satisfied the required minimum of 3 articles and 2 distinct media outlets;
   the fifth candidate had 2 articles. Three independent diagnostic calls had
   the same 4-publishable-cluster boundary.
+- Cloud Build `e8854004-1820-4954-9d21-6764c42138e2` deployed `40b05ee`.
+  Run `live-20260815-path-filter-40b05ee` collected and persisted successfully:
+  10 of the 12 configured source policies returned usable rows, with 51
+  distinct article IDs (100 rows including the retry attempt). The live Vertex
+  stage still failed closed because only 3 publishable clusters were produced.
+  A body-free diagnostic execution against the same 2026-08-15 collection
+  window used 50 actual metadata articles and made three independent Vertex
+  calls. All three returned valid JSON and 5 candidates, but each had only 3
+  publishable clusters; the remaining candidates were rejected by coherence or
+  minimum article-count rules. This confirms the quarantine is a real quality
+  boundary, not a reason to lower the gate or fill an issue with outliers.
 - The current public reader was checked directly at
   `https://agendaframe-snapshot-reader-2zut37vwaq-du.a.run.app/active` and
   returned the prior healthy pointer: basis date `2026-08-14`, run
