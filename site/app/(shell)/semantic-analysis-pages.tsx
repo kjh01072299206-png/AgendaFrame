@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   DIM_LABEL,
@@ -15,6 +16,7 @@ import type {
   SemanticDimensionItem,
   SemanticProfileEntry,
 } from "../../lib/initial-five/types";
+import { stripEvidenceTokens } from "../../lib/initial-five/public-text.mjs";
 
 type RichProfile = NonNullable<SemanticProfileEntry["profile"]> & {
   secondary_descriptors?: {
@@ -177,7 +179,8 @@ function synthesisData(bundle: IssueAnalysisBundle): EventSynthesisData | null {
 }
 
 function observedClaim(claim?: { text?: string | null; status?: string } | null): string | null {
-  return claim?.status === "observed" && typeof claim.text === "string" && claim.text.trim() ? claim.text : null;
+  if (claim?.status !== "observed" || typeof claim.text !== "string" || !claim.text.trim()) return null;
+  return stripEvidenceTokens(claim.text) || null;
 }
 
 function comparisonAxes(bundle: IssueAnalysisBundle): RuleComparisonAxis[] {
@@ -1037,9 +1040,10 @@ function MethodologyDisclaimer() {
   );
 }
 
-function PendingAnalysisShell({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
+function PendingAnalysisShell({ bundle, issue, mode }: { bundle: IssueAnalysisBundle; issue: IssueView; mode: AnalysisMode }) {
   return (
     <>
+      <AnalysisPageHeader mode={mode} bundle={bundle} issue={issue} dimensions={[]} />
       <section className="afs-card afs-card-lead">
         <h2>{issue.title}</h2>
         <div className="afs-in afs-prose">
@@ -1079,10 +1083,11 @@ function isPendingLiveAnalysis(bundle: IssueAnalysisBundle) {
 }
 
 export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
-  if (isPendingLiveAnalysis(bundle)) return <PendingAnalysisShell bundle={bundle} issue={issue} />;
+  if (isPendingLiveAnalysis(bundle)) return <PendingAnalysisShell mode="outlets" bundle={bundle} issue={issue} />;
   const dimensions = analyses(bundle, issue);
   return (
     <>
+      <AnalysisPageHeader mode="outlets" bundle={bundle} issue={issue} dimensions={dimensions} />
       <IssueThirtySecond issue={issue} />
       <div id="sec-synthesis">
         <SynthesisNarrative bundle={bundle} />
@@ -1129,21 +1134,22 @@ export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
 }
 
 export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
-  if (isPendingLiveAnalysis(bundle)) return <PendingAnalysisShell bundle={bundle} issue={issue} />;
+  if (isPendingLiveAnalysis(bundle)) return <PendingAnalysisShell mode="framing" bundle={bundle} issue={issue} />;
   const dimensions = analyses(bundle, issue);
   return (
     <>
-      <FramingRail />
-      <IssueThirtySecond issue={issue} />
-      <div id="sec-synthesis">
-        <SynthesisNarrative bundle={bundle} />
-      </div>
+      <AnalysisPageHeader mode="framing" bundle={bundle} issue={issue} dimensions={dimensions} />
       <Summary bundle={bundle} issue={issue} analyses={dimensions} />
+      <FramingRail />
       <div id="sec-guide">
         <DimensionGuide dimensions={dimensions} />
       </div>
       <div id="sec-four-functions">
         <FourFunctionTable issue={issue} dimensions={dimensions} />
+      </div>
+      <IssueThirtySecond issue={issue} />
+      <div id="sec-synthesis">
+        <SynthesisNarrative bundle={bundle} />
       </div>
       <section className="afs-card" id="sec-matrix">
         <h2>
@@ -1191,4 +1197,65 @@ export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
 
 export function AnalysisPageIntro({ title, description, children }: { title: string; description: string; children?: ReactNode }) {
   return <header className="afs-head afp-head"><span className="afs-eyebrow">AI EVIDENCE VIEW</span><h1>{title}</h1><p>{description}</p>{children}</header>;
+}
+
+type AnalysisMode = "outlets" | "framing";
+
+function AnalysisPageHeader({
+  mode,
+  bundle,
+  issue,
+  dimensions,
+}: {
+  mode: AnalysisMode;
+  bundle: IssueAnalysisBundle;
+  issue: IssueView;
+  dimensions: DimensionAnalysis[];
+}) {
+  const framing = mode === "framing";
+  const synthesis = synthesisData(bundle);
+  const camps = (synthesis?.camps ?? []).filter((camp) => camp.gist && (camp.outlets?.length || camp.article_ids?.length));
+  const observedDimensions = dimensions.filter((dimension) => dimension.observedArticles > 0).length;
+  const kpis = framing
+    ? [
+        ["매체", String(issue.outletCount), "곳"],
+        ["기사", String(issue.articleCount), "건"],
+        ["관측 축", `${observedDimensions}/5`, "축"],
+        ["공개 근거", String(issue.evidenceTotal), "지문"],
+      ]
+    : [
+        ["매체", String(issue.outletCount), "곳"],
+        ["기사", String(issue.articleCount), "건"],
+        ["논조 군집", camps.length ? String(camps.length) : "—", camps.length ? "개" : "없음"],
+        ["매체 서술 갈림", String(issue.splitDimensions), "축"],
+      ];
+
+  return (
+    <>
+      <header className="afs-head afp-page-head">
+        <div className="afp-page-heading">
+          <div className="afp-page-title-line">
+            <h1>{framing ? "프레이밍 분석" : "언론사 비교"}</h1>
+            <span className="afp-page-badge">{framing ? "방법론 6축" : "논조 군집"}</span>
+          </div>
+          <p>
+            {issue.rank}위 · {issue.title} — {framing
+              ? "문제·원인·책임·평가·해법·취재원 배치를 기사 근거와 함께 읽습니다."
+              : "사건 이해 → 갈린 질문 → 논조 군집 → 기사 근거 순서로 비교합니다."}
+          </p>
+        </div>
+        <Link className="afs-pill afs-pill-go afp-page-action" href={`/issues/${encodeURIComponent(issue.issueId)}/report`}>
+          리포트로 보기
+        </Link>
+      </header>
+      <section className="afp-kpis" aria-label={`${framing ? "프레이밍 분석" : "언론사 비교"} 요약 지표`}>
+        {kpis.map(([label, value, unit]) => (
+          <div className="afp-kpi" key={label}>
+            <span>{label}</span>
+            <strong>{value}<small>{unit}</small></strong>
+          </div>
+        ))}
+      </section>
+    </>
+  );
 }

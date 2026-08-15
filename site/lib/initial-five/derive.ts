@@ -7,6 +7,7 @@
 import { getInitialFiveIssueBundle, initialFiveManifest } from "./artifacts";
 // 취재원 역할 좁히기 규칙은 워커 API 와 공유한다 (lib/initial-five/subjects.mjs)
 import { actorParaphrases, narrowSubject, paraphrasesByLocator, subjectsIn } from "./subjects.mjs";
+import { stripEvidenceTokens } from "./public-text.mjs";
 import type { EventSynthesisData, InitialFiveManifest, IssueAnalysisBundle } from "./types";
 
 export const DIM_ORDER = [
@@ -849,12 +850,12 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
     category: bundle.issue.category,
     articleCount: bundle.issue.articleCount,
     outletCount: bundle.issue.outletCount,
-    lead: bundle.clusterAi.summary
+    lead: stripEvidenceTokens(bundle.clusterAi.summary
       ?? observedSynthesisText((data.synthesis as EventSynthesisData | undefined)?.what_happened)
-      ?? null,
-    commonGround: brief.common_ground ?? (typeof data.agreedLine === "string" ? data.agreedLine : null),
-    mainDifference: brief.main_difference ?? (typeof data.splitLine === "string" ? data.splitLine : null),
-    sourceContext: brief.source_context ?? null,
+      ?? null),
+    commonGround: stripEvidenceTokens(brief.common_ground ?? (typeof data.agreedLine === "string" ? data.agreedLine : null)),
+    mainDifference: stripEvidenceTokens(brief.main_difference ?? (typeof data.splitLine === "string" ? data.splitLine : null)),
+    sourceContext: stripEvidenceTokens(brief.source_context ?? null),
     commonSubjects: bundle.clusterAi.commonSubjects ?? [],
     clusters: (bundle.clusterAi.narrativeVariants ?? []).map((variant) => ({
       label: variant.label ?? "서사",

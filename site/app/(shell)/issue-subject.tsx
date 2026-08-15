@@ -34,12 +34,13 @@ export function IssueSubject({
 }) {
   const pathname = usePathname() ?? "";
   const base = `/issues/${encodeURIComponent(issueId)}`;
+  const compact = pathname.endsWith("/outlets") || pathname.endsWith("/framing");
   const active =
     SCREENS.slice().reverse().find((screen) => screen.tail && pathname.endsWith(screen.tail)) ?? SCREENS[0];
 
   return (
     <>
-      <section className="afs-subject">
+      <section className={`afs-subject${compact ? " afs-subject-context" : ""}`}>
         <span className="afs-subject-rank" aria-label={`보도량 ${rank}위`}>
           {String(rank).padStart(2, "0")}
         </span>

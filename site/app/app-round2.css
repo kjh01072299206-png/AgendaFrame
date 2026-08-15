@@ -30,6 +30,112 @@
   border-left: 3px solid var(--afs-brand);
 }
 
+/* Analysis pages keep the issue visible as context, then let the page-specific
+   title and evidence flow lead. This mirrors the prototype without hiding the
+   route context or the issue navigation. */
+.afp-page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 0;
+}
+.afp-page-heading {
+  min-width: 0;
+}
+.afp-page-title-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.afp-page-title-line h1 {
+  margin: 0;
+  font-size: clamp(24px, 2.8vw, 31px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+.afp-page-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 2px 9px;
+  border: 1px solid color-mix(in srgb, var(--afs-brand) 28%, transparent);
+  border-radius: var(--afs-r-chip);
+  background: var(--afs-soft);
+  color: var(--afs-brand);
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.afp-page-head p {
+  margin: 5px 0 0;
+  max-width: 80ch;
+  color: var(--afs-ink-2);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.afp-page-action {
+  flex: 0 0 auto;
+  min-height: 42px;
+}
+.afp-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: -6px;
+}
+.afp-kpi {
+  min-width: 0;
+  padding: 11px 13px;
+  border: 1px solid var(--afs-rule);
+  border-radius: var(--afs-r-card);
+  background: var(--afs-card);
+}
+.afp-kpi span {
+  display: block;
+  color: var(--afs-ink-3);
+  font-size: 11.5px;
+  font-weight: 650;
+}
+.afp-kpi strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 21px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+.afp-kpi small {
+  margin-left: 3px;
+  color: var(--afs-ink-2);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+.afs-subject-context {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 3px 12px;
+  padding: 11px 16px;
+}
+.afs-subject-context .afs-subject-rank {
+  grid-row: span 2;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+.afs-subject-context h1 {
+  font-size: 16px;
+}
+.afs-subject-context .afs-subject-lead {
+  display: none;
+}
+.afs-subject-context .afs-subject-chips {
+  margin-top: 3px;
+}
+
 /* ── 다크에서 파임 방향 ──────────────────────────────────────────────────── */
 /* 라이트는 흰 카드보다 어두운 면이 "파임"이다. 다크에서 sunk 을 더 밝게 잡으면
    파임이 오히려 솟아 보여 각주 상자가 카드와 구별되지 않는다. */
@@ -1114,4 +1220,153 @@
 .afs-btn,
 .afs-submit {
   color: var(--afs-on-brand);
+}
+
+/* Evidence controls are interactive content, so the visible label must keep a
+   touch-sized hit area even when the label itself is short. Long hash/location
+   strings stay inside the disclosure instead of widening its parent. */
+.afs-shell details > summary {
+  min-height: 44px;
+}
+.afs-evidence summary,
+.afp-evidence summary,
+.afp-more summary,
+.afp-scope-articles summary,
+.afp-debate-box > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.afp-evidence-body a,
+.afp-article-body > a {
+  display: inline-flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 6px 0;
+}
+.afp-evidence-body,
+.afp-evidence-body > *,
+.afp-article,
+.afp-article > summary,
+.afp-article > summary > *,
+.afp-article-row,
+.afp-article-row > * {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.afp-evidence-body small {
+  display: block;
+  line-height: 1.5;
+}
+.afp-device-list > div,
+.afp-descriptor-list > div {
+  min-width: 0;
+  max-width: 100%;
+}
+.afs-camps b {
+  color: var(--afs-ink) !important;
+}
+
+@media (max-width: 720px) {
+  .afp-device-list > div,
+  .afp-descriptor-list > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: initial;
+    gap: 5px;
+  }
+}
+
+@media (max-width: 560px) {
+  .afs-feed,
+  .afs-feed > li,
+  .afs-feed-head,
+  .afs-feed-foot,
+  .afs-feed-replies {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .afs-feed-head .afs-chip {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (min-width: 1200px) {
+  .afp-matrix {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+  .afp-matrix th:first-child {
+    width: 120px;
+  }
+  .afp-matrix .afp-cell {
+    min-width: 0;
+  }
+  .afp-matrix .afp-source-cell,
+  .afp-matrix .afp-source-cell span {
+    min-width: 0;
+  }
+  .afp-matrix .afp-cell p,
+  .afp-matrix .afp-cell strong {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 860px) {
+  .afs-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 4px;
+    padding-bottom: 2px;
+  }
+  .afs-nav a {
+    white-space: nowrap;
+  }
+  .afs-nav-sec {
+    display: block;
+    min-width: 0;
+  }
+  .afs-subject-context {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .afs-subject-context .afs-subject-rank {
+    grid-row: span 2;
+  }
+}
+
+@media (max-width: 560px) {
+  .afs-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .afp-page-head {
+    flex-direction: column;
+  }
+  .afp-page-action {
+    width: max-content;
+  }
+  .afp-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .afs-subject-context {
+    align-items: start;
+  }
+  .afs-subject-context .afs-subject-chips {
+    grid-column: 2;
+  }
+  .afs-subject-context .afs-chip-good,
+  .afs-subject-context .afs-save {
+    display: none;
+  }
 }
