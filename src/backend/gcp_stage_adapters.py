@@ -509,7 +509,7 @@ def _title_fallback_clusters(articles: Sequence[MetadataArticle]) -> list[dict[s
         key=lambda group: (-len(group["articles"]), group["articles"][0].article_id),
     )
     clusters: list[dict[str, Any]] = []
-    for index, group in enumerate(ranked[:5], 1):
+    for index, group in enumerate(ranked, 1):
         lead = group["articles"][0]
         clusters.append(
             {
@@ -591,6 +591,23 @@ class MetadataClusterRankAdapter(ClusterRankAdapter):
                 for article in metadata_articles
             ],
             "clusters": ranked,
+            "candidates": [
+                {
+                    "issueId": str(cluster["cluster_id"]),
+                    "title": str(cluster["label"]),
+                    "articleIds": [
+                        str(assignment["article_id"])
+                        for assignment in cluster.get("article_assignments", [])
+                        if assignment.get("relation") == "same_event"
+                    ],
+                    "coherence": cluster.get("coherence"),
+                }
+                for cluster in ranked
+                if any(
+                    assignment.get("relation") == "same_event" and assignment.get("article_id")
+                    for assignment in cluster.get("article_assignments", [])
+                )
+            ],
             "top5": top5,
             "clustering": clustering.as_dict(),
             "idempotencyKey": idempotency_key,
@@ -918,17 +935,20 @@ class FrameSemanticAdapter(SemanticAdapter):
         self.dependencies = dependencies
 
     def analyze_top5(self, request, ranked, *, idempotency_key: str) -> Mapping[str, Any]:
-        top5 = ranked.get("top5")
-        if not isinstance(top5, Sequence) or isinstance(top5, (str, bytes, bytearray)):
+        pool = ranked.get("candidates")
+        if not isinstance(pool, Sequence) or isinstance(pool, (str, bytes, bytearray)) or not pool:
+            pool = ranked.get("top5")
+        if not isinstance(pool, Sequence) or isinstance(pool, (str, bytes, bytearray)):
             raise StageAdapterError("rank output has no top5 candidates")
-        if len(top5) != 5:
-            raise StageAdapterError("semantic stage requires exactly five ranked issues")
 
         bundles: dict[str, Any] = {}
         public_issues: list[dict[str, Any]] = []
         analyzed = 0
         missing_evidence = 0
-        for issue in top5:
+        skipped_without_evidence = 0
+        for issue in pool:
+            if len(public_issues) >= 5:
+                break
             if not isinstance(issue, Mapping):
                 raise StageAdapterError("top5 issue row is invalid")
             issue_id = str(issue.get("issueId", "")).strip()
@@ -1004,7 +1024,8 @@ class FrameSemanticAdapter(SemanticAdapter):
                 )
                 analyzed += 1
             if not article_rows:
-                raise StageAdapterError(f"top5 issue {issue_id} has no evidence-backed article")
+                skipped_without_evidence += 1
+                continue
             article_count = len(article_rows)
             outlet_count = len({str(row["outlet"]) for row in article_rows})
             comparison_axes = _comparison_axes(profiles, article_count=article_count)
@@ -1127,6 +1148,11 @@ class FrameSemanticAdapter(SemanticAdapter):
                     "semantic": semantic_engine,
                     "clusterAi": cluster_engine,
                 }
+            )
+        if len(public_issues) != 5:
+            raise StageAdapterError(
+                "semantic stage requires exactly five evidence-backed issues; "
+                f"got {len(public_issues)} after skipping {skipped_without_evidence} without evidence"
             )
         result = {
             "unsupportedClaimRate": 1.0 if missing_evidence else 0.0,
