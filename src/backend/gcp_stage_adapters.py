@@ -547,8 +547,19 @@ class MetadataClusterRankAdapter(ClusterRankAdapter):
             groups,
         )
         cluster_rows = [dict(cluster) for cluster in clustering.clusters]
-        if not cluster_rows:
+        usable_clusters = []
+        for cluster in cluster_rows:
+            assigned = [
+                assignment
+                for assignment in cluster.get("article_assignments", [])
+                if assignment.get("relation") == "same_event" and assignment.get("article_id")
+            ]
+            if assigned:
+                usable_clusters.append(cluster)
+        if len(usable_clusters) < 5:
             cluster_rows = _title_fallback_clusters(metadata_articles)
+        else:
+            cluster_rows = usable_clusters
         ranked = sorted(
             cluster_rows,
             key=lambda cluster: (

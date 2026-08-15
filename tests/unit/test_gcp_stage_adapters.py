@@ -367,6 +367,43 @@ class GcpStageAdapterTests(unittest.TestCase):
         self.assertTrue(all(row["articleIds"] for row in ranked["top5"]))
         self.assertTrue(all(row["issueId"].startswith("title-fallback-") for row in ranked["top5"]))
 
+    def test_cluster_rank_falls_back_when_model_returns_fewer_than_five_clusters(self) -> None:
+        class ShortClusters:
+            def __init__(self, articles):
+                lead = articles[0]
+                self.clusters = [
+                    {
+                        "cluster_id": "only-one",
+                        "label": lead.title,
+                        "article_assignments": [
+                            {"article_id": article.article_id, "relation": "same_event"}
+                            for article in articles
+                        ],
+                    }
+                ]
+
+            def as_dict(self):
+                return {"clusters": self.clusters, "approval": {"body_free": True}}
+
+        class ShortClusterer:
+            def analyze(self, articles, candidate_groups):
+                return ShortClusters(articles)
+
+        collected = PolicyCollectionAdapter(
+            self.dependencies, clock=lambda: COLLECTED_AT, max_articles_per_run=12
+        ).collect(self.request, idempotency_key="collect-short")
+        persisted = MetadataPersistenceAdapter(self.dependencies).persist(
+            self.request, collected, idempotency_key="persist-short"
+        )
+        deps = StageDependencies(
+            **{**self.dependencies.__dict__, "initial_five_clusterer": ShortClusterer()}
+        )
+        ranked = MetadataClusterRankAdapter(deps).cluster_rank(
+            self.request, persisted, idempotency_key="rank-short"
+        )
+        self.assertEqual(len(ranked["top5"]), 5)
+        self.assertTrue(all(row["issueId"].startswith("title-fallback-") for row in ranked["top5"]))
+
     def test_semantic_adapter_uses_bound_event_synthesis_when_injected(self) -> None:
         class SynthesisFake:
             def synthesize(self, request):
