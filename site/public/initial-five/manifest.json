@@ -1,7 +1,7 @@
 {
   "schemaVersion": "agendaframe.initial-five.public.v1",
   "basisDate": "2026-08-15",
-  "generatedAt": "2026-08-15T08:46:48.455Z",
+  "generatedAt": "2026-08-15T17:12:13.733Z",
   "issueCount": 5,
   "articleCount": 40,
   "issues": [
@@ -31,16 +31,16 @@
       },
       "semantic": {
         "status": "review_needed",
-        "engineLabel": "unverified",
-        "semanticAi": false,
-        "model": null,
-        "promptVersion": null,
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "source": "pending-vertex",
-        "succeededArticleCount": 0,
-        "reviewNeededArticleCount": 8,
-        "requiresHumanReview": true,
-        "fallbackReason": "no_private_body_for_locator_recheck"
+        "source": "gcp:vertex:current-display-batch",
+        "articleCount": 8,
+        "succeededArticleCount": 7,
+        "reviewNeededArticleCount": 1,
+        "requiresHumanReview": true
       }
     },
     {
@@ -69,16 +69,16 @@
       },
       "semantic": {
         "status": "review_needed",
-        "engineLabel": "unverified",
-        "semanticAi": false,
-        "model": null,
-        "promptVersion": null,
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "source": "pending-vertex",
-        "succeededArticleCount": 0,
-        "reviewNeededArticleCount": 12,
-        "requiresHumanReview": true,
-        "fallbackReason": "no_private_body_for_locator_recheck"
+        "source": "gcp:vertex:current-display-batch",
+        "articleCount": 12,
+        "succeededArticleCount": 10,
+        "reviewNeededArticleCount": 2,
+        "requiresHumanReview": true
       }
     },
     {
@@ -107,16 +107,16 @@
       },
       "semantic": {
         "status": "review_needed",
-        "engineLabel": "unverified",
-        "semanticAi": false,
-        "model": null,
-        "promptVersion": null,
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "source": "pending-vertex",
-        "succeededArticleCount": 0,
-        "reviewNeededArticleCount": 7,
-        "requiresHumanReview": true,
-        "fallbackReason": "no_private_body_for_locator_recheck"
+        "source": "gcp:vertex:current-display-batch",
+        "articleCount": 7,
+        "succeededArticleCount": 5,
+        "reviewNeededArticleCount": 2,
+        "requiresHumanReview": true
       }
     },
     {
@@ -144,17 +144,17 @@
         "summary": "3개 언론사의 관련 제목 7건을 사건 인물·행위와 제목 유사도를 함께 확인해 묶었습니다."
       },
       "semantic": {
-        "status": "review_needed",
-        "engineLabel": "unverified",
-        "semanticAi": false,
-        "model": null,
-        "promptVersion": null,
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "source": "pending-vertex",
-        "succeededArticleCount": 0,
-        "reviewNeededArticleCount": 7,
-        "requiresHumanReview": true,
-        "fallbackReason": "no_private_body_for_locator_recheck"
+        "source": "gcp:vertex:current-display-batch",
+        "articleCount": 7,
+        "succeededArticleCount": 7,
+        "reviewNeededArticleCount": 0,
+        "requiresHumanReview": true
       }
     },
     {
@@ -182,17 +182,17 @@
         "summary": "3개 언론사의 관련 제목 6건을 사건 인물·행위와 제목 유사도를 함께 확인해 묶었습니다."
       },
       "semantic": {
-        "status": "review_needed",
-        "engineLabel": "unverified",
-        "semanticAi": false,
-        "model": null,
-        "promptVersion": null,
+        "status": "succeeded",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "source": "pending-vertex",
-        "succeededArticleCount": 0,
-        "reviewNeededArticleCount": 6,
-        "requiresHumanReview": true,
-        "fallbackReason": "no_private_body_for_locator_recheck"
+        "source": "gcp:vertex:current-display-batch",
+        "articleCount": 6,
+        "succeededArticleCount": 6,
+        "reviewNeededArticleCount": 0,
+        "requiresHumanReview": true
       }
     }
   ]

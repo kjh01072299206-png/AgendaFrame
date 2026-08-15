@@ -102,6 +102,72 @@ class GcpLiveDependencyTests(unittest.TestCase):
         self.assertEqual(rows[0].text_scope, "authorized_transient_body")
         self.assertEqual(rows[0].title_source, "html_title")
 
+    def test_known_publisher_body_containers_are_extracted(self) -> None:
+        cases = (
+            ("cont_newstext", "KBS body " + LONG_BODY),
+            ("article-body", "Chosun body " + LONG_BODY),
+            ("view_body", "Donga body " + LONG_BODY),
+        )
+        for selector, expected in cases:
+            with self.subTest(selector=selector):
+                html = (
+                    "<html><head><title>Publisher title</title>"
+                    "<script type='application/ld+json'>"
+                    f"{json.dumps({'@type': 'NewsArticle', 'datePublished': '2026-08-13T10:30:00+09:00'})}"
+                    f"</script></head><body><div id='{selector}'><p>{expected}</p>"
+                    "</div></body></html>"
+                ).encode()
+                url = f"https://khan.co.kr/article/{selector}"
+                fetcher = FakeFetcher(
+                    {
+                        url: FetchedResponse(url, 200, "text/html", html),
+                    }
+                )
+                rows = parser(fetcher).parse(
+                    FetchedResponse(
+                        "https://khan.co.kr/rss",
+                        200,
+                        "application/rss+xml",
+                        rss((selector, url)),
+                    ),
+                    source=SOURCE,
+                    endpoint_url=SOURCE.endpoint_urls[0],
+                    collected_at=COLLECTED_AT,
+                )
+                self.assertEqual(len(rows), 1)
+                self.assertIn(expected, rows[0].body_text)
+
+    def test_fusion_metadata_body_is_extracted_when_markup_is_client_rendered(self) -> None:
+        canonical = "https://www.chosun.com/international/article/fusion"
+        payload = {
+            "content_elements": [
+                {"type": "image", "url": "https://example.test/image"},
+                {"type": "text", "content": LONG_BODY},
+            ]
+        }
+        html = (
+            "<html><head><title>Fusion title</title>"
+            "<script id='fusion-metadata'>"
+            f"window.Fusion.globalContent={json.dumps(payload)};Fusion.contextPath='/pf';"
+            "</script><script type='application/ld+json'>"
+            f"{json.dumps({'@type': 'NewsArticle', 'datePublished': '2026-08-13T10:30:00+09:00'})}"
+            "</script></head><body></body></html>"
+        ).encode()
+        fetcher = FakeFetcher({canonical: FetchedResponse(canonical, 200, "text/html", html)})
+        rows = parser(fetcher).parse(
+            FetchedResponse(
+                "https://khan.co.kr/rss",
+                200,
+                "application/rss+xml",
+                rss(("Fusion", canonical)),
+            ),
+            source=SourceDefinition("chosun", ("chosun.com",), ("https://chosun.com/rss",)),
+            endpoint_url="https://chosun.com/rss",
+            collected_at=COLLECTED_AT,
+        )
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].body_text, LONG_BODY)
+
     def test_jsonld_headline_has_priority_and_is_traced(self) -> None:
         canonical = "https://khan.co.kr/article/headline"
         fetcher = FakeFetcher(

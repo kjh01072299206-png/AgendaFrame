@@ -36,16 +36,16 @@
     },
     "semantic": {
       "status": "review_needed",
-      "engineLabel": "unverified",
-      "semanticAi": false,
-      "model": null,
-      "promptVersion": null,
+      "engineLabel": "ai_semantic",
+      "semanticAi": true,
+      "model": "gemini-2.5-pro",
+      "promptVersion": "2.6.0",
       "schemaVersion": "agendaframe.article-frame-profile.v2",
-      "source": "pending-vertex",
-      "succeededArticleCount": 0,
-      "reviewNeededArticleCount": 8,
-      "requiresHumanReview": true,
-      "fallbackReason": "no_private_body_for_locator_recheck"
+      "source": "gcp:vertex:current-display-batch",
+      "articleCount": 8,
+      "succeededArticleCount": 7,
+      "reviewNeededArticleCount": 1,
+      "requiresHumanReview": true
     }
   },
   "clusterAi": {
@@ -66,7 +66,9 @@
       "mediaGroupId": "joongang_group",
       "canonicalUrl": "https://www.joongang.co.kr/article/25453584",
       "publishedAt": "2026-08-15T06:28:56.952Z",
-      "section": "international"
+      "section": "international",
+      "bodySha256": "4b8366306ab07e7da9e355a0b489ac02623a4d756d4b0f32b00f7e610c719704",
+      "issueId": "live-2026-08-15-top-1"
     },
     {
       "articleId": "84bea795e160274d1154148f77bcbe7f",
@@ -78,7 +80,9 @@
       "mediaGroupId": "seoul_group",
       "canonicalUrl": "https://www.seoul.co.kr/news/international/USA-amrica/2026/08/15/20260815500005",
       "publishedAt": "2026-08-15T06:28:56.952Z",
-      "section": "international"
+      "section": "international",
+      "bodySha256": "e01e8f58bb040d120c99b78df282cecda2f2d76dd6c8c6505eab65331c28cf34",
+      "issueId": "live-2026-08-15-top-1"
     },
     {
       "articleId": "94f041e82774e659f9f7ea90aa39ef71",
@@ -90,7 +94,9 @@
       "mediaGroupId": "kmib_group",
       "canonicalUrl": "https://www.kmib.co.kr/article/view.asp?arcid=9000003289&code=61131511&sid1=int",
       "publishedAt": "2026-08-15T06:28:56.952Z",
-      "section": "international"
+      "section": "international",
+      "bodySha256": "2eedd0446dac95832d674887e0763c4a4e18105ab73a1562357029481ba0c26f",
+      "issueId": "live-2026-08-15-top-1"
     },
     {
       "articleId": "95bc8dd5c9d457f38a514d841c997fc5",
@@ -102,7 +108,9 @@
       "mediaGroupId": "kbs_group",
       "canonicalUrl": "https://news.kbs.co.kr/news/view.do?ncd=8637935",
       "publishedAt": "2026-08-14T23:14:42.000Z",
-      "section": "pending"
+      "section": "pending",
+      "bodySha256": "6f5b8759d0ed9fcd1891ea2093f20d162c265c2720d4163764d4cd484e735bef",
+      "issueId": "live-2026-08-15-top-1"
     },
     {
       "articleId": "96f04d1c2f26918ca77bc89262e5019a",
@@ -114,7 +122,9 @@
       "mediaGroupId": "kbs_group",
       "canonicalUrl": "https://news.kbs.co.kr/news/view.do?ncd=8637858",
       "publishedAt": "2026-08-14T20:10:46.000Z",
-      "section": "pending"
+      "section": "pending",
+      "bodySha256": "6dc5a76399da0e7fb867bbde6c053c07bd07ebc3e032a5090380171b58567b5d",
+      "issueId": "live-2026-08-15-top-1"
     },
     {
       "articleId": "ec10b645de4afbfdc1445413404f8ebf",
@@ -126,7 +136,9 @@
       "mediaGroupId": "chosun_group",
       "canonicalUrl": "https://www.chosun.com/international/international_general/2026/08/15/GNRGCMBUMUZTSYJQGZSDGNJVMI/",
       "publishedAt": "2026-08-15T01:49:47.000Z",
-      "section": "international"
+      "section": "international",
+      "bodySha256": "2b6c3644f584ebf44f5412848deb7091257803f0c21def4f2916ce5c8c08c7ae",
+      "issueId": "live-2026-08-15-top-1"
     },
     {
       "articleId": "f078d4f24cce0778526ae433280a74a3",
@@ -138,7 +150,9 @@
       "mediaGroupId": "segye_group",
       "canonicalUrl": "https://www.segye.com/newsView/20260815503378",
       "publishedAt": "2026-08-15T01:29:19.000Z",
-      "section": "international"
+      "section": "international",
+      "bodySha256": "79bba94607e5d057faa7ca5f9a8ecc4561c399900c7bd676c1e9128cb864b195",
+      "issueId": "live-2026-08-15-top-1"
     },
     {
       "articleId": "fd0d51bef55a0c116acd09721364ddde",
@@ -150,27 +164,4032 @@
       "mediaGroupId": "sbs_group",
       "canonicalUrl": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008706527",
       "publishedAt": "2026-08-14T20:49:00.000Z",
-      "section": "international"
+      "section": "international",
+      "bodySha256": "fcd7a3a50df5ef8f013e73ea835b7586de9c9311a829279a08fa039476475ad4",
+      "issueId": "live-2026-08-15-top-1"
     }
   ],
-  "semanticProfiles": [],
+  "semanticProfiles": [
+    {
+      "articleId": "785775d4b9c48d32436b8f61cb08b699",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "785775d4b9c48d32436b8f61cb08b699",
+        "evidenceCount": 10,
+        "bodySha256": "4b8366306ab07e7da9e355a0b489ac02623a4d756d4b0f32b00f7e610c719704",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "785775d4b9c48d32436b8f61cb08b699",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 10
+          },
+          "sentenceSha256": "09615ae9896c332e667bf558f1e9569e874679286a5a638cc780b53af9ec5143"
+        },
+        {
+          "articleId": "785775d4b9c48d32436b8f61cb08b699",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "3195683f03fc75303b1d65cc971d1906a1d26d01ba51ecf3c8adc37cce120920"
+        },
+        {
+          "articleId": "785775d4b9c48d32436b8f61cb08b699",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 14
+          },
+          "sentenceSha256": "a26d98f4bc8958308a34d523fef0fb98db1d8801653d144441baa0d0bf642a1c"
+        },
+        {
+          "articleId": "785775d4b9c48d32436b8f61cb08b699",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 16
+          },
+          "sentenceSha256": "3fdf905c0a617e0b0a0aa3c275c97480b333d38992a2e15e4ae023b62c0e43de"
+        },
+        {
+          "articleId": "785775d4b9c48d32436b8f61cb08b699",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 13
+          },
+          "sentenceSha256": "257f371cf4c3338cb332cbbaeff527ba2552fc6c8bab728c2ca4e36d54c882b3"
+        },
+        {
+          "articleId": "785775d4b9c48d32436b8f61cb08b699",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "bc9fc2d730c009ccb6a0a06b4957fb7fda0619c7fdfa08103b60cc71cdf2cc78"
+        },
+        {
+          "articleId": "785775d4b9c48d32436b8f61cb08b699",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 22
+          },
+          "sentenceSha256": "12be8c237e8e34e752a8cbcb9b683664538b66bcdcfe5570524f946c1c903f11"
+        },
+        {
+          "articleId": "785775d4b9c48d32436b8f61cb08b699",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 23
+          },
+          "sentenceSha256": "5ce03147cdadcca48780edb3892e40caaaa7959c50caa7dc9e41dbf12bf24968"
+        },
+        {
+          "articleId": "785775d4b9c48d32436b8f61cb08b699",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 18
+          },
+          "sentenceSha256": "95ffc21ca628939e7fd774b40b93641d307a10fc457682f47d1ead6bd628417b"
+        },
+        {
+          "articleId": "785775d4b9c48d32436b8f61cb08b699",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 20
+          },
+          "sentenceSha256": "dee55b3a7e2cf3cf03b5ad455a5fc10b48bf9e10bf205b3bcd69f331e69feda4"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "7e9b86edfa07d8b664737d9cb9357abb017ed8a398fd84d586519586b4c1c34a",
+            "response_sha256": "dd509658864d8f5f6710bfb5326c8629f531d266a9715b107e7f656ea48897d2",
+            "response_id": "QJSAaqnGFvOKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:31:29.624253+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "7e9b86edfa07d8b664737d9cb9357abb017ed8a398fd84d586519586b4c1c34a",
+            "response_sha256": "dd509658864d8f5f6710bfb5326c8629f531d266a9715b107e7f656ea48897d2",
+            "response_id": "QJSAaqnGFvOKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:31:29.624253+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "785775d4b9c48d32436b8f61cb08b699",
+          "upstream_article_id": "785775d4b9c48d32436b8f61cb08b699",
+          "published_at": "2026-08-15T06:28:56.952000+00:00",
+          "title_sha256": "40a363adc953d5fc32a82f9bd40cf6b34bc9048b470402bae0708b47f76017f5",
+          "body_sha256": "4b8366306ab07e7da9e355a0b489ac02623a4d756d4b0f32b00f7e610c719704",
+          "body_character_count": 3384,
+          "body_word_count": 774,
+          "paragraph_count": 1,
+          "sentence_count": 30
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 3384,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 10
+              },
+              "sentence_sha256": "09615ae9896c332e667bf558f1e9569e874679286a5a638cc780b53af9ec5143"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 11
+              },
+              "sentence_sha256": "3195683f03fc75303b1d65cc971d1906a1d26d01ba51ecf3c8adc37cce120920"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:933a0ac9e2dcbaaef17191f6de9d8c0b94f1c5a77b016b0a4c60ef2c18d66b39",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "이란이 핵무기를 보유하는 것을 막아야 하며, 세계 제1의 테러지원국인 이란을 봉쇄하는 것이 문제의 핵심이다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 14
+                  },
+                  "sentence_sha256": "a26d98f4bc8958308a34d523fef0fb98db1d8801653d144441baa0d0bf642a1c"
+                }
+              },
+              {
+                "claim_id": "claim:933a0ac9e2dcbaaef17191f6de9d8c0b94f1c5a77b016b0a4c60ef2c18d66b39",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "이란이 핵무기를 보유하는 것을 막아야 하며, 세계 제1의 테러지원국인 이란을 봉쇄하는 것이 문제의 핵심이다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 16
+                  },
+                  "sentence_sha256": "3fdf905c0a617e0b0a0aa3c275c97480b333d38992a2e15e4ae023b62c0e43de"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:1f70bfc8e780989c54fa3613ae7259e78b1e92a91f36eb1ee7e4caed9d2c8ba9",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "political_incentive",
+                "variant_key": "semantic:causal_interpretation:family:political_incentive",
+                "public_paraphrase": "미국이 군사력을 사용하고 호르무즈 해협을 봉쇄하는 것은 이란이 핵무기를 갖는 것을 막기 위함이다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 14
+                  },
+                  "sentence_sha256": "a26d98f4bc8958308a34d523fef0fb98db1d8801653d144441baa0d0bf642a1c"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:2c0978c534cc1726f381c6cc2685776276e7002f391b59351ce08e40b81cd33e",
+                "code": "semantic_moral_evaluation",
+                "frame_family": "effectiveness_positive",
+                "variant_key": "semantic:moral_evaluation:family:effectiveness_positive",
+                "public_paraphrase": "트럼프 대통령은 이란과의 대치 상황에 대해 \"정말 잘하고 있다\"고 긍정적으로 평가하며, 유가 상승은 옳은 일을 위한 대가라고 주장했다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 13
+                  },
+                  "sentence_sha256": "257f371cf4c3338cb332cbbaeff527ba2552fc6c8bab728c2ca4e36d54c882b3"
+                }
+              },
+              {
+                "claim_id": "claim:2c0978c534cc1726f381c6cc2685776276e7002f391b59351ce08e40b81cd33e",
+                "code": "semantic_moral_evaluation",
+                "frame_family": "effectiveness_positive",
+                "variant_key": "semantic:moral_evaluation:family:effectiveness_positive",
+                "public_paraphrase": "트럼프 대통령은 이란과의 대치 상황에 대해 \"정말 잘하고 있다\"고 긍정적으로 평가하며, 유가 상승은 옳은 일을 위한 대가라고 주장했다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 16
+                  },
+                  "sentence_sha256": "3fdf905c0a617e0b0a0aa3c275c97480b333d38992a2e15e4ae023b62c0e43de"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:ca392dc5db60896c577e8d80da054872276bdab69ccead946a1d87e31e261c96",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "strengthen_policy",
+                "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+                "public_paraphrase": "호르무즈 해협을 미국 영토로 선언하고 봉쇄를 유지하여 이란의 핵무기 보유를 막아야 한다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 10
+                  },
+                  "sentence_sha256": "09615ae9896c332e667bf558f1e9569e874679286a5a638cc780b53af9ec5143"
+                }
+              },
+              {
+                "claim_id": "claim:ca392dc5db60896c577e8d80da054872276bdab69ccead946a1d87e31e261c96",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "strengthen_policy",
+                "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+                "public_paraphrase": "호르무즈 해협을 미국 영토로 선언하고 봉쇄를 유지하여 이란의 핵무기 보유를 막아야 한다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "bc9fc2d730c009ccb6a0a06b4957fb7fda0619c7fdfa08103b60cc71cdf2cc78"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:0a45358ed4074ffdfed47693b5f87462c428ab45cd24cb5d3a0906b193651a53",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 22
+                },
+                "sentence_sha256": "12be8c237e8e34e752a8cbcb9b683664538b66bcdcfe5570524f946c1c903f11"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 23
+                },
+                "sentence_sha256": "5ce03147cdadcca48780edb3892e40caaaa7959c50caa7dc9e41dbf12bf24968"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:3e7960e20af35dffb6227ed506c71c6471698791b80f165d261980cf384d1a18",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 10
+                },
+                "sentence_sha256": "09615ae9896c332e667bf558f1e9569e874679286a5a638cc780b53af9ec5143"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 11
+                },
+                "sentence_sha256": "3195683f03fc75303b1d65cc971d1906a1d26d01ba51ecf3c8adc37cce120920"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 10
+              },
+              "sentence_sha256": "09615ae9896c332e667bf558f1e9569e874679286a5a638cc780b53af9ec5143"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 22
+              },
+              "sentence_sha256": "12be8c237e8e34e752a8cbcb9b683664538b66bcdcfe5570524f946c1c903f11"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 10
+              },
+              "sentence_sha256": "09615ae9896c332e667bf558f1e9569e874679286a5a638cc780b53af9ec5143"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 11
+              },
+              "sentence_sha256": "3195683f03fc75303b1d65cc971d1906a1d26d01ba51ecf3c8adc37cce120920"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "conflict",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 10
+                  },
+                  "sentence_sha256": "09615ae9896c332e667bf558f1e9569e874679286a5a638cc780b53af9ec5143"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 22
+                  },
+                  "sentence_sha256": "12be8c237e8e34e752a8cbcb9b683664538b66bcdcfe5570524f946c1c903f11"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "security_defense",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "bc9fc2d730c009ccb6a0a06b4957fb7fda0619c7fdfa08103b60cc71cdf2cc78"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 14
+                  },
+                  "sentence_sha256": "a26d98f4bc8958308a34d523fef0fb98db1d8801653d144441baa0d0bf642a1c"
+                }
+              ]
+            },
+            {
+              "code": "political",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 18
+                  },
+                  "sentence_sha256": "95ffc21ca628939e7fd774b40b93641d307a10fc457682f47d1ead6bd628417b"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 20
+                  },
+                  "sentence_sha256": "dee55b3a7e2cf3cf03b5ad455a5fc10b48bf9e10bf205b3bcd69f331e69feda4"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": "트럼프 “호르무즈 해협, 조만간 미국 영토로 선언할 것”",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 10
+                },
+                "sentence_sha256": "09615ae9896c332e667bf558f1e9569e874679286a5a638cc780b53af9ec5143"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "contrast",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 10
+                },
+                "sentence_sha256": "09615ae9896c332e667bf558f1e9569e874679286a5a638cc780b53af9ec5143"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 22
+                },
+                "sentence_sha256": "12be8c237e8e34e752a8cbcb9b683664538b66bcdcfe5570524f946c1c903f11"
+              }
+            ],
+            "appears_in_lead": false
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "2adca6bfd624dad81a69b8843c98d3a6971c11c701071da8a8f58aa826d34fb6",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "84bea795e160274d1154148f77bcbe7f",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "84bea795e160274d1154148f77bcbe7f",
+        "evidenceCount": 13,
+        "bodySha256": "e01e8f58bb040d120c99b78df282cecda2f2d76dd6c8c6505eab65331c28cf34",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "84bea795e160274d1154148f77bcbe7f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "6a610e3f902d7cac2ed33b930b98cd2283eff5e7342891f24d3f3c226c5b31e5"
+        },
+        {
+          "articleId": "84bea795e160274d1154148f77bcbe7f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 10
+          },
+          "sentenceSha256": "9b910e7d3157bfc6518b43f3393f223e24aa1e5ae4679ba79ee01974e2c8fba2"
+        },
+        {
+          "articleId": "84bea795e160274d1154148f77bcbe7f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 32
+          },
+          "sentenceSha256": "a7301df2670cb98fe7e6cbb23cf76e0f0ce8aa07e9da4ac727bf7ef42444e8f4"
+        },
+        {
+          "articleId": "84bea795e160274d1154148f77bcbe7f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 18
+          },
+          "sentenceSha256": "29d0c07e74df471ceccfb5dac6bfde53b03d339b4e96ac25cd3e9eb57585d443"
+        },
+        {
+          "articleId": "84bea795e160274d1154148f77bcbe7f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 19
+          },
+          "sentenceSha256": "67e54734266657de6e1dad4eb6158307a8c3a77ac80c5dadabdf0da9e1e328c7"
+        },
+        {
+          "articleId": "84bea795e160274d1154148f77bcbe7f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "12a8d947ffe06870926bbf2c7ea44fb92c875bb2eaaccd604f515b80ef1638a1"
+        },
+        {
+          "articleId": "84bea795e160274d1154148f77bcbe7f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 31
+          },
+          "sentenceSha256": "ec893c4a82f880e342e98d8ccfdb2b844e83b01d0d9e42d0f4ac479e8adf33f6"
+        },
+        {
+          "articleId": "84bea795e160274d1154148f77bcbe7f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 20
+          },
+          "sentenceSha256": "473a2dfcfbf0bb19a433a7d1c7c85b46125effb5c2856ac58cd3395b06f05767"
+        },
+        {
+          "articleId": "84bea795e160274d1154148f77bcbe7f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 22
+          },
+          "sentenceSha256": "237f87b9caff13287c94167a427d36c402511e3c123788b2f37f7a8bbf7d4d52"
+        },
+        {
+          "articleId": "84bea795e160274d1154148f77bcbe7f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 33
+          },
+          "sentenceSha256": "26935634783e7c600b020b248b6c72a42410ce706fd3ae4bf6ebd4592ef4d54c"
+        },
+        {
+          "articleId": "84bea795e160274d1154148f77bcbe7f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 34
+          },
+          "sentenceSha256": "cac26c98c28e869ebcd8e258bc0cec926e8ed7901a51129bdec2d4bfd83fab2a"
+        },
+        {
+          "articleId": "84bea795e160274d1154148f77bcbe7f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 43
+          },
+          "sentenceSha256": "f3ee43073387111207937580cd048edda91123e1ca0640a0e67a29c2ae385075"
+        },
+        {
+          "articleId": "84bea795e160274d1154148f77bcbe7f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "60dd9fcb3fd36718599946695a186f7766ec2fd55eb6cde17cf42d676f06d2d3"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "521ed11d8b54c37694e422dd24428b6b4b4e3e60ba36b70fb1d26c959ad9c9af",
+            "response_sha256": "efcb5a3eeb9f1193185dcab9cbe2fa55e00955fc05cb12079c37e70953a90d77",
+            "response_id": "QJSAapKPFuaLx9gPrfyDoQc",
+            "completed_at": "2026-08-15T16:31:26.922718+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "521ed11d8b54c37694e422dd24428b6b4b4e3e60ba36b70fb1d26c959ad9c9af",
+            "response_sha256": "efcb5a3eeb9f1193185dcab9cbe2fa55e00955fc05cb12079c37e70953a90d77",
+            "response_id": "QJSAapKPFuaLx9gPrfyDoQc",
+            "completed_at": "2026-08-15T16:31:26.922718+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "84bea795e160274d1154148f77bcbe7f",
+          "upstream_article_id": "84bea795e160274d1154148f77bcbe7f",
+          "published_at": "2026-08-15T06:28:56.952000+00:00",
+          "title_sha256": "a3ed905d5aec4e054b8541f09a22c2bdd004b807cf94009b87197acdfe40adab",
+          "body_sha256": "e01e8f58bb040d120c99b78df282cecda2f2d76dd6c8c6505eab65331c28cf34",
+          "body_character_count": 2909,
+          "body_word_count": 697,
+          "paragraph_count": 1,
+          "sentence_count": 50
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 2909,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "6a610e3f902d7cac2ed33b930b98cd2283eff5e7342891f24d3f3c226c5b31e5"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 10
+              },
+              "sentence_sha256": "9b910e7d3157bfc6518b43f3393f223e24aa1e5ae4679ba79ee01974e2c8fba2"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "moral_evaluation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:06c70900b9bc31d39d1761c3d9e25f316382aa68e6fd7f5f0670fb0b3db49c7c",
+                "code": "semantic_moral_evaluation",
+                "frame_family": "effectiveness_negative",
+                "variant_key": "semantic:moral_evaluation:family:effectiveness_negative",
+                "public_paraphrase": "에너지 비용 급등은 대선 공약과 반대되는 상황으로 트럼프 대통령에게 상당한 정치적 부담이 되고 있다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 32
+                  },
+                  "sentence_sha256": "a7301df2670cb98fe7e6cbb23cf76e0f0ce8aa07e9da4ac727bf7ef42444e8f4"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:eb23d3ec3e7fbad7e6444560811657c37d08fa9f9f18f38e6ee5fc9d733a1b54",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 18
+                },
+                "sentence_sha256": "29d0c07e74df471ceccfb5dac6bfde53b03d339b4e96ac25cd3e9eb57585d443"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 19
+                },
+                "sentence_sha256": "67e54734266657de6e1dad4eb6158307a8c3a77ac80c5dadabdf0da9e1e328c7"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 11
+              },
+              "sentence_sha256": "12a8d947ffe06870926bbf2c7ea44fb92c875bb2eaaccd604f515b80ef1638a1"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 31
+              },
+              "sentence_sha256": "ec893c4a82f880e342e98d8ccfdb2b844e83b01d0d9e42d0f4ac479e8adf33f6"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 10
+              },
+              "sentence_sha256": "9b910e7d3157bfc6518b43f3393f223e24aa1e5ae4679ba79ee01974e2c8fba2"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 18
+              },
+              "sentence_sha256": "29d0c07e74df471ceccfb5dac6bfde53b03d339b4e96ac25cd3e9eb57585d443"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "conflict",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 20
+                  },
+                  "sentence_sha256": "473a2dfcfbf0bb19a433a7d1c7c85b46125effb5c2856ac58cd3395b06f05767"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 22
+                  },
+                  "sentence_sha256": "237f87b9caff13287c94167a427d36c402511e3c123788b2f37f7a8bbf7d4d52"
+                }
+              ]
+            },
+            {
+              "code": "economic_consequences",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "12a8d947ffe06870926bbf2c7ea44fb92c875bb2eaaccd604f515b80ef1638a1"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 31
+                  },
+                  "sentence_sha256": "ec893c4a82f880e342e98d8ccfdb2b844e83b01d0d9e42d0f4ac479e8adf33f6"
+                }
+              ]
+            },
+            {
+              "code": "responsibility",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 33
+                  },
+                  "sentence_sha256": "26935634783e7c600b020b248b6c72a42410ce706fd3ae4bf6ebd4592ef4d54c"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 34
+                  },
+                  "sentence_sha256": "cac26c98c28e869ebcd8e258bc0cec926e8ed7901a51129bdec2d4bfd83fab2a"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "security_defense",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 20
+                  },
+                  "sentence_sha256": "473a2dfcfbf0bb19a433a7d1c7c85b46125effb5c2856ac58cd3395b06f05767"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 34
+                  },
+                  "sentence_sha256": "cac26c98c28e869ebcd8e258bc0cec926e8ed7901a51129bdec2d4bfd83fab2a"
+                }
+              ]
+            },
+            {
+              "code": "economic",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 31
+                  },
+                  "sentence_sha256": "ec893c4a82f880e342e98d8ccfdb2b844e83b01d0d9e42d0f4ac479e8adf33f6"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 32
+                  },
+                  "sentence_sha256": "a7301df2670cb98fe7e6cbb23cf76e0f0ce8aa07e9da4ac727bf7ef42444e8f4"
+                }
+              ]
+            },
+            {
+              "code": "political",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 32
+                  },
+                  "sentence_sha256": "a7301df2670cb98fe7e6cbb23cf76e0f0ce8aa07e9da4ac727bf7ef42444e8f4"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 43
+                  },
+                  "sentence_sha256": "f3ee43073387111207937580cd048edda91123e1ca0640a0e67a29c2ae385075"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "60dd9fcb3fd36718599946695a186f7766ec2fd55eb6cde17cf42d676f06d2d3"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "evaluative_label",
+            "label": "파격적인 발언",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 10
+                },
+                "sentence_sha256": "9b910e7d3157bfc6518b43f3393f223e24aa1e5ae4679ba79ee01974e2c8fba2"
+              }
+            ],
+            "appears_in_lead": false
+          },
+          {
+            "code": "causal_link",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 31
+                },
+                "sentence_sha256": "ec893c4a82f880e342e98d8ccfdb2b844e83b01d0d9e42d0f4ac479e8adf33f6"
+              }
+            ],
+            "appears_in_lead": false
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "6ed538fbffa8ec1e927e1678cfebd1cc557283c58c4757ae7bbe0e6a3fba431b",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+        "evidenceCount": 11,
+        "bodySha256": "2eedd0446dac95832d674887e0763c4a4e18105ab73a1562357029481ba0c26f",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "7bc5f4a0a6d36c02b5f7b8af7e1d6e1c8e27b9545079b591a0e180bf84793a96"
+        },
+        {
+          "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "14da45f2324256e64d4cb2ba10a627131543ae7f32e51ca62e7715769de5f025"
+        },
+        {
+          "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 13
+          },
+          "sentenceSha256": "10132b0e4e6384def89dfdec1c300b12d7f4a17ef497112119a42d9cae79cbb1"
+        },
+        {
+          "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 5
+          },
+          "sentenceSha256": "e09ac66f302adf69d695a8039fa2cd00ebb0c8e557faa67389c9fe106ed85223"
+        },
+        {
+          "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "88c9ed89f399403e0aff351efcf511c5fd8eec2d89de8b773e4cb08ed0d35cbc"
+        },
+        {
+          "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "9166fbdb4483848917e52a747f24010068664ff027fd36fdde57bc3aaae39594"
+        },
+        {
+          "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "8f73e51543f42da6fbc0bac5f96f2e0df6ce89cf9978c1381eb3159ddcc279a1"
+        },
+        {
+          "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 8
+          },
+          "sentenceSha256": "85e7f3fc9e5e07795aacd78eda29e02082a503aff5be2c0bb99bfe94bd617f29"
+        },
+        {
+          "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "8080a549c52779cf96f8561255a57782422315c4ca8021a1d86a42acdec54c89"
+        },
+        {
+          "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 9
+          },
+          "sentenceSha256": "6ef2366c567a3c79396af5da0eb88d42058b3bea79e175dd4b10844712c08f8a"
+        },
+        {
+          "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "f9d9bc56e4e3c4842d11444fe25a0f05f3a9e85749ba210fc08a975ee0eb3120"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "821c01cd096e15d690acb84921e3b80f9e58456d6603ae614de8799de7120e6e",
+            "response_sha256": "6b35924e41da84bf64f787b3256598506c5e6cfb5d4701a16d3a99e07065e010",
+            "response_id": "QJSAavDaFZGMx9gPkrXbyAg",
+            "completed_at": "2026-08-15T16:31:26.566941+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "821c01cd096e15d690acb84921e3b80f9e58456d6603ae614de8799de7120e6e",
+            "response_sha256": "6b35924e41da84bf64f787b3256598506c5e6cfb5d4701a16d3a99e07065e010",
+            "response_id": "QJSAavDaFZGMx9gPkrXbyAg",
+            "completed_at": "2026-08-15T16:31:26.566941+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "94f041e82774e659f9f7ea90aa39ef71",
+          "upstream_article_id": "94f041e82774e659f9f7ea90aa39ef71",
+          "published_at": "2026-08-15T06:28:56.952000+00:00",
+          "title_sha256": "0f255be2aae49c8bcb68e456f91bbc536bc497186ca94ed0c49b0d11af07f5f2",
+          "body_sha256": "2eedd0446dac95832d674887e0763c4a4e18105ab73a1562357029481ba0c26f",
+          "body_character_count": 2682,
+          "body_word_count": 620,
+          "paragraph_count": 1,
+          "sentence_count": 16
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 2682,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "7bc5f4a0a6d36c02b5f7b8af7e1d6e1c8e27b9545079b591a0e180bf84793a96"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 12
+              },
+              "sentence_sha256": "14da45f2324256e64d4cb2ba10a627131543ae7f32e51ca62e7715769de5f025"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:883665b146f221ebd1a4730788cddd73338d241d3f59b9b3a1fc308f2dcdef97",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 12
+                },
+                "sentence_sha256": "14da45f2324256e64d4cb2ba10a627131543ae7f32e51ca62e7715769de5f025"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 13
+                },
+                "sentence_sha256": "10132b0e4e6384def89dfdec1c300b12d7f4a17ef497112119a42d9cae79cbb1"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:d59e711eafbc5f8309cc7f2de4f49b3ba5eb7a9ce62305f3493b8bfe7baa7316",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "7bc5f4a0a6d36c02b5f7b8af7e1d6e1c8e27b9545079b591a0e180bf84793a96"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 5
+                },
+                "sentence_sha256": "e09ac66f302adf69d695a8039fa2cd00ebb0c8e557faa67389c9fe106ed85223"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "moderate",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "88c9ed89f399403e0aff351efcf511c5fd8eec2d89de8b773e4cb08ed0d35cbc"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 12
+              },
+              "sentence_sha256": "14da45f2324256e64d4cb2ba10a627131543ae7f32e51ca62e7715769de5f025"
+            }
+          ],
+          "level": "moderate"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "9166fbdb4483848917e52a747f24010068664ff027fd36fdde57bc3aaae39594"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "8f73e51543f42da6fbc0bac5f96f2e0df6ce89cf9978c1381eb3159ddcc279a1"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "conflict",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "8f73e51543f42da6fbc0bac5f96f2e0df6ce89cf9978c1381eb3159ddcc279a1"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "14da45f2324256e64d4cb2ba10a627131543ae7f32e51ca62e7715769de5f025"
+                }
+              ]
+            },
+            {
+              "code": "responsibility",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 5
+                  },
+                  "sentence_sha256": "e09ac66f302adf69d695a8039fa2cd00ebb0c8e557faa67389c9fe106ed85223"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "85e7f3fc9e5e07795aacd78eda29e02082a503aff5be2c0bb99bfe94bd617f29"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "security_defense",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 5
+                  },
+                  "sentence_sha256": "e09ac66f302adf69d695a8039fa2cd00ebb0c8e557faa67389c9fe106ed85223"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "8080a549c52779cf96f8561255a57782422315c4ca8021a1d86a42acdec54c89"
+                }
+              ]
+            },
+            {
+              "code": "political",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "6ef2366c567a3c79396af5da0eb88d42058b3bea79e175dd4b10844712c08f8a"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "f9d9bc56e4e3c4842d11444fe25a0f05f3a9e85749ba210fc08a975ee0eb3120"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": "트럼프 “호르무즈, 조만간 美영토로 선언할 것”",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "7bc5f4a0a6d36c02b5f7b8af7e1d6e1c8e27b9545079b591a0e180bf84793a96"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "causal_link",
+            "label": "우리는 이란이 핵무기를 갖도록 내버려둘 수 없기 때문",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "8080a549c52779cf96f8561255a57782422315c4ca8021a1d86a42acdec54c89"
+              }
+            ],
+            "appears_in_lead": false
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "362e6cfb1ac1f783ae458ee7391057d56b5b3e9974d3738ec0d17e28686986ec",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "95bc8dd5c9d457f38a514d841c997fc5",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "95bc8dd5c9d457f38a514d841c997fc5",
+        "evidenceCount": 6,
+        "bodySha256": "6f5b8759d0ed9fcd1891ea2093f20d162c265c2720d4163764d4cd484e735bef",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "95bc8dd5c9d457f38a514d841c997fc5",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+        },
+        {
+          "articleId": "95bc8dd5c9d457f38a514d841c997fc5",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "971e4356e95b6c8a805778fea6e1f9cc06d72a9e4e32a7f52a7c44c598c5d76c"
+        },
+        {
+          "articleId": "95bc8dd5c9d457f38a514d841c997fc5",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "106199bd18f8ea388eda47588ff48f56dae3ebafcec59fe6c3efbe15f30a3f17"
+        },
+        {
+          "articleId": "95bc8dd5c9d457f38a514d841c997fc5",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "474cd2531e0ebfbb9dfc93fa27981d62b7136d08bcb8c2d1607c064e55b6e150"
+        },
+        {
+          "articleId": "95bc8dd5c9d457f38a514d841c997fc5",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 5
+          },
+          "sentenceSha256": "5694e140153695087a156cc38e09565f4fdbbe709b2096ba25e996f586c33d4a"
+        },
+        {
+          "articleId": "95bc8dd5c9d457f38a514d841c997fc5",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "8688e2805867ff8dcc862a496af198c4f30d5c2e35658906beef228e49d1f6ab"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "dec378d6d7992d7a539f035991a60aeaa7c6e918ad26228b67322445f7a0ab31",
+            "response_sha256": "bd36ea3d85660e6c3be54f7a3d733eba1bede269d6231e8a195ce691211961ed",
+            "response_id": "QJSAavjLFfSTx9gPz5Tr8QM",
+            "completed_at": "2026-08-15T16:31:29.686224+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "dec378d6d7992d7a539f035991a60aeaa7c6e918ad26228b67322445f7a0ab31",
+            "response_sha256": "bd36ea3d85660e6c3be54f7a3d733eba1bede269d6231e8a195ce691211961ed",
+            "response_id": "QJSAavjLFfSTx9gPz5Tr8QM",
+            "completed_at": "2026-08-15T16:31:29.686224+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "95bc8dd5c9d457f38a514d841c997fc5",
+          "upstream_article_id": "95bc8dd5c9d457f38a514d841c997fc5",
+          "published_at": "2026-08-14T23:14:42+00:00",
+          "title_sha256": "4ec84c157cb7d777c7140182b3d0303ccb0b0693d7c871b60ec595fb23cc5172",
+          "body_sha256": "6f5b8759d0ed9fcd1891ea2093f20d162c265c2720d4163764d4cd484e735bef",
+          "body_character_count": 2518,
+          "body_word_count": 552,
+          "paragraph_count": 1,
+          "sentence_count": 23
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 2518,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "971e4356e95b6c8a805778fea6e1f9cc06d72a9e4e32a7f52a7c44c598c5d76c"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:31a262e46df027c9c7602790ed1b34ec9ce1a3dbc4c2ec8742127c2a3491a80c",
+                "code": "semantic_problem_definition",
+                "frame_family": "political_conflict",
+                "variant_key": "semantic:problem_definition:family:political_conflict",
+                "public_paraphrase": "미국 트럼프 대통령의 호르무즈 해협 영유권 주장에 대해 이란이 '허황된 망상'이라며 반발하며 양국 간의 정치적 갈등이 심화되고 있다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+                }
+              },
+              {
+                "claim_id": "claim:31a262e46df027c9c7602790ed1b34ec9ce1a3dbc4c2ec8742127c2a3491a80c",
+                "code": "semantic_problem_definition",
+                "frame_family": "political_conflict",
+                "variant_key": "semantic:problem_definition:family:political_conflict",
+                "public_paraphrase": "미국 트럼프 대통령의 호르무즈 해협 영유권 주장에 대해 이란이 '허황된 망상'이라며 반발하며 양국 간의 정치적 갈등이 심화되고 있다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "106199bd18f8ea388eda47588ff48f56dae3ebafcec59fe6c3efbe15f30a3f17"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:c042ec3e56bc3a1623d9a8c6bb0c51566617561bbfcaa878549c49010fbb9ddc",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "도널드 트럼프 미국 대통령이 호르무즈 해협을 미국 영토로 선언할 것이라고 연설에서 주장한 것이 이란의 강력한 반발을 촉발했다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+                }
+              },
+              {
+                "claim_id": "claim:c042ec3e56bc3a1623d9a8c6bb0c51566617561bbfcaa878549c49010fbb9ddc",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "도널드 트럼프 미국 대통령이 호르무즈 해협을 미국 영토로 선언할 것이라고 연설에서 주장한 것이 이란의 강력한 반발을 촉발했다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "106199bd18f8ea388eda47588ff48f56dae3ebafcec59fe6c3efbe15f30a3f17"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:5cd31cc3ee004fcb8c068efa78891933ef1d6c9a1260cada35668ca6756ff98c",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "971e4356e95b6c8a805778fea6e1f9cc06d72a9e4e32a7f52a7c44c598c5d76c"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "474cd2531e0ebfbb9dfc93fa27981d62b7136d08bcb8c2d1607c064e55b6e150"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:7e6cabad51a40f586d5ecc55800cec77ad5e8a9d139b733e57bf5387c0260890",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "106199bd18f8ea388eda47588ff48f56dae3ebafcec59fe6c3efbe15f30a3f17"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "106199bd18f8ea388eda47588ff48f56dae3ebafcec59fe6c3efbe15f30a3f17"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "106199bd18f8ea388eda47588ff48f56dae3ebafcec59fe6c3efbe15f30a3f17"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "conflict",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "474cd2531e0ebfbb9dfc93fa27981d62b7136d08bcb8c2d1607c064e55b6e150"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "security_defense",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 5
+                  },
+                  "sentence_sha256": "5694e140153695087a156cc38e09565f4fdbbe709b2096ba25e996f586c33d4a"
+                }
+              ]
+            },
+            {
+              "code": "political",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "971e4356e95b6c8a805778fea6e1f9cc06d72a9e4e32a7f52a7c44c598c5d76c"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "8688e2805867ff8dcc862a496af198c4f30d5c2e35658906beef228e49d1f6ab"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "contrast",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "106199bd18f8ea388eda47588ff48f56dae3ebafcec59fe6c3efbe15f30a3f17"
+              }
+            ],
+            "appears_in_lead": true
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "cb0892795e6d00c00322e8bb888745b7e700fe884e11d4c035bf46206971a86a",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+        "evidenceCount": 9,
+        "bodySha256": "6dc5a76399da0e7fb867bbde6c053c07bd07ebc3e032a5090380171b58567b5d",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "328090b134a9d602f115218504471230cf7e4fda9e7659c728092c0db1297e93"
+        },
+        {
+          "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "9808e8c7276ce0974b1d09c4dc26554f6f1f8449f6154288a9b803dc1ce4d723"
+        },
+        {
+          "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "3884cec6e34deb48405cbb104c2e7637b7d13a9bf244aee9bc167fd3e6386252"
+        },
+        {
+          "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "96337149c4dd1c31d9041dc8e38951c6d862cb7b656efca4478712e19747a275"
+        },
+        {
+          "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 9
+          },
+          "sentenceSha256": "dd0aadd0175cc4b7e04a2164cd5f8bdf595e3bbe99300b3aa54241bd4f485003"
+        },
+        {
+          "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 5
+          },
+          "sentenceSha256": "443ce0d9e8ec418da4fa8be7322718bc01a3ea1710df2ce0a27318e94d6d9834"
+        },
+        {
+          "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "80ff03895d208352daeacc3f107b2bde7d9d89c7e89ed6e346eeed1119b5e62a"
+        },
+        {
+          "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 8
+          },
+          "sentenceSha256": "565248307b35c4c2ef0cf113a0b35f548942fef35adf85e434cf9dc9127e30d3"
+        },
+        {
+          "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "733d3469f15fb1c9536b8626b9808dda84acd2032f4a8420d19c1c2513c54844"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "86457604d24a93922511157bf9f3e3ff5b962a21752c1f164cd169310ea0ef3d",
+            "response_sha256": "ee49f49f11f6c44eb0c3b835a150e925b0bcec4e689f1bed027957373fd60e84",
+            "response_id": "QJSAasCOFuaLx9gPrfyDoQc",
+            "completed_at": "2026-08-15T16:31:26.645931+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "86457604d24a93922511157bf9f3e3ff5b962a21752c1f164cd169310ea0ef3d",
+            "response_sha256": "ee49f49f11f6c44eb0c3b835a150e925b0bcec4e689f1bed027957373fd60e84",
+            "response_id": "QJSAasCOFuaLx9gPrfyDoQc",
+            "completed_at": "2026-08-15T16:31:26.645931+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "96f04d1c2f26918ca77bc89262e5019a",
+          "upstream_article_id": "96f04d1c2f26918ca77bc89262e5019a",
+          "published_at": "2026-08-14T20:10:46+00:00",
+          "title_sha256": "4f0b299822f3352ac112436eef3b1a8162c64fe0f0c74ba58d37ac7af14eb7c3",
+          "body_sha256": "6dc5a76399da0e7fb867bbde6c053c07bd07ebc3e032a5090380171b58567b5d",
+          "body_character_count": 1644,
+          "body_word_count": 368,
+          "paragraph_count": 1,
+          "sentence_count": 17
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 1644,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "328090b134a9d602f115218504471230cf7e4fda9e7659c728092c0db1297e93"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "9808e8c7276ce0974b1d09c4dc26554f6f1f8449f6154288a9b803dc1ce4d723"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:839d77fd91e44ffc5f38d0f8a8d1dc384f3ce56d88c75491ecd6c39b14488d69",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "이란의 핵무기 보유 가능성이 문제이며, 이를 막기 위한 미국의 조치가 필요하다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "3884cec6e34deb48405cbb104c2e7637b7d13a9bf244aee9bc167fd3e6386252"
+                }
+              },
+              {
+                "claim_id": "claim:839d77fd91e44ffc5f38d0f8a8d1dc384f3ce56d88c75491ecd6c39b14488d69",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "이란의 핵무기 보유 가능성이 문제이며, 이를 막기 위한 미국의 조치가 필요하다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "96337149c4dd1c31d9041dc8e38951c6d862cb7b656efca4478712e19747a275"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:c43b09e7bde4029c64225a80c406a68e74539a9dd0dd245e3caaf6e6eb1290b1",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "미국이 호르무즈 해협을 봉쇄하고 통제하고 있기 때문에, 사실상 미국 영토라고 주장한다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "9808e8c7276ce0974b1d09c4dc26554f6f1f8449f6154288a9b803dc1ce4d723"
+                }
+              },
+              {
+                "claim_id": "claim:c43b09e7bde4029c64225a80c406a68e74539a9dd0dd245e3caaf6e6eb1290b1",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "미국이 호르무즈 해협을 봉쇄하고 통제하고 있기 때문에, 사실상 미국 영토라고 주장한다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "dd0aadd0175cc4b7e04a2164cd5f8bdf595e3bbe99300b3aa54241bd4f485003"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:70c5a042d8bcc4349bf53867c4845b101caad972503f544eb0c4818c3df291d8",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "government",
+                "variant_key": "semantic:responsibility_attribution:family:government",
+                "public_paraphrase": "미국 정부는 이란의 핵무기 보유를 막기 위해 호르무즈 해협을 통제할 책임이 있다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "3884cec6e34deb48405cbb104c2e7637b7d13a9bf244aee9bc167fd3e6386252"
+                }
+              },
+              {
+                "claim_id": "claim:70c5a042d8bcc4349bf53867c4845b101caad972503f544eb0c4818c3df291d8",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "government",
+                "variant_key": "semantic:responsibility_attribution:family:government",
+                "public_paraphrase": "미국 정부는 이란의 핵무기 보유를 막기 위해 호르무즈 해협을 통제할 책임이 있다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "96337149c4dd1c31d9041dc8e38951c6d862cb7b656efca4478712e19747a275"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:1fabc969edb88b1ee3771d91a5865612ad59c326b7c2c7888a0602fb8a761a2f",
+                "code": "semantic_moral_evaluation",
+                "frame_family": "effectiveness_positive",
+                "variant_key": "semantic:moral_evaluation:family:effectiveness_positive",
+                "public_paraphrase": "미국은 이란과의 대치 상황에서 모든 면에서 매우 잘하고 있다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 5
+                  },
+                  "sentence_sha256": "443ce0d9e8ec418da4fa8be7322718bc01a3ea1710df2ce0a27318e94d6d9834"
+                }
+              },
+              {
+                "claim_id": "claim:1fabc969edb88b1ee3771d91a5865612ad59c326b7c2c7888a0602fb8a761a2f",
+                "code": "semantic_moral_evaluation",
+                "frame_family": "effectiveness_positive",
+                "variant_key": "semantic:moral_evaluation:family:effectiveness_positive",
+                "public_paraphrase": "미국은 이란과의 대치 상황에서 모든 면에서 매우 잘하고 있다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "80ff03895d208352daeacc3f107b2bde7d9d89c7e89ed6e346eeed1119b5e62a"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:55bb031c1e5badafad9918b41e26ea29e58b625fdb214a08a2a5590db903a87d",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "strengthen_policy",
+                "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+                "public_paraphrase": "호르무즈 해협을 조만간 미국 영토로 선언해야 한다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "328090b134a9d602f115218504471230cf7e4fda9e7659c728092c0db1297e93"
+                }
+              },
+              {
+                "claim_id": "claim:55bb031c1e5badafad9918b41e26ea29e58b625fdb214a08a2a5590db903a87d",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "strengthen_policy",
+                "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+                "public_paraphrase": "호르무즈 해협을 조만간 미국 영토로 선언해야 한다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "565248307b35c4c2ef0cf113a0b35f548942fef35adf85e434cf9dc9127e30d3"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:7fa2dc70ba857901a4eabae3d82488735f0536ad05ff801d7f5b6a54a04981d7",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "328090b134a9d602f115218504471230cf7e4fda9e7659c728092c0db1297e93"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "9808e8c7276ce0974b1d09c4dc26554f6f1f8449f6154288a9b803dc1ce4d723"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "328090b134a9d602f115218504471230cf7e4fda9e7659c728092c0db1297e93"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "9808e8c7276ce0974b1d09c4dc26554f6f1f8449f6154288a9b803dc1ce4d723"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "9808e8c7276ce0974b1d09c4dc26554f6f1f8449f6154288a9b803dc1ce4d723"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "dd0aadd0175cc4b7e04a2164cd5f8bdf595e3bbe99300b3aa54241bd4f485003"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [
+            {
+              "code": "security_defense",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "3884cec6e34deb48405cbb104c2e7637b7d13a9bf244aee9bc167fd3e6386252"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "96337149c4dd1c31d9041dc8e38951c6d862cb7b656efca4478712e19747a275"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "733d3469f15fb1c9536b8626b9808dda84acd2032f4a8420d19c1c2513c54844"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 8
+                },
+                "sentence_sha256": "565248307b35c4c2ef0cf113a0b35f548942fef35adf85e434cf9dc9127e30d3"
+              }
+            ],
+            "appears_in_lead": true
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "9aae12ef1ce08bdd6701d790631804ec496a82125ea87fd5680780d1002aaa8c",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+        "evidenceCount": 8,
+        "bodySha256": "2b6c3644f584ebf44f5412848deb7091257803f0c21def4f2916ce5c8c08c7ae",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "26a843f1b32b2a66aebd22f0835fb49ed1551e49aa410fcf04f6bc09eea7b3b7"
+        },
+        {
+          "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "f273b77e7ac6e19e463d6de194a4a3f82f5d2f024e3f0ee710dda40220527ec7"
+        },
+        {
+          "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "1c2f98bb105ad5126e030771c8846a93445be3d6c5dc352811ed8123a3f588e8"
+        },
+        {
+          "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "20f383508cd70a5b27ae7ab5e6e61a630861fd090a1585425a2f65bc4fd8fde8"
+        },
+        {
+          "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 7
+          },
+          "sentenceSha256": "3e668fa3e2a31c50542fc1cc2cacd491c1107273049a6d80b0fa534c371b1e0e"
+        },
+        {
+          "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "5f55f1cf12e4c4251dc506173d43db8925dc2816500cc160ce8aa9cb181b8437"
+        },
+        {
+          "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "f3c5032eb2c51bd08d1e00a79a956d968bffa766cf634b0ffe32fd3d1c526f57"
+        },
+        {
+          "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 8
+          },
+          "sentenceSha256": "8b5cda81cbf30a5be835ef3df649edd33a75130eb76d875c499ce3c40bdc64f7"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "8fc206c6bc03e8c9f7ecde556f7291d1797777a1efe02483a14077109c67b212",
+            "response_sha256": "160f958994e31422863851f839f225c5b740dd55523e8734aa011a9c4c395dd2",
+            "response_id": "QJSAau-sF_OKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:31:26.880600+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "8fc206c6bc03e8c9f7ecde556f7291d1797777a1efe02483a14077109c67b212",
+            "response_sha256": "160f958994e31422863851f839f225c5b740dd55523e8734aa011a9c4c395dd2",
+            "response_id": "QJSAau-sF_OKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:31:26.880600+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "ec10b645de4afbfdc1445413404f8ebf",
+          "upstream_article_id": "ec10b645de4afbfdc1445413404f8ebf",
+          "published_at": "2026-08-15T01:49:47+00:00",
+          "title_sha256": "cc0210c250fdb8fa33aba796435ea1f568ada2fdf7bd9377e7f87f51392cf184",
+          "body_sha256": "2b6c3644f584ebf44f5412848deb7091257803f0c21def4f2916ce5c8c08c7ae",
+          "body_character_count": 1238,
+          "body_word_count": 285,
+          "paragraph_count": 1,
+          "sentence_count": 15
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 1238,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "26a843f1b32b2a66aebd22f0835fb49ed1551e49aa410fcf04f6bc09eea7b3b7"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "f273b77e7ac6e19e463d6de194a4a3f82f5d2f024e3f0ee710dda40220527ec7"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:39e526cf017979068285fc4ca0c2507332507e473ca31e56487fa633fb1f4295",
+                "code": "semantic_problem_definition",
+                "frame_family": "political_conflict",
+                "variant_key": "semantic:problem_definition:family:political_conflict",
+                "public_paraphrase": "미국과 이란이 호르무즈 해협의 통제권을 두고 영유권을 주장하며 무력을 동원해 맞불 봉쇄를 이어가는 정치적 갈등 상황",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "26a843f1b32b2a66aebd22f0835fb49ed1551e49aa410fcf04f6bc09eea7b3b7"
+                }
+              },
+              {
+                "claim_id": "claim:39e526cf017979068285fc4ca0c2507332507e473ca31e56487fa633fb1f4295",
+                "code": "semantic_problem_definition",
+                "frame_family": "political_conflict",
+                "variant_key": "semantic:problem_definition:family:political_conflict",
+                "public_paraphrase": "미국과 이란이 호르무즈 해협의 통제권을 두고 영유권을 주장하며 무력을 동원해 맞불 봉쇄를 이어가는 정치적 갈등 상황",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "1c2f98bb105ad5126e030771c8846a93445be3d6c5dc352811ed8123a3f588e8"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:29d1d6696bd848bf024ff1529a0b30e43e0998b8dd745d10eff78587540eb2c7",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "20f383508cd70a5b27ae7ab5e6e61a630861fd090a1585425a2f65bc4fd8fde8"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 7
+                },
+                "sentence_sha256": "3e668fa3e2a31c50542fc1cc2cacd491c1107273049a6d80b0fa534c371b1e0e"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:0c4963a042dca8e8dc88cbe71fdf7db06222bcbf733c77125250963b2987aff3",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "f273b77e7ac6e19e463d6de194a4a3f82f5d2f024e3f0ee710dda40220527ec7"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "5f55f1cf12e4c4251dc506173d43db8925dc2816500cc160ce8aa9cb181b8437"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "moderate",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 12
+              },
+              "sentence_sha256": "1c2f98bb105ad5126e030771c8846a93445be3d6c5dc352811ed8123a3f588e8"
+            }
+          ],
+          "level": "moderate"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "f273b77e7ac6e19e463d6de194a4a3f82f5d2f024e3f0ee710dda40220527ec7"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "20f383508cd70a5b27ae7ab5e6e61a630861fd090a1585425a2f65bc4fd8fde8"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "conflict",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "26a843f1b32b2a66aebd22f0835fb49ed1551e49aa410fcf04f6bc09eea7b3b7"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "5f55f1cf12e4c4251dc506173d43db8925dc2816500cc160ce8aa9cb181b8437"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "security_defense",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "f3c5032eb2c51bd08d1e00a79a956d968bffa766cf634b0ffe32fd3d1c526f57"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "1c2f98bb105ad5126e030771c8846a93445be3d6c5dc352811ed8123a3f588e8"
+                }
+              ]
+            },
+            {
+              "code": "political",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "26a843f1b32b2a66aebd22f0835fb49ed1551e49aa410fcf04f6bc09eea7b3b7"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "f273b77e7ac6e19e463d6de194a4a3f82f5d2f024e3f0ee710dda40220527ec7"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "contrast",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "26a843f1b32b2a66aebd22f0835fb49ed1551e49aa410fcf04f6bc09eea7b3b7"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "evaluative_label",
+            "label": "허황된 망상",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "26a843f1b32b2a66aebd22f0835fb49ed1551e49aa410fcf04f6bc09eea7b3b7"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 8
+                },
+                "sentence_sha256": "8b5cda81cbf30a5be835ef3df649edd33a75130eb76d875c499ce3c40bdc64f7"
+              }
+            ],
+            "appears_in_lead": true
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "075e60d331fb44f22358746944bb3f1b72c08e4c10b44ce09829223d3fce45f3",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "f078d4f24cce0778526ae433280a74a3",
+      "status": "review_needed",
+      "engine": {
+        "label": "unavailable",
+        "engineLabel": "unavailable",
+        "semanticAi": false,
+        "status": "review_needed",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "f078d4f24cce0778526ae433280a74a3",
+        "evidenceCount": 0,
+        "bodySha256": "79bba94607e5d057faa7ca5f9a8ecc4561c399900c7bd676c1e9128cb864b195",
+        "reviewRequired": true,
+        "fallbackReason": "vertex_analysis_review_needed"
+      },
+      "evidence": [],
+      "profile": null
+    },
+    {
+      "articleId": "fd0d51bef55a0c116acd09721364ddde",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "fd0d51bef55a0c116acd09721364ddde",
+        "evidenceCount": 4,
+        "bodySha256": "fcd7a3a50df5ef8f013e73ea835b7586de9c9311a829279a08fa039476475ad4",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "fd0d51bef55a0c116acd09721364ddde",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "e76b4855b45005d756dcb9b22a013ccc017e56c27f8d668559f5649dda0eec10"
+        },
+        {
+          "articleId": "fd0d51bef55a0c116acd09721364ddde",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "0493efc64874bfc71fc351455112290fb71b62267e92ea58c0f85d196ff95efe"
+        },
+        {
+          "articleId": "fd0d51bef55a0c116acd09721364ddde",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "1395deaabb63298ebd1513df0950e8d7576286fc7aec10920340f0071401725e"
+        },
+        {
+          "articleId": "fd0d51bef55a0c116acd09721364ddde",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "2eaee8f6d9039b13d84048debd34789c2a6d8928925b2aa4ff572ee1093833aa"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "e59b6b68f0cd38ef668cfdaf9953b6a26b90732a4c39638c5fec88a60137b8b3",
+            "response_sha256": "afb9632ad42daa95d93c70c1ba50fe1105353e87c6e847f1ff68e4b127ab7bdf",
+            "response_id": "QJSAapCPFuaLx9gPrfyDoQc",
+            "completed_at": "2026-08-15T16:31:25.096113+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "e59b6b68f0cd38ef668cfdaf9953b6a26b90732a4c39638c5fec88a60137b8b3",
+            "response_sha256": "afb9632ad42daa95d93c70c1ba50fe1105353e87c6e847f1ff68e4b127ab7bdf",
+            "response_id": "QJSAapCPFuaLx9gPrfyDoQc",
+            "completed_at": "2026-08-15T16:31:25.096113+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "fd0d51bef55a0c116acd09721364ddde",
+          "upstream_article_id": "fd0d51bef55a0c116acd09721364ddde",
+          "published_at": "2026-08-14T20:49:00+00:00",
+          "title_sha256": "6a55a697b64f3d9081da4b684f7b056652b6f97692a82b99b8a58afc8d681cf3",
+          "body_sha256": "fcd7a3a50df5ef8f013e73ea835b7586de9c9311a829279a08fa039476475ad4",
+          "body_character_count": 1202,
+          "body_word_count": 282,
+          "paragraph_count": 1,
+          "sentence_count": 14
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 1202,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "e76b4855b45005d756dcb9b22a013ccc017e56c27f8d668559f5649dda0eec10"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "0493efc64874bfc71fc351455112290fb71b62267e92ea58c0f85d196ff95efe"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:833527b968b77b5ab8ad68c92cdb36841eeea725c3b498bc1d835c6b837e8847",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "government",
+                "variant_key": "semantic:responsibility_attribution:family:government",
+                "public_paraphrase": "호르무즈 해협에 대한 영유권 주장 및 통제권 행사의 주체는 미국 대통령임.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "e76b4855b45005d756dcb9b22a013ccc017e56c27f8d668559f5649dda0eec10"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:e7af87d2d264881056a37bbdbb730101f7cb4a382bf9fbb09e072a90bfca8f09",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "e76b4855b45005d756dcb9b22a013ccc017e56c27f8d668559f5649dda0eec10"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "0493efc64874bfc71fc351455112290fb71b62267e92ea58c0f85d196ff95efe"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "e76b4855b45005d756dcb9b22a013ccc017e56c27f8d668559f5649dda0eec10"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "0493efc64874bfc71fc351455112290fb71b62267e92ea58c0f85d196ff95efe"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "e76b4855b45005d756dcb9b22a013ccc017e56c27f8d668559f5649dda0eec10"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "0493efc64874bfc71fc351455112290fb71b62267e92ea58c0f85d196ff95efe"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "conflict",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "e76b4855b45005d756dcb9b22a013ccc017e56c27f8d668559f5649dda0eec10"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "1395deaabb63298ebd1513df0950e8d7576286fc7aec10920340f0071401725e"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "security_defense",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "0493efc64874bfc71fc351455112290fb71b62267e92ea58c0f85d196ff95efe"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "2eaee8f6d9039b13d84048debd34789c2a6d8928925b2aa4ff572ee1093833aa"
+                }
+              ]
+            },
+            {
+              "code": "political",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "e76b4855b45005d756dcb9b22a013ccc017e56c27f8d668559f5649dda0eec10"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "1395deaabb63298ebd1513df0950e8d7576286fc7aec10920340f0071401725e"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "e76b4855b45005d756dcb9b22a013ccc017e56c27f8d668559f5649dda0eec10"
+              }
+            ],
+            "appears_in_lead": true
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "8cd6eae25354556f0958d03ff34575c1580553180cf8fab5dd73ccaa3ad40f5e",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    }
+  ],
   "ruleProfiles": [],
   "comparison": {
     "engine": {
-      "semanticAi": false,
-      "version": null,
-      "status": "review_needed"
+      "label": "ai_semantic",
+      "engineLabel": "ai_semantic",
+      "semanticAi": true,
+      "status": "succeeded",
+      "model": "gemini-2.5-pro",
+      "promptVersion": "event-synthesis-v1.0.0",
+      "schemaVersion": "agendaframe.event-synthesis.v1",
+      "source": "gcp:event-synthesis"
     },
     "data": {
       "summary_30_seconds": {
-        "what_happened": null,
-        "main_difference": null,
-        "common_ground": null,
-        "divergence_detected": false
+        "sample": "8건 · 7개 매체",
+        "common_ground": "모든 언론은 도널드 트럼프 전 미국 대통령이 호르무즈 해협을 미국 영토로 선언하겠다는 발언을 했다는 사실을 보도했다(96f04d1c2f26918ca77bc89262e5019a, 1, 2). 또한 이란이 트럼프 전 대통령의 주장에 대해 \"허황된 망상\"이라며 반발한 내용도 공통적으로 다루었다(95bc8dd5c9d457f38a514d841c997fc5, 1, 2).",
+        "main_difference": "트럼프 전 대통령의 발언 배경을 두고, 일부 언론은 이란의 핵무기 보유를 막기 위한 조치라는 점을 앞세웠고(785775d4b9c48d32436b8f61cb08b699, 1, 14), 다른 언론은 이란의 강한 반발로 양국 간 정치적 갈등이 심화되는 상황을 부각했으며(ec10b645de4afbfdc1445413404f8ebf, 1, 1), 또 다른 언론은 급등하는 에너지 비용이 트럼프에게 정치적 부담이 되고 있다는 국내 정치적 맥락을 함께 제시했다",
+        "source_context": "트럼프 전 대통령의 이번 발언은 세계 주요 원유 수송로인 호르무즈 해협을 둘러싼 미국과 이란의 군사적 긴장을 다시금 고조시키고 있다. 이는 국제 유가 불안정성을 키울 뿐만 아니라, 미국 대선을 앞두고 트럼프 전 대통령의 지지층 결집과 외교 정책 방향을 보여주는 행보로 해석될 수 있다.",
+        "limit": "기사 ID·locator·문장 해시가 연결된 관측만 표시합니다. 언론사 성향은 추론하지 않습니다.",
+        "divergence_detected": true
       },
-      "camps": [],
-      "terms": []
-    }
+      "synthesis": {
+        "schemaVersion": "agendaframe.event-synthesis.v1",
+        "promptVersion": "event-synthesis-v1.0.0",
+        "usable": true,
+        "opposition": true,
+        "what_happened": {
+          "text": "도널드 트럼프 전 미국 대통령이 재임 시절 호르무즈 해협을 봉쇄했던 것을 언급하며, 조만간 이곳을 미국 영토로 선언할 것이라고 발언했다. 이에 대해 이란은 \"허황된 망상\"이라며 강하게 반발했다.",
+          "status": "observed",
+          "evidence": [
+            {
+              "article_id": "94f041e82774e659f9f7ea90aa39ef71",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "9166fbdb4483848917e52a747f24010068664ff027fd36fdde57bc3aaae39594"
+            },
+            {
+              "article_id": "95bc8dd5c9d457f38a514d841c997fc5",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "8688e2805867ff8dcc862a496af198c4f30d5c2e35658906beef228e49d1f6ab"
+            },
+            {
+              "article_id": "ec10b645de4afbfdc1445413404f8ebf",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "f273b77e7ac6e19e463d6de194a4a3f82f5d2f024e3f0ee710dda40220527ec7"
+            }
+          ]
+        },
+        "agreed_line": {
+          "text": "모든 언론은 도널드 트럼프 전 미국 대통령이 호르무즈 해협을 미국 영토로 선언하겠다는 발언을 했다는 사실을 보도했다(96f04d1c2f26918ca77bc89262e5019a, 1, 2). 또한 이란이 트럼프 전 대통령의 주장에 대해 \"허황된 망상\"이라며 반발한 내용도 공통적으로 다루었다(95bc8dd5c9d457f38a514d841c997fc5, 1, 2).",
+          "status": "observed",
+          "evidence": [
+            {
+              "article_id": "96f04d1c2f26918ca77bc89262e5019a",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "328090b134a9d602f115218504471230cf7e4fda9e7659c728092c0db1297e93"
+            },
+            {
+              "article_id": "fd0d51bef55a0c116acd09721364ddde",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "e76b4855b45005d756dcb9b22a013ccc017e56c27f8d668559f5649dda0eec10"
+            },
+            {
+              "article_id": "95bc8dd5c9d457f38a514d841c997fc5",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+            },
+            {
+              "article_id": "ec10b645de4afbfdc1445413404f8ebf",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "f273b77e7ac6e19e463d6de194a4a3f82f5d2f024e3f0ee710dda40220527ec7"
+            }
+          ]
+        },
+        "split_line": {
+          "text": "트럼프 전 대통령의 발언 배경을 두고, 일부 언론은 이란의 핵무기 보유를 막기 위한 조치라는 점을 앞세웠고(785775d4b9c48d32436b8f61cb08b699, 1, 14), 다른 언론은 이란의 강한 반발로 양국 간 정치적 갈등이 심화되는 상황을 부각했으며(ec10b645de4afbfdc1445413404f8ebf, 1, 1), 또 다른 언론은 급등하는 에너지 비용이 트럼프에게 정치적 부담이 되고 있다는 국내 정치적 맥락을 함께 제시했다",
+          "status": "observed",
+          "evidence": [
+            {
+              "article_id": "785775d4b9c48d32436b8f61cb08b699",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 14
+              },
+              "sentence_sha256": "a26d98f4bc8958308a34d523fef0fb98db1d8801653d144441baa0d0bf642a1c"
+            },
+            {
+              "article_id": "ec10b645de4afbfdc1445413404f8ebf",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "26a843f1b32b2a66aebd22f0835fb49ed1551e49aa410fcf04f6bc09eea7b3b7"
+            },
+            {
+              "article_id": "84bea795e160274d1154148f77bcbe7f",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 32
+              },
+              "sentence_sha256": "a7301df2670cb98fe7e6cbb23cf76e0f0ce8aa07e9da4ac727bf7ef42444e8f4"
+            }
+          ]
+        },
+        "so_what": {
+          "text": "트럼프 전 대통령의 이번 발언은 세계 주요 원유 수송로인 호르무즈 해협을 둘러싼 미국과 이란의 군사적 긴장을 다시금 고조시키고 있다. 이는 국제 유가 불안정성을 키울 뿐만 아니라, 미국 대선을 앞두고 트럼프 전 대통령의 지지층 결집과 외교 정책 방향을 보여주는 행보로 해석될 수 있다.",
+          "status": "observed",
+          "evidence": [
+            {
+              "article_id": "84bea795e160274d1154148f77bcbe7f",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 32
+              },
+              "sentence_sha256": "a7301df2670cb98fe7e6cbb23cf76e0f0ce8aa07e9da4ac727bf7ef42444e8f4"
+            }
+          ]
+        },
+        "camps": [
+          {
+            "name": "트럼프 발언의 명분 강조",
+            "gist": "트럼프의 발언은 이란의 핵무기 개발을 저지하고 해협 통제권을 과시하려는 의도라고 분석하며, 그의 조치가 효과적이었다는 긍정적 평가를 함께 전했다.",
+            "status": "observed",
+            "outlets": [
+              "중앙일보",
+              "KBS 뉴스"
+            ],
+            "article_ids": [
+              "785775d4b9c48d32436b8f61cb08b699",
+              "96f04d1c2f26918ca77bc89262e5019a"
+            ],
+            "evidence": [
+              {
+                "article_id": "785775d4b9c48d32436b8f61cb08b699",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 14
+                },
+                "sentence_sha256": "a26d98f4bc8958308a34d523fef0fb98db1d8801653d144441baa0d0bf642a1c"
+              },
+              {
+                "article_id": "96f04d1c2f26918ca77bc89262e5019a",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "3884cec6e34deb48405cbb104c2e7637b7d13a9bf244aee9bc167fd3e6386252"
+              },
+              {
+                "article_id": "785775d4b9c48d32436b8f61cb08b699",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 13
+                },
+                "sentence_sha256": "257f371cf4c3338cb332cbbaeff527ba2552fc6c8bab728c2ca4e36d54c882b3"
+              }
+            ],
+            "index": 0
+          },
+          {
+            "name": "이란의 반발과 갈등 고조에 주목",
+            "gist": "이란이 트럼프의 주장을 '망상'으로 일축하며 강하게 반발해 양국 갈등이 격화되고 있다고 보도했다.",
+            "status": "observed",
+            "outlets": [
+              "KBS 뉴스",
+              "조선일보"
+            ],
+            "article_ids": [
+              "95bc8dd5c9d457f38a514d841c997fc5",
+              "ec10b645de4afbfdc1445413404f8ebf"
+            ],
+            "evidence": [
+              {
+                "article_id": "95bc8dd5c9d457f38a514d841c997fc5",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+              },
+              {
+                "article_id": "ec10b645de4afbfdc1445413404f8ebf",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "26a843f1b32b2a66aebd22f0835fb49ed1551e49aa410fcf04f6bc09eea7b3b7"
+              },
+              {
+                "article_id": "ec10b645de4afbfdc1445413404f8ebf",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 12
+                },
+                "sentence_sha256": "1c2f98bb105ad5126e030771c8846a93445be3d6c5dc352811ed8123a3f588e8"
+              }
+            ],
+            "index": 1
+          },
+          {
+            "name": "미국 내 정치적 배경 분석",
+            "gist": "트럼프의 발언이 급등하는 에너지 비용에 대한 미국 내 비판을 의식한 정치적 행보일 수 있다고 분석했다.",
+            "status": "observed",
+            "outlets": [
+              "서울신문"
+            ],
+            "article_ids": [
+              "84bea795e160274d1154148f77bcbe7f"
+            ],
+            "evidence": [
+              {
+                "article_id": "84bea795e160274d1154148f77bcbe7f",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 32
+                },
+                "sentence_sha256": "a7301df2670cb98fe7e6cbb23cf76e0f0ce8aa07e9da4ac727bf7ef42444e8f4"
+              },
+              {
+                "article_id": "84bea795e160274d1154148f77bcbe7f",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 31
+                },
+                "sentence_sha256": "ec893c4a82f880e342e98d8ccfdb2b844e83b01d0d9e42d0f4ac479e8adf33f6"
+              }
+            ],
+            "index": 2
+          }
+        ],
+        "terms": [
+          {
+            "term": "호르무즈 해협",
+            "gloss": "페르시아만과 오만만을 잇는 좁은 해협으로, 전 세계 해상 원유 수송량의 약 3분의 1이 통과하는 전략적 요충지이다.",
+            "status": "observed",
+            "evidence": [
+              {
+                "article_id": "84bea795e160274d1154148f77bcbe7f",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 18
+                },
+                "sentence_sha256": "29d0c07e74df471ceccfb5dac6bfde53b03d339b4e96ac25cd3e9eb57585d443"
+              },
+              {
+                "article_id": "84bea795e160274d1154148f77bcbe7f",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 19
+                },
+                "sentence_sha256": "67e54734266657de6e1dad4eb6158307a8c3a77ac80c5dadabdf0da9e1e328c7"
+              }
+            ]
+          }
+        ],
+        "fact_rows": [],
+        "split_rows": [],
+        "frame_functions": [],
+        "proof_rows": [],
+        "invocation": {
+          "provider": "vertex_ai",
+          "model": "gemini-2.5-pro",
+          "prompt_version": "event-synthesis-v1.0.0",
+          "attempt": 1,
+          "request_sha256": "f648b9a4486e43642e9c32e87d056a19b425014ca6eba788057780547cb4c621",
+          "response_sha256": "95db3589f40fa72e922fbbd2df7394befae897cddbcb61e292e7eab8087514f4",
+          "response_id": "2ZSAarLNG_OKx9gP1IyauQk",
+          "completed_at": "2026-08-15T16:34:14.421976+00:00"
+        },
+        "source": "gcp:event-synthesis",
+        "run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b"
+      },
+      "whatHappened": "도널드 트럼프 전 미국 대통령이 재임 시절 호르무즈 해협을 봉쇄했던 것을 언급하며, 조만간 이곳을 미국 영토로 선언할 것이라고 발언했다. 이에 대해 이란은 \"허황된 망상\"이라며 강하게 반발했다.",
+      "agreedLine": "모든 언론은 도널드 트럼프 전 미국 대통령이 호르무즈 해협을 미국 영토로 선언하겠다는 발언을 했다는 사실을 보도했다(96f04d1c2f26918ca77bc89262e5019a, 1, 2). 또한 이란이 트럼프 전 대통령의 주장에 대해 \"허황된 망상\"이라며 반발한 내용도 공통적으로 다루었다(95bc8dd5c9d457f38a514d841c997fc5, 1, 2).",
+      "splitLine": "트럼프 전 대통령의 발언 배경을 두고, 일부 언론은 이란의 핵무기 보유를 막기 위한 조치라는 점을 앞세웠고(785775d4b9c48d32436b8f61cb08b699, 1, 14), 다른 언론은 이란의 강한 반발로 양국 간 정치적 갈등이 심화되는 상황을 부각했으며(ec10b645de4afbfdc1445413404f8ebf, 1, 1), 또 다른 언론은 급등하는 에너지 비용이 트럼프에게 정치적 부담이 되고 있다는 국내 정치적 맥락을 함께 제시했다",
+      "soWhat": "트럼프 전 대통령의 이번 발언은 세계 주요 원유 수송로인 호르무즈 해협을 둘러싼 미국과 이란의 군사적 긴장을 다시금 고조시키고 있다. 이는 국제 유가 불안정성을 키울 뿐만 아니라, 미국 대선을 앞두고 트럼프 전 대통령의 지지층 결집과 외교 정책 방향을 보여주는 행보로 해석될 수 있다.",
+      "camps": [
+        {
+          "name": "트럼프 발언의 명분 강조",
+          "gist": "트럼프의 발언은 이란의 핵무기 개발을 저지하고 해협 통제권을 과시하려는 의도라고 분석하며, 그의 조치가 효과적이었다는 긍정적 평가를 함께 전했다.",
+          "outlets": [
+            "중앙일보",
+            "KBS 뉴스"
+          ],
+          "article_ids": [
+            "785775d4b9c48d32436b8f61cb08b699",
+            "96f04d1c2f26918ca77bc89262e5019a"
+          ],
+          "evidence": [
+            {
+              "article_id": "785775d4b9c48d32436b8f61cb08b699",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 14
+              },
+              "sentence_sha256": "a26d98f4bc8958308a34d523fef0fb98db1d8801653d144441baa0d0bf642a1c"
+            },
+            {
+              "article_id": "96f04d1c2f26918ca77bc89262e5019a",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "3884cec6e34deb48405cbb104c2e7637b7d13a9bf244aee9bc167fd3e6386252"
+            },
+            {
+              "article_id": "785775d4b9c48d32436b8f61cb08b699",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 13
+              },
+              "sentence_sha256": "257f371cf4c3338cb332cbbaeff527ba2552fc6c8bab728c2ca4e36d54c882b3"
+            }
+          ],
+          "index": 0
+        },
+        {
+          "name": "이란의 반발과 갈등 고조에 주목",
+          "gist": "이란이 트럼프의 주장을 '망상'으로 일축하며 강하게 반발해 양국 갈등이 격화되고 있다고 보도했다.",
+          "outlets": [
+            "KBS 뉴스",
+            "조선일보"
+          ],
+          "article_ids": [
+            "95bc8dd5c9d457f38a514d841c997fc5",
+            "ec10b645de4afbfdc1445413404f8ebf"
+          ],
+          "evidence": [
+            {
+              "article_id": "95bc8dd5c9d457f38a514d841c997fc5",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+            },
+            {
+              "article_id": "ec10b645de4afbfdc1445413404f8ebf",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "26a843f1b32b2a66aebd22f0835fb49ed1551e49aa410fcf04f6bc09eea7b3b7"
+            },
+            {
+              "article_id": "ec10b645de4afbfdc1445413404f8ebf",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 12
+              },
+              "sentence_sha256": "1c2f98bb105ad5126e030771c8846a93445be3d6c5dc352811ed8123a3f588e8"
+            }
+          ],
+          "index": 1
+        },
+        {
+          "name": "미국 내 정치적 배경 분석",
+          "gist": "트럼프의 발언이 급등하는 에너지 비용에 대한 미국 내 비판을 의식한 정치적 행보일 수 있다고 분석했다.",
+          "outlets": [
+            "서울신문"
+          ],
+          "article_ids": [
+            "84bea795e160274d1154148f77bcbe7f"
+          ],
+          "evidence": [
+            {
+              "article_id": "84bea795e160274d1154148f77bcbe7f",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 32
+              },
+              "sentence_sha256": "a7301df2670cb98fe7e6cbb23cf76e0f0ce8aa07e9da4ac727bf7ef42444e8f4"
+            },
+            {
+              "article_id": "84bea795e160274d1154148f77bcbe7f",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 31
+              },
+              "sentence_sha256": "ec893c4a82f880e342e98d8ccfdb2b844e83b01d0d9e42d0f4ac479e8adf33f6"
+            }
+          ],
+          "index": 2
+        }
+      ],
+      "factRows": [],
+      "splitRows": [],
+      "terms": [
+        {
+          "term": "호르무즈 해협",
+          "gloss": "페르시아만과 오만만을 잇는 좁은 해협으로, 전 세계 해상 원유 수송량의 약 3분의 1이 통과하는 전략적 요충지이다."
+        }
+      ],
+      "frameFunctions": [],
+      "proofRows": [],
+      "source_lens": {
+        "by_outlet": [
+          {
+            "outlet": "중앙일보",
+            "roles": [
+              {
+                "role": "political_actor",
+                "role_label": "정당·정치권",
+                "count": 2
+              },
+              {
+                "role": "government_official",
+                "role_label": "정부·공공기관",
+                "count": 2
+              }
+            ]
+          },
+          {
+            "outlet": "서울신문",
+            "roles": [
+              {
+                "role": "political_actor",
+                "role_label": "정당·정치권",
+                "count": 2
+              }
+            ]
+          },
+          {
+            "outlet": "국민일보",
+            "roles": [
+              {
+                "role": "political_actor",
+                "role_label": "정당·정치권",
+                "count": 2
+              },
+              {
+                "role": "government_official",
+                "role_label": "정부·공공기관",
+                "count": 2
+              }
+            ]
+          },
+          {
+            "outlet": "KBS 뉴스",
+            "roles": [
+              {
+                "role": "political_actor",
+                "role_label": "정당·정치권",
+                "count": 3
+              },
+              {
+                "role": "government_official",
+                "role_label": "정부·공공기관",
+                "count": 2
+              }
+            ]
+          },
+          {
+            "outlet": "조선일보",
+            "roles": [
+              {
+                "role": "political_actor",
+                "role_label": "정당·정치권",
+                "count": 2
+              },
+              {
+                "role": "government_official",
+                "role_label": "정부·공공기관",
+                "count": 2
+              }
+            ]
+          },
+          {
+            "outlet": "SBS 뉴스",
+            "roles": [
+              {
+                "role": "political_actor",
+                "role_label": "정당·정치권",
+                "count": 2
+              }
+            ]
+          }
+        ],
+        "caution": "취재원 구성은 발화 가시성의 관측이지 매체의 의도 판정이 아닙니다."
+      },
+      "not_observed_statements": [
+        "1건은 본문 확보·분석에서 제외되어 종합 근거로 사용하지 않았습니다."
+      ]
+    },
+    "evidence": [
+      {
+        "articleId": "94f041e82774e659f9f7ea90aa39ef71",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 1
+        },
+        "sentenceSha256": "9166fbdb4483848917e52a747f24010068664ff027fd36fdde57bc3aaae39594"
+      },
+      {
+        "articleId": "95bc8dd5c9d457f38a514d841c997fc5",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 1
+        },
+        "sentenceSha256": "8688e2805867ff8dcc862a496af198c4f30d5c2e35658906beef228e49d1f6ab"
+      },
+      {
+        "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "f273b77e7ac6e19e463d6de194a4a3f82f5d2f024e3f0ee710dda40220527ec7"
+      },
+      {
+        "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "328090b134a9d602f115218504471230cf7e4fda9e7659c728092c0db1297e93"
+      },
+      {
+        "articleId": "fd0d51bef55a0c116acd09721364ddde",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 1
+        },
+        "sentenceSha256": "e76b4855b45005d756dcb9b22a013ccc017e56c27f8d668559f5649dda0eec10"
+      },
+      {
+        "articleId": "95bc8dd5c9d457f38a514d841c997fc5",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+      },
+      {
+        "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "f273b77e7ac6e19e463d6de194a4a3f82f5d2f024e3f0ee710dda40220527ec7"
+      },
+      {
+        "articleId": "785775d4b9c48d32436b8f61cb08b699",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 14
+        },
+        "sentenceSha256": "a26d98f4bc8958308a34d523fef0fb98db1d8801653d144441baa0d0bf642a1c"
+      },
+      {
+        "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 1
+        },
+        "sentenceSha256": "26a843f1b32b2a66aebd22f0835fb49ed1551e49aa410fcf04f6bc09eea7b3b7"
+      },
+      {
+        "articleId": "84bea795e160274d1154148f77bcbe7f",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 32
+        },
+        "sentenceSha256": "a7301df2670cb98fe7e6cbb23cf76e0f0ce8aa07e9da4ac727bf7ef42444e8f4"
+      },
+      {
+        "articleId": "84bea795e160274d1154148f77bcbe7f",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 32
+        },
+        "sentenceSha256": "a7301df2670cb98fe7e6cbb23cf76e0f0ce8aa07e9da4ac727bf7ef42444e8f4"
+      },
+      {
+        "articleId": "785775d4b9c48d32436b8f61cb08b699",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 14
+        },
+        "sentenceSha256": "a26d98f4bc8958308a34d523fef0fb98db1d8801653d144441baa0d0bf642a1c"
+      },
+      {
+        "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 6
+        },
+        "sentenceSha256": "3884cec6e34deb48405cbb104c2e7637b7d13a9bf244aee9bc167fd3e6386252"
+      },
+      {
+        "articleId": "785775d4b9c48d32436b8f61cb08b699",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 13
+        },
+        "sentenceSha256": "257f371cf4c3338cb332cbbaeff527ba2552fc6c8bab728c2ca4e36d54c882b3"
+      },
+      {
+        "articleId": "95bc8dd5c9d457f38a514d841c997fc5",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+      },
+      {
+        "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 1
+        },
+        "sentenceSha256": "26a843f1b32b2a66aebd22f0835fb49ed1551e49aa410fcf04f6bc09eea7b3b7"
+      },
+      {
+        "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 12
+        },
+        "sentenceSha256": "1c2f98bb105ad5126e030771c8846a93445be3d6c5dc352811ed8123a3f588e8"
+      },
+      {
+        "articleId": "84bea795e160274d1154148f77bcbe7f",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 32
+        },
+        "sentenceSha256": "a7301df2670cb98fe7e6cbb23cf76e0f0ce8aa07e9da4ac727bf7ef42444e8f4"
+      },
+      {
+        "articleId": "84bea795e160274d1154148f77bcbe7f",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 31
+        },
+        "sentenceSha256": "ec893c4a82f880e342e98d8ccfdb2b844e83b01d0d9e42d0f4ac479e8adf33f6"
+      },
+      {
+        "articleId": "84bea795e160274d1154148f77bcbe7f",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 18
+        },
+        "sentenceSha256": "29d0c07e74df471ceccfb5dac6bfde53b03d339b4e96ac25cd3e9eb57585d443"
+      },
+      {
+        "articleId": "84bea795e160274d1154148f77bcbe7f",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 19
+        },
+        "sentenceSha256": "67e54734266657de6e1dad4eb6158307a8c3a77ac80c5dadabdf0da9e1e328c7"
+      },
+      {
+        "articleId": "785775d4b9c48d32436b8f61cb08b699",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 14
+        },
+        "sentenceSha256": "a26d98f4bc8958308a34d523fef0fb98db1d8801653d144441baa0d0bf642a1c"
+      },
+      {
+        "articleId": "96f04d1c2f26918ca77bc89262e5019a",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 6
+        },
+        "sentenceSha256": "3884cec6e34deb48405cbb104c2e7637b7d13a9bf244aee9bc167fd3e6386252"
+      },
+      {
+        "articleId": "785775d4b9c48d32436b8f61cb08b699",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 13
+        },
+        "sentenceSha256": "257f371cf4c3338cb332cbbaeff527ba2552fc6c8bab728c2ca4e36d54c882b3"
+      },
+      {
+        "articleId": "95bc8dd5c9d457f38a514d841c997fc5",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "40fb13b4777fde94679b76c24f002211c71e33ea40f071a824cd1176f632d8a6"
+      },
+      {
+        "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 1
+        },
+        "sentenceSha256": "26a843f1b32b2a66aebd22f0835fb49ed1551e49aa410fcf04f6bc09eea7b3b7"
+      },
+      {
+        "articleId": "ec10b645de4afbfdc1445413404f8ebf",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 12
+        },
+        "sentenceSha256": "1c2f98bb105ad5126e030771c8846a93445be3d6c5dc352811ed8123a3f588e8"
+      },
+      {
+        "articleId": "84bea795e160274d1154148f77bcbe7f",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 32
+        },
+        "sentenceSha256": "a7301df2670cb98fe7e6cbb23cf76e0f0ce8aa07e9da4ac727bf7ef42444e8f4"
+      },
+      {
+        "articleId": "84bea795e160274d1154148f77bcbe7f",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 31
+        },
+        "sentenceSha256": "ec893c4a82f880e342e98d8ccfdb2b844e83b01d0d9e42d0f4ac479e8adf33f6"
+      }
+    ]
   },
   "lineage": {
     "contractVersion": "agendaframe.initial-five.public.v1",
@@ -183,8 +4202,13 @@
       "top5GeneratedAt": null,
       "metadataSchemaVersion": "agendaframe.metadata-issue-cluster.v1",
       "metadataGeneratedAt": null,
-      "semanticDirectory": "pending-vertex",
-      "semanticFileCount": 0
-    }
+      "semanticDirectory": "current-display-batch/f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+      "semanticFileCount": 7,
+      "semanticBatchModel": "gemini-2.5-pro",
+      "semanticBatchPromptVersion": "2.6.0",
+      "eventSynthesisPromptVersion": "event-synthesis-v1.0.0"
+    },
+    "runId": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+    "analysisBoundary": "current Vercel display articles only; collection/ranking/scheduler untouched"
   }
 }

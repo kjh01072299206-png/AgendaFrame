@@ -142,7 +142,30 @@ function assertLivePublishable(envelope: SnapshotEnvelope): void {
   }
 }
 
-function demoSource(publicationStatus: "published" | "pending" = "pending"): ActiveSnapshotSource {
+function hasDirectEventSynthesis(bundle: IssueAnalysisBundle | null): boolean {
+  const synthesis = bundle?.comparison?.data?.synthesis;
+  const runId = String((bundle?.lineage as { runId?: unknown } | undefined)?.runId ?? "").trim();
+  return Boolean(
+    synthesis?.usable === true
+    && synthesis.source === "gcp:event-synthesis"
+    && runId
+    && String(synthesis.run_id ?? "").trim() === runId
+    && synthesis.invocation?.provider === "vertex_ai",
+  );
+}
+
+function defaultDemoPublicationStatus(): "published" | "pending" {
+  const isCurrentDisplay = initialFiveManifest.basisDate === "2026-08-15";
+  const hasAllIssueResults = isCurrentDisplay
+    && initialFiveManifest.issueCount === 5
+    && initialFiveManifest.issues.length === 5
+    && initialFiveManifest.issues.every((issue) => hasDirectEventSynthesis(
+      withEventSynthesis(getInitialFiveIssueBundle(issue.issueId)),
+    ));
+  return hasAllIssueResults ? "published" : "pending";
+}
+
+function demoSource(publicationStatus: "published" | "pending" = defaultDemoPublicationStatus()): ActiveSnapshotSource {
   return {
     mode: "demo",
     publicationStatus,

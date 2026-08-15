@@ -36,16 +36,16 @@
     },
     "semantic": {
       "status": "review_needed",
-      "engineLabel": "unverified",
-      "semanticAi": false,
-      "model": null,
-      "promptVersion": null,
+      "engineLabel": "ai_semantic",
+      "semanticAi": true,
+      "model": "gemini-2.5-pro",
+      "promptVersion": "2.6.0",
       "schemaVersion": "agendaframe.article-frame-profile.v2",
-      "source": "pending-vertex",
-      "succeededArticleCount": 0,
-      "reviewNeededArticleCount": 7,
-      "requiresHumanReview": true,
-      "fallbackReason": "no_private_body_for_locator_recheck"
+      "source": "gcp:vertex:current-display-batch",
+      "articleCount": 7,
+      "succeededArticleCount": 5,
+      "reviewNeededArticleCount": 2,
+      "requiresHumanReview": true
     }
   },
   "clusterAi": {
@@ -66,7 +66,9 @@
       "mediaGroupId": "kbs_group",
       "canonicalUrl": "https://news.kbs.co.kr/news/view.do?ncd=8636928",
       "publishedAt": "2026-08-13T22:29:12.000Z",
-      "section": "pending"
+      "section": "pending",
+      "bodySha256": "82d02c81f1fc184d10ac427f8b9424f309dbcb2cbce53831c933e9c69481f9c1",
+      "issueId": "live-2026-08-15-top-3"
     },
     {
       "articleId": "16d6a5053788f97963f71e99e832bb8c",
@@ -78,7 +80,9 @@
       "mediaGroupId": "kmib_group",
       "canonicalUrl": "https://www.kmib.co.kr/article/view.asp?arcid=9000003102&code=61131111&sid1=int&stg=ws_rank",
       "publishedAt": "2026-08-15T06:28:56.952Z",
-      "section": "international"
+      "section": "international",
+      "bodySha256": null,
+      "issueId": "live-2026-08-15-top-3"
     },
     {
       "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
@@ -90,7 +94,9 @@
       "mediaGroupId": "kbs_group",
       "canonicalUrl": "https://news.kbs.co.kr/news/view.do?ncd=8637705",
       "publishedAt": "2026-08-14T12:56:38.000Z",
-      "section": "pending"
+      "section": "pending",
+      "bodySha256": "4c1c886d781bc4d2354c48d5c4c4e673fe2d2411a7370b7b8d54f4cfdc8379ca",
+      "issueId": "live-2026-08-15-top-3"
     },
     {
       "articleId": "4995faaefdeabca7622b5e080b2214f1",
@@ -102,7 +108,9 @@
       "mediaGroupId": "chosun_group",
       "canonicalUrl": "https://www.chosun.com/international/international_general/2026/08/14/GVSWKZBQHAYGIYZSGQYTQMBUMI/",
       "publishedAt": "2026-08-13T21:49:30.000Z",
-      "section": "international"
+      "section": "international",
+      "bodySha256": "064110b43e7b03381467eda6c9e09d1b705d85a6832ce22f3c30df87e1ba9c34",
+      "issueId": "live-2026-08-15-top-3"
     },
     {
       "articleId": "78e517cfcb5c817f67c830f7ac761290",
@@ -114,7 +122,9 @@
       "mediaGroupId": "khan_group",
       "canonicalUrl": "https://www.khan.co.kr/article/202608140723001/",
       "publishedAt": "2026-08-13T22:23:00.000Z",
-      "section": "international"
+      "section": "international",
+      "bodySha256": "78342cfbcff54d8581f89439621123f48181dc72b405a07ba7552a1f6ebc6160",
+      "issueId": "live-2026-08-15-top-3"
     },
     {
       "articleId": "7fef8003ab2a5310cab5cbefdadb213e",
@@ -126,7 +136,9 @@
       "mediaGroupId": "kmib_group",
       "canonicalUrl": "https://www.kmib.co.kr/article/view.asp?arcid=9000003102&code=61131111&sid1=int",
       "publishedAt": "2026-08-15T06:28:56.952Z",
-      "section": "international"
+      "section": "international",
+      "bodySha256": null,
+      "issueId": "live-2026-08-15-top-3"
     },
     {
       "articleId": "8acc4d51941926f62141996c8bc7e18a",
@@ -138,27 +150,3109 @@
       "mediaGroupId": "kbs_group",
       "canonicalUrl": "https://news.kbs.co.kr/news/view.do?ncd=8636918",
       "publishedAt": "2026-08-13T22:14:10.000Z",
-      "section": "pending"
+      "section": "pending",
+      "bodySha256": "e50b5b2a2febcd48599ad98e2ac522e8ac7a50cb2bbc10a62ce0be53f99b9b27",
+      "issueId": "live-2026-08-15-top-3"
     }
   ],
-  "semanticProfiles": [],
+  "semanticProfiles": [
+    {
+      "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+        "evidenceCount": 11,
+        "bodySha256": "82d02c81f1fc184d10ac427f8b9424f309dbcb2cbce53831c933e9c69481f9c1",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "4df9d49a90083d38bdf863eef58e78b92bc89dd42a9e70962f719e8bf55e0d23"
+        },
+        {
+          "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "84d199d55bfbfc1e5f516caa6e147fb9aaac6083bc4a67971252cddcaf9d4d96"
+        },
+        {
+          "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "570da95ea275535c8e7a9aa96069cfac5ac10ba4df442a44da008e1bea485202"
+        },
+        {
+          "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 10
+          },
+          "sentenceSha256": "d515bb530aa96cfe0eceb34af461e7cbb6b0f7635080cc413b56df11b70a1825"
+        },
+        {
+          "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "701f53945da9ddb1c456cf30432cbf483588d4112052962def57dda3e8577fe6"
+        },
+        {
+          "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "e870353c37ebc2694fee5a9a667ce6c544328f62773835af6c90d852c4c8a4bd"
+        },
+        {
+          "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 13
+          },
+          "sentenceSha256": "da798b0beaeb2fb3424297ef40a14f8d7faae9e93c3ac300b8b3aba574b7a610"
+        },
+        {
+          "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 9
+          },
+          "sentenceSha256": "eb1cc2aace309ea2e1ccb8f25e59008719666ad008d6ce5d9e52ed2cea387fb4"
+        },
+        {
+          "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "f7e5f934c47f8c55109e2f1c192aee75e2b3022e6f7c1e1863ed7257ecc9292c"
+        },
+        {
+          "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 5
+          },
+          "sentenceSha256": "d14c92390448ac39df7bfa8c4093a948a2d6d5a904f011f5ef48a1f46125d1fb"
+        },
+        {
+          "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "0a273efa75c17c8b8e32ba5bba8aaaf4ff953af4f81b9ad0da23a3abc42efd37"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "e5eb2d9f2bd63913420d35bbae666d42275b2f3138fab066ef2aeb77269dece4",
+            "response_sha256": "1593cd2fd1543789b9d8159d3d8ae08ff240d21c7c626ee69dd3d6349aa5990f",
+            "response_id": "fJSAavvqFPOKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:32:25.464382+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "e5eb2d9f2bd63913420d35bbae666d42275b2f3138fab066ef2aeb77269dece4",
+            "response_sha256": "1593cd2fd1543789b9d8159d3d8ae08ff240d21c7c626ee69dd3d6349aa5990f",
+            "response_id": "fJSAavvqFPOKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:32:25.464382+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "0e85b35d88cd9572dd482415533dbcf1",
+          "upstream_article_id": "0e85b35d88cd9572dd482415533dbcf1",
+          "published_at": "2026-08-13T22:29:12+00:00",
+          "title_sha256": "cccab9ac18febca2d038952d5919c20008fd01fc2027360bbf9b41f01291bd12",
+          "body_sha256": "82d02c81f1fc184d10ac427f8b9424f309dbcb2cbce53831c933e9c69481f9c1",
+          "body_character_count": 3500,
+          "body_word_count": 792,
+          "paragraph_count": 1,
+          "sentence_count": 35
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 3500,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "4df9d49a90083d38bdf863eef58e78b92bc89dd42a9e70962f719e8bf55e0d23"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "84d199d55bfbfc1e5f516caa6e147fb9aaac6083bc4a67971252cddcaf9d4d96"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:13c3f599987363a0c8d1a4481a7ab0601dbf90a9eb56f3fdc733c5ebfda0f126",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "government",
+                "variant_key": "semantic:responsibility_attribution:family:government",
+                "public_paraphrase": "미국 트럼프 행정부는 드론 수입품이 국가안보에 미치는 영향을 조사하고 관세 부과 조치를 취할 책임이 있음.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "4df9d49a90083d38bdf863eef58e78b92bc89dd42a9e70962f719e8bf55e0d23"
+                }
+              },
+              {
+                "claim_id": "claim:13c3f599987363a0c8d1a4481a7ab0601dbf90a9eb56f3fdc733c5ebfda0f126",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "government",
+                "variant_key": "semantic:responsibility_attribution:family:government",
+                "public_paraphrase": "미국 트럼프 행정부는 드론 수입품이 국가안보에 미치는 영향을 조사하고 관세 부과 조치를 취할 책임이 있음.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "570da95ea275535c8e7a9aa96069cfac5ac10ba4df442a44da008e1bea485202"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:11257669bb6f08d85bdc3c5b4f008360c057992c6e6000b68cc0576fbfb72c0f",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 10
+                },
+                "sentence_sha256": "d515bb530aa96cfe0eceb34af461e7cbb6b0f7635080cc413b56df11b70a1825"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:7cb52b0413505663c180d485cd6e35638e92e5913de273f7484d8f1044c46364",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "701f53945da9ddb1c456cf30432cbf483588d4112052962def57dda3e8577fe6"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "moderate",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 11
+              },
+              "sentence_sha256": "e870353c37ebc2694fee5a9a667ce6c544328f62773835af6c90d852c4c8a4bd"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 13
+              },
+              "sentence_sha256": "da798b0beaeb2fb3424297ef40a14f8d7faae9e93c3ac300b8b3aba574b7a610"
+            }
+          ],
+          "level": "moderate"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "4df9d49a90083d38bdf863eef58e78b92bc89dd42a9e70962f719e8bf55e0d23"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "84d199d55bfbfc1e5f516caa6e147fb9aaac6083bc4a67971252cddcaf9d4d96"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "economic_consequences",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "4df9d49a90083d38bdf863eef58e78b92bc89dd42a9e70962f719e8bf55e0d23"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "eb1cc2aace309ea2e1ccb8f25e59008719666ad008d6ce5d9e52ed2cea387fb4"
+                }
+              ]
+            },
+            {
+              "code": "responsibility",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "4df9d49a90083d38bdf863eef58e78b92bc89dd42a9e70962f719e8bf55e0d23"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "570da95ea275535c8e7a9aa96069cfac5ac10ba4df442a44da008e1bea485202"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "security_defense",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "84d199d55bfbfc1e5f516caa6e147fb9aaac6083bc4a67971252cddcaf9d4d96"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "701f53945da9ddb1c456cf30432cbf483588d4112052962def57dda3e8577fe6"
+                }
+              ]
+            },
+            {
+              "code": "economic",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "4df9d49a90083d38bdf863eef58e78b92bc89dd42a9e70962f719e8bf55e0d23"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 10
+                  },
+                  "sentence_sha256": "d515bb530aa96cfe0eceb34af461e7cbb6b0f7635080cc413b56df11b70a1825"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "f7e5f934c47f8c55109e2f1c192aee75e2b3022e6f7c1e1863ed7257ecc9292c"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "quantification",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 5
+                },
+                "sentence_sha256": "d14c92390448ac39df7bfa8c4093a948a2d6d5a904f011f5ef48a1f46125d1fb"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "0a273efa75c17c8b8e32ba5bba8aaaf4ff953af4f81b9ad0da23a3abc42efd37"
+              }
+            ],
+            "appears_in_lead": false
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "39ff242fb326826484db36defa87c77db7244d6946dcc1e118e20ce013365dce",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "16d6a5053788f97963f71e99e832bb8c",
+      "status": "review_needed",
+      "engine": {
+        "label": "unavailable",
+        "engineLabel": "unavailable",
+        "semanticAi": false,
+        "status": "review_needed",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "16d6a5053788f97963f71e99e832bb8c",
+        "evidenceCount": 0,
+        "bodySha256": null,
+        "reviewRequired": true,
+        "fallbackReason": "analysis_excluded_body_unavailable"
+      },
+      "evidence": [],
+      "profile": null
+    },
+    {
+      "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+        "evidenceCount": 13,
+        "bodySha256": "4c1c886d781bc4d2354c48d5c4c4e673fe2d2411a7370b7b8d54f4cfdc8379ca",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "cbb70d3e769f4fb11c6c0566900437ee8729423008706032e55795f8748a9672"
+        },
+        {
+          "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 5
+          },
+          "sentenceSha256": "d54493d510fea93f6f06d9fa0b2d8e0c3f22348d43a1e30e5640f4a32fdbf843"
+        },
+        {
+          "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 8
+          },
+          "sentenceSha256": "e60aef32c970272376334cfa7c33773e7e384e1ed15d85360fc7fee32cee5dee"
+        },
+        {
+          "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "11209c63d3348d8cdcc60ec218cbde230de9b96a4a75ab7778513c8c9333c090"
+        },
+        {
+          "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 9
+          },
+          "sentenceSha256": "de60ed9a54d62c9a9db3d35832b104ef17a6f6285987c9a576b0e7b67eb4ac90"
+        },
+        {
+          "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 10
+          },
+          "sentenceSha256": "7f983ee13279a915d03119dadfb0e1e365ff747fc3baf6691fd24ddb7fc09dda"
+        },
+        {
+          "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "b6f86d0034754ac89a73073f3fa038ae77b9512fd4275461f18a1ae12d1d0dc7"
+        },
+        {
+          "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 15
+          },
+          "sentenceSha256": "d6e05c852833131c899be9e78a796269fc63ec38c5681fd8b9eba2b85d8025e5"
+        },
+        {
+          "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "d8d2c479694024eab72cb3971273f735fcd9024272b03afb9473bb400a8537a8"
+        },
+        {
+          "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 7
+          },
+          "sentenceSha256": "2123083af76d0205fe2d8f2396d7017fd90fd48b9a762b6f5e69346184ed0a35"
+        },
+        {
+          "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 14
+          },
+          "sentenceSha256": "7a4bdddc50a0fcf1eb75872c671e828b5a6fa937b8f043298c17b26725eefb7a"
+        },
+        {
+          "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "d497251aa6f7e913d380cab4f8e2f61116f0cbd5edd8ac10653f9c1f52fb5509"
+        },
+        {
+          "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "5626522da1150377a1027b4e1a02bf394b69692fb31eb25caa4c85a1d62df461"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "36dc8ab74faf87b2fa6b830bdb68b3a3c77bff3ce970ecf1f41e276f85c16cc3",
+            "response_sha256": "f84b9dbb0ecad42f4c99d4e1a48d1e30d42edef6f5d99460dd7bd3b2fba680a3",
+            "response_id": "fJSAarDFLZGMx9gPkrXbyAg",
+            "completed_at": "2026-08-15T16:32:29.078332+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "36dc8ab74faf87b2fa6b830bdb68b3a3c77bff3ce970ecf1f41e276f85c16cc3",
+            "response_sha256": "f84b9dbb0ecad42f4c99d4e1a48d1e30d42edef6f5d99460dd7bd3b2fba680a3",
+            "response_id": "fJSAarDFLZGMx9gPkrXbyAg",
+            "completed_at": "2026-08-15T16:32:29.078332+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+          "upstream_article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+          "published_at": "2026-08-14T12:56:38+00:00",
+          "title_sha256": "2132d729c5c243fb655a93752d80253eabd195b7da5786381a992fa8869e3cb4",
+          "body_sha256": "4c1c886d781bc4d2354c48d5c4c4e673fe2d2411a7370b7b8d54f4cfdc8379ca",
+          "body_character_count": 2787,
+          "body_word_count": 631,
+          "paragraph_count": 1,
+          "sentence_count": 39
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 2787,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "cbb70d3e769f4fb11c6c0566900437ee8729423008706032e55795f8748a9672"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "d54493d510fea93f6f06d9fa0b2d8e0c3f22348d43a1e30e5640f4a32fdbf843"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:c6a9ee4ffdc9c81f4639005c2e21cce49180d12f606303221799d24ba34428f1",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "미국은 국가 안보와 국방 관련 산업 기반 보호를 위해 드론 수입품이 국가안보에 미치는 영향을 문제로 정의하고 있다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "e60aef32c970272376334cfa7c33773e7e384e1ed15d85360fc7fee32cee5dee"
+                }
+              },
+              {
+                "claim_id": "claim:c6a9ee4ffdc9c81f4639005c2e21cce49180d12f606303221799d24ba34428f1",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "미국은 국가 안보와 국방 관련 산업 기반 보호를 위해 드론 수입품이 국가안보에 미치는 영향을 문제로 정의하고 있다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "11209c63d3348d8cdcc60ec218cbde230de9b96a4a75ab7778513c8c9333c090"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:3bccdb9ae8a071555f44e16ce02261fb772b776ac41887af3198f9dcd5e75bf8",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "structural_condition",
+                "variant_key": "semantic:causal_interpretation:family:structural_condition",
+                "public_paraphrase": "전 세계 드론 시장을 장악한 중국을 견제하고, 전쟁을 통해 드론이 핵심 군사 전력으로 부상한 상황이 관세 부과의 원인으로 풀이된다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "de60ed9a54d62c9a9db3d35832b104ef17a6f6285987c9a576b0e7b67eb4ac90"
+                }
+              },
+              {
+                "claim_id": "claim:3bccdb9ae8a071555f44e16ce02261fb772b776ac41887af3198f9dcd5e75bf8",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "structural_condition",
+                "variant_key": "semantic:causal_interpretation:family:structural_condition",
+                "public_paraphrase": "전 세계 드론 시장을 장악한 중국을 견제하고, 전쟁을 통해 드론이 핵심 군사 전력으로 부상한 상황이 관세 부과의 원인으로 풀이된다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 10
+                  },
+                  "sentence_sha256": "7f983ee13279a915d03119dadfb0e1e365ff747fc3baf6691fd24ddb7fc09dda"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:486415c9148fa1d1073742f54c71982b9ff796f6e6c5aec2df6dd573b94ce283",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "government",
+                "variant_key": "semantic:responsibility_attribution:family:government",
+                "public_paraphrase": "트럼프 미국 행정부는 무역확장법 232조에 따라 드론 수입품의 국가안보 영향을 조사하고 관세 부과 조치를 시행하며 책임을 지고 있다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "b6f86d0034754ac89a73073f3fa038ae77b9512fd4275461f18a1ae12d1d0dc7"
+                }
+              },
+              {
+                "claim_id": "claim:486415c9148fa1d1073742f54c71982b9ff796f6e6c5aec2df6dd573b94ce283",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "government",
+                "variant_key": "semantic:responsibility_attribution:family:government",
+                "public_paraphrase": "트럼프 미국 행정부는 무역확장법 232조에 따라 드론 수입품의 국가안보 영향을 조사하고 관세 부과 조치를 시행하며 책임을 지고 있다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "11209c63d3348d8cdcc60ec218cbde230de9b96a4a75ab7778513c8c9333c090"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:d7a5a45da5b59e470e7d3cab81e4fc862585960def8d035fb07271d2683328a3",
+                "code": "semantic_moral_evaluation",
+                "frame_family": "effectiveness_positive",
+                "variant_key": "semantic:moral_evaluation:family:effectiveness_positive",
+                "public_paraphrase": "중국산 대비 가격 경쟁력을 얻게 된 한국 드론 업계에는 호재로 평가된다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 15
+                  },
+                  "sentence_sha256": "d6e05c852833131c899be9e78a796269fc63ec38c5681fd8b9eba2b85d8025e5"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:f5aa7fa3fb80c2aa6ba274160d6234f3d1cf22066b712fbe83a4c7ac2fb7650b",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "strengthen_policy",
+                "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+                "public_paraphrase": "드론과 핵심 부품에 최대 100%의 관세를 부과하고, 한국 등 우방국에는 15%의 차등 관세를 적용한다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "d8d2c479694024eab72cb3971273f735fcd9024272b03afb9473bb400a8537a8"
+                }
+              },
+              {
+                "claim_id": "claim:f5aa7fa3fb80c2aa6ba274160d6234f3d1cf22066b712fbe83a4c7ac2fb7650b",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "strengthen_policy",
+                "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+                "public_paraphrase": "드론과 핵심 부품에 최대 100%의 관세를 부과하고, 한국 등 우방국에는 15%의 차등 관세를 적용한다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 7
+                  },
+                  "sentence_sha256": "2123083af76d0205fe2d8f2396d7017fd90fd48b9a762b6f5e69346184ed0a35"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:e602ab85e84d6105efa9ac6f9c49c60d14415df554f3108dab8ab9628d20ad5f",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 8
+                },
+                "sentence_sha256": "e60aef32c970272376334cfa7c33773e7e384e1ed15d85360fc7fee32cee5dee"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 15
+                },
+                "sentence_sha256": "d6e05c852833131c899be9e78a796269fc63ec38c5681fd8b9eba2b85d8025e5"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "moderate",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 12
+              },
+              "sentence_sha256": "11209c63d3348d8cdcc60ec218cbde230de9b96a4a75ab7778513c8c9333c090"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 14
+              },
+              "sentence_sha256": "7a4bdddc50a0fcf1eb75872c671e828b5a6fa937b8f043298c17b26725eefb7a"
+            }
+          ],
+          "level": "moderate"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "b6f86d0034754ac89a73073f3fa038ae77b9512fd4275461f18a1ae12d1d0dc7"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "d8d2c479694024eab72cb3971273f735fcd9024272b03afb9473bb400a8537a8"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "economic_consequences",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 15
+                  },
+                  "sentence_sha256": "d6e05c852833131c899be9e78a796269fc63ec38c5681fd8b9eba2b85d8025e5"
+                }
+              ]
+            },
+            {
+              "code": "conflict",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "d497251aa6f7e913d380cab4f8e2f61116f0cbd5edd8ac10653f9c1f52fb5509"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 14
+                  },
+                  "sentence_sha256": "7a4bdddc50a0fcf1eb75872c671e828b5a6fa937b8f043298c17b26725eefb7a"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "security_defense",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "e60aef32c970272376334cfa7c33773e7e384e1ed15d85360fc7fee32cee5dee"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "de60ed9a54d62c9a9db3d35832b104ef17a6f6285987c9a576b0e7b67eb4ac90"
+                }
+              ]
+            },
+            {
+              "code": "economic",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "b6f86d0034754ac89a73073f3fa038ae77b9512fd4275461f18a1ae12d1d0dc7"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 15
+                  },
+                  "sentence_sha256": "d6e05c852833131c899be9e78a796269fc63ec38c5681fd8b9eba2b85d8025e5"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "5626522da1150377a1027b4e1a02bf394b69692fb31eb25caa4c85a1d62df461"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "quantification",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "d8d2c479694024eab72cb3971273f735fcd9024272b03afb9473bb400a8537a8"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 7
+                },
+                "sentence_sha256": "2123083af76d0205fe2d8f2396d7017fd90fd48b9a762b6f5e69346184ed0a35"
+              }
+            ],
+            "appears_in_lead": false
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "a8241c5bc1ed02c701c51d45a8c9dcb85809041811d12520b8b70472a29c854e",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "4995faaefdeabca7622b5e080b2214f1",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "4995faaefdeabca7622b5e080b2214f1",
+        "evidenceCount": 8,
+        "bodySha256": "064110b43e7b03381467eda6c9e09d1b705d85a6832ce22f3c30df87e1ba9c34",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "4995faaefdeabca7622b5e080b2214f1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "8c194bb637ffd34f4747a5ea4288d336d33e3b148d7ee70fca184b656b9b2820"
+        },
+        {
+          "articleId": "4995faaefdeabca7622b5e080b2214f1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "96908da7218afccfa6bee156a64b45c45d731389a6ff46f1251564c64ed2c2f1"
+        },
+        {
+          "articleId": "4995faaefdeabca7622b5e080b2214f1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "0aaa0b334d26e1b3e37ceaab66310c3997a09788abf1ed369cc35030b264e377"
+        },
+        {
+          "articleId": "4995faaefdeabca7622b5e080b2214f1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 14
+          },
+          "sentenceSha256": "7f65ec033c8470461e0042ef845dc886866118a62cfd839a6cdb2f95b7f69150"
+        },
+        {
+          "articleId": "4995faaefdeabca7622b5e080b2214f1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 13
+          },
+          "sentenceSha256": "bd47a205d944c8fba0bde1fd76dc2e089c8ce32cd984eebfa545d35c3965e924"
+        },
+        {
+          "articleId": "4995faaefdeabca7622b5e080b2214f1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "289488fa8776ce88331fd29b9e6adaadb2d7a33cd1d2fd45d8055ea9b31dd9f0"
+        },
+        {
+          "articleId": "4995faaefdeabca7622b5e080b2214f1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 15
+          },
+          "sentenceSha256": "40377f25b183435f4b6a95ab7f39c2f5a3f095e1c87a39f2304bc80198eaff12"
+        },
+        {
+          "articleId": "4995faaefdeabca7622b5e080b2214f1",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "4c7deb33f4c58b2189dd413305766e66587be809f879454ca566fd61ff5ab368"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "4c4c681c2ed7eeac6f6b0424b7276b48013e32ebd38258759137c0472db3980b",
+            "response_sha256": "4981d2b09665eec160d86d042065b34fe04c0d250d0ada0261c16323f8b4ab07",
+            "response_id": "gJSAaq7BA_OKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:32:29.922216+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "4c4c681c2ed7eeac6f6b0424b7276b48013e32ebd38258759137c0472db3980b",
+            "response_sha256": "4981d2b09665eec160d86d042065b34fe04c0d250d0ada0261c16323f8b4ab07",
+            "response_id": "gJSAaq7BA_OKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:32:29.922216+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "4995faaefdeabca7622b5e080b2214f1",
+          "upstream_article_id": "4995faaefdeabca7622b5e080b2214f1",
+          "published_at": "2026-08-13T21:49:30+00:00",
+          "title_sha256": "6d088a1c90f74459f797b06bd4adbd8e2ea650d550e1abf0b433df29df14a364",
+          "body_sha256": "064110b43e7b03381467eda6c9e09d1b705d85a6832ce22f3c30df87e1ba9c34",
+          "body_character_count": 1048,
+          "body_word_count": 234,
+          "paragraph_count": 1,
+          "sentence_count": 16
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 1048,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "8c194bb637ffd34f4747a5ea4288d336d33e3b148d7ee70fca184b656b9b2820"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "96908da7218afccfa6bee156a64b45c45d731389a6ff46f1251564c64ed2c2f1"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:83d61d13362fb9d96db0366b86ffa9cab2615f373eaf117a81bbf498e098b98c",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "미국이 드론 및 관련 부품을 해외 공급망에 지나치게 의존하고 있으며, 일부 해외 업체 제품이 안보 위험을 초래할 수 있다는 점.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "0aaa0b334d26e1b3e37ceaab66310c3997a09788abf1ed369cc35030b264e377"
+                }
+              },
+              {
+                "claim_id": "claim:83d61d13362fb9d96db0366b86ffa9cab2615f373eaf117a81bbf498e098b98c",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "미국이 드론 및 관련 부품을 해외 공급망에 지나치게 의존하고 있으며, 일부 해외 업체 제품이 안보 위험을 초래할 수 있다는 점.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 14
+                  },
+                  "sentence_sha256": "7f65ec033c8470461e0042ef845dc886866118a62cfd839a6cdb2f95b7f69150"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:50d9a656cd9c37ab5031c06e39d65f2c4ec2826d52780ff3eda8e5f60f89ff0b",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "structural_condition",
+                "variant_key": "semantic:causal_interpretation:family:structural_condition",
+                "public_paraphrase": "외국 업체가 생산한 드론의 미국 시장 침투율이 상당하여 미국이 해외 공급원에 지나치게 의존하게 된 상황 때문이다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 13
+                  },
+                  "sentence_sha256": "bd47a205d944c8fba0bde1fd76dc2e089c8ce32cd984eebfa545d35c3965e924"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:14bbbb383f3e17f6252d8c933035ae94619a985566068aeb5eaf10ce1ef6a62c",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "strengthen_policy",
+                "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+                "public_paraphrase": "수입 드론 및 관련 부품에 국가안보 민감도에 따라 최대 100%의 차등 관세를 부과한다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "8c194bb637ffd34f4747a5ea4288d336d33e3b148d7ee70fca184b656b9b2820"
+                }
+              },
+              {
+                "claim_id": "claim:14bbbb383f3e17f6252d8c933035ae94619a985566068aeb5eaf10ce1ef6a62c",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "strengthen_policy",
+                "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+                "public_paraphrase": "수입 드론 및 관련 부품에 국가안보 민감도에 따라 최대 100%의 차등 관세를 부과한다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "289488fa8776ce88331fd29b9e6adaadb2d7a33cd1d2fd45d8055ea9b31dd9f0"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:d69077ecb2af57d735a3f9211b635a963fc4ecadc0614c3c8512e4272866af96",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "8c194bb637ffd34f4747a5ea4288d336d33e3b148d7ee70fca184b656b9b2820"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "96908da7218afccfa6bee156a64b45c45d731389a6ff46f1251564c64ed2c2f1"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:9846a15fdb213a05c813af106db8b74353691dd3db4ebaa1cd04a119468c99e0",
+            "role": "other",
+            "role_label": "기타 취재원",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "96908da7218afccfa6bee156a64b45c45d731389a6ff46f1251564c64ed2c2f1"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 15
+                },
+                "sentence_sha256": "40377f25b183435f4b6a95ab7f39c2f5a3f095e1c87a39f2304bc80198eaff12"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "moderate",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 12
+              },
+              "sentence_sha256": "0aaa0b334d26e1b3e37ceaab66310c3997a09788abf1ed369cc35030b264e377"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 13
+              },
+              "sentence_sha256": "bd47a205d944c8fba0bde1fd76dc2e089c8ce32cd984eebfa545d35c3965e924"
+            }
+          ],
+          "level": "moderate"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "8c194bb637ffd34f4747a5ea4288d336d33e3b148d7ee70fca184b656b9b2820"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "96908da7218afccfa6bee156a64b45c45d731389a6ff46f1251564c64ed2c2f1"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [
+            {
+              "code": "security_defense",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "289488fa8776ce88331fd29b9e6adaadb2d7a33cd1d2fd45d8055ea9b31dd9f0"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 14
+                  },
+                  "sentence_sha256": "7f65ec033c8470461e0042ef845dc886866118a62cfd839a6cdb2f95b7f69150"
+                }
+              ]
+            },
+            {
+              "code": "economic",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "8c194bb637ffd34f4747a5ea4288d336d33e3b148d7ee70fca184b656b9b2820"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "4c7deb33f4c58b2189dd413305766e66587be809f879454ca566fd61ff5ab368"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "quantification",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "8c194bb637ffd34f4747a5ea4288d336d33e3b148d7ee70fca184b656b9b2820"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "4c7deb33f4c58b2189dd413305766e66587be809f879454ca566fd61ff5ab368"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "causal_link",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 12
+                },
+                "sentence_sha256": "0aaa0b334d26e1b3e37ceaab66310c3997a09788abf1ed369cc35030b264e377"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 13
+                },
+                "sentence_sha256": "bd47a205d944c8fba0bde1fd76dc2e089c8ce32cd984eebfa545d35c3965e924"
+              }
+            ],
+            "appears_in_lead": false
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "e0d32bf3b25484b542d0692568511901896b0665cd7e6fd31ddc9b153b2b296a",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "78e517cfcb5c817f67c830f7ac761290",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "78e517cfcb5c817f67c830f7ac761290",
+        "evidenceCount": 6,
+        "bodySha256": "78342cfbcff54d8581f89439621123f48181dc72b405a07ba7552a1f6ebc6160",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "78e517cfcb5c817f67c830f7ac761290",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "30533db109308e169e513dd5f0d04a6ec158b3bb7f96f0f8aa64dd47b676a5f3"
+        },
+        {
+          "articleId": "78e517cfcb5c817f67c830f7ac761290",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+        },
+        {
+          "articleId": "78e517cfcb5c817f67c830f7ac761290",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "d2f8edcad0f08966fb68a828026ba40f55fc8a31358323457d8adf96a76ba88a"
+        },
+        {
+          "articleId": "78e517cfcb5c817f67c830f7ac761290",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "27d22bf027e6c4f54ad5bfd3bf8e8a66da084af1b15974fde2deecc0b40ae7c0"
+        },
+        {
+          "articleId": "78e517cfcb5c817f67c830f7ac761290",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 7
+          },
+          "sentenceSha256": "d46c0d66bac2e8136143d154ea126fbab715633cf1ac92cb6dafc92ea20f87ac"
+        },
+        {
+          "articleId": "78e517cfcb5c817f67c830f7ac761290",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 5
+          },
+          "sentenceSha256": "6959857b17ba76d78cec353e0b2af38dfb61e579632e2860dcd2fe83438a10f5"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "f5cfcab5dab8602b8a6711d5013b3d728ef8766d0afb2681e0cf163751137d4f",
+            "response_sha256": "247b8d7c0936ef47493056b69ef663aa1b843aa319bb158c1b4ddb3ab78dbeae",
+            "response_id": "hJSAapmMMpGMx9gPkrXbyAg",
+            "completed_at": "2026-08-15T16:32:30.874712+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "f5cfcab5dab8602b8a6711d5013b3d728ef8766d0afb2681e0cf163751137d4f",
+            "response_sha256": "247b8d7c0936ef47493056b69ef663aa1b843aa319bb158c1b4ddb3ab78dbeae",
+            "response_id": "hJSAapmMMpGMx9gPkrXbyAg",
+            "completed_at": "2026-08-15T16:32:30.874712+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "78e517cfcb5c817f67c830f7ac761290",
+          "upstream_article_id": "78e517cfcb5c817f67c830f7ac761290",
+          "published_at": "2026-08-13T22:23:00+00:00",
+          "title_sha256": "059d8b272f0e8aff4295dc301d08efe59fd6b34ef11466677efcc2da9b83b126",
+          "body_sha256": "78342cfbcff54d8581f89439621123f48181dc72b405a07ba7552a1f6ebc6160",
+          "body_character_count": 1247,
+          "body_word_count": 307,
+          "paragraph_count": 1,
+          "sentence_count": 15
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 1247,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "30533db109308e169e513dd5f0d04a6ec158b3bb7f96f0f8aa64dd47b676a5f3"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:d3cfdb840ff003ab71c9a17a4cf66e305dc06255010ba39517ae7c183b5c96e9",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "수입 드론 및 부품으로 인한 국가 안보 위협과 미국 드론 산업 및 공급망 약화",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+                }
+              },
+              {
+                "claim_id": "claim:d3cfdb840ff003ab71c9a17a4cf66e305dc06255010ba39517ae7c183b5c96e9",
+                "code": "semantic_problem_definition",
+                "frame_family": "safety_harm",
+                "variant_key": "semantic:problem_definition:family:safety_harm",
+                "public_paraphrase": "수입 드론 및 부품으로 인한 국가 안보 위협과 미국 드론 산업 및 공급망 약화",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "d2f8edcad0f08966fb68a828026ba40f55fc8a31358323457d8adf96a76ba88a"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:b790d118f297adc4f3b7a0c2accb2283f9419210d6caf217a6495e47047ebb82",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "government",
+                "variant_key": "semantic:responsibility_attribution:family:government",
+                "public_paraphrase": "미국 행정부가 드론 관세 부과 포고문에 서명하며 문제 해결의 책임을 짐",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+                }
+              },
+              {
+                "claim_id": "claim:b790d118f297adc4f3b7a0c2accb2283f9419210d6caf217a6495e47047ebb82",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "government",
+                "variant_key": "semantic:responsibility_attribution:family:government",
+                "public_paraphrase": "미국 행정부가 드론 관세 부과 포고문에 서명하며 문제 해결의 책임을 짐",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "27d22bf027e6c4f54ad5bfd3bf8e8a66da084af1b15974fde2deecc0b40ae7c0"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:d3f0283fd075e40045e12981c79395db3c56209e357e81d347e1f9fdb6d3d8d3",
+                "code": "semantic_moral_evaluation",
+                "frame_family": "effectiveness_positive",
+                "variant_key": "semantic:moral_evaluation:family:effectiveness_positive",
+                "public_paraphrase": "드론 관세가 미국의 국가 안보와 국방 산업 기반을 보호하고, 미국 내 일자리를 지원 및 창출할 것이라고 긍정적으로 평가됨",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "d2f8edcad0f08966fb68a828026ba40f55fc8a31358323457d8adf96a76ba88a"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:f390bdda744a184ba2339f1980b8f9df2c54caa82af23baf91d3ba252f60a5fe",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "strengthen_policy",
+                "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+                "public_paraphrase": "특정 성능의 드론에 100%, 한국산 등에는 15%의 차등 관세를 부과함",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "27d22bf027e6c4f54ad5bfd3bf8e8a66da084af1b15974fde2deecc0b40ae7c0"
+                }
+              },
+              {
+                "claim_id": "claim:f390bdda744a184ba2339f1980b8f9df2c54caa82af23baf91d3ba252f60a5fe",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "strengthen_policy",
+                "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+                "public_paraphrase": "특정 성능의 드론에 100%, 한국산 등에는 15%의 차등 관세를 부과함",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 7
+                  },
+                  "sentence_sha256": "d46c0d66bac2e8136143d154ea126fbab715633cf1ac92cb6dafc92ea20f87ac"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:05d01bd350b71935031ce8523be9bfcee94f482813d0c77a1f8201ef481d9b8d",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 11
+                },
+                "sentence_sha256": "d2f8edcad0f08966fb68a828026ba40f55fc8a31358323457d8adf96a76ba88a"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 11
+              },
+              "sentence_sha256": "d2f8edcad0f08966fb68a828026ba40f55fc8a31358323457d8adf96a76ba88a"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "27d22bf027e6c4f54ad5bfd3bf8e8a66da084af1b15974fde2deecc0b40ae7c0"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "economic_consequences",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "d2f8edcad0f08966fb68a828026ba40f55fc8a31358323457d8adf96a76ba88a"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "security_defense",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "27d22bf027e6c4f54ad5bfd3bf8e8a66da084af1b15974fde2deecc0b40ae7c0"
+                }
+              ]
+            },
+            {
+              "code": "economic",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "d2f8edcad0f08966fb68a828026ba40f55fc8a31358323457d8adf96a76ba88a"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "unknown",
+            "label": "트럼프, 수입 드론·부품에 관세 100%···한국은 15%",
+            "evidence": [],
+            "appears_in_lead": true
+          },
+          {
+            "code": "quantification",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 4
+                },
+                "sentence_sha256": "27d22bf027e6c4f54ad5bfd3bf8e8a66da084af1b15974fde2deecc0b40ae7c0"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 5
+                },
+                "sentence_sha256": "6959857b17ba76d78cec353e0b2af38dfb61e579632e2860dcd2fe83438a10f5"
+              }
+            ],
+            "appears_in_lead": false
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "9d07c12247e58bbbc50d304bbea484be743e4cbdb513088f99f3bf823b9d4f99",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "7fef8003ab2a5310cab5cbefdadb213e",
+      "status": "review_needed",
+      "engine": {
+        "label": "unavailable",
+        "engineLabel": "unavailable",
+        "semanticAi": false,
+        "status": "review_needed",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "7fef8003ab2a5310cab5cbefdadb213e",
+        "evidenceCount": 0,
+        "bodySha256": null,
+        "reviewRequired": true,
+        "fallbackReason": "analysis_excluded_body_unavailable"
+      },
+      "evidence": [],
+      "profile": null
+    },
+    {
+      "articleId": "8acc4d51941926f62141996c8bc7e18a",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "8acc4d51941926f62141996c8bc7e18a",
+        "evidenceCount": 5,
+        "bodySha256": "e50b5b2a2febcd48599ad98e2ac522e8ac7a50cb2bbc10a62ce0be53f99b9b27",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "8acc4d51941926f62141996c8bc7e18a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "48194311f8cee0b5b849f029a6c12dab9428db079cbc2ccb594798359aa5e908"
+        },
+        {
+          "articleId": "8acc4d51941926f62141996c8bc7e18a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "b0d310f6e9f1f15feba6ec4a1c785964cd71df35aca49622ec7a3c211f381911"
+        },
+        {
+          "articleId": "8acc4d51941926f62141996c8bc7e18a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "81513d4618fb12b796ca5ee2dcbaba1806ecbc781b1d977edd3c46a6ccb2e71e"
+        },
+        {
+          "articleId": "8acc4d51941926f62141996c8bc7e18a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "21f05c83b87815cac92990eea17446f4dd8e14eee597a8ff4043534f42ea5942"
+        },
+        {
+          "articleId": "8acc4d51941926f62141996c8bc7e18a",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "c225eedb41b3acba4b2ab1f99c34d5930bc5056da6c082a8447252f6c076c57b"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "cf05bafef81ae60c9ce3c04a1a1e962a5dc1ddee25a9b5ea69a6860eb69b5018",
+            "response_sha256": "a49e4dfb59579a57e2f566280e2f63fc0c338dd6d1fdc0297172835267c36dfb",
+            "response_id": "kpSAavLhIZGMx9gPkrXbyAg",
+            "completed_at": "2026-08-15T16:32:46.852136+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "cf05bafef81ae60c9ce3c04a1a1e962a5dc1ddee25a9b5ea69a6860eb69b5018",
+            "response_sha256": "a49e4dfb59579a57e2f566280e2f63fc0c338dd6d1fdc0297172835267c36dfb",
+            "response_id": "kpSAavLhIZGMx9gPkrXbyAg",
+            "completed_at": "2026-08-15T16:32:46.852136+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "8acc4d51941926f62141996c8bc7e18a",
+          "upstream_article_id": "8acc4d51941926f62141996c8bc7e18a",
+          "published_at": "2026-08-13T22:14:10+00:00",
+          "title_sha256": "7603e22a02f1016e1b0255c0b1b69603ae5d7e9ca3a49ccbeace1f64eaaa2bb3",
+          "body_sha256": "e50b5b2a2febcd48599ad98e2ac522e8ac7a50cb2bbc10a62ce0be53f99b9b27",
+          "body_character_count": 1449,
+          "body_word_count": 329,
+          "paragraph_count": 1,
+          "sentence_count": 13
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 1449,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "48194311f8cee0b5b849f029a6c12dab9428db079cbc2ccb594798359aa5e908"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "b0d310f6e9f1f15feba6ec4a1c785964cd71df35aca49622ec7a3c211f381911"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:13b819258afa3388f351671f1b251d07e284079cc1543bcd3ce13e82685c1743",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "government",
+                "variant_key": "semantic:responsibility_attribution:family:government",
+                "public_paraphrase": "미국 정부(트럼프 대통령)가 관세 부과 포고문에 서명하며 이 문제에 대한 조치를 취할 책임이 있음을 보여준다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "48194311f8cee0b5b849f029a6c12dab9428db079cbc2ccb594798359aa5e908"
+                }
+              },
+              {
+                "claim_id": "claim:13b819258afa3388f351671f1b251d07e284079cc1543bcd3ce13e82685c1743",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "government",
+                "variant_key": "semantic:responsibility_attribution:family:government",
+                "public_paraphrase": "미국 정부(트럼프 대통령)가 관세 부과 포고문에 서명하며 이 문제에 대한 조치를 취할 책임이 있음을 보여준다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "81513d4618fb12b796ca5ee2dcbaba1806ecbc781b1d977edd3c46a6ccb2e71e"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:3e7e8dc5d3fd6f72bb9fffedeb6e90efc06e6b6a546f584cf3945e089c1124ae",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "strengthen_policy",
+                "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+                "public_paraphrase": "드론 및 부품에 최대 100% 관세를 부과하고, 한국 등 우방국에는 최대 15%의 관세를 부과하는 조치를 시행한다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "48194311f8cee0b5b849f029a6c12dab9428db079cbc2ccb594798359aa5e908"
+                }
+              },
+              {
+                "claim_id": "claim:3e7e8dc5d3fd6f72bb9fffedeb6e90efc06e6b6a546f584cf3945e089c1124ae",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "strengthen_policy",
+                "variant_key": "semantic:treatment_recommendation:family:strengthen_policy",
+                "public_paraphrase": "드론 및 부품에 최대 100% 관세를 부과하고, 한국 등 우방국에는 최대 15%의 관세를 부과하는 조치를 시행한다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "81513d4618fb12b796ca5ee2dcbaba1806ecbc781b1d977edd3c46a6ccb2e71e"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:9627ac40299313c7d0ad79fea8cd8c774387518669976d7c8c42814179d7f732",
+            "role": "government_official",
+            "role_label": "정부·공공기관",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "48194311f8cee0b5b849f029a6c12dab9428db079cbc2ccb594798359aa5e908"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "b0d310f6e9f1f15feba6ec4a1c785964cd71df35aca49622ec7a3c211f381911"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "48194311f8cee0b5b849f029a6c12dab9428db079cbc2ccb594798359aa5e908"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "b0d310f6e9f1f15feba6ec4a1c785964cd71df35aca49622ec7a3c211f381911"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "48194311f8cee0b5b849f029a6c12dab9428db079cbc2ccb594798359aa5e908"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "b0d310f6e9f1f15feba6ec4a1c785964cd71df35aca49622ec7a3c211f381911"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "economic_consequences",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "48194311f8cee0b5b849f029a6c12dab9428db079cbc2ccb594798359aa5e908"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "21f05c83b87815cac92990eea17446f4dd8e14eee597a8ff4043534f42ea5942"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "economic",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "48194311f8cee0b5b849f029a6c12dab9428db079cbc2ccb594798359aa5e908"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "b0d310f6e9f1f15feba6ec4a1c785964cd71df35aca49622ec7a3c211f381911"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "c225eedb41b3acba4b2ab1f99c34d5930bc5056da6c082a8447252f6c076c57b"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "quantification",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "48194311f8cee0b5b849f029a6c12dab9428db079cbc2ccb594798359aa5e908"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "b0d310f6e9f1f15feba6ec4a1c785964cd71df35aca49622ec7a3c211f381911"
+              }
+            ],
+            "appears_in_lead": true
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "00812521c660d0187a7b3386677da23ab13baf459e15cc8d8704f5f35647ad97",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    }
+  ],
   "ruleProfiles": [],
   "comparison": {
     "engine": {
-      "semanticAi": false,
-      "version": null,
-      "status": "review_needed"
+      "label": "ai_semantic",
+      "engineLabel": "ai_semantic",
+      "semanticAi": true,
+      "status": "succeeded",
+      "model": "gemini-2.5-pro",
+      "promptVersion": "event-synthesis-v1.0.0",
+      "schemaVersion": "agendaframe.event-synthesis.v1",
+      "source": "gcp:event-synthesis"
     },
     "data": {
       "summary_30_seconds": {
-        "what_happened": null,
-        "main_difference": null,
-        "common_ground": null,
-        "divergence_detected": false
+        "sample": "7건 · 4개 매체",
+        "common_ground": "언론들은 트럼프 미국 행정부가 무역확장법 232조에 근거해 국가 안보 위협을 이유로 수입 드론과 부품에 관세를 부과하기로 했다고 일제히 보도했습니다. 특히 중국산 등에는 최대 100%의 고율 관세를, 한국산에는 15%의 관세를 차등 적용한다는 사실을 공통적으로 전했습니다.",
+        "main_difference": "보도에 따라 강조점에는 차이가 있었는데, 일부 언론은 이번 조치가 세계 드론 시장을 장악한 중국을 견제하려는 의도이며 한국 드론 업계에는 호재가 될 수 있다는 점을 부각했습니다. 반면 다른 언론들은 수입 드론이 야기하는 국가 안보 위협과 해외 공급망에 대한 과도한 의존을 줄여 미국 내 산업 기반을 보호하려는 목적을 더 강조했습니다.",
+        "source_context": "이번 조치는 미중 기술 경쟁과 보호무역주의가 드론 산업으로까지 확대되었음을 보여줍니다. 중국산 드론에 대한 고율 관세는 한국 기업에게 미국 시장 점유율을 높일 기회가 될 수 있지만, 동시에 미중 갈등 사이에서 한국이 처한 복잡한 상황을 드러내기도 합니다.",
+        "limit": "기사 ID·locator·문장 해시가 연결된 관측만 표시합니다. 언론사 성향은 추론하지 않습니다.",
+        "divergence_detected": true
       },
-      "camps": [],
-      "terms": []
-    }
+      "synthesis": {
+        "schemaVersion": "agendaframe.event-synthesis.v1",
+        "promptVersion": "event-synthesis-v1.0.0",
+        "usable": true,
+        "opposition": true,
+        "what_happened": {
+          "text": "도널드 트럼프 미국 행정부가 국가 안보를 이유로 수입 드론 및 관련 부품에 최대 100%의 관세를 부과하는 포고문에 서명했습니다. 이 조치는 사실상 중국을 겨냥한 것으로, 한국 등 우방국에는 15%의 차등 관세가 적용됩니다.",
+          "status": "observed",
+          "evidence": [
+            {
+              "article_id": "8acc4d51941926f62141996c8bc7e18a",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "48194311f8cee0b5b849f029a6c12dab9428db079cbc2ccb594798359aa5e908"
+            },
+            {
+              "article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "e60aef32c970272376334cfa7c33773e7e384e1ed15d85360fc7fee32cee5dee"
+            },
+            {
+              "article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 7
+              },
+              "sentence_sha256": "2123083af76d0205fe2d8f2396d7017fd90fd48b9a762b6f5e69346184ed0a35"
+            }
+          ]
+        },
+        "agreed_line": {
+          "text": "언론들은 트럼프 미국 행정부가 무역확장법 232조에 근거해 국가 안보 위협을 이유로 수입 드론과 부품에 관세를 부과하기로 했다고 일제히 보도했습니다. 특히 중국산 등에는 최대 100%의 고율 관세를, 한국산에는 15%의 관세를 차등 적용한다는 사실을 공통적으로 전했습니다.",
+          "status": "observed",
+          "evidence": [
+            {
+              "article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "b6f86d0034754ac89a73073f3fa038ae77b9512fd4275461f18a1ae12d1d0dc7"
+            },
+            {
+              "article_id": "78e517cfcb5c817f67c830f7ac761290",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+            },
+            {
+              "article_id": "0e85b35d88cd9572dd482415533dbcf1",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "701f53945da9ddb1c456cf30432cbf483588d4112052962def57dda3e8577fe6"
+            },
+            {
+              "article_id": "4995faaefdeabca7622b5e080b2214f1",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "289488fa8776ce88331fd29b9e6adaadb2d7a33cd1d2fd45d8055ea9b31dd9f0"
+            }
+          ]
+        },
+        "split_line": {
+          "text": "보도에 따라 강조점에는 차이가 있었는데, 일부 언론은 이번 조치가 세계 드론 시장을 장악한 중국을 견제하려는 의도이며 한국 드론 업계에는 호재가 될 수 있다는 점을 부각했습니다. 반면 다른 언론들은 수입 드론이 야기하는 국가 안보 위협과 해외 공급망에 대한 과도한 의존을 줄여 미국 내 산업 기반을 보호하려는 목적을 더 강조했습니다.",
+          "status": "observed",
+          "evidence": [
+            {
+              "article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "de60ed9a54d62c9a9db3d35832b104ef17a6f6285987c9a576b0e7b67eb4ac90"
+            },
+            {
+              "article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 15
+              },
+              "sentence_sha256": "d6e05c852833131c899be9e78a796269fc63ec38c5681fd8b9eba2b85d8025e5"
+            },
+            {
+              "article_id": "78e517cfcb5c817f67c830f7ac761290",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+            },
+            {
+              "article_id": "4995faaefdeabca7622b5e080b2214f1",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 12
+              },
+              "sentence_sha256": "0aaa0b334d26e1b3e37ceaab66310c3997a09788abf1ed369cc35030b264e377"
+            },
+            {
+              "article_id": "78e517cfcb5c817f67c830f7ac761290",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 11
+              },
+              "sentence_sha256": "d2f8edcad0f08966fb68a828026ba40f55fc8a31358323457d8adf96a76ba88a"
+            }
+          ]
+        },
+        "so_what": {
+          "text": "이번 조치는 미중 기술 경쟁과 보호무역주의가 드론 산업으로까지 확대되었음을 보여줍니다. 중국산 드론에 대한 고율 관세는 한국 기업에게 미국 시장 점유율을 높일 기회가 될 수 있지만, 동시에 미중 갈등 사이에서 한국이 처한 복잡한 상황을 드러내기도 합니다.",
+          "status": "observed",
+          "evidence": [
+            {
+              "article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "de60ed9a54d62c9a9db3d35832b104ef17a6f6285987c9a576b0e7b67eb4ac90"
+            },
+            {
+              "article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 15
+              },
+              "sentence_sha256": "d6e05c852833131c899be9e78a796269fc63ec38c5681fd8b9eba2b85d8025e5"
+            }
+          ]
+        },
+        "camps": [
+          {
+            "name": "중국 견제 및 한국 업계 호재 강조",
+            "gist": "이번 관세 조치가 세계 드론 시장을 장악한 중국을 견제하기 위한 것이며, 가격 경쟁력을 얻게 된 한국 드론 업계에는 긍정적인 소식이라는 점을 부각하여 보도했습니다.",
+            "status": "observed",
+            "outlets": [
+              "KBS 뉴스"
+            ],
+            "article_ids": [
+              "3c9b6492c7776979a1a2470cc1fca67d"
+            ],
+            "evidence": [
+              {
+                "article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 9
+                },
+                "sentence_sha256": "de60ed9a54d62c9a9db3d35832b104ef17a6f6285987c9a576b0e7b67eb4ac90"
+              },
+              {
+                "article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 15
+                },
+                "sentence_sha256": "d6e05c852833131c899be9e78a796269fc63ec38c5681fd8b9eba2b85d8025e5"
+              }
+            ],
+            "index": 0
+          },
+          {
+            "name": "미국 안보 및 산업 보호 초점",
+            "gist": "수입 드론으로 인한 국가 안보 위협과 해외 공급망에 대한 과도한 의존 문제를 해결하고, 이를 통해 미국 내 산업 기반을 보호하려는 미국의 입장을 중심으로 보도했습니다.",
+            "status": "observed",
+            "outlets": [
+              "조선일보",
+              "경향신문"
+            ],
+            "article_ids": [
+              "4995faaefdeabca7622b5e080b2214f1",
+              "78e517cfcb5c817f67c830f7ac761290"
+            ],
+            "evidence": [
+              {
+                "article_id": "78e517cfcb5c817f67c830f7ac761290",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+              },
+              {
+                "article_id": "4995faaefdeabca7622b5e080b2214f1",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 12
+                },
+                "sentence_sha256": "0aaa0b334d26e1b3e37ceaab66310c3997a09788abf1ed369cc35030b264e377"
+              },
+              {
+                "article_id": "78e517cfcb5c817f67c830f7ac761290",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 11
+                },
+                "sentence_sha256": "d2f8edcad0f08966fb68a828026ba40f55fc8a31358323457d8adf96a76ba88a"
+              }
+            ],
+            "index": 1
+          }
+        ],
+        "terms": [
+          {
+            "term": "무역확장법 232조",
+            "gloss": "특정 수입품이 미국의 국가안보를 위협한다고 판단될 경우, 대통령이 긴급하게 수입을 제한하거나 고율의 관세를 부과할 수 있도록 허용하는 미국 법률 조항입니다.",
+            "status": "observed",
+            "evidence": [
+              {
+                "article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "b6f86d0034754ac89a73073f3fa038ae77b9512fd4275461f18a1ae12d1d0dc7"
+              }
+            ]
+          }
+        ],
+        "fact_rows": [],
+        "split_rows": [],
+        "frame_functions": [],
+        "proof_rows": [],
+        "invocation": {
+          "provider": "vertex_ai",
+          "model": "gemini-2.5-pro",
+          "prompt_version": "event-synthesis-v1.0.0",
+          "attempt": 1,
+          "request_sha256": "03c08efbc41181aeba3930610d57c4eddcf58c02bfcb8c39d0abf67d3f10d0c9",
+          "response_sha256": "d3017c7970398476dce14121df0e79499ce9cd69eda5a3bc15ef70cf931f0edf",
+          "response_id": "2ZSAap39GZGMx9gPkrXbyAg",
+          "completed_at": "2026-08-15T16:34:15.482434+00:00"
+        },
+        "source": "gcp:event-synthesis",
+        "run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b"
+      },
+      "whatHappened": "도널드 트럼프 미국 행정부가 국가 안보를 이유로 수입 드론 및 관련 부품에 최대 100%의 관세를 부과하는 포고문에 서명했습니다. 이 조치는 사실상 중국을 겨냥한 것으로, 한국 등 우방국에는 15%의 차등 관세가 적용됩니다.",
+      "agreedLine": "언론들은 트럼프 미국 행정부가 무역확장법 232조에 근거해 국가 안보 위협을 이유로 수입 드론과 부품에 관세를 부과하기로 했다고 일제히 보도했습니다. 특히 중국산 등에는 최대 100%의 고율 관세를, 한국산에는 15%의 관세를 차등 적용한다는 사실을 공통적으로 전했습니다.",
+      "splitLine": "보도에 따라 강조점에는 차이가 있었는데, 일부 언론은 이번 조치가 세계 드론 시장을 장악한 중국을 견제하려는 의도이며 한국 드론 업계에는 호재가 될 수 있다는 점을 부각했습니다. 반면 다른 언론들은 수입 드론이 야기하는 국가 안보 위협과 해외 공급망에 대한 과도한 의존을 줄여 미국 내 산업 기반을 보호하려는 목적을 더 강조했습니다.",
+      "soWhat": "이번 조치는 미중 기술 경쟁과 보호무역주의가 드론 산업으로까지 확대되었음을 보여줍니다. 중국산 드론에 대한 고율 관세는 한국 기업에게 미국 시장 점유율을 높일 기회가 될 수 있지만, 동시에 미중 갈등 사이에서 한국이 처한 복잡한 상황을 드러내기도 합니다.",
+      "camps": [
+        {
+          "name": "중국 견제 및 한국 업계 호재 강조",
+          "gist": "이번 관세 조치가 세계 드론 시장을 장악한 중국을 견제하기 위한 것이며, 가격 경쟁력을 얻게 된 한국 드론 업계에는 긍정적인 소식이라는 점을 부각하여 보도했습니다.",
+          "outlets": [
+            "KBS 뉴스"
+          ],
+          "article_ids": [
+            "3c9b6492c7776979a1a2470cc1fca67d"
+          ],
+          "evidence": [
+            {
+              "article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "de60ed9a54d62c9a9db3d35832b104ef17a6f6285987c9a576b0e7b67eb4ac90"
+            },
+            {
+              "article_id": "3c9b6492c7776979a1a2470cc1fca67d",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 15
+              },
+              "sentence_sha256": "d6e05c852833131c899be9e78a796269fc63ec38c5681fd8b9eba2b85d8025e5"
+            }
+          ],
+          "index": 0
+        },
+        {
+          "name": "미국 안보 및 산업 보호 초점",
+          "gist": "수입 드론으로 인한 국가 안보 위협과 해외 공급망에 대한 과도한 의존 문제를 해결하고, 이를 통해 미국 내 산업 기반을 보호하려는 미국의 입장을 중심으로 보도했습니다.",
+          "outlets": [
+            "조선일보",
+            "경향신문"
+          ],
+          "article_ids": [
+            "4995faaefdeabca7622b5e080b2214f1",
+            "78e517cfcb5c817f67c830f7ac761290"
+          ],
+          "evidence": [
+            {
+              "article_id": "78e517cfcb5c817f67c830f7ac761290",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+            },
+            {
+              "article_id": "4995faaefdeabca7622b5e080b2214f1",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 12
+              },
+              "sentence_sha256": "0aaa0b334d26e1b3e37ceaab66310c3997a09788abf1ed369cc35030b264e377"
+            },
+            {
+              "article_id": "78e517cfcb5c817f67c830f7ac761290",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 11
+              },
+              "sentence_sha256": "d2f8edcad0f08966fb68a828026ba40f55fc8a31358323457d8adf96a76ba88a"
+            }
+          ],
+          "index": 1
+        }
+      ],
+      "factRows": [],
+      "splitRows": [],
+      "terms": [
+        {
+          "term": "무역확장법 232조",
+          "gloss": "특정 수입품이 미국의 국가안보를 위협한다고 판단될 경우, 대통령이 긴급하게 수입을 제한하거나 고율의 관세를 부과할 수 있도록 허용하는 미국 법률 조항입니다."
+        }
+      ],
+      "frameFunctions": [],
+      "proofRows": [],
+      "source_lens": {
+        "by_outlet": [
+          {
+            "outlet": "KBS 뉴스",
+            "roles": [
+              {
+                "role": "government_official",
+                "role_label": "정부·공공기관",
+                "count": 5
+              },
+              {
+                "role": "political_actor",
+                "role_label": "정당·정치권",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "outlet": "조선일보",
+            "roles": [
+              {
+                "role": "other",
+                "role_label": "기타 취재원",
+                "count": 2
+              },
+              {
+                "role": "government_official",
+                "role_label": "정부·공공기관",
+                "count": 2
+              }
+            ]
+          },
+          {
+            "outlet": "경향신문",
+            "roles": [
+              {
+                "role": "government_official",
+                "role_label": "정부·공공기관",
+                "count": 2
+              }
+            ]
+          }
+        ],
+        "caution": "취재원 구성은 발화 가시성의 관측이지 매체의 의도 판정이 아닙니다."
+      },
+      "not_observed_statements": [
+        "2건은 본문 확보·분석에서 제외되어 종합 근거로 사용하지 않았습니다."
+      ]
+    },
+    "evidence": [
+      {
+        "articleId": "8acc4d51941926f62141996c8bc7e18a",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "48194311f8cee0b5b849f029a6c12dab9428db079cbc2ccb594798359aa5e908"
+      },
+      {
+        "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 8
+        },
+        "sentenceSha256": "e60aef32c970272376334cfa7c33773e7e384e1ed15d85360fc7fee32cee5dee"
+      },
+      {
+        "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 7
+        },
+        "sentenceSha256": "2123083af76d0205fe2d8f2396d7017fd90fd48b9a762b6f5e69346184ed0a35"
+      },
+      {
+        "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "b6f86d0034754ac89a73073f3fa038ae77b9512fd4275461f18a1ae12d1d0dc7"
+      },
+      {
+        "articleId": "78e517cfcb5c817f67c830f7ac761290",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 3
+        },
+        "sentenceSha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+      },
+      {
+        "articleId": "0e85b35d88cd9572dd482415533dbcf1",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 4
+        },
+        "sentenceSha256": "701f53945da9ddb1c456cf30432cbf483588d4112052962def57dda3e8577fe6"
+      },
+      {
+        "articleId": "4995faaefdeabca7622b5e080b2214f1",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 4
+        },
+        "sentenceSha256": "289488fa8776ce88331fd29b9e6adaadb2d7a33cd1d2fd45d8055ea9b31dd9f0"
+      },
+      {
+        "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 9
+        },
+        "sentenceSha256": "de60ed9a54d62c9a9db3d35832b104ef17a6f6285987c9a576b0e7b67eb4ac90"
+      },
+      {
+        "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 15
+        },
+        "sentenceSha256": "d6e05c852833131c899be9e78a796269fc63ec38c5681fd8b9eba2b85d8025e5"
+      },
+      {
+        "articleId": "78e517cfcb5c817f67c830f7ac761290",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 3
+        },
+        "sentenceSha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+      },
+      {
+        "articleId": "4995faaefdeabca7622b5e080b2214f1",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 12
+        },
+        "sentenceSha256": "0aaa0b334d26e1b3e37ceaab66310c3997a09788abf1ed369cc35030b264e377"
+      },
+      {
+        "articleId": "78e517cfcb5c817f67c830f7ac761290",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 11
+        },
+        "sentenceSha256": "d2f8edcad0f08966fb68a828026ba40f55fc8a31358323457d8adf96a76ba88a"
+      },
+      {
+        "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 9
+        },
+        "sentenceSha256": "de60ed9a54d62c9a9db3d35832b104ef17a6f6285987c9a576b0e7b67eb4ac90"
+      },
+      {
+        "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 15
+        },
+        "sentenceSha256": "d6e05c852833131c899be9e78a796269fc63ec38c5681fd8b9eba2b85d8025e5"
+      },
+      {
+        "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 9
+        },
+        "sentenceSha256": "de60ed9a54d62c9a9db3d35832b104ef17a6f6285987c9a576b0e7b67eb4ac90"
+      },
+      {
+        "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 15
+        },
+        "sentenceSha256": "d6e05c852833131c899be9e78a796269fc63ec38c5681fd8b9eba2b85d8025e5"
+      },
+      {
+        "articleId": "78e517cfcb5c817f67c830f7ac761290",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 3
+        },
+        "sentenceSha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+      },
+      {
+        "articleId": "4995faaefdeabca7622b5e080b2214f1",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 12
+        },
+        "sentenceSha256": "0aaa0b334d26e1b3e37ceaab66310c3997a09788abf1ed369cc35030b264e377"
+      },
+      {
+        "articleId": "78e517cfcb5c817f67c830f7ac761290",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 11
+        },
+        "sentenceSha256": "d2f8edcad0f08966fb68a828026ba40f55fc8a31358323457d8adf96a76ba88a"
+      },
+      {
+        "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "b6f86d0034754ac89a73073f3fa038ae77b9512fd4275461f18a1ae12d1d0dc7"
+      },
+      {
+        "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 9
+        },
+        "sentenceSha256": "de60ed9a54d62c9a9db3d35832b104ef17a6f6285987c9a576b0e7b67eb4ac90"
+      },
+      {
+        "articleId": "3c9b6492c7776979a1a2470cc1fca67d",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 15
+        },
+        "sentenceSha256": "d6e05c852833131c899be9e78a796269fc63ec38c5681fd8b9eba2b85d8025e5"
+      },
+      {
+        "articleId": "78e517cfcb5c817f67c830f7ac761290",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 3
+        },
+        "sentenceSha256": "f096fe689ba36ecac4d3ae9500834df64bd61959de03299c54ad9e478c1604ad"
+      },
+      {
+        "articleId": "4995faaefdeabca7622b5e080b2214f1",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 12
+        },
+        "sentenceSha256": "0aaa0b334d26e1b3e37ceaab66310c3997a09788abf1ed369cc35030b264e377"
+      },
+      {
+        "articleId": "78e517cfcb5c817f67c830f7ac761290",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 11
+        },
+        "sentenceSha256": "d2f8edcad0f08966fb68a828026ba40f55fc8a31358323457d8adf96a76ba88a"
+      }
+    ]
   },
   "lineage": {
     "contractVersion": "agendaframe.initial-five.public.v1",
@@ -171,8 +3265,13 @@
       "top5GeneratedAt": null,
       "metadataSchemaVersion": "agendaframe.metadata-issue-cluster.v1",
       "metadataGeneratedAt": null,
-      "semanticDirectory": "pending-vertex",
-      "semanticFileCount": 0
-    }
+      "semanticDirectory": "current-display-batch/f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+      "semanticFileCount": 5,
+      "semanticBatchModel": "gemini-2.5-pro",
+      "semanticBatchPromptVersion": "2.6.0",
+      "eventSynthesisPromptVersion": "event-synthesis-v1.0.0"
+    },
+    "runId": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+    "analysisBoundary": "current Vercel display articles only; collection/ranking/scheduler untouched"
   }
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "agendaframe.initial-five.public.v1",
   "basisDate": "2026-08-15",
-  "status": "review_needed",
+  "status": "succeeded",
   "issue": {
     "issueId": "live-2026-08-15-top-4",
     "rank": 4,
@@ -19,7 +19,7 @@
     }
   },
   "analysisStatus": {
-    "state": "review_needed",
+    "state": "succeeded",
     "cluster": {
       "label": "complete_link",
       "engineLabel": "complete_link",
@@ -35,17 +35,17 @@
       "summary": "3개 언론사의 관련 제목 7건을 사건 인물·행위와 제목 유사도를 함께 확인해 묶었습니다."
     },
     "semantic": {
-      "status": "review_needed",
-      "engineLabel": "unverified",
-      "semanticAi": false,
-      "model": null,
-      "promptVersion": null,
+      "status": "succeeded",
+      "engineLabel": "ai_semantic",
+      "semanticAi": true,
+      "model": "gemini-2.5-pro",
+      "promptVersion": "2.6.0",
       "schemaVersion": "agendaframe.article-frame-profile.v2",
-      "source": "pending-vertex",
-      "succeededArticleCount": 0,
-      "reviewNeededArticleCount": 7,
-      "requiresHumanReview": true,
-      "fallbackReason": "no_private_body_for_locator_recheck"
+      "source": "gcp:vertex:current-display-batch",
+      "articleCount": 7,
+      "succeededArticleCount": 7,
+      "reviewNeededArticleCount": 0,
+      "requiresHumanReview": true
     }
   },
   "clusterAi": {
@@ -66,7 +66,9 @@
       "mediaGroupId": "kbs_group",
       "canonicalUrl": "https://news.kbs.co.kr/news/view.do?ncd=8637875",
       "publishedAt": "2026-08-14T21:25:11.000Z",
-      "section": "pending"
+      "section": "pending",
+      "bodySha256": "24c0df46e77d4236a13a509f47a5471aa956f1df5b4052d8b4032679fe838774",
+      "issueId": "live-2026-08-15-top-4"
     },
     {
       "articleId": "c57759f3430ff2ba3b34d53beea4361c",
@@ -78,7 +80,9 @@
       "mediaGroupId": "khan_group",
       "canonicalUrl": "https://www.khan.co.kr/article/202608141317001/",
       "publishedAt": "2026-08-14T04:17:00.000Z",
-      "section": "society"
+      "section": "society",
+      "bodySha256": "695ecd6832fc029060a283b96247784cc1ac2b4dcdd3836915050da4993d8e7d",
+      "issueId": "live-2026-08-15-top-4"
     },
     {
       "articleId": "ddb9e9e8f42a256fe89cddacac6b07ed",
@@ -90,7 +94,9 @@
       "mediaGroupId": "kbs_group",
       "canonicalUrl": "https://news.kbs.co.kr/news/view.do?ncd=8637801",
       "publishedAt": "2026-08-14T14:31:37.000Z",
-      "section": "pending"
+      "section": "pending",
+      "bodySha256": "2c6ca72c00504a0684b563f8530073e4262253d3e96d44a7c89475606ba6c552",
+      "issueId": "live-2026-08-15-top-4"
     },
     {
       "articleId": "e30d243a5d4270edb92633bbb97c7d7d",
@@ -102,7 +108,9 @@
       "mediaGroupId": "donga_group",
       "canonicalUrl": "https://www.donga.com/news/Society/article/all/20260814/134482312/2",
       "publishedAt": "2026-08-14T16:40:00.000Z",
-      "section": "society"
+      "section": "society",
+      "bodySha256": "175e0d11836929fd40a80a3ec9ad678823748b0183e62336069595f288c8b015",
+      "issueId": "live-2026-08-15-top-4"
     },
     {
       "articleId": "e96ef63a6c796aa045fd477f7c9bdecb",
@@ -114,7 +122,9 @@
       "mediaGroupId": "kbs_group",
       "canonicalUrl": "https://news.kbs.co.kr/news/view.do?ncd=8637605",
       "publishedAt": "2026-08-14T12:22:02.000Z",
-      "section": "pending"
+      "section": "pending",
+      "bodySha256": "a0253d0e673287f5338ebf678411b95475c63428c20cbb753e52a55c0c90c76d",
+      "issueId": "live-2026-08-15-top-4"
     },
     {
       "articleId": "ed63b88a3b0f6f86d03897c51bb0efec",
@@ -126,7 +136,9 @@
       "mediaGroupId": "donga_group",
       "canonicalUrl": "https://www.donga.com/news/Society/article/all/20260814/134478156/1",
       "publishedAt": "2026-08-14T03:53:00.000Z",
-      "section": "society"
+      "section": "society",
+      "bodySha256": "1b837b7d35bac62b99be2d388b7a0e76e368e4b721ecefbf97d7fabdfe133b9c",
+      "issueId": "live-2026-08-15-top-4"
     },
     {
       "articleId": "f6cadcf80e81288414da6c6b584d530e",
@@ -138,27 +150,3027 @@
       "mediaGroupId": "kbs_group",
       "canonicalUrl": "https://news.kbs.co.kr/news/view.do?ncd=8637909",
       "publishedAt": "2026-08-14T22:20:15.000Z",
-      "section": "pending"
+      "section": "pending",
+      "bodySha256": "650ec8a1470f18306385f86e25f22aa9d615f89094d35dff1baa1a87d97390b0",
+      "issueId": "live-2026-08-15-top-4"
     }
   ],
-  "semanticProfiles": [],
+  "semanticProfiles": [
+    {
+      "articleId": "05c96c1435646cb8b2083c8dade2c546",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "05c96c1435646cb8b2083c8dade2c546",
+        "evidenceCount": 10,
+        "bodySha256": "24c0df46e77d4236a13a509f47a5471aa956f1df5b4052d8b4032679fe838774",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "05c96c1435646cb8b2083c8dade2c546",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "ddd7e194a4dd313491bf25cc5ad5921a920193cb680d5329b2b76966cd018bfd"
+        },
+        {
+          "articleId": "05c96c1435646cb8b2083c8dade2c546",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 14
+          },
+          "sentenceSha256": "bc1cb0e8b9042f146a78aa46d915e29f25d8b0d1b0d3ed7c7f2032494dd61f11"
+        },
+        {
+          "articleId": "05c96c1435646cb8b2083c8dade2c546",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 9
+          },
+          "sentenceSha256": "554c2f8977abc72afa215e372b93feb06cb81f8d0106f66e537359683324c2fb"
+        },
+        {
+          "articleId": "05c96c1435646cb8b2083c8dade2c546",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "c47d81bf3c42ff0cbd90586e8ede7c9c1192387309ba25724c8f856def6d4331"
+        },
+        {
+          "articleId": "05c96c1435646cb8b2083c8dade2c546",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "79539721773245d5f71f99434726587b76c35d6bb116901e60cb5d6cee1430a2"
+        },
+        {
+          "articleId": "05c96c1435646cb8b2083c8dade2c546",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "07bb4c8faf0d37fbf53cbdd813a95a27203832a470835795fcc389e5c9faca2e"
+        },
+        {
+          "articleId": "05c96c1435646cb8b2083c8dade2c546",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "f155049cc4c8bb62344147855e0ce5dc8f181e6f9649eaffd35436a2ce666af1"
+        },
+        {
+          "articleId": "05c96c1435646cb8b2083c8dade2c546",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 13
+          },
+          "sentenceSha256": "3d97be15f2142d454e892dd964ce07b5a9ffef42fcf1874804872f2b8e5bd372"
+        },
+        {
+          "articleId": "05c96c1435646cb8b2083c8dade2c546",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 10
+          },
+          "sentenceSha256": "628124b13ffd9ca625777c615ef8709c8283b13c8918be872eec50317efa84d4"
+        },
+        {
+          "articleId": "05c96c1435646cb8b2083c8dade2c546",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "df243690cee24a4132682b19ff552b6fe027a048c6d0d8fa258feba370e6f81a"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "f42d91bae079615bf4f2547b79093b5a37528b60ca776ce5ed33329c20ee7613",
+            "response_sha256": "a6bd02f54fc566d18706ec06a17fe887c9a8c1e4a408594066c4a07709cc85de",
+            "response_id": "k5SAau7DNvSTx9gPz5Tr8QM",
+            "completed_at": "2026-08-15T16:32:50.620295+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "f42d91bae079615bf4f2547b79093b5a37528b60ca776ce5ed33329c20ee7613",
+            "response_sha256": "a6bd02f54fc566d18706ec06a17fe887c9a8c1e4a408594066c4a07709cc85de",
+            "response_id": "k5SAau7DNvSTx9gPz5Tr8QM",
+            "completed_at": "2026-08-15T16:32:50.620295+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "05c96c1435646cb8b2083c8dade2c546",
+          "upstream_article_id": "05c96c1435646cb8b2083c8dade2c546",
+          "published_at": "2026-08-14T21:25:11+00:00",
+          "title_sha256": "d15f49080db364e4c548bfe398b4473a4bd6115da8a158eac15acadd5c25b271",
+          "body_sha256": "24c0df46e77d4236a13a509f47a5471aa956f1df5b4052d8b4032679fe838774",
+          "body_character_count": 2714,
+          "body_word_count": 587,
+          "paragraph_count": 1,
+          "sentence_count": 33
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 2714,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "ddd7e194a4dd313491bf25cc5ad5921a920193cb680d5329b2b76966cd018bfd"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 14
+              },
+              "sentence_sha256": "bc1cb0e8b9042f146a78aa46d915e29f25d8b0d1b0d3ed7c7f2032494dd61f11"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:bb916adcd0135b92a0fcfbd1ad3e66446b6e84ad1ebb4e1f9cfa9c8cffc6bfaf",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "legislature_politics",
+                "variant_key": "semantic:responsibility_attribution:family:legislature_politics",
+                "public_paraphrase": "2차 종합특검은 당시 영장 집행 방해를 주도한 국민의힘 나경원, 김기현, 윤상현, 권영진 의원에게 책임이 있다고 보고 재판에 넘겼다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "554c2f8977abc72afa215e372b93feb06cb81f8d0106f66e537359683324c2fb"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:555934d5722693b262d42d87e2be3fb52ea30d725be691a4b356bbe2550540e2",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "기소된 의원들은 특검팀을 법왜곡죄로 고소하는 방안을 검토하고 있다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 14
+                  },
+                  "sentence_sha256": "bc1cb0e8b9042f146a78aa46d915e29f25d8b0d1b0d3ed7c7f2032494dd61f11"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:0ffe09dd94430e308d5a3c4bcc8c90b56dcaa6e3d737662e3df1afe033850053",
+            "role": "political_actor",
+            "role_label": "정당·정치권",
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "c47d81bf3c42ff0cbd90586e8ede7c9c1192387309ba25724c8f856def6d4331"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 9
+                },
+                "sentence_sha256": "554c2f8977abc72afa215e372b93feb06cb81f8d0106f66e537359683324c2fb"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "79539721773245d5f71f99434726587b76c35d6bb116901e60cb5d6cee1430a2"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "07bb4c8faf0d37fbf53cbdd813a95a27203832a470835795fcc389e5c9faca2e"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "79539721773245d5f71f99434726587b76c35d6bb116901e60cb5d6cee1430a2"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 9
+              },
+              "sentence_sha256": "554c2f8977abc72afa215e372b93feb06cb81f8d0106f66e537359683324c2fb"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "conflict",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "f155049cc4c8bb62344147855e0ce5dc8f181e6f9649eaffd35436a2ce666af1"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 13
+                  },
+                  "sentence_sha256": "3d97be15f2142d454e892dd964ce07b5a9ffef42fcf1874804872f2b8e5bd372"
+                }
+              ]
+            },
+            {
+              "code": "responsibility",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "554c2f8977abc72afa215e372b93feb06cb81f8d0106f66e537359683324c2fb"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 10
+                  },
+                  "sentence_sha256": "628124b13ffd9ca625777c615ef8709c8283b13c8918be872eec50317efa84d4"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "legality",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "79539721773245d5f71f99434726587b76c35d6bb116901e60cb5d6cee1430a2"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 10
+                  },
+                  "sentence_sha256": "628124b13ffd9ca625777c615ef8709c8283b13c8918be872eec50317efa84d4"
+                }
+              ]
+            },
+            {
+              "code": "political",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "f155049cc4c8bb62344147855e0ce5dc8f181e6f9649eaffd35436a2ce666af1"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 13
+                  },
+                  "sentence_sha256": "3d97be15f2142d454e892dd964ce07b5a9ffef42fcf1874804872f2b8e5bd372"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "df243690cee24a4132682b19ff552b6fe027a048c6d0d8fa258feba370e6f81a"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "evaluative_label",
+            "label": "'좀비 특검'의 정치 난동",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 13
+                },
+                "sentence_sha256": "3d97be15f2142d454e892dd964ce07b5a9ffef42fcf1874804872f2b8e5bd372"
+              }
+            ],
+            "appears_in_lead": false
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "aaafbe7077293428f950c68ca19c5b7bd5342328fd925056be1ac46e98166892",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "c57759f3430ff2ba3b34d53beea4361c",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "c57759f3430ff2ba3b34d53beea4361c",
+        "evidenceCount": 5,
+        "bodySha256": "695ecd6832fc029060a283b96247784cc1ac2b4dcdd3836915050da4993d8e7d",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "c57759f3430ff2ba3b34d53beea4361c",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "e8b0ee5fba167c4ac581959fba1141b6eb160199a235d98a3f54384da738f002"
+        },
+        {
+          "articleId": "c57759f3430ff2ba3b34d53beea4361c",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "2130901caee89c82eef0d0561ee6bf57c523ae50d962e52f94663cd1a6cc39b6"
+        },
+        {
+          "articleId": "c57759f3430ff2ba3b34d53beea4361c",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "6fc4a017dbd4b72aedef5975599cc0f3af363330e3d3aa3eb45686b72f2e97a4"
+        },
+        {
+          "articleId": "c57759f3430ff2ba3b34d53beea4361c",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "5e59b7f6cf1444b516c3424885fad73259f14fcd74920f41a2e1b6f3cb9d6855"
+        },
+        {
+          "articleId": "c57759f3430ff2ba3b34d53beea4361c",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "82707357ac9040c4c5ab0a2bcffb68feb0e3e6b78bd7cba5fd22359e812693a0"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "28c6d468dc997d743919d0d6ac7cfe7114da6d7202de5c60a6a5431d0bba3958",
+            "response_sha256": "c5db1c7f6e3c3702a12130bd4fbd87ad9ac261ef1352c26c2ad652f0ef0cfc43",
+            "response_id": "lZSAaofgEPOKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:32:52.602208+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "28c6d468dc997d743919d0d6ac7cfe7114da6d7202de5c60a6a5431d0bba3958",
+            "response_sha256": "c5db1c7f6e3c3702a12130bd4fbd87ad9ac261ef1352c26c2ad652f0ef0cfc43",
+            "response_id": "lZSAaofgEPOKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:32:52.602208+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "c57759f3430ff2ba3b34d53beea4361c",
+          "upstream_article_id": "c57759f3430ff2ba3b34d53beea4361c",
+          "published_at": "2026-08-14T04:17:00+00:00",
+          "title_sha256": "877ee1c8b7515616a66f89dad60167d3e5918d35faaf703bb00cd3796a9d6d98",
+          "body_sha256": "695ecd6832fc029060a283b96247784cc1ac2b4dcdd3836915050da4993d8e7d",
+          "body_character_count": 1159,
+          "body_word_count": 278,
+          "paragraph_count": 1,
+          "sentence_count": 10
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 1159,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "e8b0ee5fba167c4ac581959fba1141b6eb160199a235d98a3f54384da738f002"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "2130901caee89c82eef0d0561ee6bf57c523ae50d962e52f94663cd1a6cc39b6"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:bb7f9286794cdc6395949ef62b4e17891ee15e69e608157199dc6ec83ff6ec32",
+                "code": "semantic_problem_definition",
+                "frame_family": "legal_institutional",
+                "variant_key": "semantic:problem_definition:family:legal_institutional",
+                "public_paraphrase": "국민의힘 의원 4명이 윤석열 전 대통령에 대한 체포영장 집행을 방해한 혐의(특수공무집행방해)로 기소되었다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "e8b0ee5fba167c4ac581959fba1141b6eb160199a235d98a3f54384da738f002"
+                }
+              },
+              {
+                "claim_id": "claim:bb7f9286794cdc6395949ef62b4e17891ee15e69e608157199dc6ec83ff6ec32",
+                "code": "semantic_problem_definition",
+                "frame_family": "legal_institutional",
+                "variant_key": "semantic:problem_definition:family:legal_institutional",
+                "public_paraphrase": "국민의힘 의원 4명이 윤석열 전 대통령에 대한 체포영장 집행을 방해한 혐의(특수공무집행방해)로 기소되었다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "2130901caee89c82eef0d0561ee6bf57c523ae50d962e52f94663cd1a6cc39b6"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "source_attributed",
+            "model_status": "supported",
+            "outlet_narration_observed": false,
+            "items": [
+              {
+                "claim_id": "claim:773af0fb468fee64e6183d528e2b5323d8a67314cdce5256ff36ceea238aabb2",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "individual_action",
+                "variant_key": "semantic:causal_interpretation:family:individual_action",
+                "public_paraphrase": "피고인들이 다수의 사람과 함께 인간벽을 형성해 관저 진입을 저지하는 등 영장 집행을 현실적으로 방해했다.",
+                "voice": {
+                  "kind": "indirect_source",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "6fc4a017dbd4b72aedef5975599cc0f3af363330e3d3aa3eb45686b72f2e97a4"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:5623996b323fc7038532d9d8a248c52da30fa3bb1f4c355c4ef7d1cf44f187e7",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "특검은 특수공무집행방해 혐의로 관련 의원들을 불구속 기소했다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "2130901caee89c82eef0d0561ee6bf57c523ae50d962e52f94663cd1a6cc39b6"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:2b089de02a97e95b1490c49139ffd8bfc02340e61e48bc21a223d9a9b5f1438e",
+            "role": "judiciary_law_enforcement",
+            "role_label": "법조·수사기관",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "2130901caee89c82eef0d0561ee6bf57c523ae50d962e52f94663cd1a6cc39b6"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "6fc4a017dbd4b72aedef5975599cc0f3af363330e3d3aa3eb45686b72f2e97a4"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "e8b0ee5fba167c4ac581959fba1141b6eb160199a235d98a3f54384da738f002"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "2130901caee89c82eef0d0561ee6bf57c523ae50d962e52f94663cd1a6cc39b6"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "e8b0ee5fba167c4ac581959fba1141b6eb160199a235d98a3f54384da738f002"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "2130901caee89c82eef0d0561ee6bf57c523ae50d962e52f94663cd1a6cc39b6"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "responsibility",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "e8b0ee5fba167c4ac581959fba1141b6eb160199a235d98a3f54384da738f002"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "2130901caee89c82eef0d0561ee6bf57c523ae50d962e52f94663cd1a6cc39b6"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "legality",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "2130901caee89c82eef0d0561ee6bf57c523ae50d962e52f94663cd1a6cc39b6"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 4
+                  },
+                  "sentence_sha256": "5e59b7f6cf1444b516c3424885fad73259f14fcd74920f41a2e1b6f3cb9d6855"
+                }
+              ]
+            },
+            {
+              "code": "crime_punishment",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "2130901caee89c82eef0d0561ee6bf57c523ae50d962e52f94663cd1a6cc39b6"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "82707357ac9040c4c5ab0a2bcffb68feb0e3e6b78bd7cba5fd22359e812693a0"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "causal_link",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "6fc4a017dbd4b72aedef5975599cc0f3af363330e3d3aa3eb45686b72f2e97a4"
+              }
+            ],
+            "appears_in_lead": false
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "42cfa56b7c72f594c4ebfc733706272180ba75454a9813a714d2257b30ee753f",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "ddb9e9e8f42a256fe89cddacac6b07ed",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "ddb9e9e8f42a256fe89cddacac6b07ed",
+        "evidenceCount": 8,
+        "bodySha256": "2c6ca72c00504a0684b563f8530073e4262253d3e96d44a7c89475606ba6c552",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "ddb9e9e8f42a256fe89cddacac6b07ed",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "b27c76920d363e84daab183c648ccc3f2fc3cdc14b633abb66393e93c4ee0332"
+        },
+        {
+          "articleId": "ddb9e9e8f42a256fe89cddacac6b07ed",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 8
+          },
+          "sentenceSha256": "322caef0c3381185f6762a20db7ee4c493aaf5a91aff478da97dec42ae8a2d0c"
+        },
+        {
+          "articleId": "ddb9e9e8f42a256fe89cddacac6b07ed",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 13
+          },
+          "sentenceSha256": "f924e6eda2c400476f1c5757d65565e3c2ff57b2ebc612e77bdaf16d7856a378"
+        },
+        {
+          "articleId": "ddb9e9e8f42a256fe89cddacac6b07ed",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 9
+          },
+          "sentenceSha256": "82f90cce1aefd2d72cc6552b38817a0c3648f93c048c95ae3cf675cf46a08404"
+        },
+        {
+          "articleId": "ddb9e9e8f42a256fe89cddacac6b07ed",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "26d032ebe695c5bbb79126b31cdb88e1303ec20eb54b1b4a717f65c3ac567fb8"
+        },
+        {
+          "articleId": "ddb9e9e8f42a256fe89cddacac6b07ed",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "6961c1793b66060e1954253a15571b1ee51426f07138ecbcd612b7a490e6d2d9"
+        },
+        {
+          "articleId": "ddb9e9e8f42a256fe89cddacac6b07ed",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "9494c9379717896b453a72d2d5ef0dcf6c2446233bec9e5472b64be4d74df588"
+        },
+        {
+          "articleId": "ddb9e9e8f42a256fe89cddacac6b07ed",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "3310db2e3de7aa0216b10cf40d6f6c97856735a78f6c785c2552d0d0e8b4c993"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "c88a50146bb2570a2313bb6e92611bef2b51de0f035839fe44f9b3c6f9424be3",
+            "response_sha256": "4a20498a6390da91ea87a5303c9e0a573bf7a0526883c63f04f91fd11f49229f",
+            "response_id": "mJSAar_jOfOKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:32:54.415163+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "c88a50146bb2570a2313bb6e92611bef2b51de0f035839fe44f9b3c6f9424be3",
+            "response_sha256": "4a20498a6390da91ea87a5303c9e0a573bf7a0526883c63f04f91fd11f49229f",
+            "response_id": "mJSAar_jOfOKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:32:54.415163+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "ddb9e9e8f42a256fe89cddacac6b07ed",
+          "upstream_article_id": "ddb9e9e8f42a256fe89cddacac6b07ed",
+          "published_at": "2026-08-14T14:31:37+00:00",
+          "title_sha256": "284c97362dd280b11f96dfec6404a7716b91934dabb2e4ef3fffea445c0da53e",
+          "body_sha256": "2c6ca72c00504a0684b563f8530073e4262253d3e96d44a7c89475606ba6c552",
+          "body_character_count": 2712,
+          "body_word_count": 584,
+          "paragraph_count": 1,
+          "sentence_count": 33
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 2712,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "b27c76920d363e84daab183c648ccc3f2fc3cdc14b633abb66393e93c4ee0332"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:1aa1475230770e5f95d08fe8149c849e54ad3cf82ff06f8ed1c45176d1ae2f98",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "legislature_politics",
+                "variant_key": "semantic:responsibility_attribution:family:legislature_politics",
+                "public_paraphrase": "2차 종합특검은 체포 시도를 주도한 국민의힘 나경원, 김기현, 윤상현, 권영진 의원에게 책임이 있다고 보고 재판에 넘겼다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "322caef0c3381185f6762a20db7ee4c493aaf5a91aff478da97dec42ae8a2d0c"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:b0a803c102ffcde27fee9c44d15815a37bdddd2efaf71b7660529a5d5183c10e",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "기소된 의원들은 특검팀을 법왜곡죄로 고소하는 방안을 검토하고 있다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 13
+                  },
+                  "sentence_sha256": "f924e6eda2c400476f1c5757d65565e3c2ff57b2ebc612e77bdaf16d7856a378"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:5ffe59c5cdf3e077c65fa58634399951e66b70c109c0ea110e0c8ba3aab12c3f",
+            "role": "other",
+            "role_label": "기타 취재원",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 8
+                },
+                "sentence_sha256": "322caef0c3381185f6762a20db7ee4c493aaf5a91aff478da97dec42ae8a2d0c"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 9
+                },
+                "sentence_sha256": "82f90cce1aefd2d72cc6552b38817a0c3648f93c048c95ae3cf675cf46a08404"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "26d032ebe695c5bbb79126b31cdb88e1303ec20eb54b1b4a717f65c3ac567fb8"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "6961c1793b66060e1954253a15571b1ee51426f07138ecbcd612b7a490e6d2d9"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "26d032ebe695c5bbb79126b31cdb88e1303ec20eb54b1b4a717f65c3ac567fb8"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "322caef0c3381185f6762a20db7ee4c493aaf5a91aff478da97dec42ae8a2d0c"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "conflict",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "82f90cce1aefd2d72cc6552b38817a0c3648f93c048c95ae3cf675cf46a08404"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "9494c9379717896b453a72d2d5ef0dcf6c2446233bec9e5472b64be4d74df588"
+                }
+              ]
+            },
+            {
+              "code": "responsibility",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "322caef0c3381185f6762a20db7ee4c493aaf5a91aff478da97dec42ae8a2d0c"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "82f90cce1aefd2d72cc6552b38817a0c3648f93c048c95ae3cf675cf46a08404"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "legality",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "26d032ebe695c5bbb79126b31cdb88e1303ec20eb54b1b4a717f65c3ac567fb8"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "82f90cce1aefd2d72cc6552b38817a0c3648f93c048c95ae3cf675cf46a08404"
+                }
+              ]
+            },
+            {
+              "code": "political",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "322caef0c3381185f6762a20db7ee4c493aaf5a91aff478da97dec42ae8a2d0c"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "9494c9379717896b453a72d2d5ef0dcf6c2446233bec9e5472b64be4d74df588"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "3310db2e3de7aa0216b10cf40d6f6c97856735a78f6c785c2552d0d0e8b4c993"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "evaluative_label",
+            "label": "'좀비 특검', '정치 난동'",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 12
+                },
+                "sentence_sha256": "9494c9379717896b453a72d2d5ef0dcf6c2446233bec9e5472b64be4d74df588"
+              }
+            ],
+            "appears_in_lead": false
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "c51892fcf3facef8d0f90cf08878bdf0d1beef4a23409df40e84b6e6b131bbe8",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "e30d243a5d4270edb92633bbb97c7d7d",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "e30d243a5d4270edb92633bbb97c7d7d",
+        "evidenceCount": 4,
+        "bodySha256": "175e0d11836929fd40a80a3ec9ad678823748b0183e62336069595f288c8b015",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "e30d243a5d4270edb92633bbb97c7d7d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 5
+          },
+          "sentenceSha256": "8a10d96830a94545755e7221e14a5d0b790f9c4cb755bea07fe726cf839848bc"
+        },
+        {
+          "articleId": "e30d243a5d4270edb92633bbb97c7d7d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 7
+          },
+          "sentenceSha256": "74d7da1f9ebfad108c0a62968371d165d94df26a4e8c71cee236f5047f33686b"
+        },
+        {
+          "articleId": "e30d243a5d4270edb92633bbb97c7d7d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 8
+          },
+          "sentenceSha256": "e1b101575908be93a4a10ee6e42707904ca590250e890fdc975f2de1cebb50f9"
+        },
+        {
+          "articleId": "e30d243a5d4270edb92633bbb97c7d7d",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "9b1e3da485d235662f1baefdc85059dc757fa78067404964a40ee4b2bf4a1bb7"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "d86cf678f5048fb467a5010b6fbe79751c6f86c8c61fe9f8f3d2339ad47f36f4",
+            "response_sha256": "8d4d4a9c550611db9bf8416671dddc6fcf6250fe66bd35891ad2f452da795ea5",
+            "response_id": "m5SAasGrLuaLx9gPrfyDoQc",
+            "completed_at": "2026-08-15T16:32:55.458730+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "d86cf678f5048fb467a5010b6fbe79751c6f86c8c61fe9f8f3d2339ad47f36f4",
+            "response_sha256": "8d4d4a9c550611db9bf8416671dddc6fcf6250fe66bd35891ad2f452da795ea5",
+            "response_id": "m5SAasGrLuaLx9gPrfyDoQc",
+            "completed_at": "2026-08-15T16:32:55.458730+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "e30d243a5d4270edb92633bbb97c7d7d",
+          "upstream_article_id": "e30d243a5d4270edb92633bbb97c7d7d",
+          "published_at": "2026-08-14T16:40:00+00:00",
+          "title_sha256": "ae517a2147116258178206061b09cd595d0e77b94ea4ded17fb8540030e3fa5e",
+          "body_sha256": "175e0d11836929fd40a80a3ec9ad678823748b0183e62336069595f288c8b015",
+          "body_character_count": 3249,
+          "body_word_count": 758,
+          "paragraph_count": 1,
+          "sentence_count": 19
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 3249,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "8a10d96830a94545755e7221e14a5d0b790f9c4cb755bea07fe726cf839848bc"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 7
+              },
+              "sentence_sha256": "74d7da1f9ebfad108c0a62968371d165d94df26a4e8c71cee236f5047f33686b"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:c7a2c86b234a3adcd60abda597f9c678d1e3d1487f6b6e5a009da655edd0c6a7",
+                "code": "semantic_problem_definition",
+                "frame_family": "legal_institutional",
+                "variant_key": "semantic:problem_definition:family:legal_institutional",
+                "public_paraphrase": "국민의힘 의원 4명이 윤석열 전 대통령에 대한 체포영장 집행을 방해한 혐의(특수공무집행방해)로 기소되었다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 5
+                  },
+                  "sentence_sha256": "8a10d96830a94545755e7221e14a5d0b790f9c4cb755bea07fe726cf839848bc"
+                }
+              },
+              {
+                "claim_id": "claim:c7a2c86b234a3adcd60abda597f9c678d1e3d1487f6b6e5a009da655edd0c6a7",
+                "code": "semantic_problem_definition",
+                "frame_family": "legal_institutional",
+                "variant_key": "semantic:problem_definition:family:legal_institutional",
+                "public_paraphrase": "국민의힘 의원 4명이 윤석열 전 대통령에 대한 체포영장 집행을 방해한 혐의(특수공무집행방해)로 기소되었다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "e1b101575908be93a4a10ee6e42707904ca590250e890fdc975f2de1cebb50f9"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:00a1c19ebc08f88de78f4bc5615d251c07ed2ef28eb52b983a01d6ce6755e9c4",
+            "role": "other",
+            "role_label": "기타 취재원",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 5
+                },
+                "sentence_sha256": "8a10d96830a94545755e7221e14a5d0b790f9c4cb755bea07fe726cf839848bc"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 7
+                },
+                "sentence_sha256": "74d7da1f9ebfad108c0a62968371d165d94df26a4e8c71cee236f5047f33686b"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "9b1e3da485d235662f1baefdc85059dc757fa78067404964a40ee4b2bf4a1bb7"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "8a10d96830a94545755e7221e14a5d0b790f9c4cb755bea07fe726cf839848bc"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "e1b101575908be93a4a10ee6e42707904ca590250e890fdc975f2de1cebb50f9"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [
+            {
+              "code": "crime_punishment",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 5
+                  },
+                  "sentence_sha256": "8a10d96830a94545755e7221e14a5d0b790f9c4cb755bea07fe726cf839848bc"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 7
+                  },
+                  "sentence_sha256": "74d7da1f9ebfad108c0a62968371d165d94df26a4e8c71cee236f5047f33686b"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 5
+                },
+                "sentence_sha256": "8a10d96830a94545755e7221e14a5d0b790f9c4cb755bea07fe726cf839848bc"
+              }
+            ],
+            "appears_in_lead": true
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "d5ea1e55e38592e7e6c742e14379c939cb4cf4f5f8f0316205991954fc3ec20e",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "e96ef63a6c796aa045fd477f7c9bdecb",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "e96ef63a6c796aa045fd477f7c9bdecb",
+        "evidenceCount": 9,
+        "bodySha256": "a0253d0e673287f5338ebf678411b95475c63428c20cbb753e52a55c0c90c76d",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "e96ef63a6c796aa045fd477f7c9bdecb",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "2860c63dd0642261ef80433f7d004036e66c693c140d2cfe50bd95ebaa780d0a"
+        },
+        {
+          "articleId": "e96ef63a6c796aa045fd477f7c9bdecb",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "c3d2d313f183ba3fc6e9a85bd893aa8ebde145e9c1618010cc8ed3ac380911a9"
+        },
+        {
+          "articleId": "e96ef63a6c796aa045fd477f7c9bdecb",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 8
+          },
+          "sentenceSha256": "5f5d54a1bcc28c473712aeba091938b9e320dccb79ae35a0b562bd3e07801ed5"
+        },
+        {
+          "articleId": "e96ef63a6c796aa045fd477f7c9bdecb",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 13
+          },
+          "sentenceSha256": "e48d63b3088e6e2b0a778f48369d130486ea42421d0306a72c827344aec5ed90"
+        },
+        {
+          "articleId": "e96ef63a6c796aa045fd477f7c9bdecb",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 5
+          },
+          "sentenceSha256": "66d367431057bd1004227e929b609bbcbc9a2dab82a00ec5341e181d72cee48e"
+        },
+        {
+          "articleId": "e96ef63a6c796aa045fd477f7c9bdecb",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "1c511bdf7193d35db1f2bb115aa18d3afd65a254e26b6ba35d9a8e2bb8caf7bf"
+        },
+        {
+          "articleId": "e96ef63a6c796aa045fd477f7c9bdecb",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 9
+          },
+          "sentenceSha256": "583ec99edd292065b1de46eacb2a1f8b54418d8ef80a4221d34d99242ea623ad"
+        },
+        {
+          "articleId": "e96ef63a6c796aa045fd477f7c9bdecb",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "630b15ee158be412ed7fe56f4cd4a3246fc056e91096e38b755febe2d7ea4f44"
+        },
+        {
+          "articleId": "e96ef63a6c796aa045fd477f7c9bdecb",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "9f9e4bd31c6d930ef8aeb37f5c6aff6a16bb2e70f65b9b052df1f13d240edde2"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "7601e210d19680cf42c8093558556490203848086d0e4eb3cb26513f225f556d",
+            "response_sha256": "9f8315acf7d51bdf52190d0f3e960c27ab91ae94f132b00f602d56a58134ce91",
+            "response_id": "nJSAatrfHZGMx9gPkrXbyAg",
+            "completed_at": "2026-08-15T16:32:55.422599+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "7601e210d19680cf42c8093558556490203848086d0e4eb3cb26513f225f556d",
+            "response_sha256": "9f8315acf7d51bdf52190d0f3e960c27ab91ae94f132b00f602d56a58134ce91",
+            "response_id": "nJSAatrfHZGMx9gPkrXbyAg",
+            "completed_at": "2026-08-15T16:32:55.422599+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "e96ef63a6c796aa045fd477f7c9bdecb",
+          "upstream_article_id": "e96ef63a6c796aa045fd477f7c9bdecb",
+          "published_at": "2026-08-14T12:22:02+00:00",
+          "title_sha256": "7f744ff9e70f7e42e8c878ee6916cb531cc1aa3c8e1462006565ef426869de00",
+          "body_sha256": "a0253d0e673287f5338ebf678411b95475c63428c20cbb753e52a55c0c90c76d",
+          "body_character_count": 2857,
+          "body_word_count": 617,
+          "paragraph_count": 1,
+          "sentence_count": 33
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 2857,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "2860c63dd0642261ef80433f7d004036e66c693c140d2cfe50bd95ebaa780d0a"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "c3d2d313f183ba3fc6e9a85bd893aa8ebde145e9c1618010cc8ed3ac380911a9"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:32977120ae30ca8dad2c45ca16f33bf4f1ce8e117c56d4d9e50815a0214259e1",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "legislature_politics",
+                "variant_key": "semantic:responsibility_attribution:family:legislature_politics",
+                "public_paraphrase": "2차 종합특검은 당시 시위를 주도한 국민의힘 나경원, 김기현, 윤상현, 권영진 의원에게 책임이 있다고 보고 재판에 넘겼다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "5f5d54a1bcc28c473712aeba091938b9e320dccb79ae35a0b562bd3e07801ed5"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:38b39e1b03e78771f14245feb51ba546e3b00f4cf8a22dceed02df73934343dd",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "institutional_check",
+                "variant_key": "semantic:treatment_recommendation:family:institutional_check",
+                "public_paraphrase": "기소된 의원들은 특검팀을 법왜곡죄로 고소하는 방안을 검토하고 있다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 13
+                  },
+                  "sentence_sha256": "e48d63b3088e6e2b0a778f48369d130486ea42421d0306a72c827344aec5ed90"
+                }
+              }
+            ]
+          }
+        },
+        "actors_and_sources": [],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "2860c63dd0642261ef80433f7d004036e66c693c140d2cfe50bd95ebaa780d0a"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "5f5d54a1bcc28c473712aeba091938b9e320dccb79ae35a0b562bd3e07801ed5"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "2860c63dd0642261ef80433f7d004036e66c693c140d2cfe50bd95ebaa780d0a"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "66d367431057bd1004227e929b609bbcbc9a2dab82a00ec5341e181d72cee48e"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "conflict",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "2860c63dd0642261ef80433f7d004036e66c693c140d2cfe50bd95ebaa780d0a"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "1c511bdf7193d35db1f2bb115aa18d3afd65a254e26b6ba35d9a8e2bb8caf7bf"
+                }
+              ]
+            },
+            {
+              "code": "responsibility",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "5f5d54a1bcc28c473712aeba091938b9e320dccb79ae35a0b562bd3e07801ed5"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "583ec99edd292065b1de46eacb2a1f8b54418d8ef80a4221d34d99242ea623ad"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "630b15ee158be412ed7fe56f4cd4a3246fc056e91096e38b755febe2d7ea4f44"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "evaluative_label",
+            "label": "인간벽 (human wall)",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "9f9e4bd31c6d930ef8aeb37f5c6aff6a16bb2e70f65b9b052df1f13d240edde2"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 9
+                },
+                "sentence_sha256": "583ec99edd292065b1de46eacb2a1f8b54418d8ef80a4221d34d99242ea623ad"
+              }
+            ],
+            "appears_in_lead": false
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "2c1c1ddeed6cb8ff3ea654e368157038d407a9fd5a6e1666806d71c9fccf17a6",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "ed63b88a3b0f6f86d03897c51bb0efec",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "ed63b88a3b0f6f86d03897c51bb0efec",
+        "evidenceCount": 1,
+        "bodySha256": "1b837b7d35bac62b99be2d388b7a0e76e368e4b721ecefbf97d7fabdfe133b9c",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "ed63b88a3b0f6f86d03897c51bb0efec",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "946cd6a07ebb56f4bd4f0aeb73a03e9657589cde290a1e578d17ffb8ceccae03"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "fa5f9239ee69604697bfde218500227cc7963337c1cfd79fa35785fb81fd1539",
+            "response_sha256": "83939c3c9400246185e6ef3d0afb7432590f506ba18949aea6367da4c1ac0d7c",
+            "response_id": "nZSAaraDEvSTx9gPz5Tr8QM",
+            "completed_at": "2026-08-15T16:32:57.531654+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "fa5f9239ee69604697bfde218500227cc7963337c1cfd79fa35785fb81fd1539",
+            "response_sha256": "83939c3c9400246185e6ef3d0afb7432590f506ba18949aea6367da4c1ac0d7c",
+            "response_id": "nZSAaraDEvSTx9gPz5Tr8QM",
+            "completed_at": "2026-08-15T16:32:57.531654+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "ed63b88a3b0f6f86d03897c51bb0efec",
+          "upstream_article_id": "ed63b88a3b0f6f86d03897c51bb0efec",
+          "published_at": "2026-08-14T03:53:00+00:00",
+          "title_sha256": "655d72a88146eaccad8d182e6f3dfef074119b93d7f33fb45b559e63489ff769",
+          "body_sha256": "1b837b7d35bac62b99be2d388b7a0e76e368e4b721ecefbf97d7fabdfe133b9c",
+          "body_character_count": 2460,
+          "body_word_count": 585,
+          "paragraph_count": 1,
+          "sentence_count": 8
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 2460,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "946cd6a07ebb56f4bd4f0aeb73a03e9657589cde290a1e578d17ffb8ceccae03"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:219b98aa905f3b61203b4d7657f015e46b74f07b432028c43143d733c754909f",
+                "code": "semantic_problem_definition",
+                "frame_family": "legal_institutional",
+                "variant_key": "semantic:problem_definition:family:legal_institutional",
+                "public_paraphrase": "특검이 윤석열 대통령 체포 방해 혐의로 나경원, 김기현, 윤상현, 권영진 등 정치인들을 기소했다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "946cd6a07ebb56f4bd4f0aeb73a03e9657589cde290a1e578d17ffb8ceccae03"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:21ee842d1e4b921274d60c6bdec2ed00ef1477a45f1381c8e4bcb348a89ec82c",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "legislature_politics",
+                "variant_key": "semantic:responsibility_attribution:family:legislature_politics",
+                "public_paraphrase": "특검은 나경원, 김기현, 윤상현, 권영진에게 '체포 방해'의 책임이 있다고 보고 기소했다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "946cd6a07ebb56f4bd4f0aeb73a03e9657589cde290a1e578d17ffb8ceccae03"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:1874b0a736f3a8c26331464820f7ea465d878f92a71d67fe108c7a9fb77fa2f6",
+            "role": "other",
+            "role_label": "기타 취재원",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 1,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "946cd6a07ebb56f4bd4f0aeb73a03e9657589cde290a1e578d17ffb8ceccae03"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "946cd6a07ebb56f4bd4f0aeb73a03e9657589cde290a1e578d17ffb8ceccae03"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "946cd6a07ebb56f4bd4f0aeb73a03e9657589cde290a1e578d17ffb8ceccae03"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [],
+          "policy_frames": [
+            {
+              "code": "legality",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "946cd6a07ebb56f4bd4f0aeb73a03e9657589cde290a1e578d17ffb8ceccae03"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": "[속보]",
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "946cd6a07ebb56f4bd4f0aeb73a03e9657589cde290a1e578d17ffb8ceccae03"
+              }
+            ],
+            "appears_in_lead": true
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "c32a0f3b4d65dd51969aa11ad3a3a09759e59ac11596edd4ee919b41f7a09670",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    },
+    {
+      "articleId": "f6cadcf80e81288414da6c6b584d530e",
+      "status": "succeeded",
+      "engine": {
+        "label": "ai_semantic",
+        "engineLabel": "ai_semantic",
+        "semanticAi": true,
+        "status": "succeeded",
+        "model": "gemini-2.5-pro",
+        "promptVersion": "2.6.0",
+        "schemaVersion": "agendaframe.article-frame-profile.v2",
+        "source": "gcp:vertex:current-display-batch",
+        "articleId": "f6cadcf80e81288414da6c6b584d530e",
+        "evidenceCount": 8,
+        "bodySha256": "650ec8a1470f18306385f86e25f22aa9d615f89094d35dff1baa1a87d97390b0",
+        "reviewRequired": true,
+        "fallbackReason": null
+      },
+      "evidence": [
+        {
+          "articleId": "f6cadcf80e81288414da6c6b584d530e",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 4
+          },
+          "sentenceSha256": "e5afa678e1c26211b9d153c238c2cecd86b16703c959450a99ac95c2684293cb"
+        },
+        {
+          "articleId": "f6cadcf80e81288414da6c6b584d530e",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 2
+          },
+          "sentenceSha256": "5dc2a0a6ba5c9eabd9e6d219387261e5360b84580bd85f959946fb7dfc5bc14a"
+        },
+        {
+          "articleId": "f6cadcf80e81288414da6c6b584d530e",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 9
+          },
+          "sentenceSha256": "38286d2eaa8171175a11b71aa1e3bb242cd2dbfee3668e61bbe367fa5bad4644"
+        },
+        {
+          "articleId": "f6cadcf80e81288414da6c6b584d530e",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 3
+          },
+          "sentenceSha256": "91c9060d046f27d6ae1e9826841f0f0b9eaaec52c9b98614ad6c57a10db965d8"
+        },
+        {
+          "articleId": "f6cadcf80e81288414da6c6b584d530e",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "8d1fa04329c2b7ade8d659f81dff005db3e1dd2f0c51f7403d99d142a97b1ff7"
+        },
+        {
+          "articleId": "f6cadcf80e81288414da6c6b584d530e",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 10
+          },
+          "sentenceSha256": "09a7f23637e662072c0ad8cbbc849bf03dac3a7d9423318589f952d6cffee0f4"
+        },
+        {
+          "articleId": "f6cadcf80e81288414da6c6b584d530e",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 8
+          },
+          "sentenceSha256": "a44c039060d8e8df341d30c950a5e784fb21384c23874d01e3743ea5fd2429d1"
+        },
+        {
+          "articleId": "f6cadcf80e81288414da6c6b584d530e",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "5960239b12c52e7600e5e4ac6ad2a2c84e171e4047cfd7d2a714e36da221ba56"
+        }
+      ],
+      "profile": {
+        "schema_version": "agendaframe.article-frame-profile.v2",
+        "lineage": {
+          "model_id": "gemini-2.5-pro",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": "agendaframe.article-frame-profile.v2",
+          "model_output_schema_version": 3,
+          "comparison_engine_version": "korean-evidence-rules-v2",
+          "approval": null,
+          "invocation": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "0572d5752f05578904fb173de2f8ff2fb0852d6e66ef6e01bdeb37a7a3e51e24",
+            "response_sha256": "d1b8eddedccf269b502a1c684b621d59a504e0c835a26c112e36cac9d8b621b3",
+            "response_id": "npSAavacEfOKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:33:00.683692+00:00"
+          },
+          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "source": "gcp:vertex:current-display-batch"
+        },
+        "engine": {
+          "name": "AgendaFrame Vertex evidence coder",
+          "version": "gemini-2.5-pro",
+          "approach": "semantic_evidence_bounded",
+          "semantic_ai": true,
+          "status": "semantic_draft",
+          "prompt_version": "2.6.0",
+          "analysis_schema_version": 3,
+          "evidence_storage": "locator_and_salted_sha256_only",
+          "invocation_receipt": {
+            "provider": "vertex_ai",
+            "model": "gemini-2.5-pro",
+            "prompt_version": "2.6.0",
+            "attempt": 1,
+            "request_sha256": "0572d5752f05578904fb173de2f8ff2fb0852d6e66ef6e01bdeb37a7a3e51e24",
+            "response_sha256": "d1b8eddedccf269b502a1c684b621d59a504e0c835a26c112e36cac9d8b621b3",
+            "response_id": "npSAavacEfOKx9gP1IyauQk",
+            "completed_at": "2026-08-15T16:33:00.683692+00:00"
+          },
+          "limitations": [
+            "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
+            "취재원 발언은 언론사의 서술이나 입장으로 자동 합산하지 않습니다.",
+            "확인되지 않음은 분석 가능한 본문에서 직접 근거를 찾지 못했다는 뜻입니다."
+          ]
+        },
+        "article": {
+          "article_id": "f6cadcf80e81288414da6c6b584d530e",
+          "upstream_article_id": "f6cadcf80e81288414da6c6b584d530e",
+          "published_at": "2026-08-14T22:20:15+00:00",
+          "title_sha256": "781e5a463c99e03f0eddb31d413fc269c4d09450617ebbc9bf2fafde4fd831ce",
+          "body_sha256": "650ec8a1470f18306385f86e25f22aa9d615f89094d35dff1baa1a87d97390b0",
+          "body_character_count": 2708,
+          "body_word_count": 585,
+          "paragraph_count": 1,
+          "sentence_count": 33
+        },
+        "extraction": {
+          "text_scope": "authorized_transient_body",
+          "analyzed_character_count": 2708,
+          "input_truncated": false
+        },
+        "genre": {
+          "code": "straight_news",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 4
+              },
+              "sentence_sha256": "e5afa678e1c26211b9d153c238c2cecd86b16703c959450a99ac95c2684293cb"
+            }
+          ]
+        },
+        "dimensions": {
+          "problem_definition": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:dcec2b2dc4451a1f3d4bf2b0751dc7536d738a209f0dd6566bab590934e3bdbd",
+                "code": "semantic_problem_definition",
+                "frame_family": "legal_institutional",
+                "variant_key": "semantic:problem_definition:family:legal_institutional",
+                "public_paraphrase": "전직 대통령에 대한 공수처의 체포영장 집행을 국회의원들이 '인간벽'을 만들어 방해한 특수공무집행방해 혐의로 재판에 넘겨진 사건.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "5dc2a0a6ba5c9eabd9e6d219387261e5360b84580bd85f959946fb7dfc5bc14a"
+                }
+              },
+              {
+                "claim_id": "claim:dcec2b2dc4451a1f3d4bf2b0751dc7536d738a209f0dd6566bab590934e3bdbd",
+                "code": "semantic_problem_definition",
+                "frame_family": "legal_institutional",
+                "variant_key": "semantic:problem_definition:family:legal_institutional",
+                "public_paraphrase": "전직 대통령에 대한 공수처의 체포영장 집행을 국회의원들이 '인간벽'을 만들어 방해한 특수공무집행방해 혐의로 재판에 넘겨진 사건.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "38286d2eaa8171175a11b71aa1e3bb242cd2dbfee3668e61bbe367fa5bad4644"
+                }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          }
+        },
+        "actors_and_sources": [
+          {
+            "actor_id": "actor:bcc1cdcd2bbd966e548bbc9e82121ec9b5e2407df1f705c33201c67f7bc3b3d1",
+            "role": "other",
+            "role_label": "기타 취재원",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "91c9060d046f27d6ae1e9826841f0f0b9eaaec52c9b98614ad6c57a10db965d8"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 12
+                },
+                "sentence_sha256": "8d1fa04329c2b7ade8d659f81dff005db3e1dd2f0c51f7403d99d142a97b1ff7"
+              }
+            ]
+          }
+        ],
+        "context_depth": {
+          "code": "shallow",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 10
+              },
+              "sentence_sha256": "09a7f23637e662072c0ad8cbbc849bf03dac3a7d9423318589f952d6cffee0f4"
+            }
+          ],
+          "level": "shallow"
+        },
+        "scope": {
+          "code": "episodic",
+          "label": null,
+          "evidence": [
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "5dc2a0a6ba5c9eabd9e6d219387261e5360b84580bd85f959946fb7dfc5bc14a"
+            },
+            {
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "a44c039060d8e8df341d30c950a5e784fb21384c23874d01e3743ea5fd2429d1"
+            }
+          ]
+        },
+        "secondary_descriptors": {
+          "generic_frames": [
+            {
+              "code": "conflict",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 3
+                  },
+                  "sentence_sha256": "91c9060d046f27d6ae1e9826841f0f0b9eaaec52c9b98614ad6c57a10db965d8"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "8d1fa04329c2b7ade8d659f81dff005db3e1dd2f0c51f7403d99d142a97b1ff7"
+                }
+              ]
+            },
+            {
+              "code": "responsibility",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "5dc2a0a6ba5c9eabd9e6d219387261e5360b84580bd85f959946fb7dfc5bc14a"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "a44c039060d8e8df341d30c950a5e784fb21384c23874d01e3743ea5fd2429d1"
+                }
+              ]
+            }
+          ],
+          "policy_frames": [
+            {
+              "code": "legality",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "5dc2a0a6ba5c9eabd9e6d219387261e5360b84580bd85f959946fb7dfc5bc14a"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 9
+                  },
+                  "sentence_sha256": "38286d2eaa8171175a11b71aa1e3bb242cd2dbfee3668e61bbe367fa5bad4644"
+                }
+              ]
+            },
+            {
+              "code": "political",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "8d1fa04329c2b7ade8d659f81dff005db3e1dd2f0c51f7403d99d142a97b1ff7"
+                }
+              ]
+            }
+          ],
+          "controlled_associations": []
+        },
+        "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "5960239b12c52e7600e5e4ac6ad2a2c84e171e4047cfd7d2a714e36da221ba56"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "contrast",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 3
+                },
+                "sentence_sha256": "91c9060d046f27d6ae1e9826841f0f0b9eaaec52c9b98614ad6c57a10db965d8"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 12
+                },
+                "sentence_sha256": "8d1fa04329c2b7ade8d659f81dff005db3e1dd2f0c51f7403d99d142a97b1ff7"
+              }
+            ],
+            "appears_in_lead": false
+          }
+        ],
+        "review": {
+          "status": "automatic_draft",
+          "analysis_decision": "analyze",
+          "analysis_state": "succeeded",
+          "attempt_count": 1,
+          "idempotency_fingerprint": "c5fc91e8921564495506877ae35e35f0ebd4a9ff6ba36374dd9505dd264141ae",
+          "error_code": null,
+          "fallback_reason": null,
+          "requires_human_review": true,
+          "publication_rule": "사람 검토 전에는 자동 분석 초안으로만 표시합니다."
+        }
+      }
+    }
+  ],
   "ruleProfiles": [],
   "comparison": {
     "engine": {
-      "semanticAi": false,
-      "version": null,
-      "status": "review_needed"
+      "label": "ai_semantic",
+      "engineLabel": "ai_semantic",
+      "semanticAi": true,
+      "status": "succeeded",
+      "model": "gemini-2.5-pro",
+      "promptVersion": "event-synthesis-v1.0.0",
+      "schemaVersion": "agendaframe.event-synthesis.v1",
+      "source": "gcp:event-synthesis"
     },
     "data": {
       "summary_30_seconds": {
-        "what_happened": null,
-        "main_difference": null,
-        "common_ground": null,
+        "sample": "7건 · 3개 매체",
+        "common_ground": "2차 종합특검은 윤석열 전 대통령 관저 앞에서 '인간벽'을 만들어 체포영장 집행을 방해한 혐의(특수공무집행방해)로 국민의힘 나경원·김기현·윤상현·권영진 의원을 불구속 기소했습니다.",
+        "main_difference": "서로 다른 근거 그룹이 확인되지 않아 대립 구도로 표시하지 않고 공통 보도로 읽습니다.",
+        "source_context": "기소된 의원들은 특검의 기소가 부당하다며 반발하고 있으며, 특검팀을 법왜곡죄로 고소하는 방안을 검토하고 있어 향후 법적 공방이 예상됩니다.",
+        "limit": "기사 ID·locator·문장 해시가 연결된 관측만 표시합니다. 언론사 성향은 추론하지 않습니다.",
         "divergence_detected": false
       },
+      "synthesis": {
+        "schemaVersion": "agendaframe.event-synthesis.v1",
+        "promptVersion": "event-synthesis-v1.0.0",
+        "usable": true,
+        "opposition": false,
+        "what_happened": {
+          "text": "윤석열 전 대통령에 대한 체포영장 집행을 방해한 혐의로 국민의힘 나경원, 김기현, 윤상현, 권영진 의원이 재판에 넘겨졌습니다.",
+          "status": "observed",
+          "evidence": [
+            {
+              "article_id": "ddb9e9e8f42a256fe89cddacac6b07ed",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "26d032ebe695c5bbb79126b31cdb88e1303ec20eb54b1b4a717f65c3ac567fb8"
+            },
+            {
+              "article_id": "c57759f3430ff2ba3b34d53beea4361c",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "e8b0ee5fba167c4ac581959fba1141b6eb160199a235d98a3f54384da738f002"
+            },
+            {
+              "article_id": "ed63b88a3b0f6f86d03897c51bb0efec",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 1
+              },
+              "sentence_sha256": "946cd6a07ebb56f4bd4f0aeb73a03e9657589cde290a1e578d17ffb8ceccae03"
+            }
+          ]
+        },
+        "agreed_line": {
+          "text": "2차 종합특검은 윤석열 전 대통령 관저 앞에서 '인간벽'을 만들어 체포영장 집행을 방해한 혐의(특수공무집행방해)로 국민의힘 나경원·김기현·윤상현·권영진 의원을 불구속 기소했습니다.",
+          "status": "observed",
+          "evidence": [
+            {
+              "article_id": "c57759f3430ff2ba3b34d53beea4361c",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 3
+              },
+              "sentence_sha256": "2130901caee89c82eef0d0561ee6bf57c523ae50d962e52f94663cd1a6cc39b6"
+            },
+            {
+              "article_id": "c57759f3430ff2ba3b34d53beea4361c",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "6fc4a017dbd4b72aedef5975599cc0f3af363330e3d3aa3eb45686b72f2e97a4"
+            },
+            {
+              "article_id": "e30d243a5d4270edb92633bbb97c7d7d",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 5
+              },
+              "sentence_sha256": "8a10d96830a94545755e7221e14a5d0b790f9c4cb755bea07fe726cf839848bc"
+            }
+          ]
+        },
+        "split_line": null,
+        "so_what": {
+          "text": "기소된 의원들은 특검의 기소가 부당하다며 반발하고 있으며, 특검팀을 법왜곡죄로 고소하는 방안을 검토하고 있어 향후 법적 공방이 예상됩니다.",
+          "status": "observed",
+          "evidence": [
+            {
+              "article_id": "05c96c1435646cb8b2083c8dade2c546",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 14
+              },
+              "sentence_sha256": "bc1cb0e8b9042f146a78aa46d915e29f25d8b0d1b0d3ed7c7f2032494dd61f11"
+            },
+            {
+              "article_id": "ddb9e9e8f42a256fe89cddacac6b07ed",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 13
+              },
+              "sentence_sha256": "f924e6eda2c400476f1c5757d65565e3c2ff57b2ebc612e77bdaf16d7856a378"
+            },
+            {
+              "article_id": "e96ef63a6c796aa045fd477f7c9bdecb",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 13
+              },
+              "sentence_sha256": "e48d63b3088e6e2b0a778f48369d130486ea42421d0306a72c827344aec5ed90"
+            }
+          ]
+        },
+        "camps": [],
+        "terms": [
+          {
+            "term": "2차 종합특검",
+            "gloss": "윤석열 전 대통령의 내란 혐의와 계엄 문건 의혹 등을 수사하기 위해 출범한 '제2차 윤석열 내란 등 의혹 종합규명을 위한 특별검사팀'의 줄임말입니다.",
+            "status": "observed",
+            "evidence": [
+              {
+                "article_id": "05c96c1435646cb8b2083c8dade2c546",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 9
+                },
+                "sentence_sha256": "554c2f8977abc72afa215e372b93feb06cb81f8d0106f66e537359683324c2fb"
+              }
+            ]
+          },
+          {
+            "term": "특수공무집행방해",
+            "gloss": "단체 또는 다중의 위력을 보이거나 위험한 물건을 휴대하여 직무를 집행하는 공무원에 대하여 폭행 또는 협박함으로써 성립하는 범죄입니다. 이 사건에서 특검은 의원들이 다수와 함께 '인간벽'을 만들어 영장 집행을 방해한 행위가 이에 해당한다고 보았습니다.",
+            "status": "observed",
+            "evidence": [
+              {
+                "article_id": "c57759f3430ff2ba3b34d53beea4361c",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "e8b0ee5fba167c4ac581959fba1141b6eb160199a235d98a3f54384da738f002"
+              },
+              {
+                "article_id": "c57759f3430ff2ba3b34d53beea4361c",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "6fc4a017dbd4b72aedef5975599cc0f3af363330e3d3aa3eb45686b72f2e97a4"
+              }
+            ]
+          }
+        ],
+        "fact_rows": [],
+        "split_rows": [],
+        "frame_functions": [],
+        "proof_rows": [],
+        "invocation": {
+          "provider": "vertex_ai",
+          "model": "gemini-2.5-pro",
+          "prompt_version": "event-synthesis-v1.0.0",
+          "attempt": 1,
+          "request_sha256": "46c5fc9f32c2c37795ed0cb0d4d62f04aa252b6f77042cdf8a67feaf326a24d3",
+          "response_sha256": "936f2b8e1d415a30997a917553dd8221c519b4699708fcdb52b34ad95a5366ec",
+          "response_id": "2ZSAav3jFuaLx9gPrfyDoQc",
+          "completed_at": "2026-08-15T16:34:05.348328+00:00"
+        },
+        "source": "gcp:event-synthesis",
+        "run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b"
+      },
+      "whatHappened": "윤석열 전 대통령에 대한 체포영장 집행을 방해한 혐의로 국민의힘 나경원, 김기현, 윤상현, 권영진 의원이 재판에 넘겨졌습니다.",
+      "agreedLine": "2차 종합특검은 윤석열 전 대통령 관저 앞에서 '인간벽'을 만들어 체포영장 집행을 방해한 혐의(특수공무집행방해)로 국민의힘 나경원·김기현·윤상현·권영진 의원을 불구속 기소했습니다.",
+      "splitLine": "서로 다른 근거 그룹이 없어 대립 구도로 표시하지 않습니다.",
+      "soWhat": "기소된 의원들은 특검의 기소가 부당하다며 반발하고 있으며, 특검팀을 법왜곡죄로 고소하는 방안을 검토하고 있어 향후 법적 공방이 예상됩니다.",
       "camps": [],
-      "terms": []
-    }
+      "factRows": [],
+      "splitRows": [],
+      "terms": [
+        {
+          "term": "2차 종합특검",
+          "gloss": "윤석열 전 대통령의 내란 혐의와 계엄 문건 의혹 등을 수사하기 위해 출범한 '제2차 윤석열 내란 등 의혹 종합규명을 위한 특별검사팀'의 줄임말입니다."
+        },
+        {
+          "term": "특수공무집행방해",
+          "gloss": "단체 또는 다중의 위력을 보이거나 위험한 물건을 휴대하여 직무를 집행하는 공무원에 대하여 폭행 또는 협박함으로써 성립하는 범죄입니다. 이 사건에서 특검은 의원들이 다수와 함께 '인간벽'을 만들어 영장 집행을 방해한 행위가 이에 해당한다고 보았습니다."
+        }
+      ],
+      "frameFunctions": [],
+      "proofRows": [],
+      "source_lens": {
+        "by_outlet": [
+          {
+            "outlet": "KBS 뉴스",
+            "roles": [
+              {
+                "role": "other",
+                "role_label": "기타 취재원",
+                "count": 4
+              },
+              {
+                "role": "political_actor",
+                "role_label": "정당·정치권",
+                "count": 2
+              }
+            ]
+          },
+          {
+            "outlet": "경향신문",
+            "roles": [
+              {
+                "role": "judiciary_law_enforcement",
+                "role_label": "법조·수사기관",
+                "count": 2
+              }
+            ]
+          },
+          {
+            "outlet": "동아일보",
+            "roles": [
+              {
+                "role": "other",
+                "role_label": "기타 취재원",
+                "count": 3
+              }
+            ]
+          }
+        ],
+        "caution": "취재원 구성은 발화 가시성의 관측이지 매체의 의도 판정이 아닙니다."
+      },
+      "not_observed_statements": []
+    },
+    "evidence": [
+      {
+        "articleId": "ddb9e9e8f42a256fe89cddacac6b07ed",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "26d032ebe695c5bbb79126b31cdb88e1303ec20eb54b1b4a717f65c3ac567fb8"
+      },
+      {
+        "articleId": "c57759f3430ff2ba3b34d53beea4361c",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "e8b0ee5fba167c4ac581959fba1141b6eb160199a235d98a3f54384da738f002"
+      },
+      {
+        "articleId": "ed63b88a3b0f6f86d03897c51bb0efec",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 1
+        },
+        "sentenceSha256": "946cd6a07ebb56f4bd4f0aeb73a03e9657589cde290a1e578d17ffb8ceccae03"
+      },
+      {
+        "articleId": "c57759f3430ff2ba3b34d53beea4361c",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 3
+        },
+        "sentenceSha256": "2130901caee89c82eef0d0561ee6bf57c523ae50d962e52f94663cd1a6cc39b6"
+      },
+      {
+        "articleId": "c57759f3430ff2ba3b34d53beea4361c",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 6
+        },
+        "sentenceSha256": "6fc4a017dbd4b72aedef5975599cc0f3af363330e3d3aa3eb45686b72f2e97a4"
+      },
+      {
+        "articleId": "e30d243a5d4270edb92633bbb97c7d7d",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 5
+        },
+        "sentenceSha256": "8a10d96830a94545755e7221e14a5d0b790f9c4cb755bea07fe726cf839848bc"
+      },
+      {
+        "articleId": "05c96c1435646cb8b2083c8dade2c546",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 14
+        },
+        "sentenceSha256": "bc1cb0e8b9042f146a78aa46d915e29f25d8b0d1b0d3ed7c7f2032494dd61f11"
+      },
+      {
+        "articleId": "ddb9e9e8f42a256fe89cddacac6b07ed",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 13
+        },
+        "sentenceSha256": "f924e6eda2c400476f1c5757d65565e3c2ff57b2ebc612e77bdaf16d7856a378"
+      },
+      {
+        "articleId": "e96ef63a6c796aa045fd477f7c9bdecb",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 13
+        },
+        "sentenceSha256": "e48d63b3088e6e2b0a778f48369d130486ea42421d0306a72c827344aec5ed90"
+      },
+      {
+        "articleId": "05c96c1435646cb8b2083c8dade2c546",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 9
+        },
+        "sentenceSha256": "554c2f8977abc72afa215e372b93feb06cb81f8d0106f66e537359683324c2fb"
+      },
+      {
+        "articleId": "c57759f3430ff2ba3b34d53beea4361c",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "e8b0ee5fba167c4ac581959fba1141b6eb160199a235d98a3f54384da738f002"
+      },
+      {
+        "articleId": "c57759f3430ff2ba3b34d53beea4361c",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 6
+        },
+        "sentenceSha256": "6fc4a017dbd4b72aedef5975599cc0f3af363330e3d3aa3eb45686b72f2e97a4"
+      }
+    ]
   },
   "lineage": {
     "contractVersion": "agendaframe.initial-five.public.v1",
@@ -171,8 +3183,13 @@
       "top5GeneratedAt": null,
       "metadataSchemaVersion": "agendaframe.metadata-issue-cluster.v1",
       "metadataGeneratedAt": null,
-      "semanticDirectory": "pending-vertex",
-      "semanticFileCount": 0
-    }
+      "semanticDirectory": "current-display-batch/f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+      "semanticFileCount": 7,
+      "semanticBatchModel": "gemini-2.5-pro",
+      "semanticBatchPromptVersion": "2.6.0",
+      "eventSynthesisPromptVersion": "event-synthesis-v1.0.0"
+    },
+    "runId": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+    "analysisBoundary": "current Vercel display articles only; collection/ranking/scheduler untouched"
   }
 }

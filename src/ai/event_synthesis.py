@@ -146,7 +146,9 @@ def _bound_claim(
     allowed_article_ids: set[str] | None = None,
     status: object = None,
 ) -> dict[str, Any] | None:
-    cleaned = _clean_text(text)
+    # Model comparison prose often ends with several inline evidence locators.
+    # Keep enough room for the cited sentence instead of cutting a locator in half.
+    cleaned = _clean_text(text, limit=560)
     declared = str(status or "").strip()
     if declared in {"explicit_not_stated", "analysis_failed", "review_needed"} and not cleaned:
         return {
@@ -543,19 +545,20 @@ def build_bound_comparison(
     """Vertex draft first, then profile composition.  None if neither is usable."""
 
     if synthesizer is not None:
-        try:
-            draft = synthesizer.synthesize(
-                synthesis_request(
-                    issue_id=issue_id,
-                    title=title,
-                    articles=articles,
-                    profiles=profiles,
-                )
-            )
-            bound = bind_event_synthesis(draft, profiles=profiles, articles=articles)
-        except (TypeError, ValueError, KeyError):
-            bound = None
-        else:
+        request = synthesis_request(
+            issue_id=issue_id,
+            title=title,
+            articles=articles,
+            profiles=profiles,
+        )
+        vertex_config = getattr(getattr(synthesizer, "config", None), "vertex", None)
+        max_attempts = max(1, min(int(getattr(vertex_config, "max_attempts", 1)), 3))
+        for _attempt in range(max_attempts):
+            try:
+                draft = synthesizer.synthesize(request)
+                bound = bind_event_synthesis(draft, profiles=profiles, articles=articles)
+            except (TypeError, ValueError, KeyError):
+                continue
             if bound.get("usable"):
                 bound = dict(bound)
                 bound["source"] = "gcp:event-synthesis"
@@ -675,9 +678,18 @@ class VertexEventSynthesizer:
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=0,
-                    max_output_tokens=min(int(self.config.vertex.max_output_tokens), 4000),
+                    max_output_tokens=int(self.config.vertex.max_output_tokens),
                     response_mime_type="application/json",
                     response_json_schema=_vertex_response_schema(),
+                    thinking_config=(
+                        types.ThinkingConfig(
+                            thinking_budget=int(self.config.vertex.thinking_budget)
+                        )
+                        if self.config.vertex.model.startswith("gemini-2.5-pro")
+                        else types.ThinkingConfig(
+                            thinking_budget=int(self.config.vertex.thinking_budget)
+                        )
+                    ),
                 ),
             )
             response_text = response.text

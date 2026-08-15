@@ -329,6 +329,9 @@ export interface EventSynthesisData {
   schemaVersion?: string;
   promptVersion?: string;
   usable?: boolean;
+  source?: string;
+  invocation?: Record<string, unknown>;
+  run_id?: string;
   opposition?: boolean;
   what_happened?: EventSynthesisClaim | null;
   agreed_line?: EventSynthesisClaim | null;

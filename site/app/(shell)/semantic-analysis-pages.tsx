@@ -395,6 +395,15 @@ function EvidenceRefs({ refs, label = "공개 근거 위치" }: { refs: unknown;
   return <details className="afp-evidence afp-evidence-compact"><summary>{label} {rows.length}개</summary><div className="afp-evidence-body">{rows.slice(0, 5).map((ref, index) => <small key={`${evidenceRefLabel(ref)}-${index}`}>{evidenceRefLabel(ref)}{ref.sentence_sha256 || ref.hash ? ` · hash ${(ref.sentence_sha256 ?? ref.hash)?.slice(0, 16)}…` : ""}</small>)}</div></details>;
 }
 
+function StateDisclosure({ reason, summary = "분석 상태" }: { reason?: string | null; summary?: string }) {
+  return (
+    <details className="afp-evidence afp-evidence-compact">
+      <summary>{summary}</summary>
+      <div className="afp-evidence-body"><p>{reason ?? "공개 근거가 확인되지 않아 이 항목은 표시하지 않습니다."}</p></div>
+    </details>
+  );
+}
+
 function EngineNote({ bundle }: { bundle: IssueAnalysisBundle }) {
   const semantic = bundle.analysisStatus.semantic;
   const clusterAi = bundle.analysisStatus.cluster ?? bundle.clusterAi;
@@ -402,7 +411,13 @@ function EngineNote({ bundle }: { bundle: IssueAnalysisBundle }) {
   const profiles = bundle.semanticProfiles ?? [];
   const reviewStatuses = [...new Set(profiles.map((entry) => richProfile(entry)?.review?.status).filter(Boolean))];
   const reviewRequired = semantic.requiresHumanReview || profiles.some((entry) => Boolean(richProfile(entry)?.review?.requires_human_review));
-  const isVertexDirect = Boolean(semantic.semanticAi && !bundle.clusterAi?.fallbackReason);
+  const synthesis = synthesisData(bundle);
+  const isVertexDirect = Boolean(
+    semantic.semanticAi
+    && comparison.semanticAi
+    && synthesis?.usable === true
+    && /gcp:event-synthesis|gcp:vertex/i.test(String(comparison.source ?? synthesis.source ?? "")),
+  );
   const comparisonLabel = comparison.semanticAi ? "semantic AI 비교" : "규칙·구조화 비교 (rules_local)";
   const artifactSource = bundle.lineage?.source?.semanticDirectory || "공개 산출물 출처 미상";
   return (
@@ -446,11 +461,17 @@ function Summary({ bundle, issue, analyses: dimensions }: { bundle: IssueAnalysi
     : split.length
       ? `${split.map((dimension) => dimension.label).join(", ")}에서 차이가 관측됐지만, 대부분 취재원 발언에 귀속되어 매체 자체의 논조 차이로 확정하지 않았습니다.`
       : "현재 semantic profile에서 매체 자체 서술이 갈린 축은 확정되지 않았습니다.";
-  const commonText = issue.commonGround ?? derivedCommonText;
-  const differenceText = issue.mainDifference ?? derivedDifferenceText;
-  const readerPath = directSplit.length
+  const synthesis = synthesisData(bundle);
+  const synthesisCommon = observedClaim(synthesis?.agreed_line) ?? observedClaim(synthesis?.what_happened);
+  const synthesisDifference = observedClaim(synthesis?.split_line);
+  const synthesisSoWhat = observedClaim(synthesis?.so_what);
+  const commonText = synthesisCommon ?? (issue.commonGround ?? derivedCommonText);
+  const differenceText = synthesis
+    ? synthesisDifference ?? "서로 다른 근거 그룹이 확인되지 않아 대립 구도로 표시하지 않습니다."
+    : (issue.mainDifference ?? derivedDifferenceText);
+  const readerPath = synthesisSoWhat ?? (directSplit.length
     ? `독자는 ${directSplit[0].groups.map((group) => group.label).join(" 또는 ")} 중 서로 다른 설명 경로를 만납니다.`
-    : "독자가 보는 차이는 우선 어떤 취재원 발언을 선택·배치했는지에서 생깁니다. 이를 매체의 동의나 의도로 단정하지 않습니다.";
+    : "독자가 보는 차이는 우선 어떤 취재원 발언을 선택·배치했는지에서 생깁니다. 이를 매체의 동의나 의도로 단정하지 않습니다.");
   return (
     <section className="afs-card afs-card-lead">
       <h2>이 사안의 프레이밍 요약 <small>{issue.articleCount}건 · {issue.outletCount}개 매체</small></h2>
@@ -494,10 +515,9 @@ export function SynthesisNarrative({ bundle }: { bundle: IssueAnalysisBundle }) 
   const splitRows = synthesis.split_rows ?? [];
   const campColors = ["var(--n1, #2563eb)", "var(--n2, #d97706)", "var(--n3, #7c3aed)", "var(--n4, #059669)"];
   const isVertexDirect = Boolean(
-    bundle.analysisStatus?.semantic?.semanticAi
-    && !bundle.clusterAi?.fallbackReason
-    && bundle.analysisStatus?.semantic?.source
-    && /gcp:vertex|vertex-evidence/i.test(String(bundle.analysisStatus.semantic.source))
+    bundle.comparison.engine?.semanticAi
+    && synthesis.source === "gcp:event-synthesis"
+    && Boolean(synthesis.invocation)
     && Boolean((bundle.lineage as { runId?: string } | undefined)?.runId),
   );
 
@@ -832,7 +852,7 @@ function MatrixCell({ rows }: { rows: Row[] }) {
     <div className="afp-cell">
       <strong>{first.item.frame_family ? familyLabel(first.item.frame_family) : "분류 코드 미확정"}</strong>
       <span className="afp-cell-voice">{statusCopy(displayStatus(first), first.item.voice?.kind)} · {MODEL_STATUS_COPY[first.modelStatus] ?? first.modelStatus}</span>
-      {first.stateOnly || !first.validEvidence ? <p className="afp-state">{first.stateReason ?? "공개 근거 지문이 없어 paraphrase를 표시하지 않습니다."}</p> : first.item.public_paraphrase ? <p>{first.item.public_paraphrase}</p> : null}
+      {first.stateOnly || !first.validEvidence ? <StateDisclosure reason={first.stateReason} /> : first.item.public_paraphrase ? <p>{first.item.public_paraphrase}</p> : null}
       <EvidenceDisclosure row={first} compact />
       {distinct.length > 1 ? <details className="afp-more"><summary>다른 관측 {distinct.length - 1}개</summary>{rows.slice(1, 3).map((row, index) => <div key={`${row.item.public_paraphrase}-${index}`}><p>{row.validEvidence ? (row.item.public_paraphrase ?? "검증된 paraphrase 없음") : (row.stateReason ?? "검증 가능한 근거 지문 없음")}</p><small>{statusCopy(displayStatus(row), row.item.voice?.kind, row.modelStatus)}</small><EvidenceDisclosure row={row} compact /></div>)}</details> : null}
     </div>
@@ -885,7 +905,7 @@ function FourFunctionTable({ issue, dimensions }: { issue: IssueView; dimensions
         <div className="afs-scroll"><table className="afs-table"><caption>각 셀은 검증된 public paraphrase만 표시합니다. 출처 발언은 매체 서술과 분리합니다.</caption><thead><tr><th scope="col">매체·기사</th>{core.filter((dimension) => dimension !== "responsibility_attribution").map((dimension) => <th scope="col" key={dimension}>{DIM_LABEL[dimension]}</th>)}</tr></thead><tbody>
           {issue.articles.map((article) => <tr key={article.articleId}><th scope="row"><strong>{article.outlet}</strong><small>{article.title}</small></th>{core.filter((dimension) => dimension !== "responsibility_attribution").map((dimension) => {
             const row = dimensions.find((entry) => entry.dimension === dimension)?.rows.find((entry) => entry.articleId === article.articleId && entry.validEvidence);
-            return <td key={dimension}>{row ? <><span className="afp-cell-voice">{statusCopy(displayStatus(row), row.item.voice?.kind, row.modelStatus)}</span><p>{row.item.public_paraphrase ?? "검증된 paraphrase 없음"}</p><EvidenceDisclosure row={row} compact /></> : <span className="afp-cell-state">{dimensions.find((entry) => entry.dimension === dimension)?.rows.find((entry) => entry.articleId === article.articleId)?.stateReason ?? "명시적 판정 없음"}</span>}</td>;
+            return <td key={dimension}>{row ? <><span className="afp-cell-voice">{statusCopy(displayStatus(row), row.item.voice?.kind, row.modelStatus)}</span><p>{row.item.public_paraphrase ?? "검증된 paraphrase 없음"}</p><EvidenceDisclosure row={row} compact /></> : <StateDisclosure summary="분석 상태" reason={dimensions.find((entry) => entry.dimension === dimension)?.rows.find((entry) => entry.articleId === article.articleId)?.stateReason ?? "명시적 판정 없음"} />}</td>;
           })}</tr>)}
         </tbody></table></div>
         <p className="afs-note">‘책임 귀속’은 4기능과 별도의 관계·주체 축으로 기사별 근거 목록에서 함께 확인합니다. 빈 셀은 의도적 누락이 아니라 공개 근거가 확인되지 않은 상태입니다.</p>

@@ -4,7 +4,7 @@
  * ideology frames, or title-derived evidence hashes.
  */
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { inspectPublicTitle } from "../lib/article-title.mjs";
@@ -174,6 +174,66 @@ function buildBundle(issue, rank) {
   };
 }
 
+function trimIncompleteInlineCitation(value) {
+  if (typeof value !== "string") return value;
+  const lastOpen = value.lastIndexOf("(");
+  const lastClose = value.lastIndexOf(")");
+  return lastOpen > lastClose ? value.slice(0, lastOpen).trim() : value;
+}
+
+function sanitizePersistedSynthesis(candidate) {
+  const data = candidate.comparison?.data;
+  const synthesis = data?.synthesis;
+  if (!data || !synthesis) return candidate;
+
+  if (synthesis.split_line && typeof synthesis.split_line.text === "string") {
+    synthesis.split_line.text = trimIncompleteInlineCitation(synthesis.split_line.text);
+  }
+  if (data.summary_30_seconds && typeof data.summary_30_seconds.main_difference === "string") {
+    data.summary_30_seconds.main_difference = trimIncompleteInlineCitation(
+      data.summary_30_seconds.main_difference,
+    );
+  }
+  if (typeof data.splitLine === "string") {
+    data.splitLine = trimIncompleteInlineCitation(data.splitLine);
+  }
+  return candidate;
+}
+
+function loadPersistedLiveBundle(rank, builtBundle) {
+  const file = path.join(
+    siteRoot,
+    "public",
+    "initial-five",
+    "issues",
+    `live-${BASIS_DATE}-top-${rank}.json`,
+  );
+  if (!existsSync(file)) return builtBundle;
+  let candidate;
+  try {
+    candidate = JSON.parse(readFileSync(file, "utf8"));
+  } catch {
+    return builtBundle;
+  }
+  const expectedArticles = new Map(
+    builtBundle.articles.map((article) => [article.articleId, article.canonicalUrl]),
+  );
+  const candidateArticles = new Map(
+    (candidate.articles ?? []).map((article) => [article.articleId, article.canonicalUrl]),
+  );
+  const synthesis = candidate.comparison?.data?.synthesis;
+  const isCurrentVerifiedBatch = Boolean(
+    candidate.basisDate === BASIS_DATE
+    && candidate.issue?.issueId === builtBundle.issue.issueId
+    && candidate.lineage?.runId
+    && synthesis?.usable === true
+    && synthesis?.source === "gcp:event-synthesis"
+    && expectedArticles.size === candidateArticles.size
+    && [...expectedArticles].every(([articleId, url]) => candidateArticles.get(articleId) === url),
+  );
+  return isCurrentVerifiedBatch ? sanitizePersistedSynthesis(candidate) : builtBundle;
+}
+
 export function buildLiveSnapshot() {
   const articles = loadArticles();
   const clustered = analyzeArticles(articles, {
@@ -190,7 +250,10 @@ export function buildLiveSnapshot() {
   if (!top.length) {
     throw new Error("no eligible 2026-08-15 clusters");
   }
-  const bundles = top.map((issue, index) => buildBundle(issue, index + 1));
+  const bundles = top.map((issue, index) => {
+    const builtBundle = buildBundle(issue, index + 1);
+    return loadPersistedLiveBundle(index + 1, builtBundle);
+  });
   const manifest = {
     schemaVersion: "agendaframe.initial-five.public.v1",
     basisDate: BASIS_DATE,

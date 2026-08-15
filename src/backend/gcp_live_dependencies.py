@@ -114,11 +114,15 @@ class _ArticleHtmlParser(HTMLParser):
         self.body_parts: list[str] = []
         self.meta: dict[str, str] = {}
         self.jsonld_parts: list[str] = []
+        self.fusion_parts: list[str] = []
         self._title_depth = 0
         self._body_depth = 0
+        self._body_selector_stack: list[str] = []
         self._skip_depth = 0
         self._jsonld_depth = 0
         self._jsonld_buffer: list[str] = []
+        self._fusion_depth = 0
+        self._fusion_buffer: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = {str(key).lower(): value or "" for key, value in attrs}
@@ -135,13 +139,44 @@ class _ArticleHtmlParser(HTMLParser):
                 self._jsonld_depth += 1
                 if self._jsonld_depth == 1:
                     self._jsonld_buffer = []
+            if values.get("id", "").lower() == "fusion-metadata":
+                self._fusion_depth += 1
+                if self._fusion_depth == 1:
+                    self._fusion_buffer = []
         if lowered == "title":
             self._title_depth += 1
         if lowered in {"script", "style", "noscript", "svg", "nav", "footer", "header"}:
             self._skip_depth += 1
         if lowered in {"article", "main"}:
             self._body_depth += 1
-        if self._body_depth and lowered in {"p", "h1", "h2", "h3", "li", "blockquote"}:
+        identifier = " ".join(
+            part
+            for part in (
+                values.get("id", "").lower(),
+                values.get("class", "").lower(),
+            )
+            if part
+        )
+        if not self._skip_depth and any(
+            marker in identifier
+            for marker in (
+                "cont_newstext",
+                "article-body",
+                "article_body",
+                "view_body",
+                "news-body",
+                "news_body",
+            )
+        ):
+            self._body_selector_stack.append(lowered)
+        if (self._body_depth or self._body_selector_stack) and lowered in {
+            "p",
+            "h1",
+            "h2",
+            "h3",
+            "li",
+            "blockquote",
+        }:
             self.body_parts.append("\n")
 
     def handle_endtag(self, tag: str) -> None:
@@ -151,23 +186,33 @@ class _ArticleHtmlParser(HTMLParser):
             if self._jsonld_depth == 0:
                 self.jsonld_parts.append("".join(self._jsonld_buffer))
                 self._jsonld_buffer = []
+        if lowered == "script" and self._fusion_depth:
+            self._fusion_depth -= 1
+            if self._fusion_depth == 0:
+                self.fusion_parts.append("".join(self._fusion_buffer))
+                self._fusion_buffer = []
         if lowered == "title":
             self._title_depth = max(0, self._title_depth - 1)
         if lowered in {"script", "style", "noscript", "svg", "nav", "footer", "header"}:
             self._skip_depth = max(0, self._skip_depth - 1)
         if lowered in {"article", "main"}:
             self._body_depth = max(0, self._body_depth - 1)
+        if self._body_selector_stack and lowered == self._body_selector_stack[-1]:
+            self._body_selector_stack.pop()
 
     def handle_data(self, data: str) -> None:
         if self._jsonld_depth:
             self._jsonld_buffer.append(data)
+            return
+        if self._fusion_depth:
+            self._fusion_buffer.append(data)
             return
         text = " ".join(data.split())
         if not text or self._skip_depth:
             return
         if self._title_depth:
             self.title_parts.append(text)
-        if self._body_depth:
+        if self._body_depth or self._body_selector_stack:
             self.body_parts.append(text)
 
 
@@ -239,6 +284,33 @@ def _jsonld_headline(parser: _ArticleHtmlParser) -> str | None:
             if isinstance(headline, str) and headline.strip():
                 return headline.strip()
     return None
+
+
+def _fusion_article_body(parser: _ArticleHtmlParser) -> str:
+    """Read Chosun's body-free server payload without retaining its HTML."""
+
+    parts: list[str] = []
+    for script in parser.fusion_parts:
+        marker = "Fusion.globalContent="
+        start = script.find(marker)
+        if start < 0:
+            continue
+        candidate = script[start + len(marker) :]
+        candidate = candidate.split(";Fusion.", 1)[0].strip()
+        try:
+            payload = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        elements = payload.get("content_elements") if isinstance(payload, Mapping) else None
+        if not isinstance(elements, list):
+            continue
+        for element in elements:
+            if not isinstance(element, Mapping) or element.get("type") not in {"text", "header"}:
+                continue
+            content = element.get("content")
+            if isinstance(content, str) and content.strip():
+                parts.append(content.strip())
+    return "\n\n".join(parts)
 
 
 class NewsArticleParser:
@@ -402,6 +474,8 @@ class NewsArticleParser:
         if not self.start <= local_date <= self.end:
             return None
         body = " ".join(" ".join(parser.body_parts).split())
+        if len(body) < 80:
+            body = " ".join(_fusion_article_body(parser).split())
         if len(body) < 80:
             return None
         return ArticleDocument(

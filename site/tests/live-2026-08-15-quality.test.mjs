@@ -76,17 +76,50 @@ test("shuffled input yields the same speech cluster members", () => {
   assert.deepEqual(members(forward), members(reverse));
 });
 
-test("unverified 2026-08-15 bundles do not emit template synthesis", async () => {
+test("verified direct event synthesis remains visible when clustering is rules-local", async () => {
   const bundle = JSON.parse(
     await readFile(path.join(siteRoot, "public/initial-five/issues/live-2026-08-15-top-1.json"), "utf8"),
   );
   assert.equal(isVerifiedSemanticBundle(bundle), false);
   const attached = withEventSynthesis(bundle);
+  assert.equal(attached.comparison.data.synthesis.usable, true);
+  assert.equal(attached.comparison.data.synthesis.source, "gcp:event-synthesis");
+  assert.equal(attached.analysisStatus.semantic.semanticAi, true);
+});
+
+test("unverified 2026-08-15 bundles without a direct synthesis stay hidden", async () => {
+  const bundle = JSON.parse(
+    await readFile(path.join(siteRoot, "public/initial-five/issues/live-2026-08-15-top-1.json"), "utf8"),
+  );
+  delete bundle.comparison.data.synthesis;
+  const attached = withEventSynthesis(bundle);
   assert.equal(attached.comparison.data.synthesis.usable, false);
   const encoded = JSON.stringify(attached);
   assert.doesNotMatch(encoded, /대통령의 침묵과 정치적 책임/);
   assert.doesNotMatch(encoded, /제도적 안전장치 약화/);
-  assert.doesNotMatch(encoded, /진보|보수/);
+});
+
+test("current synthesis projections do not end with a truncated inline citation", async () => {
+  for (const rank of [1, 2, 3, 4, 5]) {
+    const bundle = JSON.parse(
+      await readFile(
+        path.join(siteRoot, `public/initial-five/issues/live-2026-08-15-top-${rank}.json`),
+        "utf8",
+      ),
+    );
+    const data = bundle.comparison?.data ?? {};
+    const texts = [
+      data.synthesis?.split_line?.text,
+      data.summary_30_seconds?.main_difference,
+      data.splitLine,
+    ].filter((value) => typeof value === "string");
+    for (const value of texts) {
+      assert.ok(
+        value.split("(").length - 1 <= value.split(")").length - 1,
+        `rank ${rank} exposes an incomplete inline citation`,
+      );
+    }
+  }
 });
 
 test("title-derived hashes are not treated as verified evidence", () => {

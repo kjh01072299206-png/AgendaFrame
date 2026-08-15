@@ -5,6 +5,7 @@
 import { isVerifiedSemanticBundle } from "../analysis-verification.mjs";
 
 const SHA256 = /^[0-9a-fA-F]{64}$/;
+const DIRECT_SYNTHESIS_SOURCE = "gcp:event-synthesis";
 const CAMP_LABELS = {
   legal_institutional: "제도 안전장치 약화를 앞세운 쪽",
   no_treatment: "구체적 대응보다 경고를 전한 쪽",
@@ -72,6 +73,23 @@ function rowsFor(coded, dimension) {
 function claim(text, evidence) {
   if (!text || !evidence?.length) return { text: null, status: "insufficient_evidence", evidence: [] };
   return { text, status: "observed", evidence };
+}
+
+function hasVerifiedDirectSynthesis(bundle) {
+  const synthesis = bundle?.comparison?.data?.synthesis;
+  const engine = bundle?.comparison?.engine;
+  const semantic = bundle?.analysisStatus?.semantic;
+  const runId = String(bundle?.lineage?.runId ?? "").trim();
+  const invocation = synthesis?.invocation;
+  if (!synthesis || synthesis.usable !== true || synthesis.source !== DIRECT_SYNTHESIS_SOURCE) return false;
+  if (!runId || String(synthesis.run_id ?? "").trim() !== runId) return false;
+  if (engine?.semanticAi !== true || semantic?.semanticAi !== true) return false;
+  if (!invocation || typeof invocation !== "object") return false;
+  if (invocation.provider !== "vertex_ai" || !String(invocation.model ?? "").trim()) return false;
+  if (!String(invocation.prompt_version ?? "").trim() || !Number.isInteger(invocation.attempt) || invocation.attempt < 1) return false;
+  if (!String(invocation.completed_at ?? "").trim()) return false;
+  return SHA256.test(String(invocation.request_sha256 ?? ""))
+    && SHA256.test(String(invocation.response_sha256 ?? ""));
 }
 
 export function composeEventSynthesis(bundle) {
@@ -280,7 +298,9 @@ function sourceLensFromProfiles(bundle) {
 
 export function withEventSynthesis(bundle) {
   if (!bundle) return bundle;
-  const liveUnverified = String(bundle.basisDate ?? "") === "2026-08-15" && !isVerifiedSemanticBundle(bundle);
+  const liveUnverified = String(bundle.basisDate ?? "") === "2026-08-15"
+    && !isVerifiedSemanticBundle(bundle)
+    && !hasVerifiedDirectSynthesis(bundle);
   if (liveUnverified) {
     return {
       ...bundle,
