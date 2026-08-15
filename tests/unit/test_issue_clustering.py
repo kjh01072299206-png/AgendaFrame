@@ -13,6 +13,7 @@ from ai.issue_clustering import (
     build_initial_five_approval_manifest,
     build_initial_five_prompt,
     to_metadata_clusters_public_shape,
+    validate_initial_five_payload,
     validate_metadata_payload,
 )
 from backend.config import RuntimeConfig
@@ -226,6 +227,22 @@ class MetadataIssueClusteringTests(unittest.TestCase):
         public = to_metadata_clusters_public_shape(result)
         self.assertEqual(public["clusters"][0]["decision"], "review_needed")
         self.assertFalse(public["clusters"][0]["engine"]["semantic_ai"])
+
+    def test_initial_five_global_outlier_can_cover_unclustered_article(self) -> None:
+        articles, _ = self._initial_five_fixture()
+        payload = self._payload()
+        cluster = payload["clusters"][0]
+        cluster["article_assignments"] = cluster["article_assignments"][:1]
+        cluster["emphasis_variants"][0]["article_ids"] = [articles[0].article_id]
+        payload["outlier_article_ids"] = [articles[1].article_id]
+
+        normalized = validate_initial_five_payload(articles, payload)
+
+        self.assertEqual(normalized["outlier_article_ids"], [articles[1].article_id])
+        self.assertEqual(
+            normalized["clusters"][0]["article_assignments"][0]["article_id"],
+            articles[0].article_id,
+        )
 
     def test_initial_five_invalid_json_is_retried_with_feedback(self) -> None:
         articles, groups = self._initial_five_fixture()

@@ -720,12 +720,39 @@ def validate_initial_five_payload(
             }
         )
 
+    global_ambiguous = set(ambiguous)
+    global_outliers = set(outliers)
+    global_relation_ids = global_ambiguous | global_outliers
+
     if seen_assigned_ids & set(excluded):
         raise InitialFivePayloadError("schema_validation_error", "Excluded articles cannot also be assigned.")
-    if seen_assigned_ids | set(excluded) != article_ids:
+    for article_id in global_ambiguous:
+        if article_id in seen_assigned_ids and article_id not in relation_ids["ambiguous"]:
+            raise InitialFivePayloadError(
+                "schema_validation_error",
+                "Global ambiguous articles must match their assignment relation.",
+            )
+    for article_id in global_outliers:
+        if article_id in seen_assigned_ids and article_id not in relation_ids["outlier"]:
+            raise InitialFivePayloadError(
+                "schema_validation_error",
+                "Global outlier articles must match their assignment relation.",
+            )
+    if relation_ids["ambiguous"] - global_ambiguous or relation_ids["outlier"] - global_outliers:
+        raise InitialFivePayloadError(
+            "schema_validation_error",
+            "Global relation arrays do not match article assignments.",
+        )
+    contradictory_global_relation_ids = (
+        seen_assigned_ids & global_relation_ids
+    ) - (relation_ids["ambiguous"] | relation_ids["outlier"])
+    if contradictory_global_relation_ids:
+        raise InitialFivePayloadError(
+            "schema_validation_error",
+            "Global relation arrays cannot contradict article assignments.",
+        )
+    if seen_assigned_ids | set(excluded) | global_relation_ids != article_ids:
         raise InitialFivePayloadError("schema_validation_error", "The response must cover every supplied article exactly once.")
-    if set(ambiguous) != relation_ids["ambiguous"] or set(outliers) != relation_ids["outlier"]:
-        raise InitialFivePayloadError("schema_validation_error", "Global relation arrays do not match article assignments.")
 
     return {
         "schema_version": INITIAL_FIVE_CLUSTER_SCHEMA_VERSION,
@@ -790,7 +817,12 @@ Use relation same_event, ambiguous, or outlier. Explain why each cluster is
 grouped, list common event elements, give up to four emphasis variants, and
 describe each article's title-level emphasis difference. Do not infer political
 ideology, outlet intent, causality, responsibility, public sentiment, or moral
-judgment. Keep article IDs exactly as supplied.
+judgment. Keep article IDs exactly as supplied. The global ambiguous_article_ids
+and outlier_article_ids arrays may contain articles that are not placed in a
+cluster; if an ambiguous or outlier article is placed in a cluster, its
+assignment relation must match the corresponding global array. Every supplied
+article must appear exactly once across cluster assignments, excluded_article_ids,
+or the two global relation arrays.
 
 OUTPUT_SCHEMA_VERSION: {INITIAL_FIVE_CLUSTER_SCHEMA_VERSION}
 TEXT_SCOPE: {INITIAL_FIVE_CLUSTER_TEXT_SCOPE}
