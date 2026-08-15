@@ -2,6 +2,8 @@
 // Reuses coded public paraphrases and drops anything without locator+hash.
 // Do not label outlets progressive/conservative.
 
+import { isVerifiedSemanticBundle } from "../analysis-verification.mjs";
+
 const SHA256 = /^[0-9a-fA-F]{64}$/;
 const CAMP_LABELS = {
   legal_institutional: "제도 안전장치 약화를 앞세운 쪽",
@@ -278,6 +280,46 @@ function sourceLensFromProfiles(bundle) {
 
 export function withEventSynthesis(bundle) {
   if (!bundle) return bundle;
+  const liveUnverified = String(bundle.basisDate ?? "") === "2026-08-15" && !isVerifiedSemanticBundle(bundle);
+  if (liveUnverified) {
+    return {
+      ...bundle,
+      analysisStatus: {
+        ...bundle.analysisStatus,
+        state: "review_needed",
+        semantic: {
+          ...(bundle.analysisStatus?.semantic ?? {}),
+          status: "review_needed",
+          semanticAi: false,
+          fallbackReason: "unverified_live_lineage",
+        },
+      },
+      comparison: {
+        ...bundle.comparison,
+        data: {
+          ...(bundle.comparison?.data ?? {}),
+          synthesis: {
+            usable: false,
+            opposition: false,
+            camps: [],
+            reason: "analysis_unverified",
+          },
+          whatHappened: null,
+          agreedLine: null,
+          splitLine: null,
+          soWhat: null,
+          camps: [],
+          summary_30_seconds: {
+            ...(bundle.comparison?.data?.summary_30_seconds ?? {}),
+            what_happened: null,
+            main_difference: null,
+            common_ground: null,
+            divergence_detected: false,
+          },
+        },
+      },
+    };
+  }
   if (bundle.comparison?.data?.synthesis?.usable) return bundle;
   const synthesis = composeEventSynthesis(bundle);
   if (!synthesis.usable) return bundle;

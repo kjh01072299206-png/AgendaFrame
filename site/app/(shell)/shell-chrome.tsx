@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { safeDecode } from "../../lib/initial-five/derive";
 import { setTheme, useTheme } from "./client-store";
-import { fetchLiveIssueList, type LiveIssueList } from "./live-data";
 import { ScrollTop } from "./scroll-top";
 
 export interface ShellIssue {
@@ -61,32 +60,8 @@ export function ShellChrome({
   fallbackMeta: ShellMeta;
   children: ReactNode;
 }) {
-  const pathname = usePathname() ?? "/";
-  const legacyIssue = /\/issues\/bigkinds-2026-07-26-/.test(pathname);
-  const [liveData, setLiveData] = useState<LiveIssueList | null>(null);
-
-  useEffect(() => {
-    if (legacyIssue) return;
-    let cancelled = false;
-    fetchLiveIssueList(5).then((payload) => {
-      if (cancelled) return;
-      setLiveData(payload);
-    }).catch(() => undefined);
-    return () => { cancelled = true; };
-  }, [legacyIssue]);
-
-  const issues = legacyIssue || !liveData ? fallbackIssues : liveData.issues.map((issue, index) => ({
-    issueId: issue.id,
-    rank: index + 1,
-    title: issue.title,
-    category: issue.category,
-  }));
-  const meta = legacyIssue || !liveData ? fallbackMeta : {
-    basisDate: liveData.date,
-    articleCount: liveData.articleCount,
-    outletCount: liveData.configuredSources,
-    issueCount: liveData.issueCount,
-  };
+  const issues = fallbackIssues;
+  const meta = fallbackMeta;
 
   return (
     <div className="afs-shell">

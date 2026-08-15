@@ -468,6 +468,20 @@ function Summary({ bundle, issue, analyses: dimensions }: { bundle: IssueAnalysi
 
 export function SynthesisNarrative({ bundle }: { bundle: IssueAnalysisBundle }) {
   const synthesis = synthesisData(bundle);
+  const unverifiedLive = bundle.basisDate === "2026-08-15" && synthesis?.usable !== true;
+  if (unverifiedLive) {
+    return (
+      <section className="afs-card afs-card-lead afp-synthesis">
+        <h2>사건 종합 비교 <small className="afs-num">분석 검증 중</small></h2>
+        <div className="afs-in afs-prose">
+          <p className="afp-state">
+            2026-08-15 기사 목록은 유지하지만, 실제 Vertex 호출 lineage와 문장 재검증이
+            끝나기 전에는 비교·프레이밍 문장을 표시하지 않습니다.
+          </p>
+        </div>
+      </section>
+    );
+  }
   if (!synthesis?.usable) return null;
   const what = observedClaim(synthesis.what_happened);
   const agreed = observedClaim(synthesis.agreed_line);
@@ -478,7 +492,13 @@ export function SynthesisNarrative({ bundle }: { bundle: IssueAnalysisBundle }) 
   const factRows = synthesis.fact_rows ?? [];
   const splitRows = synthesis.split_rows ?? [];
   const campColors = ["var(--n1, #2563eb)", "var(--n2, #d97706)", "var(--n3, #7c3aed)", "var(--n4, #059669)"];
-  const isVertexDirect = Boolean(bundle.analysisStatus?.semantic?.semanticAi && !bundle.clusterAi?.fallbackReason);
+  const isVertexDirect = Boolean(
+    bundle.analysisStatus?.semantic?.semanticAi
+    && !bundle.clusterAi?.fallbackReason
+    && bundle.analysisStatus?.semantic?.source
+    && /gcp:vertex|vertex-evidence/i.test(String(bundle.analysisStatus.semantic.source))
+    && Boolean((bundle.lineage as { runId?: string } | undefined)?.runId),
+  );
 
   return (
     <section className="afs-card afs-card-lead afp-synthesis">

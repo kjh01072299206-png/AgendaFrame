@@ -4,6 +4,13 @@
 
 실배포 주소: <https://agendaframe-capstone.vercel.app>
 
+## 2026-08-15 첫 실반영
+
+운영 스냅샷은 `site/scripts/build-live-snapshot.mjs`로 다시 만든다. 은퇴한
+`scripts/cluster_today_issues.mjs`는 쓰지 않는다. 검증 후 저장소 루트에서
+`npx vercel deploy --prod --yes`로 올리거나 `main` push로 Git 연결 배포한다.
+비교·프레이밍 문장은 Vertex lineage가 검증되기 전까지 “분석 검증 중”이다.
+
 ## 재사용 가능한 실배포 순서 (main → Vercel)
 
 이 저장소의 운영 배포 주체는 Sites가 아니라 Vercel Git 연결이다. 따라서

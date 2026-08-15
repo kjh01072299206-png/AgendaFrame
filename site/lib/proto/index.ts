@@ -138,9 +138,11 @@ export interface ProtoBundle {
 
 export const proto = bundle as unknown as ProtoBundle;
 
-/** 라이브 의제 id 는 bigkinds-2026-07-26-top-N 이고 이 산출물은 rank 로 매긴다. */
+/** 2026-07-26 산출물만 연결한다. live-2026-08-15 같은 다른 날짜 ID는 절대 매핑하지 않는다. */
 export function protoIssue(issueId: string): ProtoIssue | null {
-  const rank = Number(/-top-(\d+)$/.exec(issueId)?.[1]);
+  const match = /^bigkinds-2026-07-26-top-(\d+)$/.exec(String(issueId ?? ""));
+  if (!match) return null;
+  const rank = Number(match[1]);
   if (!Number.isFinite(rank)) return null;
   return proto.issues.find((issue) => issue.rank === rank) ?? null;
 }

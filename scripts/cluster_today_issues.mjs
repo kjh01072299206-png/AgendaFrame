@@ -1,3 +1,12 @@
+/**
+ * SYNTHETIC / DO NOT USE FOR PRODUCTION.
+ * Keyword EVENT_DEFS and outlet-ideology frames were retired.
+ * Operational builder: site/scripts/build-live-snapshot.mjs
+ */
+throw new Error(
+  "scripts/cluster_today_issues.mjs is synthetic and retired. Use site/scripts/build-live-snapshot.mjs",
+);
+
 import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 

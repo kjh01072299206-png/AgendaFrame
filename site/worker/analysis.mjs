@@ -46,6 +46,7 @@ const genericEventTokens = new Set([
   "관련", "사건", "의혹", "논란", "특검", "검찰", "경찰", "법원", "정부", "국회", "청구", "수사", "조사",
   "구속영장", "압수수색", "긴급체포", "체포", "구속", "기소", "입건", "송치", "선고", "판결", "발표",
   "추진", "개최", "방문", "오늘", "내일", "전날", "지난", "이번", "속보", "종합",
+  "광복절", "대통령", "여야", "국민",
 ]);
 
 const distinctiveEventTokens = new Set([
@@ -299,8 +300,24 @@ function topCategory(article) {
   return article._category ?? classifyAgendaCategory(article);
 }
 
+const HARD_NEGATIVE_TITLE_PAIRS = [
+  [/경축사|대북|전쟁\s*종식|상호\s*위협|주적/u, /산책|k-?컬처|케이컬처|야스쿠니|탄도\s*미사일|독립유공자.{0,8}기부/u],
+  [/이진숙.{0,12}(방통|방송통신|탄핵)/u, /이진숙.{0,12}의원|5[·.]18|오월|토론회/u],
+  [/특별사면|사면\s*복권|복권/u, /부동산|당내.{0,6}선거|전당대회|경선|공천/u],
+  [/친일.{0,8}재산|재산\s*환수/u, /독립유공자.{0,8}(기부|성금)|광복회.{0,8}기부/u],
+];
+
+function hasHardNegativeTitleSplit(left, right) {
+  const leftTitle = String(left.title ?? "");
+  const rightTitle = String(right.title ?? "");
+  return HARD_NEGATIVE_TITLE_PAIRS.some(([first, second]) =>
+    (first.test(leftTitle) && second.test(rightTitle)) || (first.test(rightTitle) && second.test(leftTitle)),
+  );
+}
+
 function compatibleEvent(left, right) {
   if (left._event.normalized === right._event.normalized) return true;
+  if (hasHardNegativeTitleSplit(left, right)) return false;
   if (topCategory(left) !== topCategory(right)) return false;
 
   const compared = articleSimilarity(left, right);
