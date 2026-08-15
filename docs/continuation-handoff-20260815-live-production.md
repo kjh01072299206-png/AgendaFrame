@@ -106,6 +106,47 @@ npx vercel deploy --prod --yes
 
 배포 후 /version, reader /healthz, reader /active, main, top-1~5의 outlets/framing/report, mobile/keyboard/failure state를 직접 확인한다. /version은 HTTP 200만으로 충분하지 않고 reviewed commit SHA가 일치해야 한다.
 
+## Live execution evidence recorded on 2026-08-15
+
+This section is intentionally written in ASCII because the older handoff text
+was saved with a legacy Korean encoding and is displayed as mojibake in some
+terminals.
+
+- Reviewed code commits pushed to `origin/main`: `b014326` (real-AI/evidence
+  fail-closed gate), `232081c` (global outlier coverage validation), and
+  `de73d2d` (redistribute the collection budget after source gaps).
+- The offline full gate after the implementation changes passed: 165 tests,
+  including 3 integration/offline end-to-end checks. The evaluation asset still
+  reports `model_quality_measured=false`, `dataset_status=synthetic_schema_only`,
+  and `release_eligible=false`; this is not a real-model quality certificate.
+- Cloud Build `749e7430-fb9f-4860-815d-168f96450beb` deployed the `b014326`
+  runtime image. Run `live-20260815-first-real-b014326` failed at `cluster_rank`
+  because the first validator rejected a response that covered the global
+  outlier articles. That validator was corrected in `232081c`.
+- Cloud Build `a4d7bdc8-1df7-4bfc-a46f-48986850c4dd` deployed `232081c`.
+  Run `live-20260815-first-real-232081c` collected and persisted real metadata,
+  then failed the publishability gate: Vertex produced only 3 publishable
+  event clusters.
+- Cloud Build `09a01f90-d327-4146-9a23-328bef812891` deployed `de73d2d`.
+  Run `live-20260815-first-real-de73d2d` collected 32 distinct articles from 5
+  sources, but the live `cluster_rank` stage was quarantined after a
+  `json_decode_error` fingerprint. Re-running the same 32-article metadata
+  through the deployed Vertex path produced valid JSON, but only 4 clusters
+  satisfied the required minimum of 3 articles and 2 distinct media outlets;
+  the fifth candidate had 2 articles. Three independent diagnostic calls had
+  the same 4-publishable-cluster boundary.
+- The current public reader was checked directly at
+  `https://agendaframe-snapshot-reader-2zut37vwaq-du.a.run.app/active` and
+  returned the prior healthy pointer: basis date `2026-08-14`, run
+  `canary-12-20260814-f`, snapshot `6eccfe4f6c90ad12966b0e9b22eacfdf`.
+  No failed 2026-08-15 run was promoted, and no synthetic fifth issue was
+  inserted.
+- Therefore the 2026-08-15 snapshot is intentionally **not published yet**.
+  The runtime and fail-closed behavior are deployed and tested, but the public
+  data cutover and Vercel production redeploy remain pending until a real run
+  supplies five independently publishable clusters. Do not lower the gate or
+  use singleton/outlier articles to fill the fifth issue.
+
 ## 7. rollback
 
 - quality gate 실패·reader 검증 실패·public 화면 불일치 시 GCS current pointer를 바꾸지 않는다.
