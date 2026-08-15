@@ -75,7 +75,7 @@ if ((& git -C $RepoRoot rev-parse HEAD).Trim() -ne $CommitSha) {
 $Gcloud = Resolve-CloudSdkCommand -Name "gcloud"
 & $Gcloud.Source workflows deploy $WorkflowName `
     --project $ProjectId --location $Region --source $WorkflowSource `
-    --service-account $WorkflowServiceAccount --call-log-level errors-only --quiet
+    --service-account $WorkflowServiceAccount --call-log-level log-errors-only --quiet
 if ($LASTEXITCODE -ne 0) { throw "Workflows deployment failed." }
 
 if (-not $CreateScheduler) {

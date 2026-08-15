@@ -276,6 +276,7 @@ class CloudDeploymentContractTests(unittest.TestCase):
         script = (ROOT / "scripts" / "gcp" / "deploy-orchestration.ps1").read_text(encoding="utf-8")
         self.assertIn("workflow-runtime.yaml", script)
         self.assertIn("$Gcloud.Source workflows deploy", script)
+        self.assertIn("--call-log-level log-errors-only", script)
         self.assertIn("[switch]$CreateScheduler", script)
         self.assertIn("scheduler jobs create http", script)
         self.assertIn("scheduler jobs update http", script)
