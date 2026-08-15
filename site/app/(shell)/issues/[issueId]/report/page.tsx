@@ -1,13 +1,8 @@
-import { getInitialFiveIssueBundle } from "../../../../../lib/initial-five/artifacts";
-import { DIM_LABEL, familyLabel, particle, safeDecode } from "../../../../../lib/initial-five/derive";
-import { LiveIssueView } from "../live-issue";
+import { DIM_LABEL, familyLabel, particle } from "../../../../../lib/initial-five/derive";
 import { loadIssue } from "../load";
 
 export default async function ReportPage({ params }: { params: Promise<{ issueId: string }> }) {
-  const { issueId } = await params;
-  const decoded = safeDecode(issueId);
-  if (!getInitialFiveIssueBundle(decoded)) return <LiveIssueView issueId={decoded} view="report" />;
-  const issue = await loadIssue(Promise.resolve({ issueId }));
+  const issue = await loadIssue(params);
   /* 문장은 전부 이 분석(claude 판정본)에서 계산한다. 공개 JSON 의 comparison.data 는
      다른 세대(rules_local)라 같은 화면에 실으면 서로를 부정한다 — 그래서 쓰지 않는다. */
   const splitRows = issue.dimensionBasis.filter((row) => row.narratedKinds >= 2);

@@ -341,6 +341,16 @@ def _manifest_issue_rows(
                 "category": issue.get("category"),
                 "articleCount": article_count,
                 "outletCount": outlet_count,
+                "agendaScore": issue.get(
+                    "agendaScore", bundle_map.get("issue", {}).get("agendaScore")
+                    if isinstance(bundle_map.get("issue"), Mapping)
+                    else None
+                ),
+                "scoreBreakdown": issue.get(
+                    "scoreBreakdown", bundle_map.get("issue", {}).get("scoreBreakdown")
+                    if isinstance(bundle_map.get("issue"), Mapping)
+                    else None
+                ),
                 "status": str(issue.get("status", "succeeded")),
                 "payloadKey": f"issues/{issue_id}.json",
                 "clusterAi": cluster_ai,
@@ -351,6 +361,14 @@ def _manifest_issue_rows(
 
 
 _SENTENCE_SHA256 = re.compile(r"^[0-9a-fA-F]{64}$")
+
+
+def _publishable_title(value: object) -> bool:
+    title = " ".join(str(value or "").split()).strip()
+    if not title or len(title) > 120:
+        return False
+    sentence_count = len([part for part in re.split(r"(?<=[.!?])\s+", title) if part])
+    return not (len(title) > 80 and (sentence_count >= 2 or len(title.split()) > 18))
 
 
 def _has_evidence(article: Mapping[str, Any]) -> bool:
@@ -393,13 +411,40 @@ def _has_evidence(article: Mapping[str, Any]) -> bool:
     if isinstance(locator, Mapping):
         paragraph = locator.get("paragraph")
         sentence = locator.get("sentence")
-        has_locator = paragraph not in (None, "") and sentence not in (None, "")
-    elif isinstance(locator, str):
-        has_locator = bool(locator.strip())
+        has_locator = (
+            isinstance(paragraph, int)
+            and not isinstance(paragraph, bool)
+            and paragraph >= 1
+            and isinstance(sentence, int)
+            and not isinstance(sentence, bool)
+            and sentence >= 1
+        )
     else:
         has_locator = False
 
     return has_locator and isinstance(sentence_hash, str) and bool(_SENTENCE_SHA256.fullmatch(sentence_hash))
+
+
+def _has_invocation_receipt(value: object, *, model: str, prompt_version: str) -> bool:
+    if not isinstance(value, Mapping):
+        return False
+    if value.get("provider") != "vertex_ai":
+        return False
+    if str(value.get("model", "")).strip() != model or str(
+        value.get("prompt_version", "")
+    ).strip() != prompt_version:
+        return False
+    attempt = value.get("attempt")
+    if not isinstance(attempt, int) or isinstance(attempt, bool) or attempt < 1:
+        return False
+    if not isinstance(value.get("completed_at"), str) or not str(value["completed_at"]).strip():
+        return False
+    return bool(
+        isinstance(value.get("request_sha256"), str)
+        and _SENTENCE_SHA256.fullmatch(value["request_sha256"])
+        and isinstance(value.get("response_sha256"), str)
+        and _SENTENCE_SHA256.fullmatch(value["response_sha256"])
+    )
 
 
 def evaluate_quality_gate(
@@ -422,6 +467,8 @@ def evaluate_quality_gate(
         raise QualityGateError("semantic output must contain public issue bundles")
     if manifest.get("issueCount") != top5_limit:
         raise QualityGateError("public snapshot manifest issueCount must match top5")
+    if manifest.get("rawBodyAbsent") is not True:
+        raise QualityGateError("public snapshot manifest must explicitly exclude raw bodies")
     unsupported = semantic.get("unsupportedClaimRate", semantic.get("unsupported_claim_rate", 0.0))
     try:
         unsupported_rate = float(unsupported)
@@ -443,16 +490,82 @@ def evaluate_quality_gate(
         issue_ids.add(str(issue_id))
         if issue_id not in bundles or not isinstance(bundles[issue_id], Mapping):
             raise QualityGateError(f"top issue {issue_id} has no public issue bundle")
+        bundle = bundles[issue_id]
+        if bundle.get("status") != "succeeded":
+            raise QualityGateError(f"top issue {issue_id} is not succeeded")
+        if not _publishable_title(issue.get("title")):
+            raise QualityGateError(f"top issue {issue_id} has a non-headline title")
+        score = issue.get("agendaScore") or bundle.get("issue", {}).get("agendaScore")
+        if not isinstance(score, (int, float)) or isinstance(score, bool) or score <= 0:
+            raise QualityGateError(f"top issue {issue_id} has no observed non-zero agenda score")
+        outlet_count = issue.get("outletCount") or bundle.get("issue", {}).get("outletCount")
+        if not isinstance(outlet_count, int) or outlet_count < 2:
+            raise QualityGateError(f"top issue {issue_id} lacks independent outlet diversity")
+        cluster_engine = issue.get("clusterAi") or bundle.get("analysisStatus", {}).get("cluster")
+        semantic_engine = issue.get("semantic") or bundle.get("analysisStatus", {}).get("semantic")
+        if not isinstance(cluster_engine, Mapping) or not isinstance(semantic_engine, Mapping):
+            raise QualityGateError(f"top issue {issue_id} has incomplete AI engine lineage")
+        for label, engine in (("cluster", cluster_engine), ("semantic", semantic_engine)):
+            if engine.get("semanticAi") is not True or engine.get("status") != "succeeded":
+                raise QualityGateError(f"top issue {issue_id} {label} engine is not verified AI")
+            model = str(engine.get("model", "")).strip()
+            prompt_version = str(engine.get("promptVersion", "")).strip()
+            if not model or not prompt_version or str(engine.get("runId", "")).strip() == "":
+                raise QualityGateError(f"top issue {issue_id} {label} lineage is incomplete")
+            if label == "cluster":
+                if not _has_invocation_receipt(
+                    engine.get("invocation"), model=model, prompt_version=prompt_version
+                ):
+                    raise QualityGateError(f"top issue {issue_id} lacks a cluster Vertex receipt")
+            else:
+                invocations = engine.get("invocations")
+                if (
+                    not isinstance(invocations, Sequence)
+                    or isinstance(invocations, (str, bytes, bytearray))
+                    or not invocations
+                    or not all(
+                        _has_invocation_receipt(item, model=model, prompt_version=prompt_version)
+                        for item in invocations
+                    )
+                ):
+                    raise QualityGateError(f"top issue {issue_id} lacks semantic Vertex receipts")
         articles = issue.get("articles", issue.get("articleProfiles", []))
         if not isinstance(articles, Sequence) or isinstance(articles, (str, bytes, bytearray)) or not articles:
             raise QualityGateError(f"top issue {issue_id} has no article evidence")
+        if len(articles) < 3:
+            raise QualityGateError(
+                f"top issue {issue_id} must have at least three article evidence rows"
+            )
         for article in articles:
             if not isinstance(article, Mapping):
                 raise QualityGateError(f"top issue {issue_id} contains an invalid article evidence row")
             article_id = article.get("articleId", article.get("article_id"))
-            if not str(article_id or "").strip() or not _has_evidence(article):
+            if (
+                not str(article_id or "").strip()
+                or not _publishable_title(article.get("title"))
+                or not _has_evidence(article)
+            ):
                 raise QualityGateError(f"top issue {issue_id} has an article without evidence lineage")
             article_count += 1
+        profiles = bundle.get("semanticProfiles")
+        if not isinstance(profiles, Sequence) or isinstance(profiles, (str, bytes, bytearray)):
+            raise QualityGateError(f"top issue {issue_id} has no semantic profile rows")
+        profile_by_id = {str(entry.get("articleId")): entry for entry in profiles if isinstance(entry, Mapping)}
+        for article in articles:
+            article_id = str(article.get("articleId", article.get("article_id")))
+            entry = profile_by_id.get(article_id)
+            if not isinstance(entry, Mapping) or entry.get("status") != "succeeded":
+                raise QualityGateError(f"top issue {issue_id} has an unverified profile: {article_id}")
+            evidence_rows = entry.get("evidence")
+            if not isinstance(evidence_rows, Sequence) or not evidence_rows:
+                raise QualityGateError(f"top issue {issue_id} profile has no evidence: {article_id}")
+            engine = entry.get("engine")
+            if not isinstance(engine, Mapping) or not _has_invocation_receipt(
+                engine.get("invocation"),
+                model=str(semantic_engine.get("model")),
+                prompt_version=str(semantic_engine.get("promptVersion")),
+            ):
+                raise QualityGateError(f"top issue {issue_id} profile lacks its Vertex receipt: {article_id}")
     if set(bundles) != issue_ids:
         raise QualityGateError("public issue bundles must match the exact top-five issue IDs")
 

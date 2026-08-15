@@ -28,16 +28,6 @@ const JSON_OUT = opt("json");
 const AGAINST = opt("against");
 const SELFTEST = flag("selftest");
 
-const ISSUE = "bigkinds-2026-07-26-top-1";
-const ISSUE_B = "bigkinds-2026-07-26-top-3";
-const ROUTES = FAST
-  ? ["/", "/issues", `/issues/${ISSUE}`, `/issues/${ISSUE}/outlets`, `/issues/${ISSUE}/framing`, `/issues/${ISSUE}/report`, "/tools/self-check", "/tools/community", "/tools/ask", "/tools/method"]
-  : [
-      "/", "/issues",
-      `/issues/${ISSUE}`, `/issues/${ISSUE}/outlets`, `/issues/${ISSUE}/framing`, `/issues/${ISSUE}/report`,
-      `/issues/${ISSUE_B}`, `/issues/${ISSUE_B}/outlets`, `/issues/${ISSUE_B}/framing`, `/issues/${ISSUE_B}/report`,
-      "/tools/self-check", "/tools/community", "/tools/ask", "/tools/method",
-    ];
 const VIEWPORTS = FAST
   ? [{ w: 1280, scheme: "light" }]
   : [{ w: 1440, scheme: "light" }, { w: 1280, scheme: "dark" }, { w: 900, scheme: "light" }, { w: 390, scheme: "light" }, { w: 390, scheme: "dark" }];
@@ -242,7 +232,7 @@ function collect({ w, isDesktop }) {
     if (lv > prev + 1) push("HEADING-SKIP", `h${prev} → h${lv} «${h.textContent.trim().slice(0, 20)}»`);
     prev = lv;
   }
-  for (const a of document.querySelectorAll("a[target=_blank]")) if (!/noopener/.test(a.rel)) push("BLANK-REL", (a.textContent || a.href).trim().slice(0, 30));
+  for (const a of document.querySelectorAll("a[target=_blank]")) if (!/noopener|noreferrer/.test(a.rel)) push("BLANK-REL", (a.textContent || a.href).trim().slice(0, 30));
 
   const cur = document.querySelectorAll('.afs-nav a[aria-current="page"]').length;
   if (root.querySelector(".afs-nav") && cur !== 1) push("ARIA-CURRENT", `사이드바 aria-current=page ${cur}개`);
@@ -257,7 +247,27 @@ const chromium = await loadChromium();
 const browser = await chromium.launch({ executablePath: chromePath() });
 const t0 = Date.now();
 
+async function discoverIssueIds(page) {
+  await page.goto(BASE + "/", { waitUntil: "load" });
+  await page.waitForTimeout(200);
+  return await page.evaluate(() => [...new Set([
+    ...[...document.querySelectorAll('a[href^="/issues/"]')]
+      .map((link) => link.getAttribute("href") || "")
+      .map((href) => href.split("?")[0].split("#")[0])
+      .filter((href) => /^\/issues\/[^/]+$/.test(href))
+      .map((href) => decodeURIComponent(href.slice("/issues/".length))),
+    ...[...document.querySelectorAll("select option")]
+      .map((option) => option.getAttribute("value") || "")
+      .filter(Boolean),
+  ])].slice(0, 5));
+}
+
 if (SELFTEST) {
+  const selftestPage = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const selftestIssues = await discoverIssueIds(selftestPage);
+  const ISSUE = selftestIssues[0];
+  await selftestPage.close();
+  if (!ISSUE) throw new Error("active home has no issue links for the render self-test");
   const CASES = [
     ["SPILL", "/", "격자 칸에 3000px 요소를 넣는다", () => { const d = document.createElement("div"); d.style.width = "3000px"; d.textContent = "x"; document.querySelector(".afs-in").appendChild(d); }],
     ["DESK-CLIP", `/issues/${ISSUE}/outlets`, "표를 4000px 로 늘린다", () => { document.querySelector(".afs-scroll table").style.minWidth = "4000px"; }],
@@ -295,12 +305,24 @@ if (SELFTEST) {
   process.exit(bad ? 2 : 0);
 }
 
+let ROUTES = [];
 for (const vp of VIEWPORTS) {
   const page = await browser.newPage({ viewport: { width: vp.w, height: 900 }, colorScheme: vp.scheme });
   const errs = [];
   page.on("pageerror", (e) => errs.push(e.message));
   page.on("console", (c) => { if (c.type() === "error") errs.push(`console: ${c.text()}`); });
-  for (const route of ROUTES) {
+  const issueIds = await discoverIssueIds(page);
+  const issueRoutes = issueIds.flatMap((issueId) => [
+    `/issues/${encodeURIComponent(issueId)}`,
+    `/issues/${encodeURIComponent(issueId)}/outlets`,
+    `/issues/${encodeURIComponent(issueId)}/framing`,
+    `/issues/${encodeURIComponent(issueId)}/report`,
+  ]);
+  const routes = FAST
+    ? ["/", "/issues", ...issueRoutes.slice(0, 4), "/tools/self-check", "/tools/community", "/tools/ask", "/tools/method"]
+    : ["/", "/issues", ...issueRoutes, "/tools/self-check", "/tools/community", "/tools/ask", "/tools/method"];
+  ROUTES = routes;
+  for (const route of routes) {
     const at = `${route} @${vp.w}${vp.scheme === "dark" ? "d" : ""}`;
     const response = await page.goto(BASE + route, { waitUntil: "load" });
     if (!response || !response.ok()) add("HTTP", `${response ? response.status() : "no response"}`, at);

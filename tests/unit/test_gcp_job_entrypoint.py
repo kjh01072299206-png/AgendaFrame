@@ -55,25 +55,108 @@ def env(**overrides: str) -> dict[str, str]:
 class FakeAdapters:
     def __init__(self, snapshots: SnapshotFake) -> None:
         self.snapshots = snapshots
+
+        def receipt(model: str) -> dict[str, Any]:
+            return {
+                "provider": "vertex_ai",
+                "model": model,
+                "prompt_version": "framing-v2",
+                "attempt": 1,
+                "request_sha256": "b" * 64,
+                "response_sha256": "c" * 64,
+                "completed_at": "2026-08-13T00:00:00+00:00",
+            }
+
+        bundles: dict[str, Any] = {}
+        top5: list[dict[str, Any]] = []
+        for index in range(1, 6):
+            issue_id = f"issue-{index}"
+            cluster_engine = {
+                "engineLabel": "ai_semantic",
+                "semanticAi": True,
+                "status": "succeeded",
+                "model": "fake-cluster",
+                "promptVersion": "framing-v2",
+                "runId": "fake-run",
+                "invocation": receipt("fake-cluster"),
+            }
+            semantic_engine = {
+                "engineLabel": "ai_semantic",
+                "semanticAi": True,
+                "status": "succeeded",
+                "model": "fake-gemini",
+                "promptVersion": "framing-v2",
+                "runId": "fake-run",
+                "invocations": [receipt("fake-gemini")],
+            }
+            articles: list[dict[str, Any]] = []
+            profiles: list[dict[str, Any]] = []
+            for member in range(1, 4):
+                article_id = f"article-{index}-{member}"
+                evidence = {
+                    "articleId": article_id,
+                    "locator": {"paragraph": 1, "sentence": member},
+                    "sentenceSha256": "a" * 64,
+                }
+                articles.append(
+                    {
+                        "articleId": article_id,
+                        "title": f"Observed event {index} report {member}",
+                        "sourceId": f"source-{index}-{1 if member < 3 else 2}",
+                        "outlet": f"source-{index}-{1 if member < 3 else 2}",
+                        "evidence": {
+                            "locator": {"paragraph": 1, "sentence": member},
+                            "sentence_sha256": "a" * 64,
+                        },
+                    }
+                )
+                profiles.append(
+                    {
+                        "articleId": article_id,
+                        "status": "succeeded",
+                        "engine": {
+                            **semantic_engine,
+                            "articleId": article_id,
+                            "invocation": receipt("fake-gemini"),
+                        },
+                        "evidence": [evidence],
+                    }
+                )
+            bundles[issue_id] = {
+                "schemaVersion": "agendaframe.initial-five.public.v1",
+                "basisDate": "2026-08-13",
+                "status": "succeeded",
+                "issue": {
+                    "issueId": issue_id,
+                    "agendaScore": 20,
+                    "outletCount": 2,
+                    "title": f"Issue {index}",
+                },
+                "analysisStatus": {"cluster": cluster_engine, "semantic": semantic_engine},
+                "semanticProfiles": profiles,
+            }
+            top5.append(
+                {
+                    "issueId": issue_id,
+                    "rank": index,
+                    "title": f"Issue {index}",
+                    "status": "succeeded",
+                    "agendaScore": 20,
+                    "outletCount": 2,
+                    "clusterAi": cluster_engine,
+                    "semantic": semantic_engine,
+                    "articles": articles,
+                }
+            )
         self.semantic = {
             "unsupportedClaimRate": 0.0,
-            "manifest": {"schemaVersion": "agenda.frame.active-snapshot.v1", "issueCount": 5},
-            "bundles": {f"issue-{i}": {"issueId": f"issue-{i}"} for i in range(1, 6)},
-            "top5": [
-                {
-                    "issueId": f"issue-{i}",
-                    "articles": [
-                        {
-                            "articleId": f"article-{i}",
-                            "evidence": {
-                                "locator": {"paragraph": 1, "sentence": 1},
-                                "sentence_sha256": "a" * 64,
-                            },
-                        }
-                    ],
-                }
-                for i in range(1, 6)
-            ],
+            "manifest": {
+                "schemaVersion": "agenda.frame.active-snapshot.v1",
+                "issueCount": 5,
+                "rawBodyAbsent": True,
+            },
+            "bundles": bundles,
+            "top5": top5,
         }
 
     def as_pipeline(self) -> PipelineAdapters:

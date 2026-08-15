@@ -1,105 +1,124 @@
-# 2026-08-15 live production handoff
+# 2026-08-15 실반영 기준일 인수인계
 
-## 초기 목표
+이 문서는 7월 26일 데모 데이터로 되돌리지 않고 2026-08-15를 첫 실기사 기준일로 삼아 AgendaFrame을 실제 AI 분석·검증·공개 스냅샷 흐름으로 전환한 작업 기록이다. 코드와 오프라인 검증 완료, 실제 Vertex 실행·current pointer 교체·Vercel 공개 화면 검증은 별도로 구분한다.
 
-7월 26일 데모로 롤백하지 않고, 2026-08-15 실제 기사로 첫 운영 기준일을 만든 뒤
-하루 4회 자동 갱신 경로를 유지한다.
+## 1. 발견한 문제와 이번 수정
 
-## 발견한 문제
+- scripts/cluster_today_issues.mjs와 기존 정적 산출물은 수동 사건 정의, 제목 키워드, slice(0, 15), 임의 locator/hash에 의존했다. 이 경로는 운영 경로에서 제외한다.
+- 7월 26일 prototype/static issue와 8월 15일 live ID가 섞이거나, hydration 뒤 D1 issue 목록이 active snapshot을 덮어쓸 수 있었다.
+- 본문 첫 문단이나 articleBody가 제목으로 노출될 수 있었고, 근거 없는 비교·프레이밍 문장이 정상 분석처럼 보일 수 있었다.
+- 점수가 null 또는 0으로 고정되는 경로가 있었고, 실제 invocation lineage 없이 Vertex 모델명을 표시하는 경로가 있었다.
+- 확인 시점의 GCP current pointer는 2026-08-14 canary(runId=canary-12-20260814-f)를 가리켰다. 해당 manifest의 issue는 title-fallback-*, 점수 null, 매체 수 1인 구형 산출물이라 새 완료 조건을 만족하지 않는다.
 
-- `cluster_today_issues.mjs`가 EVENT_DEFS·매체 성향·제목 해시로 가짜 Vertex 결과를 만들었다.
-- `protoIssue()`가 `live-2026-08-15-top-N`을 2026-07-26 산출물에 매핑해 보완수사권·멱살 설명이 섞였다.
-- `ShellChrome`이 hydration 뒤 D1 `/api/issues`로 드롭다운을 바꿔 만료 ID가 생겼다.
-- 본문형 제목(200자+)이 title로 공개됐다.
-- 점수가 `null`/0.0으로 고정됐다.
-- 공개 비교문이 “대통령 침묵 / 제도 안전장치” 템플릿을 모든 의제에 반복했다.
+## 2. 구현된 운영 경로
 
-## 수정한 파일
+### 수집·제목 정제
 
-- `site/lib/proto/index.ts` — 7/26 ID만 proto 매핑
-- `site/app/(shell)/shell-chrome.tsx` — D1 의제 목록 덮어쓰기 제거
-- `site/lib/initial-five/compose-synthesis.mjs` — 8/15 미검증 합성 fail-closed
-- `site/app/(shell)/semantic-analysis-pages.tsx` — “분석 검증 중” 표시, 가짜 Vertex 배지 제거
-- `site/app/(shell)/active-home.tsx` — 실제 agendaScore 표시
-- `site/lib/article-title.mjs`, `site/lib/analysis-verification.mjs`
-- `site/worker/analysis.mjs` — 광복절/대통령 일반 토큰, hard-negative 분리
-- `site/scripts/build-live-snapshot.mjs` — 운영 스냅샷 생성기
-- `scripts/cluster_today_issues.mjs` — synthetic retired
-- `site/public/initial-five/manifest.json` 및 `live-2026-08-15-top-*.json`
+- src/backend/gcp_live_dependencies.py는 JSON-LD NewsArticle.headline → og:title → 검증된 HTML title → RSS title 순서로만 제목을 선택한다.
+- articleBody, description, listing anchor, 본문 문장을 제목 fallback으로 사용하지 않는다. 제목을 확인할 수 없으면 수집하지 않고 title_source를 보존한다.
+- src/crawler/models.py의 ArticleDocument.title_source와 metadata titleSource로 title lineage를 기록한다.
+- private body는 분석 중에만 vault/object storage에서 사용하고 public manifest/bundle에는 보내지 않는다.
 
-## 실제 클러스터링
+### 실제 AI 군집
 
-`analyzeArticles()` complete-link v7. 제목 정제 후 당일 전체 재군집화.
-최소 기사 3·매체 2. singleton으로 5개를 채우지 않음.
-hard-negative: 경축사↔산책/K-컬처/야스쿠니, 이진숙 방통↔의원 5·18, 사면↔당내 선거, 친일재산↔독립유공자 기부.
+- src/backend/gcp_stage_adapters.py의 운영 rank adapter는 전체 수집 metadata를 하나의 Vertex 초기-5 클러스터 요청에 전달한다. 운영 경로에서 수동 EVENT_DEFS, 제목 키워드 묶음, remainder singleton, title fallback을 만들지 않는다.
+- AI가 반환한 same_event 군집 중 다음을 모두 만족하는 경우만 후보로 남긴다.
+  - 기사 3개 이상
+  - 서로 다른 매체 2개 이상
+  - cohesion high 또는 medium
+  - 확인 가능한 article ID만 포함
+- 후보가 5개 미만이면 임의 행으로 채우지 않고 quarantine한다. 공개 게이트는 정확히 top 5 bundle만 허용한다.
+- hard negative와 사건 식별은 제목 하나가 아니라 핵심 인물·기관·행위·시점·장소·정책/법안·사건 상태·기사 제목/본문 증거를 함께 사용하도록 Vertex prompt 계약으로 제한한다.
 
-## 실제 순위 산식
+### 실제 점수
 
-`observed-agenda-v5`: 독립 매체 다양성, 로그 기사 수, 배치, 후속/반복 감점, cohesion.
-화면은 `agendaScore`를 그대로 표시한다.
+src/backend/gcp_stage_adapters.py의 observed-agenda-gcp-v1 점수는 관측 가능한 값만 사용한다.
 
-## Vertex / evidence
+- 매체 다양성 55%
+- 기사량(log 규모) 25%
+- 동일 매체 반복 보도 5%
+- 배치·검색 순위는 관측되지 않은 값으로 제외
+- 매체 수와 기사 수를 반영한 coverage factor 적용
 
-이번 재생성 스냅샷은 **Vertex 실호출이 아니다.**
-`today-articles-2026-08-15.json`에 비공개 본문이 없어 locator 재검증이 불가능하다.
-공개 비교·프레이밍 문장은 fail-closed (“분석 검증 중”).
-가짜 `gemini-2.5-flash-lite` / `sha256(title+"-1")` 경로는 제거했다.
+공개 issue에는 agendaScore, scoreBreakdown, rankScoreVersion, sourceCount를 함께 남긴다. 화면은 0.0 placeholder가 아니라 실제 계산값만 표시한다.
 
-모델·promptVersion은 검증된 lineage가 생기기 전에는 표시하지 않는다.
+### Vertex 프레이밍·이벤트 합성
 
-## 공개 본문 방지
+- src/ai/framing.py: gemini-2.5-flash-lite, framing prompt/schema 계약, article별 실제 Vertex 응답 검증.
+- src/ai/event_synthesis.py: 비교·공통점·차이점 합성에 실제 Vertex invocation receipt를 연결한다.
+- 성공 결과마다 provider, model, prompt version, attempt, 완료시각, request/response SHA-256 receipt를 기록한다. 본문·prompt payload 자체는 로그나 public JSON에 기록하지 않는다.
+- 근거가 없거나 출력 검증이 실패하면 explicit_not_stated, not_observed, insufficient_evidence, conflicting, analysis_failed, review_needed 중 적절한 상태로 남기고 정상 분석 문장으로 채우지 않는다.
 
-- 200자 초과·다문장·본문형 title 제거
-- 공개 bundle에 bodyText/raw_body/HTML/sentenceText 없음
-- 제목 없으면 클러스터 입력에서 제외
+### evidence lineage
 
-## GCP 실행 / 하루 4회
+- src/backend/gcp_stage_adapters.py가 private body의 실제 paragraph/sentence 위치와 salted sentence SHA-256을 만든다.
+- public row에는 article ID, locator, hash, public paraphrase, voice/source role, model run lineage만 남긴다.
+- src/backend/gcp_orchestration.py 품질 게이트는 locator의 양의 정수 paragraph/sentence, 64자리 hash, 실제 cluster/semantic/profile invocation receipt, model·prompt·runId, 본문 부재, 정확한 top-5 bundle 일치를 모두 확인한다.
+- public payload 금칙어는 bodyText, raw_body, articleBody, content, HTML, sentenceText 등으로 확장했다.
 
-이미 배포됨.
+## 3. active snapshot과 화면 일관성
 
-- Job: `agendaframe-collection-analysis`
-- Workflow: `agendaframe-collection-analysis`
-- Scheduler: `agendaframe-collection-4x-kst` `0 3,9,15,21 * * *` Etc/UTC
-- Reader: `https://agendaframe-snapshot-reader-2zut37vwaq-du.a.run.app/active`
+- site/lib/active-snapshot.ts가 live mode에서 reader의 하나의 envelope만 읽고, manifest와 bundle ID가 정확히 일치하는지 확인한다.
+- manifest와 envelope의 quality gate가 모두 pass가 아니면 화면에 live 결과를 표시하지 않는다.
+- shell, main, issue overview, outlets, framing, report, AI ask API/page가 모두 같은 getActiveSnapshot() 결과를 사용한다.
+- site/app/(shell)/shell-chrome.tsx는 hydration 후 D1 /api/issues로 issue ID를 덮어쓰지 않는다.
+- demo mode는 로컬 개발용이며 7월 26일 데이터를 8월 15일 live 결과로 위장하지 않는다. Vercel production은 AGENDAFRAME_DATA_MODE=live와 AGENDAFRAME_ACTIVE_SNAPSHOT_URL을 사용해야 한다.
 
-Vercel 환경변수 이름만: `AGENDAFRAME_DATA_MODE`, `AGENDAFRAME_ACTIVE_SNAPSHOT_URL`.
+## 4. GCP 구조와 자동 갱신
 
-Cloudflare cron은 Scheduler 예약 성공 확인 전에는 끄지 않음.
+- Cloud Run Job: agendaframe-collection-analysis
+- Workflow: agendaframe-collection-analysis
+- Scheduler: agendaframe-collection-4x-kst
+- KST 00/06/12/18 = UTC 0 3,9,15,21 * * *
+- snapshot reader: https://agendaframe-snapshot-reader-2zut37vwaq-du.a.run.app
+- snapshot bucket과 project는 config/gcp-runtime.yaml 및 site/.openai/hosting.json의 기존 설정을 사용한다. 새 project/site를 만들지 않는다.
+- Cloudflare cron은 GCP Scheduler와 중복 실행하지 않도록 legacy/Cloudflare ownership을 비활성화한 뒤에만 cutover한다.
 
-## 배포
+각 run은 runId와 scheduled time을 갖고, 수집 → metadata persist → Vertex global cluster → 실제 Vertex framing → evidence gate → immutable manifest/active bundle 작성 → 마지막에 current pointer 교체 순으로 실행한다. 실패하면 이전 pointer를 유지한다.
 
-```powershell
-cd site
-npm run typecheck
-npm run lint
-node --test --test-isolation=none tests/live-2026-08-15-quality.test.mjs tests/initial-five-contract.test.mjs
-# 저장소 루트
+## 5. 검증 결과
+
+### 완료된 로컬 검증
+
+- powershell -NoProfile -File scripts/check.ps1 -Mode quick: 163 passed
+- powershell -NoProfile -File scripts/check.ps1 -Mode full: 163 unit/contract + integration/e2e 3 passed; eval asset은 synthetic_schema_only, release_eligible=false로 남아 있어 실제 모델 품질 증거로 사용하지 않는다.
+- Python 핵심 단위 테스트: stage adapter/orchestration/job entrypoint 및 live dependency 테스트 통과
+- site: typecheck 통과, lint error 없음(기존 warning 6개), 계약·품질·active snapshot 관련 테스트 29 passed
+- npx next build: compile, TypeScript, static page 생성 완료
+
+### 아직 완료로 부르면 안 되는 검증
+
+- 현재 GCP pointer는 구형 2026-08-14 canary이며 새 코드의 2026-08-15 실제 Vertex 결과가 아니다.
+- 확인된 구형 reader는 /active 200이지만 /healthz 404이다. 새 reader revision을 배포한 뒤 /healthz와 expected snapshot ID를 다시 확인해야 한다.
+- public Vercel /version의 reviewed commit SHA와 실제 main/top-1/outlets/framing 화면은 새 commit 배포 후에 확인해야 한다.
+- 실제 8월 15일 기사에 대한 cluster precision, unsupported claim rate, locator/hash 일치율은 실제 run과 사람 검토 전에는 측정되지 않았다.
+- 로컬 audit-site.mjs는 현재 playwright-core 경로가 지정되지 않아 브라우저 audit 실행이 보류된 상태다. Next build와 계약 테스트 통과를 브라우저 렌더 통과로 대체하지 않는다.
+
+## 6. 배포·실행 순서
+
+~~~powershell
+powershell -NoProfile -File scripts/gcp/deploy-runtime-job.ps1 -Apply -FullGatePassed -CommitSha <40-character-reviewed-sha>
+gcloud run jobs execute agendaframe-collection-analysis --region asia-northeast3 --project project-40bc06fc-fb4b-46b6-a10 --update-env-vars AGENDAFRAME_RUN_ID=live-20260815-first-real,AGENDAFRAME_SCHEDULED_TIME=2026-08-15T12:00:00+09:00,AGENDAFRAME_BASIS_DATE=2026-08-15 --wait
+powershell -NoProfile -File scripts/gcp/deploy-snapshot-reader.ps1 -Apply -FullGatePassed -AllowUnauthenticated -Promote -CommitSha <40-character-reviewed-sha>
+npx vercel env ls production
 npx vercel deploy --prod --yes
-```
+~~~
 
-## rollback
+배포 후 /version, reader /healthz, reader /active, main, top-1~5의 outlets/framing/report, mobile/keyboard/failure state를 직접 확인한다. /version은 HTTP 200만으로 충분하지 않고 reviewed commit SHA가 일치해야 한다.
 
-- 사이트: 직전 Vercel production redeploy
-- 스냅샷: `site/public/initial-five`의 이전 immutable JSON + 직전 commit
-- GCP pointer: 바꾸지 않았으면 이전 current pointer 유지
+## 7. rollback
 
-## 테스트
+- quality gate 실패·reader 검증 실패·public 화면 불일치 시 GCS current pointer를 바꾸지 않는다.
+- pointer가 이미 바뀐 뒤 문제가 발견되면 직전 immutable snapshot ID로 pointer만 되돌리고, 새 run은 실패 상태로 남긴다.
+- public app 문제는 직전 검증된 Vercel deployment로 되돌린다.
+- 7월 26일 prototype/static JSON을 8월 15일 live 결과의 대체품으로 연결하지 않는다.
 
-- live-2026-08-15-quality, compose-synthesis, active-snapshot-contract, initial-five-contract 통과
-- `tsc --noEmit` 통과
+## 8. 남은 일과 다음 모델의 시작점
 
-## 공개 URL
+1. 새 runtime image를 reviewed commit으로 배포하고 2026-08-15 실제 run을 실행한다.
+2. run 성공 시 새 manifest/pointer와 reader /healthz·/active를 확인한다.
+3. Vercel production env를 live reader로 설정하고 새 commit을 배포한다.
+4. 공개 /version과 실제 화면, 다섯 issue의 모든 링크를 브라우저에서 확인한다.
+5. 실제 결과에 대해 사람 검토를 수행하고, 품질 목표를 충족하지 못하면 pointer를 교체하지 않는다.
 
-배포 후 `/version`과 `/`에서 2026-08-15, 가짜 7/26 설명 없음, 점수 > 0을 확인한다.
-
-## 미완료
-
-- 비공개 본문 확보 후 실제 Vertex framing + locator 재검증
-- 5개 미만이 아닌 “최대 5” 빈 칸 UI (현재 적격 군집 5개 발행)
-- Cloudflare cron cutover
-- Reader `/healthz` 404
-- 사람 코더 / `release_eligible`
-
-## 다음 모델 프롬프트
-
-2026-08-15 클러스터는 complete-link로 다시 만들었다. 다음 작업은 비공개 본문을 확보한 뒤 상위 최대 5개만 Vertex로 분석하고, locator/hash를 재검증한 뒤에만 비교문을 열어라. 7월 26일로 롤백하지 마라.
+완료 보고는 실제 구현/배포, 오프라인 테스트, 실제 live 검증, 사람 검토가 필요한 항목을 분리해서 작성한다.

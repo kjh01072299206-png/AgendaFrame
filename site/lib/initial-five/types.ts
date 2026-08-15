@@ -26,6 +26,9 @@ export interface InitialFiveManifestIssue {
   category: string | null;
   articleCount: number;
   outletCount: number;
+  agendaScore?: number | null;
+  scoreBreakdown?: Record<string, unknown> | null;
+  rankScoreVersion?: string | null;
   status: AnalysisState;
   payloadKey: string;
   clusterAi: {
@@ -241,6 +244,7 @@ export interface InitialFiveArticle {
   articleId: string;
   id: string;
   title: string | null;
+  titleSource?: string | null;
   outlet: string | null;
   sourceId: string | null;
   mediaGroupId: string | null;
@@ -360,6 +364,9 @@ export interface IssueAnalysisBundle {
     category: string | null;
     articleCount: number;
     outletCount: number;
+    agendaScore?: number | null;
+    scoreBreakdown?: Record<string, unknown> | null;
+    rankScoreVersion?: string | null;
   };
   analysisStatus: {
     state: AnalysisState;

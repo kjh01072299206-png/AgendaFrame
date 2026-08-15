@@ -35,11 +35,7 @@ export function ActiveSnapshotHome({ active }: { active: ActiveSnapshotSource })
             category: issue.category,
             articleCount: issue.articleCount,
             outletCount: issue.outletCount,
-            score: Number.isFinite(Number((issue as { agendaScore?: number; score?: number }).agendaScore ?? (issue as { score?: number }).score))
-              ? Number((issue as { agendaScore?: number; score?: number }).agendaScore ?? (issue as { score?: number }).score)
-              : Number.isFinite(Number(issue.articleCount)) && Number(issue.outletCount) > 0
-                ? Number(issue.outletCount) * 10 + Math.log1p(Number(issue.articleCount))
-                : null,
+            score: Number.isFinite(Number(issue.agendaScore)) ? Number(issue.agendaScore) : null,
           }))} />
         </div>
       </section>

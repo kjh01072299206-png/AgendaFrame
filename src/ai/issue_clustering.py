@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import time
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any, Callable, Mapping, Sequence
 
 from backend.config import RuntimeConfig
@@ -439,6 +441,7 @@ class InitialFiveClusteringResult:
     attempts: int = 0
     payload_valid: bool = False
     fallback_reason: str | None = None
+    invocation_receipt: dict[str, Any] | None = None
 
     @property
     def analysis_state(self) -> str:
@@ -454,6 +457,7 @@ class InitialFiveClusteringResult:
             "analysis_state": self.analysis_state,
             "model": self.model_id,
             "attempts": self.attempts,
+            "invocation": self.invocation_receipt,
             "articles": [_article_metadata(article) for article in self.articles],
             "clusters": [dict(cluster) for cluster in self.clusters],
             "ambiguous_article_ids": list(self.ambiguous_article_ids),
@@ -511,6 +515,8 @@ class InitialFiveClusterer:
         self,
         articles: Sequence[MetadataArticle],
         candidate_groups: Sequence[MetadataIssueGroup],
+        *,
+        enforce_candidate_membership: bool = True,
     ) -> InitialFiveClusteringResult:
         articles = tuple(articles)
         candidate_groups = tuple(candidate_groups)
@@ -560,6 +566,15 @@ class InitialFiveClusterer:
                     normalized,
                     model_id=self.config.vertex.model,
                     attempts=attempt,
+                    enforce_candidate_membership=enforce_candidate_membership,
+                    invocation_receipt=_model_invocation_receipt(
+                        prompt,
+                        raw_text,
+                        model=self.config.vertex.model,
+                        prompt_version=INITIAL_FIVE_CLUSTER_PROMPT_VERSION,
+                        attempt=attempt,
+                        response=response,
+                    ),
                 )
             except json.JSONDecodeError as error:
                 last_error = error
@@ -955,6 +970,8 @@ def _reconcile_initial_five_result(
     *,
     model_id: str,
     attempts: int,
+    enforce_candidate_membership: bool = True,
+    invocation_receipt: dict[str, Any] | None = None,
 ) -> InitialFiveClusteringResult:
     candidate_by_article = {
         article.article_id: group.issue_id
@@ -989,39 +1006,40 @@ def _reconcile_initial_five_result(
                     }
                 )
 
-    matched_ai_ids: set[str] = set()
-    for group in candidate_groups:
-        expected_ids = {article.article_id for article in group.articles}
-        exact = [
-            cluster_id
-            for cluster_id, assigned_ids in same_event_by_cluster.items()
-            if assigned_ids == expected_ids
-        ]
-        if len(exact) == 1 and exact[0] not in matched_ai_ids:
-            matched_ai_ids.add(exact[0])
-        else:
-            overlapping = sorted(
+    if enforce_candidate_membership:
+        matched_ai_ids: set[str] = set()
+        for group in candidate_groups:
+            expected_ids = {article.article_id for article in group.articles}
+            exact = [
                 cluster_id
                 for cluster_id, assigned_ids in same_event_by_cluster.items()
-                if assigned_ids & expected_ids
-            )
+                if assigned_ids == expected_ids
+            ]
+            if len(exact) == 1 and exact[0] not in matched_ai_ids:
+                matched_ai_ids.add(exact[0])
+            else:
+                overlapping = sorted(
+                    cluster_id
+                    for cluster_id, assigned_ids in same_event_by_cluster.items()
+                    if assigned_ids & expected_ids
+                )
+                mismatches.append(
+                    {
+                        "type": "candidate_membership_mismatch",
+                        "candidate_cluster_id": group.issue_id,
+                        "expected_article_ids": sorted(expected_ids),
+                        "observed_ai_cluster_ids": overlapping,
+                    }
+                )
+
+        for cluster_id in sorted(set(same_event_by_cluster) - matched_ai_ids):
             mismatches.append(
                 {
-                    "type": "candidate_membership_mismatch",
-                    "candidate_cluster_id": group.issue_id,
-                    "expected_article_ids": sorted(expected_ids),
-                    "observed_ai_cluster_ids": overlapping,
+                    "type": "unmatched_ai_cluster",
+                    "ai_cluster_id": cluster_id,
+                    "article_ids": sorted(same_event_by_cluster[cluster_id]),
                 }
             )
-
-    for cluster_id in sorted(set(same_event_by_cluster) - matched_ai_ids):
-        mismatches.append(
-            {
-                "type": "unmatched_ai_cluster",
-                "ai_cluster_id": cluster_id,
-                "article_ids": sorted(same_event_by_cluster[cluster_id]),
-            }
-        )
 
     if set(candidate_by_article) != {article.article_id for article in articles}:
         mismatches.append({"type": "candidate_partition_incomplete"})
@@ -1040,6 +1058,7 @@ def _reconcile_initial_five_result(
         schema_version=INITIAL_FIVE_CLUSTER_SCHEMA_VERSION,
         attempts=attempts,
         payload_valid=True,
+        invocation_receipt=invocation_receipt,
     )
 
 
@@ -1067,6 +1086,29 @@ def _initial_five_fallback_result(
         payload_valid=False,
         fallback_reason=reason,
     )
+
+
+def _model_invocation_receipt(
+    prompt: str,
+    response_text: str,
+    *,
+    model: str,
+    prompt_version: str,
+    attempt: int,
+    response: Any,
+) -> dict[str, Any]:
+    """Return a public-safe receipt proving that Vertex returned a response."""
+
+    return {
+        "provider": "vertex_ai",
+        "model": model,
+        "prompt_version": prompt_version,
+        "attempt": attempt,
+        "request_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+        "response_sha256": hashlib.sha256(response_text.encode("utf-8")).hexdigest(),
+        "response_id": getattr(response, "response_id", None) or getattr(response, "id", None),
+        "completed_at": datetime.now(UTC).isoformat(),
+    }
 
 
 def _validate_initial_five_inputs(

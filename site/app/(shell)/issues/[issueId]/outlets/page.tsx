@@ -1,10 +1,7 @@
 import { notFound } from "next/navigation";
 import { getActiveSnapshot } from "../../../../../lib/active-snapshot";
-import { getInitialFiveIssueBundle } from "../../../../../lib/initial-five/artifacts";
-import { withEventSynthesis } from "../../../../../lib/initial-five/compose-synthesis.mjs";
 import { deriveIssue, safeDecode } from "../../../../../lib/initial-five/derive";
 import { OutletsSemanticPage } from "../../../semantic-analysis-pages";
-import { LiveIssueView } from "../live-issue";
 
 export const metadata = { title: "언론사 비교 | AgendaFrame" };
 
@@ -17,10 +14,7 @@ export default async function OutletsPage({ params }: { params: Promise<{ issueI
     if (!activeBundle) notFound();
     return <OutletsSemanticPage bundle={activeBundle} issue={deriveIssue(activeBundle)} />;
   }
-  const bundle = activeBundle ?? withEventSynthesis(getInitialFiveIssueBundle(decoded));
-  if (bundle) {
-    return <OutletsSemanticPage bundle={bundle} issue={deriveIssue(bundle)} />;
-  }
-  return <LiveIssueView issueId={decoded} view="outlets" />;
+  if (!activeBundle) notFound();
+  return <OutletsSemanticPage bundle={activeBundle} issue={deriveIssue(activeBundle)} />;
 }
 

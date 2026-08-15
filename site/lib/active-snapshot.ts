@@ -30,6 +30,8 @@ const FORBIDDEN_PUBLIC_KEYS = new Set([
   "fullarticle",
   "article_content",
   "articlecontent",
+  "articlebody",
+  "content",
   "full_content",
   "fullcontent",
   "prompt_payload",
@@ -72,6 +74,10 @@ function validateEnvelope(value: unknown): SnapshotEnvelope {
   ) {
     throw new Error("활성 스냅샷 quality gate가 통과되지 않았습니다.");
   }
+  const envelopeQuality = (envelope as SnapshotEnvelope & { qualityGate?: Record<string, unknown> }).qualityGate;
+  if (envelopeQuality?.status !== "pass") {
+    throw new Error("active snapshot quality gate is not pass.");
+  }
   if (envelope.manifest.issueCount !== 5 || envelope.manifest.issues.length !== 5) {
     throw new Error("active snapshot manifest must contain exactly five issues.");
   }
@@ -102,8 +108,8 @@ function validateEnvelope(value: unknown): SnapshotEnvelope {
 
 function demoSource(): ActiveSnapshotSource {
   return {
-    mode: "live",
-    snapshotId: `live:${initialFiveManifest.generatedAt ?? initialFiveManifest.basisDate}`,
+    mode: "demo",
+    snapshotId: `demo:${initialFiveManifest.generatedAt ?? initialFiveManifest.basisDate}`,
     manifest: initialFiveManifest,
     getIssueBundle: (issueId) => withEventSynthesis(getInitialFiveIssueBundle(issueId)),
   };
@@ -123,10 +129,6 @@ export async function getActiveSnapshot(fetcher: typeof fetch = fetch): Promise<
   if (!response.ok) throw new Error(`활성 스냅샷을 읽지 못했습니다 (${response.status}).`);
   const envelope = validateEnvelope(await response.json());
   const bundles = envelope.bundles;
-
-  if (envelope.manifest.articleCount <= 5 && process.env.AGENDAFRAME_FORCE_CANARY !== "1") {
-    return demoSource();
-  }
 
   return {
     mode: "live",

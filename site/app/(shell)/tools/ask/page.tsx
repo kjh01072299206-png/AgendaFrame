@@ -1,10 +1,13 @@
-import { initialFiveManifest } from "../../../../lib/initial-five/artifacts";
+import { getActiveSnapshot } from "../../../../lib/active-snapshot";
 import { AskPanel } from "./ask-panel";
 
 export const metadata = { title: "AI 대화 | AgendaFrame" };
 
-export default function AskPage() {
-  const issues = initialFiveManifest.issues
+export const dynamic = "force-dynamic";
+
+export default async function AskPage() {
+  const active = await getActiveSnapshot();
+  const issues = active.manifest.issues
     .slice()
     .sort((a, b) => a.rank - b.rank)
     .map((issue) => ({ issueId: issue.issueId, rank: issue.rank, title: issue.title, payloadKey: issue.payloadKey }));

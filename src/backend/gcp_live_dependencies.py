@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -46,6 +47,19 @@ USER_AGENT = "AgendaFrameAcademicResearch/1.0 (+https://agendaframe-capstone.ver
 MAX_ARTICLES_PER_SOURCE = 120
 MAX_REQUESTS_PER_SOURCE = 30
 MAX_ENDPOINT_BYTES = 2_000_000
+MAX_PUBLIC_TITLE_CHARACTERS = 120
+
+
+def _clean_public_title(value: str) -> str | None:
+    """Accept a headline-shaped title; reject descriptions/body carriers."""
+
+    title = " ".join(str(value or "").split()).strip()
+    if not title or len(title) > MAX_PUBLIC_TITLE_CHARACTERS:
+        return None
+    sentence_count = len([part for part in re.split(r"(?<=[.!?])\s+", title) if part])
+    if len(title) > 80 and (sentence_count >= 2 or len(title.split()) > 18):
+        return None
+    return title
 
 
 @dataclass(frozen=True)
@@ -212,6 +226,21 @@ def _jsonld_published_at(parser: _ArticleHtmlParser) -> datetime | None:
     return None
 
 
+def _jsonld_headline(parser: _ArticleHtmlParser) -> str | None:
+    """Return a NewsArticle headline without treating article prose as a title."""
+
+    for raw in parser.jsonld_parts:
+        try:
+            payload = json.loads(raw)
+        except (TypeError, json.JSONDecodeError):
+            continue
+        for node in _walk_json(payload):
+            headline = node.get("headline")
+            if isinstance(headline, str) and headline.strip():
+                return headline.strip()
+    return None
+
+
 class NewsArticleParser:
     """Parse RSS, sitemap, and section HTML, then fetch article pages."""
 
@@ -237,11 +266,8 @@ class NewsArticleParser:
         if response.status in {403, 429} or not response.body:
             return ()
         text = response.body.decode("utf-8", errors="replace")
-        candidates = (
-            self._rss_candidates(text)
-            if self._looks_xml(text, response.content_type)
-            else self._html_candidates(text, endpoint_url)
-        )
+        is_feed = self._looks_xml(text, response.content_type)
+        candidates = self._rss_candidates(text) if is_feed else self._html_candidates(text, endpoint_url)
         rows: list[ArticleDocument] = []
         seen: set[str] = set()
         requests_used = 0
@@ -273,6 +299,7 @@ class NewsArticleParser:
                 source_id=source.source_id,
                 canonical_url=canonical,
                 fallback_title=title,
+                allow_fallback_title=is_feed,
                 fallback_published=published,
                 collected_at=collected_at,
             )
@@ -330,6 +357,7 @@ class NewsArticleParser:
         source_id: str,
         canonical_url: str,
         fallback_title: str,
+        allow_fallback_title: bool,
         fallback_published: datetime | None,
         collected_at: datetime,
     ) -> ArticleDocument | None:
@@ -337,12 +365,23 @@ class NewsArticleParser:
             return None
         parser = _ArticleHtmlParser()
         parser.feed(response.body.decode("utf-8", errors="replace"))
-        title = (
-            parser.meta.get("og:title")
-            or parser.meta.get("title")
-            or " ".join(parser.title_parts)
-            or fallback_title
-        ).strip()
+        title_candidates = (
+            (_jsonld_headline(parser), "jsonld_headline"),
+            (parser.meta.get("og:title"), "og_title"),
+            (" ".join(parser.title_parts), "html_title"),
+            (fallback_title if allow_fallback_title else None, "rss_title"),
+        )
+        title, title_source = next(
+            (
+                (candidate, source)
+                for candidate, source in title_candidates
+                if candidate and candidate.strip()
+            ),
+            ("", "title_unavailable"),
+        )
+        title = _clean_public_title(title)
+        if title is None:
+            return None
         published = (
             _jsonld_published_at(parser)
             or _parse_datetime(
@@ -372,6 +411,7 @@ class NewsArticleParser:
             section=None,
             body_text=body,
             text_scope="authorized_transient_body",
+            title_source=title_source,
         )
 
 

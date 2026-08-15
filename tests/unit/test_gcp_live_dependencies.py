@@ -38,16 +38,23 @@ def rss(*links: tuple[str, str]) -> bytes:
     return f"<?xml version='1.0'?><rss><channel>{items}</channel></rss>".encode()
 
 
-def article_page(*, date_published: str | None, body: str = LONG_BODY) -> bytes:
+def article_page(
+    *,
+    date_published: str | None,
+    body: str = LONG_BODY,
+    headline: str | None = None,
+    html_title: str = "Fallback article title",
+) -> bytes:
+    jsonld_payload = {"@type": "NewsArticle", "datePublished": date_published}
+    if headline is not None:
+        jsonld_payload["headline"] = headline
     jsonld = (
-        f'<script type="application/ld+json">'
-        f"{json.dumps({'@type': 'NewsArticle', 'datePublished': date_published})}"
-        "</script>"
+        f'<script type="application/ld+json">{json.dumps(jsonld_payload)}</script>'
         if date_published is not None
         else ""
     )
     return (
-        f"<html><head><title>Fallback article title</title>{jsonld}</head>"
+        f"<html><head><title>{html_title}</title>{jsonld}</head>"
         f"<body><article><p>{body}</p></article></body></html>"
     ).encode()
 
@@ -93,6 +100,73 @@ class GcpLiveDependencyTests(unittest.TestCase):
         self.assertEqual(rows[0].published_at, datetime(2026, 8, 13, 1, 30, tzinfo=UTC))
         self.assertEqual(rows[0].body_text, LONG_BODY)
         self.assertEqual(rows[0].text_scope, "authorized_transient_body")
+        self.assertEqual(rows[0].title_source, "html_title")
+
+    def test_jsonld_headline_has_priority_and_is_traced(self) -> None:
+        canonical = "https://khan.co.kr/article/headline"
+        fetcher = FakeFetcher(
+            {
+                canonical: FetchedResponse(
+                    canonical,
+                    200,
+                    "text/html",
+                    article_page(
+                        date_published="2026-08-13T10:30:00+09:00",
+                        headline="JSON-LD 검증 헤드라인",
+                        html_title="사이트 공통 제목",
+                    ),
+                )
+            }
+        )
+        response = FetchedResponse(
+            "https://khan.co.kr/rss",
+            200,
+            "application/rss+xml",
+            rss(("RSS 후보 제목", canonical)),
+        )
+
+        rows = parser(fetcher).parse(
+            response,
+            source=SOURCE,
+            endpoint_url=SOURCE.endpoint_urls[0],
+            collected_at=COLLECTED_AT,
+        )
+
+        self.assertEqual(rows[0].title, "JSON-LD 검증 헤드라인")
+        self.assertEqual(rows[0].title_source, "jsonld_headline")
+
+    def test_html_listing_text_is_not_a_title_fallback(self) -> None:
+        canonical = "https://khan.co.kr/article/no-headline"
+        fetcher = FakeFetcher(
+            {
+                canonical: FetchedResponse(
+                    canonical,
+                    200,
+                    "text/html",
+                    (
+                        "<html><head><script type='application/ld+json'>"
+                        f"{json.dumps({'@type': 'NewsArticle', 'datePublished': '2026-08-13T10:30:00+09:00'})}"
+                        "</script></head><body><article><p>"
+                        f"{LONG_BODY}</p></article></body></html>"
+                    ).encode(),
+                )
+            }
+        )
+        listing = FetchedResponse(
+            "https://khan.co.kr/section",
+            200,
+            "text/html",
+            f'<html><body><a href="{canonical}">본문형 목록 설명을 제목으로 쓰지 않음</a></body></html>'.encode(),
+        )
+
+        rows = parser(fetcher).parse(
+            listing,
+            source=SOURCE,
+            endpoint_url="https://khan.co.kr/section",
+            collected_at=COLLECTED_AT,
+        )
+
+        self.assertEqual(rows, ())
 
     def test_date_less_html_candidate_is_not_assigned_discovery_time(self) -> None:
         canonical = "https://khan.co.kr/article/date-less"

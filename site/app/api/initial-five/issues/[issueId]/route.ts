@@ -1,8 +1,10 @@
-import { getInitialFiveIssueBundle } from "../../../../../lib/initial-five/artifacts";
+import { getActiveSnapshot } from "../../../../../lib/active-snapshot";
 
 const cacheHeaders = {
   "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
 };
+
+export const dynamic = "force-dynamic";
 
 export async function GET(
   _request: Request,
@@ -10,7 +12,10 @@ export async function GET(
 ) {
   const { issueId } = await params;
   const decodedIssueId = decodeURIComponent(issueId);
-  const bundle = getInitialFiveIssueBundle(decodedIssueId);
+  const active = await getActiveSnapshot();
+  const bundle = active.manifest.issues.some((issue) => issue.issueId === decodedIssueId)
+    ? active.getIssueBundle(decodedIssueId)
+    : null;
   if (!bundle) {
     return Response.json(
       { error: "initial_five_issue_not_found", issueId: decodedIssueId },

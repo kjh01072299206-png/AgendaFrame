@@ -1,4 +1,4 @@
-import { getInitialFiveIssueBundle } from "../../../../lib/initial-five/artifacts";
+import { getActiveSnapshot } from "../../../../lib/active-snapshot";
 import { DIM_LABEL, familyLabel } from "../../../../lib/initial-five/derive";
 import { actorParaphrases, narrowSubject, paraphrasesByLocator } from "../../../../lib/initial-five/subjects.mjs";
 import { ruleGroundedAnswer } from "../../../../lib/initial-five/rule-answers.mjs";
@@ -13,6 +13,8 @@ const MAX_QUESTION_LENGTH = 500;
 const RATE_WINDOW_MS = 60_000;
 const RATE_LIMIT = 20;
 const requestsByClient = new Map<string, number[]>();
+
+export const dynamic = "force-dynamic";
 
 type AnswerEvidence = {
   articleId: string;
@@ -307,7 +309,11 @@ export async function POST(request: Request) {
   const issueId = typeof payload.issueId === "string" ? payload.issueId.trim() : "";
   const question = normalizedQuestion(payload.question);
   if (!issueId || !question) return Response.json({ error: "issue_and_question_required" }, { status: 400 });
-  const bundle = getInitialFiveIssueBundle(issueId);
+  const active = await getActiveSnapshot();
+  if (!active.manifest.issues.some((issue) => issue.issueId === issueId)) {
+    return Response.json({ error: "issue_not_found" }, { status: 404 });
+  }
+  const bundle = active.getIssueBundle(issueId);
   if (!bundle) return Response.json({ error: "issue_not_found" }, { status: 404 });
   const grounded = groundedAnswer(bundle, question);
   // 본문 AI가 아직 끝나지 않았거나 질문과 연결되는 paraphrase가 없을 때도

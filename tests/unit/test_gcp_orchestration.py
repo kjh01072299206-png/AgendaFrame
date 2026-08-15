@@ -16,6 +16,112 @@ from backend.gcp_orchestration import (
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def _receipt(model: str, prompt_version: str = "framing-v2") -> dict[str, Any]:
+    return {
+        "provider": "vertex_ai",
+        "model": model,
+        "prompt_version": prompt_version,
+        "attempt": 1,
+        "request_sha256": "a" * 64,
+        "response_sha256": "b" * 64,
+        "completed_at": "2026-08-13T06:00:00+09:00",
+    }
+
+
+def _verified_semantic_fixture() -> dict[str, Any]:
+    bundles: dict[str, Any] = {}
+    top5: list[dict[str, Any]] = []
+    for index in range(1, 6):
+        issue_id = f"issue-{index}"
+        cluster_engine = {
+            "engineLabel": "ai_semantic",
+            "semanticAi": True,
+            "status": "succeeded",
+            "model": "fake-cluster",
+            "promptVersion": "framing-v2",
+            "runId": "run-2026-08-13-0600",
+            "invocation": _receipt("fake-cluster"),
+        }
+        semantic_engine = {
+            "engineLabel": "ai_semantic",
+            "semanticAi": True,
+            "status": "succeeded",
+            "model": "fake-gemini",
+            "promptVersion": "framing-v2",
+            "runId": "run-2026-08-13-0600",
+            "invocations": [_receipt("fake-gemini")],
+        }
+        articles: list[dict[str, Any]] = []
+        profiles: list[dict[str, Any]] = []
+        for member in range(1, 4):
+            article_id = f"article-{index}-{member}"
+            evidence = {
+                "articleId": article_id,
+                "locator": {"paragraph": 1, "sentence": member},
+                "sentenceSha256": "a" * 64,
+            }
+            articles.append(
+                {
+                    "articleId": article_id,
+                    "sourceId": f"source-{index}-{1 if member < 3 else 2}",
+                    "outlet": f"source-{index}-{1 if member < 3 else 2}",
+                    "title": f"Observed event {index} report {member}",
+                    "evidence": {
+                        "locator": {"paragraph": 1, "sentence": member},
+                        "sentence_sha256": "a" * 64,
+                    },
+                }
+            )
+            profiles.append(
+                {
+                    "articleId": article_id,
+                    "status": "succeeded",
+                    "engine": {
+                        **semantic_engine,
+                        "articleId": article_id,
+                        "invocation": _receipt("fake-gemini"),
+                    },
+                    "evidence": [evidence],
+                }
+            )
+        bundle = {
+            "schemaVersion": "agendaframe.initial-five.public.v1",
+            "basisDate": "2026-08-13",
+            "status": "succeeded",
+            "issue": {
+                "issueId": issue_id,
+                "agendaScore": 20,
+                "outletCount": 2,
+            },
+            "analysisStatus": {"cluster": cluster_engine, "semantic": semantic_engine},
+            "semanticProfiles": profiles,
+        }
+        bundles[issue_id] = bundle
+        top5.append(
+            {
+                "issueId": issue_id,
+                "rank": index,
+                "title": f"Issue {index}",
+                "status": "succeeded",
+                "agendaScore": 20,
+                "outletCount": 2,
+                "clusterAi": cluster_engine,
+                "semantic": semantic_engine,
+                "articles": articles,
+            }
+        )
+    return {
+        "unsupportedClaimRate": 0.0,
+        "manifest": {
+            "schemaVersion": "agenda.frame.active-snapshot.v1",
+            "issueCount": 5,
+            "rawBodyAbsent": True,
+        },
+        "bundles": bundles,
+        "top5": top5,
+    }
+
+
 class FakeSnapshots:
     def __init__(self, current: Mapping[str, Any] | None = None) -> None:
         self.current = dict(current) if current else None
@@ -38,28 +144,7 @@ class FakeAdapters:
         self, snapshots: FakeSnapshots, *, semantic: Mapping[str, Any] | None = None
     ) -> None:
         self.snapshots = snapshots
-        self.semantic = semantic or {
-            "unsupportedClaimRate": 0.0,
-            "manifest": {"schemaVersion": "agenda.frame.active-snapshot.v1", "issueCount": 5},
-            "bundles": {
-                f"issue-{index}": {"issue": {"issueId": f"issue-{index}"}} for index in range(1, 6)
-            },
-            "top5": [
-                {
-                    "issueId": f"issue-{index}",
-                    "articles": [
-                        {
-                            "articleId": f"article-{index}",
-                            "evidence": {
-                                "locator": {"paragraph": 1, "sentence": 1},
-                                "sentence_sha256": "a" * 64,
-                            },
-                        }
-                    ],
-                }
-                for index in range(1, 6)
-            ],
-        }
+        self.semantic = semantic or _verified_semantic_fixture()
         self.calls: list[str] = []
         self.fail_once: set[str] = set()
         self.attempts: dict[str, int] = {}

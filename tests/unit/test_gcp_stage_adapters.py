@@ -27,6 +27,18 @@ POLICY = ROOT / "site" / "data" / "discovery-sources.json"
 COLLECTED_AT = datetime(2026, 8, 13, 0, 0, tzinfo=timezone.utc)
 
 
+def invocation(model: str, prompt_version: str = "test") -> dict[str, Any]:
+    return {
+        "provider": "vertex_ai",
+        "model": model,
+        "prompt_version": prompt_version,
+        "attempt": 1,
+        "request_sha256": "a" * 64,
+        "response_sha256": "b" * 64,
+        "completed_at": "2026-08-13T00:00:00+00:00",
+    }
+
+
 def article(source_id: str, index: int, domain: str | None = None) -> ArticleDocument:
     domain = domain or {
         "khan": "khan.co.kr",
@@ -64,7 +76,10 @@ class Parser:
         # are empty. This exercises RSS/site parser injection without network.
         if endpoint_url != source.endpoint_urls[0]:
             return ()
-        return (article(source.source_id, self.calls, source.domains[0]),)
+        return tuple(
+            article(source.source_id, self.calls * 10 + offset, source.domains[0])
+            for offset in range(2)
+        )
 
 
 class Vault:
@@ -104,24 +119,43 @@ class CandidateBuilder:
 
 class ClusteringResult:
     def __init__(self, articles: Sequence[Any]) -> None:
-        self.clusters = [
-            {
-                "cluster_id": f"issue-{index}",
-                "label": f"Issue {index}",
-                "coherence": "high",
-                "article_assignments": [
-                    {"article_id": article.article_id, "relation": "same_event"}
-                ],
-            }
-            for index, article in enumerate(articles[:5], 1)
-        ]
+        self.clusters = []
+        for index in range(5):
+            members = articles[index * 3 : index * 3 + 3]
+            self.clusters.append(
+                {
+                    "cluster_id": f"issue-{index + 1}",
+                    "label": f"Issue {index + 1}",
+                    "coherence": "high",
+                    "article_assignments": [
+                        {"article_id": article.article_id, "relation": "same_event"}
+                        for article in members
+                    ],
+                }
+            )
+        self.analysis_state = "succeeded"
+        self.fallback_reason = None
 
     def as_dict(self):
-        return {"clusters": list(self.clusters), "approval": {"body_free": True}}
+        return {
+            "schema_version": "agendaframe.initial-five-cluster.v2",
+            "prompt_version": "test",
+            "analysis_state": self.analysis_state,
+            "model": "fake-cluster",
+            "invocation": invocation("fake-cluster"),
+            "clusters": list(self.clusters),
+            "approval": {"body_free": True, "status": "approved_same_event"},
+            "engine": {
+                "model": "fake-cluster",
+                "prompt_version": "test",
+                "schema_version": "agendaframe.initial-five-cluster.v2",
+                "semantic_ai": True,
+            },
+        }
 
 
 class Clusterer:
-    def analyze(self, articles, candidate_groups):
+    def analyze(self, articles, candidate_groups, **kwargs):
         return ClusteringResult(articles)
 
 
@@ -192,6 +226,8 @@ class FrameFake:
             text_scope=value.text_scope,
             analyzed_character_count=len(value.body_text or ""),
             input_truncated=False,
+            analysis_state="succeeded",
+            invocation_receipt=invocation("fake-gemini"),
         )
 
 
@@ -220,6 +256,8 @@ class GcpStageAdapterTests(unittest.TestCase):
             {
                 "run_id": "run-1",
                 "basis_date": "2026-08-13",
+                "model_revision": "fake-gemini",
+                "prompt_version": "test",
             },
         )()
 
@@ -340,15 +378,22 @@ class GcpStageAdapterTests(unittest.TestCase):
         )
         self.assertIsNotNone(bundle["comparison"]["data"]["summary_30_seconds"])
 
-    def test_cluster_rank_uses_title_fallback_when_model_returns_no_clusters(self) -> None:
+    def test_cluster_rank_quarantines_when_model_returns_no_clusters(self) -> None:
         class EmptyClusters:
             clusters: list = []
+            analysis_state = "review_needed"
+            fallback_reason = "model_request_unavailable"
 
             def as_dict(self):
-                return {"clusters": [], "approval": {"body_free": True, "fallback": True}}
+                return {
+                    "clusters": [],
+                    "analysis_state": "review_needed",
+                    "fallback_reason": self.fallback_reason,
+                    "approval": {"body_free": True, "status": "review_needed"},
+                }
 
         class EmptyClusterer:
-            def analyze(self, articles, candidate_groups):
+            def analyze(self, articles, candidate_groups, **kwargs):
                 return EmptyClusters()
 
         collected = PolicyCollectionAdapter(
@@ -360,14 +405,12 @@ class GcpStageAdapterTests(unittest.TestCase):
         deps = StageDependencies(
             **{**self.dependencies.__dict__, "initial_five_clusterer": EmptyClusterer()}
         )
-        ranked = MetadataClusterRankAdapter(deps).cluster_rank(
-            self.request, persisted, idempotency_key="rank-empty"
-        )
-        self.assertEqual(len(ranked["top5"]), 5)
-        self.assertTrue(all(row["articleIds"] for row in ranked["top5"]))
-        self.assertTrue(all(row["issueId"].startswith("title-fallback-") for row in ranked["top5"]))
+        with self.assertRaises(StageAdapterError):
+            MetadataClusterRankAdapter(deps).cluster_rank(
+                self.request, persisted, idempotency_key="rank-empty"
+            )
 
-    def test_cluster_rank_falls_back_when_model_returns_fewer_than_five_clusters(self) -> None:
+    def test_cluster_rank_quarantines_when_model_returns_fewer_than_five_clusters(self) -> None:
         class ShortClusters:
             def __init__(self, articles):
                 lead = articles[0]
@@ -382,11 +425,27 @@ class GcpStageAdapterTests(unittest.TestCase):
                     }
                 ]
 
+            analysis_state = "succeeded"
+            fallback_reason = None
+
             def as_dict(self):
-                return {"clusters": self.clusters, "approval": {"body_free": True}}
+                return {
+                    "clusters": self.clusters,
+                    "analysis_state": "succeeded",
+                    "model": "fake-cluster",
+                    "prompt_version": "test",
+                    "invocation": invocation("fake-cluster"),
+                    "approval": {"body_free": True, "status": "approved_same_event"},
+                    "engine": {
+                        "model": "fake-cluster",
+                        "prompt_version": "test",
+                        "schema_version": "agendaframe.initial-five-cluster.v2",
+                        "semantic_ai": True,
+                    },
+                }
 
         class ShortClusterer:
-            def analyze(self, articles, candidate_groups):
+            def analyze(self, articles, candidate_groups, **kwargs):
                 return ShortClusters(articles)
 
         collected = PolicyCollectionAdapter(
@@ -398,15 +457,14 @@ class GcpStageAdapterTests(unittest.TestCase):
         deps = StageDependencies(
             **{**self.dependencies.__dict__, "initial_five_clusterer": ShortClusterer()}
         )
-        ranked = MetadataClusterRankAdapter(deps).cluster_rank(
-            self.request, persisted, idempotency_key="rank-short"
-        )
-        self.assertEqual(len(ranked["top5"]), 5)
-        self.assertTrue(all(row["issueId"].startswith("title-fallback-") for row in ranked["top5"]))
+        with self.assertRaises(StageAdapterError):
+            MetadataClusterRankAdapter(deps).cluster_rank(
+                self.request, persisted, idempotency_key="rank-short"
+            )
 
-    def test_cluster_rank_appends_unassigned_articles_as_remainder_candidates(self) -> None:
+    def test_cluster_rank_does_not_create_remainder_singletons(self) -> None:
         collected = PolicyCollectionAdapter(
-            self.dependencies, clock=lambda: COLLECTED_AT, max_articles_per_run=12
+            self.dependencies, clock=lambda: COLLECTED_AT, max_articles_per_run=24
         ).collect(self.request, idempotency_key="collect-remain")
         persisted = MetadataPersistenceAdapter(self.dependencies).persist(
             self.request, collected, idempotency_key="persist-remain"
@@ -415,15 +473,10 @@ class GcpStageAdapterTests(unittest.TestCase):
             self.request, persisted, idempotency_key="rank-remain"
         )
         self.assertEqual(len(ranked["top5"]), 5)
-        remainder_ids = [
-            row["issueId"]
-            for row in ranked["candidates"]
-            if str(row["issueId"]).startswith("title-remainder-")
-        ]
-        self.assertGreaterEqual(len(remainder_ids), 1)
-        self.assertGreater(len(ranked["candidates"]), 5)
+        self.assertEqual(len(ranked["candidates"]), 5)
+        self.assertFalse(any("remainder" in str(row["issueId"]) for row in ranked["candidates"]))
 
-    def test_semantic_uses_body_proof_when_analyzer_returns_no_evidence(self) -> None:
+    def test_semantic_quarantines_when_vertex_returns_no_evidence(self) -> None:
         class ReviewNeededFrame:
             def analyze(self, value: ArticleDocument) -> FrameResult:
                 return FrameResult(
@@ -461,17 +514,10 @@ class GcpStageAdapterTests(unittest.TestCase):
         ranked = MetadataClusterRankAdapter(deps).cluster_rank(
             self.request, persisted, idempotency_key="rank-proof"
         )
-        semantic = FrameSemanticAdapter(deps).analyze_top5(
-            self.request, ranked, idempotency_key="semantic-proof"
-        )
-        self.assertEqual(len(semantic["top5"]), 5)
-        self.assertEqual(semantic["unsupportedClaimRate"], 0.0)
-        bundle = next(iter(semantic["bundles"].values()))
-        first_profile = bundle["semanticProfiles"][0]["profile"]
-        self.assertTrue(first_profile.get("proof"))
-        self.assertNotIn("Event 1 was described", json.dumps(semantic, ensure_ascii=False))
-        gate = evaluate_quality_gate(semantic)
-        self.assertEqual(gate["status"], "pass")
+        with self.assertRaises(StageAdapterError):
+            FrameSemanticAdapter(deps).analyze_top5(
+                self.request, ranked, idempotency_key="semantic-proof"
+            )
 
     def test_semantic_adapter_uses_bound_event_synthesis_when_injected(self) -> None:
         class SynthesisFake:

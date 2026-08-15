@@ -284,6 +284,7 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
             "model_output_schema_version": result.schema_version,
             "comparison_engine_version": COMPARISON_ENGINE_VERSION,
             "approval": result.approval_lineage,
+            "invocation": result.invocation_receipt,
         },
         "engine": {
             "name": "AgendaFrame Vertex evidence coder",
@@ -298,6 +299,7 @@ def public_profile(article: ArticleDocument, result: FrameResult) -> dict[str, A
             "prompt_version": result.prompt_version,
             "analysis_schema_version": result.schema_version,
             "evidence_storage": "locator_and_salted_sha256_only",
+            "invocation_receipt": result.invocation_receipt,
             "limitations": limitations,
         },
         "article": {

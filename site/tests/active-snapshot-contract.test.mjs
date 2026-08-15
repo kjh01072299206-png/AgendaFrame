@@ -51,3 +51,15 @@ test("live active snapshot is the shared source for the main and two analysis ro
   assert.doesNotMatch(framing, /active\.mode === "live" && activeBundle/);
   assert.doesNotMatch(homeView, /raw_body|body_text|sentence_text/i);
 });
+
+test("AI dialogue issue list and bundle API use the active snapshot boundary", async () => {
+  const askPage = await readFile(path.join(siteRoot, "app", "(shell)", "tools", "ask", "page.tsx"), "utf8");
+  const askRoute = await readFile(path.join(siteRoot, "app", "api", "initial-five", "ask", "route.ts"), "utf8");
+  const issueRoute = await readFile(path.join(siteRoot, "app", "api", "initial-five", "issues", "[issueId]", "route.ts"), "utf8");
+  assert.match(askPage, /getActiveSnapshot/);
+  assert.match(askRoute, /getActiveSnapshot/);
+  assert.match(issueRoute, /getActiveSnapshot/);
+  assert.doesNotMatch(askPage, /initialFiveManifest/);
+  assert.doesNotMatch(askRoute, /getInitialFiveIssueBundle/);
+  assert.doesNotMatch(issueRoute, /getInitialFiveIssueBundle/);
+});

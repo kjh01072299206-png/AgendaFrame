@@ -15,8 +15,10 @@ groups survive.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
+from datetime import UTC, datetime
 from typing import Any, Mapping, Protocol, Sequence
 
 PROMPT_VERSION = "event-synthesis-v1.0.0"
@@ -430,6 +432,11 @@ def bind_event_synthesis(
         "split_rows": split_rows,
         "frame_functions": frame_functions,
         "proof_rows": proof_rows,
+        **(
+            {"invocation": dict(draft["_invocation"])}
+            if isinstance(draft.get("_invocation"), Mapping)
+            else {}
+        ),
     }
 
 
@@ -673,12 +680,26 @@ class VertexEventSynthesizer:
                     response_json_schema=_vertex_response_schema(),
                 ),
             )
-            payload = json.loads(response.text)
+            response_text = response.text
+            payload = json.loads(response_text)
         except Exception:
             return {"prompt_version": PROMPT_VERSION, "usable": False}
         if not isinstance(payload, Mapping):
             return {"prompt_version": PROMPT_VERSION, "usable": False}
-        return dict(payload)
+        return {
+            **dict(payload),
+            "_invocation": {
+                "provider": "vertex_ai",
+                "model": self.config.vertex.model,
+                "prompt_version": PROMPT_VERSION,
+                "attempt": 1,
+                "request_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+                "response_sha256": hashlib.sha256(response_text.encode("utf-8")).hexdigest(),
+                "response_id": getattr(response, "response_id", None)
+                or getattr(response, "id", None),
+                "completed_at": datetime.now(UTC).isoformat(),
+            },
+        }
 
 
 def _vertex_response_schema() -> dict[str, Any]:

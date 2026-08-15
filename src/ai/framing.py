@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import time
 import unicodedata
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any, Protocol
 
 from backend.analysis_state import AnalysisState, analysis_idempotency_fingerprint
@@ -142,6 +144,10 @@ class FrameResult:
     structured_context: dict[str, Any] | None = None
     input_tokens: int | None = None
     output_tokens: int | None = None
+    # A redacted receipt of the actual model invocation.  It contains hashes
+    # and provider metadata only; the prompt and response text never cross
+    # the private-body boundary.
+    invocation_receipt: dict[str, Any] | None = None
     text_scope: str | None = None
     analyzed_character_count: int | None = None
     input_truncated: bool | None = None
@@ -255,6 +261,35 @@ def validate_frame_result(article: ArticleDocument, result: FrameResult) -> None
             raise ValueError("Untruncated input must cover the complete article body.")
     if result.input_truncated is not None and not isinstance(result.input_truncated, bool):
         raise ValueError("Invalid input truncation marker.")
+    if result.invocation_receipt is not None:
+        if not isinstance(result.invocation_receipt, dict):
+            raise ValueError("Invalid model invocation receipt.")
+        required_receipt = {
+            "provider",
+            "model",
+            "prompt_version",
+            "attempt",
+            "request_sha256",
+            "response_sha256",
+            "completed_at",
+        }
+        if not required_receipt.issubset(result.invocation_receipt):
+            raise ValueError("Model invocation receipt is incomplete.")
+        if result.invocation_receipt.get("provider") != "vertex_ai":
+            raise ValueError("Model invocation receipt provider is invalid.")
+        for key in ("model", "prompt_version", "completed_at"):
+            if not isinstance(result.invocation_receipt.get(key), str) or not str(
+                result.invocation_receipt[key]
+            ).strip():
+                raise ValueError(f"Model invocation receipt field is invalid: {key}.")
+        if not isinstance(result.invocation_receipt.get("attempt"), int) or result.invocation_receipt[
+            "attempt"
+        ] < 1:
+            raise ValueError("Model invocation receipt attempt is invalid.")
+        for key in ("request_sha256", "response_sha256"):
+            value = result.invocation_receipt.get(key)
+            if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value):
+                raise ValueError(f"Model invocation receipt hash is invalid: {key}.")
     if result.approval_lineage is not None:
         required_lineage = {
             "authorization_id",
@@ -444,7 +479,8 @@ class VertexFrameAnalyzer:
                         ),
                     ),
                 )
-                payload = json.loads(response.text)
+                response_text = response.text
+                payload = json.loads(response_text)
                 if not isinstance(payload, dict):
                     raise ValueError("Vertex AI response must be a JSON object.")
                 payload = _align_payload_evidence(
@@ -468,6 +504,19 @@ class VertexFrameAnalyzer:
                     schema_version=self.config.vertex.schema_version,
                     input_tokens=getattr(usage, "prompt_token_count", None),
                     output_tokens=getattr(usage, "candidates_token_count", None),
+                    invocation_receipt={
+                        "provider": "vertex_ai",
+                        "model": self.config.vertex.model,
+                        "prompt_version": self.config.vertex.prompt_version,
+                        "attempt": call_attempt,
+                        "request_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+                        "response_sha256": hashlib.sha256(
+                            response_text.encode("utf-8")
+                        ).hexdigest(),
+                        "response_id": getattr(response, "response_id", None)
+                        or getattr(response, "id", None),
+                        "completed_at": datetime.now(UTC).isoformat(),
+                    },
                     text_scope=article.text_scope,
                     analyzed_character_count=len(body),
                     input_truncated=len(body) < len(article.body_text),

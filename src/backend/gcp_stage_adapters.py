@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 from dataclasses import dataclass, replace
 from datetime import datetime
@@ -47,7 +48,6 @@ from backend.gcp_orchestration import (
 )
 from backend.publisher import publication_row
 from crawler.models import ArticleDocument, canonicalize_url, is_domain_allowed
-from crawler.text import sentence_rows
 
 
 class StageAdapterError(RuntimeError):
@@ -90,7 +90,8 @@ def load_source_definitions(path: str) -> tuple[SourceDefinition, ...]:
     """Validate the 12-source policy and retain only collection metadata."""
 
     try:
-        payload = json.loads(open(path, encoding="utf-8").read())
+        with open(path, encoding="utf-8") as handle:
+            payload = json.load(handle)
     except (OSError, json.JSONDecodeError) as error:
         raise StageAdapterError(f"cannot load discovery policy: {path}") from error
     if not isinstance(payload, Mapping):
@@ -262,6 +263,7 @@ def _metadata(article: ArticleDocument, *, private_object_ref: str) -> dict[str,
         "sourceId": article.source_id,
         "canonicalUrl": article.canonical_url,
         "title": article.title,
+        "titleSource": article.title_source,
         "publishedAt": article.published_at.isoformat(),
         "collectedAt": article.collected_at.isoformat(),
         "section": article.section,
@@ -473,119 +475,88 @@ class ConservativeCandidateGroupBuilder(CandidateGroupBuilder):
         )
 
 
-_TITLE_TOKEN = re.compile(r"[0-9A-Za-z가-힣]{2,}")
+def _same_event_ids(cluster: Mapping[str, Any]) -> list[str]:
+    return sorted(
+        [
+            str(assignment["article_id"])
+            for assignment in cluster.get("article_assignments", [])
+            if assignment.get("relation") == "same_event" and assignment.get("article_id")
+        ]
+    )
 
 
-def _title_tokens(title: str) -> set[str]:
-    return {token.casefold() for token in _TITLE_TOKEN.findall(title)}
+def _rank_cluster(
+    cluster: Mapping[str, Any],
+    articles_by_id: Mapping[str, MetadataArticle],
+    *,
+    configured_source_count: int,
+    max_article_count: int = 50,
+) -> dict[str, Any]:
+    """Calculate an observed-components agenda score for one AI cluster.
 
-
-def _title_fallback_clusters(articles: Sequence[MetadataArticle]) -> list[dict[str, Any]]:
-    """Group leftover articles by title overlap when Vertex clustering is empty.
-
-    This does not invent events.  Unrelated titles stay separate, and the
-    ranker still publishes at most five real groups.
+    The rank is intentionally metadata-only: independent source coverage is
+    weighted ahead of repeat volume, and placement is marked unobserved rather
+    than guessed.  This keeps the score comparable to the site's observed
+    score while making the missing signal explicit.
     """
 
-    groups: list[dict[str, Any]] = []
-    for article in articles:
-        tokens = _title_tokens(article.title)
-        placed = False
-        for group in groups:
-            union = tokens | group["tokens"]
-            overlap = tokens & group["tokens"]
-            if union and overlap and (len(overlap) / len(union)) >= 0.35:
-                group["articles"].append(article)
-                group["tokens"] = union
-                placed = True
-                break
-        if not placed:
-            groups.append({"tokens": tokens, "articles": [article]})
-    if len(groups) < 5:
-        groups = [
-            {"tokens": _title_tokens(article.title), "articles": [article]} for article in articles
-        ]
-    ranked = sorted(
-        groups,
-        key=lambda group: (-len(group["articles"]), group["articles"][0].article_id),
+    article_ids = _same_event_ids(cluster)
+    source_counts: dict[str, int] = {}
+    for article_id in article_ids:
+        article = articles_by_id.get(article_id)
+        if article is None:
+            continue
+        source_counts[article.source] = source_counts.get(article.source, 0) + 1
+    source_count = len(source_counts)
+    article_count = len(article_ids)
+    diversity = min(100.0, (source_count / max(1, configured_source_count)) * 100.0)
+    volume = min(
+        100.0,
+        (math.log1p(article_count) / math.log1p(max(1, max_article_count))) * 100.0,
     )
-    clusters: list[dict[str, Any]] = []
-    for index, group in enumerate(ranked, 1):
-        lead = group["articles"][0]
-        clusters.append(
-            {
-                "cluster_id": f"title-fallback-{index}",
-                "label": lead.title,
-                "coherence": "title_fallback",
-                "article_assignments": [
-                    {"article_id": item.article_id, "relation": "same_event"}
-                    for item in group["articles"]
-                ],
-            }
-        )
-    return clusters
-
-
-def _same_event_ids(cluster: Mapping[str, Any]) -> list[str]:
-    return [
-        str(assignment["article_id"])
-        for assignment in cluster.get("article_assignments", [])
-        if assignment.get("relation") == "same_event" and assignment.get("article_id")
-    ]
-
-
-def _remainder_clusters(
-    articles: Sequence[MetadataArticle],
-    ranked: Sequence[Mapping[str, Any]],
-) -> list[dict[str, Any]]:
-    """Keep unclustered articles walkable so a skipped issue can still be replaced."""
-
-    assigned = {article_id for cluster in ranked for article_id in _same_event_ids(cluster)}
-    remainders: list[dict[str, Any]] = []
-    for index, article in enumerate(articles, 1):
-        if article.article_id in assigned:
-            continue
-        remainders.append(
-            {
-                "cluster_id": f"title-remainder-{index}",
-                "label": article.title,
-                "coherence": "unassigned_singleton",
-                "article_assignments": [
-                    {"article_id": article.article_id, "relation": "same_event"}
-                ],
-            }
-        )
-    return remainders
-
-
-def _body_proof_row(article: ArticleDocument) -> dict[str, Any] | None:
-    """Locator+hash of a real sentence. This is not a frame claim."""
-
-    body = article.body_text or ""
-    if not body.strip():
-        return None
-    for row in sentence_rows(body):
-        text = str(row.get("text") or "").strip()
-        if len(text) < 8:
-            continue
-        digest = hashlib.sha256(
-            (
-                "agendaframe:evidence:v2:"
-                f"{article.article_id}:{row['paragraph']}:{row['sentence']}:{text}"
-            ).encode("utf-8")
-        ).hexdigest()
-        return {
-            "locator": {
-                "paragraph": row["paragraph"],
-                "sentence": row["sentence"],
+    repeat_volume = (
+        ((article_count - source_count) / max(1, article_count - 1)) * 100.0
+        if article_count > 1
+        else 0.0
+    )
+    components = (
+        (diversity, 0.55),
+        (volume, 0.25),
+        (repeat_volume, 0.05),
+    )
+    observed_weight = sum(weight for _, weight in components)
+    base_score = sum(value * weight for value, weight in components) / observed_weight
+    coverage_factor = min(1.0, 0.45 + (source_count / max(1, configured_source_count)) * 0.8)
+    score = round(base_score * coverage_factor, 1)
+    result = dict(cluster)
+    result.update(
+        {
+            "agendaScore": score,
+            "scoreBreakdown": {
+                "diversity": round(diversity, 1),
+                "volume": round(volume, 1),
+                "placement": None,
+                "repetition": round(repeat_volume, 1),
+                "repetitionPenalty": round(max(0.0, 100.0 - repeat_volume), 1),
+                "observedWeight": round(observed_weight * 100),
+                "status": "placement_excluded",
+                "sourceCount": source_count,
+                "configuredSourceCount": configured_source_count,
             },
-            "sentence_sha256": digest,
+            "rankScoreVersion": "observed-agenda-gcp-v1",
+            "sourceCount": source_count,
         }
-    return None
+    )
+    return result
 
 
 class MetadataClusterRankAdapter(ClusterRankAdapter):
-    """Reuse InitialFiveClusterer and rank candidates without body text."""
+    """Use the global Vertex partition and rank only verified event clusters.
+
+    A missing or partial model partition is a quarantine condition.  This
+    adapter deliberately does not manufacture title-overlap groups or
+    singleton remainder issues to reach five rows.
+    """
 
     def __init__(self, dependencies: StageDependencies) -> None:
         self.dependencies = dependencies
@@ -604,39 +575,53 @@ class MetadataClusterRankAdapter(ClusterRankAdapter):
         clustering = self.dependencies.initial_five_clusterer.analyze(
             metadata_articles,
             groups,
+            enforce_candidate_membership=False,
         )
+        clustering_payload = clustering.as_dict()
+        clustering_state = getattr(clustering, "analysis_state", clustering_payload.get("analysis_state"))
+        if clustering_state != "succeeded":
+            raise StageAdapterError(
+                "global Vertex clustering is not publishable: "
+                f"{clustering_payload.get('fallback_reason') or clustering_payload.get('approval', {}).get('status') or clustering_state}"
+            )
         cluster_rows = [dict(cluster) for cluster in clustering.clusters]
-        usable_clusters = []
-        for cluster in cluster_rows:
-            assigned = [
-                assignment
-                for assignment in cluster.get("article_assignments", [])
-                if assignment.get("relation") == "same_event" and assignment.get("article_id")
-            ]
-            if assigned:
-                usable_clusters.append(cluster)
-        if len(usable_clusters) < 5:
-            cluster_rows = _title_fallback_clusters(metadata_articles)
-        else:
-            cluster_rows = usable_clusters
+        metadata_by_id = {article.article_id: article for article in metadata_articles}
+        usable_clusters = [
+            cluster
+            for cluster in cluster_rows
+            if len(_same_event_ids(cluster)) >= 3
+            and len(
+                {
+                    metadata_by_id[article_id].source
+                    for article_id in _same_event_ids(cluster)
+                    if article_id in metadata_by_id
+                }
+            )
+            >= 2
+            and str(cluster.get("coherence", "")).lower() in {"high", "medium"}
+        ]
         ranked = sorted(
-            cluster_rows,
+            (_rank_cluster(cluster, metadata_by_id, configured_source_count=12) for cluster in usable_clusters),
             key=lambda cluster: (
-                -len(cluster.get("article_assignments", [])),
+                -float(cluster.get("agendaScore", 0.0)),
+                -len(_same_event_ids(cluster)),
                 str(cluster.get("cluster_id", "")),
             ),
         )
-        ranked = list(ranked) + _remainder_clusters(metadata_articles, ranked)
+        if len(ranked) < 5:
+            raise StageAdapterError(
+                "global Vertex clustering produced fewer than five publishable event clusters: "
+                f"{len(ranked)}"
+            )
         top5 = [
             {
                 "issueId": str(cluster["cluster_id"]),
                 "title": str(cluster["label"]),
-                "articleIds": [
-                    str(assignment["article_id"])
-                    for assignment in cluster.get("article_assignments", [])
-                    if assignment.get("relation") == "same_event"
-                ],
+                "articleIds": _same_event_ids(cluster),
                 "coherence": cluster.get("coherence"),
+                "agendaScore": cluster.get("agendaScore"),
+                "scoreBreakdown": cluster.get("scoreBreakdown"),
+                "rankScoreVersion": cluster.get("rankScoreVersion"),
             }
             for cluster in ranked[:5]
         ]
@@ -655,12 +640,11 @@ class MetadataClusterRankAdapter(ClusterRankAdapter):
                 {
                     "issueId": str(cluster["cluster_id"]),
                     "title": str(cluster["label"]),
-                    "articleIds": [
-                        str(assignment["article_id"])
-                        for assignment in cluster.get("article_assignments", [])
-                        if assignment.get("relation") == "same_event"
-                    ],
+                    "articleIds": _same_event_ids(cluster),
                     "coherence": cluster.get("coherence"),
+                    "agendaScore": cluster.get("agendaScore"),
+                    "scoreBreakdown": cluster.get("scoreBreakdown"),
+                    "rankScoreVersion": cluster.get("rankScoreVersion"),
                 }
                 for cluster in ranked
                 if any(
@@ -669,15 +653,18 @@ class MetadataClusterRankAdapter(ClusterRankAdapter):
                 )
             ],
             "top5": top5,
-            "clustering": clustering.as_dict(),
+            "clustering": clustering_payload,
+            "clusterCount": len(ranked),
             "idempotencyKey": idempotency_key,
         }
         assert_body_safe(result, context="cluster/rank stage")
         return result
 
 
-def _public_evidence(profile: Mapping[str, Any]) -> Mapping[str, Any] | None:
-    evidence = _public_evidence_rows(profile, article_id="")
+def _public_evidence(
+    profile: Mapping[str, Any], *, article_id: str = ""
+) -> Mapping[str, Any] | None:
+    evidence = _public_evidence_rows(profile, article_id=article_id)
     if not evidence:
         return None
     first = evidence[0]
@@ -792,6 +779,7 @@ def _engine_metadata(
         "schemaVersion": schema,
         "source": "gcp:vertex-evidence-profile",
         "articleId": article_id,
+        "runId": request.run_id,
         "evidenceCount": len(_public_evidence_rows(profile, article_id=article_id)),
         "bodySha256": body_hash,
         "reviewRequired": bool(profile.get("review", {}).get("requires_human_review", True))
@@ -800,6 +788,7 @@ def _engine_metadata(
         "fallbackReason": profile.get("review", {}).get("fallback_reason")
         if isinstance(profile.get("review"), Mapping)
         else None,
+        "invocation": lineage.get("invocation"),
     }
 
 
@@ -987,6 +976,7 @@ def _synthesize_comparison(
         "promptVersion": bound.get("promptVersion"),
         "schemaVersion": bound.get("schemaVersion"),
         "source": source,
+        "invocation": bound.get("invocation"),
         "requiresHumanReview": True,
     }
     what = bound.get("what_happened")
@@ -1027,25 +1017,37 @@ class FrameSemanticAdapter(SemanticAdapter):
                 profile_cache[article_id] = (article, {}, None)
                 return profile_cache[article_id]
             result: FrameResult = self.dependencies.frame_analyzer.analyze(article)
+            # A review-needed result or a fake proof is never promoted to a
+            # successful semantic profile.  Publication requires a real
+            # Vertex invocation receipt and model-aligned evidence.
+            if (
+                result.decision != "analyze"
+                or result.analysis_state != "succeeded"
+                or not isinstance(result.invocation_receipt, Mapping)
+                or result.invocation_receipt.get("provider") != "vertex_ai"
+            ):
+                profile_cache[article_id] = (article, {}, None)
+                return profile_cache[article_id]
             row = publication_row(article, result)
             profile = row.get("profile")
             if not isinstance(profile, Mapping):
                 raise StageAdapterError(
                     f"semantic analyzer returned no public profile: {article_id}"
-                )
+            )
             profile = dict(profile)
-            evidence = _public_evidence(profile)
+            evidence = _public_evidence(profile, article_id=article.article_id)
             if evidence is None:
-                proof = _body_proof_row(article)
-                if proof is not None:
-                    profile["proof"] = [proof]
-                    evidence = _public_evidence(profile)
+                profile_cache[article_id] = (article, {}, None)
+                return profile_cache[article_id]
             profile_cache[article_id] = (article, profile, evidence)
             return profile_cache[article_id]
 
         walkable = [item for item in pool if isinstance(item, Mapping)]
         if len(walkable) != len(pool):
             raise StageAdapterError("top5 issue row is invalid")
+        clustering_payload = (
+            ranked.get("clustering") if isinstance(ranked.get("clustering"), Mapping) else {}
+        )
 
         for issue in walkable:
             if len(public_issues) >= 5:
@@ -1087,6 +1089,7 @@ class FrameSemanticAdapter(SemanticAdapter):
                         "mediaGroupId": None,
                         "canonicalUrl": article.canonical_url,
                         "title": article.title,
+                        "titleSource": article.title_source,
                         "publishedAt": article.published_at.isoformat(),
                         "section": article.section,
                         "bodySha256": article.body_hash,
@@ -1099,6 +1102,7 @@ class FrameSemanticAdapter(SemanticAdapter):
                         "sourceId": article.source_id,
                         "sourceUrl": article.canonical_url,
                         "title": article.title,
+                        "titleSource": article.title_source,
                         "evidence": {
                             "locator": dict(evidence["locator"]),
                             "sentence_sha256": evidence["sentence_sha256"],
@@ -1130,15 +1134,32 @@ class FrameSemanticAdapter(SemanticAdapter):
                 comparison_axes=comparison_axes,
                 request=request,
             )
+            profile_invocations = [
+                entry.get("engine", {}).get("invocation")
+                for entry in profiles
+                if isinstance(entry.get("engine"), Mapping)
+            ]
+            clustering_meta = ranked.get("clustering")
+            clustering_engine = (
+                clustering_meta.get("engine")
+                if isinstance(clustering_meta, Mapping)
+                else {}
+            )
             semantic_engine = {
                 "label": "ai_semantic",
                 "engineLabel": "ai_semantic",
                 "semanticAi": True,
                 "status": "succeeded",
-                "model": getattr(request, "model_revision", "vertex-configured"),
-                "promptVersion": getattr(request, "prompt_version", "runtime-configured"),
+                "model": profiles[0]["engine"].get("model")
+                if profiles
+                else getattr(request, "model_revision", "vertex-configured"),
+                "promptVersion": profiles[0]["engine"].get("promptVersion")
+                if profiles
+                else getattr(request, "prompt_version", "runtime-configured"),
                 "schemaVersion": "agendaframe.article-frame-profile.v2",
                 "source": "gcp:vertex-evidence-profile",
+                "runId": request.run_id,
+                "invocations": profile_invocations,
                 "articleCount": article_count,
                 "succeededArticleCount": len(profiles),
                 "reviewNeededArticleCount": 0,
@@ -1149,10 +1170,17 @@ class FrameSemanticAdapter(SemanticAdapter):
                 "engineLabel": "ai_semantic",
                 "semanticAi": True,
                 "status": "succeeded",
-                "model": getattr(request, "model_revision", "vertex-configured"),
-                "promptVersion": getattr(request, "prompt_version", "runtime-configured"),
-                "schemaVersion": 1,
-                "source": "gcp:metadata-cluster-rank",
+                "model": clustering_engine.get("model")
+                or getattr(request, "model_revision", "vertex-configured"),
+                "promptVersion": clustering_engine.get("prompt_version")
+                or getattr(request, "prompt_version", "runtime-configured"),
+                "schemaVersion": clustering_engine.get("schema_version")
+                or "agendaframe.initial-five-cluster.v2",
+                "source": "gcp:vertex-initial-five-clusterer",
+                "runId": request.run_id,
+                "invocation": clustering_payload.get("invocation")
+                if isinstance(clustering_payload, Mapping)
+                else None,
                 "decision": "analyze",
                 "coherence": issue.get("coherence"),
                 "requiresHumanReview": True,
@@ -1168,6 +1196,9 @@ class FrameSemanticAdapter(SemanticAdapter):
                     "category": None,
                     "articleCount": article_count,
                     "outletCount": outlet_count,
+                    "agendaScore": issue.get("agendaScore"),
+                    "scoreBreakdown": issue.get("scoreBreakdown"),
+                    "rankScoreVersion": issue.get("rankScoreVersion"),
                 },
                 "analysisStatus": {
                     "state": "succeeded",
@@ -1183,6 +1214,8 @@ class FrameSemanticAdapter(SemanticAdapter):
                     "narrativeVariants": [],
                     "outlierArticleIds": [],
                     "articleIds": [row["articleId"] for row in article_rows],
+                    "agendaScore": issue.get("agendaScore"),
+                    "scoreBreakdown": issue.get("scoreBreakdown"),
                 },
                 "articles": article_rows,
                 "semanticProfiles": profiles,
@@ -1226,6 +1259,12 @@ class FrameSemanticAdapter(SemanticAdapter):
                         "semanticFileCount": len(profiles),
                     },
                     "issueId": issue_id,
+                    "runId": request.run_id,
+                    "model": semantic_engine["model"],
+                    "promptVersion": semantic_engine["promptVersion"],
+                    "clusterInvocation": cluster_engine.get("invocation"),
+                    "semanticInvocations": profile_invocations,
+                    "comparisonInvocation": comparison_engine.get("invocation"),
                 },
             }
             public_issues.append(
@@ -1239,6 +1278,8 @@ class FrameSemanticAdapter(SemanticAdapter):
                     "status": "succeeded",
                     "semantic": semantic_engine,
                     "clusterAi": cluster_engine,
+                    "agendaScore": issue.get("agendaScore"),
+                    "scoreBreakdown": issue.get("scoreBreakdown"),
                 }
             )
             used_article_ids.update(str(row["articleId"]) for row in article_rows)

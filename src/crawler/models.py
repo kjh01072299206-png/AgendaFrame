@@ -50,6 +50,7 @@ class ArticleDocument:
     section: str | None
     body_text: str | None
     text_scope: str
+    title_source: str = "unknown"
 
     @property
     def body_hash(self) -> str | None:
