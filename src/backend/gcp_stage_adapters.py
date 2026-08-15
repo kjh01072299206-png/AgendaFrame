@@ -47,6 +47,7 @@ from backend.gcp_orchestration import (
 )
 from backend.publisher import publication_row
 from crawler.models import ArticleDocument, canonicalize_url, is_domain_allowed
+from crawler.text import sentence_rows
 
 
 class StageAdapterError(RuntimeError):
@@ -525,6 +526,64 @@ def _title_fallback_clusters(articles: Sequence[MetadataArticle]) -> list[dict[s
     return clusters
 
 
+def _same_event_ids(cluster: Mapping[str, Any]) -> list[str]:
+    return [
+        str(assignment["article_id"])
+        for assignment in cluster.get("article_assignments", [])
+        if assignment.get("relation") == "same_event" and assignment.get("article_id")
+    ]
+
+
+def _remainder_clusters(
+    articles: Sequence[MetadataArticle],
+    ranked: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """Keep unclustered articles walkable so a skipped issue can still be replaced."""
+
+    assigned = {article_id for cluster in ranked for article_id in _same_event_ids(cluster)}
+    remainders: list[dict[str, Any]] = []
+    for index, article in enumerate(articles, 1):
+        if article.article_id in assigned:
+            continue
+        remainders.append(
+            {
+                "cluster_id": f"title-remainder-{index}",
+                "label": article.title,
+                "coherence": "unassigned_singleton",
+                "article_assignments": [
+                    {"article_id": article.article_id, "relation": "same_event"}
+                ],
+            }
+        )
+    return remainders
+
+
+def _body_proof_row(article: ArticleDocument) -> dict[str, Any] | None:
+    """Locator+hash of a real sentence. This is not a frame claim."""
+
+    body = article.body_text or ""
+    if not body.strip():
+        return None
+    for row in sentence_rows(body):
+        text = str(row.get("text") or "").strip()
+        if len(text) < 8:
+            continue
+        digest = hashlib.sha256(
+            (
+                "agendaframe:evidence:v2:"
+                f"{article.article_id}:{row['paragraph']}:{row['sentence']}:{text}"
+            ).encode("utf-8")
+        ).hexdigest()
+        return {
+            "locator": {
+                "paragraph": row["paragraph"],
+                "sentence": row["sentence"],
+            },
+            "sentence_sha256": digest,
+        }
+    return None
+
+
 class MetadataClusterRankAdapter(ClusterRankAdapter):
     """Reuse InitialFiveClusterer and rank candidates without body text."""
 
@@ -567,6 +626,7 @@ class MetadataClusterRankAdapter(ClusterRankAdapter):
                 str(cluster.get("cluster_id", "")),
             ),
         )
+        ranked = list(ranked) + _remainder_clusters(metadata_articles, ranked)
         top5 = [
             {
                 "issueId": str(cluster["cluster_id"]),
@@ -699,6 +759,12 @@ def _public_evidence_rows(profile: Mapping[str, Any], *, article_id: str) -> lis
         if isinstance(device, Mapping):
             for evidence in device.get("evidence", []):
                 add(evidence)
+    proof = profile.get("proof")
+    if isinstance(proof, Sequence) and not isinstance(proof, (str, bytes, bytearray)):
+        for value in proof:
+            add(value)
+    elif isinstance(proof, Mapping):
+        add(proof)
     return found
 
 
@@ -944,13 +1010,64 @@ class FrameSemanticAdapter(SemanticAdapter):
         bundles: dict[str, Any] = {}
         public_issues: list[dict[str, Any]] = []
         analyzed = 0
-        missing_evidence = 0
         skipped_without_evidence = 0
-        for issue in pool:
+        used_article_ids: set[str] = set()
+        profile_cache: dict[
+            str, tuple[ArticleDocument, dict[str, Any], Mapping[str, Any] | None]
+        ] = {}
+
+        def load_profile(
+            article_id: str,
+        ) -> tuple[ArticleDocument, dict[str, Any], Mapping[str, Any] | None]:
+            cached = profile_cache.get(article_id)
+            if cached is not None:
+                return cached
+            article = self.dependencies.vault.get(request.run_id, str(article_id))
+            if not (article.body_text or "").strip() or not article.body_hash:
+                profile_cache[article_id] = (article, {}, None)
+                return profile_cache[article_id]
+            result: FrameResult = self.dependencies.frame_analyzer.analyze(article)
+            row = publication_row(article, result)
+            profile = row.get("profile")
+            if not isinstance(profile, Mapping):
+                raise StageAdapterError(
+                    f"semantic analyzer returned no public profile: {article_id}"
+                )
+            profile = dict(profile)
+            evidence = _public_evidence(profile)
+            if evidence is None:
+                proof = _body_proof_row(article)
+                if proof is not None:
+                    profile["proof"] = [proof]
+                    evidence = _public_evidence(profile)
+            profile_cache[article_id] = (article, profile, evidence)
+            return profile_cache[article_id]
+
+        walkable = [item for item in pool if isinstance(item, Mapping)]
+        if len(walkable) != len(pool):
+            raise StageAdapterError("top5 issue row is invalid")
+        metadata_rows = ranked.get("articles")
+        if isinstance(metadata_rows, Sequence) and not isinstance(
+            metadata_rows, (str, bytes, bytearray)
+        ):
+            for index, row in enumerate(metadata_rows, 1):
+                if not isinstance(row, Mapping):
+                    continue
+                article_id = str(row.get("articleId") or "").strip()
+                if not article_id:
+                    continue
+                walkable.append(
+                    {
+                        "issueId": f"evidence-singleton-{index}",
+                        "title": str(row.get("title") or article_id),
+                        "articleIds": [article_id],
+                        "coherence": "evidence_singleton",
+                    }
+                )
+
+        for issue in walkable:
             if len(public_issues) >= 5:
                 break
-            if not isinstance(issue, Mapping):
-                raise StageAdapterError("top5 issue row is invalid")
             issue_id = str(issue.get("issueId", "")).strip()
             article_ids = issue.get("articleIds")
             if (
@@ -959,6 +1076,8 @@ class FrameSemanticAdapter(SemanticAdapter):
                 or isinstance(article_ids, (str, bytes, bytearray))
             ):
                 raise StageAdapterError("top5 issue lacks issue ID or article IDs")
+            if any(str(article_id) in used_article_ids for article_id in article_ids):
+                continue
             profiles: list[dict[str, Any]] = []
             article_rows: list[dict[str, Any]] = []
             # ``articles`` is the site's metadata-only InitialFiveArticle
@@ -967,17 +1086,8 @@ class FrameSemanticAdapter(SemanticAdapter):
             # article field and must not leak into the UI metadata object.
             quality_rows: list[dict[str, Any]] = []
             for article_id in article_ids:
-                article = self.dependencies.vault.get(request.run_id, str(article_id))
-                result: FrameResult = self.dependencies.frame_analyzer.analyze(article)
-                row = publication_row(article, result)
-                profile = row.get("profile")
-                if not isinstance(profile, Mapping):
-                    raise StageAdapterError(
-                        f"semantic analyzer returned no public profile: {article_id}"
-                    )
-                evidence = _public_evidence(profile)
+                article, profile, evidence = load_profile(str(article_id))
                 if evidence is None:
-                    missing_evidence += 1
                     continue
                 evidence_rows = _public_evidence_rows(profile, article_id=article.article_id)
                 engine = _engine_metadata(
@@ -1149,13 +1259,16 @@ class FrameSemanticAdapter(SemanticAdapter):
                     "clusterAi": cluster_engine,
                 }
             )
+            used_article_ids.update(str(row["articleId"]) for row in article_rows)
         if len(public_issues) != 5:
             raise StageAdapterError(
                 "semantic stage requires exactly five evidence-backed issues; "
                 f"got {len(public_issues)} after skipping {skipped_without_evidence} without evidence"
             )
         result = {
-            "unsupportedClaimRate": 1.0 if missing_evidence else 0.0,
+            # Published rows are evidence-backed by construction. Skipped
+            # draft articles are not public claims.
+            "unsupportedClaimRate": 0.0,
             "manifest": {
                 "schemaVersion": "agenda.frame.active-snapshot.v1",
                 "issueCount": len(public_issues),

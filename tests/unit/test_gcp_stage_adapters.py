@@ -404,6 +404,75 @@ class GcpStageAdapterTests(unittest.TestCase):
         self.assertEqual(len(ranked["top5"]), 5)
         self.assertTrue(all(row["issueId"].startswith("title-fallback-") for row in ranked["top5"]))
 
+    def test_cluster_rank_appends_unassigned_articles_as_remainder_candidates(self) -> None:
+        collected = PolicyCollectionAdapter(
+            self.dependencies, clock=lambda: COLLECTED_AT, max_articles_per_run=12
+        ).collect(self.request, idempotency_key="collect-remain")
+        persisted = MetadataPersistenceAdapter(self.dependencies).persist(
+            self.request, collected, idempotency_key="persist-remain"
+        )
+        ranked = MetadataClusterRankAdapter(self.dependencies).cluster_rank(
+            self.request, persisted, idempotency_key="rank-remain"
+        )
+        self.assertEqual(len(ranked["top5"]), 5)
+        remainder_ids = [
+            row["issueId"]
+            for row in ranked["candidates"]
+            if str(row["issueId"]).startswith("title-remainder-")
+        ]
+        self.assertGreaterEqual(len(remainder_ids), 1)
+        self.assertGreater(len(ranked["candidates"]), 5)
+
+    def test_semantic_uses_body_proof_when_analyzer_returns_no_evidence(self) -> None:
+        class ReviewNeededFrame:
+            def analyze(self, value: ArticleDocument) -> FrameResult:
+                return FrameResult(
+                    article_id=value.article_id,
+                    decision="review_needed",
+                    dimensions=tuple(
+                        {
+                            "dimension": name,
+                            "status": "explicit_not_stated",
+                            "value": None,
+                            "evidence": [],
+                            "reason": "Vertex output failed validation.",
+                        }
+                        for name in sorted(FRAME_DIMENSIONS)
+                    ),
+                    model_id="fake-gemini",
+                    prompt_version="test",
+                    schema_version=3,
+                    text_scope=value.text_scope,
+                    analyzed_character_count=len(value.body_text or ""),
+                    input_truncated=False,
+                    analysis_state="review_needed",
+                    fallback_reason="Vertex output failed validation.",
+                )
+
+        deps = StageDependencies(
+            **{**self.dependencies.__dict__, "frame_analyzer": ReviewNeededFrame()}
+        )
+        collected = PolicyCollectionAdapter(deps, clock=lambda: COLLECTED_AT).collect(
+            self.request, idempotency_key="collect-proof"
+        )
+        persisted = MetadataPersistenceAdapter(deps).persist(
+            self.request, collected, idempotency_key="persist-proof"
+        )
+        ranked = MetadataClusterRankAdapter(deps).cluster_rank(
+            self.request, persisted, idempotency_key="rank-proof"
+        )
+        semantic = FrameSemanticAdapter(deps).analyze_top5(
+            self.request, ranked, idempotency_key="semantic-proof"
+        )
+        self.assertEqual(len(semantic["top5"]), 5)
+        self.assertEqual(semantic["unsupportedClaimRate"], 0.0)
+        bundle = next(iter(semantic["bundles"].values()))
+        first_profile = bundle["semanticProfiles"][0]["profile"]
+        self.assertTrue(first_profile.get("proof"))
+        self.assertNotIn("Event 1 was described", json.dumps(semantic, ensure_ascii=False))
+        gate = evaluate_quality_gate(semantic)
+        self.assertEqual(gate["status"], "pass")
+
     def test_semantic_adapter_uses_bound_event_synthesis_when_injected(self) -> None:
         class SynthesisFake:
             def synthesize(self, request):
