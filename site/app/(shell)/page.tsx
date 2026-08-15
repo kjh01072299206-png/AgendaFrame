@@ -8,3 +8,5 @@ export default async function HomePage() {
   const active = await getActiveSnapshot();
   return active.mode === "live" ? <ActiveSnapshotHome active={active} /> : <LiveHome />;
 }
+
+

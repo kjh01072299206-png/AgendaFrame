@@ -1046,24 +1046,6 @@ class FrameSemanticAdapter(SemanticAdapter):
         walkable = [item for item in pool if isinstance(item, Mapping)]
         if len(walkable) != len(pool):
             raise StageAdapterError("top5 issue row is invalid")
-        metadata_rows = ranked.get("articles")
-        if isinstance(metadata_rows, Sequence) and not isinstance(
-            metadata_rows, (str, bytes, bytearray)
-        ):
-            for index, row in enumerate(metadata_rows, 1):
-                if not isinstance(row, Mapping):
-                    continue
-                article_id = str(row.get("articleId") or "").strip()
-                if not article_id:
-                    continue
-                walkable.append(
-                    {
-                        "issueId": f"evidence-singleton-{index}",
-                        "title": str(row.get("title") or article_id),
-                        "articleIds": [article_id],
-                        "coherence": "evidence_singleton",
-                    }
-                )
 
         for issue in walkable:
             if len(public_issues) >= 5:
@@ -1265,10 +1247,28 @@ class FrameSemanticAdapter(SemanticAdapter):
                 "semantic stage requires exactly five evidence-backed issues; "
                 f"got {len(public_issues)} after skipping {skipped_without_evidence} without evidence"
             )
+        total_claims = 0
+        unsupported_claims = 0
+        for issue_bundle in bundles.values():
+            for profile_entry in issue_bundle.get("semanticProfiles", []):
+                profile_data = profile_entry.get("profile") or {}
+                evidence_list = profile_entry.get("evidence") or []
+                for dim in ("problem_definition", "causal_attribution", "responsibility_attribution", "evaluation", "treatment_recommendation"):
+                    if profile_data.get(dim) is not None:
+                        total_claims += 1
+                        has_ev = any(
+                            isinstance(ev, Mapping)
+                            and ev.get("dimension") == dim
+                            and ev.get("locator")
+                            and ev.get("sentence_sha256")
+                            for ev in evidence_list
+                        )
+                        if not has_ev:
+                            unsupported_claims += 1
+        unsupported_rate = (unsupported_claims / total_claims) if total_claims > 0 else 0.0
+
         result = {
-            # Published rows are evidence-backed by construction. Skipped
-            # draft articles are not public claims.
-            "unsupportedClaimRate": 0.0,
+            "unsupportedClaimRate": round(unsupported_rate, 4),
             "manifest": {
                 "schemaVersion": "agenda.frame.active-snapshot.v1",
                 "issueCount": len(public_issues),

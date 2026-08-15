@@ -1,10 +1,9 @@
-import { getInitialFiveIssueBundle, initialFiveManifest } from "../../../../lib/initial-five/artifacts";
+import Link from "next/link";
 import { deriveIssue, safeDecode } from "../../../../lib/initial-five/derive";
 import { IssueSubject } from "../../issue-subject";
+import { loadIssueBundle } from "./load";
 
-export function generateStaticParams() {
-  return initialFiveManifest.issues.map((issue) => ({ issueId: issue.issueId }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function IssueLayout({
   children,
@@ -14,8 +13,27 @@ export default async function IssueLayout({
   params: Promise<{ issueId: string }>;
 }) {
   const { issueId } = await params;
-  const bundle = getInitialFiveIssueBundle(safeDecode(issueId));
-  if (!bundle) return children;
+  let bundle = null;
+  try {
+    bundle = await loadIssueBundle(params);
+  } catch {
+    bundle = null;
+  }
+
+  if (!bundle) {
+    return (
+      <div className="afs-card afs-card-lead" style={{ padding: "32px 24px", textAlign: "center" }}>
+        <h2>의제 정보를 찾을 수 없습니다</h2>
+        <p className="afs-prose" style={{ margin: "16px 0", color: "var(--afs-muted, #64748b)" }}>
+          요청하신 의제(<code>{safeDecode(issueId)}</code>)는 현재 활성 스냅샷에 존재하지 않거나 만료되었습니다.
+        </p>
+        <Link className="afs-pill afs-pill-go" href="/" style={{ display: "inline-block", marginTop: "8px" }}>
+          오늘의 상위 5개 의제로 돌아가기
+        </Link>
+      </div>
+    );
+  }
+
   const issue = deriveIssue(bundle);
 
   return (
@@ -30,8 +48,6 @@ export default async function IssueLayout({
         outletCount={issue.outletCount}
         splitDimensions={issue.splitDimensions}
       />
-      {/* 아티팩트의 publication_rule 이 요구하는 표시는 이 한 줄이다. 모델 이름·분석 글자 수·
-          지문 저장 방식은 방법론 화면에 한 번만 둔다 — 의제마다 다시 읽을 값이 아니다. */}
       <p className="afs-prov">
         {issue.provenance.requiresHumanReview ? <b>자동 분석 초안 · 사람 검토 전</b> : <b>검토 완료</b>}
         {issue.agreement?.mean != null ? (
@@ -44,3 +60,4 @@ export default async function IssueLayout({
     </>
   );
 }
+

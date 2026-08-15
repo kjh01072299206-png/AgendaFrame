@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { getInitialFiveIssueBundle } from "../../../../lib/initial-five/artifacts";
 import { safeDecode } from "../../../../lib/initial-five/derive";
 import { protoIssue } from "../../../../lib/proto";
@@ -16,7 +15,19 @@ export default async function IssueOverviewPage({ params }: { params: Promise<{ 
   const issue = await loadIssue(Promise.resolve({ issueId }));
   const bundle = await loadIssueBundle(Promise.resolve({ issueId }));
   const proto = protoIssue(issue.issueId);
-  if (!proto) notFound();
+  if (!proto) {
+    return (
+      <>
+        <SynthesisNarrative bundle={bundle} />
+        <section className="afs-card">
+          <h2>보도 흐름</h2>
+          <div className="afs-in">
+            <Timeline articles={issue.articles} />
+          </div>
+        </section>
+      </>
+    );
+  }
 
   return (
     <>

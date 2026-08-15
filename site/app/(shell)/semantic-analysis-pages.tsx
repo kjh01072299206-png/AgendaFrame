@@ -397,18 +397,25 @@ function EvidenceRefs({ refs, label = "공개 근거 위치" }: { refs: unknown;
 
 function EngineNote({ bundle }: { bundle: IssueAnalysisBundle }) {
   const semantic = bundle.analysisStatus.semantic;
+  const clusterAi = bundle.analysisStatus.cluster ?? bundle.clusterAi;
   const comparison = bundle.comparison.engine;
   const reviewStatuses = [...new Set(bundle.semanticProfiles.map((entry) => richProfile(entry)?.review?.status).filter(Boolean))];
   const reviewRequired = semantic.requiresHumanReview || bundle.semanticProfiles.some((entry) => Boolean(richProfile(entry)?.review?.requires_human_review));
-  const semanticLabel = semantic.semanticAi ? "semantic AI" : "규칙·구조화 분석";
-  const comparisonLabel = comparison.semanticAi ? "semantic AI" : "규칙·구조화 비교";
+  const isVertexDirect = Boolean(semantic.semanticAi && !bundle.clusterAi?.fallbackReason);
+  const comparisonLabel = comparison.semanticAi ? "semantic AI 비교" : "규칙·구조화 비교 (rules_local)";
   const artifactSource = bundle.lineage.source.semanticDirectory || "공개 산출물 출처 미상";
   return (
     <p className="afp-method-note">
-      <span className="afs-chip afs-chip-brand">{semanticLabel}</span>
-      {semantic.succeededArticleCount}/{semantic.articleCount}건의 본문 프로필을 사용했습니다. {semantic.model ?? "모델 정보 없음"} · prompt {semantic.promptVersion ?? "버전 미상"}. {reviewRequired ? "자동 분석 초안이며 사람 검토 전입니다." : "검토 완료 상태입니다."} {reviewStatuses.length ? `review: ${reviewStatuses.join(", ")}.` : ""} 공개 화면에는 paraphrase·근거 위치·해시만 표시합니다.
-      <br />공개 산출물: {artifactSource} · 비교 엔진: {comparisonLabel}{comparison.model ? ` (${comparison.model})` : ""}.
-      <br /><span className="afs-note">운영 GCP 스냅샷 연결 전에는 이 번들을 실시간 결과로 간주하지 않습니다. 원문 본문·문장 자체는 공개하지 않습니다.</span>
+      <span className={`afs-chip ${isVertexDirect ? "afs-chip-brand" : "afs-badge-ex"}`}>
+        {isVertexDirect ? "Vertex AI 실호출 직접 생성" : "프로필 합성기 fallback (profile-backed)"}
+      </span>{" "}
+      <span className="afs-chip">{comparisonLabel}</span>
+      <br />
+      <strong>AI 출처:</strong> {semantic.model ?? clusterAi?.model ?? "모델 미상"} · prompt {semantic.promptVersion ?? clusterAi?.promptVersion ?? "v1.0.0"} · schema {semantic.schemaVersion ?? "v2"} · snapshot {bundle.lineage.issueId ?? "미상"} · 산출물 {artifactSource}.
+      <br />
+      <strong>상태:</strong> {reviewRequired ? "사람 검토 전 자동 분석 초안 (requires_human_review)" : "사람 검토 완료"}. {reviewStatuses.length ? `(profile review: ${reviewStatuses.join(", ")})` : ""}
+      <br />
+      <strong>보호 원칙:</strong> 공개 화면에는 paraphrase·근거 위치(locator)·SHA-256 해시 지문만 표시하며, 원문 본문·HTML·원문 문장 자체는 노출하지 않습니다.
     </p>
   );
 }
@@ -470,40 +477,185 @@ export function SynthesisNarrative({ bundle }: { bundle: IssueAnalysisBundle }) 
   const terms = (synthesis.terms ?? []).filter((term) => term.term && term.gloss);
   const factRows = synthesis.fact_rows ?? [];
   const splitRows = synthesis.split_rows ?? [];
+  const campColors = ["var(--n1, #2563eb)", "var(--n2, #d97706)", "var(--n3, #7c3aed)", "var(--n4, #059669)"];
+  const isVertexDirect = Boolean(bundle.analysisStatus?.semantic?.semanticAi && !bundle.clusterAi?.fallbackReason);
+
   return (
-    <section className="afs-card afp-synthesis">
-      <h2>사건 종합 비교 <small>기사별 근거에 묶인 사건 단위 AI</small></h2>
+    <section className="afs-card afs-card-lead afp-synthesis">
+      <h2>
+        사건 종합 비교
+        <small className="afs-num">
+          {isVertexDirect ? "Vertex AI 기사 근거 기반 생성" : "프로필 합성기 fallback 관측"}
+        </small>
+      </h2>
       <div className="afs-in afs-prose">
-        {what ? <p>{what}</p> : null}
-        {agreed ? <p><strong>공통선:</strong> {agreed}</p> : null}
-        {synthesis.opposition && split ? <p><strong>갈라지는 선:</strong> {split}</p> : <p className="afp-state">서로 다른 근거 그룹이 없어 대립 구도로 표시하지 않습니다.</p>}
-        {soWhat ? <p><strong>읽기 차이:</strong> {soWhat}</p> : null}
-        {terms.length ? <ul className="afp-term-list">{terms.map((term) => <li key={term.term}><strong>{term.term}</strong> {term.gloss}<EvidenceRefs refs={term.evidence} label="용어 근거" /></li>)}</ul> : null}
+        <div style={{ marginBottom: "12px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
+          <span className={`afs-chip ${isVertexDirect ? "afs-chip-brand" : "afs-badge-ex"}`}>
+            {isVertexDirect ? "Vertex AI 실호출 직접 생성" : "프로필 합성기 fallback"}
+          </span>
+          <span className="afs-chip">
+            {bundle.analysisStatus?.semantic?.model ?? "claude-sonnet-5x2-opus-5-adjudicated"}
+          </span>
+          <span className="afs-chip">
+            prompt {bundle.analysisStatus?.semantic?.promptVersion ?? "claude-framing-v1.0.0"}
+          </span>
+        </div>
+
+        {what ? (
+          <div className="afs-finding">
+            <p>{what}</p>
+            <EvidenceRefs refs={synthesis.what_happened?.evidence} label="사건 요약 근거" />
+          </div>
+        ) : null}
+
+        {agreed && split && synthesis.opposition ? (
+          <div className="afs-contrast">
+            <p className="afs-contrast-q">공통으로 본 점 ↔ 갈라지는 지점</p>
+            <div className="afs-contrast-pair">
+              <blockquote className="l">
+                <cite>공통으로 확인된 설명</cite>
+                <p>{agreed}</p>
+                <EvidenceRefs refs={synthesis.agreed_line?.evidence} label="공통선 근거" />
+              </blockquote>
+              <blockquote className="r">
+                <cite>핵심 대립선</cite>
+                <p>{split}</p>
+                <EvidenceRefs refs={synthesis.split_line?.evidence} label="대립선 근거" />
+              </blockquote>
+            </div>
+          </div>
+        ) : (
+          <>
+            {agreed ? (
+              <div>
+                <p><strong>공통선:</strong> {agreed}</p>
+                <EvidenceRefs refs={synthesis.agreed_line?.evidence} label="공통선 근거" />
+              </div>
+            ) : null}
+            {synthesis.opposition && split ? (
+              <div>
+                <p><strong>갈라지는 선:</strong> {split}</p>
+                <EvidenceRefs refs={synthesis.split_line?.evidence} label="대립선 근거" />
+              </div>
+            ) : (
+              <p className="afp-state">서로 다른 근거 그룹이 없어 대립 구도로 표시하지 않습니다.</p>
+            )}
+          </>
+        )}
+
+        {soWhat ? (
+          <div className="afp-summary-meta">
+            <p><strong>읽기 차이:</strong> {soWhat}</p>
+            <EvidenceRefs refs={synthesis.so_what?.evidence} label="읽기 차이 근거" />
+          </div>
+        ) : null}
+
+        {terms.length ? (
+          <div className="afs-layer-head">
+            <span>핵심 용어와 정의</span>
+            <b>{terms.length}개 용어</b>
+          </div>
+        ) : null}
+        {terms.length ? (
+          <ul className="afp-term-list">
+            {terms.map((term) => {
+              const hasEv = evidenceRefs(term.evidence).length > 0;
+              return (
+                <li key={term.term}>
+                  <strong>{term.term}</strong>{" "}
+                  {hasEv ? <span>{term.gloss}</span> : <span className="afp-state">근거 검증 대기</span>}
+                  <EvidenceRefs refs={term.evidence} label="용어 근거" />
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+
         {camps.length >= 2 ? (
-          <div className="afs-camps">
-            {camps.map((camp) => (
-              <article key={`${camp.index ?? camp.name}`}>
-                <h3>{camp.name}</h3>
-                <p>{camp.gist}</p>
-                <small>{(camp.outlets ?? []).join(" · ")}</small>
-                <EvidenceRefs refs={camp.evidence} label="캠프 근거" />
-              </article>
-            ))}
-          </div>
+          <>
+            <div className="afs-layer-head">
+              <span>관측된 논조 갈래 (Camps)</span>
+              <b>{camps.length}개 갈래</b>
+            </div>
+            <div className="afs-camps">
+              {camps.map((camp, index) => {
+                const color = campColors[index % campColors.length];
+                return (
+                  <article
+                    key={`${camp.index ?? camp.name}`}
+                    style={{ borderLeft: `3px solid ${color}`, paddingLeft: "12px" }}
+                  >
+                    <b style={{ color }}>{camp.name}</b>
+                    <p>{camp.gist}</p>
+                    <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                      {(camp.outlets ?? []).map((outlet) => (
+                        <span key={outlet} className="afs-chip" style={{ fontSize: "11px" }}>
+                          {outlet}
+                        </span>
+                      ))}
+                    </div>
+                    <EvidenceRefs refs={camp.evidence} label="캠프 근거" />
+                  </article>
+                );
+              })}
+            </div>
+          </>
         ) : null}
+
         {factRows.length ? (
-          <div className="afp-fact-rows">
-            <strong>공통으로 본 항목</strong>
-            {factRows.map((row) => <p key={row.question}>{row.question}: {row.common}</p>)}
+          <div className="afp-fact-rows" style={{ marginTop: "16px" }}>
+            <div className="afs-layer-head">
+              <span>공통으로 본 항목</span>
+              <b>{factRows.length}개 질문</b>
+            </div>
+            {factRows.map((row) => {
+              const hasEv = evidenceRefs(row.evidence).length > 0;
+              return (
+                <div key={row.question} style={{ margin: "6px 0", fontSize: "13px" }}>
+                  <strong>{row.question}:</strong>{" "}
+                  {hasEv && row.common ? (
+                    <span>{row.common}</span>
+                  ) : (
+                    <span className="afp-state">
+                      {row.status === "explicit_not_stated" ? "명시적으로 언급되지 않음" : "공개 근거 지문 부족으로 내용 미표시 (insufficient_evidence)"}
+                    </span>
+                  )}
+                  <EvidenceRefs refs={row.evidence} label="질문 근거" />
+                </div>
+              );
+            })}
           </div>
         ) : null}
+
         {synthesis.opposition && splitRows.length ? (
-          <div className="afp-split-rows">
-            <strong>캠프별 차이</strong>
-            {splitRows.map((row) => <p key={row.question}>{row.question}: {(row.cells ?? []).filter(Boolean).join(" / ")}</p>)}
+          <div className="afp-split-rows" style={{ marginTop: "16px" }}>
+            <div className="afs-layer-head">
+              <span>캠프별 차이</span>
+              <b>{splitRows.length}개 질문</b>
+            </div>
+            {splitRows.map((row) => {
+              const hasEv = evidenceRefs(row.evidence).length > 0;
+              const cells = (row.cells ?? []).filter(Boolean);
+              return (
+                <div key={row.question} style={{ margin: "6px 0", fontSize: "13px" }}>
+                  <strong>{row.question}:</strong>{" "}
+                  {hasEv && cells.length > 0 ? (
+                    <span>{cells.join("  /  ")}</span>
+                  ) : (
+                    <span className="afp-state">
+                      {row.status === "explicit_not_stated" ? "명시적으로 언급되지 않음" : "공개 근거 지문 부족으로 내용 미표시 (insufficient_evidence)"}
+                    </span>
+                  )}
+                  <EvidenceRefs refs={row.evidence} label="질문 근거" />
+                </div>
+              );
+            })}
           </div>
         ) : null}
-        <p className="afs-note">캠프 이름은 기사에서 관측된 강조의 묶음입니다. 언론사 이념이나 의도를 뜻하지 않으며, locator와 문장 해시가 없는 문장은 표시하지 않습니다.</p>
+
+        <p className="afs-note" style={{ marginTop: "14px" }}>
+          캠프 이름은 기사에서 관측된 강조의 묶음입니다. 언론사 이념이나 의도를 뜻하지 않으며, locator와 문장 해시가 없는 문장은 표시하지 않습니다.
+        </p>
       </div>
     </section>
   );
@@ -790,43 +942,167 @@ function DevicesSection({ bundle }: { bundle: IssueAnalysisBundle }) {
   return <section className="afs-card"><h2>근거 장치 <small>기사 안에서 확인된 구조화 항목</small></h2><div className="afs-in">{devices.length ? <div className="afp-device-list">{devices.map((device, index) => <div key={`${device.code ?? device.label}-${index}`}><strong>{device.label ?? device.code ?? "장치 미상"}</strong><span>{device.count ?? 1}건 · article {device.articleId}</span><EvidenceRefs refs={device.evidence} label="장치 근거" /></div>)}</div> : <p className="afp-state">현재 semantic profile에는 별도의 근거 장치 코드가 구조화되지 않았습니다. 본문에 없다고 단정하지 않고, 이 분류만 보류합니다.</p>}</div></section>;
 }
 
+function FramingRail() {
+  return (
+    <nav className="afs-rail" aria-label="프레이밍 분석 주요 층위 바로가기">
+      <a className="afs-rail-item" href="#sec-synthesis">
+        <b>사건 종합 비교</b>
+        <small>공통선 · 갈림길 · Camps</small>
+      </a>
+      <a className="afs-rail-item" href="#sec-four-functions">
+        <b>프레임 4기능</b>
+        <small>Entman 1993</small>
+      </a>
+      <a className="afs-rail-item" href="#sec-matrix">
+        <b>전체 프레임 행렬</b>
+        <small>5개 기능 · 취재원</small>
+      </a>
+      <a className="afs-rail-item" href="#sec-clusters">
+        <b>보도 군집</b>
+        <small>Matthes &amp; Kohring</small>
+      </a>
+      <a className="afs-rail-item" href="#sec-descriptors">
+        <b>정책·보편 프레임</b>
+        <small>Boydstun · Semetko</small>
+      </a>
+      <a className="afs-rail-item" href="#sec-scope">
+        <b>보도 시야</b>
+        <small>Iyengar · Episodic/Thematic</small>
+      </a>
+      <a className="afs-rail-item" href="#sec-evidence">
+        <b>기사별 판정 근거</b>
+        <small>Locator · Hash</small>
+      </a>
+    </nav>
+  );
+}
+
+function MethodologyDisclaimer() {
+  return (
+    <details className="afs-card afs-fold" id="sec-methodology">
+      <summary>이 분석 보고서를 읽는 원칙과 해석 한계 (학술적 방법론 안내)</summary>
+      <div className="afs-in afs-prose" style={{ marginTop: "12px", fontSize: "13px", lineHeight: "1.7" }}>
+        <p>
+          <strong>포함한 비교 기준:</strong> 동일한 사건을 다룬 여러 기사를 사건 단위로 묶고, Entman(1993)의 4대 기능(문제 정의·원인 귀속·도덕적/정치적 평가·해법 제시)과 취재원 가시성(Gans 1979), 보도 시야(Iyengar 1991), 정책 프레임(Boydstun et al. 2014) 틀을 적용하여 관측 가능한 차이를 대조합니다.
+        </p>
+        <p>
+          <strong>엄격한 근거 보존 원칙:</strong> 저작권 보호 및 허위 추론 방지를 위해 기사 원문 본문/HTML은 비공개 저장소에만 보관하며, 공개 화면에는 문장 위치(<code>locator</code>)와 64자리 SHA-256 지문(<code>sentence_sha256</code>)이 검증된 문장만 안전한 의역(paraphrase)으로 표시합니다.
+        </p>
+        <p>
+          <strong>해석의 한계:</strong> 관측되지 않은 차원은 &apos;명시되지 않음(explicit_not_stated)&apos; 또는 &apos;근거 부족(insufficient_evidence)&apos;으로 처리하며, 매체의 고정 성향이나 의도적 왜곡으로 단정하지 않습니다. 취재원의 발언은 해당 발화 주체에게만 귀속되며 언론사 자체 주장으로 환원하지 않습니다.
+        </p>
+      </div>
+    </details>
+  );
+}
+
 export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
   const dimensions = analyses(bundle, issue);
-  return <>
-    <IssueThirtySecond issue={issue} />
-    <SynthesisNarrative bundle={bundle} />
-    <Summary bundle={bundle} issue={issue} analyses={dimensions} />
-    <AxisSection dimensions={dimensions} />
-    <DebateSection issue={issue} dimensions={dimensions} />
-    <ComparisonAxisEvidence bundle={bundle} issue={issue} />
-    <section className="afs-card"><h2>언론사별 프레임 비교 <small>기사 단위 semantic AI</small></h2><div className="afs-in"><FrameMatrix issue={issue} dimensions={dimensions} /></div></section>
-    <section className="afs-card"><h2>누구의 말을 중심에 뒀나 <small>Gans · source selection</small></h2><div className="afs-in"><SourceTable issue={issue} /></div></section>
-    <section className="afs-card"><h2>어떤 말로 설명했나 <small>발화 방식과 표현 선택</small></h2><div className="afs-in"><VoiceTable issue={issue} /></div></section>
-    <section className="afs-card"><h2>기사 근거 <small>원문은 링크로만 열기</small></h2><div className="afs-in"><ArticleList bundle={bundle} issue={issue} dimensions={dimensions} /></div></section>
-  </>;
+  return (
+    <>
+      <IssueThirtySecond issue={issue} />
+      <div id="sec-synthesis">
+        <SynthesisNarrative bundle={bundle} />
+      </div>
+      <Summary bundle={bundle} issue={issue} analyses={dimensions} />
+      <AxisSection dimensions={dimensions} />
+      <DebateSection issue={issue} dimensions={dimensions} />
+      <ComparisonAxisEvidence bundle={bundle} issue={issue} />
+      <section className="afs-card" id="sec-matrix">
+        <h2>
+          언론사별 프레임 비교 <small>기사 단위 semantic AI</small>
+        </h2>
+        <div className="afs-in">
+          <FrameMatrix issue={issue} dimensions={dimensions} />
+        </div>
+      </section>
+      <section className="afs-card" id="sec-sources">
+        <h2>
+          누구의 말을 중심에 뒀나 <small>Gans · source selection</small>
+        </h2>
+        <div className="afs-in">
+          <SourceTable issue={issue} />
+        </div>
+      </section>
+      <section className="afs-card">
+        <h2>
+          어떤 말로 설명했나 <small>발화 방식과 표현 선택</small>
+        </h2>
+        <div className="afs-in">
+          <VoiceTable issue={issue} />
+        </div>
+      </section>
+      <section className="afs-card" id="sec-evidence">
+        <h2>
+          기사 근거 <small>원문은 링크로만 열기</small>
+        </h2>
+        <div className="afs-in">
+          <ArticleList bundle={bundle} issue={issue} dimensions={dimensions} />
+        </div>
+      </section>
+      <MethodologyDisclaimer />
+    </>
+  );
 }
 
 export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
   const dimensions = analyses(bundle, issue);
-  return <>
-    <IssueThirtySecond issue={issue} />
-    <SynthesisNarrative bundle={bundle} />
-    <Summary bundle={bundle} issue={issue} analyses={dimensions} />
-    <DimensionGuide dimensions={dimensions} />
-    <FourFunctionTable issue={issue} dimensions={dimensions} />
-    <section className="afs-card"><h2>매체별 전체 프레임 행렬 <small>5개 기능·취재원 구조</small></h2><div className="afs-in"><FrameMatrix issue={issue} dimensions={dimensions} /></div></section>
-    <ClusterSection issue={issue} />
-    <ComparisonAxisEvidence bundle={bundle} issue={issue} />
-    <StructuredObservationSection bundle={bundle} />
-    <DescriptorSection bundle={bundle} field="policy_frames" title="정책 프레임" subtitle="Boydstun et al. 2014" />
-    <DescriptorSection bundle={bundle} field="generic_frames" title="보편 프레임 다섯 종" subtitle="Semetko &amp; Valkenburg 2000" />
-    <ScopeSection bundle={bundle} />
-    <section className="afs-card"><h2>누구의 말을 중심에 뒀나 <small>취재원 구조</small></h2><div className="afs-in"><SourceTable issue={issue} /></div></section>
-    <SourceRoleEvidence bundle={bundle} />
-    <SourceNetwork dimensions={dimensions} />
-    <DevicesSection bundle={bundle} />
-    <section className="afs-card"><h2>기사별 판정 근거 <small>evidence locator · hash</small></h2><div className="afs-in"><ArticleList bundle={bundle} issue={issue} dimensions={dimensions} /></div></section>
-  </>;
+  return (
+    <>
+      <FramingRail />
+      <IssueThirtySecond issue={issue} />
+      <div id="sec-synthesis">
+        <SynthesisNarrative bundle={bundle} />
+      </div>
+      <Summary bundle={bundle} issue={issue} analyses={dimensions} />
+      <div id="sec-guide">
+        <DimensionGuide dimensions={dimensions} />
+      </div>
+      <div id="sec-four-functions">
+        <FourFunctionTable issue={issue} dimensions={dimensions} />
+      </div>
+      <section className="afs-card" id="sec-matrix">
+        <h2>
+          매체별 전체 프레임 행렬 <small>5개 기능·취재원 구조</small>
+        </h2>
+        <div className="afs-in">
+          <FrameMatrix issue={issue} dimensions={dimensions} />
+        </div>
+      </section>
+      <div id="sec-clusters">
+        <ClusterSection issue={issue} />
+      </div>
+      <ComparisonAxisEvidence bundle={bundle} issue={issue} />
+      <StructuredObservationSection bundle={bundle} />
+      <div id="sec-descriptors">
+        <DescriptorSection bundle={bundle} field="policy_frames" title="정책 프레임" subtitle="Boydstun et al. 2014" />
+        <DescriptorSection bundle={bundle} field="generic_frames" title="보편 프레임 다섯 종" subtitle="Semetko &amp; Valkenburg 2000" />
+      </div>
+      <div id="sec-scope">
+        <ScopeSection bundle={bundle} />
+      </div>
+      <section className="afs-card" id="sec-sources">
+        <h2>
+          누구의 말을 중심에 뒀나 <small>취재원 구조</small>
+        </h2>
+        <div className="afs-in">
+          <SourceTable issue={issue} />
+        </div>
+      </section>
+      <SourceRoleEvidence bundle={bundle} />
+      <SourceNetwork dimensions={dimensions} />
+      <DevicesSection bundle={bundle} />
+      <section className="afs-card" id="sec-evidence">
+        <h2>
+          기사별 판정 근거 <small>evidence locator · hash</small>
+        </h2>
+        <div className="afs-in">
+          <ArticleList bundle={bundle} issue={issue} dimensions={dimensions} />
+        </div>
+      </section>
+      <MethodologyDisclaimer />
+    </>
+  );
 }
 
 export function AnalysisPageIntro({ title, description, children }: { title: string; description: string; children?: ReactNode }) {

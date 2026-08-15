@@ -76,7 +76,7 @@ export function LiveHome() {
                         : "현재 제목·게시정보 기준이며, 본문 근거가 없어 설명 차이는 판단하지 않았습니다."}
                     </p>
                     <p className="afs-explore-links">
-                      <Link className="afs-link" href={`/issues/${encodeURIComponent(issue.id)}`}>무슨 일이었나</Link>
+                      <Link className="afs-link" href={`/issues/${encodeURIComponent(issue.id)}/outlets`}>언론사 비교</Link>
                       <Link className="afs-link" href={`/issues/${encodeURIComponent(issue.id)}/framing`}>프레이밍 분석 →</Link>
                     </p>
                   </article>

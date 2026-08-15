@@ -215,19 +215,25 @@ export function ShellTop({ issues }: { issues: ShellIssue[] }) {
       <label className="afs-top-label" htmlFor="afs-issue">
         의제
       </label>
-      <select id="afs-issue" value={picked} onChange={(event) => setPicked(event.target.value)}>
+      <select
+        id="afs-issue"
+        value={picked}
+        onChange={(event) => {
+          const next = event.target.value;
+          setPicked(next);
+          router.push(`/issues/${encodeURIComponent(next)}${tail || ""}`);
+        }}
+      >
         {issues.map((issue) => (
           <option key={issue.issueId} value={issue.issueId}>
             {issue.rank}위 · {issue.title}
           </option>
         ))}
       </select>
-      {/* 홈에서는 select 값이 이미 1위라 이 버튼이 비활성이었고, 첫 화면의 유일한 액션이
-          눌리지 않는 상태였다. 같은 의제를 골랐어도 그 의제 화면으로 들어간다. */}
       <button
         type="button"
         className="afs-pill afs-pill-go"
-        onClick={() => router.push(`/issues/${encodeURIComponent(picked)}${tail}`)}
+        onClick={() => router.push(`/issues/${encodeURIComponent(picked)}${tail || ""}`)}
       >
         이 의제 보기
       </button>

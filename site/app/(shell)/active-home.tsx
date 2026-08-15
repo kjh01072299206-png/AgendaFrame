@@ -58,10 +58,14 @@ export function ActiveSnapshotHome({ active }: { active: ActiveSnapshotSource })
                     <SaveIssueButton issueId={issue.issueId} title={issue.title} compact />
                   </p>
                   <p className="afs-explore-hot">{summary}</p>
-                  <p className="afs-explore-links">
-                    <Link className="afs-link" href={`/issues/${encodeURIComponent(issue.issueId)}/outlets`}>언론사 비교</Link>
-                    <Link className="afs-link" href={`/issues/${encodeURIComponent(issue.issueId)}/framing`}>프레이밍 분석</Link>
-                  </p>
+                  <div className="afs-explore-links" style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                    <Link className="afs-pill afs-pill-go" href={`/issues/${encodeURIComponent(issue.issueId)}/outlets`}>
+                      언론사 비교
+                    </Link>
+                    <Link className="afs-pill" href={`/issues/${encodeURIComponent(issue.issueId)}/framing`}>
+                      프레이밍 분석 →
+                    </Link>
+                  </div>
                 </article>
               );
             })}

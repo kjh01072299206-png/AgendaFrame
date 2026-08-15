@@ -157,6 +157,9 @@ export function composeEventSynthesis(bundle) {
   if (duties.length && new Set(duties.map((row) => row.family)).size === 1 && duties[0]) {
     factRows.push({ question: "누구 책임이라고 했나", common: duties[0].text, cells: null, status: "observed", evidence: [duties[0].evidence] });
   }
+  if (morals.length && new Set(morals.map((row) => row.family)).size === 1 && morals[0]) {
+    factRows.push({ question: "어떻게 평가했나", common: morals[0].text, cells: null, status: "observed", evidence: [morals[0].evidence] });
+  }
 
   const splitRows = [];
   if (opposition) {
@@ -187,6 +190,21 @@ export function composeEventSynthesis(bundle) {
     });
   }
 
+  const terms = [];
+  if (Array.isArray(bundle?.comparison?.data?.terms)) {
+    for (const t of bundle.comparison.data.terms) {
+      if (t && typeof t.term === "string" && typeof t.gloss === "string") {
+        const rawEv = Array.isArray(t.evidence) ? t.evidence : [];
+        const validatedEv = rawEv
+          .map((ev) => itemEvidence(ev.article_id || ev.articleId, { evidence: ev }))
+          .filter(Boolean);
+        if (validatedEv.length > 0) {
+          terms.push({ term: t.term, gloss: t.gloss, evidence: validatedEv });
+        }
+      }
+    }
+  }
+
   return {
     schemaVersion: "agendaframe.event-synthesis.v1",
     promptVersion: "event-synthesis-v1.0.0",
@@ -201,7 +219,7 @@ export function composeEventSynthesis(bundle) {
       ? claim("어느 기사 묶음을 먼저 읽느냐에 따라 이 사안이 정치 책임 문제로 보이는지, 제도 문제로 보이는지, 경고만 남는지가 달라진다.", splitEvidence)
       : { text: null, status: "explicit_not_stated", evidence: [] },
     camps: publicCamps,
-    terms: [],
+    terms,
     fact_rows: factRows,
     split_rows: splitRows,
     frame_functions: [
