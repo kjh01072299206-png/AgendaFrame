@@ -472,6 +472,59 @@ class ConservativeCandidateGroupBuilder(CandidateGroupBuilder):
         )
 
 
+_TITLE_TOKEN = re.compile(r"[0-9A-Za-z가-힣]{2,}")
+
+
+def _title_tokens(title: str) -> set[str]:
+    return {token.casefold() for token in _TITLE_TOKEN.findall(title)}
+
+
+def _title_fallback_clusters(articles: Sequence[MetadataArticle]) -> list[dict[str, Any]]:
+    """Group leftover articles by title overlap when Vertex clustering is empty.
+
+    This does not invent events.  Unrelated titles stay separate, and the
+    ranker still publishes at most five real groups.
+    """
+
+    groups: list[dict[str, Any]] = []
+    for article in articles:
+        tokens = _title_tokens(article.title)
+        placed = False
+        for group in groups:
+            union = tokens | group["tokens"]
+            overlap = tokens & group["tokens"]
+            if union and overlap and (len(overlap) / len(union)) >= 0.35:
+                group["articles"].append(article)
+                group["tokens"] = union
+                placed = True
+                break
+        if not placed:
+            groups.append({"tokens": tokens, "articles": [article]})
+    if len(groups) < 5:
+        groups = [
+            {"tokens": _title_tokens(article.title), "articles": [article]} for article in articles
+        ]
+    ranked = sorted(
+        groups,
+        key=lambda group: (-len(group["articles"]), group["articles"][0].article_id),
+    )
+    clusters: list[dict[str, Any]] = []
+    for index, group in enumerate(ranked[:5], 1):
+        lead = group["articles"][0]
+        clusters.append(
+            {
+                "cluster_id": f"title-fallback-{index}",
+                "label": lead.title,
+                "coherence": "title_fallback",
+                "article_assignments": [
+                    {"article_id": item.article_id, "relation": "same_event"}
+                    for item in group["articles"]
+                ],
+            }
+        )
+    return clusters
+
+
 class MetadataClusterRankAdapter(ClusterRankAdapter):
     """Reuse InitialFiveClusterer and rank candidates without body text."""
 
@@ -494,6 +547,8 @@ class MetadataClusterRankAdapter(ClusterRankAdapter):
             groups,
         )
         cluster_rows = [dict(cluster) for cluster in clustering.clusters]
+        if not cluster_rows:
+            cluster_rows = _title_fallback_clusters(metadata_articles)
         ranked = sorted(
             cluster_rows,
             key=lambda cluster: (

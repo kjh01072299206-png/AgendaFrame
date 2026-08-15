@@ -340,6 +340,33 @@ class GcpStageAdapterTests(unittest.TestCase):
         )
         self.assertIsNotNone(bundle["comparison"]["data"]["summary_30_seconds"])
 
+    def test_cluster_rank_uses_title_fallback_when_model_returns_no_clusters(self) -> None:
+        class EmptyClusters:
+            clusters: list = []
+
+            def as_dict(self):
+                return {"clusters": [], "approval": {"body_free": True, "fallback": True}}
+
+        class EmptyClusterer:
+            def analyze(self, articles, candidate_groups):
+                return EmptyClusters()
+
+        collected = PolicyCollectionAdapter(
+            self.dependencies, clock=lambda: COLLECTED_AT, max_articles_per_run=12
+        ).collect(self.request, idempotency_key="collect-empty")
+        persisted = MetadataPersistenceAdapter(self.dependencies).persist(
+            self.request, collected, idempotency_key="persist-empty"
+        )
+        deps = StageDependencies(
+            **{**self.dependencies.__dict__, "initial_five_clusterer": EmptyClusterer()}
+        )
+        ranked = MetadataClusterRankAdapter(deps).cluster_rank(
+            self.request, persisted, idempotency_key="rank-empty"
+        )
+        self.assertEqual(len(ranked["top5"]), 5)
+        self.assertTrue(all(row["articleIds"] for row in ranked["top5"]))
+        self.assertTrue(all(row["issueId"].startswith("title-fallback-") for row in ranked["top5"]))
+
     def test_semantic_adapter_uses_bound_event_synthesis_when_injected(self) -> None:
         class SynthesisFake:
             def synthesize(self, request):
