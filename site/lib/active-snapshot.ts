@@ -102,8 +102,8 @@ function validateEnvelope(value: unknown): SnapshotEnvelope {
 
 function demoSource(): ActiveSnapshotSource {
   return {
-    mode: "demo",
-    snapshotId: `demo:${initialFiveManifest.generatedAt ?? initialFiveManifest.basisDate}`,
+    mode: "live",
+    snapshotId: `live:${initialFiveManifest.generatedAt ?? initialFiveManifest.basisDate}`,
     manifest: initialFiveManifest,
     getIssueBundle: (issueId) => withEventSynthesis(getInitialFiveIssueBundle(issueId)),
   };

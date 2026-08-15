@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const active = await getActiveSnapshot();
-  return active.mode === "live" ? <ActiveSnapshotHome active={active} /> : <LiveHome />;
+  return active.mode === "live" ? <ActiveSnapshotHome active={active} /> : <ActiveSnapshotHome active={active} />;
 }
 
 
