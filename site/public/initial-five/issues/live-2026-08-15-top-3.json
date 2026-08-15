@@ -3297,7 +3297,7 @@
   "lineage": {
     "issueId": "live-2026-08-15-top-3",
     "basisDate": "2026-08-15",
-    "generatedAt": "2026-08-15T06:38:51.966Z",
+    "generatedAt": "2026-08-15T07:21:17.846Z",
     "source": {
       "semanticDirectory": "gcp:vertex-live-batch-20260815"
     }
