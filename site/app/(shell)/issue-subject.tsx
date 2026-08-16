@@ -20,6 +20,7 @@ export function IssueSubject({
   articleCount,
   outletCount,
   splitDimensions,
+  splitDimensionsWithSources = 0,
   analysisPending = false,
 }: {
   issueId: string;
@@ -30,6 +31,7 @@ export function IssueSubject({
   articleCount: number;
   outletCount: number;
   splitDimensions: number;
+  splitDimensionsWithSources?: number;
   analysisPending?: boolean;
 }) {
   const pathname = usePathname() ?? "";
@@ -51,13 +53,21 @@ export function IssueSubject({
           <span className="afs-chip afs-num">기사 {articleCount}건</span>
           <span className="afs-chip afs-num">매체 {outletCount}곳</span>
           <span className="afs-chip afs-chip-good afs-num">
-            {analysisPending ? "본문 근거 부족 · 비교 보류" : `다섯 층위 중 ${splitDimensions}곳에서 갈림`}
+            {analysisPending
+              ? "본문 근거 부족 · 비교 보류"
+              : compact
+                ? splitDimensions > 0
+                  ? `기자 서술 ${splitDimensions}축에서 갈림`
+                  : splitDimensionsWithSources > 0
+                    ? `취재원 포함 ${splitDimensionsWithSources}축 관측`
+                    : "매체 서술 갈림 미확정"
+                : `다섯 층위 중 ${splitDimensions}곳에서 갈림`}
           </span>
           <SaveIssueButton issueId={issueId} title={title} />
         </div>
       </section>
 
-      <nav className="afs-tabs" aria-label="이 의제의 화면">
+      <nav className={`afs-tabs${compact ? " afs-tabs-context" : ""}`} aria-label="이 의제의 화면">
         {SCREENS.map((screen) => (
           <Link
             key={screen.label}

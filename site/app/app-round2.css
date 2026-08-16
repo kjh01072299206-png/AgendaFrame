@@ -135,6 +135,27 @@
 .afs-subject-context .afs-subject-chips {
   margin-top: 3px;
 }
+.afs-tabs-context {
+  gap: 4px;
+}
+.afs-tabs-context a {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 7px;
+  min-height: 42px;
+  padding: 8px 11px;
+}
+.afs-tabs-context a b {
+  font-size: 12.5px;
+}
+.afs-tabs-context a small {
+  font-size: 10.5px;
+}
+.afs-tabs-context + .afs-prov {
+  margin-top: -2px;
+  padding: 6px 12px;
+  font-size: 10.5px;
+}
 
 /* ── 다크에서 파임 방향 ──────────────────────────────────────────────────── */
 /* 라이트는 흰 카드보다 어두운 면이 "파임"이다. 다크에서 sunk 을 더 밝게 잡으면
@@ -1368,5 +1389,222 @@
   .afs-subject-context .afs-chip-good,
   .afs-subject-context .afs-save {
     display: none;
+  }
+}
+
+/* ── 프로토타입 순서의 비교·프레이밍 리드 ──────────────────────────────────
+   의제 카드는 route context 로 남기고, 그 아래부터는 사건 설명과 관측된
+   갈래를 먼저 읽게 한다. 이 영역에는 실제 synthesis/profile 값만 들어온다. */
+.afp-axis-lead {
+  border-top: 3px solid var(--afs-brand);
+}
+.afp-axis-question {
+  max-width: 78ch;
+  padding: 2px 0 4px;
+}
+.afp-axis-question p {
+  margin: 6px 0 0;
+  color: var(--afs-ink);
+  font-size: clamp(16px, 2vw, 20px);
+  font-weight: 750;
+  line-height: 1.55;
+  letter-spacing: -0.02em;
+}
+.afp-axis-rail {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 13px;
+}
+.afp-axis-rail::before {
+  position: absolute;
+  top: 0;
+  right: 2%;
+  left: 2%;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--n1), var(--n0), var(--n3));
+  content: "";
+}
+.afp-axis-node {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 0 8px;
+}
+.afp-axis-node::before {
+  position: absolute;
+  top: -17px;
+  left: 10px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--afs-card);
+  border-radius: 50%;
+  background: var(--n0);
+  box-shadow: 0 0 0 1px var(--afs-rule);
+  content: "";
+}
+.afp-axis-node:first-child::before { background: var(--n1); }
+.afp-axis-node:last-child::before { background: var(--n3); }
+.afp-axis-node > span {
+  color: var(--afs-ink-3);
+  font-family: var(--afs-mono);
+  font-size: 10px;
+  font-weight: 800;
+}
+.afp-axis-node strong {
+  font-size: 13px;
+  line-height: 1.4;
+}
+.afp-axis-node small {
+  color: var(--afs-ink-3);
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.afp-camp-lead {
+  border-top: 1px solid color-mix(in srgb, var(--afs-brand) 24%, var(--afs-rule));
+}
+.afp-camp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.afp-camp-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--afs-rule);
+  border-radius: var(--afs-r-btn);
+  background: var(--afs-sunk);
+}
+.afp-camp-card header {
+  display: grid;
+  gap: 3px;
+}
+.afp-camp-card h3,
+.afp-camp-card p {
+  margin: 0;
+}
+.afp-camp-card h3 {
+  font-size: 14px;
+  line-height: 1.4;
+}
+.afp-camp-card header > small {
+  color: var(--afs-ink-3);
+  font-size: 10.5px;
+}
+.afp-camp-card > p {
+  color: var(--afs-ink-2);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.afp-camp-outlets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.afp-camp-outlets .afs-chip {
+  margin: 0;
+  font-size: 10.5px;
+}
+.afp-camp-proof {
+  margin-top: 2px;
+  border-top: 1px solid var(--afs-rule);
+}
+.afp-camp-proof > summary {
+  padding-top: 8px;
+  color: var(--afs-brand);
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.afp-camp-proof > div {
+  display: grid;
+  gap: 7px;
+  padding-top: 8px;
+}
+.afp-camp-article {
+  display: grid;
+  gap: 2px;
+  padding-top: 6px;
+  border-top: 1px solid var(--afs-rule);
+}
+.afp-camp-article strong {
+  color: var(--afs-brand);
+  font-size: 10.5px;
+}
+.afp-camp-article span {
+  color: var(--afs-ink-2);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.afp-framing-lead-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr);
+  gap: 12px;
+  align-items: stretch;
+}
+.afp-framing-lead-grid > .afs-card {
+  margin: 0;
+}
+.afp-summary-compact .afp-summary-meta {
+  margin-top: 3px;
+}
+.afp-scope-compact .afp-stat-grid {
+  gap: 8px;
+}
+.afp-scope-compact .afp-stat-grid > div {
+  padding: 10px;
+}
+.afp-scope-compact .afs-note {
+  font-size: 11px;
+}
+.afp-framing-lead-grid + #sec-guide,
+#sec-guide + #sec-four-functions {
+  scroll-margin-top: 76px;
+}
+.afp-framing-lead-grid + #sec-guide .afs-card,
+#sec-guide + #sec-four-functions .afs-card {
+  border-top-color: color-mix(in srgb, var(--afs-brand) 20%, var(--afs-rule));
+}
+.afp-rail-secondary {
+  margin-top: 0;
+}
+
+@media (max-width: 860px) {
+  .afp-framing-lead-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .afp-camp-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .afp-axis-rail {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 0 0 0 18px;
+  }
+  .afp-axis-rail::before {
+    top: 2px;
+    bottom: 2px;
+    left: 4px;
+    width: 2px;
+    height: auto;
+    background: linear-gradient(180deg, var(--n1), var(--n0), var(--n3));
+  }
+  .afp-axis-node {
+    padding: 0;
+  }
+  .afp-axis-node::before {
+    top: 3px;
+    left: -18px;
   }
 }

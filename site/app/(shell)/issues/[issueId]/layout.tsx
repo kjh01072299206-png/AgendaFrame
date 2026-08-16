@@ -47,6 +47,7 @@ export default async function IssueLayout({
         articleCount={issue.articleCount}
         outletCount={issue.outletCount}
         splitDimensions={issue.splitDimensions}
+        splitDimensionsWithSources={issue.splitDimensionsWithSources}
       />
       <p className="afs-prov">
         {issue.provenance.requiresHumanReview ? <b>자동 분석 초안 · 사람 검토 전</b> : <b>검토 완료</b>}

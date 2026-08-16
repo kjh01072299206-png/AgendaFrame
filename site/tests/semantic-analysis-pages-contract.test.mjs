@@ -66,6 +66,24 @@ test("semantic pages include framing navigation rail and methodology disclaimer"
   assert.match(source, /Gans/);
 });
 
+test("semantic pages keep the issue context and lead with prototype reading order", async () => {
+  const source = await readFile(pagePath, "utf8");
+  assert.match(source, /function ComparisonLead\(/);
+  assert.match(source, /function ComparisonAxisLead\(/);
+  assert.match(source, /function CampLead\(/);
+  assert.match(source, /afp-framing-lead-grid/);
+  const outlets = source.indexOf("export function OutletsSemanticPage");
+  const outletsLead = source.indexOf("<ComparisonLead bundle={bundle} issue={issue} dimensions={dimensions} />", outlets);
+  const outletsEvidence = source.indexOf('id="sec-evidence"', outletsLead);
+  assert.ok(outletsLead > outlets, "outlets page should use the comparison lead");
+  assert.ok(outletsEvidence > outletsLead, "article evidence should follow the event and camp lead");
+  const framing = source.indexOf("export function FramingSemanticPage");
+  const framingGrid = source.indexOf("afp-framing-lead-grid", framing);
+  const framingGuide = source.indexOf('id="sec-guide"', framingGrid);
+  assert.ok(framingGrid > framing, "framing page should start with the summary/scope lead grid");
+  assert.ok(framingGuide > framingGrid, "framing guide should follow the lead grid");
+});
+
 test("issue layout and home page maintain active snapshot route consistency", async () => {
   const layoutPath = path.join(siteRoot, "app", "(shell)", "issues", "[issueId]", "layout.tsx");
   const homePath = path.join(siteRoot, "app", "(shell)", "page.tsx");

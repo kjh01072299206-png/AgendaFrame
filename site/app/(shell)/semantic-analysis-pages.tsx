@@ -178,6 +178,11 @@ function synthesisData(bundle: IssueAnalysisBundle): EventSynthesisData | null {
   return value && typeof value === "object" ? value : null;
 }
 
+function synthesisCamps(bundle: IssueAnalysisBundle) {
+  const synthesis = synthesisData(bundle);
+  return (synthesis?.camps ?? []).filter((camp) => camp.gist && (camp.outlets?.length || camp.article_ids?.length));
+}
+
 function observedClaim(claim?: { text?: string | null; status?: string } | null): string | null {
   if (claim?.status !== "observed" || typeof claim.text !== "string" || !claim.text.trim()) return null;
   return stripEvidenceTokens(claim.text) || null;
@@ -439,7 +444,7 @@ function EngineNote({ bundle }: { bundle: IssueAnalysisBundle }) {
   );
 }
 
-function Summary({ bundle, issue, analyses: dimensions }: { bundle: IssueAnalysisBundle; issue: IssueView; analyses: DimensionAnalysis[] }) {
+function Summary({ bundle, issue, analyses: dimensions, compact = false }: { bundle: IssueAnalysisBundle; issue: IssueView; analyses: DimensionAnalysis[]; compact?: boolean }) {
   const observed = dimensions.filter((dimension) => dimension.groups.length > 0);
   const split = observed.filter((dimension) => dimension.groups.length >= 2);
   const directSplit = split.filter((dimension) => dimension.groups.filter((group) => group.narratedArticles > 0).length >= 2);
@@ -476,17 +481,17 @@ function Summary({ bundle, issue, analyses: dimensions }: { bundle: IssueAnalysi
     ? `독자는 ${directSplit[0].groups.map((group) => group.label).join(" 또는 ")} 중 서로 다른 설명 경로를 만납니다.`
     : "독자가 보는 차이는 우선 어떤 취재원 발언을 선택·배치했는지에서 생깁니다. 이를 매체의 동의나 의도로 단정하지 않습니다.");
   return (
-    <section className="afs-card afs-card-lead">
+    <section className={`afs-card afs-card-lead${compact ? " afp-summary-compact" : ""}`}>
       <h2>이 사안의 프레이밍 요약 <small>{issue.articleCount}건 · {issue.outletCount}개 매체</small></h2>
       <div className="afs-in afs-prose afp-summary">
         <p><strong>공통으로 보이는 설명:</strong> {commonText}</p>
         <p><strong>갈라지는 질문:</strong> {differenceText}</p>
-        <p><strong>읽기 경로:</strong> {readerPath}</p>
-        {issue.sourceContext ? <p><strong>취재원 맥락:</strong> {issue.sourceContext}</p> : null}
+        {!compact ? <p><strong>읽기 경로:</strong> {readerPath}</p> : null}
+        {!compact && issue.sourceContext ? <p><strong>취재원 맥락:</strong> {issue.sourceContext}</p> : null}
         <p className="afp-summary-meta">{observed.length}/{DIMENSION_LIST.length}개 차원에서 AI 구조화 항목이 관측됐고, 관측 항목의 {allRows.length ? Math.round((attributed / allRows.length) * 100) : 0}%가 명시적 취재원 발언으로 분류됐습니다. 미확인 발화는 별도 귀속하지 않습니다.</p>
-        {stateText ? <p className="afp-summary-meta"><strong>판정 보류·상태:</strong> {stateText}</p> : null}
+        {!compact && stateText ? <p className="afp-summary-meta"><strong>판정 보류·상태:</strong> {stateText}</p> : null}
       </div>
-      <EngineNote bundle={bundle} />
+      {!compact ? <EngineNote bundle={bundle} /> : null}
     </section>
   );
 }
@@ -709,7 +714,7 @@ function IssueThirtySecond({ issue }: { issue: IssueView }) {
   const articles = issue.articles.slice().sort((a, b) => (a.publishedAt ?? "").localeCompare(b.publishedAt ?? ""));
   return (
     <section className="afs-card afp-issue-brief">
-      <h2>사건 30초 요약 <small>기사 묶음의 공통 사실</small></h2>
+      <h2>사건 설명 <small>사건 30초 요약 · 기사 묶음의 공통 사실</small></h2>
       <div className="afs-in afs-prose">
         <p>{issue.lead ?? "공개 semantic 요약이 아직 생성되지 않았습니다."}</p>
         {issue.commonGround ? <p><strong>공통으로 확인된 설명:</strong> {issue.commonGround}</p> : null}
@@ -723,6 +728,108 @@ function IssueThirtySecond({ issue }: { issue: IssueView }) {
         <p className="afs-note">이 요약은 기사 메타데이터와 공개 semantic paraphrase를 집계한 것입니다. 원문 본문이나 인용문을 화면에 복사하지 않습니다.</p>
       </div>
     </section>
+  );
+}
+
+function ComparisonAxisLead({ bundle, issue, dimensions }: { bundle: IssueAnalysisBundle; issue: IssueView; dimensions: DimensionAnalysis[] }) {
+  const synthesis = synthesisData(bundle);
+  const camps = synthesisCamps(bundle);
+  const splitText = observedClaim(synthesis?.split_line) ?? issue.mainDifference;
+  const split = dimensions.filter((dimension) => dimension.groups.length >= 2).slice(0, 3);
+  const fallbackAxes = camps.slice(0, 3).map((camp) => ({
+    label: camp.name ?? "보도 갈래",
+    detail: `${(camp.outlets ?? []).join(" · ")} · ${(camp.article_ids ?? []).length}건`,
+  }));
+  return (
+    <section className="afs-card afp-axis-lead" id="sec-synthesis">
+      <h2>논조 갈래 축 <small>같은 사건에서 갈린 질문</small></h2>
+      <div className="afs-in">
+        <div className="afp-axis-question">
+          <span className="afp-kicker">갈린 질문</span>
+          <p>{splitText ?? "현재 공개 근거에서 매체 서술이 갈린 질문은 확정되지 않았습니다."}</p>
+        </div>
+        {split.length ? (
+          <div className="afp-axis-rail" aria-label="기사에서 관측된 비교 축">
+            {split.map((analysis, index) => (
+              <div className="afp-axis-node" key={analysis.dimension}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <strong>{analysis.label}</strong>
+                <small>{analysis.groups.slice(0, 3).map((group) => group.label).join(" · ")}</small>
+              </div>
+            ))}
+          </div>
+        ) : fallbackAxes.length ? (
+          <div className="afp-axis-rail" aria-label="종합에서 관측된 보도 갈래">
+            {fallbackAxes.map((axis, index) => (
+              <div className="afp-axis-node" key={`${axis.label}-${index}`}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <strong>{axis.label}</strong>
+                <small>{axis.detail}</small>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="afp-state">서로 다른 근거 그룹이 없어 대립 축으로 표시하지 않습니다.</p>
+        )}
+        <p className="afs-note">이 축은 기사 안에서 앞세운 문제·원인·책임·파급효과의 차이를 묶은 것입니다. 언론사의 고정 성향이나 의도로 해석하지 않습니다.</p>
+      </div>
+    </section>
+  );
+}
+
+function CampLead({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
+  const camps = synthesisCamps(bundle);
+  const articles = new Map(issue.articles.map((article) => [article.articleId, article]));
+  if (!camps.length) {
+    return (
+      <section className="afs-card afp-camp-lead" id="sec-camps">
+        <h2>관측된 보도 갈래 <small>근거가 확인된 군집만 표시</small></h2>
+        <div className="afs-in"><p className="afp-state">현재 공개 종합에는 기사 근거가 연결된 보도 갈래가 없습니다. 대립 구도를 임의로 만들지 않았습니다.</p></div>
+      </section>
+    );
+  }
+  return (
+    <section className="afs-card afp-camp-lead" id="sec-camps">
+      <h2>관측된 보도 갈래 <small>{camps.length}개 · 기사 근거 연결</small></h2>
+      <div className="afs-in">
+        <div className="afp-camp-grid">
+          {camps.slice(0, 4).map((camp, index) => {
+            const ids = camp.article_ids ?? [];
+            const campArticles = ids.map((id) => articles.get(id)).filter(Boolean);
+            const campEvidence = (camp.evidence ?? []).filter((ref) => !ref.article_id || ids.includes(ref.article_id));
+            return (
+              <article className="afp-camp-card" key={`${camp.index ?? index}-${camp.name ?? "camp"}`}>
+                <header>
+                  <span className="afp-kicker">보도 갈래 {String.fromCharCode(65 + index)}</span>
+                  <h3>{camp.name}</h3>
+                  <small>{(camp.outlets ?? []).join(" · ") || "매체 미상"} · {ids.length}건</small>
+                </header>
+                <p>{camp.gist}</p>
+                <div className="afp-camp-outlets">{(camp.outlets ?? []).map((outlet) => <span className="afs-chip" key={outlet}>{outlet}</span>)}</div>
+                <details className="afp-camp-proof">
+                  <summary>기사 근거 보기</summary>
+                  <div>
+                    {campArticles.length ? campArticles.map((article) => <div className="afp-camp-article" key={article?.articleId}><strong>{article?.outlet}</strong><span>{article?.title}</span></div>) : <p className="afp-state">연결된 기사 제목이 없습니다.</p>}
+                    <EvidenceRefs refs={campEvidence} label="이 갈래의 공개 근거" />
+                  </div>
+                </details>
+              </article>
+            );
+          })}
+        </div>
+        <p className="afs-note">보도 갈래는 이번 의제 기사에서 함께 관측된 강조의 묶음입니다. 실제 대립이 확인된 경우에만 표시하며, 기사에 없는 의도·이념을 보충하지 않습니다.</p>
+      </div>
+    </section>
+  );
+}
+
+function ComparisonLead({ bundle, issue, dimensions }: { bundle: IssueAnalysisBundle; issue: IssueView; dimensions: DimensionAnalysis[] }) {
+  return (
+    <>
+      <IssueThirtySecond issue={issue} />
+      <ComparisonAxisLead bundle={bundle} issue={issue} dimensions={dimensions} />
+      <CampLead bundle={bundle} issue={issue} />
+    </>
   );
 }
 
@@ -968,12 +1075,12 @@ function DescriptorSection({ bundle, field, title, subtitle }: { bundle: IssueAn
   return <section className="afs-card"><h2>{title} <small>{subtitle}</small></h2><div className="afs-in"><p className="afs-note">semantic profile이 명시적으로 구조화한 보조 분류만 표시합니다. 논조나 의도를 직접 판정하는 지표가 아닙니다.</p>{grouped.size ? <ul className="afp-descriptor-list">{[...grouped.values()].sort((a, b) => b.articles.size - a.articles.size).map((row) => <li key={row.label}><strong>{row.label}</strong><span>{row.articles.size}건</span><EvidenceRefs refs={row.evidence} /></li>)}</ul> : <p className="afp-state">이 표본의 semantic profile에는 아직 {title} 코드가 구조화되지 않았습니다. 규칙 기반 결과를 AI 결과로 대체하지 않았습니다.</p>}</div></section>;
 }
 
-function ScopeSection({ bundle }: { bundle: IssueAnalysisBundle }) {
+function ScopeSection({ bundle, compact = false, id = "sec-scope" }: { bundle: IssueAnalysisBundle; compact?: boolean; id?: string }) {
   const values = bundle.semanticProfiles.map((entry) => ({ entry, profile: richProfile(entry) })).filter(({ profile }) => Boolean(profile)).map(({ entry, profile }) => ({ entry, scope: profile?.scope?.code ?? "unknown", depth: profile?.context_depth?.level ?? "unknown", scopeEvidence: profile?.scope?.evidence, depthEvidence: profile?.context_depth?.evidence, scopeCaution: profile?.scope?.caution, depthCaution: profile?.context_depth?.caution }));
   const count = (key: "scope" | "depth") => { const map = new Map<string, number>(); for (const value of values) map.set(value[key], (map.get(value[key]) ?? 0) + 1); return [...map].sort((a, b) => b[1] - a[1]); };
   const scope = count("scope"); const depth = count("depth");
   const translate = (code: string) => ({ episodic: "사건 중심", thematic: "구조·주제 중심", mixed: "혼합", unknown: "시야 판정 미관측", shallow: "얕은 맥락", moderate: "중간 맥락", deep: "깊은 맥락" }[code] ?? code);
-  return <section className="afs-card"><h2>사건 하나로 봤나, 구조 문제로 봤나 <small>Iyengar · context depth</small></h2><div className="afs-in"><div className="afp-stat-grid"><div><span>시야</span><strong>{scope.map(([key, value]) => `${translate(key)} ${value}`).join(" · ") || "시야 판정 미관측"}</strong><p className="afs-note">사건 중심/구조 중심 판정은 본문에서 확인된 설명 범위에만 적용합니다.</p></div><div><span>맥락 깊이</span><strong>{depth.map(([key, value]) => `${translate(key)} ${value}`).join(" · ") || "맥락 깊이 미관측"}</strong><p className="afs-note">판정 근거는 원문 대신 공개 위치·해시로만 확인합니다.</p></div></div><div className="afp-scope-articles">{values.map((value) => <details key={value.entry.articleId}><summary>{value.entry.articleId} · {translate(value.scope)} · {translate(value.depth)}</summary><div className="afp-evidence-body"><EvidenceRefs refs={value.scopeEvidence} label="시야 판단 근거" /><EvidenceRefs refs={value.depthEvidence} label="맥락 깊이 근거" />{value.scopeCaution || value.depthCaution ? <p className="afs-note">{value.scopeCaution ?? value.depthCaution}</p> : null}</div></details>)}</div></div></section>;
+  return <section className={`afs-card${compact ? " afp-scope-compact" : ""}`} id={id}><h2>{compact ? "시야 분포" : "사건 하나로 봤나, 구조 문제로 봤나"} <small>Iyengar · context depth</small></h2><div className="afs-in"><div className="afp-stat-grid"><div><span>시야</span><strong>{scope.map(([key, value]) => `${translate(key)} ${value}`).join(" · ") || "시야 판정 미관측"}</strong><p className="afs-note">사건 중심/구조 중심 판정은 본문에서 확인된 설명 범위에만 적용합니다.</p></div><div><span>맥락 깊이</span><strong>{depth.map(([key, value]) => `${translate(key)} ${value}`).join(" · ") || "맥락 깊이 미관측"}</strong><p className="afs-note">판정 근거는 원문 대신 공개 위치·해시로만 확인합니다.</p></div></div>{compact ? <p className="afs-note">시야와 맥락 깊이는 기사에 실제로 제시된 설명 범위만 집계합니다. 기사별 근거는 아래 상세 영역에서 확인합니다.</p> : <div className="afp-scope-articles">{values.map((value) => <details key={value.entry.articleId}><summary>{value.entry.articleId} · {translate(value.scope)} · {translate(value.depth)}</summary><div className="afp-evidence-body"><EvidenceRefs refs={value.scopeEvidence} label="시야 판단 근거" /><EvidenceRefs refs={value.depthEvidence} label="맥락 깊이 근거" />{value.scopeCaution || value.depthCaution ? <p className="afs-note">{value.scopeCaution ?? value.depthCaution}</p> : null}</div></details>)}</div>}</div></section>;
 }
 
 function SourceNetwork({ dimensions }: { dimensions: DimensionAnalysis[] }) {
@@ -1088,12 +1195,18 @@ export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
   return (
     <>
       <AnalysisPageHeader mode="outlets" bundle={bundle} issue={issue} dimensions={dimensions} />
-      <IssueThirtySecond issue={issue} />
-      <div id="sec-synthesis">
-        <SynthesisNarrative bundle={bundle} />
+      <ComparisonLead bundle={bundle} issue={issue} dimensions={dimensions} />
+      <section className="afs-card" id="sec-evidence">
+        <h2>
+          기사 근거 <small>갈래를 만든 기사와 공개 locator</small>
+        </h2>
+        <div className="afs-in">
+          <ArticleList bundle={bundle} issue={issue} dimensions={dimensions} />
+        </div>
+      </section>
+      <div id="sec-axis-details">
+        <AxisSection dimensions={dimensions} />
       </div>
-      <Summary bundle={bundle} issue={issue} analyses={dimensions} />
-      <AxisSection dimensions={dimensions} />
       <DebateSection issue={issue} dimensions={dimensions} />
       <ComparisonAxisEvidence bundle={bundle} issue={issue} />
       <section className="afs-card" id="sec-matrix">
@@ -1120,14 +1233,6 @@ export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
           <VoiceTable issue={issue} />
         </div>
       </section>
-      <section className="afs-card" id="sec-evidence">
-        <h2>
-          기사 근거 <small>원문은 링크로만 열기</small>
-        </h2>
-        <div className="afs-in">
-          <ArticleList bundle={bundle} issue={issue} dimensions={dimensions} />
-        </div>
-      </section>
       <MethodologyDisclaimer />
     </>
   );
@@ -1139,14 +1244,17 @@ export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
   return (
     <>
       <AnalysisPageHeader mode="framing" bundle={bundle} issue={issue} dimensions={dimensions} />
-      <Summary bundle={bundle} issue={issue} analyses={dimensions} />
-      <FramingRail />
+      <div className="afp-framing-lead-grid">
+        <Summary bundle={bundle} issue={issue} analyses={dimensions} compact />
+        <ScopeSection bundle={bundle} compact id="sec-scope-summary" />
+      </div>
       <div id="sec-guide">
         <DimensionGuide dimensions={dimensions} />
       </div>
       <div id="sec-four-functions">
         <FourFunctionTable issue={issue} dimensions={dimensions} />
       </div>
+      <FramingRail />
       <IssueThirtySecond issue={issue} />
       <div id="sec-synthesis">
         <SynthesisNarrative bundle={bundle} />
@@ -1213,8 +1321,8 @@ function AnalysisPageHeader({
   dimensions: DimensionAnalysis[];
 }) {
   const framing = mode === "framing";
-  const synthesis = synthesisData(bundle);
-  const camps = (synthesis?.camps ?? []).filter((camp) => camp.gist && (camp.outlets?.length || camp.article_ids?.length));
+  const camps = synthesisCamps(bundle);
+  const sourceRoleCount = new Set(issue.outlets.flatMap((outlet) => outlet.roles.map((role) => role.label))).size;
   const observedDimensions = dimensions.filter((dimension) => dimension.observedArticles > 0).length;
   const kpis = framing
     ? [
@@ -1227,7 +1335,7 @@ function AnalysisPageHeader({
         ["매체", String(issue.outletCount), "곳"],
         ["기사", String(issue.articleCount), "건"],
         ["논조 군집", camps.length ? String(camps.length) : "—", camps.length ? "개" : "없음"],
-        ["매체 서술 갈림", String(issue.splitDimensions), "축"],
+        ["취재원 역할", sourceRoleCount ? String(sourceRoleCount) : "—", sourceRoleCount ? "종" : "미관측"],
       ];
 
   return (
@@ -1236,12 +1344,12 @@ function AnalysisPageHeader({
         <div className="afp-page-heading">
           <div className="afp-page-title-line">
             <h1>{framing ? "프레이밍 분석" : "언론사 비교"}</h1>
-            <span className="afp-page-badge">{framing ? "방법론 6축" : "논조 군집"}</span>
+            <span className="afp-page-badge">{framing ? "핵심 6축 + 보조 3층위" : "관측된 보도 갈래"}</span>
           </div>
           <p>
             {issue.rank}위 · {issue.title} — {framing
-              ? "문제·원인·책임·평가·해법·취재원 배치를 기사 근거와 함께 읽습니다."
-              : "사건 이해 → 갈린 질문 → 논조 군집 → 기사 근거 순서로 비교합니다."}
+              ? "문제·원인·책임·평가·해법·취재원 배치를 먼저 보고, 시야·표현 장치는 보조 관측으로 확인합니다."
+              : "사건 설명 → 갈린 질문 → 관측된 보도 갈래 → 기사 근거 순서로 비교합니다."}
           </p>
         </div>
         <Link className="afs-pill afs-pill-go afp-page-action" href={`/issues/${encodeURIComponent(issue.issueId)}/report`}>
