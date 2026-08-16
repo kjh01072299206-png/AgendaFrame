@@ -560,20 +560,88 @@ class GcpStageAdapterTests(unittest.TestCase):
                         }
                     )
                 first = cited_rows[0]
+                second = cited_rows[1]
                 return {
-                    "what_happened": "같은 사건을 두 매체가 다르게 잘랐다",
-                    "what_happened_evidence": [first],
-                    "agreed_line": "원인 귀속은 공통으로 관측된다",
-                    "agreed_evidence": cited_rows,
-                    "split_line": "문제 정의가 정치 책임과 제도 약화로 갈린다",
-                    "split_evidence": cited_rows,
+                    "prompt_version": "event-synthesis-v2.0.0",
+                    "schema_version": "agendaframe.event-synthesis.v2",
+                    "event_paragraphs": [
+                        {"text": "같은 사건을 여러 기사가 다뤘다", "evidence": [first]},
+                        {
+                            "text": "기사들은 사건의 경위를 서로 다른 위치에서 설명했다",
+                            "evidence": [second],
+                        },
+                    ],
+                    "terms": [
+                        {
+                            "term": "사건 쟁점",
+                            "gloss": "기사들이 서로 다르게 설명한 핵심 질문",
+                            "evidence": [first],
+                        }
+                    ],
+                    "comparison_axis": {
+                        "label": "정치 책임과 제도 설명",
+                        "points": [
+                            {"text": "정치 책임을 먼저 설명", "evidence": [first]},
+                            {"text": "제도 작동을 먼저 설명", "evidence": [second]},
+                        ],
+                        "question": "무엇을 먼저 설명했나",
+                        "evidence": [first, second],
+                    },
+                    "common_ground": {
+                        "text": "원인 귀속은 공통으로 관측된다",
+                        "evidence": cited_rows,
+                    },
                     "camps": [
                         {
                             "name": "정치 책임",
-                            "gist": "대통령 침묵을 문제로 둔다",
+                            "headline": "정치적 책임을 먼저 묻는 갈래",
+                            "summary": "대통령 침묵을 문제로 둔다",
+                            "decisive_difference": "제도 설명보다 책임 주체를 먼저 보인다",
                             "article_ids": [first["article_id"]],
                             "evidence": [first],
-                        }
+                            "headline_evidence": [first],
+                            "summary_evidence": [first],
+                            "decisive_difference_evidence": [first],
+                            "voice_basis": {
+                                "kind": "journalist_narration",
+                                "label": "기자 서술 중심",
+                                "evidence": [first],
+                            },
+                            "proof_rows": [
+                                {
+                                    "article_id": first["article_id"],
+                                    "outlet": "khan",
+                                    "dimension": "문제 정의",
+                                    "public_paraphrase": "대통령 침묵을 문제로 설명했다",
+                                    "evidence": [first],
+                                }
+                            ],
+                        },
+                        {
+                            "name": "제도 설명",
+                            "headline": "제도 작동을 먼저 보여 주는 갈래",
+                            "summary": "제도 안전장치의 작동 방식을 먼저 설명한다",
+                            "decisive_difference": "정치 공방보다 제도 변화를 먼저 보인다",
+                            "article_ids": [second["article_id"]],
+                            "evidence": [second],
+                            "headline_evidence": [second],
+                            "summary_evidence": [second],
+                            "decisive_difference_evidence": [second],
+                            "voice_basis": {
+                                "kind": "source_attributed",
+                                "label": "취재원 발언 중심",
+                                "evidence": [second],
+                            },
+                            "proof_rows": [
+                                {
+                                    "article_id": second["article_id"],
+                                    "outlet": "kbs",
+                                    "dimension": "문제 정의",
+                                    "public_paraphrase": "제도 안전장치를 문제로 설명했다",
+                                    "evidence": [second],
+                                }
+                            ],
+                        },
                     ],
                 }
 
@@ -596,10 +664,11 @@ class GcpStageAdapterTests(unittest.TestCase):
         self.assertEqual(bundle["comparison"]["engine"]["source"], "gcp:event-synthesis")
         self.assertTrue(bundle["comparison"]["engine"]["semanticAi"])
         self.assertIn(
-            "공통 보도", bundle["comparison"]["data"]["summary_30_seconds"]["main_difference"]
+            "무엇을 먼저 설명했나",
+            bundle["comparison"]["data"]["summary_30_seconds"]["main_difference"],
         )
-        self.assertFalse(bundle["comparison"]["data"]["synthesis"]["opposition"])
-        self.assertEqual(bundle["comparison"]["data"]["synthesis"]["camps"], [])
+        self.assertTrue(bundle["comparison"]["data"]["synthesis"]["opposition"])
+        self.assertEqual(len(bundle["comparison"]["data"]["synthesis"]["camps"]), 2)
         self.assertTrue(bundle["clusterAi"]["summary"])
         assert_body_safe(bundle, context="synthesized public bundle")
 

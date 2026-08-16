@@ -27,6 +27,9 @@ test("active snapshot loader is fail-closed and demo fallback is explicit", asyn
   assert.match(source, /is not publishable/);
   assert.match(source, /publicationStatus/);
   assert.match(source, /fewer than 3 articles or 2 outlets/);
+  assert.match(source, /event-synthesis\.v2/);
+  assert.match(source, /event_paragraphs/);
+  assert.match(source, /common_ground/);
 });
 
 test("shell issue routes resolve through the active snapshot boundary", async () => {

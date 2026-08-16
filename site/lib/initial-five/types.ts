@@ -308,13 +308,44 @@ export interface EventSynthesisClaim {
   reason?: string;
 }
 
+export interface EventSynthesisPoint extends EventSynthesisClaim {
+  text?: string | null;
+}
+
+export interface EventSynthesisVoiceBasis {
+  kind?: "journalist_narration" | "source_attributed" | "mixed" | "not_observed" | string;
+  label?: string;
+  evidence?: EventSynthesisEvidence[];
+}
+
+export interface EventSynthesisProofRow {
+  article_id?: string;
+  outlet?: string;
+  dimension?: string;
+  public_paraphrase?: string;
+  text?: string;
+  evidence?: EventSynthesisEvidence[];
+}
+
 export interface EventSynthesisCamp {
   name?: string;
+  headline?: string;
+  summary?: string;
   gist?: string;
+  decisive_difference?: string;
   outlets?: string[];
   article_ids?: string[];
+  voice_basis?: EventSynthesisVoiceBasis;
   evidence?: EventSynthesisEvidence[];
+  proof_rows?: EventSynthesisProofRow[];
   index?: number;
+}
+
+export interface EventSynthesisComparisonAxis {
+  label?: string;
+  points?: EventSynthesisPoint[];
+  question?: string;
+  evidence?: EventSynthesisEvidence[];
 }
 
 export interface EventSynthesisRow {
@@ -333,6 +364,9 @@ export interface EventSynthesisData {
   invocation?: Record<string, unknown>;
   run_id?: string;
   opposition?: boolean;
+  event_paragraphs?: EventSynthesisClaim[];
+  comparison_axis?: EventSynthesisComparisonAxis | null;
+  common_ground?: EventSynthesisClaim | null;
   what_happened?: EventSynthesisClaim | null;
   agreed_line?: EventSynthesisClaim | null;
   split_line?: EventSynthesisClaim | null;
@@ -351,6 +385,7 @@ export interface EventSynthesisData {
     article_id?: string;
     outlet?: string;
     dimension?: string;
+    public_paraphrase?: string;
     text?: string;
     evidence?: EventSynthesisEvidence[];
   }>;

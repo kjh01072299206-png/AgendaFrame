@@ -19,3 +19,8 @@ prompts:
     path: event-synthesis-v1.0.0.md
     output_schema: schemas/event-synthesis-output.schema.json
     taxonomy_version: entman-event-comparison-v1
+  - id: event-synthesis-v2
+    version: 2.0.0
+    path: event-synthesis-v2.0.0.md
+    output_schema: schemas/event-synthesis-v2-output.schema.json
+    taxonomy_version: entman-event-comparison-v2

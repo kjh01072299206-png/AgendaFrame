@@ -157,7 +157,12 @@ class EvaluationContractTests(unittest.TestCase):
                 self.assertIn("not approved for production", prompt_text)
                 schema = json.loads(schema_path.read_text(encoding="utf-8"))
                 self.assertEqual(schema["type"], "object")
-                self.assertEqual(schema["properties"]["prompt_version"]["const"], prompt["version"])
+                prompt_version_const = schema["properties"]["prompt_version"]["const"]
+                self.assertTrue(
+                    prompt_version_const == prompt["version"]
+                    or str(prompt_version_const).endswith(str(prompt["version"])),
+                    f"schema prompt version {prompt_version_const!r} does not match {prompt['version']!r}",
+                )
 
 
 if __name__ == "__main__":

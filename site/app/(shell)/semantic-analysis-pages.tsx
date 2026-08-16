@@ -17,6 +17,7 @@ import type {
   SemanticProfileEntry,
 } from "../../lib/initial-five/types";
 import { stripEvidenceTokens } from "../../lib/initial-five/public-text.mjs";
+import { ComparisonLead as ComparisonLeadV2 } from "./comparison-lead";
 
 type RichProfile = NonNullable<SemanticProfileEntry["profile"]> & {
   secondary_descriptors?: {
@@ -731,108 +732,6 @@ function IssueThirtySecond({ issue }: { issue: IssueView }) {
   );
 }
 
-function ComparisonAxisLead({ bundle, issue, dimensions }: { bundle: IssueAnalysisBundle; issue: IssueView; dimensions: DimensionAnalysis[] }) {
-  const synthesis = synthesisData(bundle);
-  const camps = synthesisCamps(bundle);
-  const splitText = observedClaim(synthesis?.split_line) ?? issue.mainDifference;
-  const split = dimensions.filter((dimension) => dimension.groups.length >= 2).slice(0, 3);
-  const fallbackAxes = camps.slice(0, 3).map((camp) => ({
-    label: camp.name ?? "보도 갈래",
-    detail: `${(camp.outlets ?? []).join(" · ")} · ${(camp.article_ids ?? []).length}건`,
-  }));
-  return (
-    <section className="afs-card afp-axis-lead" id="sec-synthesis">
-      <h2>논조 갈래 축 <small>같은 사건에서 갈린 질문</small></h2>
-      <div className="afs-in">
-        <div className="afp-axis-question">
-          <span className="afp-kicker">갈린 질문</span>
-          <p>{splitText ?? "현재 공개 근거에서 매체 서술이 갈린 질문은 확정되지 않았습니다."}</p>
-        </div>
-        {split.length ? (
-          <div className="afp-axis-rail" aria-label="기사에서 관측된 비교 축">
-            {split.map((analysis, index) => (
-              <div className="afp-axis-node" key={analysis.dimension}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <strong>{analysis.label}</strong>
-                <small>{analysis.groups.slice(0, 3).map((group) => group.label).join(" · ")}</small>
-              </div>
-            ))}
-          </div>
-        ) : fallbackAxes.length ? (
-          <div className="afp-axis-rail" aria-label="종합에서 관측된 보도 갈래">
-            {fallbackAxes.map((axis, index) => (
-              <div className="afp-axis-node" key={`${axis.label}-${index}`}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <strong>{axis.label}</strong>
-                <small>{axis.detail}</small>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="afp-state">서로 다른 근거 그룹이 없어 대립 축으로 표시하지 않습니다.</p>
-        )}
-        <p className="afs-note">이 축은 기사 안에서 앞세운 문제·원인·책임·파급효과의 차이를 묶은 것입니다. 언론사의 고정 성향이나 의도로 해석하지 않습니다.</p>
-      </div>
-    </section>
-  );
-}
-
-function CampLead({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
-  const camps = synthesisCamps(bundle);
-  const articles = new Map(issue.articles.map((article) => [article.articleId, article]));
-  if (!camps.length) {
-    return (
-      <section className="afs-card afp-camp-lead" id="sec-camps">
-        <h2>관측된 보도 갈래 <small>근거가 확인된 군집만 표시</small></h2>
-        <div className="afs-in"><p className="afp-state">현재 공개 종합에는 기사 근거가 연결된 보도 갈래가 없습니다. 대립 구도를 임의로 만들지 않았습니다.</p></div>
-      </section>
-    );
-  }
-  return (
-    <section className="afs-card afp-camp-lead" id="sec-camps">
-      <h2>관측된 보도 갈래 <small>{camps.length}개 · 기사 근거 연결</small></h2>
-      <div className="afs-in">
-        <div className="afp-camp-grid">
-          {camps.slice(0, 4).map((camp, index) => {
-            const ids = camp.article_ids ?? [];
-            const campArticles = ids.map((id) => articles.get(id)).filter(Boolean);
-            const campEvidence = (camp.evidence ?? []).filter((ref) => !ref.article_id || ids.includes(ref.article_id));
-            return (
-              <article className="afp-camp-card" key={`${camp.index ?? index}-${camp.name ?? "camp"}`}>
-                <header>
-                  <span className="afp-kicker">보도 갈래 {String.fromCharCode(65 + index)}</span>
-                  <h3>{camp.name}</h3>
-                  <small>{(camp.outlets ?? []).join(" · ") || "매체 미상"} · {ids.length}건</small>
-                </header>
-                <p>{camp.gist}</p>
-                <div className="afp-camp-outlets">{(camp.outlets ?? []).map((outlet) => <span className="afs-chip" key={outlet}>{outlet}</span>)}</div>
-                <details className="afp-camp-proof">
-                  <summary>기사 근거 보기</summary>
-                  <div>
-                    {campArticles.length ? campArticles.map((article) => <div className="afp-camp-article" key={article?.articleId}><strong>{article?.outlet}</strong><span>{article?.title}</span></div>) : <p className="afp-state">연결된 기사 제목이 없습니다.</p>}
-                    <EvidenceRefs refs={campEvidence} label="이 갈래의 공개 근거" />
-                  </div>
-                </details>
-              </article>
-            );
-          })}
-        </div>
-        <p className="afs-note">보도 갈래는 이번 의제 기사에서 함께 관측된 강조의 묶음입니다. 실제 대립이 확인된 경우에만 표시하며, 기사에 없는 의도·이념을 보충하지 않습니다.</p>
-      </div>
-    </section>
-  );
-}
-
-function ComparisonLead({ bundle, issue, dimensions }: { bundle: IssueAnalysisBundle; issue: IssueView; dimensions: DimensionAnalysis[] }) {
-  return (
-    <>
-      <IssueThirtySecond issue={issue} />
-      <ComparisonAxisLead bundle={bundle} issue={issue} dimensions={dimensions} />
-      <CampLead bundle={bundle} issue={issue} />
-    </>
-  );
-}
-
 function AxisCard({ analysis }: { analysis: DimensionAnalysis }) {
   if (analysis.groups.length < 2) return null;
   return (
@@ -1195,7 +1094,7 @@ export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
   return (
     <>
       <AnalysisPageHeader mode="outlets" bundle={bundle} issue={issue} dimensions={dimensions} />
-      <ComparisonLead bundle={bundle} issue={issue} dimensions={dimensions} />
+      <ComparisonLeadV2 issue={issue} synthesis={synthesisData(bundle)} />
       <section className="afs-card" id="sec-evidence">
         <h2>
           기사 근거 <small>갈래를 만든 기사와 공개 locator</small>
@@ -1204,35 +1103,40 @@ export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
           <ArticleList bundle={bundle} issue={issue} dimensions={dimensions} />
         </div>
       </section>
-      <div id="sec-axis-details">
-        <AxisSection dimensions={dimensions} />
-      </div>
-      <DebateSection issue={issue} dimensions={dimensions} />
-      <ComparisonAxisEvidence bundle={bundle} issue={issue} />
-      <section className="afs-card" id="sec-matrix">
-        <h2>
-          언론사별 프레임 비교 <small>기사 단위 semantic AI</small>
-        </h2>
-        <div className="afs-in">
-          <FrameMatrix issue={issue} dimensions={dimensions} />
+      <details className="afs-card afs-fold afp-detail-analysis" id="sec-detail-analysis">
+        <summary>세부 프레임 분석 보기</summary>
+        <div className="afp-detail-analysis-body">
+          <div id="sec-axis-details">
+            <AxisSection dimensions={dimensions} />
+          </div>
+          <DebateSection issue={issue} dimensions={dimensions} />
+          <ComparisonAxisEvidence bundle={bundle} issue={issue} />
+          <section className="afs-card" id="sec-matrix">
+            <h2>
+              언론사별 프레임 비교 <small>기사 단위 semantic AI</small>
+            </h2>
+            <div className="afs-in">
+              <FrameMatrix issue={issue} dimensions={dimensions} />
+            </div>
+          </section>
+          <section className="afs-card" id="sec-sources">
+            <h2>
+              누구의 말을 중심에 뒀나 <small>Gans · source selection</small>
+            </h2>
+            <div className="afs-in">
+              <SourceTable issue={issue} />
+            </div>
+          </section>
+          <section className="afs-card">
+            <h2>
+              어떤 말로 설명했나 <small>발화 방식과 표현 선택</small>
+            </h2>
+            <div className="afs-in">
+              <VoiceTable issue={issue} />
+            </div>
+          </section>
         </div>
-      </section>
-      <section className="afs-card" id="sec-sources">
-        <h2>
-          누구의 말을 중심에 뒀나 <small>Gans · source selection</small>
-        </h2>
-        <div className="afs-in">
-          <SourceTable issue={issue} />
-        </div>
-      </section>
-      <section className="afs-card">
-        <h2>
-          어떤 말로 설명했나 <small>발화 방식과 표현 선택</small>
-        </h2>
-        <div className="afs-in">
-          <VoiceTable issue={issue} />
-        </div>
-      </section>
+      </details>
       <MethodologyDisclaimer />
     </>
   );
@@ -1276,9 +1180,7 @@ export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
         <DescriptorSection bundle={bundle} field="policy_frames" title="정책 프레임" subtitle="Boydstun et al. 2014" />
         <DescriptorSection bundle={bundle} field="generic_frames" title="보편 프레임 다섯 종" subtitle="Semetko &amp; Valkenburg 2000" />
       </div>
-      <div id="sec-scope">
-        <ScopeSection bundle={bundle} />
-      </div>
+      <ScopeSection bundle={bundle} />
       <section className="afs-card" id="sec-sources">
         <h2>
           누구의 말을 중심에 뒀나 <small>취재원 구조</small>
@@ -1331,12 +1233,7 @@ function AnalysisPageHeader({
         ["관측 축", `${observedDimensions}/5`, "축"],
         ["공개 근거", String(issue.evidenceTotal), "지문"],
       ]
-    : [
-        ["매체", String(issue.outletCount), "곳"],
-        ["기사", String(issue.articleCount), "건"],
-        ["논조 군집", camps.length ? String(camps.length) : "—", camps.length ? "개" : "없음"],
-        ["취재원 역할", sourceRoleCount ? String(sourceRoleCount) : "—", sourceRoleCount ? "종" : "미관측"],
-      ];
+    : [];
 
   return (
     <>
@@ -1356,14 +1253,20 @@ function AnalysisPageHeader({
           리포트로 보기
         </Link>
       </header>
-      <section className="afp-kpis" aria-label={`${framing ? "프레이밍 분석" : "언론사 비교"} 요약 지표`}>
-        {kpis.map(([label, value, unit]) => (
-          <div className="afp-kpi" key={label}>
-            <span>{label}</span>
-            <strong>{value}<small>{unit}</small></strong>
-          </div>
-        ))}
-      </section>
+      {framing ? (
+        <section className="afp-kpis" aria-label="프레이밍 분석 요약 지표">
+          {kpis.map(([label, value, unit]) => (
+            <div className="afp-kpi" key={label}>
+              <span>{label}</span>
+              <strong>{value}<small>{unit}</small></strong>
+            </div>
+          ))}
+        </section>
+      ) : (
+        <p className="afp-compact-meta" aria-label="언론사 비교 표본 정보">
+          기사 {issue.articleCount}건 · 매체 {issue.outletCount}곳 · {camps.length ? `관측 갈래 ${camps.length}개` : "공통 보도"} · 취재원 역할 {sourceRoleCount || "미관측"}
+        </p>
+      )}
     </>
   );
 }

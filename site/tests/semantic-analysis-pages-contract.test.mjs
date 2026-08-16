@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const pagePath = path.join(siteRoot, "app", "(shell)", "semantic-analysis-pages.tsx");
+const comparisonPath = path.join(siteRoot, "app", "(shell)", "comparison-lead.tsx");
 
 test("semantic pages enforce public evidence and state boundaries", async () => {
   const source = await readFile(pagePath, "utf8");
@@ -68,12 +69,19 @@ test("semantic pages include framing navigation rail and methodology disclaimer"
 
 test("semantic pages keep the issue context and lead with prototype reading order", async () => {
   const source = await readFile(pagePath, "utf8");
-  assert.match(source, /function ComparisonLead\(/);
-  assert.match(source, /function ComparisonAxisLead\(/);
-  assert.match(source, /function CampLead\(/);
+  const comparison = await readFile(comparisonPath, "utf8");
+  assert.match(source, /ComparisonLeadV2/);
+  assert.match(comparison, /export function ComparisonLead/);
+  assert.match(comparison, /event_paragraphs/);
+  assert.match(comparison, /사건 경위와 용어 더 보기/);
+  assert.match(comparison, /aria-expanded/);
+  assert.match(comparison, /aria-controls/);
+  assert.match(comparison, /결정적 차이/);
+  assert.match(comparison, /기사 근거 보기/);
   assert.match(source, /afp-framing-lead-grid/);
+  assert.match(source, /세부 프레임 분석 보기/);
   const outlets = source.indexOf("export function OutletsSemanticPage");
-  const outletsLead = source.indexOf("<ComparisonLead bundle={bundle} issue={issue} dimensions={dimensions} />", outlets);
+  const outletsLead = source.indexOf("<ComparisonLeadV2 issue={issue} synthesis={synthesisData(bundle)} />", outlets);
   const outletsEvidence = source.indexOf('id="sec-evidence"', outletsLead);
   assert.ok(outletsLead > outlets, "outlets page should use the comparison lead");
   assert.ok(outletsEvidence > outletsLead, "article evidence should follow the event and camp lead");

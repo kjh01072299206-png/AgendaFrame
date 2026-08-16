@@ -76,7 +76,14 @@ jobs:
         run: npm run lint
 
       - name: Contract tests
-        run: node --test --test-isolation=none tests/initial-five-contract.test.mjs tests/community.test.mjs
+        run: >-
+          node --test --test-isolation=none
+          tests/initial-five-contract.test.mjs
+          tests/community.test.mjs
+          tests/active-snapshot-contract.test.mjs
+          tests/live-2026-08-15-quality.test.mjs
+          tests/semantic-analysis-pages-contract.test.mjs
+          tests/compose-synthesis.test.mjs
 
       - name: Build (Next)
         run: npx next build

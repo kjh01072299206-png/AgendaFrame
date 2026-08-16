@@ -148,6 +148,15 @@ function hasDirectEventSynthesis(bundle: IssueAnalysisBundle | null): boolean {
   return Boolean(
     synthesis?.usable === true
     && synthesis.source === "gcp:event-synthesis"
+    && synthesis.schemaVersion === "agendaframe.event-synthesis.v2"
+    && synthesis.promptVersion === "event-synthesis-v2.0.0"
+    && Array.isArray(synthesis.event_paragraphs)
+    && synthesis.event_paragraphs.length >= 2
+    && synthesis.event_paragraphs.length <= 4
+    && Array.isArray(synthesis.terms)
+    && synthesis.terms.length >= 1
+    && synthesis.terms.length <= 4
+    && synthesis.common_ground?.status === "observed"
     && runId
     && String(synthesis.run_id ?? "").trim() === runId
     && synthesis.invocation?.provider === "vertex_ai",

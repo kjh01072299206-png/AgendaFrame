@@ -3,8 +3,10 @@ from __future__ import annotations
 import json
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 from ai.event_synthesis import (
+    PROMPT_VERSION,
     SCHEMA_VERSION,
     EventSynthesisError,
     bind_event_synthesis,
@@ -65,6 +67,118 @@ def evidence(article_id: str, digest: str, *, paragraph: int = 1, sentence: int 
 
 
 class EventSynthesisBindingTests(unittest.TestCase):
+    def test_binds_v2_event_contract_with_camp_proof(self) -> None:
+        draft = {
+            "prompt_version": PROMPT_VERSION,
+            "schema_version": SCHEMA_VERSION,
+            "event_paragraphs": [
+                {"text": "두 매체가 같은 사건을 다뤘다", "evidence": [evidence("a1", HASH_A)]},
+                {
+                    "text": "기사들은 사건의 경위를 서로 다른 위치에서 설명했다",
+                    "evidence": [evidence("a2", HASH_B)],
+                },
+            ],
+            "terms": [
+                {
+                    "term": "보완수사권",
+                    "gloss": "수사 과정에서 추가 확인을 할 수 있는 권한",
+                    "evidence": [evidence("a1", HASH_A)],
+                }
+            ],
+            "comparison_axis": {
+                "label": "정치적 책임과 제도 안전장치",
+                "points": [
+                    {"text": "정치적 책임을 먼저 설명", "evidence": [evidence("a1", HASH_A)]},
+                    {"text": "제도 안전장치를 먼저 설명", "evidence": [evidence("a2", HASH_B)]},
+                ],
+                "question": "이 사건을 정치 책임으로 읽을까, 제도 문제로 읽을까",
+                "evidence": [evidence("a1", HASH_A), evidence("a2", HASH_B)],
+            },
+            "common_ground": {
+                "text": "두 기사는 같은 제도 논쟁을 다뤘다",
+                "evidence": [evidence("a1", HASH_A), evidence("a2", HASH_B)],
+            },
+            "camps": [
+                {
+                    "name": "정치 책임을 앞세운 쪽",
+                    "headline": "정치적 책임을 먼저 묻는 갈래",
+                    "summary": "대통령의 태도와 정치적 책임을 기사 앞부분에 배치했다",
+                    "decisive_difference": "제도 설명보다 책임 주체를 먼저 보이게 했다",
+                    "article_ids": ["a1"],
+                    "voice_basis": {
+                        "kind": "journalist_narration",
+                        "label": "기자 서술 중심",
+                        "evidence": [evidence("a1", HASH_A)],
+                    },
+                    "evidence": [evidence("a1", HASH_A)],
+                    "headline_evidence": [evidence("a1", HASH_A)],
+                    "summary_evidence": [evidence("a1", HASH_A)],
+                    "decisive_difference_evidence": [evidence("a1", HASH_A)],
+                    "proof_rows": [
+                        {
+                            "article_id": "a1",
+                            "outlet": "조선일보",
+                            "dimension": "책임 귀속",
+                            "public_paraphrase": "대통령의 태도에 책임을 연결했다",
+                            "evidence": [evidence("a1", HASH_A)],
+                        }
+                    ],
+                },
+                {
+                    "name": "제도 문제를 앞세운 쪽",
+                    "headline": "제도 안전장치를 먼저 보여 준 갈래",
+                    "summary": "권한 축소가 수사 제도에 미칠 영향을 기사 앞부분에 배치했다",
+                    "decisive_difference": "정치적 공방보다 제도 작동 방식을 먼저 보이게 했다",
+                    "article_ids": ["a2"],
+                    "voice_basis": {
+                        "kind": "source_attributed",
+                        "label": "취재원 발언 중심",
+                        "evidence": [evidence("a2", HASH_B)],
+                    },
+                    "evidence": [evidence("a2", HASH_B)],
+                    "headline_evidence": [evidence("a2", HASH_B)],
+                    "summary_evidence": [evidence("a2", HASH_B)],
+                    "decisive_difference_evidence": [evidence("a2", HASH_B)],
+                    "proof_rows": [
+                        {
+                            "article_id": "a2",
+                            "outlet": "중앙일보",
+                            "dimension": "문제 정의",
+                            "public_paraphrase": "제도 안전장치 약화를 문제로 설명했다",
+                            "evidence": [evidence("a2", HASH_B)],
+                        }
+                    ],
+                },
+            ],
+        }
+        bound = bind_event_synthesis(
+            draft,
+            profiles=[profile("a1", HASH_A), profile("a2", HASH_B)],
+            articles=[article("a1", "조선일보"), article("a2", "중앙일보")],
+        )
+        self.assertEqual(bound["schemaVersion"], SCHEMA_VERSION)
+        self.assertEqual(len(bound["event_paragraphs"]), 2)
+        self.assertEqual(bound["common_ground"]["status"], "observed")
+        self.assertTrue(bound["comparison_axis"]["question"])
+        self.assertTrue(bound["camps"][0]["headline_evidence"])
+        self.assertTrue(bound["camps"][0]["proof_rows"][0]["public_paraphrase"])
+
+    def test_live_synthesizer_does_not_fall_back_to_profile_composition(self) -> None:
+        class InvalidSynthesizer:
+            config = SimpleNamespace(vertex=SimpleNamespace(max_attempts=1))
+
+            def synthesize(self, request):
+                return {"prompt_version": "event-synthesis-v1.0.0", "usable": True}
+
+        with self.assertRaises(EventSynthesisError):
+            build_bound_comparison(
+                profiles=[profile("a1", HASH_A)],
+                articles=[article("a1", "한겨레")],
+                title="사건",
+                issue_id="issue-1",
+                synthesizer=InvalidSynthesizer(),
+            )
+
     def test_keeps_cited_camps_and_drops_uncited_prose(self) -> None:
         bound = bind_event_synthesis(
             {

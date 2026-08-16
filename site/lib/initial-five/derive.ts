@@ -32,6 +32,11 @@ function observedSynthesisText(claim?: { text?: string | null; status?: string }
     : null;
 }
 
+function observedEventParagraph(synthesis?: EventSynthesisData | null): string | null {
+  const first = synthesis?.event_paragraphs?.find((claim) => claim?.status === "observed" && typeof claim.text === "string" && claim.text.trim());
+  return first?.text ?? observedSynthesisText(synthesis?.what_happened);
+}
+
 export const DIM_QUESTION: Record<string, string> = {
   problem_definition: "무엇이 문제인가",
   causal_interpretation: "왜 그렇게 됐는가",
@@ -738,6 +743,8 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
     limit?: string;
   };
   const secondary = (data.secondary_descriptors ?? {}) as SecondaryDescriptors;
+  const synthesis = data.synthesis as EventSynthesisData | undefined;
+  const isV2Synthesis = synthesis?.schemaVersion === "agendaframe.event-synthesis.v2" || Array.isArray(synthesis?.event_paragraphs);
   const outletOf = new Map(articles.map((a) => [a.articleId, a.outlet]));
 
   const axes: AxisView[] = (data.comparison_axes ?? []).map((axis) => ({
@@ -850,12 +857,14 @@ export function deriveIssue(bundle: IssueAnalysisBundle): IssueView {
     category: bundle.issue.category,
     articleCount: bundle.issue.articleCount,
     outletCount: bundle.issue.outletCount,
-    lead: stripEvidenceTokens(bundle.clusterAi.summary
-      ?? observedSynthesisText((data.synthesis as EventSynthesisData | undefined)?.what_happened)
-      ?? null),
-    commonGround: stripEvidenceTokens(brief.common_ground ?? (typeof data.agreedLine === "string" ? data.agreedLine : null)),
-    mainDifference: stripEvidenceTokens(brief.main_difference ?? (typeof data.splitLine === "string" ? data.splitLine : null)),
-    sourceContext: stripEvidenceTokens(brief.source_context ?? null),
+    lead: stripEvidenceTokens(observedEventParagraph(synthesis) ?? bundle.clusterAi.summary ?? null),
+    commonGround: stripEvidenceTokens(brief.common_ground
+      ?? observedSynthesisText(synthesis?.common_ground)
+      ?? (typeof data.agreedLine === "string" ? data.agreedLine : null)),
+    mainDifference: stripEvidenceTokens(brief.main_difference
+      ?? synthesis?.comparison_axis?.question
+      ?? (typeof data.splitLine === "string" ? data.splitLine : null)),
+    sourceContext: isV2Synthesis ? null : stripEvidenceTokens(brief.source_context ?? null),
     commonSubjects: bundle.clusterAi.commonSubjects ?? [],
     clusters: (bundle.clusterAi.narrativeVariants ?? []).map((variant) => ({
       label: variant.label ?? "서사",
