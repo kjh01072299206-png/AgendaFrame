@@ -284,6 +284,23 @@ class EventSynthesisBindingTests(unittest.TestCase):
         )
         self.assertEqual(bound["what_happened"]["status"], "review_needed")
         self.assertIsNone(bound["what_happened"]["text"])
+        safe_bound = bind_event_synthesis(
+            {
+                "what_happened": "기사에 공통으로 확인된 사건 설명",
+                "what_happened_evidence": [evidence("a1", HASH_A)],
+                "terms": [{"term": "government", "gloss": "내부 코드", "evidence": [evidence("a1", HASH_A)]}],
+                "camps": [{
+                    "name": "effectiveness_positive",
+                    "gist": "내부 코드 갈래",
+                    "article_ids": ["a1"],
+                    "evidence": [evidence("a1", HASH_A)],
+                }],
+            },
+            profiles=[profile("a1", HASH_A)],
+            articles=[article("a1", "서울신문")],
+        )
+        self.assertNotIn("effectiveness_positive", str(safe_bound))
+        self.assertNotIn('"term": "government"', str(safe_bound))
         with self.assertRaises(EventSynthesisError):
             bind_event_synthesis(
                 {"what_happened": "ok", "raw_body": "secret"},

@@ -104,7 +104,8 @@ function EventExplanation({ issue, synthesis }: { issue: IssueView; synthesis: E
     <section className="afs-card afp-event-card-v2" id="sec-event-summary">
       <div className="afs-in afs-prose">
         <div className="afp-v2-section-kicker">사건 설명</div>
-        <p className="afp-event-note">이 의제의 기사들이 공통으로 다룬 사건을 먼저 설명한 뒤, 어디서 강조가 갈렸는지 이어서 보여줍니다.</p>
+        <h2 className="afp-event-title">{issue.title}</h2>
+        <p className="afp-event-note">사건 서술과 용어 풀이는 근거 기사를 취합해 썼고, 아래는 매체가 다르게 쓴 지점입니다.</p>
         <p className="afp-event-first">{first}</p>
         <EvidenceDisclosure refs={synthesis?.event_paragraphs?.[0]?.evidence} label="첫 사건 설명 근거" />
         {more.length || terms.length ? (

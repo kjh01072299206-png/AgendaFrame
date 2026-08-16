@@ -367,7 +367,7 @@ def _bind_event_synthesis_legacy(
             gloss = _bound_claim(
                 raw.get("gloss") or raw.get("explanation"), raw.get("evidence"), index
             )
-            if term and gloss and gloss.get("status") == "observed":
+            if term and not _contains_ideology(term) and not _contains_internal_marker(term) and gloss and gloss.get("status") == "observed":
                 terms.append(
                     {
                         "term": term,
@@ -632,6 +632,8 @@ def _bind_event_synthesis_v2(
             allowed = set(camp_articles)
             fallback_evidence = raw.get("evidence")
             name = _clean_text(raw.get("name"), limit=60)
+            if _contains_ideology(name) or _contains_internal_marker(name):
+                continue
             headline = _v2_claim(raw.get("headline") or (name if legacy_mode else None), raw.get("headline_evidence") or fallback_evidence, index, allowed_article_ids=allowed, limit=180)
             summary = _v2_claim(raw.get("summary") or raw.get("gist"), raw.get("summary_evidence") or fallback_evidence, index, allowed_article_ids=allowed, limit=720)
             decisive = _v2_claim(
@@ -650,6 +652,8 @@ def _bind_event_synthesis_v2(
             if isinstance(raw_voice, Mapping):
                 voice_kind = _clean_text(raw_voice.get("kind") or raw_voice.get("scope") or "not_observed", limit=40)
                 voice_label = _clean_text(raw_voice.get("label") or raw_voice.get("text") or "발화 범위 미관측", limit=100)
+                if _contains_ideology(voice_label) or _contains_internal_marker(voice_label):
+                    voice_label = "발화 범위 미관측"
                 voice_evidence = _bind_evidence(raw_voice.get("evidence") or fallback_evidence, index, allowed_article_ids=allowed)
             else:
                 voice_kind = "not_observed"
@@ -675,11 +679,14 @@ def _bind_event_synthesis_v2(
                 )
                 if not paraphrase or paraphrase.get("status") != "observed":
                     continue
+                dimension = _clean_text(proof.get("dimension"), limit=80) or "관측된 보도 선택"
+                if _contains_ideology(dimension) or _contains_internal_marker(dimension):
+                    dimension = "관측된 보도 선택"
                 proof_rows.append(
                     {
                         "article_id": proof_article_id,
                         "outlet": str(by_id.get(proof_article_id, {}).get("outlet") or by_id.get(proof_article_id, {}).get("sourceId") or ""),
-                        "dimension": _clean_text(proof.get("dimension"), limit=80) or "관측된 보도 선택",
+                        "dimension": dimension,
                         "public_paraphrase": paraphrase["text"],
                         "evidence": paraphrase["evidence"],
                     }

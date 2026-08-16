@@ -73,6 +73,8 @@ test("semantic pages keep the issue context and lead with prototype reading orde
   assert.match(source, /ComparisonLeadV2/);
   assert.match(comparison, /export function ComparisonLead/);
   assert.match(comparison, /event_paragraphs/);
+  assert.match(comparison, /className="afp-event-title">\{issue\.title\}/);
+  assert.match(comparison, /사건 서술과 용어 풀이는 근거 기사를 취합해 썼고/);
   assert.match(comparison, /사건 경위와 용어 더 보기/);
   assert.match(comparison, /aria-expanded/);
   assert.match(comparison, /aria-controls/);
