@@ -103,10 +103,15 @@ function EventExplanation({ issue, synthesis }: { issue: IssueView; synthesis: E
   return (
     <section className="afs-card afp-event-card-v2" id="sec-event-summary">
       <div className="afs-in afs-prose">
+        <div className="afp-event-copy">
         <div className="afp-v2-section-kicker">사건 설명</div>
         <h2 className="afp-event-title">{issue.title}</h2>
         <p className="afp-event-note">사건 서술과 용어 풀이는 근거 기사를 취합해 썼고, 아래는 매체가 다르게 쓴 지점입니다.</p>
         <p className="afp-event-first">{first}</p>
+        </div>
+        <div className="afp-event-context">
+          <div className="afp-v2-section-kicker">기사 묶음에서 확인</div>
+          <p className="afp-event-context-note">사건 설명은 첫 근거를 먼저 보여주고, 추가 경위와 용어는 필요한 경우에만 펼쳐 봅니다.</p>
         <EvidenceDisclosure refs={synthesis?.event_paragraphs?.[0]?.evidence} label="첫 사건 설명 근거" />
         {more.length || terms.length ? (
           <details className="afp-event-more">
@@ -130,6 +135,7 @@ function EventExplanation({ issue, synthesis }: { issue: IssueView; synthesis: E
             ) : null}
           </details>
         ) : null}
+        </div>
       </div>
     </section>
   );
@@ -143,10 +149,13 @@ function AxisExplanation({ issue, synthesis }: { issue: IssueView; synthesis: Ev
   return (
     <section className="afs-card afp-axis-v2" id="sec-comparison-axis">
       <div className="afs-in">
+        <div className="afp-axis-copy">
         <div className="afp-v2-section-kicker">논조 갈래 축</div>
         {axis?.label ? <h2>{axis.label}</h2> : <h2>같은 사건을 어디에 초점을 두고 설명했나</h2>}
         {points.length ? <div className="afp-axis-points" aria-label="기사에서 관측된 비교 축">{points.map((point, index) => <span key={`${point}-${index}`}>{point}</span>)}</div> : null}
         <p className="afp-axis-question-v2">{question ?? "현재 공개 근거에서는 서로 다른 설명 축을 확정하지 않았습니다."}</p>
+        </div>
+        <div className="afp-axis-context">
         <EvidenceDisclosure refs={axis?.evidence ?? synthesis?.split_line?.evidence} label="갈린 질문 근거" />
         {common ? (
           <div className="afp-common-ground-v2">
@@ -155,6 +164,7 @@ function AxisExplanation({ issue, synthesis }: { issue: IssueView; synthesis: Ev
             <EvidenceDisclosure refs={synthesis?.common_ground?.evidence} label="공통 사실 근거" />
           </div>
         ) : <p className="afp-state">공통 설명으로 묶을 공개 근거가 아직 확인되지 않았습니다.</p>}
+        </div>
       </div>
     </section>
   );
