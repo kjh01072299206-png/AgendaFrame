@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const pagePath = path.join(siteRoot, "app", "(shell)", "semantic-analysis-pages.tsx");
 const comparisonPath = path.join(siteRoot, "app", "(shell)", "comparison-lead.tsx");
+const comparisonStylesPath = path.join(siteRoot, "app", "app-round2.css");
 
 test("semantic pages enforce public evidence and state boundaries", async () => {
   const source = await readFile(pagePath, "utf8");
@@ -92,6 +93,19 @@ test("semantic pages keep the issue context and lead with prototype reading orde
   const framingGuide = source.indexOf('id="sec-guide"', framingGrid);
   assert.ok(framingGrid > framing, "framing page should start with the summary/scope lead grid");
   assert.ok(framingGuide > framingGrid, "framing guide should follow the lead grid");
+});
+
+test("comparison lead uses the desktop card width and collapses its context columns", async () => {
+  const comparison = await readFile(comparisonPath, "utf8");
+  const styles = await readFile(comparisonStylesPath, "utf8");
+
+  assert.match(comparison, /className="afp-event-copy"/);
+  assert.match(comparison, /className="afp-event-context"/);
+  assert.match(comparison, /className="afp-axis-copy"/);
+  assert.match(comparison, /className="afp-axis-context"/);
+  assert.match(styles, /\.afp-event-card-v2 \.afs-in,[\s\S]*?\.afp-camps-v2 \.afs-in \{[\s\S]*?max-width: none;/);
+  assert.match(styles, /\.afp-event-card-v2 \.afs-in,[\s\S]*?\.afp-axis-v2 \.afs-in \{[\s\S]*?display: grid;[\s\S]*?grid-template-columns: minmax\(0, 1\.25fr\) minmax\(280px, \.75fr\);/);
+  assert.match(styles, /\.afp-event-card-v2 \.afs-in,[\s\S]*?\.afp-axis-v2 \.afs-in \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\);/);
 });
 
 test("issue layout and home page maintain active snapshot route consistency", async () => {
