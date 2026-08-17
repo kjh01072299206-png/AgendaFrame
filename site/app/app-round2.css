@@ -1597,7 +1597,55 @@
 .afp-event-card-v2 .afs-in,
 .afp-axis-v2 .afs-in,
 .afp-camps-v2 .afs-in {
-  max-width: 78ch;
+  max-width: none;
+}
+.afp-event-card-v2 .afs-in,
+.afp-axis-v2 .afs-in {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
+  gap: 24px clamp(24px, 4vw, 56px);
+  align-items: start;
+}
+.afp-event-copy,
+.afp-axis-copy,
+.afp-event-context,
+.afp-axis-context {
+  min-width: 0;
+}
+.afp-event-context,
+.afp-axis-context {
+  padding: 15px 16px;
+  border: 1px solid var(--afs-rule);
+  background: var(--afs-sunk);
+}
+.afp-event-context-note {
+  margin: 0 0 12px;
+  color: var(--afs-ink-2);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.afp-event-context .afp-event-more {
+  margin-top: 14px;
+  padding-top: 12px;
+}
+.afp-event-context .afp-event-more-row {
+  max-width: none;
+}
+.afp-event-context .afp-event-more-row p,
+.afp-axis-context .afp-common-ground-v2 p {
+  max-width: none;
+}
+.afp-axis-context {
+  align-self: stretch;
+}
+.afp-axis-context .afp-evidence {
+  margin-top: 0;
+}
+.afp-axis-context .afp-common-ground-v2 {
+  margin-top: 12px;
+}
+.afp-axis-context .afp-common-ground-v2 p {
+  margin-bottom: 0;
 }
 .afp-v2-section-kicker {
   margin-bottom: 6px;
@@ -1937,6 +1985,11 @@
 @media (max-width: 860px) {
   .afp-framing-lead-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .afp-event-card-v2 .afs-in,
+  .afp-axis-v2 .afs-in {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
   }
   .afp-camp-grid {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
