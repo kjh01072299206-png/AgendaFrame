@@ -24,6 +24,34 @@ function article(id, title) {
   };
 }
 
+const FORBIDDEN_PUBLIC_KEYS = new Set([
+  "body_text",
+  "bodytext",
+  "raw_body",
+  "rawbody",
+  "html",
+  "sentence_text",
+  "sentencetext",
+  "full_article",
+  "fullarticle",
+  "article_content",
+  "articlecontent",
+  "articlebody",
+  "content",
+  "full_content",
+  "fullcontent",
+  "prompt_payload",
+  "promptpayload",
+  "evidence_text",
+  "evidencetext",
+]);
+
+function containsForbiddenPublicKey(value) {
+  if (Array.isArray(value)) return value.some(containsForbiddenPublicKey);
+  if (!value || typeof value !== "object") return false;
+  return Object.entries(value).some(([key, child]) => FORBIDDEN_PUBLIC_KEYS.has(key.toLowerCase()) || containsForbiddenPublicKey(child));
+}
+
 test("body-like titles are not public headlines", () => {
   const longBody = `${"정부는 오늘 발표했다. ".repeat(12)}추가 설명이 이어진다`;
   const inspected = inspectPublicTitle(longBody);
@@ -85,6 +113,64 @@ test("verified direct event synthesis remains visible when clustering is rules-l
   assert.equal(attached.comparison.data.synthesis.usable, true);
   assert.equal(attached.comparison.data.synthesis.source, "gcp:event-synthesis");
   assert.equal(attached.analysisStatus.semantic.semanticAi, true);
+});
+
+test("published 2026-08-15 synthesis is Vertex-backed, evidence-bound, and body-free", async () => {
+  const manifest = JSON.parse(
+    await readFile(path.join(siteRoot, "public/initial-five/manifest.json"), "utf8"),
+  );
+  assert.equal(manifest.basisDate, "2026-08-15");
+  assert.equal(manifest.issueCount, 5);
+  assert.equal(manifest.articleCount, 40);
+  assert.equal(manifest.analysisModel, "gemini-2.5-pro");
+  assert.match(String(manifest.analysisRunId), /^[0-9a-f]{32}$/);
+
+  for (const rank of [1, 2, 3, 4, 5]) {
+    const bundle = JSON.parse(
+      await readFile(
+        path.join(siteRoot, `public/initial-five/issues/live-2026-08-15-top-${rank}.json`),
+        "utf8",
+      ),
+    );
+    const synthesis = bundle.comparison?.data?.synthesis;
+    const engine = bundle.comparison?.engine;
+    const semantic = bundle.analysisStatus?.semantic;
+    assert.equal(bundle.lineage?.runId, manifest.analysisRunId);
+    assert.equal(engine?.source, "gcp:event-synthesis");
+    assert.equal(engine?.semanticAi, true);
+    assert.equal(engine?.model, "gemini-2.5-pro");
+    assert.equal(semantic?.semanticAi, true);
+    assert.equal(synthesis?.schemaVersion, "agendaframe.event-synthesis.v2");
+    assert.equal(synthesis?.usable, true);
+    assert.equal(synthesis?.source, "gcp:event-synthesis");
+    assert.equal(synthesis?.run_id, manifest.analysisRunId);
+    assert.equal(synthesis?.invocation?.provider, "vertex_ai");
+    assert.match(String(synthesis?.invocation?.request_sha256), /^[0-9a-f]{64}$/);
+    assert.match(String(synthesis?.invocation?.response_sha256), /^[0-9a-f]{64}$/);
+
+    assert.ok(Array.isArray(synthesis.event_paragraphs));
+    assert.ok(synthesis.event_paragraphs.length >= 2 && synthesis.event_paragraphs.length <= 4);
+    for (const paragraph of synthesis.event_paragraphs) {
+      assert.equal(paragraph.status, "observed");
+      assert.ok(paragraph.text);
+      assert.ok(Array.isArray(paragraph.evidence) && paragraph.evidence.length > 0);
+    }
+    assert.equal(synthesis.common_ground?.status, "observed");
+    assert.ok(synthesis.common_ground?.text);
+    assert.ok(Array.isArray(synthesis.common_ground?.evidence) && synthesis.common_ground.evidence.length > 0);
+    assert.ok(Array.isArray(synthesis.terms));
+    assert.ok(Array.isArray(synthesis.proof_rows));
+    assert.ok(Array.isArray(synthesis.camps));
+    if (synthesis.camps.length >= 2) {
+      assert.equal(synthesis.opposition, true);
+      assert.ok(synthesis.comparison_axis?.label);
+      assert.ok(synthesis.comparison_axis?.question);
+      assert.ok(Array.isArray(synthesis.comparison_axis?.evidence) && synthesis.comparison_axis.evidence.length > 0);
+    } else {
+      assert.equal(synthesis.opposition, false);
+    }
+    assert.equal(containsForbiddenPublicKey(bundle), false);
+  }
 });
 
 test("unverified 2026-08-15 bundles without a direct synthesis stay hidden", async () => {

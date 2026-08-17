@@ -36,11 +36,8 @@
         "model": "gemini-2.5-pro",
         "promptVersion": "2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "source": "gcp:vertex:current-display-batch",
-        "articleCount": 8,
-        "succeededArticleCount": 7,
-        "reviewNeededArticleCount": 1,
-        "requiresHumanReview": true
+        "succeededArticleCount": 6,
+        "reviewNeededArticleCount": 2
       }
     },
     {
@@ -74,11 +71,8 @@
         "model": "gemini-2.5-pro",
         "promptVersion": "2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "source": "gcp:vertex:current-display-batch",
-        "articleCount": 12,
         "succeededArticleCount": 10,
-        "reviewNeededArticleCount": 2,
-        "requiresHumanReview": true
+        "reviewNeededArticleCount": 2
       }
     },
     {
@@ -112,11 +106,8 @@
         "model": "gemini-2.5-pro",
         "promptVersion": "2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "source": "gcp:vertex:current-display-batch",
-        "articleCount": 7,
         "succeededArticleCount": 5,
-        "reviewNeededArticleCount": 2,
-        "requiresHumanReview": true
+        "reviewNeededArticleCount": 2
       }
     },
     {
@@ -126,7 +117,7 @@
       "category": "사회",
       "articleCount": 7,
       "outletCount": 3,
-      "status": "review_needed",
+      "status": "succeeded",
       "payloadKey": "issues/live-2026-08-15-top-4.json",
       "agendaScore": 28.6,
       "clusterAi": {
@@ -150,11 +141,8 @@
         "model": "gemini-2.5-pro",
         "promptVersion": "2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "source": "gcp:vertex:current-display-batch",
-        "articleCount": 7,
         "succeededArticleCount": 7,
-        "reviewNeededArticleCount": 0,
-        "requiresHumanReview": true
+        "reviewNeededArticleCount": 0
       }
     },
     {
@@ -164,7 +152,7 @@
       "category": "사회",
       "articleCount": 6,
       "outletCount": 3,
-      "status": "review_needed",
+      "status": "succeeded",
       "payloadKey": "issues/live-2026-08-15-top-5.json",
       "agendaScore": 27.3,
       "clusterAi": {
@@ -188,12 +176,14 @@
         "model": "gemini-2.5-pro",
         "promptVersion": "2.6.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "source": "gcp:vertex:current-display-batch",
-        "articleCount": 6,
         "succeededArticleCount": 6,
-        "reviewNeededArticleCount": 0,
-        "requiresHumanReview": true
+        "reviewNeededArticleCount": 0
       }
     }
-  ]
+  ],
+  "analysisRunId": "5ccb18b9d8a74675b6e5daa31bd11cd0",
+  "analysisGeneratedAt": "2026-08-17T07:41:03.327050+00:00",
+  "analysisModel": "gemini-2.5-pro",
+  "analysisPromptVersion": "2.6.0",
+  "analysisEvidencePolicy": "article URL locators and SHA-256 fingerprints only"
 }

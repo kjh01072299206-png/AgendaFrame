@@ -163,6 +163,16 @@ class EventSynthesisBindingTests(unittest.TestCase):
         self.assertTrue(bound["camps"][0]["headline_evidence"])
         self.assertTrue(bound["camps"][0]["proof_rows"][0]["public_paraphrase"])
 
+        no_axis = dict(draft)
+        no_axis.pop("comparison_axis")
+        closed = bind_event_synthesis(
+            no_axis,
+            profiles=[profile("a1", HASH_A), profile("a2", HASH_B)],
+            articles=[article("a1", "議곗꽑?쇰낫"), article("a2", "以묒븰?쇰낫")],
+        )
+        self.assertFalse(closed["opposition"])
+        self.assertEqual(closed["camps"], [])
+
     def test_live_synthesizer_does_not_fall_back_to_profile_composition(self) -> None:
         class InvalidSynthesizer:
             config = SimpleNamespace(vertex=SimpleNamespace(max_attempts=1))
@@ -288,13 +298,21 @@ class EventSynthesisBindingTests(unittest.TestCase):
             {
                 "what_happened": "기사에 공통으로 확인된 사건 설명",
                 "what_happened_evidence": [evidence("a1", HASH_A)],
-                "terms": [{"term": "government", "gloss": "내부 코드", "evidence": [evidence("a1", HASH_A)]}],
-                "camps": [{
-                    "name": "effectiveness_positive",
-                    "gist": "내부 코드 갈래",
-                    "article_ids": ["a1"],
-                    "evidence": [evidence("a1", HASH_A)],
-                }],
+                "terms": [
+                    {
+                        "term": "government",
+                        "gloss": "내부 코드",
+                        "evidence": [evidence("a1", HASH_A)],
+                    }
+                ],
+                "camps": [
+                    {
+                        "name": "effectiveness_positive",
+                        "gist": "내부 코드 갈래",
+                        "article_ids": ["a1"],
+                        "evidence": [evidence("a1", HASH_A)],
+                    }
+                ],
             },
             profiles=[profile("a1", HASH_A)],
             articles=[article("a1", "서울신문")],

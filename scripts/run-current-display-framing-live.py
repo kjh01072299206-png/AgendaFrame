@@ -1193,7 +1193,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 2048 if args.model.startswith("gemini-2.5-pro") else config.vertex.thinking_budget
             ),
             max_output_tokens=(
-                8000 if args.model.startswith("gemini-2.5-pro") else config.vertex.max_output_tokens
+                6000 if args.model.startswith("gemini-2.5-pro") else config.vertex.max_output_tokens
             ),
         ),
     )

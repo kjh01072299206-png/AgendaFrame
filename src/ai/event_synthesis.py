@@ -504,7 +504,7 @@ def _v2_claim(
     limit: int = 560,
 ) -> dict[str, Any] | None:
     if isinstance(value, Mapping):
-        text = value.get("text") or value.get("summary") or value.get("value")
+        text = value.get("text") or value.get("claim") or value.get("summary") or value.get("value")
         evidence = value.get("evidence") or fallback_evidence
         status = value.get("status")
     else:
@@ -634,7 +634,7 @@ def _bind_event_synthesis_v2(
             name = _clean_text(raw.get("name"), limit=60)
             if _contains_ideology(name) or _contains_internal_marker(name):
                 continue
-            headline = _v2_claim(raw.get("headline") or (name if legacy_mode else None), raw.get("headline_evidence") or fallback_evidence, index, allowed_article_ids=allowed, limit=180)
+            headline = _v2_claim(raw.get("headline") or raw.get("strong_headline") or (name if legacy_mode else None), raw.get("headline_evidence") or fallback_evidence, index, allowed_article_ids=allowed, limit=180)
             summary = _v2_claim(raw.get("summary") or raw.get("gist"), raw.get("summary_evidence") or fallback_evidence, index, allowed_article_ids=allowed, limit=720)
             decisive = _v2_claim(
                 raw.get("decisive_difference") or (f"다른 갈래보다 {name}에 초점을 맞춘 갈래입니다." if legacy_mode and name else None),
@@ -719,7 +719,11 @@ def _bind_event_synthesis_v2(
                 }
             )
 
-    opposition = len(camps) >= 2
+    # A pair of model-proposed camps is not enough to expose a public VS.
+    # Require the model to articulate one evidence-backed comparison axis too;
+    # otherwise fail closed to shared coverage instead of manufacturing a
+    # divide from otherwise valid article-level proof.
+    opposition = len(camps) >= 2 and (axis is not None or legacy_mode)
     if not opposition:
         camps = []
         if axis is not None:
@@ -1102,6 +1106,7 @@ class VertexEventSynthesizer:
 
     def synthesize(self, request: Mapping[str, Any]) -> Mapping[str, Any]:
         prompt = _build_prompt(request)
+        synthesis_output_tokens = max(int(getattr(self.config.vertex, "max_output_tokens", 0)), 14_000)
         try:
             from google import genai
             from google.genai import types
@@ -1120,9 +1125,8 @@ class VertexEventSynthesizer:
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=0,
-                    max_output_tokens=int(self.config.vertex.max_output_tokens),
+                    max_output_tokens=synthesis_output_tokens,
                     response_mime_type="application/json",
-                    response_json_schema=_vertex_response_schema(),
                     thinking_config=(
                         types.ThinkingConfig(
                             thinking_budget=int(self.config.vertex.thinking_budget)
@@ -1136,6 +1140,15 @@ class VertexEventSynthesizer:
             )
             response_text = response.text
             payload = json.loads(response_text)
+            if isinstance(payload, Mapping) and isinstance(payload.get("payload"), str):
+                nested = payload["payload"].strip()
+                if nested.startswith("```"):
+                    nested = re.sub(r"^```(?:json)?\s*|\s*```$", "", nested, flags=re.IGNORECASE).strip()
+                payload = json.loads(nested)
+            if isinstance(payload, Mapping):
+                payload = dict(payload)
+                payload.setdefault("prompt_version", PROMPT_VERSION)
+                payload.setdefault("schema_version", SCHEMA_VERSION)
         except Exception:
             return {"prompt_version": PROMPT_VERSION, "usable": False}
         if not isinstance(payload, Mapping):
@@ -1157,86 +1170,15 @@ class VertexEventSynthesizer:
 
 
 def _vertex_response_schema() -> dict[str, Any]:
-    evidence = {
-        "type": "object",
-        "properties": {
-            "article_id": {"type": "string"},
-            "locator": {
-                "type": "object",
-                "properties": {
-                    "paragraph": {"type": "integer"},
-                    "sentence": {"type": "integer"},
-                },
-                "required": ["paragraph", "sentence"],
-            },
-            "sentence_sha256": {"type": "string"},
-        },
-        "required": ["article_id", "locator", "sentence_sha256"],
-    }
+    # Vertex compiles response schemas into a finite constraint automaton.  A
+    # recursively repeated evidence schema exceeds that automaton's state
+    # budget on Gemini 2.5 Pro.  The transport therefore constrains only one
+    # string field; the string is parsed into the v2 object below and then
+    # checked by bind_event_synthesis().
     return {
         "type": "object",
-        "properties": {
-            "prompt_version": {"type": "string", "enum": [PROMPT_VERSION]},
-            "schema_version": {"type": "string", "enum": [SCHEMA_VERSION]},
-            "event_paragraphs": {
-                "type": "array",
-                "minItems": 2,
-                "maxItems": 4,
-                "items": {"type": "object", "properties": {"text": {"type": "string"}, "evidence": {"type": "array", "items": evidence}}, "required": ["text", "evidence"]},
-            },
-            "terms": {
-                "type": "array",
-                "minItems": 1,
-                "maxItems": 4,
-                "items": {"type": "object", "properties": {"term": {"type": "string"}, "gloss": {"type": "string"}, "evidence": {"type": "array", "items": evidence}}, "required": ["term", "gloss", "evidence"]},
-            },
-            "comparison_axis": {
-                "type": ["object", "null"],
-                "properties": {
-                    "label": {"type": "string"},
-                    "points": {"type": "array", "minItems": 2, "maxItems": 4, "items": {"type": "object", "properties": {"text": {"type": "string"}, "evidence": {"type": "array", "items": evidence}}, "required": ["text", "evidence"]}},
-                    "question": {"type": "string"},
-                    "evidence": {"type": "array", "items": evidence},
-                },
-                "required": ["label", "points", "question", "evidence"],
-            },
-            "common_ground": {"type": "object", "properties": {"text": {"type": "string"}, "evidence": {"type": "array", "items": evidence}}, "required": ["text", "evidence"]},
-            "camps": {
-                "type": "array",
-                "minItems": 0,
-                "maxItems": 4,
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "name": {"type": "string"},
-                        "headline": {"type": "string"},
-                        "summary": {"type": "string"},
-                        "decisive_difference": {"type": "string"},
-                        "article_ids": {"type": "array", "items": {"type": "string"}},
-                        "voice_basis": {"type": "object", "properties": {"kind": {"type": "string"}, "label": {"type": "string"}, "evidence": {"type": "array", "items": evidence}}, "required": ["kind", "label", "evidence"]},
-                        "evidence": {"type": "array", "items": evidence},
-                        "headline_evidence": {"type": "array", "items": evidence},
-                        "summary_evidence": {"type": "array", "items": evidence},
-                        "decisive_difference_evidence": {"type": "array", "items": evidence},
-                        "proof_rows": {"type": "array", "items": {"type": "object", "properties": {"article_id": {"type": "string"}, "outlet": {"type": "string"}, "dimension": {"type": "string"}, "public_paraphrase": {"type": "string"}, "evidence": {"type": "array", "items": evidence}}, "required": ["article_id", "dimension", "public_paraphrase", "evidence"]}},
-                    },
-                    "required": ["name", "headline", "summary", "decisive_difference", "article_ids", "voice_basis", "evidence", "headline_evidence", "summary_evidence", "decisive_difference_evidence", "proof_rows"],
-                },
-            },
-            "fact_rows": {"type": "array"},
-            "split_rows": {"type": "array"},
-            "frame_functions": {"type": "array"},
-            "proof_rows": {"type": "array"},
-        },
-        "required": [
-            "prompt_version",
-            "schema_version",
-            "event_paragraphs",
-            "terms",
-            "comparison_axis",
-            "common_ground",
-            "camps",
-        ],
+        "properties": {"payload": {"type": "string"}},
+        "required": ["payload"],
     }
 
 
@@ -1246,15 +1188,16 @@ def _build_prompt(request: Mapping[str, Any]) -> str:
         "You are producing event-synthesis-v2.0.0 for one Korean news event from already-coded article profiles. "
         "The input contains article titles, outlet names, public paraphrases, voice kind, frame families, and evidence locators; it never contains article bodies. "
         "Write natural Korean that describes observable editorial choices, never hidden outlet intent or fixed political ideology. "
-        "Create 2-4 event_paragraphs: first the event, then only evidence-supported chronology or context. Create 1-4 terms with simple glosses. "
-        "Create comparison_axis only when at least two distinct evidence groups exist: a short label, 2-4 natural-language points, and the concrete question that separates the coverage. "
+        "Create 2-4 concise event_paragraphs, each no more than two sentences: first the event, then only evidence-supported chronology or context. Create 1-4 terms with one-sentence glosses. "
+        "Create comparison_axis only when at least two distinct evidence groups exist: a short label, 2-4 concise natural-language points, and the concrete question that separates the coverage. "
         "Create common_ground from the whole or majority of articles. Use 모두 only when every article supports it, 대부분 for 70% or more, and 일부 below that; name a single outlet when only one outlet supports a point. "
         "Create 0 camps when no real opposition is observed; otherwise create 2-4 camps. Every camp must have name, strong headline, 2-3 sentence summary, decisive_difference, article_ids, voice_basis, evidence, and proof_rows. "
+        "Never return two or more camps without comparison_axis. If you cannot support a comparison_axis with at least two evidence-backed points and a concrete question, return camps as an empty array instead. "
         "Keep journalist narration separate from source-attributed speech: write '매체가 평가했다' only when the profile voice is journalist_narration; otherwise write that the outlet placed a source's statement in the title, lead, or body. "
-        "Every public sentence and every camp field must cite article_id, locator.paragraph, locator.sentence, and sentence_sha256 copied from the supplied profiles. Do not put locator tuples or hashes inline in prose; put them only in evidence arrays. "
-        "proof_rows must contain article_id, outlet, dimension, public_paraphrase, and evidence, and must be drawn from the supplied paraphrases. "
+        "Every public sentence and every camp field must cite article_id, locator.paragraph, locator.sentence, and sentence_sha256 copied from the supplied profiles. Use no more than two non-duplicated evidence refs per short claim. Do not put locator tuples or hashes inline in prose; put them only in evidence arrays. "
+        "proof_rows must contain article_id, outlet, dimension, public_paraphrase, and evidence, and must be drawn from the supplied paraphrases; use at most three proof rows per camp. Keep camp summaries to two sentences. "
         "Do not copy article body text, HTML, raw sentences, or English internal codes. Do not output so_what or source-context interpretation. "
-        "Return only JSON matching the v2 schema. If a field cannot be supported, use an empty array or null rather than inventing text. "
+        "Use the exact v2 keys prompt_version, schema_version, text, headline, and common_ground.text; do not rename text to claim or headline to strong_headline. Return one JSON object matching the v2 shape, with no wrapper and no markdown fences. If a field cannot be supported, use an empty array or null rather than inventing text. "
         f"Input: {payload}"
     )
 

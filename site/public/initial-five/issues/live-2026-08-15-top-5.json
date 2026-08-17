@@ -81,7 +81,7 @@
       "canonicalUrl": "https://news.kbs.co.kr/news/view.do?ncd=8637867",
       "publishedAt": "2026-08-14T21:12:47.000Z",
       "section": "pending",
-      "bodySha256": "c05d19f81b26c67ab0f55eb0925e47bb3693640a82f17da3f741a2c06addde98",
+      "bodySha256": "c60bff3b222cbf608e28367a3cd1ac9d019f58c15d6f330d155a731ed934b159",
       "issueId": "live-2026-08-15-top-5"
     },
     {
@@ -95,7 +95,7 @@
       "canonicalUrl": "https://news.kbs.co.kr/news/view.do?ncd=8637946",
       "publishedAt": "2026-08-15T00:31:55.000Z",
       "section": "pending",
-      "bodySha256": "c2acde6671896f8719e0479b32dfa1ceb9e6df0d550b14f78267a7085fe3883b",
+      "bodySha256": "945c463264e714661a81e3d0ac0e9c0b1795074e4bd0d7f589706a5f8fe1744b",
       "issueId": "live-2026-08-15-top-5"
     },
     {
@@ -109,7 +109,7 @@
       "canonicalUrl": "https://news.kbs.co.kr/news/view.do?ncd=8637903",
       "publishedAt": "2026-08-14T22:09:57.000Z",
       "section": "pending",
-      "bodySha256": "4247a118ffa21fada166869a1f154b984638e955c9a82f895e8487314d677526",
+      "bodySha256": "74aa1e677a0726d44d77d67f1991652b7aabd8c1a3b6b50f2a5106d15650c978",
       "issueId": "live-2026-08-15-top-5"
     },
     {
@@ -123,7 +123,7 @@
       "canonicalUrl": "https://news.kbs.co.kr/news/view.do?ncd=8637980",
       "publishedAt": "2026-08-15T03:04:58.000Z",
       "section": "pending",
-      "bodySha256": "1270909a5516bb8c7e4e7e0e1a45d05f352595c4b442e0e55425cd9d21aadfcc",
+      "bodySha256": "52d4eeb57dadad604fbb5cd35acd33a1916d0cacb05717ad56d5ecde0638345b",
       "issueId": "live-2026-08-15-top-5"
     },
     {
@@ -137,7 +137,7 @@
       "canonicalUrl": "https://www.joongang.co.kr/article/25453498",
       "publishedAt": "2026-08-15T06:28:56.952Z",
       "section": "economy",
-      "bodySha256": "5ae105bada70cdeff2574ab3b7aec2cae06d6321f7fc538ad87f5606650678c5",
+      "bodySha256": "272e50a57511099a3f46a2a59038408ed4d1fe9714d556064eff33f675e27c5a",
       "issueId": "live-2026-08-15-top-5"
     }
   ],
@@ -155,7 +155,7 @@
         "schemaVersion": "agendaframe.article-frame-profile.v2",
         "source": "gcp:vertex:current-display-batch",
         "articleId": "09825dacd9c1cbad99e8a68a3872447f",
-        "evidenceCount": 11,
+        "evidenceCount": 15,
         "bodySha256": "2cf9da2fb2847edc46ad5798b0d262365342b574908780a33c97c075ca744c6a",
         "reviewRequired": true,
         "fallbackReason": null
@@ -189,17 +189,9 @@
           "articleId": "09825dacd9c1cbad99e8a68a3872447f",
           "locator": {
             "paragraph": 1,
-            "sentence": 7
+            "sentence": 3
           },
-          "sentenceSha256": "c7fa096bbf21602859cebffca97f4508f26f2715e2d2ab5302d23d30b95456ff"
-        },
-        {
-          "articleId": "09825dacd9c1cbad99e8a68a3872447f",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 6
-          },
-          "sentenceSha256": "a2d8378460002e7cefbe908e39a5d4fadf8b7dadd3846ca09a79e6fdd92ab22d"
+          "sentenceSha256": "4ad398f33a66f20745313795bcdb6f3b5a3ee0c517eda545c1cd8b7e4f68dd76"
         },
         {
           "articleId": "09825dacd9c1cbad99e8a68a3872447f",
@@ -213,9 +205,17 @@
           "articleId": "09825dacd9c1cbad99e8a68a3872447f",
           "locator": {
             "paragraph": 1,
-            "sentence": 3
+            "sentence": 20
           },
-          "sentenceSha256": "4ad398f33a66f20745313795bcdb6f3b5a3ee0c517eda545c1cd8b7e4f68dd76"
+          "sentenceSha256": "6a725094b2d16a793fcccdaa3fe645b960ee39b12c24b78f5efb27b348aaf181"
+        },
+        {
+          "articleId": "09825dacd9c1cbad99e8a68a3872447f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 23
+          },
+          "sentenceSha256": "416b4cf54ab3445c58667c2ad969fa8c054321b34312edeb2c5890bd7129bf49"
         },
         {
           "articleId": "09825dacd9c1cbad99e8a68a3872447f",
@@ -237,6 +237,14 @@
           "articleId": "09825dacd9c1cbad99e8a68a3872447f",
           "locator": {
             "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "5ed9507675531bde4a7269fe28aed2a5723884159080c4ebc7ad27bad7ae15b3"
+        },
+        {
+          "articleId": "09825dacd9c1cbad99e8a68a3872447f",
+          "locator": {
+            "paragraph": 1,
             "sentence": 9
           },
           "sentenceSha256": "5cc70f4cc2d52e78f9d216cb579dc31beaecb75b1d5f984c384fdb5d47b17b6e"
@@ -245,9 +253,33 @@
           "articleId": "09825dacd9c1cbad99e8a68a3872447f",
           "locator": {
             "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "a2d8378460002e7cefbe908e39a5d4fadf8b7dadd3846ca09a79e6fdd92ab22d"
+        },
+        {
+          "articleId": "09825dacd9c1cbad99e8a68a3872447f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 7
+          },
+          "sentenceSha256": "c7fa096bbf21602859cebffca97f4508f26f2715e2d2ab5302d23d30b95456ff"
+        },
+        {
+          "articleId": "09825dacd9c1cbad99e8a68a3872447f",
+          "locator": {
+            "paragraph": 1,
             "sentence": 10
           },
           "sentenceSha256": "b988902f167a3990914f27d29dada19c3f03f7b6a394a5d3375061bc9ee7c279"
+        },
+        {
+          "articleId": "09825dacd9c1cbad99e8a68a3872447f",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 14
+          },
+          "sentenceSha256": "cf2384afd6eef9cf1d98900274741f92210546ae15f68d423aa76a56a41bcafa"
         }
       ],
       "profile": {
@@ -265,11 +297,11 @@
             "prompt_version": "2.6.0",
             "attempt": 1,
             "request_sha256": "5364ff6106183c033b5e17a5ee74e6a7d94a26a9409a71ec914e77bf7ca1a462",
-            "response_sha256": "d81fb1e12ba06358e7d93593801700f29002227062cf876361e5fc598a4e7786",
-            "response_id": "rpSAauCeHpGMx9gPkrXbyAg",
-            "completed_at": "2026-08-15T16:33:20.301687+00:00"
+            "response_sha256": "894ea234e1334ad17a986ac682c5c200aa8fbf4379bca6b3b9170179bd375e9c",
+            "response_id": "ZLqCaoZzvqSS3A-6-N-pCQ",
+            "completed_at": "2026-08-17T07:38:44.882586+00:00"
           },
-          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "batch_run_id": "5ccb18b9d8a74675b6e5daa31bd11cd0",
           "source": "gcp:vertex:current-display-batch"
         },
         "engine": {
@@ -287,9 +319,9 @@
             "prompt_version": "2.6.0",
             "attempt": 1,
             "request_sha256": "5364ff6106183c033b5e17a5ee74e6a7d94a26a9409a71ec914e77bf7ca1a462",
-            "response_sha256": "d81fb1e12ba06358e7d93593801700f29002227062cf876361e5fc598a4e7786",
-            "response_id": "rpSAauCeHpGMx9gPkrXbyAg",
-            "completed_at": "2026-08-15T16:33:20.301687+00:00"
+            "response_sha256": "894ea234e1334ad17a986ac682c5c200aa8fbf4379bca6b3b9170179bd375e9c",
+            "response_id": "ZLqCaoZzvqSS3A-6-N-pCQ",
+            "completed_at": "2026-08-17T07:38:44.882586+00:00"
           },
           "limitations": [
             "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
@@ -344,7 +376,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "legal_institutional",
                 "variant_key": "semantic:problem_definition:family:legal_institutional",
-                "public_paraphrase": "최태원 회장과 노소영 관장의 재산분할 소송이 파기환송심 판결에 대한 최 회장의 불복으로 대법원에서 다시 다뤄지게 된 법적 분쟁 상황",
+                "public_paraphrase": "최태원 회장이 파기환송심의 재산분할 판결에 불복하고 재상고하여, '세기의 이혼' 소송이 대법원에서 다시 다뤄지게 된 법적 분쟁 상황",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -362,7 +394,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "legal_institutional",
                 "variant_key": "semantic:problem_definition:family:legal_institutional",
-                "public_paraphrase": "최태원 회장과 노소영 관장의 재산분할 소송이 파기환송심 판결에 대한 최 회장의 불복으로 대법원에서 다시 다뤄지게 된 법적 분쟁 상황",
+                "public_paraphrase": "최태원 회장이 파기환송심의 재산분할 판결에 불복하고 재상고하여, '세기의 이혼' 소송이 대법원에서 다시 다뤄지게 된 법적 분쟁 상황",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -370,55 +402,18 @@
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 5
+                    "sentence": 2
                   },
-                  "sentence_sha256": "17516326ecc20450bf3086ad0747b043f9a91c71a66936a1731610a9b150c0c1"
+                  "sentence_sha256": "f01987f813ed8ed6d08543fe63c525d962984a5c59b663c4fe3fa24beb51a4cd"
                 }
               }
             ]
           },
           "causal_interpretation": {
-            "status": "observed",
-            "model_status": "supported",
-            "outlet_narration_observed": true,
-            "items": [
-              {
-                "claim_id": "claim:a325f4c5edd5781ef85bd2e9704ce6193d49430cba0b27e160decbc20baafed7",
-                "code": "semantic_causal_interpretation",
-                "frame_family": "individual_action",
-                "variant_key": "semantic:causal_interpretation:family:individual_action",
-                "public_paraphrase": "최태원 회장이 파기환송심의 재산분할 판결에 불복하고, 재산분할 비율 및 규모 산정에 법리 오해가 있었다고 주장하며 대법원에 재상고했기 때문이다.",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 5
-                  },
-                  "sentence_sha256": "17516326ecc20450bf3086ad0747b043f9a91c71a66936a1731610a9b150c0c1"
-                }
-              },
-              {
-                "claim_id": "claim:a325f4c5edd5781ef85bd2e9704ce6193d49430cba0b27e160decbc20baafed7",
-                "code": "semantic_causal_interpretation",
-                "frame_family": "individual_action",
-                "variant_key": "semantic:causal_interpretation:family:individual_action",
-                "public_paraphrase": "최태원 회장이 파기환송심의 재산분할 판결에 불복하고, 재산분할 비율 및 규모 산정에 법리 오해가 있었다고 주장하며 대법원에 재상고했기 때문이다.",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 7
-                  },
-                  "sentence_sha256": "c7fa096bbf21602859cebffca97f4508f26f2715e2d2ab5302d23d30b95456ff"
-                }
-              }
-            ]
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
           },
           "responsibility_attribution": {
             "status": "observed",
@@ -426,11 +421,11 @@
             "outlet_narration_observed": true,
             "items": [
               {
-                "claim_id": "claim:19f2de00fd65663d11c01338cd693252b6c73bad7dac4e371e88f0784cb8f020",
+                "claim_id": "claim:2427c0bcb4b47b4d99fc0b0d6a7fa97a94f97d7732f34a54f032ceaf6d70609e",
                 "code": "semantic_responsibility_attribution",
-                "frame_family": "judiciary_law_enforcement",
-                "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
-                "public_paraphrase": "두 사람의 재산분할 소송에 대한 최종적인 법적 판단의 책임은 대법원에 있다.",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "최태원 회장 측이 파기환송심 판결에 불복하여 대법원에 재상고장을 제출함으로써 법적 다툼을 이어가게 되었다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -438,17 +433,17 @@
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 1
+                    "sentence": 2
                   },
-                  "sentence_sha256": "002253b40c1f9b6f0a850538b9f37c231a094c7e7f9da78b0c56bd80d6455bfd"
+                  "sentence_sha256": "f01987f813ed8ed6d08543fe63c525d962984a5c59b663c4fe3fa24beb51a4cd"
                 }
               },
               {
-                "claim_id": "claim:19f2de00fd65663d11c01338cd693252b6c73bad7dac4e371e88f0784cb8f020",
+                "claim_id": "claim:2427c0bcb4b47b4d99fc0b0d6a7fa97a94f97d7732f34a54f032ceaf6d70609e",
                 "code": "semantic_responsibility_attribution",
-                "frame_family": "judiciary_law_enforcement",
-                "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
-                "public_paraphrase": "두 사람의 재산분할 소송에 대한 최종적인 법적 판단의 책임은 대법원에 있다.",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "최태원 회장 측이 파기환송심 판결에 불복하여 대법원에 재상고장을 제출함으로써 법적 다툼을 이어가게 되었다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -456,37 +451,18 @@
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 6
+                    "sentence": 5
                   },
-                  "sentence_sha256": "a2d8378460002e7cefbe908e39a5d4fadf8b7dadd3846ca09a79e6fdd92ab22d"
+                  "sentence_sha256": "17516326ecc20450bf3086ad0747b043f9a91c71a66936a1731610a9b150c0c1"
                 }
               }
             ]
           },
           "moral_evaluation": {
-            "status": "source_attributed",
-            "model_status": "supported",
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
             "outlet_narration_observed": false,
-            "items": [
-              {
-                "claim_id": "claim:6b64b3d9cfa8f2ec2766a132ecab8399b5118dce459dab8b71e689bb602cc760",
-                "code": "semantic_moral_evaluation",
-                "frame_family": "effectiveness_negative",
-                "variant_key": "semantic:moral_evaluation:family:effectiveness_negative",
-                "public_paraphrase": "법조계는 대법원이 이미 한 차례 판단을 내렸던 사건이므로 재상고심에서 결과가 뒤집힐 가능성은 크지 않다고 본다.",
-                "voice": {
-                  "kind": "indirect_source",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 8
-                  },
-                  "sentence_sha256": "b745404eb67db140ce800c2f3ea705a9c77474ec28e93fe08e1b3d00b80fdb1f"
-                }
-              }
-            ]
+            "items": []
           },
           "treatment_recommendation": {
             "status": "not_observed",
@@ -500,8 +476,8 @@
             "actor_id": "actor:8a4498c4dd9fd61d8843d5dec1fef31183c8fa629038bd88002c4b0854e39c83",
             "role": "business",
             "role_label": "기업·산업계",
-            "direct_quote_count": 0,
-            "indirect_attribution_count": 1,
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
             "evidence": [
               {
                 "locator": {
@@ -525,6 +501,29 @@
                   "sentence": 8
                 },
                 "sentence_sha256": "b745404eb67db140ce800c2f3ea705a9c77474ec28e93fe08e1b3d00b80fdb1f"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:93279ddc254877d3e7dd4cca57e6b16315307783cadac187f7de61ad631aaf2e",
+            "role": "judiciary_law_enforcement",
+            "role_label": "법조·수사기관",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 20
+                },
+                "sentence_sha256": "6a725094b2d16a793fcccdaa3fe645b960ee39b12c24b78f5efb27b348aaf181"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 23
+                },
+                "sentence_sha256": "416b4cf54ab3445c58667c2ad969fa8c054321b34312edeb2c5890bd7129bf49"
               }
             ]
           }
@@ -564,9 +563,9 @@
             {
               "locator": {
                 "paragraph": 1,
-                "sentence": 12
+                "sentence": 11
               },
-              "sentence_sha256": "fb56e8694a4fe7f5e9390b18db9424143bca062e9cce98e84cc03c6a99dc2e19"
+              "sentence_sha256": "5ed9507675531bde4a7269fe28aed2a5723884159080c4ebc7ad27bad7ae15b3"
             }
           ]
         },
@@ -586,9 +585,9 @@
                 {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 5
+                    "sentence": 11
                   },
-                  "sentence_sha256": "17516326ecc20450bf3086ad0747b043f9a91c71a66936a1731610a9b150c0c1"
+                  "sentence_sha256": "5ed9507675531bde4a7269fe28aed2a5723884159080c4ebc7ad27bad7ae15b3"
                 }
               ]
             },
@@ -621,16 +620,16 @@
                 {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 1
+                    "sentence": 6
                   },
-                  "sentence_sha256": "002253b40c1f9b6f0a850538b9f37c231a094c7e7f9da78b0c56bd80d6455bfd"
+                  "sentence_sha256": "a2d8378460002e7cefbe908e39a5d4fadf8b7dadd3846ca09a79e6fdd92ab22d"
                 },
                 {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 6
+                    "sentence": 7
                   },
-                  "sentence_sha256": "a2d8378460002e7cefbe908e39a5d4fadf8b7dadd3846ca09a79e6fdd92ab22d"
+                  "sentence_sha256": "c7fa096bbf21602859cebffca97f4508f26f2715e2d2ab5302d23d30b95456ff"
                 }
               ]
             }
@@ -642,7 +641,7 @@
             "code": "unknown",
             "label": "최태원, ‘재산분할 9440억’ 불복… ‘세기의 이혼’ 다시 대법원으로",
             "evidence": [],
-            "appears_in_lead": true
+            "appears_in_lead": false
           },
           {
             "code": "quantification",
@@ -679,9 +678,9 @@
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 13
+                  "sentence": 14
                 },
-                "sentence_sha256": "078f041c971ba6a61c666088d82dcc5f1f2ac94662d111500cb2a2b3158fbf8a"
+                "sentence_sha256": "cf2384afd6eef9cf1d98900274741f92210546ae15f68d423aa76a56a41bcafa"
               }
             ],
             "appears_in_lead": false
@@ -713,8 +712,8 @@
         "schemaVersion": "agendaframe.article-frame-profile.v2",
         "source": "gcp:vertex:current-display-batch",
         "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
-        "evidenceCount": 15,
-        "bodySha256": "c05d19f81b26c67ab0f55eb0925e47bb3693640a82f17da3f741a2c06addde98",
+        "evidenceCount": 14,
+        "bodySha256": "c60bff3b222cbf608e28367a3cd1ac9d019f58c15d6f330d155a731ed934b159",
         "reviewRequired": true,
         "fallbackReason": null
       },
@@ -747,17 +746,9 @@
           "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
           "locator": {
             "paragraph": 1,
-            "sentence": 11
+            "sentence": 5
           },
-          "sentenceSha256": "bfdb357e58254691fcf473e35e8da04e82b67232fe157a4c0ca19aa264832fcf"
-        },
-        {
-          "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 12
-          },
-          "sentenceSha256": "ab4d338938997744bd4add8ac7ebf9bbddb99088606661958340ded831e1ae59"
+          "sentenceSha256": "c598a0ce6a9587f5bdc4e468287eeb9b9ce4801978f6ecad1cead6ffa93bd2ea"
         },
         {
           "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
@@ -766,6 +757,14 @@
             "sentence": 13
           },
           "sentenceSha256": "18ee0d1b9105b0d42556214b2ea582ba68265a32567c2cf041277dc2ce963d03"
+        },
+        {
+          "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 14
+          },
+          "sentenceSha256": "e6ca11f3b30b612da2fc1ca2fd2450b833316fc62b0dd692bf3310b0ebd6711f"
         },
         {
           "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
@@ -787,33 +786,9 @@
           "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
           "locator": {
             "paragraph": 1,
-            "sentence": 9
-          },
-          "sentenceSha256": "bb546d42ec2ea17cbe7c9793c152af059ea81314fc130c99cd18e9e9c681f1d8"
-        },
-        {
-          "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 15
-          },
-          "sentenceSha256": "c5f6c37f82df38150ea35c07e5c4a513782aa1389089b2ba02302b0a9f340698"
-        },
-        {
-          "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
-          "locator": {
-            "paragraph": 1,
             "sentence": 7
           },
           "sentenceSha256": "645e1ac3b1b2a92d24ceb2cb0fde1f17db9db437a7b383557d53b301f0e880e3"
-        },
-        {
-          "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 6
-          },
-          "sentenceSha256": "1b27668be052fcb267252472d02b6fd607448c757ab276770a37f41674bf9875"
         },
         {
           "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
@@ -827,9 +802,25 @@
           "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
           "locator": {
             "paragraph": 1,
-            "sentence": 5
+            "sentence": 6
           },
-          "sentenceSha256": "c598a0ce6a9587f5bdc4e468287eeb9b9ce4801978f6ecad1cead6ffa93bd2ea"
+          "sentenceSha256": "1b27668be052fcb267252472d02b6fd607448c757ab276770a37f41674bf9875"
+        },
+        {
+          "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "bfdb357e58254691fcf473e35e8da04e82b67232fe157a4c0ca19aa264832fcf"
+        },
+        {
+          "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 9
+          },
+          "sentenceSha256": "bb546d42ec2ea17cbe7c9793c152af059ea81314fc130c99cd18e9e9c681f1d8"
         },
         {
           "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
@@ -854,12 +845,12 @@
             "model": "gemini-2.5-pro",
             "prompt_version": "2.6.0",
             "attempt": 1,
-            "request_sha256": "7c580eb045a8537e65f12ae04ec201b56c388ff1047e644158f9e0474134f31b",
-            "response_sha256": "1d76690f5c9f7b8d266c25243f9a6bea0111a99f84d75d7057d92ebf0465f6a8",
-            "response_id": "spSAavekB-aLx9gPrfyDoQc",
-            "completed_at": "2026-08-15T16:33:22.911577+00:00"
+            "request_sha256": "ba5822b1c6afd8046be8fbf151c228c12607a6709f54c6832cf827b6dda4d0b5",
+            "response_sha256": "1fc29438c08ed152077eb7ca039fff3e090e53615504a2296fa2a3134b983aa3",
+            "response_id": "ZrqCavnuE8ilktwPzZvNqAc",
+            "completed_at": "2026-08-17T07:38:53.646933+00:00"
           },
-          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "batch_run_id": "5ccb18b9d8a74675b6e5daa31bd11cd0",
           "source": "gcp:vertex:current-display-batch"
         },
         "engine": {
@@ -876,10 +867,10 @@
             "model": "gemini-2.5-pro",
             "prompt_version": "2.6.0",
             "attempt": 1,
-            "request_sha256": "7c580eb045a8537e65f12ae04ec201b56c388ff1047e644158f9e0474134f31b",
-            "response_sha256": "1d76690f5c9f7b8d266c25243f9a6bea0111a99f84d75d7057d92ebf0465f6a8",
-            "response_id": "spSAavekB-aLx9gPrfyDoQc",
-            "completed_at": "2026-08-15T16:33:22.911577+00:00"
+            "request_sha256": "ba5822b1c6afd8046be8fbf151c228c12607a6709f54c6832cf827b6dda4d0b5",
+            "response_sha256": "1fc29438c08ed152077eb7ca039fff3e090e53615504a2296fa2a3134b983aa3",
+            "response_id": "ZrqCavnuE8ilktwPzZvNqAc",
+            "completed_at": "2026-08-17T07:38:53.646933+00:00"
           },
           "limitations": [
             "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
@@ -892,15 +883,15 @@
           "upstream_article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
           "published_at": "2026-08-14T21:12:47+00:00",
           "title_sha256": "7da27be83824f9319262085c062c3e0c90b34e0560384d5ba611bfa7d0fa38d2",
-          "body_sha256": "c05d19f81b26c67ab0f55eb0925e47bb3693640a82f17da3f741a2c06addde98",
-          "body_character_count": 2804,
-          "body_word_count": 629,
+          "body_sha256": "c60bff3b222cbf608e28367a3cd1ac9d019f58c15d6f330d155a731ed934b159",
+          "body_character_count": 2817,
+          "body_word_count": 633,
           "paragraph_count": 1,
-          "sentence_count": 39
+          "sentence_count": 38
         },
         "extraction": {
           "text_scope": "authorized_transient_body",
-          "analyzed_character_count": 2804,
+          "analyzed_character_count": 2817,
           "input_truncated": false
         },
         "genre": {
@@ -934,7 +925,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "legal_institutional",
                 "variant_key": "semantic:problem_definition:family:legal_institutional",
-                "public_paraphrase": "최태원 회장과 노소영 관장 간의 이혼에 따른 재산 분할, 특히 SK 주식의 분할 대상 여부와 비율을 둘러싼 법적 분쟁",
+                "public_paraphrase": "최태원 SK그룹 회장이 노소영 관장에게 9,440억 원을 지급하라는 파기환송심 판결에 불복하고 대법원에 상고한 법적 분쟁.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -952,7 +943,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "legal_institutional",
                 "variant_key": "semantic:problem_definition:family:legal_institutional",
-                "public_paraphrase": "최태원 회장과 노소영 관장 간의 이혼에 따른 재산 분할, 특히 SK 주식의 분할 대상 여부와 비율을 둘러싼 법적 분쟁",
+                "public_paraphrase": "최태원 SK그룹 회장이 노소영 관장에게 9,440억 원을 지급하라는 파기환송심 판결에 불복하고 대법원에 상고한 법적 분쟁.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -960,9 +951,9 @@
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 11
+                    "sentence": 5
                   },
-                  "sentence_sha256": "bfdb357e58254691fcf473e35e8da04e82b67232fe157a4c0ca19aa264832fcf"
+                  "sentence_sha256": "c598a0ce6a9587f5bdc4e468287eeb9b9ce4801978f6ecad1cead6ffa93bd2ea"
                 }
               }
             ]
@@ -973,29 +964,11 @@
             "outlet_narration_observed": true,
             "items": [
               {
-                "claim_id": "claim:ff9666db96075f46948906687a408a75bca7f14624da6c843014a5b82b350be4",
+                "claim_id": "claim:13e788163f54ca447556740990d2d0b1a359af9f8ef6a4e8f6cc48a009376b5d",
                 "code": "semantic_causal_interpretation",
-                "frame_family": "policy_design",
-                "variant_key": "semantic:causal_interpretation:family:policy_design",
-                "public_paraphrase": "파기환송심이 SK 주식을 부부 공동재산으로 인정하고 노 관장의 재산 형성 기여를 인정한 판단에 대해 최 회장 측이 불복했기 때문이다.",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 12
-                  },
-                  "sentence_sha256": "ab4d338938997744bd4add8ac7ebf9bbddb99088606661958340ded831e1ae59"
-                }
-              },
-              {
-                "claim_id": "claim:ff9666db96075f46948906687a408a75bca7f14624da6c843014a5b82b350be4",
-                "code": "semantic_causal_interpretation",
-                "frame_family": "policy_design",
-                "variant_key": "semantic:causal_interpretation:family:policy_design",
-                "public_paraphrase": "파기환송심이 SK 주식을 부부 공동재산으로 인정하고 노 관장의 재산 형성 기여를 인정한 판단에 대해 최 회장 측이 불복했기 때문이다.",
+                "frame_family": "other",
+                "variant_key": "semantic:causal_interpretation:family:other",
+                "public_paraphrase": "파기환송심 재판부가 SK 주식을 부부 공동재산으로 인정하고, 노 관장이 재산 형성에 기여했다고 판단한 것이 9,440억 원 재산 분할 판결의 원인으로 제시되었다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1006,6 +979,24 @@
                     "sentence": 13
                   },
                   "sentence_sha256": "18ee0d1b9105b0d42556214b2ea582ba68265a32567c2cf041277dc2ce963d03"
+                }
+              },
+              {
+                "claim_id": "claim:13e788163f54ca447556740990d2d0b1a359af9f8ef6a4e8f6cc48a009376b5d",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "other",
+                "variant_key": "semantic:causal_interpretation:family:other",
+                "public_paraphrase": "파기환송심 재판부가 SK 주식을 부부 공동재산으로 인정하고, 노 관장이 재산 형성에 기여했다고 판단한 것이 9,440억 원 재산 분할 판결의 원인으로 제시되었다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 14
+                  },
+                  "sentence_sha256": "e6ca11f3b30b612da2fc1ca2fd2450b833316fc62b0dd692bf3310b0ebd6711f"
                 }
               }
             ]
@@ -1020,7 +1011,7 @@
                 "code": "semantic_responsibility_attribution",
                 "frame_family": "judiciary_law_enforcement",
                 "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
-                "public_paraphrase": "재산 분할에 대한 최종 판단 책임은 대법원에 있다.",
+                "public_paraphrase": "재산 분할에 대한 최종 판단 책임은 대법원에 있으며, 9년에 걸친 법정 공방이 이어지고 있다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1038,7 +1029,7 @@
                 "code": "semantic_responsibility_attribution",
                 "frame_family": "judiciary_law_enforcement",
                 "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
-                "public_paraphrase": "재산 분할에 대한 최종 판단 책임은 대법원에 있다.",
+                "public_paraphrase": "재산 분할에 대한 최종 판단 책임은 대법원에 있으며, 9년에 걸친 법정 공방이 이어지고 있다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1063,7 +1054,7 @@
                 "code": "semantic_moral_evaluation",
                 "frame_family": "economic_negative",
                 "variant_key": "semantic:moral_evaluation:family:economic_negative",
-                "public_paraphrase": "상고 결정으로 최 회장은 당장의 현금 마련 부담은 덜었지만, 대법원 판단까지 경영 리스크를 감수해야 한다.",
+                "public_paraphrase": "판결이 확정될 경우 최 회장은 9,440억 원과 연 5%의 지연이자를 부담해야 하며, 이는 하루 약 1억 3천만 원에 달하는 막대한 경제적 부담이다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1071,9 +1062,9 @@
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 9
+                    "sentence": 7
                   },
-                  "sentence_sha256": "bb546d42ec2ea17cbe7c9793c152af059ea81314fc130c99cd18e9e9c681f1d8"
+                  "sentence_sha256": "645e1ac3b1b2a92d24ceb2cb0fde1f17db9db437a7b383557d53b301f0e880e3"
                 }
               },
               {
@@ -1081,7 +1072,7 @@
                 "code": "semantic_moral_evaluation",
                 "frame_family": "economic_negative",
                 "variant_key": "semantic:moral_evaluation:family:economic_negative",
-                "public_paraphrase": "상고 결정으로 최 회장은 당장의 현금 마련 부담은 덜었지만, 대법원 판단까지 경영 리스크를 감수해야 한다.",
+                "public_paraphrase": "판결이 확정될 경우 최 회장은 9,440억 원과 연 5%의 지연이자를 부담해야 하며, 이는 하루 약 1억 3천만 원에 달하는 막대한 경제적 부담이다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1089,18 +1080,55 @@
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 10
+                    "sentence": 8
                   },
-                  "sentence_sha256": "37963467f4b9188d51df99aadd507fad907bcf1aaa70e2492db2d63a9e67fc8b"
+                  "sentence_sha256": "2a005053fb6815bfe0c9004b9cad604f903d0a3a671739e98c37a433b8261c2c"
                 }
               }
             ]
           },
           "treatment_recommendation": {
-            "status": "not_observed",
-            "model_status": "explicit_not_stated",
-            "outlet_narration_observed": false,
-            "items": []
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:63f6f3b6952395f281978f2ee90084565610d6cb9a09b761bec4681f9f389998",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "최태원 회장 측은 SK 주식 분할 문제와 그 비율을 다시 따지기 위해 대법원에 상고를 결정했다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "1b27668be052fcb267252472d02b6fd607448c757ab276770a37f41674bf9875"
+                }
+              },
+              {
+                "claim_id": "claim:63f6f3b6952395f281978f2ee90084565610d6cb9a09b761bec4681f9f389998",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "최태원 회장 측은 SK 주식 분할 문제와 그 비율을 다시 따지기 위해 대법원에 상고를 결정했다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "bfdb357e58254691fcf473e35e8da04e82b67232fe157a4c0ca19aa264832fcf"
+                }
+              }
+            ]
           }
         },
         "actors_and_sources": [
@@ -1114,40 +1142,40 @@
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 12
+                  "sentence": 2
                 },
-                "sentence_sha256": "ab4d338938997744bd4add8ac7ebf9bbddb99088606661958340ded831e1ae59"
+                "sentence_sha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
               },
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 15
+                  "sentence": 5
                 },
-                "sentence_sha256": "c5f6c37f82df38150ea35c07e5c4a513782aa1389089b2ba02302b0a9f340698"
+                "sentence_sha256": "c598a0ce6a9587f5bdc4e468287eeb9b9ce4801978f6ecad1cead6ffa93bd2ea"
               }
             ]
           }
         ],
         "context_depth": {
-          "code": "moderate",
+          "code": "shallow",
           "label": null,
           "evidence": [
             {
               "locator": {
                 "paragraph": 1,
-                "sentence": 7
+                "sentence": 2
               },
-              "sentence_sha256": "645e1ac3b1b2a92d24ceb2cb0fde1f17db9db437a7b383557d53b301f0e880e3"
+              "sentence_sha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
             },
             {
               "locator": {
                 "paragraph": 1,
-                "sentence": 11
+                "sentence": 6
               },
-              "sentence_sha256": "bfdb357e58254691fcf473e35e8da04e82b67232fe157a4c0ca19aa264832fcf"
+              "sentence_sha256": "1b27668be052fcb267252472d02b6fd607448c757ab276770a37f41674bf9875"
             }
           ],
-          "level": "moderate"
+          "level": "shallow"
         },
         "scope": {
           "code": "episodic",
@@ -1205,9 +1233,9 @@
                 {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 8
+                    "sentence": 9
                   },
-                  "sentence_sha256": "2a005053fb6815bfe0c9004b9cad604f903d0a3a671739e98c37a433b8261c2c"
+                  "sentence_sha256": "bb546d42ec2ea17cbe7c9793c152af059ea81314fc130c99cd18e9e9c681f1d8"
                 }
               ]
             }
@@ -1251,12 +1279,12 @@
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 7
+                  "sentence": 8
                 },
-                "sentence_sha256": "645e1ac3b1b2a92d24ceb2cb0fde1f17db9db437a7b383557d53b301f0e880e3"
+                "sentence_sha256": "2a005053fb6815bfe0c9004b9cad604f903d0a3a671739e98c37a433b8261c2c"
               }
             ],
-            "appears_in_lead": true
+            "appears_in_lead": false
           },
           {
             "code": "headline_emphasis",
@@ -1278,7 +1306,7 @@
           "analysis_decision": "analyze",
           "analysis_state": "succeeded",
           "attempt_count": 1,
-          "idempotency_fingerprint": "2f48e4b8049070bf8244b030a5578eae8a4048433d01e94775a68737bc122be2",
+          "idempotency_fingerprint": "5c88a6e2d1249122c11b3ddeaa585557913897ecb7092697f082f981cba1d477",
           "error_code": null,
           "fallback_reason": null,
           "requires_human_review": true,
@@ -1299,8 +1327,8 @@
         "schemaVersion": "agendaframe.article-frame-profile.v2",
         "source": "gcp:vertex:current-display-batch",
         "articleId": "83ec12943a84ec03876bd4537d4eb107",
-        "evidenceCount": 9,
-        "bodySha256": "c2acde6671896f8719e0479b32dfa1ceb9e6df0d550b14f78267a7085fe3883b",
+        "evidenceCount": 10,
+        "bodySha256": "945c463264e714661a81e3d0ac0e9c0b1795074e4bd0d7f589706a5f8fe1744b",
         "reviewRequired": true,
         "fallbackReason": null
       },
@@ -1341,25 +1369,9 @@
           "articleId": "83ec12943a84ec03876bd4537d4eb107",
           "locator": {
             "paragraph": 1,
-            "sentence": 10
+            "sentence": 9
           },
-          "sentenceSha256": "0fc26ed5e60e220ea030010735b045d393fe987add8821dba004717e377a5699"
-        },
-        {
-          "articleId": "83ec12943a84ec03876bd4537d4eb107",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 12
-          },
-          "sentenceSha256": "96d7a8809d81f772ac2e07774ad0145ed9352fae0c33d2089a57f3f135cf477d"
-        },
-        {
-          "articleId": "83ec12943a84ec03876bd4537d4eb107",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 5
-          },
-          "sentenceSha256": "f29f5cb9a31c0ec5afbd9aa24b60a3abda8b699f0adc29885925722ee62ac9f7"
+          "sentenceSha256": "7dae1f0a111a4f352b6377f98fe09df154d44cf5afd8c331c04acc16d7a4fcc7"
         },
         {
           "articleId": "83ec12943a84ec03876bd4537d4eb107",
@@ -1373,9 +1385,33 @@
           "articleId": "83ec12943a84ec03876bd4537d4eb107",
           "locator": {
             "paragraph": 1,
+            "sentence": 5
+          },
+          "sentenceSha256": "f29f5cb9a31c0ec5afbd9aa24b60a3abda8b699f0adc29885925722ee62ac9f7"
+        },
+        {
+          "articleId": "83ec12943a84ec03876bd4537d4eb107",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 7
+          },
+          "sentenceSha256": "dc21f0b864acbadbd7e1c2a9ddbb8bf3c7c54b0376f9f07864d0197335ec234e"
+        },
+        {
+          "articleId": "83ec12943a84ec03876bd4537d4eb107",
+          "locator": {
+            "paragraph": 1,
             "sentence": 8
           },
           "sentenceSha256": "1d4f8b734d2dbf8a44daa0bd518b79d446fb8731a1c60711040a8e57fa29316a"
+        },
+        {
+          "articleId": "83ec12943a84ec03876bd4537d4eb107",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 19
+          },
+          "sentenceSha256": "8618f57719686f9fc7ce875ef0bbbe2a82e2330b91befe43164e6b0bec6b2cc9"
         }
       ],
       "profile": {
@@ -1392,12 +1428,12 @@
             "model": "gemini-2.5-pro",
             "prompt_version": "2.6.0",
             "attempt": 1,
-            "request_sha256": "f06cfa9843e8e07fa0f9689ce7a872df519f7ce77bb3b0b2673b40f80f3efb69",
-            "response_sha256": "f4e31d2c6705a1eb0ddd3ba2802dbbe9c1bb92a28ccccef37f3dc7d27528b249",
-            "response_id": "tJSAauO6AfOKx9gP1IyauQk",
-            "completed_at": "2026-08-15T16:33:22.156747+00:00"
+            "request_sha256": "b1a02f9f200fd3908728d7df1682ba3008f7021858ba171651095efc18c5e1a7",
+            "response_sha256": "6bce84f9e56d0afa158ac19dc2dc2e99b4dff969221e628e47ae2429a3655112",
+            "response_id": "ZrqCarq2G8ilktwPzZvNqAc",
+            "completed_at": "2026-08-17T07:38:50.963136+00:00"
           },
-          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "batch_run_id": "5ccb18b9d8a74675b6e5daa31bd11cd0",
           "source": "gcp:vertex:current-display-batch"
         },
         "engine": {
@@ -1414,10 +1450,10 @@
             "model": "gemini-2.5-pro",
             "prompt_version": "2.6.0",
             "attempt": 1,
-            "request_sha256": "f06cfa9843e8e07fa0f9689ce7a872df519f7ce77bb3b0b2673b40f80f3efb69",
-            "response_sha256": "f4e31d2c6705a1eb0ddd3ba2802dbbe9c1bb92a28ccccef37f3dc7d27528b249",
-            "response_id": "tJSAauO6AfOKx9gP1IyauQk",
-            "completed_at": "2026-08-15T16:33:22.156747+00:00"
+            "request_sha256": "b1a02f9f200fd3908728d7df1682ba3008f7021858ba171651095efc18c5e1a7",
+            "response_sha256": "6bce84f9e56d0afa158ac19dc2dc2e99b4dff969221e628e47ae2429a3655112",
+            "response_id": "ZrqCarq2G8ilktwPzZvNqAc",
+            "completed_at": "2026-08-17T07:38:50.963136+00:00"
           },
           "limitations": [
             "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
@@ -1430,15 +1466,15 @@
           "upstream_article_id": "83ec12943a84ec03876bd4537d4eb107",
           "published_at": "2026-08-15T00:31:55+00:00",
           "title_sha256": "3c16eb1d0725cf7391e388828dee1a975e3b21a3ff16489d28d8100cb1d2b4e9",
-          "body_sha256": "c2acde6671896f8719e0479b32dfa1ceb9e6df0d550b14f78267a7085fe3883b",
-          "body_character_count": 2783,
-          "body_word_count": 623,
+          "body_sha256": "945c463264e714661a81e3d0ac0e9c0b1795074e4bd0d7f589706a5f8fe1744b",
+          "body_character_count": 2796,
+          "body_word_count": 627,
           "paragraph_count": 1,
-          "sentence_count": 39
+          "sentence_count": 38
         },
         "extraction": {
           "text_scope": "authorized_transient_body",
-          "analyzed_character_count": 2783,
+          "analyzed_character_count": 2796,
           "input_truncated": false
         },
         "genre": {
@@ -1472,7 +1508,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "legal_institutional",
                 "variant_key": "semantic:problem_definition:family:legal_institutional",
-                "public_paraphrase": "최태원 회장이 파기환송심의 9,440억 원 재산분할 판결에 불복하여 대법원에 상고하면서 9년간의 법적 공방이 이어지고 있다.",
+                "public_paraphrase": "최태원 회장이 9,440억 원의 재산분할 판결에 불복하고 상고하여 9년간의 법정 공방이 계속되는 상황이다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1490,7 +1526,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "legal_institutional",
                 "variant_key": "semantic:problem_definition:family:legal_institutional",
-                "public_paraphrase": "최태원 회장이 파기환송심의 9,440억 원 재산분할 판결에 불복하여 대법원에 상고하면서 9년간의 법적 공방이 이어지고 있다.",
+                "public_paraphrase": "최태원 회장이 9,440억 원의 재산분할 판결에 불복하고 상고하여 9년간의 법정 공방이 계속되는 상황이다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1506,22 +1542,16 @@
             ]
           },
           "causal_interpretation": {
-            "status": "not_observed",
-            "model_status": "explicit_not_stated",
-            "outlet_narration_observed": false,
-            "items": []
-          },
-          "responsibility_attribution": {
             "status": "observed",
             "model_status": "supported",
             "outlet_narration_observed": true,
             "items": [
               {
-                "claim_id": "claim:110f5b5048f0ae40655a1c5a3954c4e1b7d5cdd8c5b13591f664f8acf48a9b71",
-                "code": "semantic_responsibility_attribution",
-                "frame_family": "judiciary_law_enforcement",
-                "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
-                "public_paraphrase": "9년에 걸친 이혼 소송의 최종 해결 책임은 대법원의 판단에 달려있다.",
+                "claim_id": "claim:48d1e526bd6fc195b488fbb3a421ae2d32b28caa99d944521f26b5c5a14de6c0",
+                "code": "semantic_causal_interpretation",
+                "frame_family": "political_incentive",
+                "variant_key": "semantic:causal_interpretation:family:political_incentive",
+                "public_paraphrase": "최태원 회장은 9,440억 원이라는 거액의 현금을 당장 마련해야 하는 부담을 피하기 위해 상고를 결정했다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1529,17 +1559,42 @@
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 10
+                    "sentence": 9
                   },
-                  "sentence_sha256": "0fc26ed5e60e220ea030010735b045d393fe987add8821dba004717e377a5699"
+                  "sentence_sha256": "7dae1f0a111a4f352b6377f98fe09df154d44cf5afd8c331c04acc16d7a4fcc7"
+                }
+              }
+            ]
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:c593f5181945c7ba8d4523ccf388a8e8d7819e28ccfc383c8a2e922ca088272a",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "최태원 회장이 상고를 결정하면서 9년에 걸친 법정 공방이 또 이어지게 됐다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "87a9c568f52513438e67c1c770f4c5c7f16bc0f7ee53294acf752f430789fb01"
                 }
               },
               {
-                "claim_id": "claim:110f5b5048f0ae40655a1c5a3954c4e1b7d5cdd8c5b13591f664f8acf48a9b71",
+                "claim_id": "claim:c593f5181945c7ba8d4523ccf388a8e8d7819e28ccfc383c8a2e922ca088272a",
                 "code": "semantic_responsibility_attribution",
-                "frame_family": "judiciary_law_enforcement",
-                "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
-                "public_paraphrase": "9년에 걸친 이혼 소송의 최종 해결 책임은 대법원의 판단에 달려있다.",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "최태원 회장이 상고를 결정하면서 9년에 걸친 법정 공방이 또 이어지게 됐다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1585,33 +1640,33 @@
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 12
+                  "sentence": 5
                 },
-                "sentence_sha256": "96d7a8809d81f772ac2e07774ad0145ed9352fae0c33d2089a57f3f135cf477d"
+                "sentence_sha256": "f29f5cb9a31c0ec5afbd9aa24b60a3abda8b699f0adc29885925722ee62ac9f7"
               }
             ]
           }
         ],
         "context_depth": {
-          "code": "shallow",
+          "code": "moderate",
           "label": null,
           "evidence": [
             {
               "locator": {
                 "paragraph": 1,
-                "sentence": 2
+                "sentence": 7
               },
-              "sentence_sha256": "d6853516f3dc47517301fccbd2c2f6fa5726767b409d5ff20cc6f8b26f2ae3a7"
+              "sentence_sha256": "dc21f0b864acbadbd7e1c2a9ddbb8bf3c7c54b0376f9f07864d0197335ec234e"
             },
             {
               "locator": {
                 "paragraph": 1,
-                "sentence": 5
+                "sentence": 8
               },
-              "sentence_sha256": "f29f5cb9a31c0ec5afbd9aa24b60a3abda8b699f0adc29885925722ee62ac9f7"
+              "sentence_sha256": "1d4f8b734d2dbf8a44daa0bd518b79d446fb8731a1c60711040a8e57fa29316a"
             }
           ],
-          "level": "shallow"
+          "level": "moderate"
         },
         "scope": {
           "code": "episodic",
@@ -1654,26 +1709,32 @@
                   "sentence_sha256": "ff86b26801996b55119dc609388331e314e892fc5be12e3c750d3537afa87465"
                 }
               ]
+            },
+            {
+              "code": "economic_consequences",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 7
+                  },
+                  "sentence_sha256": "dc21f0b864acbadbd7e1c2a9ddbb8bf3c7c54b0376f9f07864d0197335ec234e"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "1d4f8b734d2dbf8a44daa0bd518b79d446fb8731a1c60711040a8e57fa29316a"
+                }
+              ]
             }
           ],
           "policy_frames": [],
           "controlled_associations": []
         },
         "framing_devices": [
-          {
-            "code": "headline_emphasis",
-            "label": null,
-            "evidence": [
-              {
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 2
-                },
-                "sentence_sha256": "d6853516f3dc47517301fccbd2c2f6fa5726767b409d5ff20cc6f8b26f2ae3a7"
-              }
-            ],
-            "appears_in_lead": true
-          },
           {
             "code": "quantification",
             "label": null,
@@ -1688,12 +1749,26 @@
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 8
+                  "sentence": 7
                 },
-                "sentence_sha256": "1d4f8b734d2dbf8a44daa0bd518b79d446fb8731a1c60711040a8e57fa29316a"
+                "sentence_sha256": "dc21f0b864acbadbd7e1c2a9ddbb8bf3c7c54b0376f9f07864d0197335ec234e"
               }
             ],
             "appears_in_lead": false
+          },
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 19
+                },
+                "sentence_sha256": "8618f57719686f9fc7ce875ef0bbbe2a82e2330b91befe43164e6b0bec6b2cc9"
+              }
+            ],
+            "appears_in_lead": true
           }
         ],
         "review": {
@@ -1701,7 +1776,7 @@
           "analysis_decision": "analyze",
           "analysis_state": "succeeded",
           "attempt_count": 1,
-          "idempotency_fingerprint": "1cb216e9c83ea56e1b2015a02e39df68cee482a8cf11f2606cde75666a8337e1",
+          "idempotency_fingerprint": "0065bf0b27c2e17e474e3dcda18451dff6dbeef22d8233dd250683726fb7a3ee",
           "error_code": null,
           "fallback_reason": null,
           "requires_human_review": true,
@@ -1722,20 +1797,12 @@
         "schemaVersion": "agendaframe.article-frame-profile.v2",
         "source": "gcp:vertex:current-display-batch",
         "articleId": "86067ecb43faae14baa94d04ed8fba88",
-        "evidenceCount": 14,
-        "bodySha256": "4247a118ffa21fada166869a1f154b984638e955c9a82f895e8487314d677526",
+        "evidenceCount": 16,
+        "bodySha256": "74aa1e677a0726d44d77d67f1991652b7aabd8c1a3b6b50f2a5106d15650c978",
         "reviewRequired": true,
         "fallbackReason": null
       },
       "evidence": [
-        {
-          "articleId": "86067ecb43faae14baa94d04ed8fba88",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 2
-          },
-          "sentenceSha256": "5d99448c8b8d4034799fe39e82e595316090233c53c85e3f26c5785f337e996d"
-        },
         {
           "articleId": "86067ecb43faae14baa94d04ed8fba88",
           "locator": {
@@ -1748,17 +1815,17 @@
           "articleId": "86067ecb43faae14baa94d04ed8fba88",
           "locator": {
             "paragraph": 1,
-            "sentence": 11
+            "sentence": 17
           },
-          "sentenceSha256": "2cf6bee562ffd687d2cc37cf593bd968f652321de0e09aceb5cfd696e1276375"
+          "sentenceSha256": "d32536b0a2f642aa9f366c94e79759aaa7088c72e184f48a0daa035658cc8f3d"
         },
         {
           "articleId": "86067ecb43faae14baa94d04ed8fba88",
           "locator": {
             "paragraph": 1,
-            "sentence": 13
+            "sentence": 2
           },
-          "sentenceSha256": "456015c09e03f94a927c58facd7d557bc35a8aa4e6969d17a1b4cf0d2d254402"
+          "sentenceSha256": "5d99448c8b8d4034799fe39e82e595316090233c53c85e3f26c5785f337e996d"
         },
         {
           "articleId": "86067ecb43faae14baa94d04ed8fba88",
@@ -1772,17 +1839,33 @@
           "articleId": "86067ecb43faae14baa94d04ed8fba88",
           "locator": {
             "paragraph": 1,
-            "sentence": 7
+            "sentence": 10
           },
-          "sentenceSha256": "a2bff3f87b571ebc9e169cd573a26395ab27a5d2fe6f260095a29fdfbad5a6c1"
+          "sentenceSha256": "e2cf09858600face37afcfb7ce47dd148cdf4fb7f15708847a28fb7f5991d752"
         },
         {
           "articleId": "86067ecb43faae14baa94d04ed8fba88",
           "locator": {
             "paragraph": 1,
-            "sentence": 10
+            "sentence": 9
           },
-          "sentenceSha256": "e2cf09858600face37afcfb7ce47dd148cdf4fb7f15708847a28fb7f5991d752"
+          "sentenceSha256": "fbae7249a3bec266d291003b91b2e9fdc7af446ed335d560cb30266eb702acdb"
+        },
+        {
+          "articleId": "86067ecb43faae14baa94d04ed8fba88",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 6
+          },
+          "sentenceSha256": "8c1c138b5bc8a57a63a4c19308fee673177a95871d643d6cb76e748ed1688e0d"
+        },
+        {
+          "articleId": "86067ecb43faae14baa94d04ed8fba88",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 11
+          },
+          "sentenceSha256": "2cf6bee562ffd687d2cc37cf593bd968f652321de0e09aceb5cfd696e1276375"
         },
         {
           "articleId": "86067ecb43faae14baa94d04ed8fba88",
@@ -1804,17 +1887,9 @@
           "articleId": "86067ecb43faae14baa94d04ed8fba88",
           "locator": {
             "paragraph": 1,
-            "sentence": 6
+            "sentence": 7
           },
-          "sentenceSha256": "8c1c138b5bc8a57a63a4c19308fee673177a95871d643d6cb76e748ed1688e0d"
-        },
-        {
-          "articleId": "86067ecb43faae14baa94d04ed8fba88",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 17
-          },
-          "sentenceSha256": "d32536b0a2f642aa9f366c94e79759aaa7088c72e184f48a0daa035658cc8f3d"
+          "sentenceSha256": "a2bff3f87b571ebc9e169cd573a26395ab27a5d2fe6f260095a29fdfbad5a6c1"
         },
         {
           "articleId": "86067ecb43faae14baa94d04ed8fba88",
@@ -1828,17 +1903,33 @@
           "articleId": "86067ecb43faae14baa94d04ed8fba88",
           "locator": {
             "paragraph": 1,
-            "sentence": 5
+            "sentence": 13
           },
-          "sentenceSha256": "a971190010f465eeb899da2f2692444e404497c4da1b336e1ad71ecb26b8475e"
+          "sentenceSha256": "456015c09e03f94a927c58facd7d557bc35a8aa4e6969d17a1b4cf0d2d254402"
         },
         {
           "articleId": "86067ecb43faae14baa94d04ed8fba88",
           "locator": {
             "paragraph": 1,
-            "sentence": 9
+            "sentence": 1
           },
-          "sentenceSha256": "fbae7249a3bec266d291003b91b2e9fdc7af446ed335d560cb30266eb702acdb"
+          "sentenceSha256": "b437b902d4bfa6e9557be5686076378fd4702ab7cfa9067cde4c2ae8eb469182"
+        },
+        {
+          "articleId": "86067ecb43faae14baa94d04ed8fba88",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 19
+          },
+          "sentenceSha256": "4707d52350879d0f02e40bb9d103d8c3a7cc3afea44e8b412e1e8d3559e40416"
+        },
+        {
+          "articleId": "86067ecb43faae14baa94d04ed8fba88",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 5
+          },
+          "sentenceSha256": "a971190010f465eeb899da2f2692444e404497c4da1b336e1ad71ecb26b8475e"
         }
       ],
       "profile": {
@@ -1855,12 +1946,12 @@
             "model": "gemini-2.5-pro",
             "prompt_version": "2.6.0",
             "attempt": 1,
-            "request_sha256": "b154c9ef23906571c3a444b2f295349a6200dccf22d45a1bb858368726cc1440",
-            "response_sha256": "8f5440ec3834e896a91258384a7e5a7e20f6a6f8bc460794d7d42b7bf7308c80",
-            "response_id": "tZSAavCGOJGMx9gPkrXbyAg",
-            "completed_at": "2026-08-15T16:33:28.575736+00:00"
+            "request_sha256": "8ec3c494c51f882f504e580269d82f7335b53f6310c057fb45117fac13a5fd44",
+            "response_sha256": "ac0ce1cc2b9bde5174bc87c67fe6e612a241970a16d1b220c5fd9926bf2938cf",
+            "response_id": "cLqCaqzcEumAktwP2tHPoQE",
+            "completed_at": "2026-08-17T07:39:00.449594+00:00"
           },
-          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "batch_run_id": "5ccb18b9d8a74675b6e5daa31bd11cd0",
           "source": "gcp:vertex:current-display-batch"
         },
         "engine": {
@@ -1877,10 +1968,10 @@
             "model": "gemini-2.5-pro",
             "prompt_version": "2.6.0",
             "attempt": 1,
-            "request_sha256": "b154c9ef23906571c3a444b2f295349a6200dccf22d45a1bb858368726cc1440",
-            "response_sha256": "8f5440ec3834e896a91258384a7e5a7e20f6a6f8bc460794d7d42b7bf7308c80",
-            "response_id": "tZSAavCGOJGMx9gPkrXbyAg",
-            "completed_at": "2026-08-15T16:33:28.575736+00:00"
+            "request_sha256": "8ec3c494c51f882f504e580269d82f7335b53f6310c057fb45117fac13a5fd44",
+            "response_sha256": "ac0ce1cc2b9bde5174bc87c67fe6e612a241970a16d1b220c5fd9926bf2938cf",
+            "response_id": "cLqCaqzcEumAktwP2tHPoQE",
+            "completed_at": "2026-08-17T07:39:00.449594+00:00"
           },
           "limitations": [
             "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
@@ -1893,15 +1984,15 @@
           "upstream_article_id": "86067ecb43faae14baa94d04ed8fba88",
           "published_at": "2026-08-14T22:09:57+00:00",
           "title_sha256": "ea3c55f30d479c485cffa6c2754615769ac6164d305a509e7d3f2f1027727f75",
-          "body_sha256": "4247a118ffa21fada166869a1f154b984638e955c9a82f895e8487314d677526",
-          "body_character_count": 2798,
-          "body_word_count": 627,
+          "body_sha256": "74aa1e677a0726d44d77d67f1991652b7aabd8c1a3b6b50f2a5106d15650c978",
+          "body_character_count": 2811,
+          "body_word_count": 631,
           "paragraph_count": 1,
-          "sentence_count": 39
+          "sentence_count": 38
         },
         "extraction": {
           "text_scope": "authorized_transient_body",
-          "analyzed_character_count": 2798,
+          "analyzed_character_count": 2811,
           "input_truncated": false
         },
         "genre": {
@@ -1911,16 +2002,16 @@
             {
               "locator": {
                 "paragraph": 1,
-                "sentence": 2
+                "sentence": 4
               },
-              "sentence_sha256": "5d99448c8b8d4034799fe39e82e595316090233c53c85e3f26c5785f337e996d"
+              "sentence_sha256": "f0359926818e6209bc32a9a099544dd7c434d3a6e1a993720a0e5d595683baa5"
             },
             {
               "locator": {
                 "paragraph": 1,
-                "sentence": 4
+                "sentence": 17
               },
-              "sentence_sha256": "f0359926818e6209bc32a9a099544dd7c434d3a6e1a993720a0e5d595683baa5"
+              "sentence_sha256": "d32536b0a2f642aa9f366c94e79759aaa7088c72e184f48a0daa035658cc8f3d"
             }
           ]
         },
@@ -1935,7 +2026,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "legal_institutional",
                 "variant_key": "semantic:problem_definition:family:legal_institutional",
-                "public_paraphrase": "최태원 회장과 노소영 관장 간의 이혼에 따른 재산 분할, 특히 SK 주식의 공동재산 인정 여부와 기여도 산정을 둘러싼 법적 분쟁",
+                "public_paraphrase": "최태원 회장이 9,440억 원의 재산 분할 판결에 불복하고 대법원에 상고하면서 9년에 걸친 법정 공방이 계속되는 문제.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1953,7 +2044,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "legal_institutional",
                 "variant_key": "semantic:problem_definition:family:legal_institutional",
-                "public_paraphrase": "최태원 회장과 노소영 관장 간의 이혼에 따른 재산 분할, 특히 SK 주식의 공동재산 인정 여부와 기여도 산정을 둘러싼 법적 분쟁",
+                "public_paraphrase": "최태원 회장이 9,440억 원의 재산 분할 판결에 불복하고 대법원에 상고하면서 9년에 걸친 법정 공방이 계속되는 문제.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1961,9 +2052,9 @@
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 11
+                    "sentence": 16
                   },
-                  "sentence_sha256": "2cf6bee562ffd687d2cc37cf593bd968f652321de0e09aceb5cfd696e1276375"
+                  "sentence_sha256": "51443bd77f7ed547048eea4dab6c0f22f1033677378a5a13db19a1b2d04b77be"
                 }
               }
             ]
@@ -1984,7 +2075,7 @@
                 "code": "semantic_responsibility_attribution",
                 "frame_family": "judiciary_law_enforcement",
                 "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
-                "public_paraphrase": "파기환송심 재판부는 노 관장이 재산 형성에 기여했다고 판단하여 재산 분할을 명령했으며, 최종 판단 책임은 대법원으로 넘어감.",
+                "public_paraphrase": "9년에 걸친 이혼 소송의 최종 판단은 다시 대법원으로 넘어가, 사법부의 결정에 따라 재산 분할 문제가 해결될 것이다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -1992,9 +2083,9 @@
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 13
+                    "sentence": 10
                   },
-                  "sentence_sha256": "456015c09e03f94a927c58facd7d557bc35a8aa4e6969d17a1b4cf0d2d254402"
+                  "sentence_sha256": "e2cf09858600face37afcfb7ce47dd148cdf4fb7f15708847a28fb7f5991d752"
                 }
               },
               {
@@ -2002,7 +2093,7 @@
                 "code": "semantic_responsibility_attribution",
                 "frame_family": "judiciary_law_enforcement",
                 "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
-                "public_paraphrase": "파기환송심 재판부는 노 관장이 재산 형성에 기여했다고 판단하여 재산 분할을 명령했으며, 최종 판단 책임은 대법원으로 넘어감.",
+                "public_paraphrase": "9년에 걸친 이혼 소송의 최종 판단은 다시 대법원으로 넘어가, 사법부의 결정에 따라 재산 분할 문제가 해결될 것이다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -2027,7 +2118,7 @@
                 "code": "semantic_moral_evaluation",
                 "frame_family": "economic_negative",
                 "variant_key": "semantic:moral_evaluation:family:economic_negative",
-                "public_paraphrase": "판결이 확정될 경우 최 회장은 9,440억 원과 연 5%의 막대한 지연이자를 부담해야 하며, 상고 기간 동안 경영 리스크를 감수해야 함.",
+                "public_paraphrase": "최 회장의 상고 결정으로 당장의 현금 마련 부담은 벗어났지만, 대법원 판단까지 경영 리스크를 감수해야 하는 부정적 상황이 지속된다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -2035,9 +2126,9 @@
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 7
+                    "sentence": 9
                   },
-                  "sentence_sha256": "a2bff3f87b571ebc9e169cd573a26395ab27a5d2fe6f260095a29fdfbad5a6c1"
+                  "sentence_sha256": "fbae7249a3bec266d291003b91b2e9fdc7af446ed335d560cb30266eb702acdb"
                 }
               },
               {
@@ -2045,7 +2136,7 @@
                 "code": "semantic_moral_evaluation",
                 "frame_family": "economic_negative",
                 "variant_key": "semantic:moral_evaluation:family:economic_negative",
-                "public_paraphrase": "판결이 확정될 경우 최 회장은 9,440억 원과 연 5%의 막대한 지연이자를 부담해야 하며, 상고 기간 동안 경영 리스크를 감수해야 함.",
+                "public_paraphrase": "최 회장의 상고 결정으로 당장의 현금 마련 부담은 벗어났지만, 대법원 판단까지 경영 리스크를 감수해야 하는 부정적 상황이 지속된다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -2061,10 +2152,47 @@
             ]
           },
           "treatment_recommendation": {
-            "status": "not_observed",
-            "model_status": "explicit_not_stated",
-            "outlet_narration_observed": false,
-            "items": []
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:1908f431d53f678c7fd732e63f3fa0d68037bda1d7d4499c78177f57ac112dfd",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "최 회장 측은 재상고심에서 SK 주식 분할 문제와 그 비율을 다시 따져달라고 대법원에 요청할 것으로 보인다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "8c1c138b5bc8a57a63a4c19308fee673177a95871d643d6cb76e748ed1688e0d"
+                }
+              },
+              {
+                "claim_id": "claim:1908f431d53f678c7fd732e63f3fa0d68037bda1d7d4499c78177f57ac112dfd",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "investigation_accountability",
+                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
+                "public_paraphrase": "최 회장 측은 재상고심에서 SK 주식 분할 문제와 그 비율을 다시 따져달라고 대법원에 요청할 것으로 보인다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "2cf6bee562ffd687d2cc37cf593bd968f652321de0e09aceb5cfd696e1276375"
+                }
+              }
+            ]
           }
         },
         "actors_and_sources": [
@@ -2102,25 +2230,25 @@
           }
         ],
         "context_depth": {
-          "code": "shallow",
+          "code": "moderate",
           "label": null,
           "evidence": [
             {
               "locator": {
                 "paragraph": 1,
-                "sentence": 2
+                "sentence": 7
               },
-              "sentence_sha256": "5d99448c8b8d4034799fe39e82e595316090233c53c85e3f26c5785f337e996d"
+              "sentence_sha256": "a2bff3f87b571ebc9e169cd573a26395ab27a5d2fe6f260095a29fdfbad5a6c1"
             },
             {
               "locator": {
                 "paragraph": 1,
-                "sentence": 16
+                "sentence": 8
               },
-              "sentence_sha256": "51443bd77f7ed547048eea4dab6c0f22f1033677378a5a13db19a1b2d04b77be"
+              "sentence_sha256": "67627f49e6bf256499e8668b290d6fb3c6633c44d5c17a0e4a7e641bb0b49511"
             }
           ],
-          "level": "shallow"
+          "level": "moderate"
         },
         "scope": {
           "code": "episodic",
@@ -2193,16 +2321,16 @@
                 {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 6
+                    "sentence": 12
                   },
-                  "sentence_sha256": "8c1c138b5bc8a57a63a4c19308fee673177a95871d643d6cb76e748ed1688e0d"
+                  "sentence_sha256": "dd043d1824339b0c250a9ab97bd9949f569bf74e64f7093030a68b22cd661925"
                 },
                 {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 11
+                    "sentence": 13
                   },
-                  "sentence_sha256": "2cf6bee562ffd687d2cc37cf593bd968f652321de0e09aceb5cfd696e1276375"
+                  "sentence_sha256": "456015c09e03f94a927c58facd7d557bc35a8aa4e6969d17a1b4cf0d2d254402"
                 }
               ]
             },
@@ -2213,16 +2341,9 @@
                 {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 5
+                    "sentence": 10
                   },
-                  "sentence_sha256": "a971190010f465eeb899da2f2692444e404497c4da1b336e1ad71ecb26b8475e"
-                },
-                {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 7
-                  },
-                  "sentence_sha256": "a2bff3f87b571ebc9e169cd573a26395ab27a5d2fe6f260095a29fdfbad5a6c1"
+                  "sentence_sha256": "e2cf09858600face37afcfb7ce47dd148cdf4fb7f15708847a28fb7f5991d752"
                 }
               ]
             }
@@ -2230,6 +2351,27 @@
           "controlled_associations": []
         },
         "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "b437b902d4bfa6e9557be5686076378fd4702ab7cfa9067cde4c2ae8eb469182"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 19
+                },
+                "sentence_sha256": "4707d52350879d0f02e40bb9d103d8c3a7cc3afea44e8b412e1e8d3559e40416"
+              }
+            ],
+            "appears_in_lead": true
+          },
           {
             "code": "quantification",
             "label": null,
@@ -2252,23 +2394,16 @@
             "appears_in_lead": false
           },
           {
-            "code": "headline_emphasis",
+            "code": "causal_link",
             "label": null,
             "evidence": [
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 2
+                  "sentence": 7
                 },
-                "sentence_sha256": "5d99448c8b8d4034799fe39e82e595316090233c53c85e3f26c5785f337e996d"
-              }
-            ],
-            "appears_in_lead": true
-          },
-          {
-            "code": "causal_link",
-            "label": null,
-            "evidence": [
+                "sentence_sha256": "a2bff3f87b571ebc9e169cd573a26395ab27a5d2fe6f260095a29fdfbad5a6c1"
+              },
               {
                 "locator": {
                   "paragraph": 1,
@@ -2285,7 +2420,7 @@
           "analysis_decision": "analyze",
           "analysis_state": "succeeded",
           "attempt_count": 1,
-          "idempotency_fingerprint": "3909ebee1b781d65bfe28e94f95cfaafcc11c88e191575b57dc9707c15eab05e",
+          "idempotency_fingerprint": "092b90dd825488d357d83befc3def7f66a193bd2dde730a277b9d39f7e8d9234",
           "error_code": null,
           "fallback_reason": null,
           "requires_human_review": true,
@@ -2306,28 +2441,12 @@
         "schemaVersion": "agendaframe.article-frame-profile.v2",
         "source": "gcp:vertex:current-display-batch",
         "articleId": "cc669164f9944be869a2ae5aa431e857",
-        "evidenceCount": 12,
-        "bodySha256": "1270909a5516bb8c7e4e7e0e1a45d05f352595c4b442e0e55425cd9d21aadfcc",
+        "evidenceCount": 10,
+        "bodySha256": "52d4eeb57dadad604fbb5cd35acd33a1916d0cacb05717ad56d5ecde0638345b",
         "reviewRequired": true,
         "fallbackReason": null
       },
       "evidence": [
-        {
-          "articleId": "cc669164f9944be869a2ae5aa431e857",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 4
-          },
-          "sentenceSha256": "1749563547818c24c7204f0f7dcf1ca9379453de33166a2d27d4c64b29236de6"
-        },
-        {
-          "articleId": "cc669164f9944be869a2ae5aa431e857",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 5
-          },
-          "sentenceSha256": "205b78eb0657cb5238c2b8cbe3c88369dc886350b669ade0e710abd7a93d5701"
-        },
         {
           "articleId": "cc669164f9944be869a2ae5aa431e857",
           "locator": {
@@ -2340,25 +2459,9 @@
           "articleId": "cc669164f9944be869a2ae5aa431e857",
           "locator": {
             "paragraph": 1,
-            "sentence": 17
+            "sentence": 4
           },
-          "sentenceSha256": "40bebe0e2a3f039f070a967c9ed996707aac2dfd517b603a8486c7c1bc302249"
-        },
-        {
-          "articleId": "cc669164f9944be869a2ae5aa431e857",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 12
-          },
-          "sentenceSha256": "143616a25e775572de79f4eaa7b4f885b851ba4510698038a68f6318bc915b18"
-        },
-        {
-          "articleId": "cc669164f9944be869a2ae5aa431e857",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 13
-          },
-          "sentenceSha256": "fbdd9490d1c0f737a86cb2e98a92a2ec13967406402a941d6cc008c76b986e95"
+          "sentenceSha256": "1749563547818c24c7204f0f7dcf1ca9379453de33166a2d27d4c64b29236de6"
         },
         {
           "articleId": "cc669164f9944be869a2ae5aa431e857",
@@ -2372,14 +2475,6 @@
           "articleId": "cc669164f9944be869a2ae5aa431e857",
           "locator": {
             "paragraph": 1,
-            "sentence": 7
-          },
-          "sentenceSha256": "fe5457e96fa55b27feafa84b8327966cfeb7d7ba978f2138c17beb7e08d5ad00"
-        },
-        {
-          "articleId": "cc669164f9944be869a2ae5aa431e857",
-          "locator": {
-            "paragraph": 1,
             "sentence": 6
           },
           "sentenceSha256": "e0a534ac39934e6549ea1e1db4ed00eff4ea3d13d4cde8efe469c707fe3b29b1"
@@ -2388,9 +2483,17 @@
           "articleId": "cc669164f9944be869a2ae5aa431e857",
           "locator": {
             "paragraph": 1,
-            "sentence": 16
+            "sentence": 17
           },
-          "sentenceSha256": "878c7f06a6d9b389d9f3be6b6001169c862a304d686651669f1746f3687aa24f"
+          "sentenceSha256": "40bebe0e2a3f039f070a967c9ed996707aac2dfd517b603a8486c7c1bc302249"
+        },
+        {
+          "articleId": "cc669164f9944be869a2ae5aa431e857",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 7
+          },
+          "sentenceSha256": "fe5457e96fa55b27feafa84b8327966cfeb7d7ba978f2138c17beb7e08d5ad00"
         },
         {
           "articleId": "cc669164f9944be869a2ae5aa431e857",
@@ -2404,9 +2507,25 @@
           "articleId": "cc669164f9944be869a2ae5aa431e857",
           "locator": {
             "paragraph": 1,
-            "sentence": 9
+            "sentence": 5
           },
-          "sentenceSha256": "00cef31fde86f95ef91860894831ba6993ac457a4bbba85c50a8de4814421a5c"
+          "sentenceSha256": "205b78eb0657cb5238c2b8cbe3c88369dc886350b669ade0e710abd7a93d5701"
+        },
+        {
+          "articleId": "cc669164f9944be869a2ae5aa431e857",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 12
+          },
+          "sentenceSha256": "143616a25e775572de79f4eaa7b4f885b851ba4510698038a68f6318bc915b18"
+        },
+        {
+          "articleId": "cc669164f9944be869a2ae5aa431e857",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 1
+          },
+          "sentenceSha256": "ee35e096b2c4b58053b942fab6260b3a3ed0414df8ec5e34e95c6e0e135e1a21"
         }
       ],
       "profile": {
@@ -2423,12 +2542,12 @@
             "model": "gemini-2.5-pro",
             "prompt_version": "2.6.0",
             "attempt": 1,
-            "request_sha256": "174f1ea47497cd75b6f2efd7a7ebe124d5ef8bfbe709df284a65a958795a2985",
-            "response_sha256": "858ae860a253af38d61c2cbeb45c924533dec0995064eaa3bef813e1c97e6b46",
-            "response_id": "t5SAaqziCPSTx9gPz5Tr8QM",
-            "completed_at": "2026-08-15T16:33:29.297802+00:00"
+            "request_sha256": "fb4edea2ea890119d9dcb2a4a3c78608efffa4c56b8ceaa5c02e7f00d3186c79",
+            "response_sha256": "8d631f15d541a6b34d5fd6259e795a2f8c689723bfcbbc3e7ed586722ade90fd",
+            "response_id": "bLqCasSMIb6kktwPuvjfqQk",
+            "completed_at": "2026-08-17T07:39:02.648838+00:00"
           },
-          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "batch_run_id": "5ccb18b9d8a74675b6e5daa31bd11cd0",
           "source": "gcp:vertex:current-display-batch"
         },
         "engine": {
@@ -2445,10 +2564,10 @@
             "model": "gemini-2.5-pro",
             "prompt_version": "2.6.0",
             "attempt": 1,
-            "request_sha256": "174f1ea47497cd75b6f2efd7a7ebe124d5ef8bfbe709df284a65a958795a2985",
-            "response_sha256": "858ae860a253af38d61c2cbeb45c924533dec0995064eaa3bef813e1c97e6b46",
-            "response_id": "t5SAaqziCPSTx9gPz5Tr8QM",
-            "completed_at": "2026-08-15T16:33:29.297802+00:00"
+            "request_sha256": "fb4edea2ea890119d9dcb2a4a3c78608efffa4c56b8ceaa5c02e7f00d3186c79",
+            "response_sha256": "8d631f15d541a6b34d5fd6259e795a2f8c689723bfcbbc3e7ed586722ade90fd",
+            "response_id": "bLqCasSMIb6kktwPuvjfqQk",
+            "completed_at": "2026-08-17T07:39:02.648838+00:00"
           },
           "limitations": [
             "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
@@ -2461,15 +2580,15 @@
           "upstream_article_id": "cc669164f9944be869a2ae5aa431e857",
           "published_at": "2026-08-15T03:04:58+00:00",
           "title_sha256": "640938b005dc35f2a0c80273a0f04663db5599829a88e05e6e499857244b52dc",
-          "body_sha256": "1270909a5516bb8c7e4e7e0e1a45d05f352595c4b442e0e55425cd9d21aadfcc",
-          "body_character_count": 2780,
-          "body_word_count": 625,
+          "body_sha256": "52d4eeb57dadad604fbb5cd35acd33a1916d0cacb05717ad56d5ecde0638345b",
+          "body_character_count": 2793,
+          "body_word_count": 629,
           "paragraph_count": 1,
-          "sentence_count": 39
+          "sentence_count": 38
         },
         "extraction": {
           "text_scope": "authorized_transient_body",
-          "analyzed_character_count": 2780,
+          "analyzed_character_count": 2793,
           "input_truncated": false
         },
         "genre": {
@@ -2479,16 +2598,16 @@
             {
               "locator": {
                 "paragraph": 1,
-                "sentence": 4
+                "sentence": 2
               },
-              "sentence_sha256": "1749563547818c24c7204f0f7dcf1ca9379453de33166a2d27d4c64b29236de6"
+              "sentence_sha256": "9496b61efbf49f27d2c3b6ca15f523cf08ad6fede9396f403e49b6c5b2a39c22"
             },
             {
               "locator": {
                 "paragraph": 1,
-                "sentence": 5
+                "sentence": 4
               },
-              "sentence_sha256": "205b78eb0657cb5238c2b8cbe3c88369dc886350b669ade0e710abd7a93d5701"
+              "sentence_sha256": "1749563547818c24c7204f0f7dcf1ca9379453de33166a2d27d4c64b29236de6"
             }
           ]
         },
@@ -2503,7 +2622,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "legal_institutional",
                 "variant_key": "semantic:problem_definition:family:legal_institutional",
-                "public_paraphrase": "최태원 회장이 이혼에 따른 9,440억 원의 재산분할 판결에 불복하고 대법원에 상고하면서 9년간의 법적 공방이 지속되는 상황이다.",
+                "public_paraphrase": "최태원 회장이 파기환송심의 9,440억 원 재산분할 판결에 불복하고 상고하여, SK 주식의 분할 대상 여부와 비율을 둘러싼 법적 공방이 지속되고 있다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -2521,75 +2640,7 @@
                 "code": "semantic_problem_definition",
                 "frame_family": "legal_institutional",
                 "variant_key": "semantic:problem_definition:family:legal_institutional",
-                "public_paraphrase": "최태원 회장이 이혼에 따른 9,440억 원의 재산분할 판결에 불복하고 대법원에 상고하면서 9년간의 법적 공방이 지속되는 상황이다.",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 17
-                  },
-                  "sentence_sha256": "40bebe0e2a3f039f070a967c9ed996707aac2dfd517b603a8486c7c1bc302249"
-                }
-              }
-            ]
-          },
-          "causal_interpretation": {
-            "status": "source_attributed",
-            "model_status": "supported",
-            "outlet_narration_observed": false,
-            "items": [
-              {
-                "claim_id": "claim:8d9e8453a27c80641275e9a84acb4b75cd937f855f8bf643516eef9fac66d2ec",
-                "code": "semantic_causal_interpretation",
-                "frame_family": "policy_design",
-                "variant_key": "semantic:causal_interpretation:family:policy_design",
-                "public_paraphrase": "최태원 회장 측은 파기환송심이 SK 주식을 분할 대상이 되는 공동재산으로 인정한 것에 '치명적이고 큰 오류'가 있다고 주장하며 상고했다.",
-                "voice": {
-                  "kind": "indirect_source",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 12
-                  },
-                  "sentence_sha256": "143616a25e775572de79f4eaa7b4f885b851ba4510698038a68f6318bc915b18"
-                }
-              },
-              {
-                "claim_id": "claim:8d9e8453a27c80641275e9a84acb4b75cd937f855f8bf643516eef9fac66d2ec",
-                "code": "semantic_causal_interpretation",
-                "frame_family": "policy_design",
-                "variant_key": "semantic:causal_interpretation:family:policy_design",
-                "public_paraphrase": "최태원 회장 측은 파기환송심이 SK 주식을 분할 대상이 되는 공동재산으로 인정한 것에 '치명적이고 큰 오류'가 있다고 주장하며 상고했다.",
-                "voice": {
-                  "kind": "indirect_source",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 13
-                  },
-                  "sentence_sha256": "fbdd9490d1c0f737a86cb2e98a92a2ec13967406402a941d6cc008c76b986e95"
-                }
-              }
-            ]
-          },
-          "responsibility_attribution": {
-            "status": "observed",
-            "model_status": "supported",
-            "outlet_narration_observed": true,
-            "items": [
-              {
-                "claim_id": "claim:6dc5dc3a9264e5912650051cfd94bdd70c5d9ea6e3486d75597e77a0cb363123",
-                "code": "semantic_responsibility_attribution",
-                "frame_family": "judiciary_law_enforcement",
-                "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
-                "public_paraphrase": "최태원 회장과 노소영 관장의 재산 분할 분쟁에 대한 최종적인 해결 책임은 대법원의 사법적 판단에 달려있다.",
+                "public_paraphrase": "최태원 회장이 파기환송심의 9,440억 원 재산분할 판결에 불복하고 상고하여, SK 주식의 분할 대상 여부와 비율을 둘러싼 법적 공방이 지속되고 있다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -2601,13 +2652,44 @@
                   },
                   "sentence_sha256": "4599d45033f493f364d7fec744e8e1138d96f849d7c68c963dbcd5483a863c48"
                 }
+              }
+            ]
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:1a07556befec1668da2dcf56c2c0b897306e3c477fbbc584c91ae566361630af",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "최태원 회장이 상고를 결정함으로써 9년에 걸친 법정 공방이 또 이어지게 됐다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "e0a534ac39934e6549ea1e1db4ed00eff4ea3d13d4cde8efe469c707fe3b29b1"
+                }
               },
               {
-                "claim_id": "claim:6dc5dc3a9264e5912650051cfd94bdd70c5d9ea6e3486d75597e77a0cb363123",
+                "claim_id": "claim:1a07556befec1668da2dcf56c2c0b897306e3c477fbbc584c91ae566361630af",
                 "code": "semantic_responsibility_attribution",
-                "frame_family": "judiciary_law_enforcement",
-                "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
-                "public_paraphrase": "최태원 회장과 노소영 관장의 재산 분할 분쟁에 대한 최종적인 해결 책임은 대법원의 사법적 판단에 달려있다.",
+                "frame_family": "individual_actor",
+                "variant_key": "semantic:responsibility_attribution:family:individual_actor",
+                "public_paraphrase": "최태원 회장이 상고를 결정함으로써 9년에 걸친 법정 공방이 또 이어지게 됐다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -2632,7 +2714,7 @@
                 "code": "semantic_moral_evaluation",
                 "frame_family": "economic_negative",
                 "variant_key": "semantic:moral_evaluation:family:economic_negative",
-                "public_paraphrase": "판결이 확정되면 최 회장은 9,440억 원과 연 5%의 지연이자를 부담해야 하며, 상고로 인해 대법원 판단까지 경영 리스크를 감수해야 한다.",
+                "public_paraphrase": "판결이 확정되면 최 회장은 연 5%의 지연이자를 부담해야 하며, 이는 하루 약 1억 3천만 원에 이르는 금액이다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -2650,7 +2732,50 @@
                 "code": "semantic_moral_evaluation",
                 "frame_family": "economic_negative",
                 "variant_key": "semantic:moral_evaluation:family:economic_negative",
-                "public_paraphrase": "판결이 확정되면 최 회장은 9,440억 원과 연 5%의 지연이자를 부담해야 하며, 상고로 인해 대법원 판단까지 경영 리스크를 감수해야 한다.",
+                "public_paraphrase": "판결이 확정되면 최 회장은 연 5%의 지연이자를 부담해야 하며, 이는 하루 약 1억 3천만 원에 이르는 금액이다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "76802f031c1741f7c540207c5d02a21c25e4fec7c5be973b4f62bb35d3a41ba3"
+                }
+              }
+            ]
+          },
+          "treatment_recommendation": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:29fd32bc072caa22a74a53eb003b6f7943d819901549de48ca17cf8ebeb54876",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "institutional_check",
+                "variant_key": "semantic:treatment_recommendation:family:institutional_check",
+                "public_paraphrase": "최태원 회장 측은 SK 주식 분할 문제와 그 비율을 대법원에서 다시 따져봐야 한다고 주장하며 상고했다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 6
+                  },
+                  "sentence_sha256": "e0a534ac39934e6549ea1e1db4ed00eff4ea3d13d4cde8efe469c707fe3b29b1"
+                }
+              },
+              {
+                "claim_id": "claim:29fd32bc072caa22a74a53eb003b6f7943d819901549de48ca17cf8ebeb54876",
+                "code": "semantic_treatment_recommendation",
+                "frame_family": "institutional_check",
+                "variant_key": "semantic:treatment_recommendation:family:institutional_check",
+                "public_paraphrase": "최태원 회장 측은 SK 주식 분할 문제와 그 비율을 대법원에서 다시 따져봐야 한다고 주장하며 상고했다.",
                 "voice": {
                   "kind": "journalist_narration",
                   "speaker_role": null
@@ -2664,81 +2789,29 @@
                 }
               }
             ]
-          },
-          "treatment_recommendation": {
-            "status": "source_attributed",
-            "model_status": "supported",
-            "outlet_narration_observed": false,
-            "items": [
-              {
-                "claim_id": "claim:12d881ae1283128332d0c03c21b8d96f84d6d08d0a35c7ef456000c67587a5f2",
-                "code": "semantic_treatment_recommendation",
-                "frame_family": "institutional_check",
-                "variant_key": "semantic:treatment_recommendation:family:institutional_check",
-                "public_paraphrase": "최태원 회장 측은 SK 주식 분할 문제와 그 비율을 다시 따져달라며 대법원에 상고를 결정했다.",
-                "voice": {
-                  "kind": "indirect_source",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 6
-                  },
-                  "sentence_sha256": "e0a534ac39934e6549ea1e1db4ed00eff4ea3d13d4cde8efe469c707fe3b29b1"
-                }
-              },
-              {
-                "claim_id": "claim:12d881ae1283128332d0c03c21b8d96f84d6d08d0a35c7ef456000c67587a5f2",
-                "code": "semantic_treatment_recommendation",
-                "frame_family": "institutional_check",
-                "variant_key": "semantic:treatment_recommendation:family:institutional_check",
-                "public_paraphrase": "최태원 회장 측은 SK 주식 분할 문제와 그 비율을 다시 따져달라며 대법원에 상고를 결정했다.",
-                "voice": {
-                  "kind": "indirect_source",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 12
-                  },
-                  "sentence_sha256": "143616a25e775572de79f4eaa7b4f885b851ba4510698038a68f6318bc915b18"
-                }
-              }
-            ]
           }
         },
         "actors_and_sources": [
           {
-            "actor_id": "actor:913c1bcf00da19014dbab1e2b855bc45b4b3418af5a465d167ed2f4a24be8cd1",
-            "role": "affected_person",
-            "role_label": "당사자·시민",
-            "direct_quote_count": 1,
-            "indirect_attribution_count": 0,
+            "actor_id": "actor:2c8b6da65011bb807e0f48d3a11d5042c0f77824e91bff3ba7e2e98a8d3ab50e",
+            "role": "other",
+            "role_label": "기타 취재원",
+            "direct_quote_count": 0,
+            "indirect_attribution_count": 2,
             "evidence": [
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 16
+                  "sentence": 2
                 },
-                "sentence_sha256": "878c7f06a6d9b389d9f3be6b6001169c862a304d686651669f1746f3687aa24f"
-              }
-            ]
-          },
-          {
-            "actor_id": "actor:064ddc59020fa8e21473bd6f142972dd3e217787b30b969fb8cb93d9dd0d575b",
-            "role": "business",
-            "role_label": "기업·산업계",
-            "direct_quote_count": 1,
-            "indirect_attribution_count": 0,
-            "evidence": [
+                "sentence_sha256": "9496b61efbf49f27d2c3b6ca15f523cf08ad6fede9396f403e49b6c5b2a39c22"
+              },
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 13
+                  "sentence": 5
                 },
-                "sentence_sha256": "fbdd9490d1c0f737a86cb2e98a92a2ec13967406402a941d6cc008c76b986e95"
+                "sentence_sha256": "205b78eb0657cb5238c2b8cbe3c88369dc886350b669ade0e710abd7a93d5701"
               }
             ]
           }
@@ -2757,9 +2830,9 @@
             {
               "locator": {
                 "paragraph": 1,
-                "sentence": 6
+                "sentence": 5
               },
-              "sentence_sha256": "e0a534ac39934e6549ea1e1db4ed00eff4ea3d13d4cde8efe469c707fe3b29b1"
+              "sentence_sha256": "205b78eb0657cb5238c2b8cbe3c88369dc886350b669ade0e710abd7a93d5701"
             }
           ],
           "level": "shallow"
@@ -2827,31 +2900,51 @@
               ]
             }
           ],
-          "policy_frames": [],
+          "policy_frames": [
+            {
+              "code": "legality",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "4599d45033f493f364d7fec744e8e1138d96f849d7c68c963dbcd5483a863c48"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 12
+                  },
+                  "sentence_sha256": "143616a25e775572de79f4eaa7b4f885b851ba4510698038a68f6318bc915b18"
+                }
+              ]
+            },
+            {
+              "code": "economic",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 7
+                  },
+                  "sentence_sha256": "fe5457e96fa55b27feafa84b8327966cfeb7d7ba978f2138c17beb7e08d5ad00"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 8
+                  },
+                  "sentence_sha256": "76802f031c1741f7c540207c5d02a21c25e4fec7c5be973b4f62bb35d3a41ba3"
+                }
+              ]
+            }
+          ],
           "controlled_associations": []
         },
         "framing_devices": [
-          {
-            "code": "quantification",
-            "label": null,
-            "evidence": [
-              {
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 8
-                },
-                "sentence_sha256": "76802f031c1741f7c540207c5d02a21c25e4fec7c5be973b4f62bb35d3a41ba3"
-              },
-              {
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 9
-                },
-                "sentence_sha256": "00cef31fde86f95ef91860894831ba6993ac457a4bbba85c50a8de4814421a5c"
-              }
-            ],
-            "appears_in_lead": false
-          },
           {
             "code": "headline_emphasis",
             "label": null,
@@ -2859,12 +2952,33 @@
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 2
+                  "sentence": 1
                 },
-                "sentence_sha256": "9496b61efbf49f27d2c3b6ca15f523cf08ad6fede9396f403e49b6c5b2a39c22"
+                "sentence_sha256": "ee35e096b2c4b58053b942fab6260b3a3ed0414df8ec5e34e95c6e0e135e1a21"
               }
             ],
             "appears_in_lead": true
+          },
+          {
+            "code": "quantification",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 5
+                },
+                "sentence_sha256": "205b78eb0657cb5238c2b8cbe3c88369dc886350b669ade0e710abd7a93d5701"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 8
+                },
+                "sentence_sha256": "76802f031c1741f7c540207c5d02a21c25e4fec7c5be973b4f62bb35d3a41ba3"
+              }
+            ],
+            "appears_in_lead": false
           }
         ],
         "review": {
@@ -2872,7 +2986,7 @@
           "analysis_decision": "analyze",
           "analysis_state": "succeeded",
           "attempt_count": 1,
-          "idempotency_fingerprint": "6fe6ffaa0d6ad7c3662c365864183c5fbb3f4d5b56be0180d43ff920a50497d4",
+          "idempotency_fingerprint": "a2db7925ac2f7ebeeee814527fc99b9be551509dccd8821a28f6a25c1434e09a",
           "error_code": null,
           "fallback_reason": null,
           "requires_human_review": true,
@@ -2893,8 +3007,8 @@
         "schemaVersion": "agendaframe.article-frame-profile.v2",
         "source": "gcp:vertex:current-display-batch",
         "articleId": "fcc2203e3461734e9b1378589e8b4725",
-        "evidenceCount": 14,
-        "bodySha256": "5ae105bada70cdeff2574ab3b7aec2cae06d6321f7fc538ad87f5606650678c5",
+        "evidenceCount": 15,
+        "bodySha256": "272e50a57511099a3f46a2a59038408ed4d1fe9714d556064eff33f675e27c5a",
         "reviewRequired": true,
         "fallbackReason": null
       },
@@ -2927,33 +3041,9 @@
           "articleId": "fcc2203e3461734e9b1378589e8b4725",
           "locator": {
             "paragraph": 1,
-            "sentence": 21
+            "sentence": 11
           },
-          "sentenceSha256": "e561dcfbb10c2f514c0718fa04c94f6c6cfdfb610b740dae7dde872457d774a6"
-        },
-        {
-          "articleId": "fcc2203e3461734e9b1378589e8b4725",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 17
-          },
-          "sentenceSha256": "8b287dfffa7c225a0b196392bcfd8f7727dc844a8e451ba0c758bbed66a412b8"
-        },
-        {
-          "articleId": "fcc2203e3461734e9b1378589e8b4725",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 19
-          },
-          "sentenceSha256": "602b00d889b0ce909045073bd1db4fbf3e341724e8619dced00ee2131d5ce471"
-        },
-        {
-          "articleId": "fcc2203e3461734e9b1378589e8b4725",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 41
-          },
-          "sentenceSha256": "5c54468fb7ec13f9bf68817ea0b409acf236bc72bd8aa4d6807d51904c376539"
+          "sentenceSha256": "c51a99794719286cb76754977e8ce65a5347d4171dc4a41ac679f04e1abd384d"
         },
         {
           "articleId": "fcc2203e3461734e9b1378589e8b4725",
@@ -2967,6 +3057,30 @@
           "articleId": "fcc2203e3461734e9b1378589e8b4725",
           "locator": {
             "paragraph": 1,
+            "sentence": 38
+          },
+          "sentenceSha256": "f4a0d18c37af5c7fc6b51609af1109e3dece61f4f2758c5459db0d7f6a8058c8"
+        },
+        {
+          "articleId": "fcc2203e3461734e9b1378589e8b4725",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 41
+          },
+          "sentenceSha256": "5c54468fb7ec13f9bf68817ea0b409acf236bc72bd8aa4d6807d51904c376539"
+        },
+        {
+          "articleId": "fcc2203e3461734e9b1378589e8b4725",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 19
+          },
+          "sentenceSha256": "602b00d889b0ce909045073bd1db4fbf3e341724e8619dced00ee2131d5ce471"
+        },
+        {
+          "articleId": "fcc2203e3461734e9b1378589e8b4725",
+          "locator": {
+            "paragraph": 1,
             "sentence": 23
           },
           "sentenceSha256": "c17ef8676c3f0067a94baae052f4a672d7236eb11347b76d8db24000a472a7d0"
@@ -2975,25 +3089,9 @@
           "articleId": "fcc2203e3461734e9b1378589e8b4725",
           "locator": {
             "paragraph": 1,
-            "sentence": 12
+            "sentence": 36
           },
-          "sentenceSha256": "dafa7f34b536eac0dce9fb4d9a087f72be75a5f6d5aefe50dd81b3722ec3acf0"
-        },
-        {
-          "articleId": "fcc2203e3461734e9b1378589e8b4725",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 31
-          },
-          "sentenceSha256": "4a3059e357f92165603ded8ef518aea79bfea61912a2a5b2ac17ea866677d9e2"
-        },
-        {
-          "articleId": "fcc2203e3461734e9b1378589e8b4725",
-          "locator": {
-            "paragraph": 1,
-            "sentence": 11
-          },
-          "sentenceSha256": "c51a99794719286cb76754977e8ce65a5347d4171dc4a41ac679f04e1abd384d"
+          "sentenceSha256": "da638e8d59f70d6924633042c4b3c816e3e4b9ecbb8824bcbb08fd589025dc9b"
         },
         {
           "articleId": "fcc2203e3461734e9b1378589e8b4725",
@@ -3002,6 +3100,30 @@
             "sentence": 16
           },
           "sentenceSha256": "3e9bd1cf763f8138e4c4cd7880b3ccbef563c38498ba850c6295b93d60128b3e"
+        },
+        {
+          "articleId": "fcc2203e3461734e9b1378589e8b4725",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 24
+          },
+          "sentenceSha256": "72503e1c4713b336a238200ede0e847473eae6c6e5b458f9e12489ef336ec941"
+        },
+        {
+          "articleId": "fcc2203e3461734e9b1378589e8b4725",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 17
+          },
+          "sentenceSha256": "8b287dfffa7c225a0b196392bcfd8f7727dc844a8e451ba0c758bbed66a412b8"
+        },
+        {
+          "articleId": "fcc2203e3461734e9b1378589e8b4725",
+          "locator": {
+            "paragraph": 1,
+            "sentence": 22
+          },
+          "sentenceSha256": "47da461790599d3ad73f879b4a07129d7267d9e7d928ee599c3107c3eb28e8c6"
         },
         {
           "articleId": "fcc2203e3461734e9b1378589e8b4725",
@@ -3026,12 +3148,12 @@
             "model": "gemini-2.5-pro",
             "prompt_version": "2.6.0",
             "attempt": 1,
-            "request_sha256": "ecb3b188c8e192386a98cb28b3b1af207e8997181e50f87444e7fa7c7ab84d95",
-            "response_sha256": "c74a8fba6b94dd1039b939d802cad47f9a2ac292d4e567331a003b53e147d2cf",
-            "response_id": "t5SAaqqaCsiax9gPtJG9sQE",
-            "completed_at": "2026-08-15T16:33:28.055408+00:00"
+            "request_sha256": "0f14f75e48bda442b0636e875faaab05f7769a4b0d2024875d793d3c77954f5f",
+            "response_sha256": "a6fe1a70e4f280000894ceaf8c0ad018b203ad098cf8db6cd3eb371781414f8e",
+            "response_id": "brqCaqv1GPej0ckPt6j_kAo",
+            "completed_at": "2026-08-17T07:39:07.465847+00:00"
           },
-          "batch_run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+          "batch_run_id": "5ccb18b9d8a74675b6e5daa31bd11cd0",
           "source": "gcp:vertex:current-display-batch"
         },
         "engine": {
@@ -3048,10 +3170,10 @@
             "model": "gemini-2.5-pro",
             "prompt_version": "2.6.0",
             "attempt": 1,
-            "request_sha256": "ecb3b188c8e192386a98cb28b3b1af207e8997181e50f87444e7fa7c7ab84d95",
-            "response_sha256": "c74a8fba6b94dd1039b939d802cad47f9a2ac292d4e567331a003b53e147d2cf",
-            "response_id": "t5SAaqqaCsiax9gPtJG9sQE",
-            "completed_at": "2026-08-15T16:33:28.055408+00:00"
+            "request_sha256": "0f14f75e48bda442b0636e875faaab05f7769a4b0d2024875d793d3c77954f5f",
+            "response_sha256": "a6fe1a70e4f280000894ceaf8c0ad018b203ad098cf8db6cd3eb371781414f8e",
+            "response_id": "brqCaqv1GPej0ckPt6j_kAo",
+            "completed_at": "2026-08-17T07:39:07.465847+00:00"
           },
           "limitations": [
             "AI가 생성한 구조화 분석 초안이며 사람 검토 전 확정 판정이 아닙니다.",
@@ -3064,15 +3186,15 @@
           "upstream_article_id": "fcc2203e3461734e9b1378589e8b4725",
           "published_at": "2026-08-15T06:28:56.952000+00:00",
           "title_sha256": "a8bae6e895183b2f7bc36143dd7f3fa4e3e491cff7302418e9d4c6484815e1af",
-          "body_sha256": "5ae105bada70cdeff2574ab3b7aec2cae06d6321f7fc538ad87f5606650678c5",
-          "body_character_count": 4425,
-          "body_word_count": 1024,
+          "body_sha256": "272e50a57511099a3f46a2a59038408ed4d1fe9714d556064eff33f675e27c5a",
+          "body_character_count": 4427,
+          "body_word_count": 1032,
           "paragraph_count": 1,
           "sentence_count": 48
         },
         "extraction": {
           "text_scope": "authorized_transient_body",
-          "analyzed_character_count": 4425,
+          "analyzed_character_count": 4427,
           "input_truncated": false
         },
         "genre": {
@@ -3102,167 +3224,13 @@
             "outlet_narration_observed": true,
             "items": [
               {
-                "claim_id": "claim:ec000dff79a6b9ce2bae6747db3c4e886b5cbbb806da2254072139f8f9f45d7f",
+                "claim_id": "claim:bfdd25c24874b608e7904e508ed46714c8542e6be253d3589ce2a131b94ac6f8",
                 "code": "semantic_problem_definition",
-                "frame_family": "economic_burden",
-                "variant_key": "semantic:problem_definition:family:economic_burden",
-                "public_paraphrase": "최태원 회장이 9440억원의 재산분할금을 현금으로 마련하는 데 따르는 현실적 장벽과 SK그룹 경영권에 미칠 부정적 영향.",
+                "frame_family": "legal_institutional",
+                "variant_key": "semantic:problem_definition:family:legal_institutional",
+                "public_paraphrase": "최태원 회장과 노소영 관장의 이혼에 따른 9440억 원 재산분할 판결에 대한 법리적 다툼과 천문학적인 현금 마련의 어려움.",
                 "voice": {
                   "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 10
-                  },
-                  "sentence_sha256": "1b518dbedcf0d7557d170194ed6f96df1849cab5e9013c136c77e1eb922a8dea"
-                }
-              },
-              {
-                "claim_id": "claim:ec000dff79a6b9ce2bae6747db3c4e886b5cbbb806da2254072139f8f9f45d7f",
-                "code": "semantic_problem_definition",
-                "frame_family": "economic_burden",
-                "variant_key": "semantic:problem_definition:family:economic_burden",
-                "public_paraphrase": "최태원 회장이 9440억원의 재산분할금을 현금으로 마련하는 데 따르는 현실적 장벽과 SK그룹 경영권에 미칠 부정적 영향.",
-                "voice": {
-                  "kind": "journalist_narration",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 21
-                  },
-                  "sentence_sha256": "e561dcfbb10c2f514c0718fa04c94f6c6cfdfb610b740dae7dde872457d774a6"
-                }
-              }
-            ]
-          },
-          "causal_interpretation": {
-            "status": "source_attributed",
-            "model_status": "supported",
-            "outlet_narration_observed": false,
-            "items": [
-              {
-                "claim_id": "claim:5fff8fbda15d61cab0ec72408999dd749b834bd36b63ad647bd19040323b0a8c",
-                "code": "semantic_causal_interpretation",
-                "frame_family": "policy_design",
-                "variant_key": "semantic:causal_interpretation:family:policy_design",
-                "public_paraphrase": "파기환송심 재판부가 재산 산정 기준 시점과 분할 비율 산정 방식을 모순되게 적용하여 법리적 오해를 야기했다는 최 회장 측의 주장.",
-                "voice": {
-                  "kind": "indirect_source",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 17
-                  },
-                  "sentence_sha256": "8b287dfffa7c225a0b196392bcfd8f7727dc844a8e451ba0c758bbed66a412b8"
-                }
-              },
-              {
-                "claim_id": "claim:5fff8fbda15d61cab0ec72408999dd749b834bd36b63ad647bd19040323b0a8c",
-                "code": "semantic_causal_interpretation",
-                "frame_family": "policy_design",
-                "variant_key": "semantic:causal_interpretation:family:policy_design",
-                "public_paraphrase": "파기환송심 재판부가 재산 산정 기준 시점과 분할 비율 산정 방식을 모순되게 적용하여 법리적 오해를 야기했다는 최 회장 측의 주장.",
-                "voice": {
-                  "kind": "indirect_source",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 19
-                  },
-                  "sentence_sha256": "602b00d889b0ce909045073bd1db4fbf3e341724e8619dced00ee2131d5ce471"
-                }
-              }
-            ]
-          },
-          "responsibility_attribution": {
-            "status": "source_attributed",
-            "model_status": "supported",
-            "outlet_narration_observed": false,
-            "items": [
-              {
-                "claim_id": "claim:d90d766c02f49cd5c1def0313ac100af55a542360bc5274566e8d75a0a24de94",
-                "code": "semantic_responsibility_attribution",
-                "frame_family": "judiciary_law_enforcement",
-                "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
-                "public_paraphrase": "재산분할 산정 방식에 법리적 오해가 있다고 판단되는 파기환송심 재판부에 책임이 있다는 최 회장 측의 입장.",
-                "voice": {
-                  "kind": "indirect_source",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 17
-                  },
-                  "sentence_sha256": "8b287dfffa7c225a0b196392bcfd8f7727dc844a8e451ba0c758bbed66a412b8"
-                }
-              },
-              {
-                "claim_id": "claim:d90d766c02f49cd5c1def0313ac100af55a542360bc5274566e8d75a0a24de94",
-                "code": "semantic_responsibility_attribution",
-                "frame_family": "judiciary_law_enforcement",
-                "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
-                "public_paraphrase": "재산분할 산정 방식에 법리적 오해가 있다고 판단되는 파기환송심 재판부에 책임이 있다는 최 회장 측의 입장.",
-                "voice": {
-                  "kind": "indirect_source",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 19
-                  },
-                  "sentence_sha256": "602b00d889b0ce909045073bd1db4fbf3e341724e8619dced00ee2131d5ce471"
-                }
-              }
-            ]
-          },
-          "moral_evaluation": {
-            "status": "source_attributed",
-            "model_status": "supported",
-            "outlet_narration_observed": false,
-            "items": [
-              {
-                "claim_id": "claim:e2fe4280b574f9d8605c80fbb4bf1c1c5120f05e17acc5a30f56e43bb03e8b9b",
-                "code": "semantic_moral_evaluation",
-                "frame_family": "economic_negative",
-                "variant_key": "semantic:moral_evaluation:family:economic_negative",
-                "public_paraphrase": "소송의 불확실성 연장은 주주 입장에서 '양날의 검'이라는 전문가 분석.",
-                "voice": {
-                  "kind": "indirect_source",
-                  "speaker_role": null
-                },
-                "evidence": {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 41
-                  },
-                  "sentence_sha256": "5c54468fb7ec13f9bf68817ea0b409acf236bc72bd8aa4d6807d51904c376539"
-                }
-              }
-            ]
-          },
-          "treatment_recommendation": {
-            "status": "source_attributed",
-            "model_status": "supported",
-            "outlet_narration_observed": false,
-            "items": [
-              {
-                "claim_id": "claim:78d997d237a8834fc12a633f3f37d7509550eff7d650fa82cd4490111c6eb259",
-                "code": "semantic_treatment_recommendation",
-                "frame_family": "investigation_accountability",
-                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
-                "public_paraphrase": "최태원 회장 측은 파기환송심 판결에 불복하여 대법원에 재상고함으로써 법리 다툼을 이어가기로 결정했다.",
-                "voice": {
-                  "kind": "indirect_source",
                   "speaker_role": null
                 },
                 "evidence": {
@@ -3274,24 +3242,67 @@
                 }
               },
               {
-                "claim_id": "claim:78d997d237a8834fc12a633f3f37d7509550eff7d650fa82cd4490111c6eb259",
-                "code": "semantic_treatment_recommendation",
-                "frame_family": "investigation_accountability",
-                "variant_key": "semantic:treatment_recommendation:family:investigation_accountability",
-                "public_paraphrase": "최태원 회장 측은 파기환송심 판결에 불복하여 대법원에 재상고함으로써 법리 다툼을 이어가기로 결정했다.",
+                "claim_id": "claim:bfdd25c24874b608e7904e508ed46714c8542e6be253d3589ce2a131b94ac6f8",
+                "code": "semantic_problem_definition",
+                "frame_family": "legal_institutional",
+                "variant_key": "semantic:problem_definition:family:legal_institutional",
+                "public_paraphrase": "최태원 회장과 노소영 관장의 이혼에 따른 9440억 원 재산분할 판결에 대한 법리적 다툼과 천문학적인 현금 마련의 어려움.",
                 "voice": {
-                  "kind": "indirect_source",
+                  "kind": "journalist_narration",
                   "speaker_role": null
                 },
                 "evidence": {
                   "locator": {
                     "paragraph": 1,
-                    "sentence": 14
+                    "sentence": 10
                   },
-                  "sentence_sha256": "ac858f4c0dbc051d0af0996300e3b2d648309c1991b06c8881794aa3d94f3e84"
+                  "sentence_sha256": "1b518dbedcf0d7557d170194ed6f96df1849cab5e9013c136c77e1eb922a8dea"
                 }
               }
             ]
+          },
+          "causal_interpretation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "responsibility_attribution": {
+            "status": "observed",
+            "model_status": "supported",
+            "outlet_narration_observed": true,
+            "items": [
+              {
+                "claim_id": "claim:1cbf48a764ee0ae27f7526267ad4caee2f57576e54dca0e2d32e2a764bcd6d63",
+                "code": "semantic_responsibility_attribution",
+                "frame_family": "judiciary_law_enforcement",
+                "variant_key": "semantic:responsibility_attribution:family:judiciary_law_enforcement",
+                "public_paraphrase": "9년 넘게 이어진 '세기의 이혼' 소송은 다시 대법원에서 마지막 법리 다툼을 벌이게 되어, 최종 판단의 책임은 대법원에 있다.",
+                "voice": {
+                  "kind": "journalist_narration",
+                  "speaker_role": null
+                },
+                "evidence": {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 11
+                  },
+                  "sentence_sha256": "c51a99794719286cb76754977e8ce65a5347d4171dc4a41ac679f04e1abd384d"
+                }
+              }
+            ]
+          },
+          "moral_evaluation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
+          },
+          "treatment_recommendation": {
+            "status": "not_observed",
+            "model_status": "explicit_not_stated",
+            "outlet_narration_observed": false,
+            "items": []
           }
         },
         "actors_and_sources": [
@@ -3299,8 +3310,8 @@
             "actor_id": "actor:6f1209e9702a44df7a33d8649e8842f6fc087416c989108efa84cd0b95aae00e",
             "role": "anonymous_official",
             "role_label": "익명·비실명 관계자",
-            "direct_quote_count": 0,
-            "indirect_attribution_count": 1,
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
             "evidence": [
               {
                 "locator": {
@@ -3315,15 +3326,22 @@
             "actor_id": "actor:6baecf2641b436ce74df6499914b898d8ca0f2c3eaea62011caa8cda6af28753",
             "role": "business",
             "role_label": "기업·산업계",
-            "direct_quote_count": 0,
-            "indirect_attribution_count": 1,
+            "direct_quote_count": 2,
+            "indirect_attribution_count": 0,
             "evidence": [
               {
                 "locator": {
                   "paragraph": 1,
-                  "sentence": 14
+                  "sentence": 38
                 },
-                "sentence_sha256": "ac858f4c0dbc051d0af0996300e3b2d648309c1991b06c8881794aa3d94f3e84"
+                "sentence_sha256": "f4a0d18c37af5c7fc6b51609af1109e3dece61f4f2758c5459db0d7f6a8058c8"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 40
+                },
+                "sentence_sha256": "3ce7ad75574222647fa08f32efb94fd8f4fbf55c745475891f87461eb9e455dc"
               }
             ]
           },
@@ -3331,8 +3349,8 @@
             "actor_id": "actor:8f86919737a357dbdc9a8906be18eb0bae5b5d50cae2761d597089309fd2611c",
             "role": "expert_research",
             "role_label": "전문가·연구자",
-            "direct_quote_count": 0,
-            "indirect_attribution_count": 1,
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
             "evidence": [
               {
                 "locator": {
@@ -3340,6 +3358,22 @@
                   "sentence": 41
                 },
                 "sentence_sha256": "5c54468fb7ec13f9bf68817ea0b409acf236bc72bd8aa4d6807d51904c376539"
+              }
+            ]
+          },
+          {
+            "actor_id": "actor:1ec94a8ad5d0d8e044d0c80604999aec1f446ee5e85213fe0e676bc873dd042b",
+            "role": "judiciary_law_enforcement",
+            "role_label": "법조·수사기관",
+            "direct_quote_count": 1,
+            "indirect_attribution_count": 0,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 14
+                },
+                "sentence_sha256": "ac858f4c0dbc051d0af0996300e3b2d648309c1991b06c8881794aa3d94f3e84"
               }
             ]
           }
@@ -3379,34 +3413,14 @@
             {
               "locator": {
                 "paragraph": 1,
-                "sentence": 12
+                "sentence": 36
               },
-              "sentence_sha256": "dafa7f34b536eac0dce9fb4d9a087f72be75a5f6d5aefe50dd81b3722ec3acf0"
+              "sentence_sha256": "da638e8d59f70d6924633042c4b3c816e3e4b9ecbb8824bcbb08fd589025dc9b"
             }
           ]
         },
         "secondary_descriptors": {
           "generic_frames": [
-            {
-              "code": "economic_consequences",
-              "label": null,
-              "evidence": [
-                {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 10
-                  },
-                  "sentence_sha256": "1b518dbedcf0d7557d170194ed6f96df1849cab5e9013c136c77e1eb922a8dea"
-                },
-                {
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 31
-                  },
-                  "sentence_sha256": "4a3059e357f92165603ded8ef518aea79bfea61912a2a5b2ac17ea866677d9e2"
-                }
-              ]
-            },
             {
               "code": "conflict",
               "label": null,
@@ -3426,12 +3440,108 @@
                   "sentence_sha256": "3e9bd1cf763f8138e4c4cd7880b3ccbef563c38498ba850c6295b93d60128b3e"
                 }
               ]
+            },
+            {
+              "code": "economic_consequences",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 10
+                  },
+                  "sentence_sha256": "1b518dbedcf0d7557d170194ed6f96df1849cab5e9013c136c77e1eb922a8dea"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 24
+                  },
+                  "sentence_sha256": "72503e1c4713b336a238200ede0e847473eae6c6e5b458f9e12489ef336ec941"
+                }
+              ]
             }
           ],
-          "policy_frames": [],
+          "policy_frames": [
+            {
+              "code": "legality",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 17
+                  },
+                  "sentence_sha256": "8b287dfffa7c225a0b196392bcfd8f7727dc844a8e451ba0c758bbed66a412b8"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 19
+                  },
+                  "sentence_sha256": "602b00d889b0ce909045073bd1db4fbf3e341724e8619dced00ee2131d5ce471"
+                }
+              ]
+            },
+            {
+              "code": "economic",
+              "label": null,
+              "evidence": [
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 10
+                  },
+                  "sentence_sha256": "1b518dbedcf0d7557d170194ed6f96df1849cab5e9013c136c77e1eb922a8dea"
+                },
+                {
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 22
+                  },
+                  "sentence_sha256": "47da461790599d3ad73f879b4a07129d7267d9e7d928ee599c3107c3eb28e8c6"
+                }
+              ]
+            }
+          ],
           "controlled_associations": []
         },
         "framing_devices": [
+          {
+            "code": "headline_emphasis",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 9
+                },
+                "sentence_sha256": "4ef59184b9d24b8732ffd406cf4dc43a85d002dc64abb22268433b30d8d14dca"
+              }
+            ],
+            "appears_in_lead": true
+          },
+          {
+            "code": "evaluative_label",
+            "label": null,
+            "evidence": [
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 10
+                },
+                "sentence_sha256": "1b518dbedcf0d7557d170194ed6f96df1849cab5e9013c136c77e1eb922a8dea"
+              },
+              {
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 11
+                },
+                "sentence_sha256": "c51a99794719286cb76754977e8ce65a5347d4171dc4a41ac679f04e1abd384d"
+              }
+            ],
+            "appears_in_lead": true
+          },
           {
             "code": "quantification",
             "label": null,
@@ -3451,28 +3561,7 @@
                 "sentence_sha256": "924fdafdabeb5913e57bc728118103ad0acb67ad8bec5b85c9a3755ab773b9f5"
               }
             ],
-            "appears_in_lead": false
-          },
-          {
-            "code": "causal_link",
-            "label": null,
-            "evidence": [
-              {
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 16
-                },
-                "sentence_sha256": "3e9bd1cf763f8138e4c4cd7880b3ccbef563c38498ba850c6295b93d60128b3e"
-              },
-              {
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 17
-                },
-                "sentence_sha256": "8b287dfffa7c225a0b196392bcfd8f7727dc844a8e451ba0c758bbed66a412b8"
-              }
-            ],
-            "appears_in_lead": false
+            "appears_in_lead": true
           }
         ],
         "review": {
@@ -3480,7 +3569,7 @@
           "analysis_decision": "analyze",
           "analysis_state": "succeeded",
           "attempt_count": 1,
-          "idempotency_fingerprint": "1d9d2f8c65c80638cfff2893e4956971eeed85dc4a300225118490810a8ad67a",
+          "idempotency_fingerprint": "57e0877fe6533beeebce4711b0bf0b65c41b1ff7b010a0202d02e76438f19511",
           "error_code": null,
           "fallback_reason": null,
           "requires_human_review": true,
@@ -3497,26 +3586,188 @@
       "semanticAi": true,
       "status": "succeeded",
       "model": "gemini-2.5-pro",
-      "promptVersion": "event-synthesis-v1.0.0",
-      "schemaVersion": "agendaframe.event-synthesis.v1",
+      "promptVersion": "event-synthesis-v2.0.0",
+      "schemaVersion": "agendaframe.event-synthesis.v2",
       "source": "gcp:event-synthesis"
     },
     "data": {
       "summary_30_seconds": {
         "sample": "6건 · 3개 매체",
-        "common_ground": "언론들은 모두 최태원 회장이 노소영 관장에게 9440억 원을 재산분할하라는 파기환송심 판결에 불복해 대법원에 재상고했다고 보도했다(fcc2203e3461734e9b1378589e8b4725, 1, 9; 09825dacd9c1cbad99e8a68a3872447f, 1, 5). 이로써 9년에 걸친 두 사람의 이혼 소송은 대법원의 최종 판단을 받게 됐다(83ec12943a84ec03876bd4537d4eb107, 1, 16).",
-        "main_difference": "보도를 종합하면, 일부 언론은 최 회장 측이 파기환송심의 SK 주식 재산분할 인정에 '치명적 오류'가 있었다는 법리적 주장을 앞세운 점을 강조했고(cc669164f9944be869a2ae5aa431e857, 1, 12), 다른 언론들은 상고로 인해 최 회장이 당장의 현금 마련 부담은 덜었지만 대법원 판단까지 경영 리스크를 감수해야 한다는 점을 부각했다(6b82244fffd6d71fdaad68295fe3ebbe, 1, 9).",
-        "source_context": "이번 재상고로 '세기의 이혼' 소송은 장기화될 전망이며, 대법원의 최종 판결은 SK그룹의 경영권에 상당한 영향을 미칠 수 있다. 법조계에서는 이미 대법원이 한 차례 판단을 내린 사건이므로 결과가 뒤집힐 가능성은 크지 않다고 보는 시각이 우세하다(09825dacd9c1cbad99e8a68a3872447f, 1, 8).",
+        "common_ground": "모든 매체는 최태원 회장이 9440억 원의 재산분할을 명령한 파기환송심 판결에 불복해 대법원에 재상고했다고 보도했다. 대부분의 매체는 이로써 9년에 걸친 법정 공방이 대법원에서 최종 결론을 맺게 되었다고 전했다. 일부 매체는 최 회장 측이 SK 주식의 분할 대상 여부와 비율을 다시 따져달라고 요청했다고 언급했으며, 판결 확정 시 하루 약 1억 3천만 원에 달하는 지연이자가 발생한다고 덧붙였다.",
+        "main_difference": "서로 다른 근거 그룹이 확인되지 않아 대립 구도로 표시하지 않고 공통 보도로 읽습니다.",
+        "source_context": null,
         "limit": "기사 ID·locator·문장 해시가 연결된 관측만 표시합니다. 언론사 성향은 추론하지 않습니다.",
-        "divergence_detected": true
+        "divergence_detected": false
       },
       "synthesis": {
-        "schemaVersion": "agendaframe.event-synthesis.v1",
-        "promptVersion": "event-synthesis-v1.0.0",
+        "schemaVersion": "agendaframe.event-synthesis.v2",
+        "promptVersion": "event-synthesis-v2.0.0",
         "usable": true,
-        "opposition": true,
+        "opposition": false,
+        "event_paragraphs": [
+          {
+            "text": "최태원 SK그룹 회장이 노소영 아트센터 나비 관장과의 이혼 소송 파기환송심 판결에 불복해 대법원에 재상고했다.",
+            "status": "observed",
+            "evidence": [
+              {
+                "article_id": "09825dacd9c1cbad99e8a68a3872447f",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "002253b40c1f9b6f0a850538b9f37c231a094c7e7f9da78b0c56bd80d6455bfd"
+              },
+              {
+                "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
+              }
+            ]
+          },
+          {
+            "text": "이로써 9440억 원 규모의 재산분할을 둘러싼 '세기의 이혼' 소송은 9년여 만에 다시 대법원에서 최종 결론이 나게 됐다.",
+            "status": "observed",
+            "evidence": [
+              {
+                "article_id": "fcc2203e3461734e9b1378589e8b4725",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 11
+                },
+                "sentence_sha256": "c51a99794719286cb76754977e8ce65a5347d4171dc4a41ac679f04e1abd384d"
+              },
+              {
+                "article_id": "83ec12943a84ec03876bd4537d4eb107",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "d6853516f3dc47517301fccbd2c2f6fa5726767b409d5ff20cc6f8b26f2ae3a7"
+              }
+            ]
+          },
+          {
+            "text": "최 회장 측은 SK 주식이 분할 대상인지와 그 비율을 다시 따져달라고 요청했으며, 판결이 확정될 경우 하루 약 1억 3천만 원의 지연이자를 부담해야 한다.",
+            "status": "observed",
+            "evidence": [
+              {
+                "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 6
+                },
+                "sentence_sha256": "1b27668be052fcb267252472d02b6fd607448c757ab276770a37f41674bf9875"
+              },
+              {
+                "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 8
+                },
+                "sentence_sha256": "2a005053fb6815bfe0c9004b9cad604f903d0a3a671739e98c37a433b8261c2c"
+              }
+            ]
+          }
+        ],
+        "terms": [
+          {
+            "term": "재산분할",
+            "gloss": "이혼 시 부부가 혼인 중 공동으로 형성한 재산을 각자의 기여도에 따라 나누는 법적 절차를 의미한다.",
+            "status": "observed",
+            "evidence": [
+              {
+                "article_id": "09825dacd9c1cbad99e8a68a3872447f",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 1
+                },
+                "sentence_sha256": "002253b40c1f9b6f0a850538b9f37c231a094c7e7f9da78b0c56bd80d6455bfd"
+              }
+            ]
+          },
+          {
+            "term": "파기환송심",
+            "gloss": "대법원이 하급심 판결을 파기하고 사건을 다시 심리하라고 돌려보냈을 때 열리는 재판을 말한다.",
+            "status": "observed",
+            "evidence": [
+              {
+                "article_id": "09825dacd9c1cbad99e8a68a3872447f",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "f01987f813ed8ed6d08543fe63c525d962984a5c59b663c4fe3fa24beb51a4cd"
+              }
+            ]
+          },
+          {
+            "term": "재상고",
+            "gloss": "파기환송심 판결에 불복하여 다시 대법원에 상고하는 것을 지칭한다.",
+            "status": "observed",
+            "evidence": [
+              {
+                "article_id": "09825dacd9c1cbad99e8a68a3872447f",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 5
+                },
+                "sentence_sha256": "17516326ecc20450bf3086ad0747b043f9a91c71a66936a1731610a9b150c0c1"
+              }
+            ]
+          }
+        ],
+        "comparison_axis": null,
+        "common_ground": {
+          "text": "모든 매체는 최태원 회장이 9440억 원의 재산분할을 명령한 파기환송심 판결에 불복해 대법원에 재상고했다고 보도했다. 대부분의 매체는 이로써 9년에 걸친 법정 공방이 대법원에서 최종 결론을 맺게 되었다고 전했다. 일부 매체는 최 회장 측이 SK 주식의 분할 대상 여부와 비율을 다시 따져달라고 요청했다고 언급했으며, 판결 확정 시 하루 약 1억 3천만 원에 달하는 지연이자가 발생한다고 덧붙였다.",
+          "status": "observed",
+          "evidence": [
+            {
+              "article_id": "09825dacd9c1cbad99e8a68a3872447f",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "f01987f813ed8ed6d08543fe63c525d962984a5c59b663c4fe3fa24beb51a4cd"
+            },
+            {
+              "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
+            },
+            {
+              "article_id": "83ec12943a84ec03876bd4537d4eb107",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "d6853516f3dc47517301fccbd2c2f6fa5726767b409d5ff20cc6f8b26f2ae3a7"
+            },
+            {
+              "article_id": "cc669164f9944be869a2ae5aa431e857",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "e0a534ac39934e6549ea1e1db4ed00eff4ea3d13d4cde8efe469c707fe3b29b1"
+            },
+            {
+              "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 8
+              },
+              "sentence_sha256": "2a005053fb6815bfe0c9004b9cad604f903d0a3a671739e98c37a433b8261c2c"
+            }
+          ]
+        },
         "what_happened": {
-          "text": "최태원 SK그룹 회장이 노소영 아트센터 나비 관장과의 이혼 소송 파기환송심 판결에 불복해 대법원에 재상고했다. 파기환송심은 최 회장이 노 관장에게 재산분할로 9440억 원을 지급하라고 판결했으며, 이 '세기의 이혼' 소송은 대법원에서 최종 결론이 나게 됐다.",
+          "text": "최태원 SK그룹 회장이 노소영 아트센터 나비 관장과의 이혼 소송 파기환송심 판결에 불복해 대법원에 재상고했다.",
           "status": "observed",
           "evidence": [
             {
@@ -3531,236 +3782,71 @@
               "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
               "locator": {
                 "paragraph": 1,
-                "sentence": 4
-              },
-              "sentence_sha256": "ed7c3678087804afd258a9538af2b033642ce775bbaca58908a37c758346c7cc"
-            },
-            {
-              "article_id": "cc669164f9944be869a2ae5aa431e857",
-              "locator": {
-                "paragraph": 1,
                 "sentence": 2
               },
-              "sentence_sha256": "9496b61efbf49f27d2c3b6ca15f523cf08ad6fede9396f403e49b6c5b2a39c22"
+              "sentence_sha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
             }
           ]
         },
         "agreed_line": {
-          "text": "언론들은 모두 최태원 회장이 노소영 관장에게 9440억 원을 재산분할하라는 파기환송심 판결에 불복해 대법원에 재상고했다고 보도했다(fcc2203e3461734e9b1378589e8b4725, 1, 9; 09825dacd9c1cbad99e8a68a3872447f, 1, 5). 이로써 9년에 걸친 두 사람의 이혼 소송은 대법원의 최종 판단을 받게 됐다(83ec12943a84ec03876bd4537d4eb107, 1, 16).",
+          "text": "모든 매체는 최태원 회장이 9440억 원의 재산분할을 명령한 파기환송심 판결에 불복해 대법원에 재상고했다고 보도했다. 대부분의 매체는 이로써 9년에 걸친 법정 공방이 대법원에서 최종 결론을 맺게 되었다고 전했다. 일부 매체는 최 회장 측이 SK 주식의 분할 대상 여부와 비율을 다시 따져달라고 요청했다고 언급했으며, 판결 확정 시 하루 약 1억 3천만 원에 달하는 지연이자가 발생한다고 덧붙였다.",
           "status": "observed",
           "evidence": [
-            {
-              "article_id": "fcc2203e3461734e9b1378589e8b4725",
-              "locator": {
-                "paragraph": 1,
-                "sentence": 9
-              },
-              "sentence_sha256": "4ef59184b9d24b8732ffd406cf4dc43a85d002dc64abb22268433b30d8d14dca"
-            },
             {
               "article_id": "09825dacd9c1cbad99e8a68a3872447f",
               "locator": {
                 "paragraph": 1,
-                "sentence": 5
+                "sentence": 2
               },
-              "sentence_sha256": "17516326ecc20450bf3086ad0747b043f9a91c71a66936a1731610a9b150c0c1"
-            },
-            {
-              "article_id": "83ec12943a84ec03876bd4537d4eb107",
-              "locator": {
-                "paragraph": 1,
-                "sentence": 16
-              },
-              "sentence_sha256": "ff86b26801996b55119dc609388331e314e892fc5be12e3c750d3537afa87465"
-            }
-          ]
-        },
-        "split_line": {
-          "text": "보도를 종합하면, 일부 언론은 최 회장 측이 파기환송심의 SK 주식 재산분할 인정에 '치명적 오류'가 있었다는 법리적 주장을 앞세운 점을 강조했고(cc669164f9944be869a2ae5aa431e857, 1, 12), 다른 언론들은 상고로 인해 최 회장이 당장의 현금 마련 부담은 덜었지만 대법원 판단까지 경영 리스크를 감수해야 한다는 점을 부각했다(6b82244fffd6d71fdaad68295fe3ebbe, 1, 9).",
-          "status": "observed",
-          "evidence": [
-            {
-              "article_id": "cc669164f9944be869a2ae5aa431e857",
-              "locator": {
-                "paragraph": 1,
-                "sentence": 12
-              },
-              "sentence_sha256": "143616a25e775572de79f4eaa7b4f885b851ba4510698038a68f6318bc915b18"
+              "sentence_sha256": "f01987f813ed8ed6d08543fe63c525d962984a5c59b663c4fe3fa24beb51a4cd"
             },
             {
               "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
               "locator": {
                 "paragraph": 1,
-                "sentence": 9
+                "sentence": 2
               },
-              "sentence_sha256": "bb546d42ec2ea17cbe7c9793c152af059ea81314fc130c99cd18e9e9c681f1d8"
-            }
-          ]
-        },
-        "so_what": {
-          "text": "이번 재상고로 '세기의 이혼' 소송은 장기화될 전망이며, 대법원의 최종 판결은 SK그룹의 경영권에 상당한 영향을 미칠 수 있다. 법조계에서는 이미 대법원이 한 차례 판단을 내린 사건이므로 결과가 뒤집힐 가능성은 크지 않다고 보는 시각이 우세하다(09825dacd9c1cbad99e8a68a3872447f, 1, 8).",
-          "status": "observed",
-          "evidence": [
+              "sentence_sha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
+            },
             {
-              "article_id": "09825dacd9c1cbad99e8a68a3872447f",
+              "article_id": "83ec12943a84ec03876bd4537d4eb107",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "d6853516f3dc47517301fccbd2c2f6fa5726767b409d5ff20cc6f8b26f2ae3a7"
+            },
+            {
+              "article_id": "cc669164f9944be869a2ae5aa431e857",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 6
+              },
+              "sentence_sha256": "e0a534ac39934e6549ea1e1db4ed00eff4ea3d13d4cde8efe469c707fe3b29b1"
+            },
+            {
+              "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
               "locator": {
                 "paragraph": 1,
                 "sentence": 8
               },
-              "sentence_sha256": "b745404eb67db140ce800c2f3ea705a9c77474ec28e93fe08e1b3d00b80fdb1f"
+              "sentence_sha256": "2a005053fb6815bfe0c9004b9cad604f903d0a3a671739e98c37a433b8261c2c"
             }
           ]
         },
-        "camps": [
-          {
-            "name": "법리적 오류 주장",
-            "gist": "최태원 회장 측이 파기환송심 판결에 법리적 오해가 있다고 주장하며 재상고한 점을 중심으로 보도했다. 특히 SK 주식을 부부 공동재산으로 인정한 판단에 '치명적 오류'가 있었다는 점을 강조했다.",
-            "status": "observed",
-            "outlets": [
-              "KBS 뉴스",
-              "중앙일보",
-              "세계일보"
-            ],
-            "article_ids": [
-              "cc669164f9944be869a2ae5aa431e857",
-              "fcc2203e3461734e9b1378589e8b4725",
-              "09825dacd9c1cbad99e8a68a3872447f",
-              "6b82244fffd6d71fdaad68295fe3ebbe"
-            ],
-            "evidence": [
-              {
-                "article_id": "cc669164f9944be869a2ae5aa431e857",
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 12
-                },
-                "sentence_sha256": "143616a25e775572de79f4eaa7b4f885b851ba4510698038a68f6318bc915b18"
-              },
-              {
-                "article_id": "fcc2203e3461734e9b1378589e8b4725",
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 17
-                },
-                "sentence_sha256": "8b287dfffa7c225a0b196392bcfd8f7727dc844a8e451ba0c758bbed66a412b8"
-              },
-              {
-                "article_id": "09825dacd9c1cbad99e8a68a3872447f",
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 7
-                },
-                "sentence_sha256": "c7fa096bbf21602859cebffca97f4508f26f2715e2d2ab5302d23d30b95456ff"
-              },
-              {
-                "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 12
-                },
-                "sentence_sha256": "ab4d338938997744bd4add8ac7ebf9bbddb99088606661958340ded831e1ae59"
-              }
-            ],
-            "index": 0
-          },
-          {
-            "name": "경영 불확실성 우려",
-            "gist": "최태원 회장의 재상고 결정이 SK그룹에 미칠 경제적 영향을 조명했다. 당장의 재산분할금 지급 부담은 피했지만, 소송 장기화로 인한 경영 불확실성과 리스크가 지속될 것이라고 분석했다.",
-            "status": "observed",
-            "outlets": [
-              "KBS 뉴스",
-              "중앙일보"
-            ],
-            "article_ids": [
-              "6b82244fffd6d71fdaad68295fe3ebbe",
-              "fcc2203e3461734e9b1378589e8b4725",
-              "86067ecb43faae14baa94d04ed8fba88",
-              "cc669164f9944be869a2ae5aa431e857"
-            ],
-            "evidence": [
-              {
-                "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 9
-                },
-                "sentence_sha256": "bb546d42ec2ea17cbe7c9793c152af059ea81314fc130c99cd18e9e9c681f1d8"
-              },
-              {
-                "article_id": "fcc2203e3461734e9b1378589e8b4725",
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 10
-                },
-                "sentence_sha256": "1b518dbedcf0d7557d170194ed6f96df1849cab5e9013c136c77e1eb922a8dea"
-              },
-              {
-                "article_id": "86067ecb43faae14baa94d04ed8fba88",
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 10
-                },
-                "sentence_sha256": "e2cf09858600face37afcfb7ce47dd148cdf4fb7f15708847a28fb7f5991d752"
-              },
-              {
-                "article_id": "cc669164f9944be869a2ae5aa431e857",
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 7
-                },
-                "sentence_sha256": "fe5457e96fa55b27feafa84b8327966cfeb7d7ba978f2138c17beb7e08d5ad00"
-              }
-            ],
-            "index": 1
-          }
-        ],
-        "terms": [
-          {
-            "term": "재산분할",
-            "gloss": "이혼 시 부부가 혼인 중 공동으로 형성한 재산을 각자의 기여도에 따라 나누는 법적 절차.",
-            "status": "observed",
-            "evidence": [
-              {
-                "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 2
-                },
-                "sentence_sha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
-              }
-            ]
-          },
-          {
-            "term": "파기환송심",
-            "gloss": "상급심(대법원)이 하급심(고등법원)의 판결을 위법하다는 이유로 파기하고 다시 심리하도록 돌려보낸 후 열리는 재판.",
-            "status": "observed",
-            "evidence": [
-              {
-                "article_id": "09825dacd9c1cbad99e8a68a3872447f",
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 1
-                },
-                "sentence_sha256": "002253b40c1f9b6f0a850538b9f37c231a094c7e7f9da78b0c56bd80d6455bfd"
-              }
-            ]
-          },
-          {
-            "term": "재상고",
-            "gloss": "파기환송심 판결에 불복하여 다시 대법원에 상고하는 것.",
-            "status": "observed",
-            "evidence": [
-              {
-                "article_id": "09825dacd9c1cbad99e8a68a3872447f",
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 6
-                },
-                "sentence_sha256": "a2d8378460002e7cefbe908e39a5d4fadf8b7dadd3846ca09a79e6fdd92ab22d"
-              }
-            ]
-          }
-        ],
+        "split_line": {
+          "text": null,
+          "status": "explicit_not_stated",
+          "evidence": [],
+          "reason": "서로 다른 근거 그룹이 없어 대립 구도로 표시하지 않습니다."
+        },
+        "so_what": {
+          "text": null,
+          "status": "explicit_not_stated",
+          "evidence": [],
+          "reason": "사건 종합에서는 취재원 맥락을 별도 해석으로 표시하지 않습니다."
+        },
+        "camps": [],
         "fact_rows": [],
         "split_rows": [],
         "frame_functions": [],
@@ -3768,135 +3854,150 @@
         "invocation": {
           "provider": "vertex_ai",
           "model": "gemini-2.5-pro",
-          "prompt_version": "event-synthesis-v1.0.0",
+          "prompt_version": "event-synthesis-v2.0.0",
           "attempt": 1,
-          "request_sha256": "1b304c8b2070af820334d130c37a497b412804c3dd784a91f275a968c0ff3993",
-          "response_sha256": "97f7358b89c611893e73ee7256e1b7d63e6e9113fbe0f47bf92b9de8f5ed747e",
-          "response_id": "2ZSAaqLiFvOKx9gP1IyauQk",
-          "completed_at": "2026-08-15T16:34:17.798960+00:00"
+          "request_sha256": "8900851e04097ba02a8d756f185f6a595ee285ec8f310d02b104b8556ea3c0e1",
+          "response_sha256": "9fdcd08622863da5001378084a1842c25995469fbb2e91bc1063c54df22dc77b",
+          "response_id": "4bqCarf8BMKFktwP6YzFoA0",
+          "completed_at": "2026-08-17T07:41:02.964910+00:00"
         },
         "source": "gcp:event-synthesis",
-        "run_id": "f73fe5564a9f4ddba0c2e3a1e48dcd0b"
+        "run_id": "5ccb18b9d8a74675b6e5daa31bd11cd0"
       },
-      "whatHappened": "최태원 SK그룹 회장이 노소영 아트센터 나비 관장과의 이혼 소송 파기환송심 판결에 불복해 대법원에 재상고했다. 파기환송심은 최 회장이 노 관장에게 재산분할로 9440억 원을 지급하라고 판결했으며, 이 '세기의 이혼' 소송은 대법원에서 최종 결론이 나게 됐다.",
-      "agreedLine": "언론들은 모두 최태원 회장이 노소영 관장에게 9440억 원을 재산분할하라는 파기환송심 판결에 불복해 대법원에 재상고했다고 보도했다(fcc2203e3461734e9b1378589e8b4725, 1, 9; 09825dacd9c1cbad99e8a68a3872447f, 1, 5). 이로써 9년에 걸친 두 사람의 이혼 소송은 대법원의 최종 판단을 받게 됐다(83ec12943a84ec03876bd4537d4eb107, 1, 16).",
-      "splitLine": "보도를 종합하면, 일부 언론은 최 회장 측이 파기환송심의 SK 주식 재산분할 인정에 '치명적 오류'가 있었다는 법리적 주장을 앞세운 점을 강조했고(cc669164f9944be869a2ae5aa431e857, 1, 12), 다른 언론들은 상고로 인해 최 회장이 당장의 현금 마련 부담은 덜었지만 대법원 판단까지 경영 리스크를 감수해야 한다는 점을 부각했다(6b82244fffd6d71fdaad68295fe3ebbe, 1, 9).",
-      "soWhat": "이번 재상고로 '세기의 이혼' 소송은 장기화될 전망이며, 대법원의 최종 판결은 SK그룹의 경영권에 상당한 영향을 미칠 수 있다. 법조계에서는 이미 대법원이 한 차례 판단을 내린 사건이므로 결과가 뒤집힐 가능성은 크지 않다고 보는 시각이 우세하다(09825dacd9c1cbad99e8a68a3872447f, 1, 8).",
-      "camps": [
+      "eventParagraphs": [
         {
-          "name": "법리적 오류 주장",
-          "gist": "최태원 회장 측이 파기환송심 판결에 법리적 오해가 있다고 주장하며 재상고한 점을 중심으로 보도했다. 특히 SK 주식을 부부 공동재산으로 인정한 판단에 '치명적 오류'가 있었다는 점을 강조했다.",
-          "outlets": [
-            "KBS 뉴스",
-            "중앙일보",
-            "세계일보"
-          ],
-          "article_ids": [
-            "cc669164f9944be869a2ae5aa431e857",
-            "fcc2203e3461734e9b1378589e8b4725",
-            "09825dacd9c1cbad99e8a68a3872447f",
-            "6b82244fffd6d71fdaad68295fe3ebbe"
-          ],
+          "text": "최태원 SK그룹 회장이 노소영 아트센터 나비 관장과의 이혼 소송 파기환송심 판결에 불복해 대법원에 재상고했다.",
+          "status": "observed",
           "evidence": [
-            {
-              "article_id": "cc669164f9944be869a2ae5aa431e857",
-              "locator": {
-                "paragraph": 1,
-                "sentence": 12
-              },
-              "sentence_sha256": "143616a25e775572de79f4eaa7b4f885b851ba4510698038a68f6318bc915b18"
-            },
-            {
-              "article_id": "fcc2203e3461734e9b1378589e8b4725",
-              "locator": {
-                "paragraph": 1,
-                "sentence": 17
-              },
-              "sentence_sha256": "8b287dfffa7c225a0b196392bcfd8f7727dc844a8e451ba0c758bbed66a412b8"
-            },
             {
               "article_id": "09825dacd9c1cbad99e8a68a3872447f",
               "locator": {
                 "paragraph": 1,
-                "sentence": 7
+                "sentence": 1
               },
-              "sentence_sha256": "c7fa096bbf21602859cebffca97f4508f26f2715e2d2ab5302d23d30b95456ff"
+              "sentence_sha256": "002253b40c1f9b6f0a850538b9f37c231a094c7e7f9da78b0c56bd80d6455bfd"
             },
             {
               "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
               "locator": {
                 "paragraph": 1,
-                "sentence": 12
+                "sentence": 2
               },
-              "sentence_sha256": "ab4d338938997744bd4add8ac7ebf9bbddb99088606661958340ded831e1ae59"
+              "sentence_sha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
             }
-          ],
-          "index": 0
+          ]
         },
         {
-          "name": "경영 불확실성 우려",
-          "gist": "최태원 회장의 재상고 결정이 SK그룹에 미칠 경제적 영향을 조명했다. 당장의 재산분할금 지급 부담은 피했지만, 소송 장기화로 인한 경영 불확실성과 리스크가 지속될 것이라고 분석했다.",
-          "outlets": [
-            "KBS 뉴스",
-            "중앙일보"
-          ],
-          "article_ids": [
-            "6b82244fffd6d71fdaad68295fe3ebbe",
-            "fcc2203e3461734e9b1378589e8b4725",
-            "86067ecb43faae14baa94d04ed8fba88",
-            "cc669164f9944be869a2ae5aa431e857"
-          ],
+          "text": "이로써 9440억 원 규모의 재산분할을 둘러싼 '세기의 이혼' 소송은 9년여 만에 다시 대법원에서 최종 결론이 나게 됐다.",
+          "status": "observed",
+          "evidence": [
+            {
+              "article_id": "fcc2203e3461734e9b1378589e8b4725",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 11
+              },
+              "sentence_sha256": "c51a99794719286cb76754977e8ce65a5347d4171dc4a41ac679f04e1abd384d"
+            },
+            {
+              "article_id": "83ec12943a84ec03876bd4537d4eb107",
+              "locator": {
+                "paragraph": 1,
+                "sentence": 2
+              },
+              "sentence_sha256": "d6853516f3dc47517301fccbd2c2f6fa5726767b409d5ff20cc6f8b26f2ae3a7"
+            }
+          ]
+        },
+        {
+          "text": "최 회장 측은 SK 주식이 분할 대상인지와 그 비율을 다시 따져달라고 요청했으며, 판결이 확정될 경우 하루 약 1억 3천만 원의 지연이자를 부담해야 한다.",
+          "status": "observed",
           "evidence": [
             {
               "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
               "locator": {
                 "paragraph": 1,
-                "sentence": 9
+                "sentence": 6
               },
-              "sentence_sha256": "bb546d42ec2ea17cbe7c9793c152af059ea81314fc130c99cd18e9e9c681f1d8"
+              "sentence_sha256": "1b27668be052fcb267252472d02b6fd607448c757ab276770a37f41674bf9875"
             },
             {
-              "article_id": "fcc2203e3461734e9b1378589e8b4725",
+              "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
               "locator": {
                 "paragraph": 1,
-                "sentence": 10
+                "sentence": 8
               },
-              "sentence_sha256": "1b518dbedcf0d7557d170194ed6f96df1849cab5e9013c136c77e1eb922a8dea"
-            },
-            {
-              "article_id": "86067ecb43faae14baa94d04ed8fba88",
-              "locator": {
-                "paragraph": 1,
-                "sentence": 10
-              },
-              "sentence_sha256": "e2cf09858600face37afcfb7ce47dd148cdf4fb7f15708847a28fb7f5991d752"
-            },
-            {
-              "article_id": "cc669164f9944be869a2ae5aa431e857",
-              "locator": {
-                "paragraph": 1,
-                "sentence": 7
-              },
-              "sentence_sha256": "fe5457e96fa55b27feafa84b8327966cfeb7d7ba978f2138c17beb7e08d5ad00"
+              "sentence_sha256": "2a005053fb6815bfe0c9004b9cad604f903d0a3a671739e98c37a433b8261c2c"
             }
-          ],
-          "index": 1
+          ]
         }
       ],
+      "comparisonAxis": null,
+      "commonGround": {
+        "text": "모든 매체는 최태원 회장이 9440억 원의 재산분할을 명령한 파기환송심 판결에 불복해 대법원에 재상고했다고 보도했다. 대부분의 매체는 이로써 9년에 걸친 법정 공방이 대법원에서 최종 결론을 맺게 되었다고 전했다. 일부 매체는 최 회장 측이 SK 주식의 분할 대상 여부와 비율을 다시 따져달라고 요청했다고 언급했으며, 판결 확정 시 하루 약 1억 3천만 원에 달하는 지연이자가 발생한다고 덧붙였다.",
+        "status": "observed",
+        "evidence": [
+          {
+            "article_id": "09825dacd9c1cbad99e8a68a3872447f",
+            "locator": {
+              "paragraph": 1,
+              "sentence": 2
+            },
+            "sentence_sha256": "f01987f813ed8ed6d08543fe63c525d962984a5c59b663c4fe3fa24beb51a4cd"
+          },
+          {
+            "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
+            "locator": {
+              "paragraph": 1,
+              "sentence": 2
+            },
+            "sentence_sha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
+          },
+          {
+            "article_id": "83ec12943a84ec03876bd4537d4eb107",
+            "locator": {
+              "paragraph": 1,
+              "sentence": 2
+            },
+            "sentence_sha256": "d6853516f3dc47517301fccbd2c2f6fa5726767b409d5ff20cc6f8b26f2ae3a7"
+          },
+          {
+            "article_id": "cc669164f9944be869a2ae5aa431e857",
+            "locator": {
+              "paragraph": 1,
+              "sentence": 6
+            },
+            "sentence_sha256": "e0a534ac39934e6549ea1e1db4ed00eff4ea3d13d4cde8efe469c707fe3b29b1"
+          },
+          {
+            "article_id": "6b82244fffd6d71fdaad68295fe3ebbe",
+            "locator": {
+              "paragraph": 1,
+              "sentence": 8
+            },
+            "sentence_sha256": "2a005053fb6815bfe0c9004b9cad604f903d0a3a671739e98c37a433b8261c2c"
+          }
+        ]
+      },
+      "whatHappened": "최태원 SK그룹 회장이 노소영 아트센터 나비 관장과의 이혼 소송 파기환송심 판결에 불복해 대법원에 재상고했다.",
+      "agreedLine": "모든 매체는 최태원 회장이 9440억 원의 재산분할을 명령한 파기환송심 판결에 불복해 대법원에 재상고했다고 보도했다. 대부분의 매체는 이로써 9년에 걸친 법정 공방이 대법원에서 최종 결론을 맺게 되었다고 전했다. 일부 매체는 최 회장 측이 SK 주식의 분할 대상 여부와 비율을 다시 따져달라고 요청했다고 언급했으며, 판결 확정 시 하루 약 1억 3천만 원에 달하는 지연이자가 발생한다고 덧붙였다.",
+      "splitLine": "서로 다른 근거 그룹이 없어 대립 구도로 표시하지 않습니다.",
+      "soWhat": null,
+      "camps": [],
       "factRows": [],
       "splitRows": [],
       "terms": [
         {
           "term": "재산분할",
-          "gloss": "이혼 시 부부가 혼인 중 공동으로 형성한 재산을 각자의 기여도에 따라 나누는 법적 절차."
+          "gloss": "이혼 시 부부가 혼인 중 공동으로 형성한 재산을 각자의 기여도에 따라 나누는 법적 절차를 의미한다."
         },
         {
           "term": "파기환송심",
-          "gloss": "상급심(대법원)이 하급심(고등법원)의 판결을 위법하다는 이유로 파기하고 다시 심리하도록 돌려보낸 후 열리는 재판."
+          "gloss": "대법원이 하급심 판결을 파기하고 사건을 다시 심리하라고 돌려보냈을 때 열리는 재판을 말한다."
         },
         {
           "term": "재상고",
-          "gloss": "파기환송심 판결에 불복하여 다시 대법원에 상고하는 것."
+          "gloss": "파기환송심 판결에 불복하여 다시 대법원에 상고하는 것을 지칭한다."
         }
       ],
       "frameFunctions": [],
@@ -3906,6 +4007,11 @@
           {
             "outlet": "세계일보",
             "roles": [
+              {
+                "role": "judiciary_law_enforcement",
+                "role_label": "법조·수사기관",
+                "count": 2
+              },
               {
                 "role": "business",
                 "role_label": "기업·산업계",
@@ -3924,17 +4030,17 @@
               {
                 "role": "other",
                 "role_label": "기타 취재원",
-                "count": 4
+                "count": 6
               },
               {
                 "role": "business",
                 "role_label": "기업·산업계",
-                "count": 2
+                "count": 1
               },
               {
                 "role": "affected_person",
                 "role_label": "당사자·시민",
-                "count": 2
+                "count": 1
               }
             ]
           },
@@ -3944,6 +4050,11 @@
               {
                 "role": "business",
                 "role_label": "기업·산업계",
+                "count": 2
+              },
+              {
+                "role": "judiciary_law_enforcement",
+                "role_label": "법조·수사기관",
                 "count": 1
               },
               {
@@ -3976,137 +4087,41 @@
         "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
         "locator": {
           "paragraph": 1,
-          "sentence": 4
-        },
-        "sentenceSha256": "ed7c3678087804afd258a9538af2b033642ce775bbaca58908a37c758346c7cc"
-      },
-      {
-        "articleId": "cc669164f9944be869a2ae5aa431e857",
-        "locator": {
-          "paragraph": 1,
           "sentence": 2
         },
-        "sentenceSha256": "9496b61efbf49f27d2c3b6ca15f523cf08ad6fede9396f403e49b6c5b2a39c22"
+        "sentenceSha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
       },
       {
         "articleId": "fcc2203e3461734e9b1378589e8b4725",
         "locator": {
           "paragraph": 1,
-          "sentence": 9
+          "sentence": 11
         },
-        "sentenceSha256": "4ef59184b9d24b8732ffd406cf4dc43a85d002dc64abb22268433b30d8d14dca"
-      },
-      {
-        "articleId": "09825dacd9c1cbad99e8a68a3872447f",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 5
-        },
-        "sentenceSha256": "17516326ecc20450bf3086ad0747b043f9a91c71a66936a1731610a9b150c0c1"
+        "sentenceSha256": "c51a99794719286cb76754977e8ce65a5347d4171dc4a41ac679f04e1abd384d"
       },
       {
         "articleId": "83ec12943a84ec03876bd4537d4eb107",
         "locator": {
           "paragraph": 1,
-          "sentence": 16
+          "sentence": 2
         },
-        "sentenceSha256": "ff86b26801996b55119dc609388331e314e892fc5be12e3c750d3537afa87465"
-      },
-      {
-        "articleId": "cc669164f9944be869a2ae5aa431e857",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 12
-        },
-        "sentenceSha256": "143616a25e775572de79f4eaa7b4f885b851ba4510698038a68f6318bc915b18"
+        "sentenceSha256": "d6853516f3dc47517301fccbd2c2f6fa5726767b409d5ff20cc6f8b26f2ae3a7"
       },
       {
         "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
         "locator": {
           "paragraph": 1,
-          "sentence": 9
+          "sentence": 6
         },
-        "sentenceSha256": "bb546d42ec2ea17cbe7c9793c152af059ea81314fc130c99cd18e9e9c681f1d8"
+        "sentenceSha256": "1b27668be052fcb267252472d02b6fd607448c757ab276770a37f41674bf9875"
       },
       {
-        "articleId": "09825dacd9c1cbad99e8a68a3872447f",
+        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
         "locator": {
           "paragraph": 1,
           "sentence": 8
         },
-        "sentenceSha256": "b745404eb67db140ce800c2f3ea705a9c77474ec28e93fe08e1b3d00b80fdb1f"
-      },
-      {
-        "articleId": "cc669164f9944be869a2ae5aa431e857",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 12
-        },
-        "sentenceSha256": "143616a25e775572de79f4eaa7b4f885b851ba4510698038a68f6318bc915b18"
-      },
-      {
-        "articleId": "fcc2203e3461734e9b1378589e8b4725",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 17
-        },
-        "sentenceSha256": "8b287dfffa7c225a0b196392bcfd8f7727dc844a8e451ba0c758bbed66a412b8"
-      },
-      {
-        "articleId": "09825dacd9c1cbad99e8a68a3872447f",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 7
-        },
-        "sentenceSha256": "c7fa096bbf21602859cebffca97f4508f26f2715e2d2ab5302d23d30b95456ff"
-      },
-      {
-        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 12
-        },
-        "sentenceSha256": "ab4d338938997744bd4add8ac7ebf9bbddb99088606661958340ded831e1ae59"
-      },
-      {
-        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 9
-        },
-        "sentenceSha256": "bb546d42ec2ea17cbe7c9793c152af059ea81314fc130c99cd18e9e9c681f1d8"
-      },
-      {
-        "articleId": "fcc2203e3461734e9b1378589e8b4725",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 10
-        },
-        "sentenceSha256": "1b518dbedcf0d7557d170194ed6f96df1849cab5e9013c136c77e1eb922a8dea"
-      },
-      {
-        "articleId": "86067ecb43faae14baa94d04ed8fba88",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 10
-        },
-        "sentenceSha256": "e2cf09858600face37afcfb7ce47dd148cdf4fb7f15708847a28fb7f5991d752"
-      },
-      {
-        "articleId": "cc669164f9944be869a2ae5aa431e857",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 7
-        },
-        "sentenceSha256": "fe5457e96fa55b27feafa84b8327966cfeb7d7ba978f2138c17beb7e08d5ad00"
-      },
-      {
-        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 2
-        },
-        "sentenceSha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
+        "sentenceSha256": "2a005053fb6815bfe0c9004b9cad604f903d0a3a671739e98c37a433b8261c2c"
       },
       {
         "articleId": "09825dacd9c1cbad99e8a68a3872447f",
@@ -4120,73 +4135,201 @@
         "articleId": "09825dacd9c1cbad99e8a68a3872447f",
         "locator": {
           "paragraph": 1,
-          "sentence": 6
+          "sentence": 2
         },
-        "sentenceSha256": "a2d8378460002e7cefbe908e39a5d4fadf8b7dadd3846ca09a79e6fdd92ab22d"
-      },
-      {
-        "articleId": "cc669164f9944be869a2ae5aa431e857",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 12
-        },
-        "sentenceSha256": "143616a25e775572de79f4eaa7b4f885b851ba4510698038a68f6318bc915b18"
-      },
-      {
-        "articleId": "fcc2203e3461734e9b1378589e8b4725",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 17
-        },
-        "sentenceSha256": "8b287dfffa7c225a0b196392bcfd8f7727dc844a8e451ba0c758bbed66a412b8"
+        "sentenceSha256": "f01987f813ed8ed6d08543fe63c525d962984a5c59b663c4fe3fa24beb51a4cd"
       },
       {
         "articleId": "09825dacd9c1cbad99e8a68a3872447f",
         "locator": {
           "paragraph": 1,
-          "sentence": 7
+          "sentence": 5
         },
-        "sentenceSha256": "c7fa096bbf21602859cebffca97f4508f26f2715e2d2ab5302d23d30b95456ff"
+        "sentenceSha256": "17516326ecc20450bf3086ad0747b043f9a91c71a66936a1731610a9b150c0c1"
+      },
+      {
+        "articleId": "09825dacd9c1cbad99e8a68a3872447f",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "f01987f813ed8ed6d08543fe63c525d962984a5c59b663c4fe3fa24beb51a4cd"
       },
       {
         "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
         "locator": {
           "paragraph": 1,
-          "sentence": 12
+          "sentence": 2
         },
-        "sentenceSha256": "ab4d338938997744bd4add8ac7ebf9bbddb99088606661958340ded831e1ae59"
+        "sentenceSha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
       },
       {
-        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
+        "articleId": "83ec12943a84ec03876bd4537d4eb107",
         "locator": {
           "paragraph": 1,
-          "sentence": 9
+          "sentence": 2
         },
-        "sentenceSha256": "bb546d42ec2ea17cbe7c9793c152af059ea81314fc130c99cd18e9e9c681f1d8"
-      },
-      {
-        "articleId": "fcc2203e3461734e9b1378589e8b4725",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 10
-        },
-        "sentenceSha256": "1b518dbedcf0d7557d170194ed6f96df1849cab5e9013c136c77e1eb922a8dea"
-      },
-      {
-        "articleId": "86067ecb43faae14baa94d04ed8fba88",
-        "locator": {
-          "paragraph": 1,
-          "sentence": 10
-        },
-        "sentenceSha256": "e2cf09858600face37afcfb7ce47dd148cdf4fb7f15708847a28fb7f5991d752"
+        "sentenceSha256": "d6853516f3dc47517301fccbd2c2f6fa5726767b409d5ff20cc6f8b26f2ae3a7"
       },
       {
         "articleId": "cc669164f9944be869a2ae5aa431e857",
         "locator": {
           "paragraph": 1,
-          "sentence": 7
+          "sentence": 6
         },
-        "sentenceSha256": "fe5457e96fa55b27feafa84b8327966cfeb7d7ba978f2138c17beb7e08d5ad00"
+        "sentenceSha256": "e0a534ac39934e6549ea1e1db4ed00eff4ea3d13d4cde8efe469c707fe3b29b1"
+      },
+      {
+        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 8
+        },
+        "sentenceSha256": "2a005053fb6815bfe0c9004b9cad604f903d0a3a671739e98c37a433b8261c2c"
+      },
+      {
+        "articleId": "09825dacd9c1cbad99e8a68a3872447f",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 1
+        },
+        "sentenceSha256": "002253b40c1f9b6f0a850538b9f37c231a094c7e7f9da78b0c56bd80d6455bfd"
+      },
+      {
+        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
+      },
+      {
+        "articleId": "09825dacd9c1cbad99e8a68a3872447f",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "f01987f813ed8ed6d08543fe63c525d962984a5c59b663c4fe3fa24beb51a4cd"
+      },
+      {
+        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
+      },
+      {
+        "articleId": "83ec12943a84ec03876bd4537d4eb107",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "d6853516f3dc47517301fccbd2c2f6fa5726767b409d5ff20cc6f8b26f2ae3a7"
+      },
+      {
+        "articleId": "cc669164f9944be869a2ae5aa431e857",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 6
+        },
+        "sentenceSha256": "e0a534ac39934e6549ea1e1db4ed00eff4ea3d13d4cde8efe469c707fe3b29b1"
+      },
+      {
+        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 8
+        },
+        "sentenceSha256": "2a005053fb6815bfe0c9004b9cad604f903d0a3a671739e98c37a433b8261c2c"
+      },
+      {
+        "articleId": "09825dacd9c1cbad99e8a68a3872447f",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 1
+        },
+        "sentenceSha256": "002253b40c1f9b6f0a850538b9f37c231a094c7e7f9da78b0c56bd80d6455bfd"
+      },
+      {
+        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
+      },
+      {
+        "articleId": "fcc2203e3461734e9b1378589e8b4725",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 11
+        },
+        "sentenceSha256": "c51a99794719286cb76754977e8ce65a5347d4171dc4a41ac679f04e1abd384d"
+      },
+      {
+        "articleId": "83ec12943a84ec03876bd4537d4eb107",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "d6853516f3dc47517301fccbd2c2f6fa5726767b409d5ff20cc6f8b26f2ae3a7"
+      },
+      {
+        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 6
+        },
+        "sentenceSha256": "1b27668be052fcb267252472d02b6fd607448c757ab276770a37f41674bf9875"
+      },
+      {
+        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 8
+        },
+        "sentenceSha256": "2a005053fb6815bfe0c9004b9cad604f903d0a3a671739e98c37a433b8261c2c"
+      },
+      {
+        "articleId": "09825dacd9c1cbad99e8a68a3872447f",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "f01987f813ed8ed6d08543fe63c525d962984a5c59b663c4fe3fa24beb51a4cd"
+      },
+      {
+        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "5ccce9f7bfb7983e1f01f8487fc8a4b264e29e2b0c2c5b01757504b545996134"
+      },
+      {
+        "articleId": "83ec12943a84ec03876bd4537d4eb107",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 2
+        },
+        "sentenceSha256": "d6853516f3dc47517301fccbd2c2f6fa5726767b409d5ff20cc6f8b26f2ae3a7"
+      },
+      {
+        "articleId": "cc669164f9944be869a2ae5aa431e857",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 6
+        },
+        "sentenceSha256": "e0a534ac39934e6549ea1e1db4ed00eff4ea3d13d4cde8efe469c707fe3b29b1"
+      },
+      {
+        "articleId": "6b82244fffd6d71fdaad68295fe3ebbe",
+        "locator": {
+          "paragraph": 1,
+          "sentence": 8
+        },
+        "sentenceSha256": "2a005053fb6815bfe0c9004b9cad604f903d0a3a671739e98c37a433b8261c2c"
       }
     ]
   },
@@ -4201,13 +4344,13 @@
       "top5GeneratedAt": null,
       "metadataSchemaVersion": "agendaframe.metadata-issue-cluster.v1",
       "metadataGeneratedAt": null,
-      "semanticDirectory": "current-display-batch/f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+      "semanticDirectory": "current-display-batch/5ccb18b9d8a74675b6e5daa31bd11cd0",
       "semanticFileCount": 6,
       "semanticBatchModel": "gemini-2.5-pro",
       "semanticBatchPromptVersion": "2.6.0",
-      "eventSynthesisPromptVersion": "event-synthesis-v1.0.0"
+      "eventSynthesisPromptVersion": "event-synthesis-v2.0.0"
     },
-    "runId": "f73fe5564a9f4ddba0c2e3a1e48dcd0b",
+    "runId": "5ccb18b9d8a74675b6e5daa31bd11cd0",
     "analysisBoundary": "current Vercel display articles only; collection/ranking/scheduler untouched"
   }
 }

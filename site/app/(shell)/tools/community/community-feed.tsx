@@ -161,6 +161,7 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
 
   const loadPosts = useCallback(async (nextSort = sort, nextCursor: string | null = null, append = false) => {
     if (mode === "local") { loadLocal(nextSort); return; }
+    if (!COMMUNITY_API_ENABLED) { setMode("local"); loadLocal(nextSort); return; }
     try {
       const query = new URLSearchParams({ sort: nextSort, limit: "20" });
       if (nextCursor) query.set("cursor", nextCursor);
