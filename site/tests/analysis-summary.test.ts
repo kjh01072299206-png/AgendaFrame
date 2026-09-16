@@ -243,6 +243,18 @@ test("same-outlet article variation is not promoted to a media difference", () =
   assert.notEqual(dimension?.status, "difference_confirmed");
 });
 
+test("comparison groups use a runtime-independent display order", () => {
+  const bundle = makeBundle([
+    { articleId: "b", outlet: "B 매체", family: "beta", text: "b 기사는 통상 관세 조치가 국내 물류에 미친 영향을 중심 현상으로 설명했다." },
+    { articleId: "a", outlet: "A 매체", family: "alpha", text: "A 기사는 이혼 재산분할 금액의 법리 판단을 핵심 쟁점으로 설명했다." },
+  ]);
+  const groups = comparisonSummary(bundle, issueView(2)).dimensions[0]?.groups ?? [];
+  assert.deepEqual(groups.map((group) => group.title), [
+    "A 기사는 이혼 재산분할 금액의 법리 판단을 핵심 쟁점으로 설명했다.",
+    "b 기사는 통상 관세 조치가 국내 물류에 미친 영향을 중심 현상으로 설명했다.",
+  ]);
+});
+
 test("multiple claims in one article retain separate evidence", () => {
   const bundle = makeBundle([{
     articleId: "a",

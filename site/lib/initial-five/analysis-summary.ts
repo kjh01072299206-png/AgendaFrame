@@ -92,6 +92,13 @@ const STATUS_LABEL: Record<ComparisonStatus, string> = {
   held_for_analysis: "비교 보류",
 };
 
+// Node SSR과 브라우저가 localeCompare의 기본 locale을 다르게 가질 수 있다.
+// 서버에서 만든 HTML과 클라이언트 hydration의 순서를 고정하기 위해 코드 포인트
+// 비교만 사용한다.
+function compareStableText(left: string, right: string) {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
 const VOICE_LABEL: Record<string, string> = {
   journalist_narration: "기자 서술",
   direct_quote: "직접 인용",
@@ -381,7 +388,7 @@ function groupObservations(
         details: detailsForGroup(bundle, [first.articleId], voice),
       } satisfies ComparisonGroup;
     })
-    .sort((a, b) => b.articleCount - a.articleCount || b.outlets.length - a.outlets.length || a.title.localeCompare(b.title));
+    .sort((a, b) => b.articleCount - a.articleCount || b.outlets.length - a.outlets.length || compareStableText(a.title, b.title));
 }
 
 function quote(value: string, limit = 76) {

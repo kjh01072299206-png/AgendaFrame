@@ -162,6 +162,12 @@ const CODE_LABEL: Record<string, string> = {
   unknown: "분류 미상",
 };
 
+// localeCompare의 기본 locale은 Node SSR과 브라우저에서 달라질 수 있어
+// hydration 시 그룹 순서가 바뀐다. 화면 정렬은 실행 환경과 무관한 비교를 쓴다.
+function compareStableText(left: string, right: string) {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
 function codeLabel(code?: string | null, label?: string | null) {
   const cleanLabel = typeof label === "string" ? label.trim() : "";
   if (cleanLabel && cleanLabel !== code && !/^[a-z][a-z0-9_.-]*$/i.test(cleanLabel)) return cleanLabel;
@@ -406,7 +412,7 @@ function analyzeDimension(bundle: IssueAnalysisBundle, issue: IssueView, dimensi
           ).size,
         } satisfies FamilyGroup;
       })
-      .sort((a, b) => b.articleIds.length - a.articleIds.length || a.label.localeCompare(b.label));
+      .sort((a, b) => b.articleIds.length - a.articleIds.length || compareStableText(a.label, b.label));
   };
   const observedRows = rows.filter((candidate) => !candidate.stateOnly && candidate.validEvidence && candidate.item.public_paraphrase);
   const groups = textGroups(observedRows.filter((row) => isNarration(row.item.voice?.kind)));
@@ -867,7 +873,7 @@ function StructuredObservationSection({ bundle, issue }: { bundle: IssueAnalysis
   const countValues = (values: Array<string | undefined>) => [...values.reduce((map, value) => {
     if (value) map.set(value, (map.get(value) ?? 0) + 1);
     return map;
-  }, new Map<string, number>())].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }, new Map<string, number>())].sort((a, b) => b[1] - a[1] || compareStableText(a[0], b[0]));
   const displayValue = (labels: Record<string, string>, code?: string, label?: string) => code || label ? (labels[code ?? ""] ?? codeLabel(code, label)) : undefined;
   const genre = countValues(profiles.map(({ profile }) => displayValue(GENRE_LABEL, profile?.genre?.code, profile?.genre?.label)));
   const scope = countValues(profiles.map(({ profile }) => displayValue(SCOPE_KIND_LABEL, profile?.scope?.code, profile?.scope?.label)));
