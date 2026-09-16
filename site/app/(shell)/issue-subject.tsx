@@ -20,7 +20,6 @@ export function IssueSubject({
   articleCount,
   outletCount,
   splitDimensions,
-  splitDimensionsWithSources = 0,
   analysisPending = false,
 }: {
   issueId: string;
@@ -52,17 +51,13 @@ export function IssueSubject({
           {category ? <span className="afs-chip afs-chip-brand">{category}</span> : null}
           <span className="afs-chip afs-num">기사 {articleCount}건</span>
           <span className="afs-chip afs-num">매체 {outletCount}곳</span>
-          <span className="afs-chip afs-chip-good afs-num">
-            {analysisPending
-              ? "본문 근거 부족 · 비교 보류"
-              : compact
-                ? splitDimensions > 0
-                  ? `기자 서술 ${splitDimensions}축에서 갈림`
-                  : splitDimensionsWithSources > 0
-                    ? `취재원 포함 ${splitDimensionsWithSources}축 관측`
-                    : "매체 서술 갈림 미확정"
+          {!compact ? (
+            <span className="afs-chip afs-chip-good afs-num">
+              {analysisPending
+                ? "본문 근거 부족 · 비교 보류"
                 : `다섯 층위 중 ${splitDimensions}곳에서 갈림`}
-          </span>
+            </span>
+          ) : null}
           <SaveIssueButton issueId={issueId} title={title} />
         </div>
       </section>

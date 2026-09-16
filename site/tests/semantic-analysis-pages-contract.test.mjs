@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const pagePath = path.join(siteRoot, "app", "(shell)", "semantic-analysis-pages.tsx");
 const comparisonPath = path.join(siteRoot, "app", "(shell)", "comparison-lead.tsx");
+const summaryPath = path.join(siteRoot, "lib", "initial-five", "analysis-summary.ts");
+const derivePath = path.join(siteRoot, "lib", "initial-five", "derive.ts");
 const comparisonStylesPath = path.join(siteRoot, "app", "app-round2.css");
 
 test("semantic pages enforce public evidence and state boundaries", async () => {
@@ -19,7 +21,6 @@ test("semantic pages enforce public evidence and state boundaries", async () => 
   assert.match(source, /analysis_failed/);
   assert.match(source, /conflicting/);
   assert.match(source, /profile\?\.review/);
-  assert.match(source, /사건 30초 요약/);
   assert.match(source, /공통으로 본 것과 갈린 지점/);
   assert.match(source, /프레이밍의 여섯 관측축/);
   assert.match(source, /프레임 4기능 비교/);
@@ -30,9 +31,12 @@ test("semantic pages enforce public evidence and state boundaries", async () => 
   assert.match(source, /서로 다른 근거 그룹이 없어 대립 구도로 표시하지 않습니다/);
   assert.match(source, /synthesis\?\.usable/);
   assert.match(source, /구조화 보조 관측/);
-  assert.match(source, /rules_local.*semantic AI와 별도/);
+  assert.match(source, /규칙 기반.*semantic AI와 별도/);
   assert.match(source, /validComparisonEvidence/);
   assert.match(source, /comparison_axes/);
+  assert.match(source, /semanticEntryIsEligible/);
+  assert.match(source, /sameComparisonMeaning/);
+  assert.match(source, /공통 계열로 묶인 설명/);
 });
 
 test("semantic pages do not publish raw article text fields or political ideology labels", async () => {
@@ -74,17 +78,19 @@ test("semantic pages keep the issue context and lead with prototype reading orde
   assert.match(source, /ComparisonLeadV2/);
   assert.match(comparison, /export function ComparisonLead/);
   assert.match(comparison, /event_paragraphs/);
-  assert.match(comparison, /className="afp-event-title">\{issue\.title\}/);
-  assert.match(comparison, /사건 서술과 용어 풀이는 근거 기사를 취합해 썼고/);
+  assert.match(comparison, /<h2>무슨 일이 있었나<\/h2>/);
+  assert.match(comparison, /기사 묶음에서 근거가 연결된 경위입니다/);
   assert.match(comparison, /사건 경위와 용어 더 보기/);
   assert.match(comparison, /aria-expanded/);
   assert.match(comparison, /aria-controls/);
-  assert.match(comparison, /결정적 차이/);
+  assert.match(comparison, /관측된 차이/);
+  assert.match(comparison, /summary\.statusLabel/);
+  assert.match(comparison, /대표 기사에서 함께 관측된 보조 설명/);
   assert.match(comparison, /기사 근거 보기/);
   assert.match(source, /afp-framing-lead-grid/);
   assert.match(source, /세부 프레임 분석 보기/);
   const outlets = source.indexOf("export function OutletsSemanticPage");
-  const outletsLead = source.indexOf("<ComparisonLeadV2 issue={issue} synthesis={synthesisData(bundle)} />", outlets);
+  const outletsLead = source.indexOf("<ComparisonLeadV2 bundle={bundle} issue={issue} synthesis={synthesisData(bundle)} />", outlets);
   const outletsEvidence = source.indexOf('id="sec-evidence"', outletsLead);
   assert.ok(outletsLead > outlets, "outlets page should use the comparison lead");
   assert.ok(outletsEvidence > outletsLead, "article evidence should follow the event and camp lead");
@@ -93,6 +99,26 @@ test("semantic pages keep the issue context and lead with prototype reading orde
   const framingGuide = source.indexOf('id="sec-guide"', framingGrid);
   assert.ok(framingGrid > framing, "framing page should start with the summary/scope lead grid");
   assert.ok(framingGuide > framingGrid, "framing guide should follow the lead grid");
+});
+
+test("comparison summary keeps status, question, groups, and speaker scope consistent", async () => {
+  const source = await readFile(summaryPath, "utf8");
+  assert.match(source, /difference_confirmed/);
+  assert.match(source, /no_clear_difference/);
+  assert.match(source, /held_for_analysis/);
+  assert.match(source, /sourceGroups/);
+  assert.match(source, /voice === "journalist"/);
+  assert.match(source, /hasValidPublicEvidence/);
+  assert.match(source, /valueKey/);
+  assert.match(source, /articleId/);
+  assert.doesNotMatch(source, /COMPARE_(QUESTIONS|DIVIDES|STORIES)/);
+});
+
+test("empty semantic profiles do not become a synthetic all-empty cluster", async () => {
+  const source = await readFile(derivePath, "utf8");
+  assert.match(source, /filter\(\(item\) => hasPublicEvidence\(item\.evidence\)\)/);
+  assert.match(source, /if \(!DIM_ORDER\.some\(\(dim\) => signature\[dim\] !== undefined\)\) continue/);
+  assert.match(source, /FAMILY_LABEL[\s\S]*economic_negative: "경제적 부담"/);
 });
 
 test("comparison lead uses the desktop card width and collapses its context columns", async () => {

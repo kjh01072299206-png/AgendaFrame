@@ -6,6 +6,9 @@ import {
   DIM_QUESTION,
   VOICE_LABEL,
   familyLabel,
+  DEPTH_LABEL,
+  GENRE_LABEL,
+  SCOPE_KIND_LABEL,
   type IssueView,
   type LayerItem,
 } from "../../lib/initial-five/derive";
@@ -18,6 +21,13 @@ import type {
 } from "../../lib/initial-five/types";
 import { stripEvidenceTokens } from "../../lib/initial-five/public-text.mjs";
 import { ComparisonLead as ComparisonLeadV2 } from "./comparison-lead";
+import {
+  comparisonSummary,
+  normalizeComparisonText,
+  sameComparisonMeaning,
+  semanticEntryBlockedState,
+  semanticEntryIsEligible,
+} from "../../lib/initial-five/analysis-summary";
 
 type RichProfile = NonNullable<SemanticProfileEntry["profile"]> & {
   secondary_descriptors?: {
@@ -40,6 +50,8 @@ type RichProfile = NonNullable<SemanticProfileEntry["profile"]> & {
     requires_human_review?: boolean;
     fallback_reason?: string | null;
   };
+  morphology?: unknown;
+  semantic_network?: unknown;
 };
 
 type StructuredProfile = {
@@ -94,6 +106,7 @@ type DimensionAnalysis = {
   question: string;
   rows: Row[];
   groups: FamilyGroup[];
+  sourceGroups: FamilyGroup[];
   observedArticles: number;
   narratedArticles: number;
   attributedArticles: number;
@@ -101,6 +114,11 @@ type DimensionAnalysis = {
 };
 
 const STATUS_COPY: Record<string, string> = {
+  queued: "분석 대기",
+  running: "분석 중",
+  retry_wait: "재시도 대기",
+  succeeded: "분석 완료",
+  dead_letter: "분석 실패",
   observed: "매체 서술에서 관측",
   source_attributed: "취재원 발언에서 관측",
   mixed: "매체 서술·취재원 발언 혼합",
@@ -123,6 +141,32 @@ const MODEL_STATUS_COPY: Record<string, string> = {
   conflicting: "모델 판정 충돌",
   missing_dimension: "차원 프로필 없음",
 };
+
+const CODE_LABEL: Record<string, string> = {
+  conflict: "갈등",
+  economic_consequences: "경제적 결과",
+  responsibility: "책임",
+  capacity: "행정 역량",
+  crime_punishment: "범죄·처벌",
+  economic: "경제",
+  legality: "합법성",
+  political: "정치",
+  security_defense: "안보·방위",
+  active_voice: "능동형 표현",
+  causal_link: "원인 연결",
+  chronology: "시간 순서",
+  contrast: "대조 표현",
+  evaluative_label: "평가 표현",
+  headline_emphasis: "제목·리드 강조",
+  quantification: "수치 제시",
+  unknown: "분류 미상",
+};
+
+function codeLabel(code?: string | null, label?: string | null) {
+  const cleanLabel = typeof label === "string" ? label.trim() : "";
+  if (cleanLabel && cleanLabel !== code && !/^[a-z][a-z0-9_.-]*$/i.test(cleanLabel)) return cleanLabel;
+  return (code && CODE_LABEL[code]) ?? (cleanLabel && CODE_LABEL[cleanLabel]) ?? "분류 미상";
+}
 
 const DIMENSION_LIST = [...DIM_ORDER];
 const CORE_DIMENSIONS = DIMENSION_LIST;
@@ -179,13 +223,9 @@ function synthesisData(bundle: IssueAnalysisBundle): EventSynthesisData | null {
   return value && typeof value === "object" ? value : null;
 }
 
-function synthesisCamps(bundle: IssueAnalysisBundle) {
-  const synthesis = synthesisData(bundle);
-  return (synthesis?.camps ?? []).filter((camp) => camp.gist && (camp.outlets?.length || camp.article_ids?.length));
-}
-
 function observedClaim(claim?: { text?: string | null; status?: string } | null): string | null {
   if (claim?.status !== "observed" || typeof claim.text !== "string" || !claim.text.trim()) return null;
+  if (!evidenceRefs((claim as { evidence?: unknown }).evidence).some((ref) => hasValidEvidence({ locator: ref.locator, hash: ref.sentence_sha256 ?? ref.hash }))) return null;
   return stripEvidenceTokens(claim.text) || null;
 }
 
@@ -233,6 +273,11 @@ const GUIDE_LABEL: Record<string, string> = {
   actor_visibility: "취재원·발화 배치",
 };
 
+const GUIDE_QUESTION: Record<string, string> = {
+  ...DIM_QUESTION,
+  actor_visibility: "누구 말을 실었나",
+};
+
 function isNarration(kind?: string) {
   return kind === "journalist_narration";
 }
@@ -262,6 +307,29 @@ function stateReason(modelStatus: string, status: string, explicitReason?: strin
   return "공개 근거 위치와 문장 지문이 없어 이 항목을 증거로 표시하지 않습니다.";
 }
 
+const BLOCKED_DIMENSION_STATES = new Set([
+  "analysis_failed",
+  "conflicting",
+  "insufficient_evidence",
+  "dead_letter",
+  "failed",
+]);
+
+function semanticRowState(
+  entry: SemanticProfileEntry,
+  bundle: IssueAnalysisBundle,
+  node: NonNullable<NonNullable<RichProfile["dimensions"]>[string]>,
+  modelStatus: string,
+) {
+  const entryState = semanticEntryBlockedState(entry, bundle);
+  const nodeState = [node.status, node.model_status].find((value): value is string => Boolean(value && BLOCKED_DIMENSION_STATES.has(value)));
+  if (entryState) return entryState;
+  if (nodeState) return nodeState;
+  if (entry.status !== "succeeded") return entry.status;
+  if (modelStatus !== "supported") return modelStatus;
+  return null;
+}
+
 function rowsForDimension(bundle: IssueAnalysisBundle, issue: IssueView, dimension: string): Row[] {
   const entries = profileMap(bundle);
   const articles = articleMap(bundle, issue);
@@ -274,12 +342,13 @@ function rowsForDimension(bundle: IssueAnalysisBundle, issue: IssueView, dimensi
     const view = articles.get(article.articleId);
     const nodeRecord = node as typeof node & { abstention_reason?: string | null };
     const modelStatus = node.model_status ?? (node.status === "not_observed" ? "not_observed" : "supported");
+    const rowState = semanticRowState(entry!, bundle, node, modelStatus);
     const reviewStatus = profile?.review?.status ?? null;
     const reviewRequired = Boolean(profile?.review?.requires_human_review ?? entry?.engine.reviewRequired);
     const itemRows = uniqueItems(node.items ?? []);
     const items = itemRows.length ? itemRows : [{ } as SemanticDimensionItem];
     for (const item of items) {
-      const stateOnly = itemRows.length === 0;
+      const stateOnly = itemRows.length === 0 || Boolean(rowState) || !semanticEntryIsEligible(entry!, bundle);
       rows.push({
         articleId: article.articleId,
         outlet: view?.outlet ?? article.outlet ?? "매체 미상",
@@ -287,10 +356,10 @@ function rowsForDimension(bundle: IssueAnalysisBundle, issue: IssueView, dimensi
         url: view?.url ?? article.canonicalUrl,
         item,
         status: node.status ?? "not_observed",
-        modelStatus,
+        modelStatus: rowState ?? modelStatus,
         reviewStatus,
         reviewRequired,
-        stateReason: stateReason(modelStatus, node.status ?? "not_observed", nodeRecord.abstention_reason),
+        stateReason: stateReason(rowState ?? modelStatus, node.status ?? "not_observed", nodeRecord.abstention_reason),
         stateOnly,
         validEvidence: !stateOnly && hasValidEvidence(item.evidence),
         evidenceCount: entry?.evidence.length ?? 0,
@@ -307,37 +376,48 @@ function analyzeDimension(bundle: IssueAnalysisBundle, issue: IssueView, dimensi
     const key = stateKey(row);
     stateCounts[key] = (stateCounts[key] ?? 0) + 1;
   }
-  const grouped = new Map<string, Row[]>();
-  for (const row of rows.filter((candidate) => !candidate.stateOnly && candidate.validEvidence && candidate.item.frame_family)) {
-    const family = row.item.frame_family ?? "unclassified";
-    const group = grouped.get(family) ?? [];
-    group.push(row);
-    grouped.set(family, group);
-  }
-  const groups = [...grouped.entries()]
-    .map(([family, groupRows]) => {
-      const articleIds = [...new Set(groupRows.map((row) => row.articleId))];
-      return {
-        family,
-        label: family === "unclassified" ? "분류 코드 미확정" : familyLabel(family),
-        rows: groupRows,
-        articleIds,
-        outlets: [...new Set(groupRows.map((row) => row.outlet))],
-        narratedArticles: new Set(
-          groupRows.filter((row) => row.item.voice?.kind === "journalist_narration").map((row) => row.articleId),
-        ).size,
-        attributedArticles: new Set(
-          groupRows.filter((row) => isAttributed(row.item.voice?.kind)).map((row) => row.articleId),
-        ).size,
-      } satisfies FamilyGroup;
-    })
-    .sort((a, b) => b.articleIds.length - a.articleIds.length || a.label.localeCompare(b.label));
+  const textGroups = (candidates: Row[]) => {
+    const grouped: Array<{ first: Row; rows: Row[] }> = [];
+    for (const row of candidates) {
+      const target = grouped.find((candidate) => sameComparisonMeaning(
+        candidate.first.item.public_paraphrase,
+        row.item.public_paraphrase,
+        dimension,
+      ));
+      if (target) target.rows.push(row);
+      else grouped.push({ first: row, rows: [row] });
+    }
+    return grouped
+      .map(({ first, rows: groupRows }) => {
+        const family = `text:${normalizeComparisonText(first.item.public_paraphrase)}`;
+        const label = first.item.public_paraphrase ?? (first.item.frame_family ? familyLabel(first.item.frame_family) : "분류 코드 미확정");
+        const articleIds = [...new Set(groupRows.map((row) => row.articleId))];
+        return {
+          family,
+          label,
+          rows: groupRows,
+          articleIds,
+          outlets: [...new Set(groupRows.map((row) => row.outlet))],
+          narratedArticles: new Set(
+            groupRows.filter((row) => row.item.voice?.kind === "journalist_narration").map((row) => row.articleId),
+          ).size,
+          attributedArticles: new Set(
+            groupRows.filter((row) => isAttributed(row.item.voice?.kind)).map((row) => row.articleId),
+          ).size,
+        } satisfies FamilyGroup;
+      })
+      .sort((a, b) => b.articleIds.length - a.articleIds.length || a.label.localeCompare(b.label));
+  };
+  const observedRows = rows.filter((candidate) => !candidate.stateOnly && candidate.validEvidence && candidate.item.public_paraphrase);
+  const groups = textGroups(observedRows.filter((row) => isNarration(row.item.voice?.kind)));
+  const sourceGroups = textGroups(observedRows.filter((row) => isAttributed(row.item.voice?.kind)));
   return {
     dimension,
     label: DIM_LABEL[dimension] ?? dimension,
     question: DIM_QUESTION[dimension] ?? dimension,
     rows,
     groups,
+    sourceGroups,
     observedArticles: new Set(rows.filter((row) => !row.stateOnly && row.validEvidence).map((row) => row.articleId)).size,
     narratedArticles: new Set(rows.filter((row) => row.validEvidence && isNarration(row.item.voice?.kind)).map((row) => row.articleId)).size,
     attributedArticles: new Set(rows.filter((row) => row.validEvidence && isAttributed(row.item.voice?.kind)).map((row) => row.articleId)).size,
@@ -418,7 +498,7 @@ function EngineNote({ bundle }: { bundle: IssueAnalysisBundle }) {
   const clusterAi = bundle.analysisStatus.cluster ?? bundle.clusterAi;
   const comparison = bundle.comparison.engine;
   const profiles = bundle.semanticProfiles ?? [];
-  const reviewStatuses = [...new Set(profiles.map((entry) => richProfile(entry)?.review?.status).filter(Boolean))];
+  const reviewStatuses = [...new Set(profiles.map((entry) => richProfile(entry)?.review?.status).filter((status): status is string => Boolean(status)))];
   const reviewRequired = semantic.requiresHumanReview || profiles.some((entry) => Boolean(richProfile(entry)?.review?.requires_human_review));
   const synthesis = synthesisData(bundle);
   const isVertexDirect = Boolean(
@@ -427,8 +507,9 @@ function EngineNote({ bundle }: { bundle: IssueAnalysisBundle }) {
     && synthesis?.usable === true
     && /gcp:event-synthesis|gcp:vertex/i.test(String(comparison.source ?? synthesis.source ?? "")),
   );
-  const comparisonLabel = comparison.semanticAi ? "semantic AI 비교" : "규칙·구조화 비교 (rules_local)";
+  const comparisonLabel = comparison.semanticAi ? "semantic AI 비교" : "규칙 기반 구조화 비교";
   const artifactSource = bundle.lineage?.source?.semanticDirectory || "공개 산출물 출처 미상";
+  const reviewStatusLabels = reviewStatuses.map((status) => STATUS_COPY[status] ?? MODEL_STATUS_COPY[status] ?? "검토 상태 확인 필요");
   return (
     <p className="afp-method-note">
       <span className={`afs-chip ${isVertexDirect ? "afs-chip-brand" : "afs-badge-ex"}`}>
@@ -438,7 +519,7 @@ function EngineNote({ bundle }: { bundle: IssueAnalysisBundle }) {
       <br />
       <strong>AI 출처:</strong> {semantic.model ?? clusterAi?.model ?? "모델 미상"} · prompt {semantic.promptVersion ?? clusterAi?.promptVersion ?? "v1.0.0"} · schema {semantic.schemaVersion ?? "v2"} · snapshot {bundle.lineage.issueId ?? "미상"} · 산출물 {artifactSource}.
       <br />
-      <strong>상태:</strong> {reviewRequired ? "사람 검토 전 자동 분석 초안 (requires_human_review)" : "사람 검토 완료"}. {reviewStatuses.length ? `(profile review: ${reviewStatuses.join(", ")})` : ""}
+      <strong>상태:</strong> {reviewRequired ? "사람 검토 전 자동 분석 초안" : "사람 검토 완료"}. {reviewStatusLabels.length ? `(프로필 검토: ${reviewStatusLabels.join(", ")})` : ""}
       <br />
       <strong>보호 원칙:</strong> 공개 화면에는 paraphrase·근거 위치(locator)·SHA-256 해시 지문만 표시하며, 원문 본문·HTML·원문 문장 자체는 노출하지 않습니다.
     </p>
@@ -446,9 +527,8 @@ function EngineNote({ bundle }: { bundle: IssueAnalysisBundle }) {
 }
 
 function Summary({ bundle, issue, analyses: dimensions, compact = false }: { bundle: IssueAnalysisBundle; issue: IssueView; analyses: DimensionAnalysis[]; compact?: boolean }) {
-  const observed = dimensions.filter((dimension) => dimension.groups.length > 0);
-  const split = observed.filter((dimension) => dimension.groups.length >= 2);
-  const directSplit = split.filter((dimension) => dimension.groups.filter((group) => group.narratedArticles > 0).length >= 2);
+  const comparison = comparisonSummary(bundle, issue);
+  const observed = dimensions.filter((dimension) => dimension.observedArticles > 0);
   const allRows = dimensions.flatMap((dimension) => dimension.rows).filter((row) => !row.stateOnly && row.validEvidence);
   const attributed = allRows.filter((row) => isAttributed(row.item.voice?.kind)).length;
   const stateCounts = dimensions.flatMap((dimension) => dimension.rows)
@@ -461,35 +541,15 @@ function Summary({ bundle, issue, analyses: dimensions, compact = false }: { bun
   const stateText = [...stateCounts.entries()]
     .map(([state, count]) => `${MODEL_STATUS_COPY[state] ?? STATUS_COPY[state] ?? state} ${count}건`)
     .join(" · ");
-  const common = observed.filter((dimension) => dimension.groups.length === 1).slice(0, 2);
-  const derivedCommonText = common.length
-    ? common.map((dimension) => `${dimension.label}은 ${dimension.groups[0].label} 계열로 모였습니다`).join(", ")
-    : "공통으로 묶이는 단일 계열은 확인되지 않았습니다.";
-  const derivedDifferenceText = directSplit.length
-    ? `${directSplit.map((dimension) => dimension.label).join(", ")}에서 매체 서술 계열이 갈렸습니다.`
-    : split.length
-      ? `${split.map((dimension) => dimension.label).join(", ")}에서 차이가 관측됐지만, 대부분 취재원 발언에 귀속되어 매체 자체의 논조 차이로 확정하지 않았습니다.`
-      : "현재 semantic profile에서 매체 자체 서술이 갈린 축은 확정되지 않았습니다.";
-  const synthesis = synthesisData(bundle);
-  const synthesisCommon = observedClaim(synthesis?.agreed_line) ?? observedClaim(synthesis?.what_happened);
-  const synthesisDifference = observedClaim(synthesis?.split_line);
-  const synthesisSoWhat = observedClaim(synthesis?.so_what);
-  const commonText = synthesisCommon ?? (issue.commonGround ?? derivedCommonText);
-  const differenceText = synthesis
-    ? synthesisDifference ?? "서로 다른 근거 그룹이 확인되지 않아 대립 구도로 표시하지 않습니다."
-    : (issue.mainDifference ?? derivedDifferenceText);
-  const readerPath = synthesisSoWhat ?? (directSplit.length
-    ? `독자는 ${directSplit[0].groups.map((group) => group.label).join(" 또는 ")} 중 서로 다른 설명 경로를 만납니다.`
-    : "독자가 보는 차이는 우선 어떤 취재원 발언을 선택·배치했는지에서 생깁니다. 이를 매체의 동의나 의도로 단정하지 않습니다.");
   return (
     <section className={`afs-card afs-card-lead${compact ? " afp-summary-compact" : ""}`}>
       <h2>이 사안의 프레이밍 요약 <small>{issue.articleCount}건 · {issue.outletCount}개 매체</small></h2>
       <div className="afs-in afs-prose afp-summary">
-        <p><strong>공통으로 보이는 설명:</strong> {commonText}</p>
-        <p><strong>갈라지는 질문:</strong> {differenceText}</p>
-        {!compact ? <p><strong>읽기 경로:</strong> {readerPath}</p> : null}
+        <p><strong>{comparison.commonScope ? `여러 매체에서 공통 계열로 묶인 설명 (${comparison.commonScope}):` : "공통으로 확인한 설명:"}</strong> {comparison.commonText ?? "공통 설명으로 묶을 공개 근거가 아직 없습니다."}</p>
+        <p><strong>{comparison.status === "difference_confirmed" ? "확인된 차이" : "비교 결과"}:</strong> {comparison.differenceText}</p>
+        <p><strong>읽을 때 볼 점:</strong> {comparison.whatToNotice}</p>
         {!compact && issue.sourceContext ? <p><strong>취재원 맥락:</strong> {issue.sourceContext}</p> : null}
-        <p className="afp-summary-meta">{observed.length}/{DIMENSION_LIST.length}개 차원에서 AI 구조화 항목이 관측됐고, 관측 항목의 {allRows.length ? Math.round((attributed / allRows.length) * 100) : 0}%가 명시적 취재원 발언으로 분류됐습니다. 미확인 발화는 별도 귀속하지 않습니다.</p>
+        <p className="afp-summary-meta"><span className={`afp-comparison-status afp-status-${comparison.status}`}>{comparison.statusLabel}</span> · 기자 서술 근거 {comparison.analyzedArticleCount}건 · {comparison.analyzedOutletCount}개 매체 · {observed.length}/{DIMENSION_LIST.length}개 차원 관측 · 관측 항목 중 취재원 발언 {allRows.length ? Math.round((attributed / allRows.length) * 100) : 0}%</p>
         {!compact && stateText ? <p className="afp-summary-meta"><strong>판정 보류·상태:</strong> {stateText}</p> : null}
       </div>
       {!compact ? <EngineNote bundle={bundle} /> : null}
@@ -667,7 +727,7 @@ export function SynthesisNarrative({ bundle }: { bundle: IssueAnalysisBundle }) 
                     <span>{row.common}</span>
                   ) : (
                     <span className="afp-state">
-                      {row.status === "explicit_not_stated" ? "명시적으로 언급되지 않음" : "공개 근거 지문 부족으로 내용 미표시 (insufficient_evidence)"}
+                       {row.status === "explicit_not_stated" ? "명시적으로 언급되지 않음" : "공개 근거 지문 부족으로 내용 미표시"}
                     </span>
                   )}
                   <EvidenceRefs refs={row.evidence} label="질문 근거" />
@@ -693,7 +753,7 @@ export function SynthesisNarrative({ bundle }: { bundle: IssueAnalysisBundle }) 
                     <span>{cells.join("  /  ")}</span>
                   ) : (
                     <span className="afp-state">
-                      {row.status === "explicit_not_stated" ? "명시적으로 언급되지 않음" : "공개 근거 지문 부족으로 내용 미표시 (insufficient_evidence)"}
+                       {row.status === "explicit_not_stated" ? "명시적으로 언급되지 않음" : "공개 근거 지문 부족으로 내용 미표시"}
                     </span>
                   )}
                   <EvidenceRefs refs={row.evidence} label="질문 근거" />
@@ -706,27 +766,6 @@ export function SynthesisNarrative({ bundle }: { bundle: IssueAnalysisBundle }) 
         <p className="afs-note" style={{ marginTop: "14px" }}>
           캠프 이름은 기사에서 관측된 강조의 묶음입니다. 언론사 이념이나 의도를 뜻하지 않으며, locator와 문장 해시가 없는 문장은 표시하지 않습니다.
         </p>
-      </div>
-    </section>
-  );
-}
-
-function IssueThirtySecond({ issue }: { issue: IssueView }) {
-  const articles = issue.articles.slice().sort((a, b) => (a.publishedAt ?? "").localeCompare(b.publishedAt ?? ""));
-  return (
-    <section className="afs-card afp-issue-brief">
-      <h2>사건 설명 <small>사건 30초 요약 · 기사 묶음의 공통 사실</small></h2>
-      <div className="afs-in afs-prose">
-        <p>{issue.lead ?? "공개 semantic 요약이 아직 생성되지 않았습니다."}</p>
-        {issue.commonGround ? <p><strong>공통으로 확인된 설명:</strong> {issue.commonGround}</p> : null}
-        {issue.mainDifference ? <p><strong>비교할 차이:</strong> {issue.mainDifference}</p> : null}
-        {issue.sourceContext ? <p><strong>취재원 맥락:</strong> {issue.sourceContext}</p> : null}
-        {issue.commonSubjects.length ? <p className="afp-summary-meta"><strong>반복 등장한 주제:</strong> {issue.commonSubjects.join(" · ")}</p> : null}
-        <details className="afp-article-index">
-          <summary>공통 사실을 확인한 기사 {articles.length}건</summary>
-          <ul>{articles.map((article) => <li key={article.articleId}><span>{article.outlet}</span><strong>{article.title}</strong>{article.url ? <a href={article.url} target="_blank" rel="noreferrer">원문 ↗</a> : null}</li>)}</ul>
-        </details>
-        <p className="afs-note">이 요약은 기사 메타데이터와 공개 semantic paraphrase를 집계한 것입니다. 원문 본문이나 인용문을 화면에 복사하지 않습니다.</p>
       </div>
     </section>
   );
@@ -753,6 +792,7 @@ function AxisCard({ analysis }: { analysis: DimensionAnalysis }) {
 
 function AxisSection({ dimensions }: { dimensions: DimensionAnalysis[] }) {
   const split = dimensions.filter((dimension) => dimension.groups.length >= 2);
+  const sourceOnly = dimensions.filter((dimension) => dimension.groups.length < 2 && dimension.sourceGroups.length >= 2);
   return (
     <section className="afs-card">
       <h2>논조 갈래 축 <small>같은 사건에서 무엇을 다르게 강조했나</small></h2>
@@ -760,6 +800,7 @@ function AxisSection({ dimensions }: { dimensions: DimensionAnalysis[] }) {
         <p className="afs-note">한 단어로 매체 성향을 정하지 않습니다. 동일 사건의 기사에서 반복된 문제·원인·책임·평가·해법 배치와 발화 주체를 함께 비교합니다.</p>
         <div className="afp-status-strip">{dimensions.map((analysis) => <span key={analysis.dimension}><b>{analysis.label}</b> {Object.entries(analysis.stateCounts).map(([state, count]) => `${STATUS_COPY[state] ?? state} ${count}`).join(" · ") || "공개 상태 없음"}</span>)}</div>
         {split.length ? <div className="afp-axis-list">{split.map((analysis) => <AxisCard key={analysis.dimension} analysis={analysis} />)}</div> : <p className="afp-state">현재 semantic AI 결과에서는 명확한 양극 축이 확정되지 않았습니다. 공통 설명과 취재원 배치 차이는 아래 표에서 확인할 수 있습니다.</p>}
+        {sourceOnly.length ? <p className="afp-state afp-source-only-note">{sourceOnly.map((analysis) => `${analysis.label}의 다른 설명은 취재원 발언에서만 ${analysis.sourceGroups.length}개 계열로 관측되어 매체 간 차이로 세지 않았습니다.`).join(" ")}</p> : null}
       </div>
     </section>
   );
@@ -810,7 +851,7 @@ function ComparisonAxisEvidence({ bundle, issue }: { bundle: IssueAnalysisBundle
                 <div className="afp-axis-group-head"><strong>{comparisonScopeLabel(pattern.voice_scope)}</strong><span>{pattern.article_count ?? articleRows.length}건 · {outlets.length}개 매체</span></div>
                 {refs.length && pattern.public_paraphrase ? <p>{pattern.public_paraphrase}</p> : <p className="afp-state">{refs.length ? "검증된 공개 paraphrase가 없습니다." : "위치·해시가 함께 검증된 공개 근거가 없어 내용을 표시하지 않습니다."}</p>}
                 {articleRows.length ? <small className="afp-summary-meta">{articleRows.slice(0, 4).map((article) => `${article?.outlet ?? "매체 미상"} · ${article?.title ?? "제목 미상"}`).join(" / ")}</small> : null}
-                {refs.length ? <EvidenceRefs refs={refs} label="축별 근거" /> : <small className="afp-state">근거 상태: insufficient_evidence</small>}
+                {refs.length ? <EvidenceRefs refs={refs} label="축별 근거" /> : <small className="afp-state">근거 상태: 공개 근거 부족</small>}
               </div>;
             })}</div> : <p className="afp-state">이 축에는 공개 패턴이 없습니다. 기사에 해당 요소가 없다고 단정하지 않습니다.</p>}
           </article>;
@@ -820,15 +861,17 @@ function ComparisonAxisEvidence({ bundle, issue }: { bundle: IssueAnalysisBundle
   );
 }
 
-function StructuredObservationSection({ bundle }: { bundle: IssueAnalysisBundle }) {
-  const profiles = (bundle.ruleProfiles ?? []).map((entry) => ({ entry, profile: structuredProfile(entry) })).filter(({ profile }) => Boolean(profile));
+function StructuredObservationSection({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
+  const articles = new Map(issue.articles.map((article) => [article.articleId, article]));
+  const profiles = (bundle.ruleProfiles ?? []).map((entry) => ({ entry, profile: structuredProfile(entry) })).filter(({ entry, profile }) => Boolean(profile) && entry.status === "succeeded");
   const countValues = (values: Array<string | undefined>) => [...values.reduce((map, value) => {
     if (value) map.set(value, (map.get(value) ?? 0) + 1);
     return map;
   }, new Map<string, number>())].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  const genre = countValues(profiles.map(({ profile }) => profile?.genre?.label ?? profile?.genre?.code));
-  const scope = countValues(profiles.map(({ profile }) => profile?.scope?.label ?? profile?.scope?.code));
-  const depth = countValues(profiles.map(({ profile }) => profile?.context_depth?.label ?? profile?.context_depth?.level));
+  const displayValue = (labels: Record<string, string>, code?: string, label?: string) => code || label ? (labels[code ?? ""] ?? codeLabel(code, label)) : undefined;
+  const genre = countValues(profiles.map(({ profile }) => displayValue(GENRE_LABEL, profile?.genre?.code, profile?.genre?.label)));
+  const scope = countValues(profiles.map(({ profile }) => displayValue(SCOPE_KIND_LABEL, profile?.scope?.code, profile?.scope?.label)));
+  const depth = countValues(profiles.map(({ profile }) => displayValue(DEPTH_LABEL, profile?.context_depth?.level, profile?.context_depth?.label)));
   const devices = profiles.flatMap(({ entry, profile }) => (profile?.framing_devices ?? []).map((device) => ({ ...device, articleId: entry.articleId })));
   const descriptors = profiles.flatMap(({ entry, profile }) => [
     ...(profile?.secondary_descriptors?.policy_frames ?? []).map((row) => ({ ...row, kind: "정책 프레임", articleId: entry.articleId })),
@@ -836,7 +879,7 @@ function StructuredObservationSection({ bundle }: { bundle: IssueAnalysisBundle 
   ]);
   return (
     <section className="afs-card afp-structured-observation">
-      <h2>구조화 보조 관측 <small>rules_local · semantic AI와 별도</small></h2>
+      <h2>구조화 보조 관측 <small>규칙 기반 · semantic AI와 별도</small></h2>
       <div className="afs-in">
         <p className="afs-note">아래 값은 공개 snapshot에 포함된 결정론적 구조화 프로필입니다. semantic AI의 의미 판정이나 언론사의 의도를 대신하지 않으며, 해당 보조 엔진의 관측 범위와 근거 위치만 보여 줍니다.</p>
         {profiles.length ? <>
@@ -845,8 +888,8 @@ function StructuredObservationSection({ bundle }: { bundle: IssueAnalysisBundle 
             <div><span>시야</span><strong>{scope.map(([label, count]) => `${label} ${count}`).join(" · ") || "미관측"}</strong></div>
             <div><span>맥락 깊이</span><strong>{depth.map(([label, count]) => `${label} ${count}`).join(" · ") || "미관측"}</strong></div>
           </div>
-          {descriptors.length ? <div className="afp-descriptor-list">{descriptors.slice(0, 20).map((row, index) => <div key={`${row.kind}-${row.code ?? row.label}-${index}`}><strong>{row.kind}: {row.label ?? row.code ?? "분류 미상"}</strong><span>{row.articleId} · {row.article_count ?? 0}건</span><EvidenceRefs refs={row.evidence} label="보조 관측 근거" /></div>)}</div> : <p className="afp-state">정책·보편 프레임 코드는 이 snapshot에서 구조화되지 않았습니다.</p>}
-          {devices.length ? <div className="afp-device-list">{devices.slice(0, 20).map((device, index) => <div key={`${device.code ?? device.label}-${index}`}><strong>{device.label ?? device.code ?? "장치 미상"}</strong><span>{device.articleId} · {device.count ?? 1}건{device.appears_in_lead ? " · 제목/리드에 관측" : ""}</span><EvidenceRefs refs={device.evidence} label="장치 근거" /></div>)}</div> : <p className="afp-state">구조화된 표현 장치가 없습니다. 본문에 장치가 없다고 단정하지 않고 이 분류만 미관측으로 둡니다.</p>}
+          {descriptors.length ? <div className="afp-descriptor-list">{descriptors.slice(0, 20).map((row, index) => <div key={`${row.kind}-${row.code ?? row.label}-${index}`}><strong>{row.kind}: {codeLabel(row.code, row.label)}</strong><span>{articles.get(row.articleId)?.outlet ?? "매체 미상"} · {articles.get(row.articleId)?.title ?? "제목 미상"}{typeof row.article_count === "number" && row.article_count > 0 ? ` · ${row.article_count}건` : ""}</span><details className="afp-technical-disclosure"><summary>기술 식별자</summary><div className="afp-evidence-body"><small>article_id {row.articleId}</small></div></details><EvidenceRefs refs={row.evidence} label="보조 관측 근거" /></div>)}</div> : <p className="afp-state">정책·보편 프레임 코드는 이 snapshot에서 구조화되지 않았습니다.</p>}
+          {devices.length ? <div className="afp-device-list">{devices.slice(0, 20).map((device, index) => <div key={`${device.code ?? device.label}-${device.articleId}-${index}`}><strong>{codeLabel(device.code, device.label)}</strong><span>{articles.get(device.articleId)?.outlet ?? "매체 미상"} · {articles.get(device.articleId)?.title ?? "제목 미상"}{typeof device.count === "number" && device.count > 0 ? ` · ${device.count}건` : ""}{device.appears_in_lead ? " · 제목/리드에 관측" : ""}</span><details className="afp-technical-disclosure"><summary>기술 식별자</summary><div className="afp-evidence-body"><small>article_id {device.articleId}</small></div></details><EvidenceRefs refs={device.evidence} label="장치 근거" /></div>)}</div> : <p className="afp-state">구조화된 표현 장치가 없습니다. 본문에 장치가 없다고 단정하지 않고 이 분류만 미관측으로 둡니다.</p>}
         </> : <p className="afp-state">이 공개 snapshot에는 구조화 보조 프로필이 없습니다. semantic AI 결과와 혼동하지 않도록 빈 결과를 추정해 채우지 않았습니다.</p>}
       </div>
     </section>
@@ -897,7 +940,7 @@ function DimensionGuide({ dimensions }: { dimensions: DimensionAnalysis[] }) {
         {FRAME_GUIDE_DIMENSIONS.map((dimension, index) => {
           const analysis = dimensions.find((entry) => entry.dimension === dimension);
           const sourceProfiles = dimension === "actor_visibility" ? dimensions.reduce((sum, entry) => sum + entry.rows.filter((row) => row.validEvidence && isAttributed(row.item.voice?.kind)).length, 0) : null;
-          return <article key={dimension}><span className="afp-kicker">{String(index + 1).padStart(2, "0")}</span><h3>{GUIDE_LABEL[dimension]}</h3><p>{CORE_DIM_EXPLANATIONS[dimension]}</p><small>{dimension === "actor_visibility" ? `${sourceProfiles ?? 0}건 취재원 귀속 관측` : `${analysis?.observedArticles ?? 0}건 관측 · ${analysis?.stateCounts.explicit_not_stated ?? 0}건 명시적 미제시`}</small></article>;
+          return <article key={dimension}><span className="afp-kicker">{String(index + 1).padStart(2, "0")}</span><h3>{GUIDE_QUESTION[dimension]}</h3><p><b>{GUIDE_LABEL[dimension]}</b> · {CORE_DIM_EXPLANATIONS[dimension]}</p><small>{dimension === "actor_visibility" ? (sourceProfiles ? `${sourceProfiles}건 취재원 귀속 관측` : "취재원 발화 근거 미관측") : analysis?.observedArticles ? `${analysis.observedArticles}건 관측 · ${analysis.stateCounts.explicit_not_stated ?? 0}건 명시적 미제시` : "공개 근거 미관측"}</small></article>;
         })}
       </div>
       <p className="afs-note">차원은 기사에 실제로 제시된 문제·원인·책임·평가·해법을 분리해 읽는 틀입니다. 한 차원의 미관측은 해당 요소가 실제로 없거나 의도적으로 빠졌다는 뜻이 아닙니다.</p>
@@ -913,7 +956,8 @@ function FourFunctionTable({ issue, dimensions }: { issue: IssueView; dimensions
       <div className="afs-in">
         <div className="afs-scroll"><table className="afs-table"><caption>각 셀은 검증된 public paraphrase만 표시합니다. 출처 발언은 매체 서술과 분리합니다.</caption><thead><tr><th scope="col">매체·기사</th>{core.filter((dimension) => dimension !== "responsibility_attribution").map((dimension) => <th scope="col" key={dimension}>{DIM_LABEL[dimension]}</th>)}</tr></thead><tbody>
           {issue.articles.map((article) => <tr key={article.articleId}><th scope="row"><strong>{article.outlet}</strong><small>{article.title}</small></th>{core.filter((dimension) => dimension !== "responsibility_attribution").map((dimension) => {
-            const row = dimensions.find((entry) => entry.dimension === dimension)?.rows.find((entry) => entry.articleId === article.articleId && entry.validEvidence);
+            const rows = dimensions.find((entry) => entry.dimension === dimension)?.rows.filter((entry) => entry.articleId === article.articleId && entry.validEvidence) ?? [];
+            const row = rows.find((entry) => isNarration(entry.item.voice?.kind)) ?? rows[0];
             return <td key={dimension}>{row ? <><span className="afp-cell-voice">{statusCopy(displayStatus(row), row.item.voice?.kind, row.modelStatus)}</span><p>{row.item.public_paraphrase ?? "검증된 paraphrase 없음"}</p><EvidenceDisclosure row={row} compact /></> : <StateDisclosure summary="분석 상태" reason={dimensions.find((entry) => entry.dimension === dimension)?.rows.find((entry) => entry.articleId === article.articleId)?.stateReason ?? "명시적 판정 없음"} />}</td>;
           })}</tr>)}
         </tbody></table></div>
@@ -926,14 +970,17 @@ function FourFunctionTable({ issue, dimensions }: { issue: IssueView; dimensions
 function SourceTable({ issue }: { issue: IssueView }) {
   return (
     <div className="afs-scroll"><table className="afs-table"><caption>인용 횟수는 목소리의 가시성이지 신뢰도나 매체의 지지 여부가 아닙니다.</caption><thead><tr><th>매체</th><th>주요 역할</th><th>직접 인용</th><th>간접 전언</th></tr></thead><tbody>
-      {issue.outlets.map((outlet) => <tr key={outlet.outlet}><th>{outlet.outlet}</th><td>{outlet.roles.slice(0, 3).map((role) => `${role.label} ${role.count}건`).join(" · ") || "역할 분석 대기"}</td><td className="afs-num">{outlet.directQuotes}</td><td className="afs-num">{outlet.indirectQuotes}</td></tr>)}
+      {issue.outlets.map((outlet) => <tr key={outlet.outlet}><th>{outlet.outlet}</th><td>{outlet.roles.slice(0, 3).map((role) => `${role.label} ${role.count}건`).join(" · ") || "역할 분석 대기"}</td><td className="afs-num">{outlet.roles.length ? outlet.directQuotes : "미관측"}</td><td className="afs-num">{outlet.roles.length ? outlet.indirectQuotes : "미관측"}</td></tr>)}
     </tbody></table></div>
   );
 }
 
-function SourceRoleEvidence({ bundle }: { bundle: IssueAnalysisBundle }) {
-  const rows = bundle.semanticProfiles.flatMap((entry) => (richProfile(entry)?.actors_and_sources ?? []).map((actor) => ({ ...actor, articleId: entry.articleId })));
-  return <section className="afs-card"><h2>취재원 역할과 전달 방식 <small>기사별 공개 근거 위치</small></h2><div className="afs-in"><p className="afs-note">취재원 구성은 목소리의 가시성에 대한 관측이며, 매체의 지지·균형·의도를 의미하지 않습니다.</p>{rows.length ? <div className="afp-source-evidence">{rows.map((row, index) => <article key={`${row.articleId}-${row.actor_id ?? row.role}-${index}`}><strong>{row.role_label ?? row.role ?? "역할 미상"}</strong><span>{row.articleId} · 직접 인용 {row.direct_quote_count ?? 0} · 간접 전언 {row.indirect_attribution_count ?? 0}</span><EvidenceRefs refs={row.evidence} label="취재원 근거" /></article>)}</div> : <p className="afp-state">기사별 취재원 역할·근거가 공개 프로필에 구조화되지 않았습니다.</p>}</div></section>;
+function SourceRoleEvidence({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
+  const articles = new Map(issue.articles.map((article) => [article.articleId, article]));
+  const rows = bundle.semanticProfiles
+    .filter((entry) => semanticEntryIsEligible(entry, bundle))
+    .flatMap((entry) => (richProfile(entry)?.actors_and_sources ?? []).map((actor) => ({ ...actor, articleId: entry.articleId })));
+  return <section className="afs-card"><h2>취재원 역할과 전달 방식 <small>기사별 공개 근거 위치</small></h2><div className="afs-in"><p className="afs-note">취재원 구성은 목소리의 가시성에 대한 관측이며, 매체의 지지·균형·의도를 의미하지 않습니다.</p>{rows.length ? <div className="afp-source-evidence">{rows.map((row, index) => <article key={`${row.articleId}-${row.actor_id ?? row.role}-${index}`}><strong>{row.role_label ?? row.role ?? "역할 미상"}</strong><span>{articles.get(row.articleId)?.outlet ?? "매체 미상"} · {articles.get(row.articleId)?.title ?? "제목 미상"} · 직접 인용 {row.direct_quote_count ?? 0} · 간접 전언 {row.indirect_attribution_count ?? 0}</span><details className="afp-technical-disclosure"><summary>기술 식별자</summary><div className="afp-evidence-body"><small>article_id {row.articleId}</small></div></details><EvidenceRefs refs={row.evidence} label="취재원 근거" /></article>)}</div> : <p className="afp-state">기사별 취재원 역할·근거가 공개 프로필에 구조화되지 않았습니다.</p>}</div></section>;
 }
 
 function VoiceTable({ issue }: { issue: IssueView }) {
@@ -948,56 +995,192 @@ function ArticleList({ bundle, issue, dimensions }: { bundle: IssueAnalysisBundl
     const profile = richProfile(entry);
     const profileReview = profile?.review;
     const articleStatus = entry?.status === "succeeded" ? (profileReview?.status ?? "succeeded") : (entry?.status ?? "analysis_failed");
-    return <details className="afp-article" key={article.articleId}><summary><span>{article.outlet}</span><strong>{article.title}</strong><small>{STATUS_COPY[articleStatus] ?? articleStatus} · {entry?.evidence.length ?? 0}개 공개 지문 · {article.publishedAt ?? "발행일 미상"}</small></summary><div className="afp-article-body">{rows.length ? rows.slice(0, 8).map((row, index) => <div className="afp-article-row" key={`${row.dimension}-${index}`}><b>{row.dimension}</b><span>{row.stateOnly || !row.validEvidence ? row.stateReason : row.item.public_paraphrase ?? "공개 paraphrase 미제공"}</span><small>{statusCopy(displayStatus(row), row.item.voice?.kind)} · {row.validEvidence ? evidenceLocator(row) : "공개 근거 지문 없음"}{row.reviewRequired ? " · 사람 검토 전" : ""}</small><EvidenceDisclosure row={row} compact /></div>) : <p className="afp-state">이 기사에는 현재 공개된 semantic 차원 항목이 없습니다. 원문 본문을 대신 표시하지 않습니다.</p>}{profileReview?.fallback_reason ? <p className="afp-state">분석 보류 사유: {profileReview.fallback_reason}</p> : null}{article.url ? <a href={article.url} target="_blank" rel="noreferrer">원문 링크 열기 ↗</a> : null}</div></details>;
+    const articleStatusLabel = STATUS_COPY[articleStatus] ?? MODEL_STATUS_COPY[articleStatus] ?? "분석 상태 확인 필요";
+    const evidenceCountLabel = entry?.evidence.length ? `${entry.evidence.length}개 공개 지문` : "공개 지문 미관측";
+    return <details className="afp-article" key={article.articleId}>
+      <summary><span>{article.outlet}</span><strong>{article.title}</strong><small>{articleStatusLabel} · {evidenceCountLabel} · {article.publishedAt ?? "발행일 미상"}</small></summary>
+      <div className="afp-article-body">
+        <details className="afp-technical-disclosure"><summary>기사 식별자·분석 설정</summary><div className="afp-evidence-body"><small>article_id {article.articleId} · model {entry?.engine.model ?? "모델 미상"} · prompt {entry?.engine.promptVersion ?? "버전 미상"}</small></div></details>
+        {rows.length ? rows.slice(0, 8).map((row, index) => <div className="afp-article-row" key={`${row.dimension}-${index}`}><b>{row.dimension}</b><span>{row.stateOnly || !row.validEvidence ? row.stateReason : row.item.public_paraphrase ?? "공개 paraphrase 미제공"}</span><small>{statusCopy(displayStatus(row), row.item.voice?.kind)} · {row.validEvidence ? evidenceLocator(row) : "공개 근거 지문 없음"}{row.reviewRequired ? " · 사람 검토 전" : ""}</small><EvidenceDisclosure row={row} compact /></div>) : <p className="afp-state">이 기사에는 현재 공개된 semantic 차원 항목이 없습니다. 원문 본문을 대신 표시하지 않습니다.</p>}
+        {profileReview?.fallback_reason ? <p className="afp-state">분석 보류 사유: {profileReview.fallback_reason}</p> : null}
+        {article.url ? <a href={article.url} target="_blank" rel="noreferrer">원문 링크 열기 ↗</a> : null}
+      </div>
+    </details>;
   })}</div>;
 }
 
-function ClusterSection({ issue }: { issue: IssueView }) {
+function ClusterSection({ issue, dimensions }: { issue: IssueView; dimensions: DimensionAnalysis[] }) {
   const clusters = issue.narratedClusters.length ? issue.narratedClusters : issue.frameClusters;
   const narrated = issue.narratedClusters.length > 0;
-  return <section className="afs-card"><h2>비슷한 방식으로 보도한 기사 묶음 <small>Matthes &amp; Kohring 2008</small></h2><div className="afs-in"><p className="afs-note">{narrated ? "기자 서술의 5개 기능 조합으로 묶었습니다." : "기자 서술만으로 충분한 군집이 없어 취재원 발언까지 포함한 보조 군집을 표시합니다."}</p><div className="afp-clusters">{clusters.slice(0, 8).map((cluster, index) => <article key={cluster.key}><span className="afp-cluster-no">{String(index + 1).padStart(2, "0")}</span><div><h3>{cluster.articleIds.length}건 · {cluster.outlets.length}개 매체</h3><p>{Object.entries(cluster.signature).map(([dimension, family]) => `${DIM_LABEL[dimension] ?? dimension}: ${family ? familyLabel(family) : "분석 대기"}`).join(" · ")}</p>{cluster.differsAt.length ? <small>대표 군집과 다른 축: {cluster.differsAt.map((dimension) => DIM_LABEL[dimension] ?? dimension).join(", ")}</small> : null}</div></article>)}{!clusters.length ? <p className="afp-state">군집을 구성할 semantic profile이 아직 충분하지 않습니다.</p> : null}</div></div></section>;
+  const basisFor = (cluster: IssueView["frameClusters"][number]) => {
+    const members = issue.articles.filter((article) => cluster.articleIds.includes(article.articleId));
+    const journalist = members.some((article) => Object.values(article.narratedFamilies).some(Boolean));
+    const anyObserved = members.some((article) => Object.values(article.families).some(Boolean));
+    return journalist ? "기자 서술 포함" : anyObserved ? "취재원 발언만 관측" : "관측 범위 미상";
+  };
+  const shortText = (value: string) => value.length > 76 ? `${value.slice(0, 75)}…` : value;
+  const titleFor = (cluster: IssueView["frameClusters"][number]) => Object.entries(cluster.signature)
+    .filter(([, family]) => family)
+    .slice(0, 2)
+    .map(([dimension, family]) => {
+      const sample = dimensions
+        .find((entry) => entry.dimension === dimension)
+        ?.rows.find((row) => cluster.articleIds.includes(row.articleId) && row.validEvidence && isNarration(row.item.voice?.kind) && row.item.public_paraphrase)
+        ?.item.public_paraphrase;
+      return `${DIM_LABEL[dimension] ?? dimension}: ${sample ? shortText(sample) : familyLabel(family)}`;
+    })
+    .join(" · ") || "근거가 연결된 기사 묶음";
+  const observedArticles = issue.articles.filter((article) => Object.values(article.families).some(Boolean)).length;
+  return <section className="afs-card" id="sec-clusters"><h2>비슷한 방식으로 보도한 기사 묶음 <small>기사 단위 조합 관측 · Matthes &amp; Kohring 2008</small></h2><div className="afs-in"><p className="afs-note">{narrated ? "기자 서술로 확인된 문제·원인·책임·평가·해법의 조합만 묶었습니다." : observedArticles ? "기자 서술 군집이 없어 취재원 발언이 포함된 보조 관측을 별도로 표시합니다. 발언만으로 매체의 입장을 만들지 않습니다." : "기자 서술이나 취재원 발언의 공개 근거가 없어 군집을 만들지 않았습니다."}</p><div className="afp-clusters">{clusters.slice(0, 8).map((cluster, index) => <article key={cluster.key}><span className="afp-cluster-no">{String(index + 1).padStart(2, "0")}</span><div><h3>{titleFor(cluster)}</h3><p className="afp-cluster-meta">{cluster.articleIds.length}건 · {cluster.outlets.length}개 매체 · {basisFor(cluster)}</p><p><b>공통 관측:</b> {Object.entries(cluster.signature).filter(([, family]) => family).map(([dimension, family]) => `${DIM_LABEL[dimension] ?? dimension}: ${familyLabel(family)}`).join(" · ") || "공개 계열 미관측"}</p>{cluster.differsAt.length ? <small>대표 군집과 다른 관측 축: {cluster.differsAt.map((dimension) => DIM_LABEL[dimension] ?? dimension).join(", ")}</small> : null}{cluster.partialAt.length ? <small>한쪽만 확인된 축: {cluster.partialAt.map((dimension) => DIM_LABEL[dimension] ?? dimension).join(", ")} · 판단 차이로 해석하지 않음</small> : null}<details className="afp-cluster-articles"><summary>포함 기사 {cluster.articleIds.length}건</summary><ul>{cluster.articleIds.map((articleId) => { const article = issue.articles.find((candidate) => candidate.articleId === articleId); return <li key={articleId}><strong>{article?.outlet ?? "매체 미상"}</strong><span>{article?.title ?? "제목 미상"}</span><small className="afp-evidence-technical">article_id {articleId}</small></li>; })}</ul></details></div></article>)}{!clusters.length ? <p className="afp-state">군집을 구성할 semantic profile이 아직 충분하지 않습니다. 기사별 상태에서 분석 실패·근거 부족·취재원 발언만 있는 경우를 구분합니다.</p> : null}</div></div></section>;
 }
 
-function DescriptorSection({ bundle, field, title, subtitle }: { bundle: IssueAnalysisBundle; field: "generic_frames" | "policy_frames"; title: string; subtitle: string }) {
-  const rows = bundle.semanticProfiles.flatMap((entry) => {
+function DescriptorSection({ bundle, issue, field, title, subtitle }: { bundle: IssueAnalysisBundle; issue: IssueView; field: "generic_frames" | "policy_frames"; title: string; subtitle: string }) {
+  const articles = new Map(issue.articles.map((article) => [article.articleId, article]));
+  const rows = bundle.semanticProfiles.filter((entry) => semanticEntryIsEligible(entry, bundle)).flatMap((entry) => {
     const descriptors = richProfile(entry)?.secondary_descriptors?.[field] ?? [];
     return descriptors.map((descriptor) => ({ ...descriptor, articleId: entry.articleId }));
   });
   const grouped = new Map<string, { label: string; articles: Set<string>; evidence: unknown[] }>();
   for (const row of rows) {
     const key = row.code ?? row.label ?? "unclassified";
-    const current = grouped.get(key) ?? { label: row.label ?? key, articles: new Set<string>(), evidence: [] };
+    const current = grouped.get(key) ?? { label: codeLabel(row.code, row.label), articles: new Set<string>(), evidence: [] };
     current.articles.add(row.articleId);
     current.evidence.push(...(row.evidence ?? []));
     grouped.set(key, current);
   }
-  return <section className="afs-card"><h2>{title} <small>{subtitle}</small></h2><div className="afs-in"><p className="afs-note">semantic profile이 명시적으로 구조화한 보조 분류만 표시합니다. 논조나 의도를 직접 판정하는 지표가 아닙니다.</p>{grouped.size ? <ul className="afp-descriptor-list">{[...grouped.values()].sort((a, b) => b.articles.size - a.articles.size).map((row) => <li key={row.label}><strong>{row.label}</strong><span>{row.articles.size}건</span><EvidenceRefs refs={row.evidence} /></li>)}</ul> : <p className="afp-state">이 표본의 semantic profile에는 아직 {title} 코드가 구조화되지 않았습니다. 규칙 기반 결과를 AI 결과로 대체하지 않았습니다.</p>}</div></section>;
+  return <section className="afs-card"><h2>{title} <small>{subtitle}</small></h2><div className="afs-in"><p className="afs-note">기사에서 명시적으로 구조화된 보조 분류만 표시합니다. 논조나 의도를 직접 판정하는 지표가 아닙니다.</p>{grouped.size ? <ul className="afp-descriptor-list">{[...grouped.values()].sort((a, b) => b.articles.size - a.articles.size).map((row) => <li key={row.label}><strong>{row.label}</strong><span>{[...row.articles].map((id) => articles.get(id)?.outlet ?? "매체 미상").filter((outlet, index, all) => all.indexOf(outlet) === index).join(" · ")} · {row.articles.size}건</span><EvidenceRefs refs={row.evidence} /></li>)}</ul> : <p className="afp-state">이 표본의 semantic profile에는 아직 {title} 코드가 구조화되지 않았습니다. 규칙 기반 결과를 AI 결과로 대체하지 않았습니다.</p>}</div></section>;
 }
 
-function ScopeSection({ bundle, compact = false, id = "sec-scope" }: { bundle: IssueAnalysisBundle; compact?: boolean; id?: string }) {
-  const values = bundle.semanticProfiles.map((entry) => ({ entry, profile: richProfile(entry) })).filter(({ profile }) => Boolean(profile)).map(({ entry, profile }) => ({ entry, scope: profile?.scope?.code ?? "unknown", depth: profile?.context_depth?.level ?? "unknown", scopeEvidence: profile?.scope?.evidence, depthEvidence: profile?.context_depth?.evidence, scopeCaution: profile?.scope?.caution, depthCaution: profile?.context_depth?.caution }));
-  const count = (key: "scope" | "depth") => { const map = new Map<string, number>(); for (const value of values) map.set(value[key], (map.get(value[key]) ?? 0) + 1); return [...map].sort((a, b) => b[1] - a[1]); };
-  const scope = count("scope"); const depth = count("depth");
-  const translate = (code: string) => ({ episodic: "사건 중심", thematic: "구조·주제 중심", mixed: "혼합", unknown: "시야 판정 미관측", shallow: "얕은 맥락", moderate: "중간 맥락", deep: "깊은 맥락" }[code] ?? code);
-  return <section className={`afs-card${compact ? " afp-scope-compact" : ""}`} id={id}><h2>{compact ? "시야 분포" : "사건 하나로 봤나, 구조 문제로 봤나"} <small>Iyengar · context depth</small></h2><div className="afs-in"><div className="afp-stat-grid"><div><span>시야</span><strong>{scope.map(([key, value]) => `${translate(key)} ${value}`).join(" · ") || "시야 판정 미관측"}</strong><p className="afs-note">사건 중심/구조 중심 판정은 본문에서 확인된 설명 범위에만 적용합니다.</p></div><div><span>맥락 깊이</span><strong>{depth.map(([key, value]) => `${translate(key)} ${value}`).join(" · ") || "맥락 깊이 미관측"}</strong><p className="afs-note">판정 근거는 원문 대신 공개 위치·해시로만 확인합니다.</p></div></div>{compact ? <p className="afs-note">시야와 맥락 깊이는 기사에 실제로 제시된 설명 범위만 집계합니다. 기사별 근거는 아래 상세 영역에서 확인합니다.</p> : <div className="afp-scope-articles">{values.map((value) => <details key={value.entry.articleId}><summary>{value.entry.articleId} · {translate(value.scope)} · {translate(value.depth)}</summary><div className="afp-evidence-body"><EvidenceRefs refs={value.scopeEvidence} label="시야 판단 근거" /><EvidenceRefs refs={value.depthEvidence} label="맥락 깊이 근거" />{value.scopeCaution || value.depthCaution ? <p className="afs-note">{value.scopeCaution ?? value.depthCaution}</p> : null}</div></details>)}</div>}</div></section>;
+function ScopeSection({ bundle, issue, compact = false, id = "sec-scope" }: { bundle: IssueAnalysisBundle; issue: IssueView; compact?: boolean; id?: string }) {
+  const articles = new Map(issue.articles.map((article) => [article.articleId, article]));
+  const values = bundle.semanticProfiles
+    .map((entry) => ({ entry, profile: richProfile(entry) }))
+    .filter(({ entry, profile }) => Boolean(profile) && semanticEntryIsEligible(entry, bundle))
+    .map(({ entry, profile }) => ({
+      entry,
+      article: articles.get(entry.articleId),
+      scope: profile?.scope?.code,
+      depth: profile?.context_depth?.level,
+      scopeEvidence: profile?.scope?.evidence,
+      depthEvidence: profile?.context_depth?.evidence,
+      scopeCaution: profile?.scope?.caution,
+      depthCaution: profile?.context_depth?.caution,
+    }));
+  const count = (key: "scope" | "depth") => {
+    const map = new Map<string, number>();
+    for (const value of values) {
+      const item = value[key];
+      if (item) map.set(item, (map.get(item) ?? 0) + 1);
+    }
+    return [...map].sort((a, b) => b[1] - a[1]);
+  };
+  const scope = count("scope");
+  const depth = count("depth");
+  const translateScope = (code?: string) => SCOPE_KIND_LABEL[code ?? ""] === "일화적"
+    ? "사건 중심"
+    : SCOPE_KIND_LABEL[code ?? ""] === "주제적"
+      ? "구조·주제 중심"
+      : SCOPE_KIND_LABEL[code ?? ""] ?? "시야 판정 미관측";
+  const translateDepth = (code?: string) => DEPTH_LABEL[code ?? ""] ?? "맥락 깊이 미관측";
+  return <section className={`afs-card${compact ? " afp-scope-compact" : ""}`} id={id}>
+    <h2>{compact ? "사건 중심인가, 구조 문제인가" : "사건 하나로 봤나, 구조 문제로 봤나"} <small>보도 시야 · 맥락 깊이</small></h2>
+    <div className="afs-in">
+      <div className="afp-stat-grid">
+        <div><span>시야</span><strong>{scope.map(([key, value]) => `${translateScope(key)} ${value}`).join(" · ") || "시야 판정 미관측"}</strong><p className="afs-note">사건 중심과 구조·주제 중심은 기사에서 실제로 연결한 설명 범위만 집계합니다.</p></div>
+        <div><span>맥락 깊이</span><strong>{depth.map(([key, value]) => `${translateDepth(key)} ${value}`).join(" · ") || "맥락 깊이 미관측"}</strong><p className="afs-note">판정 근거는 원문 대신 공개 위치·해시로 확인합니다.</p></div>
+      </div>
+      {compact ? <p className="afs-note">이 분류는 프레임의 옳고 그름이 아니라 사건을 구조적 맥락과 연결한 범위입니다.</p> : <div className="afp-scope-articles">{values.map((value) => <details key={value.entry.articleId}>
+        <summary>{value.article ? `${value.article.outlet} · ${value.article.title}` : "기사 정보 미상"} · {translateScope(value.scope)} · {translateDepth(value.depth)}</summary>
+        <div className="afp-evidence-body">
+          <small className="afp-evidence-technical">article_id {value.entry.articleId}</small>
+          <EvidenceRefs refs={value.scopeEvidence} label="시야 판단 근거" />
+          <EvidenceRefs refs={value.depthEvidence} label="맥락 깊이 근거" />
+          {value.scopeCaution || value.depthCaution ? <p className="afs-note">{value.scopeCaution ?? value.depthCaution}</p> : null}
+        </div>
+      </details>)}</div>}
+    </div>
+  </section>;
 }
 
-function SourceNetwork({ dimensions }: { dimensions: DimensionAnalysis[] }) {
-  const groups = dimensions.flatMap((dimension) => dimension.groups.map((group) => ({ dimension: dimension.label, group })));
-  return <section className="afs-card"><h2>프레임별 의미 연결망 <small>semantic profile co-occurrence</small></h2><div className="afs-in"><p className="afs-note">기사별로 함께 관측된 프레임 계열과 취재원 구조를 연결해 보여줍니다. 연결은 기사 안의 동시 관측을 뜻하며 인과나 의도를 뜻하지 않습니다.</p><div className="afp-network">{groups.slice(0, 15).map(({ dimension, group }) => <div className="afp-network-node" key={`${dimension}-${group.family}`}><b>{dimension}</b><strong>{group.label}</strong><span>{group.articleIds.length}건 · {group.outlets.join(" · ")}</span></div>)}</div></div></section>;
+type NetworkNode = { id: string; label: string; count?: number };
+type NetworkEdge = { source: string; target: string; weight?: number };
+
+function networkData(bundle: IssueAnalysisBundle): { nodes: NetworkNode[]; edges: NetworkEdge[] } | null {
+  const data = bundle.comparison.data as Record<string, unknown>;
+  const candidates: unknown[] = [data.semantic_network, data.source_network, data.network];
+  for (const entry of bundle.semanticProfiles) {
+    if (!semanticEntryIsEligible(entry, bundle)) continue;
+    const profile = richProfile(entry) as (RichProfile & { semantic_network?: unknown; network?: unknown }) | null;
+    candidates.push(profile?.semantic_network, profile?.network);
+  }
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== "object") continue;
+    const raw = candidate as { nodes?: unknown; edges?: unknown };
+    if (!Array.isArray(raw.nodes) || !Array.isArray(raw.edges)) continue;
+    const nodes = raw.nodes.flatMap((node): NetworkNode[] => {
+      if (!node || typeof node !== "object") return [];
+      const value = node as { id?: unknown; label?: unknown; count?: unknown };
+      if (typeof value.id !== "string") return [];
+      return [{
+        id: value.id,
+        label: codeLabel(value.id, typeof value.label === "string" ? value.label : null),
+        count: typeof value.count === "number" && value.count > 0 ? value.count : undefined,
+      }];
+    });
+    const nodeIds = new Set(nodes.map((node) => node.id));
+    const edges = raw.edges.flatMap((edge): NetworkEdge[] => {
+      if (!edge || typeof edge !== "object") return [];
+      const value = edge as { source?: unknown; target?: unknown; from?: unknown; to?: unknown; weight?: unknown };
+      const source = typeof value.source === "string" ? value.source : value.from;
+      const target = typeof value.target === "string" ? value.target : value.to;
+      if (typeof source !== "string" || typeof target !== "string" || !nodeIds.has(source) || !nodeIds.has(target)) return [];
+      return [{ source, target, weight: typeof value.weight === "number" && value.weight > 0 ? value.weight : undefined }];
+    });
+    if (nodes.length && edges.length) return { nodes, edges };
+  }
+  return null;
 }
 
-function DevicesSection({ bundle }: { bundle: IssueAnalysisBundle }) {
-  const devices = bundle.semanticProfiles.flatMap((entry) => (richProfile(entry)?.framing_devices ?? []).map((device) => ({ ...device, articleId: entry.articleId })));
-  return <section className="afs-card"><h2>근거 장치 <small>기사 안에서 확인된 구조화 항목</small></h2><div className="afs-in">{devices.length ? <div className="afp-device-list">{devices.map((device, index) => <div key={`${device.code ?? device.label}-${index}`}><strong>{device.label ?? device.code ?? "장치 미상"}</strong><span>{device.count ?? 1}건 · article {device.articleId}</span><EvidenceRefs refs={device.evidence} label="장치 근거" /></div>)}</div> : <p className="afp-state">현재 semantic profile에는 별도의 근거 장치 코드가 구조화되지 않았습니다. 본문에 없다고 단정하지 않고, 이 분류만 보류합니다.</p>}</div></section>;
+function SourceNetwork({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
+  const network = networkData(bundle);
+  const labels = new Map(network?.nodes.map((node) => [node.id, node.label]));
+  return <section className="afs-card" id="sec-network"><h2>실제 의미 연결망 <small>노드·연결선이 있는 경우만 표시</small></h2><div className="afs-in"><p className="afs-note">연결선은 같은 기사에서 함께 관측된 항목을 뜻할 뿐, 인과관계나 매체의 의도를 뜻하지 않습니다. 기사별 표본의 소속은 근거 상세에서 확인합니다.</p>{network ? <><p className="afp-summary-meta">노드 {network.nodes.length}개 · 연결 {network.edges.length}개 · 기사 {issue.articleCount}건 표본</p><div className="afp-network"><div className="afp-network-nodes">{network.nodes.slice(0, 30).map((node) => <div className="afp-network-node" key={node.id}><strong>{node.label}</strong>{node.count ? <span>{node.count}건</span> : null}</div>)}</div><ul className="afp-network-edges">{network.edges.slice(0, 60).map((edge, index) => <li key={`${edge.source}-${edge.target}-${index}`}>{labels.get(edge.source) ?? "노드 미상"} <span>↔</span> {labels.get(edge.target) ?? "노드 미상"}{edge.weight ? <small> · {edge.weight}회</small> : null}</li>)}</ul></div></> : <div className="afp-unavailable"><strong>연결망 미제공</strong><p>이 공개 snapshot에는 실제 노드와 연결선 데이터가 없습니다. 차원·프레임 목록을 연결망처럼 만들어 표시하지 않았습니다.</p></div>}</div></section>;
+}
+
+type MorphologyRow = { articleId: string; label: string; count?: number };
+
+function morphologyRows(bundle: IssueAnalysisBundle): MorphologyRow[] {
+  return bundle.semanticProfiles.filter((entry) => semanticEntryIsEligible(entry, bundle)).flatMap((entry) => {
+    const raw = (richProfile(entry) as (RichProfile & { morphology?: unknown }) | null)?.morphology;
+    const items = Array.isArray(raw) ? raw : raw && typeof raw === "object" && Array.isArray((raw as { items?: unknown }).items) ? (raw as { items: unknown[] }).items : [];
+    return items.flatMap((item): MorphologyRow[] => {
+      if (!item || typeof item !== "object") return [];
+      const value = item as { code?: unknown; label?: unknown; term?: unknown; count?: unknown };
+      const rawLabel = typeof value.label === "string" ? value.label : typeof value.term === "string" ? value.term : typeof value.code === "string" ? value.code : "";
+      if (!rawLabel) return [];
+      return [{ articleId: entry.articleId, label: codeLabel(typeof value.code === "string" ? value.code : null, rawLabel), count: typeof value.count === "number" && value.count > 0 ? value.count : undefined }];
+    });
+  });
+}
+
+function MorphologySection({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
+  const rows = morphologyRows(bundle);
+  const articles = new Map(issue.articles.map((article) => [article.articleId, article]));
+  return <section className="afs-card" id="sec-morphology"><h2>형태소·차별 표현 <small>프레임 판정과 별도인 언어 관측</small></h2><div className="afs-in"><p className="afs-note">단어 형태나 반복 표현은 어떤 문장이 눈에 띄는지 보여 줄 뿐, 그 자체로 프레임·논조·의도를 판정하지 않습니다.</p>{rows.length ? <div className="afp-morphology-list">{rows.slice(0, 60).map((row, index) => <div key={`${row.articleId}-${row.label}-${index}`}><strong>{row.label}</strong><span>{articles.get(row.articleId)?.outlet ?? "매체 미상"} · {articles.get(row.articleId)?.title ?? "제목 미상"}{row.count ? ` · ${row.count}회` : ""}</span><details className="afp-technical-disclosure"><summary>기술 식별자</summary><div className="afp-evidence-body"><small>article_id {row.articleId}</small></div></details></div>)}</div> : <div className="afp-unavailable"><strong>형태소 결과 미제공</strong><p>이 공개 snapshot에는 형태소·차별 표현 분석 결과가 없어 프레임 결론에 사용하지 않았습니다.</p></div>}</div></section>;
+}
+
+function DevicesSection({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
+  const articles = new Map(issue.articles.map((article) => [article.articleId, article]));
+  const devices = bundle.semanticProfiles.filter((entry) => semanticEntryIsEligible(entry, bundle)).flatMap((entry) => (richProfile(entry)?.framing_devices ?? []).map((device) => ({ ...device, articleId: entry.articleId })));
+  return <section className="afs-card"><h2>기사에서 눈에 띄는 표현·근거 장치 <small>강조·수치·인과 연결</small></h2><div className="afs-in"><p className="afs-note">이 항목은 기사 표현의 구조를 보여 주며 프레임의 방향이나 기자의 의도를 판정하지 않습니다.</p>{devices.length ? <div className="afp-device-list">{devices.map((device, index) => { const article = articles.get(device.articleId); const count = typeof device.count === "number" && device.count > 0 ? `${device.count}건` : "건수 미상"; return <div key={`${device.code ?? device.label}-${device.articleId}-${index}`}><strong>{codeLabel(device.code, device.label)}</strong><span>{article?.outlet ?? "매체 미상"} · {article?.title ?? "제목 미상"} · {count}{device.appears_in_lead ? " · 제목/리드에 관측" : ""}</span><details className="afp-technical-disclosure"><summary>기술 식별자</summary><div className="afp-evidence-body"><small>article_id {device.articleId}</small></div></details><EvidenceRefs refs={device.evidence} label="장치 근거" /></div>; })}</div> : <p className="afp-state">현재 semantic profile에는 별도의 표현·근거 장치 코드가 구조화되지 않았습니다. 본문에 없다고 단정하지 않고 이 분류만 보류합니다.</p>}</div></section>;
 }
 
 function FramingRail() {
   return (
     <nav className="afs-rail" aria-label="프레이밍 분석 주요 층위 바로가기">
       <a className="afs-rail-item" href="#sec-synthesis">
-        <b>사건 종합 비교</b>
-        <small>공통선 · 갈림길 · Camps</small>
+        <b>공통·차이 요약</b>
+        <small>확인된 설명 · 비교 보류</small>
       </a>
       <a className="afs-rail-item" href="#sec-four-functions">
         <b>프레임 4기능</b>
@@ -1015,9 +1198,21 @@ function FramingRail() {
         <b>정책·보편 프레임</b>
         <small>Boydstun · Semetko</small>
       </a>
+      <a className="afs-rail-item" href="#sec-sources">
+        <b>취재원 구성</b>
+        <small>역할 · 전달 방식</small>
+      </a>
       <a className="afs-rail-item" href="#sec-scope">
         <b>보도 시야</b>
-        <small>Iyengar · Episodic/Thematic</small>
+        <small>사건 중심 · 구조 중심</small>
+      </a>
+      <a className="afs-rail-item" href="#sec-network">
+        <b>의미 연결망</b>
+        <small>실제 노드·연결선만</small>
+      </a>
+      <a className="afs-rail-item" href="#sec-morphology">
+        <b>표현·형태소</b>
+        <small>프레임 판정과 별도</small>
       </a>
       <a className="afs-rail-item" href="#sec-evidence">
         <b>기사별 판정 근거</b>
@@ -1039,7 +1234,7 @@ function MethodologyDisclaimer() {
           <strong>엄격한 근거 보존 원칙:</strong> 저작권 보호 및 허위 추론 방지를 위해 기사 원문 본문/HTML은 비공개 저장소에만 보관하며, 공개 화면에는 문장 위치(<code>locator</code>)와 64자리 SHA-256 지문(<code>sentence_sha256</code>)이 검증된 문장만 안전한 의역(paraphrase)으로 표시합니다.
         </p>
         <p>
-          <strong>해석의 한계:</strong> 관측되지 않은 차원은 &apos;명시되지 않음(explicit_not_stated)&apos; 또는 &apos;근거 부족(insufficient_evidence)&apos;으로 처리하며, 매체의 고정 성향이나 의도적 왜곡으로 단정하지 않습니다. 취재원의 발언은 해당 발화 주체에게만 귀속되며 언론사 자체 주장으로 환원하지 않습니다.
+          <strong>해석의 한계:</strong> 관측되지 않은 차원은 ‘기사에 명시되지 않음’ 또는 ‘공개 근거 부족’으로 처리하며, 매체의 고정 성향이나 의도적 왜곡으로 단정하지 않습니다. 취재원의 발언은 해당 발화 주체에게만 귀속되며 언론사 자체 주장으로 환원하지 않습니다.
         </p>
       </div>
     </details>
@@ -1094,7 +1289,7 @@ export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
   return (
     <>
       <AnalysisPageHeader mode="outlets" bundle={bundle} issue={issue} dimensions={dimensions} />
-      <ComparisonLeadV2 issue={issue} synthesis={synthesisData(bundle)} />
+      <ComparisonLeadV2 bundle={bundle} issue={issue} synthesis={synthesisData(bundle)} />
       <section className="afs-card" id="sec-evidence">
         <h2>
           기사 근거 <small>갈래를 만든 기사와 공개 locator</small>
@@ -1148,9 +1343,9 @@ export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
   return (
     <>
       <AnalysisPageHeader mode="framing" bundle={bundle} issue={issue} dimensions={dimensions} />
-      <div className="afp-framing-lead-grid">
-        <Summary bundle={bundle} issue={issue} analyses={dimensions} compact />
-        <ScopeSection bundle={bundle} compact id="sec-scope-summary" />
+      <div className="afp-framing-lead-grid" id="sec-synthesis">
+        <Summary bundle={bundle} issue={issue} analyses={dimensions} />
+        <ScopeSection bundle={bundle} issue={issue} compact id="sec-scope-summary" />
       </div>
       <div id="sec-guide">
         <DimensionGuide dimensions={dimensions} />
@@ -1159,10 +1354,6 @@ export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
         <FourFunctionTable issue={issue} dimensions={dimensions} />
       </div>
       <FramingRail />
-      <IssueThirtySecond issue={issue} />
-      <div id="sec-synthesis">
-        <SynthesisNarrative bundle={bundle} />
-      </div>
       <section className="afs-card" id="sec-matrix">
         <h2>
           매체별 전체 프레임 행렬 <small>5개 기능·취재원 구조</small>
@@ -1171,16 +1362,14 @@ export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
           <FrameMatrix issue={issue} dimensions={dimensions} />
         </div>
       </section>
-      <div id="sec-clusters">
-        <ClusterSection issue={issue} />
-      </div>
+      <ClusterSection issue={issue} dimensions={dimensions} />
       <ComparisonAxisEvidence bundle={bundle} issue={issue} />
-      <StructuredObservationSection bundle={bundle} />
+      <StructuredObservationSection bundle={bundle} issue={issue} />
       <div id="sec-descriptors">
-        <DescriptorSection bundle={bundle} field="policy_frames" title="정책 프레임" subtitle="Boydstun et al. 2014" />
-        <DescriptorSection bundle={bundle} field="generic_frames" title="보편 프레임 다섯 종" subtitle="Semetko &amp; Valkenburg 2000" />
+        <DescriptorSection bundle={bundle} issue={issue} field="policy_frames" title="정책 프레임" subtitle="Boydstun et al. 2014" />
+        <DescriptorSection bundle={bundle} issue={issue} field="generic_frames" title="보편 프레임 다섯 종" subtitle="Semetko &amp; Valkenburg 2000" />
       </div>
-      <ScopeSection bundle={bundle} />
+      <ScopeSection bundle={bundle} issue={issue} />
       <section className="afs-card" id="sec-sources">
         <h2>
           누구의 말을 중심에 뒀나 <small>취재원 구조</small>
@@ -1189,9 +1378,10 @@ export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
           <SourceTable issue={issue} />
         </div>
       </section>
-      <SourceRoleEvidence bundle={bundle} />
-      <SourceNetwork dimensions={dimensions} />
-      <DevicesSection bundle={bundle} />
+      <SourceRoleEvidence bundle={bundle} issue={issue} />
+      <SourceNetwork bundle={bundle} issue={issue} />
+      <MorphologySection bundle={bundle} issue={issue} />
+      <DevicesSection bundle={bundle} issue={issue} />
       <section className="afs-card" id="sec-evidence">
         <h2>
           기사별 판정 근거 <small>evidence locator · hash</small>
@@ -1223,7 +1413,7 @@ function AnalysisPageHeader({
   dimensions: DimensionAnalysis[];
 }) {
   const framing = mode === "framing";
-  const camps = synthesisCamps(bundle);
+  const comparison = comparisonSummary(bundle, issue);
   const sourceRoleCount = new Set(issue.outlets.flatMap((outlet) => outlet.roles.map((role) => role.label))).size;
   const observedDimensions = dimensions.filter((dimension) => dimension.observedArticles > 0).length;
   const kpis = framing
@@ -1241,12 +1431,12 @@ function AnalysisPageHeader({
         <div className="afp-page-heading">
           <div className="afp-page-title-line">
             <h1>{framing ? "프레이밍 분석" : "언론사 비교"}</h1>
-            <span className="afp-page-badge">{framing ? "핵심 6축 + 보조 3층위" : "관측된 보도 갈래"}</span>
+            <span className="afp-page-badge">{framing ? "핵심 6축 + 보조 3층위" : comparison.statusLabel}</span>
           </div>
           <p>
             {issue.rank}위 · {issue.title} — {framing
               ? "문제·원인·책임·평가·해법·취재원 배치를 먼저 보고, 시야·표현 장치는 보조 관측으로 확인합니다."
-              : "사건 설명 → 갈린 질문 → 관측된 보도 갈래 → 기사 근거 순서로 비교합니다."}
+              : "사건 설명 → 실제 비교 질문 → 기사 설명 묶음 → 기사 근거 순서로 비교합니다."}
           </p>
         </div>
         <Link className="afs-pill afs-pill-go afp-page-action" href={`/issues/${encodeURIComponent(issue.issueId)}/report`}>
@@ -1264,7 +1454,7 @@ function AnalysisPageHeader({
         </section>
       ) : (
         <p className="afp-compact-meta" aria-label="언론사 비교 표본 정보">
-          기사 {issue.articleCount}건 · 매체 {issue.outletCount}곳 · {camps.length ? `관측 갈래 ${camps.length}개` : "공통 보도"} · 취재원 역할 {sourceRoleCount || "미관측"}
+          기사 {issue.articleCount}건 · 매체 {issue.outletCount}곳 · {comparison.statusLabel} · 기자 서술 근거 {comparison.analyzedArticleCount}건 · 취재원 역할 {sourceRoleCount || "미관측"}
         </p>
       )}
     </>

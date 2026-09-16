@@ -39,10 +39,10 @@ function observedEventParagraph(synthesis?: EventSynthesisData | null): string |
 
 export const DIM_QUESTION: Record<string, string> = {
   problem_definition: "무엇이 문제인가",
-  causal_interpretation: "왜 그렇게 됐는가",
-  responsibility_attribution: "누구의 책임인가",
-  moral_evaluation: "옳고 그름을 어떻게 봤는가",
-  treatment_recommendation: "무엇을 해야 하는가",
+  causal_interpretation: "왜 이렇게 됐나",
+  responsibility_attribution: "누구 책임인가",
+  moral_evaluation: "어떻게 평가하나",
+  treatment_recommendation: "어떻게 하자는가",
 };
 
 export const VOICE_LABEL: Record<string, string> = {
@@ -102,6 +102,18 @@ export const FAMILY_LABEL: Record<string, string> = {
   safety_harm: "안전·피해",
   safety_negative: "안전 실패",
   fairness_negative: "공정성 훼손",
+  economic_negative: "경제적 부담",
+  external_event: "외부 사건·상황",
+  policy_implementation: "정책 집행",
+  structural_condition: "구조적 조건",
+  policy_design: "정책 설계",
+  strengthen_policy: "정책 강화",
+  effectiveness_positive: "효과 긍정 평가",
+  government: "정부·공공기관",
+  business: "기업·경제 주체",
+  judiciary_law_enforcement: "사법·수사기관",
+  legislature_politics: "정치권·입법기관",
+  other: "기타",
 };
 
 /** 종성 유무로 조사를 고른다. 하드코딩하면 '취재원 구성가'처럼 깨진다. */
@@ -122,6 +134,30 @@ export function safeDecode(value: string) {
 }
 
 export const familyLabel = (code?: string) => (code ? FAMILY_LABEL[code] ?? code : "미상");
+
+const BLOCKED_SEMANTIC_STATES = new Set([
+  "analysis_failed",
+  "conflicting",
+  "insufficient_evidence",
+  "dead_letter",
+  "failed",
+]);
+
+function usableSemanticEntry(entry: IssueAnalysisBundle["semanticProfiles"][number] | undefined, bundle: IssueAnalysisBundle) {
+  const profile = entry?.profile as (NonNullable<IssueAnalysisBundle["semanticProfiles"][number]["profile"]> & {
+    review?: { analysis_state?: string; analysis_decision?: string; status?: string };
+  }) | null | undefined;
+  const states = [
+    bundle.analysisStatus?.semantic?.status,
+    entry?.status,
+    entry?.engine?.status,
+    profile?.engine?.status,
+    profile?.review?.analysis_state,
+    profile?.review?.analysis_decision,
+    profile?.review?.status,
+  ];
+  return Boolean(entry?.status === "succeeded" && profile && !states.some((state) => typeof state === "string" && BLOCKED_SEMANTIC_STATES.has(state)));
+}
 
 type Counter = Array<{ key: string; label: string; count: number }>;
 
@@ -147,6 +183,15 @@ type ClaimSource = {
   evidence?: { locator?: { paragraph?: number; sentence?: number }; sentence_sha256?: string };
 };
 type ClaimItem<T> = T & { evidenceSentences: number; sentences: number[] };
+
+function hasPublicEvidence(evidence?: ClaimSource["evidence"] | null) {
+  return Boolean(
+    evidence?.locator
+    && (typeof evidence.locator.paragraph === "number" || typeof evidence.locator.sentence === "number")
+    && typeof evidence.sentence_sha256 === "string"
+    && /^[a-f0-9]{64}$/i.test(evidence.sentence_sha256),
+  );
+}
 
 function claimItems<T extends ClaimSource>(items: T[]): Array<ClaimItem<T>> {
   const order: string[] = [];
@@ -206,7 +251,7 @@ function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
   const byId = new Map((bundle.semanticProfiles ?? []).map((entry) => [entry.articleId, entry]));
   return (bundle.articles ?? []).map((article) => {
     const entry = byId.get(article.articleId);
-    const profile = entry?.profile ?? null;
+    const profile = usableSemanticEntry(entry, bundle) ? entry?.profile ?? null : null;
     const dims = profile?.dimensions ?? {};
     const families: Record<string, string | undefined> = {};
     const statuses: Record<string, string | undefined> = {};
@@ -216,7 +261,9 @@ function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
     const voiceBasis: Record<string, { narrated: number; attributed: number }> = {};
     for (const dim of DIM_ORDER) {
       const node = dims[dim];
-      const items = claimItems(node?.items ?? []);
+      // 화면에 계열·발화·주체를 집계할 때는 공개 locator와 SHA-256이 모두 있는
+      // 주장만 사용한다. 분석 상태가 있는 빈 노드를 실제 관측값으로 세지 않는다.
+      const items = claimItems(node?.items ?? []).filter((item) => hasPublicEvidence(item.evidence));
       statuses[dim] = node?.status;
       families[dim] = items[0]?.frame_family;
       // 취재원의 말로 실린 설명을 매체의 서술로 합산하지 않는다 — 프레이밍 화면과 같은 규칙을
@@ -239,6 +286,7 @@ function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
     for (const dim of DIM_ORDER) {
       subjects[dim] = subjectsIn(
         claimItems(dims[dim]?.items ?? [])
+          .filter((item) => hasPublicEvidence(item.evidence))
           .map((item) => item.public_paraphrase ?? "")
           .filter(Boolean),
       );
@@ -504,6 +552,10 @@ function layerViews(bundle: IssueAnalysisBundle, articles: ArticleView[], axes: 
     const attributed: LayerItem[] = [];
     let notObserved = 0;
     for (const entry of bundle.semanticProfiles) {
+      if (!usableSemanticEntry(entry, bundle)) {
+        notObserved += 1;
+        continue;
+      }
       const node = entry.profile?.dimensions?.[dim];
       if (!node) continue;
       if (node.status === "not_observed" || !(node.items ?? []).length) {
@@ -582,6 +634,9 @@ function frameClusters(articles: ArticleView[], basis: "all" | "narrated" = "all
     const signature: Record<string, string | undefined> = {};
     for (const dim of DIM_ORDER)
       signature[dim] = basis === "narrated" ? article.narratedFamilies[dim] : article.families[dim];
+    // 한 축도 공개 근거가 없는 기사는 빈 값 하나의 군집으로 만들지 않는다.
+    // 이런 기사는 아래 기사별 상태에서만 '분석 대기'로 남긴다.
+    if (!DIM_ORDER.some((dim) => signature[dim] !== undefined)) continue;
     const key = DIM_ORDER.map((dim) => signature[dim] ?? "-").join("|");
     const slot = groups.get(key) ?? { key, signature, articleIds: [], outlets: [], count: 0, differsAt: [], partialAt: [] };
     slot.articleIds.push(article.articleId);

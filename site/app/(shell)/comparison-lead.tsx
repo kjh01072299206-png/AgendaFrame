@@ -2,21 +2,34 @@
 
 import { useState } from "react";
 import type {
-  EventSynthesisCamp,
   EventSynthesisClaim,
   EventSynthesisData,
   EventSynthesisEvidence,
-  EventSynthesisProofRow,
+  IssueAnalysisBundle,
 } from "../../lib/initial-five/types";
 import type { IssueView } from "../../lib/initial-five/derive";
+import {
+  comparisonSummary,
+  comparisonVoiceLabel,
+  type ComparisonGroup,
+  type ComparisonObservation,
+  type ComparisonSummary,
+} from "../../lib/initial-five/analysis-summary";
 import { stripEvidenceTokens } from "../../lib/initial-five/public-text.mjs";
 
 type ArticleRef = IssueView["articles"][number];
 
-function textOf(claim?: EventSynthesisClaim | null) {
+function textOf(claim?: EventSynthesisClaim | null, expectedArticleCount = 0) {
   if (!claim || claim.status === "explicit_not_stated" || claim.status === "insufficient_evidence") return null;
   if (typeof claim.text !== "string" || !claim.text.trim()) return null;
-  return stripEvidenceTokens(claim.text).trim() || null;
+  const refs = refsOf(claim.evidence).filter(validRef);
+  if (!refs.length) return null;
+  const text = stripEvidenceTokens(claim.text).trim();
+  if (expectedArticleCount > 0 && /모든\s*(?:매체|기사)|전\s*매체|공통으로/.test(text)) {
+    const articleCount = new Set(refs.map((ref) => ref.article_id)).size;
+    if (articleCount < expectedArticleCount) return null;
+  }
+  return text || null;
 }
 
 function refsOf(value: unknown): EventSynthesisEvidence[] {
@@ -28,235 +41,287 @@ function refsOf(value: unknown): EventSynthesisEvidence[] {
 function validRef(ref: EventSynthesisEvidence) {
   const locator = ref.locator;
   return typeof ref.article_id === "string"
-    && typeof locator?.paragraph === "number"
-    && typeof locator?.sentence === "number"
+    && (typeof locator?.paragraph === "number" || typeof locator?.sentence === "number")
     && typeof ref.sentence_sha256 === "string"
     && /^[a-f0-9]{64}$/i.test(ref.sentence_sha256);
 }
 
-function evidenceLabel(ref: EventSynthesisEvidence) {
-  const locator = ref.locator ?? {};
-  const place = [
-    typeof locator.paragraph === "number" ? `문단 ${locator.paragraph}` : null,
-    typeof locator.sentence === "number" ? `문장 ${locator.sentence}` : null,
-  ].filter(Boolean).join(" · ");
-  return `${ref.article_id ?? "기사"} · ${place || "위치 미상"}${ref.sentence_sha256 ? ` · hash ${ref.sentence_sha256.slice(0, 12)}…` : ""}`;
+function articleLabel(article?: ArticleRef, articleId?: string) {
+  if (article) return `${article.outlet} · ${article.title}`;
+  return articleId ? "기사 정보 미상" : "기사 근거";
 }
 
-function EvidenceDisclosure({ refs, label }: { refs: unknown; label: string }) {
+function evidencePlace(ref: EventSynthesisEvidence) {
+  const locator = ref.locator ?? {};
+  return [
+    typeof locator.paragraph === "number" ? `문단 ${locator.paragraph}` : null,
+    typeof locator.sentence === "number" ? `문장 ${locator.sentence}` : null,
+  ].filter(Boolean).join(" · ") || "위치 미상";
+}
+
+function EvidenceDisclosure({
+  refs,
+  label,
+  articles,
+}: {
+  refs: unknown;
+  label: string;
+  articles?: Map<string, ArticleRef>;
+}) {
   const valid = refsOf(refs).filter(validRef).slice(0, 6);
   if (!valid.length) return <small className="afp-state">{label} 연결 대기</small>;
   return (
     <details className="afp-evidence afp-evidence-compact afp-v2-evidence">
       <summary>{label} {valid.length}개</summary>
       <div className="afp-evidence-body">
-        {valid.map((ref, index) => <small key={`${evidenceLabel(ref)}-${index}`}>{evidenceLabel(ref)}</small>)}
+        {valid.map((ref, index) => (
+          <div className="afp-evidence-ref" key={`${ref.article_id}-${ref.sentence_sha256}-${index}`}>
+            <strong>{articleLabel(ref.article_id ? articles?.get(ref.article_id) : undefined, ref.article_id)}</strong>
+            <small>{evidencePlace(ref)}</small>
+            <small className="afp-evidence-technical">
+              article_id {ref.article_id ?? "미상"} · SHA-256 {ref.sentence_sha256?.slice(0, 16)}…
+            </small>
+          </div>
+        ))}
       </div>
     </details>
   );
 }
 
-function voiceLabel(kind?: string) {
-  if (kind === "journalist_narration") return "기자 서술 중심";
-  if (kind === "source_attributed") return "취재원 발언 중심";
-  if (kind === "mixed") return "기자 서술·취재원 혼합";
-  return "발화 범위 미관측";
-}
-
-function campHeadline(camp: EventSynthesisCamp) {
-  return camp.headline ?? camp.summary ?? camp.gist ?? camp.name ?? "관측된 보도 갈래";
-}
-
-function campSummary(camp: EventSynthesisCamp) {
-  return camp.summary ?? camp.gist ?? "공개 근거가 연결된 보도 선택을 묶었습니다.";
-}
-
-function campProofRows(camp: EventSynthesisCamp, synthesis: EventSynthesisData | null): EventSynthesisProofRow[] {
-  const direct = Array.isArray(camp.proof_rows) ? camp.proof_rows : [];
-  if (direct.length) return direct;
-  const ids = new Set(camp.article_ids ?? []);
-  return (synthesis?.proof_rows ?? []).filter((row) => row.article_id && ids.has(row.article_id));
-}
-
-function ArticleProof({ row, article }: { row: EventSynthesisProofRow; article?: ArticleRef }) {
-  const paraphrase = stripEvidenceTokens(row.public_paraphrase ?? row.text ?? "").trim();
-  return (
-    <article className="afp-proof-row-v2">
-      <div className="afp-proof-row-head">
-        <strong>{article?.outlet ?? row.outlet ?? "매체 미상"}</strong>
-        <span>{article?.title ?? row.article_id ?? "기사 제목 미상"}</span>
-      </div>
-      {row.dimension ? <small className="afp-proof-dimension">{row.dimension}</small> : null}
-      {paraphrase ? <p>{paraphrase}</p> : <p className="afp-state">공개 의역이 연결되지 않았습니다.</p>}
-      <EvidenceDisclosure refs={row.evidence} label="이 기사 근거" />
-      {article?.url ? <a href={article.url} target="_blank" rel="noreferrer">원문 링크 열기 ↗</a> : null}
-    </article>
-  );
-}
-
 function EventExplanation({ issue, synthesis }: { issue: IssueView; synthesis: EventSynthesisData | null }) {
-  const paragraphs = (synthesis?.event_paragraphs ?? []).map(textOf).filter((text): text is string => Boolean(text));
-  const fallback = paragraphs.length ? paragraphs : [issue.lead].filter((text): text is string => Boolean(text));
-  const first = fallback[0] ?? "공개 근거가 연결된 사건 설명을 아직 표시할 수 없습니다.";
+  const articles = new Map(issue.articles.map((article) => [article.articleId, article]));
+  const paragraphs = (synthesis?.event_paragraphs ?? [])
+    .map((claim) => ({ claim, text: textOf(claim, issue.articleCount) }))
+    .filter((entry): entry is { claim: EventSynthesisClaim; text: string } => Boolean(entry.text));
+  const fallback = paragraphs.length
+    ? paragraphs
+    : issue.lead
+      ? [{ claim: null, text: issue.lead }]
+      : [];
+  const first = fallback[0]?.text ?? "공개 근거가 연결된 사건 설명을 아직 표시할 수 없습니다.";
   const more = fallback.slice(1, 4);
   const terms = (synthesis?.terms ?? []).filter((term) => term.term && term.gloss);
   return (
     <section className="afs-card afp-event-card-v2" id="sec-event-summary">
       <div className="afs-in afs-prose">
         <div className="afp-event-copy">
-        <div className="afp-v2-section-kicker">사건 설명</div>
-        <h2 className="afp-event-title">{issue.title}</h2>
-        <p className="afp-event-note">사건 서술과 용어 풀이는 근거 기사를 취합해 썼고, 아래는 매체가 다르게 쓴 지점입니다.</p>
-        <p className="afp-event-first">{first}</p>
+          <div className="afp-v2-section-kicker">사건 설명</div>
+          <h2>무슨 일이 있었나</h2>
+          <p className="afp-event-note">기사 묶음에서 근거가 연결된 경위입니다. 아래 비교는 이 사건을 각 매체가 어떤 설명으로 풀었는지 보여 줍니다.</p>
+          <p className="afp-event-first">{first}</p>
         </div>
         <div className="afp-event-context">
-          <div className="afp-v2-section-kicker">기사 묶음에서 확인</div>
-          <p className="afp-event-context-note">사건 설명은 첫 근거를 먼저 보여주고, 추가 경위와 용어는 필요한 경우에만 펼쳐 봅니다.</p>
-        <EvidenceDisclosure refs={synthesis?.event_paragraphs?.[0]?.evidence} label="첫 사건 설명 근거" />
-        {more.length || terms.length ? (
-          <details className="afp-event-more">
-            <summary>사건 경위와 용어 더 보기</summary>
-            {more.map((paragraph, index) => (
-              <div className="afp-event-more-row" key={`${paragraph}-${index}`}>
-                <p>{paragraph}</p>
-                <EvidenceDisclosure refs={synthesis?.event_paragraphs?.[index + 1]?.evidence} label="사건 경위 근거" />
-              </div>
-            ))}
-            {terms.length ? (
-              <div className="afp-terms-v2">
-                <strong>기사에서 확인한 용어</strong>
-                {terms.map((term, index) => (
-                  <div className="afp-term-v2" key={`${term.term}-${index}`}>
-                    <b>{term.term}</b><span>{stripEvidenceTokens(term.gloss ?? "")}</span>
-                    <EvidenceDisclosure refs={term.evidence} label="용어 근거" />
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </details>
-        ) : null}
+          <div className="afp-v2-section-kicker">근거와 추가 경위</div>
+          <p className="afp-event-context-note">첫 문장을 먼저 읽고, 필요한 경우 기사·문장 위치를 펼쳐 확인하세요.</p>
+          <EvidenceDisclosure refs={fallback[0]?.claim?.evidence} label="첫 사건 설명 근거" articles={articles} />
+          {more.length || terms.length ? (
+            <details className="afp-event-more">
+              <summary>사건 경위와 용어 더 보기</summary>
+              {more.map((paragraph, index) => (
+                <div className="afp-event-more-row" key={`${paragraph.text}-${index}`}>
+                  <p>{paragraph.text}</p>
+                  <EvidenceDisclosure refs={paragraph.claim?.evidence} label="사건 경위 근거" articles={articles} />
+                </div>
+              ))}
+              {terms.length ? (
+                <div className="afp-terms-v2">
+                  <strong>기사에서 확인한 용어</strong>
+                  {terms.map((term, index) => (
+                    <div className="afp-term-v2" key={`${term.term}-${index}`}>
+                      <b>{term.term}</b><span>{stripEvidenceTokens(term.gloss ?? "")}</span>
+                      <EvidenceDisclosure refs={term.evidence} label="용어 근거" articles={articles} />
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </details>
+          ) : null}
         </div>
       </div>
     </section>
   );
 }
 
-function AxisExplanation({ issue, synthesis }: { issue: IssueView; synthesis: EventSynthesisData | null }) {
-  const axis = synthesis?.comparison_axis;
-  const common = textOf(synthesis?.common_ground) ?? issue.commonGround;
-  const points = (axis?.points ?? []).map(textOf).filter((text): text is string => Boolean(text));
-  const question = axis?.question ?? textOf(synthesis?.split_line) ?? issue.mainDifference;
+function AxisExplanation({ issue, summary, synthesis }: { issue: IssueView; summary: ComparisonSummary; synthesis: EventSynthesisData | null }) {
+  const articles = new Map(issue.articles.map((article) => [article.articleId, article]));
+  const observedCommonEvidence: EventSynthesisEvidence[] = summary.commonObservations.map((row) => ({
+    article_id: row.articleId,
+    locator: row.evidence.locator,
+    sentence_sha256: row.evidence.sentence_sha256,
+  }));
+  const commonEvidence = observedCommonEvidence.length
+    ? observedCommonEvidence
+    : synthesis?.common_ground?.evidence ?? synthesis?.agreed_line?.evidence;
+  const axisEvidence = synthesis?.comparison_axis?.evidence;
   return (
     <section className="afs-card afp-axis-v2" id="sec-comparison-axis">
       <div className="afs-in">
         <div className="afp-axis-copy">
-        <div className="afp-v2-section-kicker">논조 갈래 축</div>
-        {axis?.label ? <h2>{axis.label}</h2> : <h2>같은 사건을 어디에 초점을 두고 설명했나</h2>}
-        {points.length ? <div className="afp-axis-points" aria-label="기사에서 관측된 비교 축">{points.map((point, index) => <span key={`${point}-${index}`}>{point}</span>)}</div> : null}
-        <p className="afp-axis-question-v2">{question ?? "현재 공개 근거에서는 서로 다른 설명 축을 확정하지 않았습니다."}</p>
+          <div className="afp-v2-section-kicker">실제 근거로 만든 비교 질문</div>
+          <h2>{summary.dimensionLabel ?? "매체 간 설명 차이"}</h2>
+          <p className="afp-axis-question-v2">{summary.question}</p>
+          <p className="afp-axis-status-reason">{summary.statusReason}</p>
         </div>
         <div className="afp-axis-context">
-        <EvidenceDisclosure refs={axis?.evidence ?? synthesis?.split_line?.evidence} label="갈린 질문 근거" />
-        {common ? (
-          <div className="afp-common-ground-v2">
-            <strong>공통으로 본 것</strong>
-            <p>{common}</p>
-            <EvidenceDisclosure refs={synthesis?.common_ground?.evidence} label="공통 사실 근거" />
+          <span className={`afp-comparison-status afp-status-${summary.status}`}>{summary.statusLabel}</span>
+          {summary.commonText ? (
+            <div className="afp-common-ground-v2">
+              <strong>{summary.commonScope ? `여러 매체에서 함께 확인된 설명 · ${summary.commonScope}` : "공통으로 확인한 설명"}</strong>
+              <p>{summary.commonText}</p>
+              <EvidenceDisclosure refs={commonEvidence} label="공통 설명 근거" articles={articles} />
+            </div>
+          ) : <p className="afp-state">공통 설명으로 묶을 공개 근거가 아직 확인되지 않았습니다.</p>}
+          <div className="afp-comparison-difference">
+            <strong>{summary.status === "difference_confirmed" ? "관측된 차이" : "현재 비교 결과"}</strong>
+            <p>{summary.differenceText}</p>
           </div>
-        ) : <p className="afp-state">공통 설명으로 묶을 공개 근거가 아직 확인되지 않았습니다.</p>}
+          {axisEvidence?.length ? <EvidenceDisclosure refs={axisEvidence} label="비교 질문 근거" articles={articles} /> : null}
         </div>
       </div>
     </section>
   );
 }
 
-function CampProofPanel({ camp, index, issue, synthesis }: { camp: EventSynthesisCamp; index: number; issue: IssueView; synthesis: EventSynthesisData | null }) {
+function observationEvidence(row: ComparisonObservation): EventSynthesisEvidence[] {
+  return [{
+    article_id: row.articleId,
+    locator: row.evidence.locator,
+    sentence_sha256: row.evidence.sentence_sha256,
+  }];
+}
+
+function GroupProofPanel({
+  group,
+  index,
+  issue,
+}: {
+  group: ComparisonGroup;
+  index: number;
+  issue: IssueView;
+}) {
   const articles = new Map(issue.articles.map((article) => [article.articleId, article]));
-  const rows = campProofRows(camp, synthesis);
-  const campArticles = (camp.article_ids ?? []).map((id) => articles.get(id)).filter((article): article is ArticleRef => Boolean(article));
   return (
-    <div className="afp-camp-proof-panel-v2" id={`camp-proof-${index}`}>
+    <div className="afp-camp-proof-panel-v2 afp-group-proof-panel" id={`comparison-proof-${index}`}>
       <div className="afp-proof-panel-heading">
         <div>
-          <span className="afp-v2-section-kicker">선택한 갈래의 기사 근거</span>
-          <h3>{campHeadline(camp)}</h3>
+          <span className="afp-v2-section-kicker">이 묶음을 만든 기사 근거</span>
+          <h3>{group.title}</h3>
         </div>
-        <span>{campArticles.length || camp.article_ids?.length || 0}건 연결</span>
+        <span>{group.articleCount}건 · {group.outlets.length}개 매체</span>
       </div>
-      {rows.length ? (
-        <div className="afp-proof-list-v2">{rows.slice(0, 12).map((row, rowIndex) => <ArticleProof key={`${row.article_id}-${rowIndex}`} row={row} article={row.article_id ? articles.get(row.article_id) : undefined} />)}</div>
-      ) : (
-        <div className="afp-proof-missing">
-          <p>이 갈래의 기사별 공개 의역과 위치 해시가 연결되지 않았습니다.</p>
-          <div>{campArticles.map((article) => <span key={article.articleId}>{article.outlet} · {article.title}</span>)}</div>
-          <EvidenceDisclosure refs={camp.evidence} label="갈래 종합 근거" />
+      {group.observations.length ? (
+        <div className="afp-proof-list-v2">
+          {group.observations.slice(0, 12).map((row, rowIndex) => {
+            const article = articles.get(row.articleId);
+            return (
+              <article className="afp-proof-row-v2" key={`${row.articleId}-${row.evidence.sentence_sha256}-${rowIndex}`}>
+                <div className="afp-proof-row-head">
+                  <strong>{row.outlet}</strong>
+                  <span>{row.title}</span>
+                </div>
+                <small className="afp-proof-dimension">{row.valueLabel} · {row.voiceKind === "journalist_narration" ? "기자 서술" : comparisonVoiceLabel(row.voiceKind)}</small>
+                {row.publicParaphrase ? <p>{row.publicParaphrase}</p> : <p className="afp-state">공개 의역이 연결되지 않았습니다.</p>}
+                <EvidenceDisclosure refs={observationEvidence(row)} label="이 기사 판단 근거" articles={articles} />
+                {article?.url ? <a href={article.url} target="_blank" rel="noreferrer">원문 링크 열기 ↗</a> : null}
+              </article>
+            );
+          })}
         </div>
-      )}
+      ) : <p className="afp-state">이 묶음에 연결된 공개 근거가 없습니다.</p>}
     </div>
   );
 }
 
-function CampsExplanation({ issue, synthesis }: { issue: IssueView; synthesis: EventSynthesisData | null }) {
-  const camps = (synthesis?.camps ?? []).filter((camp) => camp.name && (camp.article_ids?.length || camp.outlets?.length));
-  const [selected, setSelected] = useState<number | null>(camps.length ? 0 : null);
-  const selectedCamp = selected == null ? null : camps[selected] ?? null;
+function groupDifference(group: ComparisonGroup, groups: ComparisonGroup[], summary: ComparisonSummary) {
+  if (groups.length < 2) return summary.statusReason;
+  const other = groups.find((candidate) => candidate.key !== group.key);
+  const emphasis = group.emphasis.replace(/\s+/g, " ").trim();
+  const shortEmphasis = emphasis.length > 84 ? `${emphasis.slice(0, 83)}…` : emphasis;
+  return `${group.outlets.join("·")} 기사에서는 ${summary.dimensionLabel ?? "설명"}에 “${shortEmphasis}”를 앞세워, ${other?.outlets.join("·") ?? "다른 기사"} 기사와 초점이 갈립니다.`;
+}
+
+function ComparisonGroups({ issue, summary }: { issue: IssueView; summary: ComparisonSummary }) {
+  const sourceOnly = summary.status === "held_for_analysis";
+  const groups = sourceOnly ? summary.sourceGroups : summary.groups;
+  const [selected, setSelected] = useState<number | null>(groups.length ? 0 : null);
+  const selectedGroup = selected == null ? null : groups[selected] ?? null;
   return (
     <section className="afs-card afp-camps-v2" id="sec-camps">
       <div className="afs-in">
         <div className="afp-camp-heading">
           <div>
-            <div className="afp-v2-section-kicker">보도 갈래</div>
-            <h2>{camps.length ? `${camps.length}개의 강조 묶음` : "공통 보도"}</h2>
+            <div className="afp-v2-section-kicker">기사 설명 묶음</div>
+            <h2>{groups.length >= 2 ? `${groups.length}개의 실제 강조 묶음` : groups.length === 1 ? "확인된 설명 묶음 1개" : "기사별 판정 상태"}</h2>
           </div>
-          <p>{camps.length ? "카드를 선택하면 해당 묶음을 만든 기사 근거가 아래에 열립니다." : "서로 다른 근거 그룹이 충분히 확인되지 않아 억지로 대립 구도를 만들지 않았습니다."}</p>
+          <p>
+            {sourceOnly
+              ? "현재 차이는 취재원 발언에서만 확인되어 매체 자체의 차이로 표시하지 않습니다."
+              : groups.length >= 2
+                ? "카드를 선택하면 그 묶음을 만든 기사와 문장 근거를 확인할 수 있습니다."
+                : "두 개 이상의 매체 서술 묶음이 없어 갈라진 구도를 만들지 않았습니다."}
+          </p>
         </div>
-        {camps.length ? (
+        {groups.length ? (
           <>
+            {sourceOnly ? <p className="afp-source-only-note">취재원 발언 기반 관측 · 언론사 자체 입장으로 환원하지 않음</p> : null}
             <div className="afp-camp-grid-v2">
-              {camps.slice(0, 4).map((camp, index) => {
-                const articleCount = camp.article_ids?.length ?? 0;
-                const outletCount = camp.outlets?.length ?? new Set((camp.article_ids ?? []).map((id) => issue.articles.find((article) => article.articleId === id)?.outlet).filter(Boolean)).size;
+              {groups.slice(0, 3).map((group, index) => {
                 const active = selected === index;
                 return (
                   <button
                     type="button"
                     className={`afp-camp-card-v2${active ? " is-selected" : ""}`}
-                    key={`${camp.name}-${index}`}
+                    key={`${group.key}-${index}`}
                     aria-expanded={active}
-                    aria-controls={`camp-proof-${index}`}
+                    aria-controls={`comparison-proof-${index}`}
                     onClick={() => setSelected(active ? null : index)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        setSelected(active ? null : index);
-                      }
-                    }}
                   >
-                    <span className="afp-camp-letter">갈래 {String.fromCharCode(65 + index)}</span>
-                    <span className="afp-camp-headline" role="heading" aria-level={3}>{campHeadline(camp)}</span>
-                    <span className="afp-camp-meta">{camp.outlets?.slice(0, 4).join(" · ") || "매체 미상"}</span>
-                    <span className="afp-camp-meta">매체 {outletCount}곳 · 기사 {articleCount}건 · {voiceLabel(camp.voice_basis?.kind)}</span>
-                    <span className="afp-camp-summary">{campSummary(camp)}</span>
-                    <span className="afp-camp-decisive"><b>결정적 차이</b>{camp.decisive_difference ?? "이 갈래를 다른 묶음과 가른 관측 문장이 연결되지 않았습니다."}</span>
+                    <span className="afp-camp-letter">묶음 {String.fromCharCode(65 + index)}</span>
+                    <span className="afp-camp-headline" role="heading" aria-level={3}>{group.title}</span>
+                    <span className="afp-camp-meta">{group.outlets.join(" · ")} · 기사 {group.articleCount}건</span>
+                    <span className="afp-camp-meta">{group.voiceLabel}</span>
+                    <span className="afp-camp-summary"><b>앞세운 설명</b>{group.emphasis}</span>
+                    {group.details.length ? (
+                      <span className="afp-camp-details">
+                        <small>대표 기사에서 함께 관측된 보조 설명</small>
+                        {group.details.slice(0, 3).map((detail) => <span key={`${detail.label}-${detail.text}`}><b>{detail.label}</b>{detail.text}<small>{detail.outlet} · {detail.title}</small></span>)}
+                      </span>
+                    ) : null}
+                    <span className="afp-camp-decisive"><b>관측된 차이</b>{groupDifference(group, groups, summary)}</span>
                     <span className="afp-proof-trigger">{active ? "기사 근거 닫기 ↑" : "기사 근거 보기 →"}</span>
                   </button>
                 );
               })}
             </div>
-            {selectedCamp && selected != null ? <CampProofPanel camp={selectedCamp} index={selected} issue={issue} synthesis={synthesis} /> : null}
+            {selectedGroup && selected != null ? <GroupProofPanel group={selectedGroup} index={selected} issue={issue} /> : null}
           </>
-        ) : <p className="afp-state">이번 기사 묶음에서 두 개 이상의 실제 강조 갈래를 확인하지 못했습니다. 공통 설명과 기사별 판정 근거를 아래에서 확인할 수 있습니다.</p>}
+        ) : (
+          <div className="afp-no-groups">
+            <strong>{summary.statusLabel}</strong>
+            <p>{summary.statusReason}</p>
+            <p>기사별 공개 근거와 분석 상태는 아래 기사 목록에서 확인하세요. 빈 묶음을 공통 보도로 해석하지 않았습니다.</p>
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
-export function ComparisonLead({ issue, synthesis }: { issue: IssueView; synthesis: EventSynthesisData | null }) {
+export function ComparisonLead({
+  bundle,
+  issue,
+  synthesis,
+}: {
+  bundle: IssueAnalysisBundle;
+  issue: IssueView;
+  synthesis: EventSynthesisData | null;
+}) {
+  const summary = comparisonSummary(bundle, issue);
   return (
     <div className="afp-comparison-lead-v2">
       <EventExplanation issue={issue} synthesis={synthesis} />
-      <AxisExplanation issue={issue} synthesis={synthesis} />
-      <CampsExplanation issue={issue} synthesis={synthesis} />
+      <AxisExplanation issue={issue} summary={summary} synthesis={synthesis} />
+      <ComparisonGroups issue={issue} summary={summary} />
     </div>
   );
 }
