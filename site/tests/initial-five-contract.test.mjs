@@ -172,6 +172,125 @@ test("serves the manifest and one lazy issue bundle from the production worker",
   assert.deepEqual(walkKeys(bundle), []);
 });
 
+function activeSnapshotFixture(basisDate) {
+  const snapshotId = `${"a".repeat(30)}${Number(basisDate.slice(-2)).toString(16).padStart(2, "0")}`;
+  const issues = [1, 2, 3, 4, 5].map((rank) => ({
+    issueId: `active-${basisDate}-${rank}`,
+    rank,
+    title: `활성 스냅샷 의제 ${basisDate} ${rank}`,
+    articleCount: 3,
+    outletCount: 2,
+    payloadKey: `issues/active-${basisDate}-${rank}.json`,
+  }));
+  const bundles = Object.fromEntries(issues.map((issue) => [issue.issueId, {
+    schemaVersion: "agenda.frame.active-snapshot.v1",
+    issue,
+    articles: [
+      { articleId: `${issue.issueId}-a`, outlet: "매체A", canonicalUrl: "https://example.test/a" },
+      { articleId: `${issue.issueId}-b`, outlet: "매체B", canonicalUrl: "https://example.test/b" },
+      { articleId: `${issue.issueId}-c`, outlet: "매체A", canonicalUrl: "https://example.test/c" },
+    ],
+    clusterAi: { coherence: "cohesive" },
+  }]));
+  const manifest = {
+    schemaVersion: "agenda.frame.active-snapshot.v1",
+    snapshotId,
+    basisDate,
+    issueCount: 5,
+    issues,
+    qualityGate: { status: "pass", rawBodyAbsent: true, evidenceLineageComplete: true },
+  };
+  return {
+    schemaVersion: "agenda.frame.active-snapshot.v1",
+    snapshotId,
+    basisDate,
+    manifest,
+    qualityGate: { status: "pass" },
+    bundles,
+  };
+}
+
+test("worker initial-five API follows successive live active snapshots", async () => {
+  let active = activeSnapshotFixture("2026-09-13");
+  const env = {
+    AGENDAFRAME_DATA_MODE: "live",
+    AGENDAFRAME_ACTIVE_SNAPSHOT_URL: "https://reader.example.test/active",
+  };
+  const loader = async () => active;
+  for (const basisDate of ["2026-09-13", "2026-09-14"]) {
+    active = activeSnapshotFixture(basisDate);
+    const manifestResponse = await handleInitialFiveRequest(
+      new Request("https://example.test/api/initial-five"),
+      env,
+      fetch,
+      loader,
+    );
+    assert.equal(manifestResponse.status, 200);
+    assert.equal(manifestResponse.headers.get("cache-control"), "no-store");
+    const publicManifest = await manifestResponse.json();
+    assert.equal(publicManifest.snapshotId, active.snapshotId);
+    assert.deepEqual(publicManifest.issues.map((issue) => issue.issueId), active.manifest.issues.map((issue) => issue.issueId));
+
+    const issueId = active.manifest.issues[0].issueId;
+    const issueResponse = await handleInitialFiveRequest(
+      new Request(`https://example.test/api/initial-five/issues/${encodeURIComponent(issueId)}`),
+      env,
+      fetch,
+      loader,
+    );
+    assert.equal(issueResponse.status, 200);
+    assert.equal(issueResponse.headers.get("cache-control"), "no-store");
+    const bundle = await issueResponse.json();
+    assert.equal(bundle.issue.issueId, issueId);
+  }
+});
+
+test("worker live active snapshot failures do not fall back to demo data", async () => {
+  const response = await handleInitialFiveRequest(
+    new Request("https://example.test/api/initial-five"),
+    {
+      AGENDAFRAME_DATA_MODE: "live",
+      AGENDAFRAME_ACTIVE_SNAPSHOT_URL: "https://reader.example.test/active",
+    },
+    fetch,
+    async () => { throw new Error("synthetic reader failure"); },
+  );
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { error: "active_snapshot_unavailable" });
+  assert.equal(response.headers.get("cache-control"), "no-store");
+});
+
+test("worker initial-five API uses live process configuration when bindings are absent", async () => {
+  const previousMode = process.env.AGENDAFRAME_DATA_MODE;
+  const previousUrl = process.env.AGENDAFRAME_ACTIVE_SNAPSHOT_URL;
+  process.env.AGENDAFRAME_DATA_MODE = "live";
+  process.env.AGENDAFRAME_ACTIVE_SNAPSHOT_URL = "https://reader.example.test/active";
+  try {
+    const active = activeSnapshotFixture("2026-09-15");
+    const loadedUrls = [];
+    const response = await handleInitialFiveRequest(
+      new Request("https://example.test/api/initial-five"),
+      {},
+      fetch,
+      async (url) => {
+        loadedUrls.push(url);
+        return active;
+      },
+    );
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.deepEqual(loadedUrls, ["https://reader.example.test/active"]);
+    const publicManifest = await response.json();
+    assert.equal(publicManifest.snapshotId, active.snapshotId);
+    assert.equal(publicManifest.basisDate, "2026-09-15");
+  } finally {
+    if (previousMode === undefined) delete process.env.AGENDAFRAME_DATA_MODE;
+    else process.env.AGENDAFRAME_DATA_MODE = previousMode;
+    if (previousUrl === undefined) delete process.env.AGENDAFRAME_ACTIVE_SNAPSHOT_URL;
+    else process.env.AGENDAFRAME_ACTIVE_SNAPSHOT_URL = previousUrl;
+  }
+});
+
 test("answers initial-five questions only from published Gemini evidence", async () => {
   const request = new Request("https://example.test/api/initial-five/ask", {
     method: "POST",

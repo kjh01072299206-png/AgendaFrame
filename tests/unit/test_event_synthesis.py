@@ -189,6 +189,40 @@ class EventSynthesisBindingTests(unittest.TestCase):
                 synthesizer=InvalidSynthesizer(),
             )
 
+    def test_live_synthesizer_rejects_legacy_v2_without_explicit_comparison(self) -> None:
+        class LegacySynthesizer:
+            config = SimpleNamespace(vertex=SimpleNamespace(max_attempts=1))
+
+            def synthesize(self, request):
+                return {
+                    "prompt_version": "event-synthesis-v2.0.0",
+                    "schema_version": "agendaframe.event-synthesis.v2",
+                    "event_paragraphs": [
+                        {"text": "사건 설명", "evidence": [evidence("a1", HASH_A)]},
+                        {"text": "추가 경위", "evidence": [evidence("a2", HASH_B)]},
+                    ],
+                    "terms": [
+                        {
+                            "term": "사건",
+                            "gloss": "공개 프로필에 있는 용어",
+                            "evidence": [evidence("a1", HASH_A)],
+                        }
+                    ],
+                    "common_ground": {
+                        "text": "공통으로 확인된 설명",
+                        "evidence": [evidence("a1", HASH_A), evidence("a2", HASH_B)],
+                    },
+                }
+
+        with self.assertRaises(EventSynthesisError):
+            build_bound_comparison(
+                profiles=[profile("a1", HASH_A), profile("a2", HASH_B)],
+                articles=[article("a1", "한겨레"), article("a2", "KBS")],
+                title="사건",
+                issue_id="issue-legacy-v2",
+                synthesizer=LegacySynthesizer(),
+            )
+
     def test_keeps_cited_camps_and_drops_uncited_prose(self) -> None:
         bound = bind_event_synthesis(
             {
@@ -338,7 +372,208 @@ class EventSynthesisBindingTests(unittest.TestCase):
         self.assertNotIn("body_text", encoded)
         self.assertEqual(request["profiles"][0]["items"][0]["sentence_sha256"], HASH_A)
 
-    def test_composer_builds_three_camps_from_rank1_profiles(self) -> None:
+    def test_same_core_outlet_coverage_cannot_validate_a_one_outlet_difference(self) -> None:
+        result = {
+            "status": "difference_confirmed",
+            "dimensions": [
+                {
+                    "dimension": "problem_definition",
+                    "status": "difference_confirmed",
+                    "points": [
+                        {
+                            "text": "두 매체가 예산 축소를 공통 핵심으로 다룸",
+                            "relation": "same_core",
+                            "article_ids": ["a1", "a2"],
+                            "voice_basis": {"kind": "journalist_narration"},
+                            "evidence": [evidence("a1", HASH_A), evidence("a2", HASH_B)],
+                        },
+                        {
+                            "text": "A 매체 기사만 지역 격차를 추가로 강조함",
+                            "relation": "different_emphasis",
+                            "article_ids": ["a1"],
+                            "voice_basis": {"kind": "journalist_narration"},
+                            "evidence": [evidence("a1", HASH_A)],
+                        },
+                    ],
+                }
+            ],
+        }
+        bound = bind_event_synthesis(
+            {"comparison_result": result},
+            profiles=[profile("a1", HASH_A), profile("a2", HASH_B)],
+            articles=[article("a1", "A 매체"), article("a2", "B 매체")],
+        )
+
+        self.assertEqual(bound["comparison_result"]["status"], "held_for_analysis")
+        self.assertEqual(bound["comparison_result"]["dimensions"][0]["status"], "held_for_analysis")
+
+    def test_held_root_discards_stale_dimension_points(self) -> None:
+        bound = bind_event_synthesis(
+            {
+                "comparison_result": {
+                    "status": "held_for_analysis",
+                    "dimensions": [
+                        {
+                            "dimension": "problem_definition",
+                            "status": "difference_confirmed",
+                            "points": [
+                                {
+                                    "text": "서로 다른 설명",
+                                    "relation": "different_emphasis",
+                                    "article_ids": ["a1", "a2"],
+                                    "voice_basis": {"kind": "journalist_narration"},
+                                    "evidence": [evidence("a1", HASH_A), evidence("a2", HASH_B)],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            },
+            profiles=[profile("a1", HASH_A), profile("a2", HASH_B)],
+            articles=[article("a1", "A 매체"), article("a2", "B 매체")],
+        )
+
+        comparison = bound["comparison_result"]
+        self.assertEqual(comparison["status"], "held_for_analysis")
+        self.assertEqual(comparison["dimensions"][0]["status"], "held_for_analysis")
+        self.assertEqual(comparison["dimensions"][0]["points"], [])
+
+    def test_no_clear_difference_requires_supported_shared_core(self) -> None:
+        shared = bind_event_synthesis(
+            {
+                "comparison_result": {
+                    "status": "no_clear_difference",
+                    "dimensions": [
+                        {
+                            "dimension": "problem_definition",
+                            "status": "no_clear_difference",
+                            "points": [
+                                {
+                                    "text": "두 매체가 같은 핵심을 설명함",
+                                    "relation": "same_core",
+                                    "article_ids": ["a1", "a2"],
+                                    "voice_basis": {"kind": "journalist_narration"},
+                                    "evidence": [evidence("a1", HASH_A), evidence("a2", HASH_B)],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            },
+            profiles=[profile("a1", HASH_A), profile("a2", HASH_B)],
+            articles=[article("a1", "A 매체"), article("a2", "B 매체")],
+        )["comparison_result"]
+        self.assertEqual(shared["status"], "no_clear_difference")
+        self.assertEqual(shared["dimensions"][0]["status"], "no_clear_difference")
+
+        unsupported = bind_event_synthesis(
+            {"comparison_result": {"status": "no_clear_difference", "dimensions": []}},
+            profiles=[profile("a1", HASH_A), profile("a2", HASH_B)],
+            articles=[article("a1", "A 매체"), article("a2", "B 매체")],
+        )["comparison_result"]
+        self.assertEqual(unsupported["status"], "held_for_analysis")
+
+    def test_failed_or_conflicting_comparison_points_are_discarded(self) -> None:
+        stale_points = [
+            {
+                "text": "A 매체 강조",
+                "relation": "different_emphasis",
+                "article_ids": ["a1"],
+                "voice_basis": {"kind": "journalist_narration"},
+                "evidence": [evidence("a1", HASH_A)],
+            },
+            {
+                "text": "B 매체 강조",
+                "relation": "different_emphasis",
+                "article_ids": ["a2"],
+                "voice_basis": {"kind": "journalist_narration"},
+                "evidence": [evidence("a2", HASH_B)],
+            },
+        ]
+        for failed_state in ("analysis_failed", "conflicting"):
+            with self.subTest(failed_state=failed_state):
+                bound = bind_event_synthesis(
+                    {
+                        "comparison_result": {
+                            "status": "difference_confirmed",
+                            "dimensions": [
+                                {
+                                    "dimension": "problem_definition",
+                                    "status": failed_state,
+                                    "points": stale_points,
+                                }
+                            ],
+                        }
+                    },
+                    profiles=[profile("a1", HASH_A), profile("a2", HASH_B)],
+                    articles=[article("a1", "A 매체"), article("a2", "B 매체")],
+                )
+                dimension = bound["comparison_result"]["dimensions"][0]
+                self.assertEqual(bound["comparison_result"]["status"], "analysis_failed")
+                self.assertEqual(dimension["status"], "analysis_failed")
+                self.assertEqual(dimension["points"], [])
+                self.assertEqual(dimension["evidence"], [])
+
+        for failed_state in ("analysis_failed", "conflicting"):
+            with self.subTest(result_state=failed_state):
+                bound = bind_event_synthesis(
+                    {
+                        "comparison_result": {
+                            "status": failed_state,
+                            "dimensions": [
+                                {
+                                    "dimension": "problem_definition",
+                                    "status": "difference_confirmed",
+                                    "points": stale_points,
+                                }
+                            ],
+                        }
+                    },
+                    profiles=[profile("a1", HASH_A), profile("a2", HASH_B)],
+                    articles=[article("a1", "A 매체"), article("a2", "B 매체")],
+                )
+                dimension = bound["comparison_result"]["dimensions"][0]
+                self.assertNotEqual(bound["comparison_result"]["status"], "difference_confirmed")
+                self.assertEqual(dimension["points"], [])
+                self.assertEqual(dimension["evidence"], [])
+
+    def test_missing_voice_basis_does_not_confirm_or_retain_a_comparison_point(self) -> None:
+        bound = bind_event_synthesis(
+            {
+                "comparison_result": {
+                    "status": "difference_confirmed",
+                    "dimensions": [
+                        {
+                            "dimension": "problem_definition",
+                            "status": "difference_confirmed",
+                            "points": [
+                                {
+                                    "text": "A 매체 강조",
+                                    "relation": "different_emphasis",
+                                    "article_ids": ["a1"],
+                                    "evidence": [evidence("a1", HASH_A)],
+                                },
+                                {
+                                    "text": "B 매체 강조",
+                                    "relation": "different_emphasis",
+                                    "article_ids": ["a2"],
+                                    "evidence": [evidence("a2", HASH_B)],
+                                },
+                            ],
+                        }
+                    ],
+                }
+            },
+            profiles=[profile("a1", HASH_A), profile("a2", HASH_B)],
+            articles=[article("a1", "A 매체"), article("a2", "B 매체")],
+        )
+
+        comparison = bound["comparison_result"]
+        self.assertEqual(comparison["status"], "held_for_analysis")
+        self.assertEqual(comparison["dimensions"][0]["status"], "held_for_analysis")
+        self.assertEqual(comparison["dimensions"][0]["points"], [])
+
+    def test_composer_does_not_build_camps_from_rank1_profiles(self) -> None:
         bundle = json.loads(RANK1.read_text(encoding="utf-8"))
         draft = compose_event_synthesis(
             profiles=bundle["semanticProfiles"],
@@ -351,20 +586,17 @@ class EventSynthesisBindingTests(unittest.TestCase):
             articles=bundle["articles"],
         )
         self.assertTrue(bound["usable"])
-        self.assertTrue(bound["opposition"])
-        names = [camp["name"] for camp in bound["camps"]]
-        self.assertEqual(len(bound["camps"]), 3)
-        self.assertTrue(any("거부권" in name or "침묵" in name for name in names))
-        self.assertTrue(any("제도" in name for name in names))
-        self.assertTrue(any("경고" in name for name in names))
-        self.assertEqual(bound["agreed_line"]["status"], "observed")
-        self.assertIn("책임", bound["agreed_line"]["text"] or "")
+        self.assertFalse(bound["opposition"])
+        self.assertEqual(bound["camps"], [])
+        self.assertEqual(bound["comparison_result"]["status"], "held_for_analysis")
+        self.assertEqual(bound["split_line"]["status"], "explicit_not_stated")
         payload = public_comparison_payload(
             bound,
             article_count=bundle["issue"]["articleCount"],
             outlet_count=bundle["issue"]["outletCount"],
         )
-        self.assertTrue(payload["summary_30_seconds"]["divergence_detected"])
+        self.assertFalse(payload["summary_30_seconds"]["divergence_detected"])
+        self.assertEqual(payload["camps"], [])
         self.assertNotIn("집계합니다", payload["summary_30_seconds"]["common_ground"] or "")
         lens = source_lens_from_profiles(bundle["semanticProfiles"], bundle["articles"])
         self.assertGreaterEqual(len(lens["by_outlet"]), 5)
@@ -389,21 +621,17 @@ class EventSynthesisBindingTests(unittest.TestCase):
             article_count=len(bundle["articles"]),
             outlet_count=bundle["issue"]["outletCount"],
         )
-        self.assertGreaterEqual(len(payload["camps"]), 2)
-        self.assertTrue(payload["agreedLine"])
+        self.assertEqual(payload["camps"], [])
+        self.assertEqual(payload["comparison_result"]["status"], "held_for_analysis")
+        self.assertFalse(payload["summary_30_seconds"]["divergence_detected"])
         self.assertTrue(payload["whatHappened"])
         self.assertTrue(payload["splitLine"])
-        self.assertRegex(payload["splitLine"], r"앞세웠고")
-        self.assertRegex(payload["splitLine"], r"경고를 전했")
-        self.assertNotIn("쪽는", payload["splitLine"])
-        self.assertTrue(payload["factRows"])
-        self.assertTrue(payload["frameFunctions"])
+        self.assertRegex(payload["splitLine"], r"대립 구도")
         self.assertNotIn("집계합니다", json.dumps(payload, ensure_ascii=False))
         self.assertNotIn(
             "검증된 기사별 관측 항목과 취재원 귀속을 비교합니다",
             json.dumps(payload, ensure_ascii=False),
         )
-        self.assertTrue(all(camp.get("evidence") for camp in payload["camps"]))
 
     def test_shipped_comparison_entry_keeps_rank4_as_shared_coverage(self) -> None:
         bundle = json.loads(
@@ -434,6 +662,21 @@ class EventSynthesisBindingTests(unittest.TestCase):
         self.assertIn("대립 구도", payload["splitLine"])
         self.assertNotIn("집계합니다", json.dumps(payload, ensure_ascii=False))
         self.assertNotIn("대통령·여당", payload["agreedLine"] or "")
+
+
+def test_provider_spend_cap_stops_issue_synthesis_after_one_attempt() -> None:
+    calls = []
+
+    class CappedSynthesizer:
+        config = SimpleNamespace(vertex=SimpleNamespace(max_attempts=3))
+
+        def synthesize(self, request):
+            calls.append(request)
+            return {"usable": False, "_failure_reason": "provider_spend_cap_breached"}
+
+    with unittest.TestCase().assertRaisesRegex(EventSynthesisError, "provider_spend_cap_breached"):
+        build_bound_comparison(profiles=[], articles=[], synthesizer=CappedSynthesizer())
+    assert len(calls) == 1
 
 
 if __name__ == "__main__":

@@ -1,9 +1,12 @@
-import { initialFiveManifest } from "../../../lib/initial-five/artifacts";
+import { getActiveSnapshot } from "../../../lib/active-snapshot";
+
+export const dynamic = "force-dynamic";
 
 const cacheHeaders = {
-  "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+  "Cache-Control": "no-store",
 };
 
-export function GET() {
-  return Response.json(initialFiveManifest, { headers: cacheHeaders });
+export async function GET() {
+  const active = await getActiveSnapshot();
+  return Response.json(active.manifest, { headers: cacheHeaders });
 }

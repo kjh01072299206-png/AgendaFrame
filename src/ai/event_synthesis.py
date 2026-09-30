@@ -23,8 +23,11 @@ from typing import Any, Mapping, Protocol, Sequence
 
 LEGACY_PROMPT_VERSION = "event-synthesis-v1.0.0"
 LEGACY_SCHEMA_VERSION = "agendaframe.event-synthesis.v1"
-PROMPT_VERSION = "event-synthesis-v2.0.0"
-SCHEMA_VERSION = "agendaframe.event-synthesis.v2"
+PROMPT_VERSION = "event-synthesis-v2.2.0"
+SCHEMA_VERSION = "agendaframe.event-synthesis.v2.2"
+COMPARISON_CONTRACT_VERSION = "comparison-v1.0.0"
+LEGACY_V2_PROMPT_VERSION = "event-synthesis-v2.0.0"
+LEGACY_V2_SCHEMA_VERSION = "agendaframe.event-synthesis.v2"
 SHA256_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
 INLINE_EVIDENCE_PATTERN = re.compile(
     r"\s*\(([0-9a-f]{32,64}),\s*\d+,\s*\d+(?:,\s*[0-9a-f]{64})?(?:\s*;\s*[0-9a-f]{32,64},\s*\d+,\s*\d+(?:,\s*[0-9a-f]{64})?)*\)",
@@ -57,6 +60,27 @@ FRAME_FUNCTIONS = (
     "evaluation",
     "treatment_recommendation",
 )
+COMPARISON_RELATIONS = (
+    "same_core",
+    "same_core_with_detail",
+    "different_emphasis",
+    "contradictory",
+    "insufficient_evidence",
+)
+COMPARISON_STATUSES = (
+    "difference_confirmed",
+    "no_clear_difference",
+    "held_for_analysis",
+    "analysis_failed",
+)
+BLOCKED_COMPARISON_STATES = frozenset({
+    "analysis_failed",
+    "conflicting",
+    "insufficient_evidence",
+    "dead_letter",
+    "failed",
+    "held_for_analysis",
+})
 
 
 class EventSynthesizer(Protocol):
@@ -104,6 +128,31 @@ def _clean_text(value: object, *, limit: int = 280) -> str:
     text = INLINE_EVIDENCE_PATTERN.sub("", value)
     text = " ".join(text.split())
     return text[:limit]
+
+
+def _exact_repeated(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Return one deterministically selected exact paraphrase group.
+
+    This is only a repeated-text ledger for the profile fallback.  It is not a
+    semantic similarity or cross-outlet difference decision.
+    """
+
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        text = _clean_text(row.get("text"))
+        if not text:
+            continue
+        key = re.sub(r"[^0-9a-z가-힣]+", " ", text.lower()).strip()
+        grouped.setdefault(key, []).append(dict(row))
+    candidates = [
+        members
+        for members in grouped.values()
+        if len({row.get("article_id") for row in members}) >= 2
+    ]
+    candidates.sort(
+        key=lambda members: (-len(members), str(members[0].get("article_id") or ""))
+    )
+    return candidates[0] if candidates else []
 
 
 def _contains_ideology(text: str) -> bool:
@@ -354,6 +403,18 @@ def _bind_event_synthesis_legacy(
                 )
         return rows
 
+    def _exact_repeated(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+        grouped: dict[str, list[dict[str, Any]]] = {}
+        for row in rows:
+            text = _clean_text(row.get("text"))
+            if not text:
+                continue
+            key = re.sub(r"[^0-9a-z가-힣]+", " ", text.lower()).strip()
+            grouped.setdefault(key, []).append(dict(row))
+        candidates = [members for members in grouped.values() if len({row.get("article_id") for row in members}) >= 2]
+        candidates.sort(key=lambda members: (-len(members), str(members[0].get("article_id") or "")))
+        return candidates[0] if candidates else []
+
     fact_rows = _rows(draft.get("fact_rows") or draft.get("factRows"))
     split_rows = _rows(draft.get("split_rows") or draft.get("splitRows")) if opposition else []
 
@@ -552,6 +613,315 @@ def _bound_claim_with_limit(
     return {"text": cleaned, "status": "observed", "evidence": bound}
 
 
+def _bind_comparison_result(
+    raw_result: object,
+    *,
+    index: Mapping[tuple[Any, ...], dict[str, Any]],
+    articles: Sequence[Mapping[str, Any]],
+    require_short_copy: bool = False,
+) -> dict[str, Any] | None:
+    """Bind the explicit relation contract without deriving meaning from text.
+
+    The model must name the relation it is asserting.  This binder only
+    preserves a relation when every cited article ID and locator+hash already
+    exists in that article's semantic evidence list.  It never clusters points
+    by words, frame families, or sentence similarity.
+    """
+
+    if not isinstance(raw_result, Mapping):
+        return None
+    known_article_ids = {
+        str(row.get("articleId") or row.get("article_id") or "")
+        for row in articles
+    }
+    known_article_ids.discard("")
+    by_id = _article_map(articles)
+    raw_status = str(raw_result.get("status") or "").strip()
+    status = raw_status if raw_status in COMPARISON_STATUSES else (
+        "analysis_failed"
+        if raw_status in {"conflicting", "dead_letter", "failed"}
+        else "held_for_analysis"
+    )
+    result_blocked = raw_status in BLOCKED_COMPARISON_STATES
+    raw_dimensions = raw_result.get("dimensions")
+    if not isinstance(raw_dimensions, Sequence) or isinstance(raw_dimensions, (str, bytes)):
+        raw_dimensions = []
+    dimensions: list[dict[str, Any]] = []
+    analyzed_ids: set[str] = set()
+    supported_difference = False
+    supported_same_core = False
+    observed_difference_relation = False
+    has_failed_dimension = False
+    primary_dimension = _clean_text(raw_result.get("primary_dimension"), limit=80)
+    for raw_dimension in list(raw_dimensions)[:5]:
+        if not isinstance(raw_dimension, Mapping):
+            continue
+        dimension = _clean_text(raw_dimension.get("dimension"), limit=80)
+        if dimension not in FRAME_FUNCTIONS:
+            continue
+        label = _clean_text(raw_dimension.get("label"), limit=120) or dimension
+        question = _clean_text(raw_dimension.get("question"), limit=71)
+        if question and len(question) > 70:
+            continue
+        if require_short_copy and not question:
+            continue
+        raw_dimension_status = str(raw_dimension.get("status") or "").strip()
+        raw_dimension_failed = raw_dimension_status in {"analysis_failed", "conflicting", "dead_letter", "failed"}
+        dimension_status = (
+            "analysis_failed"
+            if raw_dimension_failed
+            else raw_dimension_status if raw_dimension_status in COMPARISON_STATUSES else "held_for_analysis"
+        )
+        has_failed_dimension = has_failed_dimension or raw_dimension_failed
+        dimension_blocked = result_blocked or raw_dimension_status in BLOCKED_COMPARISON_STATES
+        if result_blocked:
+            dimension_status = status if status == "analysis_failed" else "held_for_analysis"
+        dimension_relation = str(raw_dimension.get("relation") or "").strip()
+        if dimension_relation not in COMPARISON_RELATIONS:
+            dimension_relation = None
+        raw_points = raw_dimension.get("points")
+        if not isinstance(raw_points, Sequence) or isinstance(raw_points, (str, bytes)):
+            raw_points = []
+        if dimension_blocked:
+            raw_points = []
+        points: list[dict[str, Any]] = []
+        dimension_ids: set[str] = set()
+        difference_article_ids: set[str] = set()
+        difference_outlets: set[str] = set()
+        same_core_article_ids: set[str] = set()
+        same_core_outlets: set[str] = set()
+        for raw_point in list(raw_points)[:6]:
+            if not isinstance(raw_point, Mapping):
+                continue
+            raw_point_status = str(raw_point.get("status") or "observed").strip()
+            if raw_point_status in BLOCKED_COMPARISON_STATES or raw_point_status != "observed":
+                continue
+            relation = str(raw_point.get("relation") or dimension_relation or "").strip()
+            if relation not in COMPARISON_RELATIONS:
+                continue
+            raw_declared_ids = raw_point.get("article_ids")
+            if raw_declared_ids is None:
+                raw_declared_ids = raw_point.get("articleIds")
+            if raw_declared_ids is not None and (
+                not isinstance(raw_declared_ids, Sequence)
+                or isinstance(raw_declared_ids, (str, bytes))
+                or not raw_declared_ids
+            ):
+                continue
+            declared_values = [str(article_id).strip() for article_id in (raw_declared_ids or [])]
+            if any(not article_id or article_id not in known_article_ids for article_id in declared_values):
+                continue
+            declared_ids = set(declared_values)
+            bound_evidence = _bind_evidence(
+                raw_point.get("evidence"),
+                index,
+                allowed_article_ids=declared_ids or None,
+            )
+            evidence_ids = {
+                str(row.get("article_id") or "")
+                for row in bound_evidence
+                if str(row.get("article_id") or "") in known_article_ids
+            }
+            # A point that names an article must carry evidence from every
+            # named article. Otherwise keep it out of the public relation.
+            if declared_ids and not declared_ids.issubset(evidence_ids):
+                continue
+            if not evidence_ids:
+                continue
+            raw_text = _clean_text(raw_point.get("text"), limit=321)
+            if not raw_text or len(raw_text) > 320:
+                continue
+            claim = _v2_claim(
+                raw_text,
+                bound_evidence,
+                index,
+                allowed_article_ids=evidence_ids,
+                limit=320,
+            )
+            if not claim or claim.get("status") != "observed":
+                continue
+            raw_headline = raw_point.get("headline")
+            raw_summary = raw_point.get("summary")
+            headline = _v2_claim(
+                raw_headline,
+                bound_evidence,
+                index,
+                allowed_article_ids=evidence_ids,
+                limit=41,
+            ) if raw_headline else None
+            summary = _v2_claim(
+                raw_summary,
+                bound_evidence,
+                index,
+                allowed_article_ids=evidence_ids,
+                limit=121,
+            ) if raw_summary else None
+            if headline and len(str(headline.get("text") or "")) > 40:
+                headline = None
+            if summary and len(str(summary.get("text") or "")) > 120:
+                summary = None
+            if require_short_copy and (
+                not headline
+                or headline.get("status") != "observed"
+                or not summary
+                or summary.get("status") != "observed"
+            ):
+                continue
+            headline_text = str(headline.get("text")) if headline and headline.get("status") == "observed" else claim["text"]
+            summary_text = str(summary.get("text")) if summary and summary.get("status") == "observed" else claim["text"]
+            def compact_copy_key(value: str) -> str:
+                return re.sub(r"[^0-9a-z가-힣]+", " ", value.casefold()).strip()
+
+            if require_short_copy and compact_copy_key(headline_text) == compact_copy_key(summary_text):
+                continue
+            raw_voice = raw_point.get("voice_basis") or raw_point.get("voiceBasis")
+            voice_kind = "not_observed"
+            voice_label = "발화 범위 미관측"
+            voice_evidence: list[dict[str, Any]] = []
+            if isinstance(raw_voice, Mapping):
+                candidate_kind = str(raw_voice.get("kind") or "not_observed")
+                voice_kind = candidate_kind if candidate_kind in {"journalist_narration", "source_attributed", "mixed", "not_observed"} else "not_observed"
+                voice_label = _clean_text(raw_voice.get("label"), limit=100) or "발화 범위 미관측"
+                voice_evidence = _bind_evidence(
+                    raw_voice.get("evidence"),
+                    index,
+                    allowed_article_ids=evidence_ids,
+                )
+            article_ids = sorted(evidence_ids)
+            claim_id = _clean_text(raw_point.get("claim_id"), limit=100) or None
+            supplied_observation_id = _clean_text(
+                raw_point.get("observation_id") or claim_id,
+                limit=160,
+            )
+            evidence_identity = sorted(
+                "{}:{}:{}:{}".format(
+                    row.get("article_id"),
+                    (row.get("locator") or {}).get("paragraph"),
+                    (row.get("locator") or {}).get("sentence"),
+                    row.get("sentence_sha256"),
+                )
+                for row in bound_evidence
+            )
+            observation_id = supplied_observation_id or (
+                "obs-" + hashlib.sha256(
+                    json.dumps(
+                        [dimension, relation, claim["text"], article_ids, evidence_identity],
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                    ).encode("utf-8")
+                ).hexdigest()[:24]
+            )
+            points.append(
+                {
+                    "observation_id": observation_id,
+                    "headline": headline_text,
+                    "summary": summary_text,
+                    "text": claim["text"],
+                    "status": "observed",
+                    "relation": relation,
+                    "article_ids": article_ids,
+                    "claim_id": claim_id,
+                    "voice_basis": {
+                        "kind": voice_kind,
+                        "label": voice_label,
+                        "evidence": voice_evidence,
+                    },
+                    "evidence": claim.get("evidence") or bound_evidence,
+                }
+            )
+            dimension_ids.update(article_ids)
+            if relation in {"different_emphasis", "contradictory"} and voice_kind == "journalist_narration":
+                difference_article_ids.update(article_ids)
+                point_outlets = {
+                    outlet
+                    for article_id in article_ids
+                    if (outlet := str(by_id.get(article_id, {}).get("outlet") or by_id.get(article_id, {}).get("sourceId") or ""))
+                }
+                difference_outlets.update(point_outlets)
+                if len(set(article_ids)) >= 2 and len(point_outlets) >= 2:
+                    observed_difference_relation = True
+            elif relation in {"same_core", "same_core_with_detail"} and voice_kind == "journalist_narration":
+                same_core_article_ids.update(article_ids)
+                same_core_outlets.update(
+                    outlet
+                    for article_id in article_ids
+                    if (outlet := str(by_id.get(article_id, {}).get("outlet") or by_id.get(article_id, {}).get("sourceId") or ""))
+                )
+        if points:
+            analyzed_ids.update(dimension_ids)
+        dimension_supports_difference = (
+            not dimension_blocked
+            and dimension_status == "difference_confirmed"
+            and len(difference_article_ids) >= 2
+            and len(difference_outlets) >= 2
+        )
+        if dimension_status == "difference_confirmed" and not dimension_supports_difference:
+            dimension_status = "held_for_analysis"
+            points = []
+        dimension_supports_same_core = (
+            not dimension_blocked
+            and dimension_status == "no_clear_difference"
+            and len(same_core_article_ids) >= 2
+            and len(same_core_outlets) >= 2
+            and not difference_article_ids
+        )
+        if dimension_status == "no_clear_difference" and not dimension_supports_same_core:
+            dimension_status = "held_for_analysis"
+            points = []
+        supported_difference = supported_difference or dimension_supports_difference
+        supported_same_core = supported_same_core or dimension_supports_same_core
+        reason = _clean_text(raw_dimension.get("reason"), limit=360) or None
+        dimensions.append(
+            {
+                "dimension": dimension,
+                "label": label,
+                "question": question,
+                "status": dimension_status,
+                "relation": dimension_relation,
+                "reason": reason,
+                "points": points,
+                "evidence": _merge_evidence(*points),
+            }
+        )
+
+    if status == "difference_confirmed" and not supported_difference:
+        status = "analysis_failed" if has_failed_dimension else "held_for_analysis"
+        reason = (
+            "한 개 이상의 비교 차원에서 분석 충돌 또는 실패가 발생했습니다."
+            if has_failed_dimension
+            else "서로 다른 관계를 두 개 이상 매체의 기사 근거로 연결하지 못했습니다."
+        )
+    elif status == "no_clear_difference" and (not supported_same_core or observed_difference_relation):
+        status = "analysis_failed" if has_failed_dimension else "held_for_analysis"
+        reason = "한 개 이상의 비교 차원에서 분석 충돌 또는 실패가 발생했습니다." if has_failed_dimension else (
+            "비교 관계가 서로 충돌해 판정을 보류합니다."
+            if observed_difference_relation
+            else "같은 핵심 설명을 서로 다른 매체의 근거로 확인하지 못해 판정을 보류합니다."
+        )
+    else:
+        reason = _clean_text(raw_result.get("reason"), limit=360) or None
+    declared_analyzed = {
+        str(article_id)
+        for article_id in (raw_result.get("analyzed_article_ids") or raw_result.get("analyzedArticleIds") or [])
+        if str(article_id) in known_article_ids
+    }
+    analyzed_ids.update(declared_analyzed)
+    outlet_count = len({
+        str(by_id.get(article_id, {}).get("outlet") or by_id.get(article_id, {}).get("sourceId") or "")
+        for article_id in analyzed_ids
+        if by_id.get(article_id, {}).get("outlet") or by_id.get(article_id, {}).get("sourceId")
+    })
+    return {
+        "version": COMPARISON_CONTRACT_VERSION,
+        "status": status,
+        "reason": reason,
+        "primary_dimension": primary_dimension if any(row["dimension"] == primary_dimension for row in dimensions) else None,
+        "analyzed_article_ids": sorted(analyzed_ids),
+        "analyzed_outlet_count": outlet_count,
+        "dimensions": dimensions,
+    }
+
+
 def _bind_event_synthesis_v2(
     draft: Mapping[str, Any],
     *,
@@ -585,13 +955,28 @@ def _bind_event_synthesis_v2(
         event_paragraphs = [fallback] if fallback and (fallback.get("status") == "observed" or legacy_mode) else []
 
     raw_common = draft.get("common_ground") or draft.get("commonGround")
-    common_ground = _v2_claim(
-        raw_common or draft.get("agreed_line") or draft.get("agreedLine"),
-        (raw_common.get("evidence") if isinstance(raw_common, Mapping) else None)
-        or draft.get("common_ground_evidence")
-        or draft.get("agreed_evidence"),
-        index,
-        limit=720,
+    if (
+        isinstance(raw_common, Mapping)
+        and raw_common.get("status") == "insufficient_evidence"
+        and not _clean_text(raw_common.get("text"), limit=721)
+        and not raw_common.get("evidence")
+    ):
+        common_ground = {"text": None, "status": "insufficient_evidence", "evidence": []}
+    else:
+        common_ground = _v2_claim(
+            raw_common or draft.get("agreed_line") or draft.get("agreedLine"),
+            (raw_common.get("evidence") if isinstance(raw_common, Mapping) else None)
+            or draft.get("common_ground_evidence")
+            or draft.get("agreed_evidence"),
+            index,
+            limit=720,
+        )
+
+    comparison_result = _bind_comparison_result(
+        draft.get("comparison_result") or draft.get("comparisonResult"),
+        index=index,
+        articles=articles,
+        require_short_copy=str(draft.get("prompt_version") or "") == PROMPT_VERSION,
     )
 
     raw_axis = draft.get("comparison_axis") or draft.get("comparisonAxis")
@@ -599,7 +984,8 @@ def _bind_event_synthesis_v2(
     if isinstance(raw_axis, Mapping):
         axis_evidence = raw_axis.get("evidence") or draft.get("split_evidence")
         label = _v2_claim(raw_axis.get("label"), axis_evidence, index, limit=120)
-        question = _v2_claim(raw_axis.get("question"), axis_evidence, index, limit=320)
+        raw_question = _clean_text(raw_axis.get("question"), limit=71)
+        question = _v2_claim(raw_question, axis_evidence, index, limit=70) if raw_question and len(raw_question) <= 70 else None
         points: list[dict[str, Any]] = []
         raw_points = raw_axis.get("points")
         if isinstance(raw_points, Sequence) and not isinstance(raw_points, (str, bytes)):
@@ -726,8 +1112,9 @@ def _bind_event_synthesis_v2(
     opposition = len(camps) >= 2 and (axis is not None or legacy_mode)
     if not opposition:
         camps = []
-        if axis is not None:
-            axis = None
+        # An evidence-backed emphasis axis is not the same thing as a camp
+        # opposition. Keep it available for the explicit comparison result;
+        # only camps are closed when the opposition contract is not met.
 
     # Keep the detailed v1 projections available to existing readers, but make
     # the v2 fields the source of truth for the new comparison lead.
@@ -775,6 +1162,7 @@ def _bind_event_synthesis_v2(
         "event_paragraphs": event_paragraphs,
         "terms": (legacy.get("terms") or [])[:4],
         "comparison_axis": axis,
+        "comparison_result": comparison_result,
         "common_ground": common_ground,
         "what_happened": event_paragraphs[0] if event_paragraphs else None,
         "agreed_line": common_ground,
@@ -820,9 +1208,12 @@ def _v2_quality_ok(draft: Mapping[str, Any], bound: Mapping[str, Any]) -> bool:
     evidence. This prevents a rules-only fallback from being labelled AI.
     """
 
-    if str(draft.get("prompt_version") or "") != PROMPT_VERSION:
-        return False
-    if str(draft.get("schema_version") or "") != SCHEMA_VERSION:
+    draft_prompt_version = str(draft.get("prompt_version") or "")
+    draft_schema_version = str(draft.get("schema_version") or "")
+    if (draft_prompt_version, draft_schema_version) not in {
+        (PROMPT_VERSION, SCHEMA_VERSION),
+        (LEGACY_V2_PROMPT_VERSION, LEGACY_V2_SCHEMA_VERSION),
+    }:
         return False
     paragraphs = bound.get("event_paragraphs")
     terms = bound.get("terms")
@@ -830,7 +1221,7 @@ def _v2_quality_ok(draft: Mapping[str, Any], bound: Mapping[str, Any]) -> bool:
         return False
     if not all(_has_observed_evidence(row) for row in paragraphs):
         return False
-    if not isinstance(terms, Sequence) or not 1 <= len(terms) <= 4:
+    if not isinstance(terms, Sequence) or not 0 <= len(terms) <= 4:
         return False
     if not all(
         isinstance(term, Mapping)
@@ -840,7 +1231,14 @@ def _v2_quality_ok(draft: Mapping[str, Any], bound: Mapping[str, Any]) -> bool:
         for term in terms
     ):
         return False
-    if not _has_observed_evidence(bound.get("common_ground")):
+    common_ground = bound.get("common_ground")
+    common_ground_is_explicitly_unavailable = (
+        isinstance(common_ground, Mapping)
+        and common_ground.get("status") == "insufficient_evidence"
+        and common_ground.get("text") is None
+        and common_ground.get("evidence") == []
+    )
+    if not _has_observed_evidence(common_ground) and not common_ground_is_explicitly_unavailable:
         return False
     camps = bound.get("camps")
     if not isinstance(camps, Sequence) or len(camps) > 4:
@@ -870,7 +1268,41 @@ def _v2_quality_ok(draft: Mapping[str, Any], bound: Mapping[str, Any]) -> bool:
                 return False
     elif camps:
         return False
+    if draft_prompt_version == PROMPT_VERSION:
+        result = bound.get("comparison_result")
+        if not isinstance(result, Mapping):
+            return False
+        result_status = str(result.get("status") or "")
+        if result_status not in COMPARISON_STATUSES:
+            return False
+        if result_status == "difference_confirmed":
+            dimensions = result.get("dimensions")
+            if not isinstance(dimensions, Sequence) or not any(
+                isinstance(dimension, Mapping)
+                and dimension.get("status") == "difference_confirmed"
+                and any(
+                    isinstance(point, Mapping)
+                    and point.get("relation") in {"different_emphasis", "contradictory"}
+                    for point in dimension.get("points") or []
+                )
+                for dimension in dimensions
+            ):
+                return False
     return True
+
+
+def _is_current_direct_contract(draft: Mapping[str, Any]) -> bool:
+    """Return whether a live model draft uses the current comparison contract.
+
+    ``bind_event_synthesis`` still understands released v2.0 fixtures so old
+    snapshots can be inspected and migrated. A new Vertex invocation must not
+    publish that legacy shape as if it were the v2.2 result.
+    """
+
+    return (
+        str(draft.get("prompt_version") or "").strip() == PROMPT_VERSION
+        and str(draft.get("schema_version") or "").strip() == SCHEMA_VERSION
+    )
 
 
 def _claim_text(claim: object) -> str | None:
@@ -932,14 +1364,16 @@ def html_event_fields(bound: Mapping[str, Any]) -> dict[str, Any]:
         if not isinstance(row, Mapping) or not row.get("term") or not row.get("gloss"):
             continue
         terms.append({"term": row.get("term"), "gloss": row.get("gloss")})
+    result_status = str((bound.get("comparison_result") or {}).get("status") or "")
     return {
         "eventParagraphs": list(bound.get("event_paragraphs") or []),
         "comparisonAxis": bound.get("comparison_axis"),
+        "comparisonResult": bound.get("comparison_result"),
         "commonGround": bound.get("common_ground"),
         "whatHappened": _claim_text(bound.get("what_happened")),
         "agreedLine": _claim_text(bound.get("agreed_line")),
         "splitLine": _claim_text(bound.get("split_line"))
-        if bound.get("opposition")
+        if bound.get("opposition") or result_status == "difference_confirmed"
         else "서로 다른 근거 그룹이 없어 대립 구도로 표시하지 않습니다.",
         "soWhat": _claim_text(bound.get("so_what")),
         "camps": camps,
@@ -957,10 +1391,15 @@ def public_comparison_payload(
     """Project a bound synthesis into the site comparison.data shape."""
 
     split_text = _claim_text(bound.get("split_line"))
-    if not bound.get("opposition"):
+    comparison_result = bound.get("comparison_result") if isinstance(bound.get("comparison_result"), Mapping) else {}
+    comparison_status = str(comparison_result.get("status") or "")
+    divergence_detected = bool(bound.get("opposition") or comparison_status == "difference_confirmed")
+    if not divergence_detected:
         split_text = (
             "서로 다른 근거 그룹이 확인되지 않아 대립 구도로 표시하지 않고 공통 보도로 읽습니다."
         )
+    if divergence_detected and not split_text:
+        split_text = str(comparison_result.get("reason") or "근거 연결된 비교 결과에서 차이가 확인되었습니다.")
     payload = {
         "summary_30_seconds": {
             "sample": f"{article_count}건 · {outlet_count}개 매체",
@@ -968,8 +1407,9 @@ def public_comparison_payload(
             "main_difference": split_text,
             "source_context": None,
             "limit": "기사 ID·locator·문장 해시가 연결된 관측만 표시합니다. 언론사 성향은 추론하지 않습니다.",
-            "divergence_detected": bool(bound.get("opposition")),
+            "divergence_detected": divergence_detected,
         },
+        "comparison_result": bound.get("comparison_result"),
         "synthesis": bound,
     }
     payload.update(html_event_fields(bound))
@@ -995,20 +1435,41 @@ def build_bound_comparison(
         )
         vertex_config = getattr(getattr(synthesizer, "config", None), "vertex", None)
         max_attempts = max(1, min(int(getattr(vertex_config, "max_attempts", 1)), 3))
+        gate_reasons: list[str] = []
         for _attempt in range(max_attempts):
             try:
                 draft = synthesizer.synthesize(request)
                 bound = bind_event_synthesis(draft, profiles=profiles, articles=articles)
             except (TypeError, ValueError, KeyError):
+                gate_reasons.append("binding_error")
                 continue
-            if bound.get("usable") and _v2_quality_ok(draft, bound):
+            if (
+                bound.get("usable")
+                and _is_current_direct_contract(draft)
+                and _v2_quality_ok(draft, bound)
+            ):
                 bound = dict(bound)
                 bound["source"] = "gcp:event-synthesis"
                 return bound
+            failure_reason = str(draft.get("_failure_reason") or "") if isinstance(draft, Mapping) else ""
+            failure_type = str(draft.get("_failure_type") or "") if isinstance(draft, Mapping) else ""
+            if failure_reason:
+                gate_reasons.append(failure_reason)
+                if failure_reason == "provider_spend_cap_breached":
+                    break
+            elif failure_type:
+                gate_reasons.append(f"model_error:{failure_type}")
+            elif not bound.get("usable"):
+                gate_reasons.append("unusable")
+            elif not _is_current_direct_contract(draft):
+                gate_reasons.append("legacy_contract")
+            else:
+                gate_reasons.append("quality_gate")
         # A live Vertex request must not silently become a profile-only,
         # rules-generated comparison. Raising here makes the batch abort before
         # it can write a partial or rules-only public snapshot.
-        raise EventSynthesisError("direct event-synthesis v2 did not pass the evidence gate")
+        detail = ",".join(dict.fromkeys(gate_reasons)) or "unknown"
+        raise EventSynthesisError(f"direct event-synthesis v2 did not pass the evidence gate ({detail})")
     try:
         bound = bind_event_synthesis(
             compose_event_synthesis(profiles=profiles, articles=articles, title=title),
@@ -1106,7 +1567,11 @@ class VertexEventSynthesizer:
 
     def synthesize(self, request: Mapping[str, Any]) -> Mapping[str, Any]:
         prompt = _build_prompt(request)
-        synthesis_output_tokens = max(int(getattr(self.config.vertex, "max_output_tokens", 0)), 14_000)
+        # Keep the issue-level call inside the same reviewed output limit used
+        # by the article analyzer and the cost guard.  A larger hard-coded
+        # reservation can trip the provider spend cap even when the local
+        # budget estimate says the run is affordable.
+        synthesis_output_tokens = max(1, int(getattr(self.config.vertex, "max_output_tokens", 0)))
         try:
             from google import genai
             from google.genai import types
@@ -1127,6 +1592,7 @@ class VertexEventSynthesizer:
                     temperature=0,
                     max_output_tokens=synthesis_output_tokens,
                     response_mime_type="application/json",
+                    response_schema=_vertex_response_schema(),
                     thinking_config=(
                         types.ThinkingConfig(
                             thinking_budget=int(self.config.vertex.thinking_budget)
@@ -1149,8 +1615,25 @@ class VertexEventSynthesizer:
                 payload = dict(payload)
                 payload.setdefault("prompt_version", PROMPT_VERSION)
                 payload.setdefault("schema_version", SCHEMA_VERSION)
-        except Exception:
-            return {"prompt_version": PROMPT_VERSION, "usable": False}
+        except Exception as error:
+            # Keep provider failures diagnosable without returning request
+            # bodies, prompts, response text, or provider error details.
+            details = getattr(error, "details", None)
+            provider_message = ""
+            if isinstance(details, Mapping) and isinstance(details.get("error"), Mapping):
+                provider_message = str(details["error"].get("message") or "").lower()
+            failure_reason = (
+                "provider_spend_cap_breached"
+                if getattr(error, "code", None) == 403 and "spend cap breached" in provider_message
+                else "provider_request_failed"
+            )
+            return {
+                "prompt_version": PROMPT_VERSION,
+                "schema_version": SCHEMA_VERSION,
+                "usable": False,
+                "_failure_reason": failure_reason,
+                "_failure_type": type(error).__name__,
+            }
         if not isinstance(payload, Mapping):
             return {"prompt_version": PROMPT_VERSION, "usable": False}
         return {
@@ -1185,20 +1668,24 @@ def _vertex_response_schema() -> dict[str, Any]:
 def _build_prompt(request: Mapping[str, Any]) -> str:
     payload = json.dumps(request, ensure_ascii=False, sort_keys=True)
     return (
-        "You are producing event-synthesis-v2.0.0 for one Korean news event from already-coded article profiles. "
+        "You are producing event-synthesis-v2.2.0 for one Korean news event from already-coded article profiles. "
         "The input contains article titles, outlet names, public paraphrases, voice kind, frame families, and evidence locators; it never contains article bodies. "
         "Write natural Korean that describes observable editorial choices, never hidden outlet intent or fixed political ideology. "
-        "Create 2-4 concise event_paragraphs, each no more than two sentences: first the event, then only evidence-supported chronology or context. Create 1-4 terms with one-sentence glosses. "
-        "Create comparison_axis only when at least two distinct evidence groups exist: a short label, 2-4 concise natural-language points, and the concrete question that separates the coverage. "
-        "Create common_ground from the whole or majority of articles. Use 모두 only when every article supports it, 대부분 for 70% or more, and 일부 below that; name a single outlet when only one outlet supports a point. "
-        "Create 0 camps when no real opposition is observed; otherwise create 2-4 camps. Every camp must have name, strong headline, 2-3 sentence summary, decisive_difference, article_ids, voice_basis, evidence, and proof_rows. "
+        "Create 2-4 concise event_paragraphs, each no more than two sentences: first the event, then only evidence-supported chronology or context. Create 0-4 terms with one-sentence glosses. "
+        "Create comparison_result for every request. Its status must be one of difference_confirmed, no_clear_difference, held_for_analysis, or analysis_failed. For each core dimension, explicitly classify supported article relations as same_core, same_core_with_detail, different_emphasis, contradictory, or insufficient_evidence. "
+        "A relation is valid only when the cited journalist-narration evidence belongs to the named articles and at least two distinct outlets support a confirmed difference. Never derive a relation from frame_family, token overlap, sentence similarity, or the number of groups. "
+        "Every comparison point must have a stable observation_id, a headline of at most 40 Korean characters, a distinct summary of at most 120 characters, and relation-bearing text of at most 320 characters. The summary adds a different detail; it must not repeat the headline. Rewrite long copy without truncating negation or causal direction. Every dimension question is one concrete sentence and at most 70 characters. "
+        "Use no_clear_difference only after sufficient comparison supports same_core or same_core_with_detail. Use held_for_analysis for insufficient evidence, and analysis_failed only for an actual failed or conflicting analysis. Never convert missing evidence to sameness or difference. "
+        "Create comparison_axis only as a readable question when the comparison_result has a supported different_emphasis or contradictory relation; an emphasis difference does not require camps. "
+        "Create common_ground from the whole or majority of articles. Use 모두 only when every article supports it, 대부분 for 70% or more, and 일부 below that. When no common explanation has valid support from at least two articles, set common_ground to text=null, status=insufficient_evidence, evidence=[]. "
+        "Create 0 camps when no real opposition is observed; ordinary emphasis differences must use comparison_result points rather than camps. Otherwise create 2-4 camps. Every camp must have name, strong headline, 2-3 sentence summary, decisive_difference, article_ids, voice_basis, evidence, and proof_rows. "
         "Never return two or more camps without comparison_axis. If you cannot support a comparison_axis with at least two evidence-backed points and a concrete question, return camps as an empty array instead. "
         "Keep journalist narration separate from source-attributed speech: write '매체가 평가했다' only when the profile voice is journalist_narration; otherwise write that the outlet placed a source's statement in the title, lead, or body. "
         "Every public sentence and every camp field must cite article_id, locator.paragraph, locator.sentence, and sentence_sha256 copied from the supplied profiles. Use no more than two non-duplicated evidence refs per short claim. Do not put locator tuples or hashes inline in prose; put them only in evidence arrays. "
         "proof_rows must contain article_id, outlet, dimension, public_paraphrase, and evidence, and must be drawn from the supplied paraphrases; use at most three proof rows per camp. Keep camp summaries to two sentences. "
         "Do not copy article body text, HTML, raw sentences, or English internal codes. Do not output so_what or source-context interpretation. "
-        "Use the exact v2 keys prompt_version, schema_version, text, headline, and common_ground.text; do not rename text to claim or headline to strong_headline. Return one JSON object matching the v2 shape, with no wrapper and no markdown fences. If a field cannot be supported, use an empty array or null rather than inventing text. "
-        f"Input: {payload}"
+        "Use the exact v2.2 keys prompt_version, schema_version, comparison_result, observation_id, headline, summary, text, and common_ground.text; do not rename text to claim or headline to strong_headline. Return one JSON object matching the v2.2 shape, with no wrapper and no markdown fences. If a field cannot be supported, use an empty array or null rather than inventing text. "
+        f"comparison_contract_version={COMPARISON_CONTRACT_VERSION}. Input: {payload}"
     )
 
 
@@ -1272,11 +1759,12 @@ def compose_event_synthesis(
     articles: Sequence[Mapping[str, Any]],
     title: str = "",
 ) -> dict[str, Any]:
-    """Build an evidence-citing draft from already-coded public profiles.
+    """Build a safe fallback draft from already-coded public profiles.
 
-    This is not an ideology classifier.  It groups observed frame families and
-    reuses the public paraphrases that already carry locator+hash evidence.
-    Vertex can replace the wording later; uncited invented prose is never added.
+    The fallback may project event facts and exact repeated paraphrases, but it
+    never turns frame-family codes or sentence resemblance into a semantic
+    comparison. A real difference requires the explicit comparison contract
+    from the issue-level model result.
     """
 
     by_id = _article_map(articles)
@@ -1295,7 +1783,6 @@ def compose_event_synthesis(
                     or ""
                 ),
                 "profile": profile,
-                "camp": _camp_key(profile),
             }
         )
     if not coded:
@@ -1331,64 +1818,22 @@ def compose_event_synthesis(
     morals = _rows_for("moral_evaluation")
     remedies = _rows_for("treatment_recommendation")
 
-    grouped: dict[str, list[dict[str, Any]]] = {}
-    for row in coded:
-        grouped.setdefault(row["camp"], []).append(row)
-
-    camps = []
-    for key, members in grouped.items():
-        if key == "other" and len(grouped) > 1:
-            continue
-        gists = _rows_for("treatment_recommendation")
-        if key == "no_treatment":
-            gists = [
-                item
-                for item in problems
-                if item["article_id"] in {row["articleId"] for row in members}
-            ]
-        elif key == "legal_institutional":
-            gists = [
-                item
-                for item in problems
-                if item["article_id"] in {row["articleId"] for row in members}
-            ]
-        else:
-            gists = [
-                item
-                for item in remedies
-                if item["article_id"] in {row["articleId"] for row in members}
-            ]
-            if not gists:
-                gists = [
-                    item
-                    for item in problems
-                    if item["article_id"] in {row["articleId"] for row in members}
-                ]
-        if not gists:
-            continue
-        lead = gists[0]
-        camps.append(
-            {
-                "key": key,
-                "name": CAMP_LABELS.get(key, "관측된 강조 묶음"),
-                "gist": lead["text"],
-                "article_ids": [row["articleId"] for row in members],
-                "evidence": [lead["evidence"]],
-            }
-        )
-    camps = camps[:4]
+    # Profile-backed composition is intentionally not a comparison engine.
+    # In particular, do not create camps from frame_family or from wording
+    # resemblance. The model must supply the relation and its proof.
+    camps: list[dict[str, Any]] = []
 
     agreed_bits = []
     agreed_evidence = []
-    if causes and len({row["family"] for row in causes}) == 1:
-        agreed_bits.append(causes[0]["text"])
-        agreed_evidence.append(causes[0]["evidence"])
-    if duties and len({row["family"] for row in duties}) == 1:
-        agreed_bits.append(duties[0]["text"])
-        agreed_evidence.append(duties[0]["evidence"])
-    agreed_line = " ".join(agreed_bits) if agreed_bits else (causes[0]["text"] if causes else None)
-    if agreed_line and not agreed_evidence and causes:
-        agreed_evidence = [causes[0]["evidence"]]
+    repeated_causes = _exact_repeated(causes)
+    repeated_duties = _exact_repeated(duties)
+    if repeated_causes:
+        agreed_bits.append(repeated_causes[0]["text"])
+        agreed_evidence.extend(row["evidence"] for row in repeated_causes)
+    if repeated_duties:
+        agreed_bits.append(repeated_duties[0]["text"])
+        agreed_evidence.extend(row["evidence"] for row in repeated_duties)
+    agreed_line = " ".join(agreed_bits) if agreed_bits else None
 
     split_line = None
     split_evidence = []
@@ -1417,20 +1862,20 @@ def compose_event_synthesis(
         so_evidence = split_evidence
 
     fact_rows = []
-    if causes and len({row["family"] for row in causes}) == 1:
+    if (repeated_causes := _exact_repeated(causes)):
         fact_rows.append(
             {
                 "question": "왜 이렇게 됐다고 했나",
-                "common": causes[0]["text"],
-                "evidence": [causes[0]["evidence"]],
+                "common": repeated_causes[0]["text"],
+                "evidence": [row["evidence"] for row in repeated_causes],
             }
         )
-    if duties and len({row["family"] for row in duties}) == 1:
+    if (repeated_duties := _exact_repeated(duties)):
         fact_rows.append(
             {
                 "question": "누구 책임이라고 했나",
-                "common": duties[0]["text"],
-                "evidence": [duties[0]["evidence"]],
+                "common": repeated_duties[0]["text"],
+                "evidence": [row["evidence"] for row in repeated_duties],
             }
         )
 
@@ -1482,21 +1927,13 @@ def compose_event_synthesis(
     ):
         if not rows:
             continue
-        families = {row["family"] for row in rows if row["family"]}
-        if len(families) == 1:
+        repeated = _exact_repeated(rows)
+        if repeated:
             frame_functions.append(
                 {
                     "dimension": dimension,
-                    "summary": rows[0]["text"],
-                    "evidence": [rows[0]["evidence"]],
-                }
-            )
-        elif len(camps) >= 2:
-            frame_functions.append(
-                {
-                    "dimension": dimension,
-                    "summary": " / ".join(camp["gist"] for camp in camps[:3]),
-                    "evidence": [item for camp in camps for item in camp["evidence"]],
+                    "summary": repeated[0]["text"],
+                    "evidence": [row["evidence"] for row in repeated],
                 }
             )
 
@@ -1521,6 +1958,14 @@ def compose_event_synthesis(
     return {
         "prompt_version": PROMPT_VERSION,
         "schema_version": SCHEMA_VERSION,
+        "comparison_result": {
+            "version": COMPARISON_CONTRACT_VERSION,
+            "status": "held_for_analysis",
+            "reason": "프로필 fallback에는 의미 관계를 확정할 issue-level 비교 판정이 없어 비교를 보류합니다.",
+            "analyzed_article_ids": [row["articleId"] for row in coded],
+            "analyzed_outlet_count": len({row["outlet"] for row in coded if row["outlet"]}),
+            "dimensions": [],
+        },
         "what_happened": what_happened,
         "what_happened_evidence": what_evidence,
         "agreed_line": agreed_line,
@@ -1592,6 +2037,7 @@ __all__ = [
     "LEGACY_SCHEMA_VERSION",
     "PROMPT_VERSION",
     "SCHEMA_VERSION",
+    "COMPARISON_CONTRACT_VERSION",
     "EventSynthesisError",
     "EventSynthesizer",
     "VertexEventSynthesizer",

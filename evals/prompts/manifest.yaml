@@ -24,3 +24,13 @@ prompts:
     path: event-synthesis-v2.0.0.md
     output_schema: schemas/event-synthesis-v2-output.schema.json
     taxonomy_version: entman-event-comparison-v2
+  - id: event-synthesis-v2.1
+    version: 2.1.0
+    path: event-synthesis-v2.1.0.md
+    output_schema: schemas/event-synthesis-v2.1-output.schema.json
+    taxonomy_version: entman-event-comparison-v2.1
+  - id: event-synthesis-v2.2
+    version: 2.2.0
+    path: event-synthesis-v2.2.0.md
+    output_schema: schemas/event-synthesis-v2.2-output.schema.json
+    taxonomy_version: entman-event-comparison-v2.2

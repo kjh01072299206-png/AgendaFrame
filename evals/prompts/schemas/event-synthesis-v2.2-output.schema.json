@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["prompt_version", "schema_version", "event_paragraphs", "terms", "comparison_result", "common_ground", "camps"],
+  "properties": {
+    "prompt_version": { "const": "event-synthesis-v2.2.0" },
+    "schema_version": { "const": "agendaframe.event-synthesis.v2.2" },
+    "event_paragraphs": { "type": "array", "minItems": 2, "maxItems": 4, "items": { "$ref": "#/$defs/claim" } },
+    "terms": { "type": "array", "maxItems": 4, "items": { "$ref": "#/$defs/term" } },
+    "comparison_result": { "$ref": "#/$defs/comparison_result" },
+    "comparison_axis": {
+      "type": ["object", "null"],
+      "required": ["label", "points", "question", "evidence"],
+      "properties": {
+        "label": { "type": "string", "maxLength": 120 },
+        "points": { "type": "array", "minItems": 2, "maxItems": 4, "items": { "$ref": "#/$defs/claim" } },
+        "question": { "type": "string", "maxLength": 70 },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+      },
+      "additionalProperties": false
+    },
+    "common_ground": { "$ref": "#/$defs/common_ground" },
+    "camps": { "type": "array", "maxItems": 4, "items": { "$ref": "#/$defs/camp" } }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "required": ["article_id", "locator", "sentence_sha256"],
+      "properties": {
+        "article_id": { "type": "string", "minLength": 1 },
+        "locator": {
+          "type": "object",
+          "required": ["paragraph", "sentence"],
+          "properties": { "paragraph": { "type": "integer" }, "sentence": { "type": "integer" } },
+          "additionalProperties": false
+        },
+        "sentence_sha256": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "claim": {
+      "type": "object",
+      "required": ["text", "evidence"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1, "maxLength": 720 },
+        "status": { "type": "string" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+      },
+      "additionalProperties": false
+    },
+    "common_ground": {
+      "type": "object",
+      "required": ["text", "status", "evidence"],
+      "properties": {
+        "text": { "type": ["string", "null"], "maxLength": 720 },
+        "status": { "enum": ["observed", "insufficient_evidence", "analysis_failed"] },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+      },
+      "additionalProperties": false
+    },
+    "term": {
+      "type": "object",
+      "required": ["term", "gloss", "evidence"],
+      "properties": {
+        "term": { "type": "string", "maxLength": 60 },
+        "gloss": { "type": "string", "maxLength": 360 },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+      },
+      "additionalProperties": false
+    },
+    "voice_basis": {
+      "type": "object",
+      "required": ["kind", "label", "evidence"],
+      "properties": {
+        "kind": { "enum": ["journalist_narration", "source_attributed", "mixed", "not_observed"] },
+        "label": { "type": "string" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+      },
+      "additionalProperties": false
+    },
+    "comparison_point": {
+      "type": "object",
+      "required": ["observation_id", "headline", "summary", "text", "evidence", "relation", "article_ids", "voice_basis"],
+      "properties": {
+        "observation_id": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "claim_id": { "type": "string", "maxLength": 100 },
+        "headline": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "text": { "type": "string", "minLength": 1, "maxLength": 320 },
+        "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidence" } },
+        "relation": { "enum": ["same_core", "same_core_with_detail", "different_emphasis", "contradictory", "insufficient_evidence"] },
+        "dimension": { "type": "string", "maxLength": 80 },
+        "article_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "voice_basis": { "$ref": "#/$defs/voice_basis" }
+      },
+      "additionalProperties": false
+    },
+    "comparison_dimension": {
+      "type": "object",
+      "required": ["dimension", "label", "question", "status", "points"],
+      "properties": {
+        "dimension": { "type": "string", "maxLength": 80 },
+        "label": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "question": { "type": "string", "minLength": 1, "maxLength": 70 },
+        "status": { "enum": ["difference_confirmed", "no_clear_difference", "held_for_analysis", "analysis_failed"] },
+        "relation": { "enum": ["same_core", "same_core_with_detail", "different_emphasis", "contradictory", "insufficient_evidence"] },
+        "reason": { "type": "string", "maxLength": 360 },
+        "points": { "type": "array", "maxItems": 6, "items": { "$ref": "#/$defs/comparison_point" } },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+      },
+      "additionalProperties": false
+    },
+    "comparison_result": {
+      "type": "object",
+      "required": ["version", "status", "dimensions", "analyzed_article_ids", "analyzed_outlet_count"],
+      "properties": {
+        "version": { "const": "comparison-v1.0.0" },
+        "status": { "enum": ["difference_confirmed", "no_clear_difference", "held_for_analysis", "analysis_failed"] },
+        "reason": { "type": "string", "maxLength": 360 },
+        "primary_dimension": { "type": "string", "maxLength": 80 },
+        "analyzed_article_ids": { "type": "array", "items": { "type": "string" } },
+        "analyzed_outlet_count": { "type": "integer", "minimum": 0 },
+        "dimensions": { "type": "array", "maxItems": 5, "items": { "$ref": "#/$defs/comparison_dimension" } }
+      },
+      "additionalProperties": false
+    },
+    "proof_row": {
+      "type": "object",
+      "required": ["article_id", "dimension", "public_paraphrase", "evidence"],
+      "properties": {
+        "article_id": { "type": "string" },
+        "outlet": { "type": "string" },
+        "dimension": { "type": "string" },
+        "public_paraphrase": { "type": "string", "maxLength": 420 },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+      },
+      "additionalProperties": false
+    },
+    "camp": {
+      "type": "object",
+      "required": ["name", "headline", "summary", "decisive_difference", "outlets", "article_ids", "voice_basis", "evidence", "proof_rows"],
+      "properties": {
+        "name": { "type": "string", "maxLength": 60 },
+        "headline": { "type": "string", "maxLength": 180 },
+        "summary": { "type": "string", "maxLength": 720 },
+        "decisive_difference": { "type": "string", "maxLength": 420 },
+        "outlets": { "type": "array", "items": { "type": "string" } },
+        "article_ids": { "type": "array", "items": { "type": "string" } },
+        "voice_basis": { "$ref": "#/$defs/voice_basis" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "headline_evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "summary_evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "decisive_difference_evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "proof_rows": { "type": "array", "items": { "$ref": "#/$defs/proof_row" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

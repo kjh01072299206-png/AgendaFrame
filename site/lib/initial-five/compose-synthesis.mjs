@@ -143,21 +143,37 @@ export function composeEventSynthesis(bundle) {
     });
   }
 
-  const opposition = camps.length >= 2;
-  const publicCamps = opposition ? camps.slice(0, 4) : [];
+  // This profile-only path is an evidence ledger, not a semantic comparator.
+  // Frame-family buckets cannot establish same-core, added-detail, emphasis,
+  // or contradiction, so never expose them as camps or a public VS.
+  const opposition = false;
+  const publicCamps = [];
+
+  const exactRepeated = (rows) => {
+    const grouped = new Map();
+    for (const row of rows) {
+      const key = cleanText(row.text).toLowerCase().replace(/[^0-9a-z가-힣]+/gu, " ").trim();
+      if (!key) continue;
+      const list = grouped.get(key) ?? [];
+      list.push(row);
+      grouped.set(key, list);
+    }
+    return [...grouped.values()].find((rowsForKey) => new Set(rowsForKey.map((row) => row.article_id)).size >= 2) ?? [];
+  };
+  const repeatedCauses = exactRepeated(causes);
+  const repeatedDuties = exactRepeated(duties);
 
   const agreedBits = [];
   const agreedEvidence = [];
-  if (causes.length && new Set(causes.map((row) => row.family)).size === 1) {
-    agreedBits.push(causes[0].text);
-    agreedEvidence.push(causes[0].evidence);
+  if (repeatedCauses.length) {
+    agreedBits.push(repeatedCauses[0].text);
+    agreedEvidence.push(...repeatedCauses.map((row) => row.evidence));
   }
-  if (duties.length && new Set(duties.map((row) => row.family)).size === 1) {
-    agreedBits.push(duties[0].text);
-    agreedEvidence.push(duties[0].evidence);
+  if (repeatedDuties.length) {
+    agreedBits.push(repeatedDuties[0].text);
+    agreedEvidence.push(...repeatedDuties.map((row) => row.evidence));
   }
-  const agreedText = agreedBits.join(" ") || causes[0]?.text || null;
-  if (agreedText && !agreedEvidence.length && causes[0]) agreedEvidence.push(causes[0].evidence);
+  const agreedText = agreedBits.join(" ") || null;
 
   let splitText = null;
   if (opposition) {
@@ -171,14 +187,15 @@ export function composeEventSynthesis(bundle) {
   const whatText = title && problems[0] ? `${title}. ${problems[0].text}` : (title || problems[0]?.text || null);
 
   const factRows = [];
-  if (causes.length && new Set(causes.map((row) => row.family)).size === 1 && causes[0]) {
-    factRows.push({ question: "왜 이렇게 됐다고 했나", common: causes[0].text, cells: null, status: "observed", evidence: [causes[0].evidence] });
+  if (repeatedCauses.length) {
+    factRows.push({ question: "왜 이렇게 됐다고 했나", common: repeatedCauses[0].text, cells: null, status: "observed", evidence: repeatedCauses.map((row) => row.evidence) });
   }
-  if (duties.length && new Set(duties.map((row) => row.family)).size === 1 && duties[0]) {
-    factRows.push({ question: "누구 책임이라고 했나", common: duties[0].text, cells: null, status: "observed", evidence: [duties[0].evidence] });
+  if (repeatedDuties.length) {
+    factRows.push({ question: "누구 책임이라고 했나", common: repeatedDuties[0].text, cells: null, status: "observed", evidence: repeatedDuties.map((row) => row.evidence) });
   }
-  if (morals.length && new Set(morals.map((row) => row.family)).size === 1 && morals[0]) {
-    factRows.push({ question: "어떻게 평가했나", common: morals[0].text, cells: null, status: "observed", evidence: [morals[0].evidence] });
+  const repeatedMorals = exactRepeated(morals);
+  if (repeatedMorals.length) {
+    factRows.push({ question: "어떻게 평가했나", common: repeatedMorals[0].text, cells: null, status: "observed", evidence: repeatedMorals.map((row) => row.evidence) });
   }
 
   const splitRows = [];
@@ -226,10 +243,19 @@ export function composeEventSynthesis(bundle) {
   }
 
   return {
-    schemaVersion: "agendaframe.event-synthesis.v1",
-    promptVersion: "event-synthesis-v1.0.0",
+    schemaVersion: "agendaframe.event-synthesis.v2.1",
+    promptVersion: "event-synthesis-v2.1.0",
+    source: "profile:event-synthesis-fallback",
     usable: Boolean(whatText || agreedText || publicCamps.length || factRows.length),
     opposition,
+    comparison_result: {
+      version: "comparison-v1.0.0",
+      status: "held_for_analysis",
+      reason: "프로필 fallback에는 의미 관계를 확정할 issue-level 비교 판정이 없어 비교를 보류합니다.",
+      analyzed_article_ids: coded.map((row) => row.articleId),
+      analyzed_outlet_count: new Set(coded.map((row) => row.outlet).filter(Boolean)).size,
+      dimensions: [],
+    },
     what_happened: claim(whatText, problems.slice(0, 4).map((row) => row.evidence)),
     agreed_line: claim(agreedText, agreedEvidence),
     split_line: opposition
@@ -250,9 +276,10 @@ export function composeEventSynthesis(bundle) {
       ["treatment_recommendation", remedies],
     ].flatMap(([dimension, rows]) => {
       if (!rows.length) return [];
-      const families = new Set(rows.map((row) => row.family).filter(Boolean));
-      const summary = families.size === 1 ? rows[0].text : (opposition ? publicCamps.map((camp) => camp.gist).join(" / ") : rows[0].text);
-      const evidence = families.size === 1 || !opposition ? [rows[0].evidence] : publicCamps.flatMap((camp) => camp.evidence);
+      const repeated = exactRepeated(rows);
+      if (!repeated.length) return [];
+      const summary = repeated[0].text;
+      const evidence = repeated.map((row) => row.evidence);
       return [{ dimension, summary, status: "observed", evidence }];
     }),
     proof_rows: [
@@ -361,6 +388,7 @@ export function withEventSynthesis(bundle) {
       data: {
         ...bundle.comparison?.data,
         synthesis,
+        comparison_result: synthesis.comparison_result,
         source_lens: sourceLens,
         whatHappened: synthesis.what_happened?.status === "observed" ? synthesis.what_happened.text : null,
         agreedLine: agreed ?? null,

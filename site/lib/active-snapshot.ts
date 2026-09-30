@@ -1,5 +1,7 @@
+import { cache } from "react";
 import { initialFiveManifest, getInitialFiveIssueBundle } from "./initial-five/artifacts";
 import { withEventSynthesis } from "./initial-five/compose-synthesis.mjs";
+import { isPublishableEventSynthesis } from "./initial-five/publication-contract";
 import type { InitialFiveManifest, IssueAnalysisBundle } from "./initial-five/types";
 
 type SnapshotEnvelope = {
@@ -123,9 +125,7 @@ function assertLivePublishable(envelope: SnapshotEnvelope): void {
     if ((issue.articleCount ?? 0) < 3 || (issue.outletCount ?? 0) < 2) {
       throw unpublishable(`issue ${issueId} has fewer than 3 articles or 2 outlets`);
     }
-    const bundle = envelope.bundles[issueId] as
-      | { articles?: Array<{ outlet?: unknown; sourceId?: unknown }>; clusterAi?: { coherence?: unknown } }
-      | undefined;
+    const bundle = envelope.bundles[issueId];
     const articles = Array.isArray(bundle?.articles) ? bundle.articles : [];
     const outlets = new Set(
       articles
@@ -139,28 +139,38 @@ function assertLivePublishable(envelope: SnapshotEnvelope): void {
     if (coherence === "title_fallback") {
       throw unpublishable(`issue ${issueId} still has title-fallback coherence`);
     }
+    if (!isPublishableEventSynthesis(bundle)) {
+      throw unpublishable(`issue ${issueId} lacks an evidence-bound v2.2 comparison result`);
+    }
   }
 }
 
-function hasDirectEventSynthesis(bundle: IssueAnalysisBundle | null): boolean {
-  const synthesis = bundle?.comparison?.data?.synthesis;
-  const runId = String((bundle?.lineage as { runId?: unknown } | undefined)?.runId ?? "").trim();
-  return Boolean(
-    synthesis?.usable === true
-    && synthesis.source === "gcp:event-synthesis"
-    && synthesis.schemaVersion === "agendaframe.event-synthesis.v2"
-    && synthesis.promptVersion === "event-synthesis-v2.0.0"
-    && Array.isArray(synthesis.event_paragraphs)
-    && synthesis.event_paragraphs.length >= 2
-    && synthesis.event_paragraphs.length <= 4
-    && Array.isArray(synthesis.terms)
-    && synthesis.terms.length >= 1
-    && synthesis.terms.length <= 4
-    && synthesis.common_ground?.status === "observed"
-    && runId
-    && String(synthesis.run_id ?? "").trim() === runId
-    && synthesis.invocation?.provider === "vertex_ai",
-  );
+export function validateLiveActiveSnapshotEnvelope(value: unknown): SnapshotEnvelope {
+  const envelope = validateEnvelope(value);
+  assertLivePublishable(envelope);
+  return envelope;
+}
+
+export async function readLiveActiveSnapshot(
+  url: string,
+  fetcher: typeof fetch = fetch,
+): Promise<SnapshotEnvelope> {
+  const normalizedUrl = url.trim();
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(normalizedUrl);
+  } catch {
+    throw new Error("AGENDAFRAME_ACTIVE_SNAPSHOT_URL must be an absolute URL.");
+  }
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+    throw new Error("AGENDAFRAME_ACTIVE_SNAPSHOT_URL must use HTTP(S).");
+  }
+  const response = await fetcher(normalizedUrl, {
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) throw new Error(`활성 스냅샷을 읽지 못했습니다 (${response.status}).`);
+  return validateLiveActiveSnapshotEnvelope(await response.json());
 }
 
 function defaultDemoPublicationStatus(): "published" | "pending" {
@@ -168,7 +178,7 @@ function defaultDemoPublicationStatus(): "published" | "pending" {
   const hasAllIssueResults = isCurrentDisplay
     && initialFiveManifest.issueCount === 5
     && initialFiveManifest.issues.length === 5
-    && initialFiveManifest.issues.every((issue) => hasDirectEventSynthesis(
+    && initialFiveManifest.issues.every((issue) => isPublishableEventSynthesis(
       withEventSynthesis(getInitialFiveIssueBundle(issue.issueId)),
     ));
   return hasAllIssueResults ? "published" : "pending";
@@ -189,24 +199,16 @@ function demoSource(publicationStatus: "published" | "pending" = defaultDemoPubl
  * Live mode is deliberately fail-closed: a missing or invalid active pointer
  * must not silently render yesterday's demo data.
  */
-export async function getActiveSnapshot(fetcher: typeof fetch = fetch): Promise<ActiveSnapshotSource> {
+async function resolveActiveSnapshot(fetcher: typeof fetch = fetch): Promise<ActiveSnapshotSource> {
   const mode = process.env.AGENDAFRAME_DATA_MODE ?? "demo";
   if (mode !== "live") return demoSource();
   const url = process.env.AGENDAFRAME_ACTIVE_SNAPSHOT_URL?.trim();
   if (!url) throw new Error("AGENDAFRAME_DATA_MODE=live requires AGENDAFRAME_ACTIVE_SNAPSHOT_URL.");
-  const response = await fetcher(url, { cache: "no-store" });
-  if (!response.ok) throw new Error(`활성 스냅샷을 읽지 못했습니다 (${response.status}).`);
-  let envelope: SnapshotEnvelope;
-  try {
-    envelope = validateEnvelope(await response.json());
-    assertLivePublishable(envelope);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (message.startsWith(UNPUBLISHABLE_PREFIX)) {
-      return demoSource("pending");
-    }
-    throw error;
-  }
+  // A live reader failure must never turn into a hard-coded demo response.
+  // The GCP publisher keeps the previous current pointer when a run fails;
+  // this boundary therefore either serves that validated pointer or fails
+  // closed when the reader itself is unavailable or invalid.
+  const envelope = await readLiveActiveSnapshot(url, fetcher);
   const bundles = envelope.bundles;
 
   return {
@@ -217,6 +219,11 @@ export async function getActiveSnapshot(fetcher: typeof fetch = fetch): Promise<
     getIssueBundle: (issueId) => withEventSynthesis(bundles[issueId] ?? null),
   };
 }
+
+// React cache is request-scoped in the server component renderer. It keeps
+// layout, page, and nested issue loaders on one pointer during a render while
+// avoiding a process-wide stale snapshot between requests.
+export const getActiveSnapshot = cache(resolveActiveSnapshot);
 
 export function validateActiveSnapshotEnvelope(value: unknown): SnapshotEnvelope {
   return validateEnvelope(value);

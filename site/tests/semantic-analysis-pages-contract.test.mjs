@@ -8,8 +8,10 @@ const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const pagePath = path.join(siteRoot, "app", "(shell)", "semantic-analysis-pages.tsx");
 const comparisonPath = path.join(siteRoot, "app", "(shell)", "comparison-lead.tsx");
 const summaryPath = path.join(siteRoot, "lib", "initial-five", "analysis-summary.ts");
+const linguisticAnalysisPath = path.join(siteRoot, "lib", "initial-five", "paraphrase-linguistic-analysis.ts");
 const derivePath = path.join(siteRoot, "lib", "initial-five", "derive.ts");
 const comparisonStylesPath = path.join(siteRoot, "app", "app-round2.css");
+const auditPath = path.join(siteRoot, "scripts", "audit-site.mjs");
 
 test("semantic pages enforce public evidence and state boundaries", async () => {
   const source = await readFile(pagePath, "utf8");
@@ -21,7 +23,7 @@ test("semantic pages enforce public evidence and state boundaries", async () => 
   assert.match(source, /analysis_failed/);
   assert.match(source, /conflicting/);
   assert.match(source, /profile\?\.review/);
-  assert.match(source, /공통으로 본 것과 갈린 지점/);
+  assert.match(source, /공통으로 본 것과 기사별 관측/);
   assert.match(source, /프레이밍의 여섯 관측축/);
   assert.match(source, /프레임 4기능 비교/);
   assert.match(source, /취재원 역할과 전달 방식/);
@@ -30,13 +32,16 @@ test("semantic pages enforce public evidence and state boundaries", async () => 
   assert.match(source, /export function SynthesisNarrative/);
   assert.match(source, /서로 다른 근거 그룹이 없어 대립 구도로 표시하지 않습니다/);
   assert.match(source, /synthesis\?\.usable/);
+  assert.match(source, /비교 판정 보류 · 명시적 결과 없음/);
+  assert.match(source, /사건 종합 계약/);
   assert.match(source, /구조화 보조 관측/);
   assert.match(source, /규칙 기반.*semantic AI와 별도/);
   assert.match(source, /validComparisonEvidence/);
   assert.match(source, /comparison_axes/);
   assert.match(source, /semanticEntryIsEligible/);
-  assert.match(source, /sameComparisonMeaning/);
-  assert.match(source, /공통 계열로 묶인 설명/);
+  assert.doesNotMatch(source, /sameComparisonMeaning|comparisonTextSimilarity/);
+  assert.match(source, /반복된 공개 paraphrase 묶음/);
+  assert.match(source, /공통으로 확인한 설명/);
 });
 
 test("semantic pages do not publish raw article text fields or political ideology labels", async () => {
@@ -44,6 +49,24 @@ test("semantic pages do not publish raw article text fields or political ideolog
   assert.doesNotMatch(source, /\braw_body\b|\bbodyText\b|\bsentenceText\b|\bfull_article\b/i);
   assert.doesNotMatch(source, /이 언론사는 진보|이 언론사는 보수/);
   assert.match(source, /원문 링크 열기/);
+});
+
+test("framing language observations are calculated from saved public paraphrases and exact evidence", async () => {
+  const source = await readFile(pagePath, "utf8");
+  const analysis = await readFile(linguisticAnalysisPath, "utf8");
+  assert.match(source, /buildParaphraseLinguisticAnalysis/);
+  assert.match(source, /원문이 아닌 저장된 공개 paraphrase/);
+  assert.match(source, /같은 공개 paraphrase/);
+  assert.match(source, /상위 \{analysis\.analyzer\.maxTermsPerParaphrase\}개 내용어/);
+  assert.match(source, /ParaphraseObservationEvidence/);
+  assert.match(analysis, /hasValidPublicEvidence\(evidence, entryEvidence\)/);
+  assert.match(analysis, /semanticProfileEntryIsUsable\(entry\)/);
+  assert.match(analysis, /voice !== "journalist_narration"/);
+  assert.match(analysis, /observationId/);
+  assert.match(analysis, /promptVersion/);
+  assert.match(analysis, /sentence_sha256/);
+  assert.match(analysis, /conflictingObservationIds/);
+  assert.doesNotMatch(analysis, /raw_body|bodyText|full_article/i);
 });
 
 test("semantic pages distinguish explicit_not_stated from insufficient_evidence and analysis_failed", async () => {
@@ -79,7 +102,7 @@ test("semantic pages keep the issue context and lead with prototype reading orde
   assert.match(comparison, /export function ComparisonLead/);
   assert.match(comparison, /event_paragraphs/);
   assert.match(comparison, /<h2>무슨 일이 있었나<\/h2>/);
-  assert.match(comparison, /기사 묶음에서 근거가 연결된 경위입니다/);
+  assert.match(comparison, /현재 분석 실행과 문장 근거가 연결된 사건 경위입니다/);
   assert.match(comparison, /사건 경위와 용어 더 보기/);
   assert.match(comparison, /aria-expanded/);
   assert.match(comparison, /aria-controls/);
@@ -87,6 +110,10 @@ test("semantic pages keep the issue context and lead with prototype reading orde
   assert.match(comparison, /summary\.statusLabel/);
   assert.match(comparison, /대표 기사에서 함께 관측된 보조 설명/);
   assert.match(comparison, /기사 근거 보기/);
+  assert.match(comparison, /refsOf\(refs\)\.filter\(\(ref\) => validRef\(ref, bundle\)\)/);
+  assert.match(comparison, /articleExists = bundle\.articles\.some/);
+  assert.match(comparison, /refsOf\(term\.evidence\)\.some\(\(ref\) => validRef\(ref, bundle\)\)/);
+  assert.doesNotMatch(comparison, /issue\.lead/);
   assert.match(source, /afp-framing-lead-grid/);
   assert.match(source, /세부 프레임 분석 보기/);
   const outlets = source.indexOf("export function OutletsSemanticPage");
@@ -96,9 +123,27 @@ test("semantic pages keep the issue context and lead with prototype reading orde
   assert.ok(outletsEvidence > outletsLead, "article evidence should follow the event and camp lead");
   const framing = source.indexOf("export function FramingSemanticPage");
   const framingGrid = source.indexOf("afp-framing-lead-grid", framing);
+  const framingFunctions = source.indexOf('id="sec-four-functions"', framingGrid);
   const framingGuide = source.indexOf('id="sec-guide"', framingGrid);
   assert.ok(framingGrid > framing, "framing page should start with the summary/scope lead grid");
-  assert.ok(framingGuide > framingGrid, "framing guide should follow the lead grid");
+  assert.ok(framingFunctions > framingGrid, "framing page should show four functions after the lead grid");
+  assert.ok(framingGuide > framingFunctions, "framing guide should follow the four-function table");
+});
+
+test("framing first screen keeps readable text and article-row evidence reachable", async () => {
+  const source = await readFile(pagePath, "utf8");
+  const styles = await readFile(comparisonStylesPath, "utf8");
+  const audit = await readFile(auditPath, "utf8");
+  const table = source.slice(source.indexOf("function FourFunctionTable"), source.indexOf("function SourceTable"));
+  assert.match(source, /function TableEvidenceDisclosure/);
+  assert.match(source, /기사 행 근거/);
+  assert.doesNotMatch(table, /<EvidenceDisclosure row=\{row\} compact \/>/);
+  assert.match(styles, /\.afp-summary-compact \.afp-summary[\s\S]*grid-template-columns: repeat\(3/);
+  assert.match(styles, /\.afp-four-functions \.afs-table td p[\s\S]*font-size: 14px/);
+  assert.match(audit, /FIRST_SCREEN_REQUIREMENTS/);
+  assert.match(audit, /visibleHeight/);
+  assert.match(audit, /visibleRatio/);
+  assert.match(audit, /프레임 4기능 첫 기사 행.*minVisibleHeight: 90/);
 });
 
 test("comparison summary keeps status, question, groups, and speaker scope consistent", async () => {
@@ -107,6 +152,8 @@ test("comparison summary keeps status, question, groups, and speaker scope consi
   assert.match(source, /no_clear_difference/);
   assert.match(source, /held_for_analysis/);
   assert.match(source, /sourceGroups/);
+  assert.match(source, /representativeGroups/);
+  assert.match(source, /comparison_result/);
   assert.match(source, /voice === "journalist"/);
   assert.match(source, /hasValidPublicEvidence/);
   assert.match(source, /valueKey/);

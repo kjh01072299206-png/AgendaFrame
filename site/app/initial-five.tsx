@@ -426,6 +426,10 @@ async function fetchIssueBundle(issue: InitialFiveManifestIssue, signal: AbortSi
         headers: { Accept: "application/json" },
         credentials: "same-origin",
       });
+      if (response.status === 404) {
+        lastError = new Error(`${endpoint} returned 404`);
+        continue;
+      }
       if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
       const candidate = await response.json() as IssueAnalysisBundle;
       if (candidate.schemaVersion !== "agendaframe.initial-five.public.v1" || candidate.issue?.issueId !== issue.issueId) {
@@ -434,7 +438,10 @@ async function fetchIssueBundle(issue: InitialFiveManifestIssue, signal: AbortSi
       return candidate;
     } catch (error) {
       if (signal.aborted) throw error;
-      lastError = error instanceof Error ? error : new Error(String(error));
+      // Only an explicit 404 is eligible for the legacy static endpoint.
+      // Reader outages, transport errors, and invalid JSON must stay visible
+      // instead of silently serving an older snapshot.
+      throw error instanceof Error ? error : new Error(String(error));
     }
   }
   throw lastError ?? new Error("선택한 의제 데이터를 불러오지 못했습니다.");
@@ -450,15 +457,23 @@ async function fetchManifest(signal: AbortSignal) {
         headers: { Accept: "application/json" },
         credentials: "same-origin",
       });
+      if (response.status === 404) {
+        lastError = new Error(`${endpoint} returned 404`);
+        continue;
+      }
       if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
       const candidate = await response.json() as InitialFiveManifest;
-      if (candidate.schemaVersion !== "agendaframe.initial-five.public.v1" || candidate.issueCount !== 5) {
+      const acceptedManifestSchema = candidate.schemaVersion === "agendaframe.initial-five.public.v1"
+        || candidate.schemaVersion === "agenda.frame.active-snapshot.v1";
+      if (!acceptedManifestSchema || candidate.issueCount !== 5) {
         throw new Error(`${endpoint} returned an invalid initial-five manifest`);
       }
       return candidate;
     } catch (error) {
       if (signal.aborted) throw error;
-      lastError = error instanceof Error ? error : new Error(String(error));
+      // Static data is a compatibility route, not a stale-data fallback for
+      // a live reader that is unavailable or invalid.
+      throw error instanceof Error ? error : new Error(String(error));
     }
   }
   throw lastError ?? new Error("초기 5개 의제 목록을 불러오지 못했습니다.");

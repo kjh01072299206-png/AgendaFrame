@@ -1,21 +1,24 @@
-import {
-  DIM_LABEL,
-  DIM_ORDER,
-  familyLabel,
-  particle,
-  type IssueView,
-} from "./derive";
+import { DIM_LABEL, DIM_ORDER } from "./derive";
+import { isPublishableEventSynthesis } from "./publication-contract";
 import { stripEvidenceTokens } from "./public-text.mjs";
 import type {
+  ComparisonRelation,
+  ComparisonResultStatus,
   EventSynthesisClaim,
+  EventSynthesisComparisonDimension,
+  EventSynthesisComparisonPoint,
+  EventSynthesisComparisonResult,
+  EventSynthesisData,
+  EventSynthesisEvidence,
   IssueAnalysisBundle,
   SemanticDimensionItem,
   SemanticEvidenceSource,
 } from "./types";
 
-export type ComparisonStatus = "difference_confirmed" | "no_clear_difference" | "held_for_analysis";
+export type ComparisonStatus = ComparisonResultStatus;
 
 export interface ComparisonObservation {
+  observationId: string;
   articleId: string;
   outlet: string;
   title: string;
@@ -26,6 +29,8 @@ export interface ComparisonObservation {
   publicParaphrase: string | null;
   voiceKind: string;
   evidence: SemanticEvidenceSource;
+  claimId?: string;
+  relation?: ComparisonRelation;
 }
 
 export interface ComparisonGroupDetail {
@@ -49,6 +54,8 @@ export interface ComparisonGroup {
   voiceLabel: string;
   observations: ComparisonObservation[];
   details: ComparisonGroupDetail[];
+  relation?: ComparisonRelation;
+  claimIds?: string[];
 }
 
 export interface DimensionComparison {
@@ -79,22 +86,41 @@ export interface ComparisonSummary {
   whatToNotice: string;
   question: string;
   dimensionLabel: string | null;
+  /** All evidence-backed groups in the selected dimension. */
   groups: ComparisonGroup[];
+  /** Groups selected for the first comparison cards. */
+  representativeGroups: ComparisonGroup[];
+  /** Groups not shown in the first card row; the UI must keep them reachable. */
+  allGroups: ComparisonGroup[];
+  remainingGroupCount: number;
   sourceGroups: ComparisonGroup[];
   dimensions: DimensionComparison[];
   analyzedArticleCount: number;
   analyzedOutletCount: number;
 }
 
+export function distinctComparisonSummary(group: ComparisonGroup) {
+  const emphasis = cleanText(group.emphasis);
+  if (!emphasis || exactText(emphasis) === exactText(group.title)) return null;
+  return emphasis;
+}
+
 const STATUS_LABEL: Record<ComparisonStatus, string> = {
   difference_confirmed: "기자 서술 차이 확인",
   no_clear_difference: "매체 간 뚜렷한 차이 없음",
   held_for_analysis: "비교 보류",
+  analysis_failed: "분석 실패",
 };
 
-// Node SSR과 브라우저가 localeCompare의 기본 locale을 다르게 가질 수 있다.
-// 서버에서 만든 HTML과 클라이언트 hydration의 순서를 고정하기 위해 코드 포인트
-// 비교만 사용한다.
+const RELATION_LABEL: Record<ComparisonRelation, string> = {
+  same_core: "핵심 설명은 같음",
+  same_core_with_detail: "핵심은 같고 세부가 추가됨",
+  different_emphasis: "강조점이 다름",
+  contradictory: "서술이 충돌함",
+  insufficient_evidence: "근거 부족",
+};
+
+// SSR과 브라우저의 locale 설정 차이로 정렬 순서가 달라지지 않도록 한다.
 function compareStableText(left: string, right: string) {
   return left < right ? -1 : left > right ? 1 : 0;
 }
@@ -104,6 +130,7 @@ const VOICE_LABEL: Record<string, string> = {
   direct_quote: "직접 인용",
   indirect_source: "간접 전언",
   uncertain_quote: "불확실 인용",
+  synthesis_claim: "비교 결과",
 };
 
 const BLOCKED_ANALYSIS_STATES = new Set([
@@ -114,8 +141,69 @@ const BLOCKED_ANALYSIS_STATES = new Set([
   "failed",
 ]);
 
+const COMPARISON_STATUSES = new Set<ComparisonStatus>([
+  "difference_confirmed",
+  "no_clear_difference",
+  "held_for_analysis",
+  "analysis_failed",
+]);
+
+const COMPARISON_RELATIONS = new Set<ComparisonRelation>([
+  "same_core",
+  "same_core_with_detail",
+  "different_emphasis",
+  "contradictory",
+  "insufficient_evidence",
+]);
+
 function blockedState(value: unknown) {
   return typeof value === "string" && BLOCKED_ANALYSIS_STATES.has(value);
+}
+
+function articleMap(bundle: IssueAnalysisBundle) {
+  return new Map((bundle.articles ?? []).map((article) => [article.articleId, article]));
+}
+
+function profileMap(bundle: IssueAnalysisBundle) {
+  return new Map((bundle.semanticProfiles ?? []).map((entry) => [entry.articleId, entry]));
+}
+
+function exactText(value?: string | null) {
+  if (!value) return "";
+  return stripEvidenceTokens(value)
+    .toLowerCase()
+    .replace(/[^0-9a-z가-힣]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function cleanText(value?: string | null) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  return stripEvidenceTokens(value).trim() || null;
+}
+
+function evidenceKey(evidence?: SemanticEvidenceSource | EventSynthesisEvidence | null) {
+  if (!evidence?.locator || typeof evidence.sentence_sha256 !== "string") return "";
+  return [
+    evidence.locator.paragraph,
+    evidence.locator.sentence,
+    evidence.sentence_sha256.toLowerCase(),
+  ].join(":");
+}
+
+export function synthesisRunMatches(bundle: IssueAnalysisBundle, synthesis?: EventSynthesisData | null) {
+  const bundleRunId = String((bundle.lineage as { runId?: unknown } | undefined)?.runId ?? "").trim();
+  const synthesisRunId = String(synthesis?.run_id ?? "").trim();
+  return Boolean(bundleRunId && synthesisRunId && bundleRunId === synthesisRunId);
+}
+
+function publicEvidenceKey(evidence?: { locator?: { paragraph?: number; sentence?: number }; sentenceSha256?: string } | null) {
+  if (!evidence?.locator || typeof evidence.sentenceSha256 !== "string") return "";
+  return [
+    evidence.locator.paragraph,
+    evidence.locator.sentence,
+    evidence.sentenceSha256.toLowerCase(),
+  ].join(":");
 }
 
 export function semanticEntryBlockedState(entry: IssueAnalysisBundle["semanticProfiles"][number], bundle: IssueAnalysisBundle) {
@@ -134,32 +222,37 @@ export function semanticEntryBlockedState(entry: IssueAnalysisBundle["semanticPr
   return candidates.find((candidate): candidate is string => blockedState(candidate)) ?? null;
 }
 
-export function semanticEntryIsEligible(entry: IssueAnalysisBundle["semanticProfiles"][number], bundle: IssueAnalysisBundle) {
+export function semanticProfileEntryIsUsable(entry: IssueAnalysisBundle["semanticProfiles"][number]) {
   const profile = entry.profile as (IssueAnalysisBundle["semanticProfiles"][number]["profile"] & {
     review?: { analysis_state?: string; analysis_decision?: string; status?: string };
   }) | null;
   const rawEntry = entry as unknown as { status?: string };
   const rawEngine = entry.engine as unknown as { status?: string };
-  const semanticState = bundle.analysisStatus?.semantic?.status;
   return entry.status === "succeeded"
-    && !semanticEntryBlockedState(entry, bundle)
     && !blockedState(rawEntry.status)
     && !blockedState(rawEngine.status)
     && !blockedState(profile?.engine?.status)
     && !blockedState(profile?.review?.analysis_state)
     && !blockedState(profile?.review?.analysis_decision)
     && !blockedState(profile?.review?.status)
-    && !blockedState(semanticState);
 }
 
-function articleMap(bundle: IssueAnalysisBundle) {
-  return new Map((bundle.articles ?? []).map((article) => [article.articleId, article]));
+export function semanticEntryIsEligible(entry: IssueAnalysisBundle["semanticProfiles"][number], bundle: IssueAnalysisBundle) {
+  return semanticProfileEntryIsUsable(entry)
+    && !blockedState(bundle.analysisStatus?.semantic?.status);
 }
 
-export function hasValidPublicEvidence(evidence?: SemanticEvidenceSource | null): evidence is SemanticEvidenceSource {
+export function hasValidPublicEvidence(
+  evidence?: SemanticEvidenceSource | null,
+  entryEvidence?: IssueAnalysisBundle["semanticProfiles"][number]["evidence"],
+): evidence is SemanticEvidenceSource {
   if (!evidence?.locator) return false;
-  const hasLocator = Object.values(evidence.locator).some((value) => typeof value === "number");
-  return hasLocator && typeof evidence.sentence_sha256 === "string" && /^[a-f0-9]{64}$/i.test(evidence.sentence_sha256);
+  const hasLocator = Number.isInteger(evidence.locator.paragraph)
+    && Number.isInteger(evidence.locator.sentence);
+  const validShape = hasLocator
+    && typeof evidence.sentence_sha256 === "string"
+    && /^[a-f0-9]{64}$/i.test(evidence.sentence_sha256);
+  return validShape && (!entryEvidence || entryEvidence.some((candidate) => publicEvidenceKey(candidate) === evidenceKey(evidence)));
 }
 
 function isJournalistVoice(kind?: string) {
@@ -167,113 +260,18 @@ function isJournalistVoice(kind?: string) {
 }
 
 function isSourceVoice(kind?: string) {
-  return kind === "direct_quote" || kind === "indirect_source" || kind === "uncertain_quote";
-}
-
-function cleanText(value?: string | null) {
-  if (typeof value !== "string" || !value.trim()) return null;
-  return stripEvidenceTokens(value).trim() || null;
-}
-
-/**
- * Compare public paraphrases rather than frame-family codes. The latter are
- * useful taxonomy labels, but are too coarse to decide whether two articles
- * actually explain an event in the same way.
- */
-export function normalizeComparisonText(value?: string | null) {
-  if (!value) return "";
-  return value
-    .toLowerCase()
-    .replace(/불구속\s*기소|재판에\s*넘겨(?:지|졌|짐|진|졌다)|재판행/g, "기소")
-    .replace(/기소(?:되었|됐다|되|됨|했다|한|된)?/g, "기소")
-    .replace(/밝혔(?:다|다는|다고)|주장(?:했|한|한다|했다|함)?/g, "발언")
-    .replace(/언급(?:했|한|한다|했다|함)?/g, "언급")
-    .replace(/보도(?:했|한|한다|했다|함)?/g, "보도")
-    .replace(/[^0-9a-z가-힣]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function comparisonFeatures(value: string) {
-  const normalized = normalizeComparisonText(value);
-  const tokens = new Set(
-    normalized
-      .split(" ")
-      .map((token) => token.replace(/(으로|에서|에게|에는|은|는|이|가|을|를|의|와|과|도|만|부터|까지)$/u, ""))
-      .filter((token) => token.length >= 2),
-  );
-  const compact = normalized.replace(/\s/g, "");
-  const grams = new Set<string>();
-  for (let index = 0; index < compact.length - 2; index += 1) grams.add(compact.slice(index, index + 3));
-  return { tokens, grams };
-}
-
-function jaccard(left: Set<string>, right: Set<string>) {
-  if (!left.size && !right.size) return 1;
-  if (!left.size || !right.size) return 0;
-  let shared = 0;
-  for (const value of left) if (right.has(value)) shared += 1;
-  return shared / new Set([...left, ...right]).size;
-}
-
-/** A conservative, deterministic near-duplicate check for public paraphrases. */
-export function comparisonTextSimilarity(left?: string | null, right?: string | null) {
-  const a = comparisonFeatures(left ?? "");
-  const b = comparisonFeatures(right ?? "");
-  if (!a.tokens.size || !b.tokens.size) return 0;
-  const sharedTokens = [...a.tokens].filter((token) => b.tokens.has(token)).length;
-  const tokenSimilarity = jaccard(a.tokens, b.tokens);
-  const characterSimilarity = jaccard(a.grams, b.grams);
-  const subsetSimilarity = sharedTokens / Math.min(a.tokens.size, b.tokens.size);
-  return Math.max(
-    0.65 * tokenSimilarity + 0.35 * characterSimilarity,
-    subsetSimilarity >= 0.72 ? 0.55 * subsetSimilarity + 0.45 * characterSimilarity : 0,
-  );
-}
-
-const COMPARISON_ANCHORS: Array<[string, RegExp]> = [
-  ["energy_price", /에너지|유가|가격\s*(?:급등|상승|인상|부담)/u],
-  ["hormuz_blockade", /호르무즈.{0,16}봉쇄|봉쇄.{0,16}호르무즈/u],
-  ["hormuz_control", /호르무즈.{0,20}(?:통제권|영유권|영토)|(?:통제권|영유권|영토).{0,20}호르무즈/u],
-  ["us_iran", /미국과\s*이란|이란과\s*미국|트럼프|이란/u],
-  ["arrest_interference", /(?:체포|영장).{0,24}방해|방해.{0,24}(?:체포|영장)/u],
-  ["prosecution", /기소|재판에\s*넘|불구속\s*기소/u],
-  ["party_target", /국민의힘|의원|정치인/u],
-  ["special_prosecutor", /특검/u],
-  ["former_president", /윤\s*석열|윤\s*전\s*대통령/u],
-  ["political_responsibility", /책임|주도/u],
-];
-
-function comparisonAnchors(value: string) {
-  return new Set(
-    COMPARISON_ANCHORS
-      .filter(([, pattern]) => pattern.test(value))
-      .map(([anchor]) => anchor),
-  );
-}
-
-export function sameComparisonMeaning(left?: string | null, right?: string | null, dimension?: string) {
-  const a = normalizeComparisonText(left);
-  const b = normalizeComparisonText(right);
-  if (!a || !b) return false;
-  if (a === b || a.includes(b) || b.includes(a)) return true;
-  const leftFeatures = comparisonFeatures(a);
-  const rightFeatures = comparisonFeatures(b);
-  const sharedTokens = [...leftFeatures.tokens].filter((token) => rightFeatures.tokens.has(token)).length;
-  const score = comparisonTextSimilarity(a, b);
-  if (sharedTokens >= 3 && score >= 0.54) return true;
-  if (!dimension) return false;
-  const leftAnchors = comparisonAnchors(a);
-  const rightAnchors = comparisonAnchors(b);
-  const sharedAnchors = [...leftAnchors].filter((anchor) => rightAnchors.has(anchor));
-  return sharedAnchors.length >= 3;
+  return kind === "direct_quote"
+    || kind === "indirect_source"
+    || kind === "uncertain_quote"
+    || kind === "source_attributed"
+    || kind === "mixed";
 }
 
 function uniqueItems(items: SemanticDimensionItem[]) {
   const seen = new Set<string>();
   return items.filter((item) => {
     const evidence = item.evidence?.sentence_sha256 ?? "";
-    const key = `${item.claim_id ?? ""}|${item.frame_family ?? ""}|${item.public_paraphrase ?? ""}|${evidence}`;
+    const key = `${item.claim_id ?? ""}|${item.public_paraphrase ?? ""}|${evidence}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -297,26 +295,29 @@ function observationsFor(
     for (const item of uniqueItems(node.items ?? [])) {
       const kind = item.voice?.kind;
       if (voice === "journalist" ? !isJournalistVoice(kind) : !isSourceVoice(kind)) continue;
-      if (!hasValidPublicEvidence(item.evidence)) continue;
-      if (!cleanText(item.public_paraphrase)) continue;
+      if (!hasValidPublicEvidence(item.evidence, entry.evidence)) continue;
+      const paraphrase = cleanText(item.public_paraphrase);
+      if (!paraphrase) continue;
       const article = articles.get(entry.articleId);
       if (!article) continue;
-      const paraphrase = cleanText(item.public_paraphrase);
-      const valueKey = item.frame_family ? `family:${item.frame_family}` : `text:${paraphrase}`;
-      const observationKey = `${entry.articleId}|${valueKey}|${paraphrase ?? ""}`;
+      // A profile family is a coding aid, never a semantic merge key.
+      const valueKey = `text:${exactText(paraphrase)}`;
+      const observationKey = `${entry.articleId}|${valueKey}|${evidenceKey(item.evidence)}`;
       if (seen.has(observationKey)) continue;
       seen.add(observationKey);
       rows.push({
+        observationId: `${dimension}:${entry.articleId}:${evidenceKey(item.evidence)}`,
         articleId: entry.articleId,
         outlet: article.outlet ?? "매체 미상",
         title: article.title ?? "제목 미상",
         url: article.canonicalUrl,
         dimension,
         valueKey,
-        valueLabel: item.frame_family ? familyLabel(item.frame_family) : paraphrase ?? "관측된 설명",
+        valueLabel: paraphrase,
         publicParaphrase: paraphrase,
         voiceKind: kind ?? "unknown",
         evidence: item.evidence,
+        claimId: item.claim_id,
       });
     }
   }
@@ -335,17 +336,17 @@ function detailsForGroup(bundle: IssueAnalysisBundle, articleIds: string[], voic
   const allowed = new Set(articleIds);
   const details: ComparisonGroupDetail[] = [];
   for (const [dimension, label] of GROUP_DETAIL_DIMENSIONS) {
-    const row = observationsFor(bundle, dimension, voice).find(
-      (candidate) => allowed.has(candidate.articleId) && candidate.publicParaphrase,
-    );
-    if (row?.publicParaphrase) details.push({
-      label,
-      text: row.publicParaphrase,
-      articleId: row.articleId,
-      outlet: row.outlet,
-      title: row.title,
-      evidence: row.evidence,
-    });
+    for (const row of observationsFor(bundle, dimension, voice)) {
+      if (!allowed.has(row.articleId) || !row.publicParaphrase) continue;
+      details.push({
+        label,
+        text: row.publicParaphrase,
+        articleId: row.articleId,
+        outlet: row.outlet,
+        title: row.title,
+        evidence: row.evidence,
+      });
+    }
   }
   return details;
 }
@@ -357,126 +358,297 @@ function groupObservations(
   voice: "journalist" | "source",
   voiceLabel: string,
 ): ComparisonGroup[] {
-  const grouped: Array<{ key: string; observations: ComparisonObservation[] }> = [];
+  const grouped = new Map<string, ComparisonObservation[]>();
   for (const row of rows) {
-    const target = grouped.find((candidate) => sameComparisonMeaning(
-      candidate.observations[0]?.publicParaphrase,
-      row.publicParaphrase,
-      dimension,
-    ));
-    if (target) target.observations.push(row);
-    else grouped.push({ key: `text:${normalizeComparisonText(row.publicParaphrase)}`, observations: [row] });
+    const key = row.valueKey;
+    const observations = grouped.get(key) ?? [];
+    observations.push(row);
+    grouped.set(key, observations);
   }
-  return grouped
-    .map(({ key, observations }) => {
-      const articleIds = [...new Set(observations.map((row) => row.articleId))];
-      const outlets = [...new Set(observations.map((row) => row.outlet))];
-      const first = observations[0];
+  return [...grouped.entries()]
+    .map(([key, observations]) => {
+      const stableObservations = [...observations].sort((left, right) =>
+        compareStableText(left.valueLabel, right.valueLabel)
+        || compareStableText(left.articleId, right.articleId)
+        || compareStableText(evidenceKey(left.evidence), evidenceKey(right.evidence)),
+      );
+      const articleIds = [...new Set(stableObservations.map((row) => row.articleId))].sort(compareStableText);
+      const outlets = [...new Set(stableObservations.map((row) => row.outlet))].sort(compareStableText);
+      const first = stableObservations[0];
       return {
         key,
         dimension,
         dimensionLabel: DIM_LABEL[dimension] ?? dimension,
         title: first.publicParaphrase ?? first.valueLabel,
-        emphasis: first.publicParaphrase ?? first.valueLabel,
+        emphasis: "",
         articleIds,
         outlets,
         articleCount: articleIds.length,
         voiceLabel,
-        observations,
-        // 보조 기능은 이 묶음의 대표 기사 한 건에서만 가져온다. 서로 다른 기사에서
-        // 문제·원인·평가·대응을 한 줄씩 조립해 묶음 전체의 주장처럼 만들지 않는다.
-        details: detailsForGroup(bundle, [first.articleId], voice),
+        observations: stableObservations,
+        details: detailsForGroup(bundle, articleIds, voice),
       } satisfies ComparisonGroup;
     })
-    .sort((a, b) => b.articleCount - a.articleCount || b.outlets.length - a.outlets.length || compareStableText(a.title, b.title));
+    .sort((a, b) => compareStableText(a.key, b.key));
 }
 
-function quote(value: string, limit = 76) {
-  const compact = value.replace(/\s+/g, " ").trim();
-  return compact.length > limit ? `${compact.slice(0, limit - 1)}…` : compact;
+function relation(value: unknown): ComparisonRelation | undefined {
+  return typeof value === "string" && COMPARISON_RELATIONS.has(value as ComparisonRelation)
+    ? value as ComparisonRelation
+    : undefined;
 }
 
-function compareQuestion(label: string, groups: ComparisonGroup[]) {
-  const values = groups.slice(0, 3).map((group) => `“${quote(group.title, 52)}”`);
-  if (!values.length) return `${label}에서 매체가 무엇을 강조했는지 확인할 수 있나?`;
-  if (values.length === 1) return `${label}에서 다음 설명을 어떻게 제시했나: ${values[0]}`;
-  return `${label}에서 ${values.join(" · ")} 중 무엇을 앞세웠나?`;
+function status(value: unknown): ComparisonStatus | undefined {
+  return typeof value === "string" && COMPARISON_STATUSES.has(value as ComparisonStatus)
+    ? value as ComparisonStatus
+    : undefined;
 }
 
-function differenceText(groups: ComparisonGroup[], narratedOutletCount: number) {
-  if (groups.length < 2) return "";
-  const parts = groups.slice(0, 3).map((group) => `${group.outlets.map((outlet) => `${outlet}${particle(outlet, "은", "는")}`).join("·")} “${quote(group.emphasis)}”`);
-  return `${parts.join(" / ")}로 설명이 나뉘었습니다. 기자 서술이 확인된 매체 ${narratedOutletCount}곳의 기사에서 나온 차이입니다.`;
+function synthesisResult(synthesis?: EventSynthesisData | null): EventSynthesisComparisonResult | null {
+  const result = synthesis?.comparison_result;
+  return result && typeof result === "object" ? result : null;
 }
 
-function outletSignatures(rows: ComparisonObservation[]) {
-  const byOutlet = new Map<string, Set<string>>();
-  for (const row of rows) {
-    const set = byOutlet.get(row.outlet) ?? new Set<string>();
-    set.add(row.valueKey);
-    byOutlet.set(row.outlet, set);
-  }
-  const signatures = new Set([...byOutlet.values()].map((values) => [...values].sort().join("|")));
-  return { outletCount: byOutlet.size, signatureCount: signatures.size };
+function comparisonDimension(result: EventSynthesisComparisonResult | null, dimension: string) {
+  return (result?.dimensions ?? []).find((candidate) => candidate?.dimension === dimension) ?? null;
 }
 
-function groupSignatures(groups: ComparisonGroup[]) {
-  const byOutlet = new Map<string, Set<string>>();
-  for (const group of groups) {
-    for (const outlet of group.outlets) {
-      const set = byOutlet.get(outlet) ?? new Set<string>();
-      set.add(group.key);
-      byOutlet.set(outlet, set);
+function boundedEvidence(
+  bundle: IssueAnalysisBundle,
+  rawEvidence: EventSynthesisEvidence[] | undefined,
+) {
+  const entries = profileMap(bundle);
+  const articles = articleMap(bundle);
+  const byArticle = new Map<string, SemanticEvidenceSource[]>();
+  for (const evidence of rawEvidence ?? []) {
+    const articleId = typeof evidence.article_id === "string" ? evidence.article_id : "";
+    const entry = entries.get(articleId);
+    const article = articles.get(articleId);
+    if (!article || !entry || !hasValidPublicEvidence(evidence, entry.evidence)) continue;
+    const normalized = {
+      locator: evidence.locator,
+      sentence_sha256: evidence.sentence_sha256?.toLowerCase(),
+    } satisfies SemanticEvidenceSource;
+    const articleEvidence = byArticle.get(articleId) ?? [];
+    if (!articleEvidence.some((candidate) => evidenceKey(candidate) === evidenceKey(normalized))) {
+      articleEvidence.push(normalized);
+      byArticle.set(articleId, articleEvidence);
     }
   }
-  const signatures = new Set([...byOutlet.values()].map((values) => [...values].sort().join("|")));
-  return { outletCount: byOutlet.size, signatureCount: signatures.size };
+  return new Map([...byArticle.entries()]
+    .sort(([left], [right]) => compareStableText(left, right))
+    .map(([articleId, evidenceRows]) => [
+      articleId,
+      evidenceRows.sort((left, right) => compareStableText(evidenceKey(left), evidenceKey(right))),
+    ]));
 }
 
-function dimensionComparison(bundle: IssueAnalysisBundle, dimension: string): DimensionComparison {
+function observationsFromClaim(
+  bundle: IssueAnalysisBundle,
+  claim: EventSynthesisClaim | null | undefined,
+  dimension: string,
+) {
+  const text = cleanText(claim?.text);
+  if (!text || claim?.status !== "observed") return [];
+  const articles = articleMap(bundle);
+  return [...boundedEvidence(bundle, claim.evidence)].flatMap(([articleId, evidenceRows]) => evidenceRows.map((evidence) => {
+    const article = articles.get(articleId);
+    return {
+      observationId: `${dimension}:${articleId}:${evidenceKey(evidence)}`,
+      articleId,
+      outlet: article?.outlet ?? article?.sourceId ?? "매체 미상",
+      title: article?.title ?? "제목 미상",
+      url: article?.canonicalUrl ?? null,
+      dimension,
+      valueKey: `synthesis:${dimension}:${exactText(text)}`,
+      valueLabel: text,
+      publicParaphrase: text,
+      voiceKind: "synthesis_claim",
+      evidence,
+    } satisfies ComparisonObservation;
+  })).sort((a, b) => compareStableText(a.articleId, b.articleId)
+    || compareStableText(evidenceKey(a.evidence), evidenceKey(b.evidence)));
+}
+
+function observationsFromPoint(
+  bundle: IssueAnalysisBundle,
+  dimension: string,
+  point: EventSynthesisComparisonPoint,
+  index: number,
+) {
+  const text = cleanText(point.text);
+  const pointRelation = relation(point.relation) ?? "insufficient_evidence";
+  if (!text || pointRelation === "insufficient_evidence" || point.status === "insufficient_evidence" || blockedState(point.status)) return null;
+  const evidence = boundedEvidence(bundle, point.evidence);
+  const declaredIds = new Set((point.article_ids ?? []).filter((articleId) => typeof articleId === "string"));
+  const articles = articleMap(bundle);
+  if ([...declaredIds].some((articleId) => !articles.has(articleId))) return null;
+  if ([...declaredIds].some((articleId) => !evidence.has(articleId))) return null;
+  const voiceKind = point.voice_basis?.kind ?? "not_observed";
+  const voice = isSourceVoice(voiceKind)
+    ? "취재원 발언"
+    : isJournalistVoice(voiceKind) ? "기자 서술" : "발화 범위 미관측";
+  const observations = [...evidence.entries()]
+    .filter(([articleId]) => !declaredIds.size || declaredIds.has(articleId))
+    .flatMap(([articleId, evidenceRows]) => evidenceRows.map((evidenceRef) => {
+      const article = articles.get(articleId);
+      return {
+        observationId: `${point.observation_id ?? point.claim_id ?? `${dimension}:${pointRelation}:${exactText(text)}`}:${articleId}:${evidenceKey(evidenceRef)}`,
+        articleId,
+        outlet: article?.outlet ?? article?.sourceId ?? "매체 미상",
+        title: article?.title ?? "제목 미상",
+        url: article?.canonicalUrl ?? null,
+        dimension,
+        valueKey: `synthesis:${dimension}:${index}:${pointRelation}`,
+        valueLabel: text,
+        publicParaphrase: text,
+        voiceKind,
+        evidence: evidenceRef,
+        claimId: point.claim_id,
+        relation: pointRelation,
+      } satisfies ComparisonObservation;
+    }))
+    .sort((a, b) => compareStableText(a.articleId, b.articleId)
+      || compareStableText(evidenceKey(a.evidence), evidenceKey(b.evidence)));
+  const articleIds = [...new Set(observations.map((row) => row.articleId))].sort(compareStableText);
+  if (!articleIds.length) return null;
+  const outlets = [...new Set(observations.map((row) => row.outlet))].sort(compareStableText);
+  return {
+    key: `synthesis:${dimension}:${pointRelation}:${exactText(text)}`,
+    dimension,
+    dimensionLabel: DIM_LABEL[dimension] ?? dimension,
+    title: cleanText(point.headline) ?? text,
+    emphasis: cleanText(point.summary) && exactText(point.summary) !== exactText(point.headline ?? text)
+      ? cleanText(point.summary) as string
+      : "",
+    articleIds,
+    outlets,
+    articleCount: articleIds.length,
+    voiceLabel: voice,
+    observations,
+    details: isSourceVoice(voiceKind)
+      ? detailsForGroup(bundle, articleIds, "source")
+      : isJournalistVoice(voiceKind) ? detailsForGroup(bundle, articleIds, "journalist") : [],
+    relation: pointRelation,
+    claimIds: point.claim_id ? [point.claim_id] : [],
+  } satisfies ComparisonGroup;
+}
+
+function groupsFromComparisonDimension(
+  bundle: IssueAnalysisBundle,
+  dimension: string,
+  raw: EventSynthesisComparisonDimension | null,
+) {
+  const groups: ComparisonGroup[] = [];
+  for (const [index, point] of (raw?.points ?? []).entries()) {
+    const group = observationsFromPoint(bundle, dimension, point, index);
+    if (group) groups.push(group);
+  }
+  return groups.sort((a, b) => compareStableText(a.key, b.key));
+}
+
+function supportForDifference(groups: ComparisonGroup[]) {
+  const differing = groups.filter((group) => group.relation === "different_emphasis" || group.relation === "contradictory");
+  const articleIds = new Set(differing.flatMap((group) => group.articleIds));
+  const outlets = new Set(differing.flatMap((group) => group.outlets));
+  return differing.length >= 1 && articleIds.size >= 2 && outlets.size >= 2;
+}
+
+function dimensionCounts(rows: ComparisonObservation[]) {
+  return {
+    articleCount: new Set(rows.map((row) => row.articleId)).size,
+    outletCount: new Set(rows.map((row) => row.outlet)).size,
+  };
+}
+
+function comparisonFailureState(value: unknown) {
+  return typeof value === "string"
+    && ["analysis_failed", "conflicting", "dead_letter", "failed"].includes(value);
+}
+
+function comparisonInsufficientState(value: unknown) {
+  return value === "insufficient_evidence";
+}
+
+function comparisonHeldState(value: unknown) {
+  return value === "held_for_analysis";
+}
+
+function comparisonResultHasFailure(result: EventSynthesisComparisonResult | null | undefined) {
+  return (result?.dimensions ?? []).some((dimension) => (
+    comparisonFailureState(dimension?.status)
+    || (dimension?.points ?? []).some((point) => comparisonFailureState(point?.status))
+  ));
+}
+
+function dimensionComparison(
+  bundle: IssueAnalysisBundle,
+  dimension: string,
+  result: EventSynthesisComparisonResult | null,
+  rootResultStatus?: unknown,
+): DimensionComparison {
   const narratedRows = observationsFor(bundle, dimension, "journalist");
   const sourceRows = observationsFor(bundle, dimension, "source");
-  const groups = groupObservations(bundle, narratedRows, dimension, "journalist", "기자 서술");
   const sourceGroups = groupObservations(bundle, sourceRows, dimension, "source", "취재원 발언");
-  const narratedArticles = new Set(narratedRows.map((row) => row.articleId));
-  const sourceArticles = new Set(sourceRows.map((row) => row.articleId));
-  const narrated = outletSignatures(narratedRows);
-  const source = outletSignatures(sourceRows);
-  const signatures = groupSignatures(groups);
-  const adequate = narratedArticles.size >= 2 && narrated.outletCount >= 2;
-  const variationAcrossOutlets = signatures.signatureCount >= 2;
-  const status: ComparisonStatus = groups.length >= 2 && adequate && variationAcrossOutlets
-    ? "difference_confirmed"
-    : adequate
-      ? "no_clear_difference"
-      : "held_for_analysis";
-  const label = DIM_LABEL[dimension] ?? dimension;
-  const question = compareQuestion(label, groups.length >= 2 ? groups : sourceGroups);
-  const reason = status === "difference_confirmed"
-    ? `${label}에서 기자 서술이 확인된 ${narratedArticles.size}건·${narrated.outletCount}곳의 강조 묶음이 서로 달랐습니다.`
-    : status === "no_clear_difference"
-      ? groups.length >= 2
-        ? "기사 단위의 다른 값은 보이지만, 매체별 서술 분포가 달라졌다고 확정할 만큼 일관된 차이는 확인되지 않았습니다."
-        : `${label}은 분석 가능한 기자 서술 ${narratedArticles.size}건에서 하나의 설명 계열로 모였습니다.`
-      : sourceGroups.length >= 2
-        ? `${label}의 다른 설명은 취재원 발언에서만 확인되어 매체 자체의 차이로 세지 않았습니다.`
-        : narratedArticles.size
-          ? `${label}에서 비교할 수 있는 기자 서술이 ${narratedArticles.size}건·${narrated.outletCount}곳으로 충분하지 않습니다.`
-          : "이 차원의 공개 근거가 없거나 분석 결과가 없어 비교를 보류합니다.";
+  const raw = comparisonDimension(result, dimension);
+  const semanticStatus = bundle.analysisStatus?.semantic?.status;
+  const failed = comparisonFailureState(semanticStatus)
+    || comparisonFailureState(rootResultStatus)
+    || comparisonFailureState(raw?.status);
+  const insufficient = comparisonInsufficientState(semanticStatus)
+    || comparisonInsufficientState(rootResultStatus)
+    || comparisonInsufficientState(raw?.status)
+    || comparisonHeldState(semanticStatus)
+    || comparisonHeldState(rootResultStatus)
+    || comparisonHeldState(raw?.status);
+  const blocked = failed || insufficient;
+  const resultGroups = blocked ? [] : groupsFromComparisonDimension(bundle, dimension, raw);
+  const groups = resultGroups.filter((group) => group.voiceLabel === "기자 서술");
+  const resultSourceGroups = resultGroups.filter((group) => group.voiceLabel === "취재원 발언");
+  const counts = dimensionCounts(groups.flatMap((group) => group.observations));
+  const sourceCounts = dimensionCounts(resultSourceGroups.flatMap((group) => group.observations));
+  const fallbackCounts = dimensionCounts(narratedRows);
+  const fallbackSourceCounts = dimensionCounts(sourceRows);
+  const requestedStatus = failed
+    ? "analysis_failed"
+    : insufficient
+      ? "held_for_analysis"
+    : status(raw?.status)
+      ?? (raw?.relation === "different_emphasis" || raw?.relation === "contradictory" ? "difference_confirmed" : undefined);
+  const supportedDifference = supportForDifference(groups);
+  const finalStatus: ComparisonStatus = requestedStatus === "analysis_failed"
+    ? "analysis_failed"
+    : requestedStatus === "difference_confirmed"
+      ? supportedDifference ? "difference_confirmed" : "held_for_analysis"
+      : requestedStatus === "no_clear_difference"
+        ? "no_clear_difference"
+        : "held_for_analysis";
+  const label = raw?.label || DIM_LABEL[dimension] || dimension;
+  const question = finalStatus === "difference_confirmed" || finalStatus === "no_clear_difference"
+    ? cleanText(raw?.question) || `${label}에서 확인된 설명을 어떻게 비교할까?`
+    : "비교 질문 미확정";
+  const reason = cleanText(raw?.reason)
+    || (finalStatus === "difference_confirmed"
+      ? `${label}에서 관계가 다른 기자 서술이 두 개 이상 매체의 근거로 연결되었습니다.`
+      : finalStatus === "no_clear_difference"
+        ? `${label}에서 핵심 설명이 같거나 차이가 확정되지 않았습니다.`
+        : finalStatus === "analysis_failed"
+          ? `${label} 비교 분석이 실패해 차이를 표시하지 않습니다.`
+          : `${label}의 비교 결과가 충분히 연결되지 않아 차이를 확정하지 않습니다.`);
   return {
     dimension,
     label,
     question,
-    status,
+    status: finalStatus,
     statusReason: reason,
-    groups,
-    sourceGroups,
-    narratedArticleCount: narratedArticles.size,
-    narratedOutletCount: narrated.outletCount,
-    sourceArticleCount: sourceArticles.size,
-    sourceOutletCount: source.outletCount,
-    variationAcrossOutlets,
-    differenceText: status === "difference_confirmed" ? differenceText(groups, narrated.outletCount) : reason,
+    groups: finalStatus === "difference_confirmed" || finalStatus === "no_clear_difference" ? groups : [],
+    sourceGroups: resultSourceGroups.length ? resultSourceGroups : sourceGroups,
+    narratedArticleCount: counts.articleCount || fallbackCounts.articleCount,
+    narratedOutletCount: counts.outletCount || fallbackCounts.outletCount,
+    sourceArticleCount: sourceCounts.articleCount || fallbackSourceCounts.articleCount,
+    sourceOutletCount: sourceCounts.outletCount || fallbackSourceCounts.outletCount,
+    variationAcrossOutlets: finalStatus === "difference_confirmed" && supportedDifference,
+    differenceText: reason,
   };
 }
 
@@ -497,88 +669,147 @@ function bundleRequiresHumanReview(bundle: IssueAnalysisBundle) {
   );
 }
 
-function validSynthesisCoverage(claim: EventSynthesisClaim | null | undefined, bundle: IssueAnalysisBundle, expectedArticleCount: number) {
-  const articleIds = new Set(
-    (claim?.evidence ?? [])
-      .filter((evidence) => typeof evidence.article_id === "string"
-        && typeof evidence.sentence_sha256 === "string"
-        && /^[a-f0-9]{64}$/i.test(evidence.sentence_sha256)
-        && Boolean(evidence.locator)
-        && Object.values(evidence.locator ?? {}).some((value) => typeof value === "number"))
-      .map((evidence) => evidence.article_id as string),
-  );
-  const knownArticleIds = new Set((bundle.articles ?? []).map((article) => article.articleId));
-  return articleIds.size >= expectedArticleCount
-    && [...articleIds].every((articleId) => knownArticleIds.has(articleId));
+function validSynthesisCoverage(claim: EventSynthesisClaim | null | undefined, bundle: IssueAnalysisBundle, minimumArticleCount = 2) {
+  const evidence = boundedEvidence(bundle, claim?.evidence);
+  const articleCount = evidence.size;
+  const text = cleanText(claim?.text) ?? "";
+  const expected = bundle.issue.articleCount;
+  if (articleCount < minimumArticleCount) return false;
+  if (/(모든|모두|전\s*기사|전체)/u.test(text) && articleCount < expected) return false;
+  if (/(대부분|다수)/u.test(text) && articleCount / Math.max(expected, 1) < 0.7) return false;
+  return true;
 }
 
-export function comparisonSummary(bundle: IssueAnalysisBundle, issue: IssueView): ComparisonSummary {
-  const dimensions = DIM_ORDER.map((dimension) => dimensionComparison(bundle, dimension));
-  const rank: Record<ComparisonStatus, number> = {
-    difference_confirmed: 0,
-    no_clear_difference: 1,
-    held_for_analysis: 2,
-  };
-  const ordered = [...dimensions].sort((a, b) =>
-    rank[a.status] - rank[b.status]
-    || b.groups.length - a.groups.length
-    || b.narratedOutletCount - a.narratedOutletCount
-    || b.narratedArticleCount - a.narratedArticleCount,
+function comparisonStatusFromResult(
+  bundle: IssueAnalysisBundle,
+  synthesis: EventSynthesisData | null | undefined,
+) {
+  const semanticStatus = bundle.analysisStatus?.semantic?.status;
+  const result = synthesisResult(synthesis);
+  if (comparisonFailureState(semanticStatus) || comparisonFailureState(result?.status) || comparisonResultHasFailure(result)) return "analysis_failed" as const;
+  if (comparisonInsufficientState(semanticStatus) || comparisonInsufficientState(result?.status)) return "held_for_analysis" as const;
+  if (comparisonHeldState(semanticStatus) || comparisonHeldState(result?.status)) return "held_for_analysis" as const;
+  if (!isPublishableEventSynthesis(bundle) || !synthesisRunMatches(bundle, synthesis)) return "held_for_analysis" as const;
+  return status(result?.status) ?? "held_for_analysis" as const;
+}
+
+function selectPrimaryDimension(dimensions: DimensionComparison[], result: EventSynthesisComparisonResult | null, target: ComparisonStatus) {
+  const explicit = result?.primary_dimension && dimensions.find((dimension) => dimension.dimension === result.primary_dimension);
+  if (explicit && explicit.status === target) return explicit;
+  // DIM_ORDER is a documented display priority, not a confidence ranking by
+  // group count. Never choose a dimension merely because it has more groups.
+  return dimensions.find((dimension) => dimension.status === target) ?? null;
+}
+
+export function selectRepresentativeGroups(groups: ComparisonGroup[], limit = 3) {
+  const remaining = [...groups].sort((left, right) =>
+    (right.relation === "different_emphasis" || right.relation === "contradictory" ? 1 : 0)
+      - (left.relation === "different_emphasis" || left.relation === "contradictory" ? 1 : 0)
+      || right.outlets.length - left.outlets.length
+      || right.articleCount - left.articleCount
+      || compareStableText(left.key, right.key),
   );
-  const chosen = ordered[0];
-  const synthesis = bundle.comparison.data.synthesis;
-  const commonCandidate = dimensions
-    .flatMap((dimension) => dimension.groups)
-    .filter((group) => group.articleCount >= 2 && group.outlets.length >= 2)
-    .sort((a, b) => b.articleCount - a.articleCount || b.outlets.length - a.outlets.length)[0];
-  const commonText = commonCandidate?.emphasis
-    ?? (observedSynthesisClaim(synthesis?.common_ground) && validSynthesisCoverage(synthesis?.common_ground, bundle, issue.articleCount)
-      ? observedSynthesisClaim(synthesis?.common_ground)
-      : null);
-  const commonObservations = commonCandidate?.observations ?? [];
-  const commonScope = commonCandidate
-    ? `${commonCandidate.articleCount}건·${commonCandidate.outlets.length}개 매체`
+  const selected: ComparisonGroup[] = [];
+  const coveredOutlets = new Set<string>();
+  while (remaining.length && selected.length < limit) {
+    let bestIndex = 0;
+    let bestScore = Number.NEGATIVE_INFINITY;
+    remaining.forEach((candidate, index) => {
+      const newOutlets = candidate.outlets.filter((outlet) => !coveredOutlets.has(outlet)).length;
+      const relationScore = candidate.relation === "different_emphasis" || candidate.relation === "contradictory" ? 1 : 0;
+      const score = newOutlets * 100 + relationScore * 10 + candidate.outlets.length * 2 + candidate.articleCount;
+      if (score > bestScore || (score === bestScore && compareStableText(candidate.key, remaining[bestIndex].key) < 0)) {
+        bestScore = score;
+        bestIndex = index;
+      }
+    });
+    const [picked] = remaining.splice(bestIndex, 1);
+    selected.push(picked);
+    picked.outlets.forEach((outlet) => coveredOutlets.add(outlet));
+  }
+  return selected;
+}
+
+export function comparisonSummary(bundle: IssueAnalysisBundle): ComparisonSummary {
+  const synthesis = bundle.comparison?.data?.synthesis;
+  const rawResult = synthesisResult(synthesis);
+  const result = isPublishableEventSynthesis(bundle) && synthesisRunMatches(bundle, synthesis) ? rawResult : null;
+  const rootResultStatus = comparisonResultHasFailure(rawResult) ? "analysis_failed" : rawResult?.status;
+  const dimensions = DIM_ORDER.map((dimension) => dimensionComparison(bundle, dimension, result, rootResultStatus));
+  const statusValue = comparisonStatusFromResult(bundle, synthesis);
+  const selected = selectPrimaryDimension(dimensions, result, statusValue);
+  const commonBlocked = comparisonFailureState(bundle.analysisStatus?.semantic?.status)
+    || comparisonInsufficientState(bundle.analysisStatus?.semantic?.status)
+    || comparisonFailureState(rawResult?.status)
+    || comparisonInsufficientState(rawResult?.status);
+  const commonText = !commonBlocked
+    && synthesisRunMatches(bundle, synthesis)
+    && observedSynthesisClaim(synthesis?.common_ground)
+    && validSynthesisCoverage(synthesis?.common_ground, bundle)
+    ? observedSynthesisClaim(synthesis?.common_ground)
     : null;
-  const status = chosen?.status ?? "held_for_analysis";
+  const commonObservations = commonText ? observationsFromClaim(bundle, synthesis?.common_ground, "common") : [];
+  const commonOutlets = new Set(commonObservations.map((observation) => observation.outlet));
+  const commonScope = commonObservations.length
+    ? `${new Set(commonObservations.map((observation) => observation.articleId)).size}건·${commonOutlets.size}개 매체`
+    : null;
+  const status = statusValue === "difference_confirmed"
+    ? selected ? "difference_confirmed" : "held_for_analysis"
+    : statusValue === "no_clear_difference"
+      ? "no_clear_difference"
+      : statusValue;
+  const allGroups = selected?.groups ?? [];
+  const representativeGroups = selectRepresentativeGroups(allGroups, 3);
+  const representativeKeys = new Set(representativeGroups.map((group) => group.key));
   const reviewRequired = bundleRequiresHumanReview(bundle);
-  const groups = chosen?.status === "difference_confirmed" || chosen?.status === "no_clear_difference"
-    ? chosen.groups
-    : [];
-  const sourceGroups = chosen?.sourceGroups ?? [];
-  const difference = chosen?.differenceText
-    ?? "기자 서술 근거가 없어 매체 간 강조 차이를 확정하지 않습니다.";
-  const reviewNote = reviewRequired ? " 현재 공개 결과는 자동 분석 초안이므로 사람 검토 전 상태입니다." : "";
-  const whatToNotice = status === "difference_confirmed"
-    ? `${chosen?.label}에서 매체가 실제로 쓴 설명의 초점이 어떻게 갈렸는지, 각 묶음의 기사 근거를 확인하세요.`
+  const statusReason = cleanText(result?.reason)
+    || selected?.statusReason
+    || (status === "analysis_failed"
+      ? "분석 실패 상태라 매체 간 차이를 표시하지 않습니다."
+      : status === "held_for_analysis"
+        ? "축별 비교 결과와 기사 근거가 연결되지 않아 매체 간 차이를 확정하지 않습니다."
+        : "비교 결과를 기사별 근거와 함께 확인합니다.");
+  const differenceText = status === "difference_confirmed"
+    ? selected?.differenceText || statusReason
+    : statusReason;
+  const baseNotice = status === "difference_confirmed"
+    ? `${selected?.label ?? "선택된 비교 축"}에서 모델이 명시한 관계와 기사별 근거를 확인하세요. 카드 수가 많다는 이유만으로 차이를 확정하지 않았습니다.`
     : status === "no_clear_difference"
-      ? `${chosen?.label ?? "각 질문"}에서 분석 가능한 기자 서술이 같은 방향으로 모이는지와, 기사별 근거가 충분한지 확인하세요.`
-      : "취재원 발언·분석 실패·공개 근거 부족을 매체 자체의 입장과 섞지 말고 기사별 상태를 먼저 확인하세요.";
+      ? "핵심 설명이 같거나 차이가 확정되지 않은 상태입니다. 세부 정보가 추가된 경우에도 별도 매체 차이로 세지 않습니다."
+      : status === "analysis_failed"
+        ? "분석 실패와 취재원 발언을 매체 자체의 입장으로 해석하지 않습니다."
+        : "기사별 공개 근거는 확인할 수 있지만, 현재 결과로 매체 간 차이를 단정할 수는 없습니다.";
+  const reviewNote = reviewRequired ? " 현재 공개 결과는 사람 검토 전 상태입니다." : "";
+  const analyzedArticleIds = result?.analyzed_article_ids?.filter((articleId) => articleMap(bundle).has(articleId)) ?? [];
   return {
     status,
-    statusLabel: reviewRequired ? {
-      difference_confirmed: "기자 서술 차이 관측 · 사람 검토 전",
-      no_clear_difference: "뚜렷한 매체 차이 미관측 · 사람 검토 전",
-      held_for_analysis: "비교 보류 · 분석 검토 전",
-    }[status] : STATUS_LABEL[status],
+    statusLabel: reviewRequired ? `${STATUS_LABEL[status]} · 사람 검토 전` : STATUS_LABEL[status],
     reviewRequired,
-    statusReason: chosen?.statusReason ?? "비교할 수 있는 공개 분석 결과가 없습니다.",
+    statusReason,
     commonText,
     commonObservations,
     commonScope,
-    differenceText: difference,
-    whatToNotice: `${whatToNotice}${reviewNote}`,
-    question: chosen?.question ?? "매체가 무엇을 다르게 강조했는지 확인할 수 있나?",
-    dimensionLabel: chosen?.label ?? null,
-    groups,
-    sourceGroups,
+    differenceText,
+    whatToNotice: `${baseNotice}${reviewNote}`,
+    question: selected?.question || "비교 질문은 분석 근거가 연결된 뒤 표시합니다.",
+    dimensionLabel: selected?.label ?? null,
+    groups: allGroups,
+    representativeGroups,
+    allGroups,
+    remainingGroupCount: allGroups.filter((group) => !representativeKeys.has(group.key)).length,
+    sourceGroups: selected?.sourceGroups ?? [],
     dimensions,
-    analyzedArticleCount: chosen?.narratedArticleCount ?? 0,
-    analyzedOutletCount: chosen?.narratedOutletCount ?? 0,
+    analyzedArticleCount: analyzedArticleIds.length || selected?.narratedArticleCount || 0,
+    analyzedOutletCount: result?.analyzed_outlet_count || selected?.narratedOutletCount || 0,
   };
 }
 
 export function comparisonStatusLabel(status: ComparisonStatus) {
   return STATUS_LABEL[status];
+}
+
+export function comparisonRelationLabel(value?: ComparisonRelation) {
+  return value ? RELATION_LABEL[value] : "비교 관계 미관측";
 }
 
 export function comparisonVoiceLabel(kind: string) {

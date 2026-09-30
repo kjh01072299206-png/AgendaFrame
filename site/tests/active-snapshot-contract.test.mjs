@@ -6,7 +6,7 @@ import { test } from "node:test";
 
 const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("active snapshot loader is fail-closed and demo fallback is explicit", async () => {
+test("active snapshot loader is fail-closed and demo mode is explicit", async () => {
   const source = await readFile(path.join(siteRoot, "lib", "active-snapshot.ts"), "utf8");
   assert.match(source, /AGENDAFRAME_DATA_MODE/);
   assert.match(source, /AGENDAFRAME_ACTIVE_SNAPSHOT_URL/);
@@ -14,6 +14,8 @@ test("active snapshot loader is fail-closed and demo fallback is explicit", asyn
   assert.match(source, /mode: "demo"/);
   assert.match(source, /cache: "no-store"/);
   assert.match(source, /getIssueBundle/);
+  assert.match(source, /import \{ cache \} from "react"/);
+  assert.match(source, /export const getActiveSnapshot = cache/);
   assert.match(source, /withEventSynthesis/);
   assert.match(source, /공개 금지 필드/);
   assert.match(source, /throw new Error/);
@@ -27,9 +29,16 @@ test("active snapshot loader is fail-closed and demo fallback is explicit", asyn
   assert.match(source, /is not publishable/);
   assert.match(source, /publicationStatus/);
   assert.match(source, /fewer than 3 articles or 2 outlets/);
-  assert.match(source, /event-synthesis\.v2/);
-  assert.match(source, /event_paragraphs/);
-  assert.match(source, /common_ground/);
+  const publicationContract = await readFile(path.join(siteRoot, "lib", "initial-five", "publication-contract.ts"), "utf8");
+  assert.match(source, /isPublishableEventSynthesis/);
+  assert.match(publicationContract, /event-synthesis-v2\.2\.0/);
+  assert.match(publicationContract, /comparison_result/);
+  assert.match(publicationContract, /held_for_analysis/);
+  assert.match(source, /lacks an evidence-bound v2\.2 comparison result/);
+  assert.match(publicationContract, /event_paragraphs/);
+  assert.match(publicationContract, /common_ground/);
+  assert.match(source, /live reader failure must never turn into a hard-coded demo response/);
+  assert.doesNotMatch(source, /return demoSource\("pending"\)/);
 });
 
 test("shell issue routes resolve through the active snapshot boundary", async () => {
@@ -68,7 +77,17 @@ test("AI dialogue issue list and bundle API use the active snapshot boundary", a
   assert.match(askPage, /getActiveSnapshot/);
   assert.match(askRoute, /getActiveSnapshot/);
   assert.match(issueRoute, /getActiveSnapshot/);
+  assert.match(issueRoute, /Cache-Control.*no-store/);
   assert.doesNotMatch(askPage, /initialFiveManifest/);
   assert.doesNotMatch(askRoute, /getInitialFiveIssueBundle/);
   assert.doesNotMatch(issueRoute, /getInitialFiveIssueBundle/);
+});
+
+test("the browser initial-five reader does not hide live reader failures with static data", async () => {
+  const source = await readFile(path.join(siteRoot, "app", "initial-five.tsx"), "utf8");
+  assert.match(source, /response\.status === 404/);
+  assert.match(source, /Only an explicit 404 is eligible/);
+  assert.match(source, /Static data is a compatibility route/);
+  assert.match(source, /throw error instanceof Error/);
+  assert.match(source, /agenda\.frame\.active-snapshot\.v1/);
 });

@@ -291,7 +291,62 @@ export interface RuleComparisonData {
     caution?: string;
   };
   not_observed_statements?: string[];
+  analysisModules?: AnalysisModules | null;
+  analysis_modules?: Record<string, unknown> | null;
   synthesis?: EventSynthesisData;
+  [key: string]: unknown;
+}
+
+export interface AnalysisModuleEvidence {
+  claimId?: string;
+  articleId?: string;
+  article_id?: string;
+  source?: string;
+  sourceUrl?: string;
+  evidenceLocator?: string | null;
+  evidenceHash?: string | null;
+  sentence_sha256?: string;
+  locator?: { paragraph?: number; sentence?: number };
+}
+
+export interface MorphologyAnalysisModule {
+  status?: string;
+  analyzer?: {
+    name?: string;
+    mode?: string;
+    version?: string;
+    dictionaryVersion?: string;
+    dictionary_version?: string;
+    posTagset?: string;
+    pos_tagset?: string;
+  };
+  minimumDocumentFrequency?: number;
+  minimumMediaGroupFrequency?: number;
+  minimum_document_frequency?: number;
+  minimum_media_group_frequency?: number;
+  byOutlet?: Array<{
+    source?: string;
+    outlet?: string;
+    analyzedArticles?: number;
+    analyzed_article_count?: number;
+    terms?: Array<{
+      term?: string;
+      pos?: string;
+      count?: number;
+      documentCount?: number;
+      document_count?: number;
+      perThousand?: number;
+      per_thousand?: number;
+      evidenceRefs?: AnalysisModuleEvidence[];
+      evidence?: AnalysisModuleEvidence[];
+    }>;
+  }>;
+  by_outlet?: Array<Record<string, unknown>>;
+  limitations?: string[];
+}
+
+export interface AnalysisModules {
+  morphology?: MorphologyAnalysisModule | null;
   [key: string]: unknown;
 }
 
@@ -311,6 +366,19 @@ export interface EventSynthesisClaim {
 export interface EventSynthesisPoint extends EventSynthesisClaim {
   text?: string | null;
 }
+
+export type ComparisonRelation =
+  | "same_core"
+  | "same_core_with_detail"
+  | "different_emphasis"
+  | "contradictory"
+  | "insufficient_evidence";
+
+export type ComparisonResultStatus =
+  | "difference_confirmed"
+  | "no_clear_difference"
+  | "held_for_analysis"
+  | "analysis_failed";
 
 export interface EventSynthesisVoiceBasis {
   kind?: "journalist_narration" | "source_attributed" | "mixed" | "not_observed" | string;
@@ -348,6 +416,38 @@ export interface EventSynthesisComparisonAxis {
   evidence?: EventSynthesisEvidence[];
 }
 
+export interface EventSynthesisComparisonPoint extends EventSynthesisPoint {
+  headline?: string;
+  summary?: string;
+  observation_id?: string;
+  relation?: ComparisonRelation;
+  dimension?: string;
+  claim_id?: string;
+  article_ids?: string[];
+  voice_basis?: EventSynthesisVoiceBasis;
+}
+
+export interface EventSynthesisComparisonDimension {
+  dimension?: string;
+  label?: string;
+  question?: string;
+  status?: ComparisonResultStatus;
+  relation?: ComparisonRelation;
+  reason?: string;
+  points?: EventSynthesisComparisonPoint[];
+  evidence?: EventSynthesisEvidence[];
+}
+
+export interface EventSynthesisComparisonResult {
+  version?: string;
+  status?: ComparisonResultStatus;
+  reason?: string;
+  primary_dimension?: string;
+  analyzed_article_ids?: string[];
+  analyzed_outlet_count?: number;
+  dimensions?: EventSynthesisComparisonDimension[];
+}
+
 export interface EventSynthesisRow {
   question?: string;
   common?: string | null;
@@ -366,6 +466,7 @@ export interface EventSynthesisData {
   opposition?: boolean;
   event_paragraphs?: EventSynthesisClaim[];
   comparison_axis?: EventSynthesisComparisonAxis | null;
+  comparison_result?: EventSynthesisComparisonResult | null;
   common_ground?: EventSynthesisClaim | null;
   what_happened?: EventSynthesisClaim | null;
   agreed_line?: EventSynthesisClaim | null;

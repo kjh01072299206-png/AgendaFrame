@@ -12,6 +12,7 @@ import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { comparisonReleaseFailures } from "./comparison-release-gate.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -27,6 +28,7 @@ const SHOTS = opt("shots");
 const JSON_OUT = opt("json");
 const AGAINST = opt("against");
 const SELFTEST = flag("selftest");
+const RELEASE = flag("release");
 
 const VIEWPORTS = FAST
   ? [{ w: 1280, scheme: "light" }]
@@ -50,7 +52,24 @@ const RULES = {
   "HEAD-META": { sev: "error", hint: "lang·title·viewport 누락." },
   "BLANK-REL": { sev: "warn", hint: 'target=_blank 에 rel="noopener" 가 없다.' },
   "HEADING-SKIP": { sev: "warn", hint: "제목 단계가 뛴다(h1 → h3)." },
+  "FIRST-SCREEN": { sev: "error", hint: "첫 화면의 핵심 정보 구조가 0 스크롤에서 보이지 않거나 숨겨졌다." },
+  "ANALYSIS-RELEASE": { sev: "error", hint: "배포에는 현재 계약의 실제 분석 결과가 필요하며, 전부 보류인 화면은 완료가 아니다." },
+  "INTERACTION": { sev: "error", hint: "390px 분석 화면의 제목·탭·근거 펼침·비교 카드 조작이 동작하지 않는다." },
   "STALE-WAIVER": { sev: "error", hint: "아무 것도 잡지 않는 웨이버. 고쳐졌으면 지운다." },
+};
+
+// A first-screen target is readable when at least half of the target block
+// and a minimum number of pixels are inside the 0-scroll viewport. A 1px
+// intersection is not evidence that a sentence or table row can be read;
+// naturally tall article rows may continue below the fold.
+const FIRST_SCREEN_REQUIREMENTS = {
+  "사건 설명 문장": { minVisibleHeight: 20, minVisibleRatio: 1 },
+  "비교 질문": { minVisibleHeight: 20, minVisibleRatio: 1 },
+  "대표 비교 카드 제목": { minVisibleHeight: 20, minVisibleRatio: 1 },
+  "비교 카드 대신 보류 상태": { minVisibleHeight: 48, minVisibleRatio: 0.5 },
+  "프레이밍 요약": { minVisibleHeight: 20, minVisibleRatio: 0.5 },
+  "프레임 4기능 표 헤더": { minVisibleHeight: 30, minVisibleRatio: 0.5 },
+  "프레임 4기능 첫 기사 행": { minVisibleHeight: 90, minVisibleRatio: 0.5 },
 };
 
 async function loadChromium() {
@@ -107,7 +126,7 @@ function chromePath() {
 }
 
 // 페이지 안에서 도는 수집기. 판정 임계값이 전부 여기 있어서 한 곳만 읽으면 된다.
-function collect({ w, isDesktop }) {
+function collect({ w, isDesktop, route = "", firstScreenRequirements = {} }) {
   const out = {};
   const push = (rule, where) => (out[rule] ||= []).push(where);
   const cls = (el) => {
@@ -115,6 +134,74 @@ function collect({ w, isDesktop }) {
     return (el.tagName.toLowerCase() + (c ? "." + c.trim().replace(/\s+/g, ".") : "")).slice(0, 54);
   };
   const root = document.querySelector(".afs-shell") || document.body;
+
+  const firstScreen = [];
+  const recordFirstScreen = (label, selector, el = document.querySelector(selector)) => {
+    if (!el) {
+      firstScreen.push({ label, selector, visible: false, reason: "selector missing" });
+      push("FIRST-SCREEN", `${label} 없음 (${selector})`);
+      return;
+    }
+    const style = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    const requirement = firstScreenRequirements[label] ?? { minVisibleHeight: 20, minVisibleRatio: 0.5 };
+    const effectiveRequirement = { ...requirement, minVisibleHeight: Math.min(requirement.minVisibleHeight, rect.height) };
+    const visibleHeight = Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0));
+    const visibleRatio = rect.height > 0 ? visibleHeight / rect.height : 0;
+    const hit = visibleHeight > 0 ? document.elementFromPoint(
+      Math.min(window.innerWidth - 1, Math.max(0, rect.left + rect.width / 2)),
+      Math.max(0, rect.top) + visibleHeight / 2,
+    ) : null;
+    const occluded = !hit || (hit !== el && !el.contains(hit));
+    const visible = window.scrollY === 0
+      && style.display !== "none"
+      && style.visibility !== "hidden"
+      && Number(style.opacity) >= 0.6
+      && rect.width > 0
+      && rect.height > 0
+      && rect.top >= 0
+      && !occluded
+      && visibleHeight >= effectiveRequirement.minVisibleHeight
+      && visibleRatio + 0.001 >= effectiveRequirement.minVisibleRatio;
+    const box = {
+      left: Math.round(rect.left),
+      top: Math.round(rect.top),
+      right: Math.round(rect.right),
+      bottom: Math.round(rect.bottom),
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+    };
+    firstScreen.push({
+      label,
+      selector,
+      visible,
+      occluded,
+      fullyContained: rect.top >= 0 && rect.bottom <= window.innerHeight,
+      visibleHeight: Math.round(visibleHeight),
+      visibleRatio: Number(visibleRatio.toFixed(2)),
+      required: effectiveRequirement,
+      box,
+    });
+    if (!visible) push("FIRST-SCREEN", `${label} ${selector} box=${JSON.stringify(box)} visible=${Math.round(visibleHeight)}px/${Math.round(rect.height)}px ratio=${visibleRatio.toFixed(2)} scrollY=${Math.round(window.scrollY)}`);
+  };
+  if ((route.endsWith("/outlets") || route.endsWith("/framing")) && w === 1440) {
+    if (route.endsWith("/outlets")) {
+      recordFirstScreen("사건 설명 문장", "#sec-event-summary .afp-event-first");
+      recordFirstScreen("비교 질문", "#sec-comparison-axis .afp-axis-question-v2");
+      if (document.querySelector("#sec-camps .afp-camp-card-v2 .afp-camp-headline")) {
+        [...document.querySelectorAll("#sec-camps .afp-camp-grid-v2 .afp-camp-headline")].forEach((title, index) => {
+          recordFirstScreen("대표 비교 카드 제목", `#sec-camps .afp-camp-grid-v2 > :nth-child(${index + 1}) .afp-camp-headline`, title);
+        });
+      } else {
+        recordFirstScreen("비교 카드 대신 보류 상태", "#sec-camps .afp-no-groups");
+      }
+    } else {
+      recordFirstScreen("프레이밍 요약", "#sec-synthesis .afp-summary p:first-of-type");
+      recordFirstScreen("프레임 4기능 표 헤더", "#sec-four-functions thead");
+      recordFirstScreen("프레임 4기능 첫 기사 행", "#sec-four-functions tbody tr:first-child");
+    }
+  }
+  out.__firstScreen = firstScreen;
 
   const de = document.documentElement;
   if (de.scrollWidth > de.clientWidth + 1) push("DOC-OVERFLOW", `문서 ${de.scrollWidth}px > 뷰포트 ${de.clientWidth}px`);
@@ -241,6 +328,9 @@ function collect({ w, isDesktop }) {
 }
 
 const findings = [];
+const firstScreenReports = [];
+const interactionReports = [];
+const comparisonReports = [];
 const add = (rule, where, at) => findings.push({ rule, sev: RULES[rule]?.sev || "error", where, at, id: `${rule}@${at}` });
 
 const chromium = await loadChromium();
@@ -260,6 +350,67 @@ async function discoverIssueIds(page) {
       .map((option) => option.getAttribute("value") || "")
       .filter(Boolean),
   ])].slice(0, 5));
+}
+
+async function checkOutletsMobileInteractions(page) {
+  const initial = await page.evaluate(() => {
+    const visible = (selector) => {
+      const el = document.querySelector(selector);
+      if (!el) return false;
+      const style = getComputedStyle(el);
+      const rect = el.getBoundingClientRect();
+      return style.display !== "none"
+        && style.visibility !== "hidden"
+        && Number(style.opacity) >= 0.6
+        && rect.width >= 24
+        && rect.height >= 24;
+    };
+    const failures = [];
+    const checks = ["페이지 제목", "현재 페이지 탭"];
+    if (!visible(".afp-page-title-line h1")) failures.push("페이지 제목이 보이지 않습니다");
+    if (!visible('.afs-tabs-context a[aria-current="page"]')) failures.push("현재 페이지 탭이 보이지 않습니다");
+
+    const evidence = document.querySelector("#sec-evidence details.afp-article");
+    const evidenceSummary = evidence?.querySelector(":scope > summary");
+    checks.push("기사 근거 펼침");
+    if (!evidence || !evidenceSummary) {
+      failures.push("기사 근거 펼침 대상이 없습니다");
+    } else {
+      evidenceSummary.click();
+    }
+
+    const cards = [...document.querySelectorAll("#sec-camps .afp-camp-card-v2:not(.afp-camp-card-secondary)")];
+    const targetIndex = cards.findIndex((card) => card.getAttribute("aria-expanded") !== "true");
+    const resolvedIndex = targetIndex >= 0 ? targetIndex : cards.length ? 0 : -1;
+    const target = resolvedIndex >= 0 ? cards[resolvedIndex] : null;
+    checks.push(target ? "비교 카드 선택" : "비교 보류 상태");
+    if (target) {
+      target.click();
+    } else if (!visible("#sec-camps .afp-no-groups")) {
+      failures.push("비교 카드 또는 보류 상태가 없습니다");
+    }
+    return {
+      failures,
+      checks,
+      evidencePresent: Boolean(evidence),
+      evidenceWasOpen: Boolean(evidence?.open),
+      targetIndex: resolvedIndex,
+      cardWasExpanded: target?.getAttribute("aria-expanded") === "true",
+    };
+  });
+  await page.waitForTimeout(80);
+  const after = await page.evaluate(({ targetIndex }) => {
+    const evidence = document.querySelector("#sec-evidence details.afp-article");
+    const cards = [...document.querySelectorAll("#sec-camps .afp-camp-card-v2:not(.afp-camp-card-secondary)")];
+    return {
+      evidenceOpen: Boolean(evidence?.open),
+      cardExpanded: targetIndex >= 0 ? cards[targetIndex]?.getAttribute("aria-expanded") === "true" : null,
+    };
+  }, initial);
+  const failures = [...initial.failures];
+  if (initial.evidencePresent && !after.evidenceOpen) failures.push("기사 근거 펼침이 열리지 않습니다");
+  if (initial.targetIndex >= 0 && after.cardExpanded === initial.cardWasExpanded) failures.push("비교 카드 선택 상태가 바뀌지 않습니다");
+  return { checks: initial.checks, failures };
 }
 
 if (SELFTEST) {
@@ -335,8 +486,23 @@ for (const vp of VIEWPORTS) {
       }
       await page.waitForTimeout(150);
     }
-    const got = await page.evaluate(collect, { w: vp.w, isDesktop: vp.w >= 1200 });
-    for (const [rule, list] of Object.entries(got)) for (const where of list) add(rule, where, at);
+    const got = await page.evaluate(collect, { w: vp.w, isDesktop: vp.w >= 1200, route, firstScreenRequirements: FIRST_SCREEN_REQUIREMENTS });
+    if (vp.w === 1440 && route.endsWith("/outlets")) {
+      comparisonReports.push({ route, ...await page.evaluate(() => {
+        const lead = document.querySelector(".afp-comparison-lead-v2");
+        return { status: lead?.getAttribute("data-comparison-status") ?? "missing", publishable: lead?.getAttribute("data-comparison-publishable") === "true" };
+      }) });
+    }
+    if (got.__firstScreen?.length) firstScreenReports.push({ at, route, boxes: got.__firstScreen });
+    for (const [rule, list] of Object.entries(got)) {
+      if (rule.startsWith("__")) continue;
+      for (const where of list) add(rule, where, at);
+    }
+    if (vp.w === 390 && vp.scheme === "light" && route.endsWith("/outlets")) {
+      const interaction = await checkOutletsMobileInteractions(page);
+      interactionReports.push({ at, route, checks: interaction.checks, failures: interaction.failures });
+      for (const where of interaction.failures) add("INTERACTION", where, at);
+    }
     if (route === "/") {
       await page.evaluate(() => document.body.focus());
       const seenWho = new Set();
@@ -363,6 +529,26 @@ for (const vp of VIEWPORTS) {
   await page.close();
 }
 await browser.close();
+if (RELEASE) {
+  for (const failure of comparisonReleaseFailures(comparisonReports)) add("ANALYSIS-RELEASE", failure, "release");
+}
+
+// The first-screen rule must cover every initial-five issue, not just the
+// first route that happened to render. Keep the coverage check next to the
+// browser loop so a future route/discovery regression cannot silently remove
+// P (5 issues × 2 analysis pages) from the gate.
+const firstScreenRoutes = ROUTES.filter((route) => route.endsWith("/outlets") || route.endsWith("/framing"));
+const firstScreenAt1440 = new Set(
+  firstScreenReports
+    .filter((report) => report.at.endsWith("@1440"))
+    .map((report) => report.at.replace(/ @1440$/, "")),
+);
+if (firstScreenRoutes.length !== 10) {
+  add("FIRST-SCREEN", `첫 화면 대상 라우트가 10개(5개 이슈 × 2페이지)가 아님: ${firstScreenRoutes.length}`, "@1440");
+}
+for (const route of firstScreenRoutes) {
+  if (!firstScreenAt1440.has(route)) add("FIRST-SCREEN", `${route}의 첫 화면 측정 결과가 없습니다`, "@1440");
+}
 
 const wf = path.join(HERE, "audit-waivers.json");
 const waivers = fs.existsSync(wf) ? JSON.parse(fs.readFileSync(wf, "utf8")).waivers || [] : [];
@@ -384,6 +570,7 @@ for (const f of live) {
 }
 
 console.log(`\n${BASE} · 라우트 ${ROUTES.length} × 뷰포트 ${VIEWPORTS.length} · ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+console.log(`  첫 화면 측정 ${firstScreenReports.filter((report) => report.at.endsWith("@1440")).length}개 · 모바일 상호작용 ${interactionReports.length}개`);
 if (!byRule.size) console.log("  결함 0 — 모든 규칙 통과");
 for (const [rule, list] of [...byRule].sort((a, b) => (RULES[a[0]].sev === "error" ? -1 : 1) - (RULES[b[0]].sev === "error" ? -1 : 1) || b[1].length - a[1].length)) {
   console.log(`\n  [${RULES[rule].sev.toUpperCase()}] ${rule} × ${list.length}`);
@@ -402,7 +589,7 @@ if (AGAINST && fs.existsSync(AGAINST)) {
   fresh.slice(0, 6).forEach((k) => console.log(`    + ${k.slice(0, 100)}`));
 }
 if (JSON_OUT) {
-  fs.writeFileSync(JSON_OUT, JSON.stringify({ base: BASE, routes: ROUTES, viewports: VIEWPORTS, findings }, null, 1), "utf8");
+  fs.writeFileSync(JSON_OUT, JSON.stringify({ base: BASE, routes: ROUTES, viewports: VIEWPORTS, findings, comparisons: comparisonReports, firstScreen: firstScreenReports, interactions: interactionReports }, null, 1), "utf8");
   console.log(`  → ${JSON_OUT}`);
 }
 process.exit(errors.length ? 1 : 0);
