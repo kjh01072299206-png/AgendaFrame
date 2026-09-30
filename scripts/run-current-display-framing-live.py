@@ -1585,7 +1585,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("--resume-checkpoint", type=Path)
     parser.add_argument("--model")
     parser.add_argument("--max-attempts", type=int, choices=(1, 2, 3))
-    parser.add_argument("--budget-usd", type=float, default=0.50)
+    parser.add_argument("--budget-usd", type=float, default=2.00)
     parser.add_argument("--fetch-workers", type=int, choices=(4, 6, 8, 10), default=8)
     parser.add_argument("--article-workers", type=int, choices=(4, 6, 8, 10), default=8)
     parser.add_argument("--synthesis-workers", type=int, choices=(3, 4, 5), default=5)

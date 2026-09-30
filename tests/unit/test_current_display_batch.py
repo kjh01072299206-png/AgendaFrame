@@ -81,6 +81,9 @@ def test_live_cli_defaults_to_the_configured_model_and_attempt_count() -> None:
     args = module.build_argument_parser().parse_args([])
 
     assert args.model is None
+    assert args.budget_usd == 2.00
+    assert args.budget_usd == config.estimated_daily_vertex_limit_usd
+    assert config.vertex.model == "gemini-2.5-flash-lite"
     assert module.selected_model(config, args.model) == config.vertex.model
     assert module.selected_attempts(config, args.max_attempts) == config.vertex.max_attempts
     estimated = module.projected_cost_usd(
