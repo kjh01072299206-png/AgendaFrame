@@ -1,50 +1,47 @@
-# 언론사 비교·프레이밍 릴리스 상태 (2026-10-01)
+# 언론사 비교·프레이밍 릴리스 검증 (2026-10-01)
 
-전체 작업은 아직 완료되지 않았다. 코드와 오프라인 검증은 준비되었지만 실제 AI 결과 생성과 공개 배포가 남아 있다.
+## 실제 분석과 원인
 
-## 확인된 문제와 수정
+Google의 기존 Spend cap breached 차단은 사용자 결제 설정 변경 후 해소됐고 실제 Vertex 요청이 성공했다. 이후 별개 문제인 화자 코드 정규화 누락, JSON 출력 계약 불일치, 실제 camelCase 메타데이터 거부, 본문에 섞인 추천·회전 광고 문구를 수정했다. 본문 해시만으로 의미 정확성을 주장하지 않는다.
 
-- 공개 rank 2 언론사 비교 화면의 첫 세 대표 카드가 모두 KBS였다. 실제 비교 결과 없이 기존 강조 그룹으로 비교 화면을 구성하던 경로를 제거하고, 증거 연결·매체 대표성·결과 상태를 검증하도록 바꿨다.
-- 현재 공개 API에서 확인한 rank 1, 2, 4는 v2.0이며 `comparison_result`가 없었다. rank 3, 5 API 조회는 시간 초과로 확인하지 못했다.
-- 현재 표시 데이터 재분석 스크립트가 정적 JSON 대신 현재 `/api/initial-five` 데이터와 의제별 API를 읽도록 수정했다. 날짜와 의제 식별자가 다른 데이터는 거부한다.
-- 실제 결과가 없으면 비교 보류로 표시하지만, 다섯 의제 전체가 보류인 상태는 `audit-site.mjs --release`에서 릴리스 실패로 처리한다. 보류 UI 검증 성공을 기능 완료로 취급하지 않는다.
-- AI 비용 한도 오류는 재시도하지 않는다. 재실행 가능한 본문 미포함 체크포인트를 저장하고, 재개 시 새로 읽은 본문 해시와 증거 위치를 다시 검증한다.
+현재 공개 API의 5개 의제·40개 기사 메타데이터를 기준으로 재분석했다. 38개 본문 중 37개 기사 분석이 근거 검증에 성공했으며 3개는 본문 부재 또는 검토 필요 상태로 남겼다. 순위·의제·날짜를 변경하지 않았다. 기준일 2026-08-15이며 오늘의 새 뉴스라고 주장하지 않는다.
 
-## 실제 검증 결과
+- 모델: gemini-2.5-flash-lite, 생각 예산 0.
+- 실행 ID: 7f0aba42d002493abe9abac8663bb881.
+- 기사 프롬프트: sentence-anchor-v1.2.0; 전송 프롬프트: event-synthesis-transport-v1.3.0.
+- 공개 계약: event-synthesis-v2.2.0 / agendaframe.event-synthesis.v2.2.
+- 원문·원본 모델 응답·토큰은 공개 산출물에 저장하지 않았다. 실제 호출 영수증 해시·모델·시각과 기사 ID·근거 위치·해시는 보존했다.
 
-- Python full gate: 단위·계약 테스트 192 passed, 1 skipped; 통합·오프라인 E2E 3 passed. 정적 검사와 평가 데이터 검증 통과. 평가 데이터는 synthetic schema 검증이며 실제 모델 품질 검증이 아니다.
-- 사이트: typecheck 통과, lint 오류 0 (기존 경고 4), 분석 테스트 34/34, 계약·릴리스 게이트 테스트 50/50, Next production build 통과.
-- 로컬 렌더: 26경로 × 5뷰포트, 첫 화면 검사 10건, 모바일 상호작용 5건; 오류·경고 0. 사용한 기존 데이터의 다섯 의제는 모두 보류이며 publishable=false였다. 정상 비교 결과의 공개 렌더 검증은 아직 아니다.
-- 공개 렌더 검사는 78개 데스크톱·태블릿 캡처 이후 모바일 페이지 로드 시간 초과로 중단되었다. 공개 감사 완료/통과를 주장하지 않는다.
-- 현재 공개 `/version`: `538a767f5474999039c721f18a0a5256e0f57906`. 이번 변경은 아직 배포하지 않았다.
+## 공개 문장 검토
 
-## 남은 실행 순서와 비용 차단
+추가 모델 검토에서도 잘못된 직함과 근거보다 강한 인과 설명이 남아 있었다. 에이전트가 인용 문장을 직접 확인해 더 좁은 표현으로 편집했다. 사람의 평가나 holdout 모델 품질 측정은 아니다.
 
-### 사용자 증액 요청 후 재시도
+공개 문장과 근거 부족 비교점만 수정했다. 비교 관계 라벨이나 대립 진영을 새로 생성하지 않았다. 같은 KBS 문장으로 차이를 주장한 점과 인용되지 않은 함정 부족·회사 수혜 예측·폭언·법리적 오해·지급 부담 회피 설명을 삭제하거나 좁혔다. 당사자 입장과 기자 해석은 출처를 구분했다. editorial_review에 전후 해시·범위·버전을 기록했다.
 
-실행 기본 한도와 설정된 일일 Vertex 추정 한도를 $0.50에서 $2.00로 올렸다. `gemini-2.5-flash-lite`는 그대로 유지했다. 공식 Vertex 표준 단가에서 입력 $0.10/100만 토큰, 출력 $0.40/100만 토큰을 다시 확인했다. 생각 토큰 예산 0, 기사당 최대 출력 6000, 재시도 실행 최대 2회 제한을 유지했다. 월 목표와 공급자 보호 설정은 변경하지 않았다.
+최종 candidate-reviewed-20261001의 새 본문 증거 재검증과 실제 프런트엔드 공개 계약 검사는 5개 모두 통과했다. 잘못된 증거·연결되지 않은 비교 증거는 0건이었다.
 
-증액 후 full gate는 192 passed, 1 skipped 및 통합·오프라인 E2E 3 passed였다. 실제 $2 재실행에서는 본문 미포함 체크포인트에 39건의 기사 처리 결과가 저장되었고, 그중 6건은 `provider_spend_cap_breached`였다. 공급자 차단이 확인돼 실행을 중단했으며 완성 후보나 새 배포는 없다. $2는 추정 실행 상한이지 실제 청구액이나 공급자 한도 변경을 뜻하지 않는다.
+| 순위 | 비교 결과 |
+|---|---|
+| 1 | 비교 보류: 기사별 분석 유지, 매체 차이 미확정 |
+| 2 | 뚜렷한 차이 없음 |
+| 3 | 뚜렷한 차이 없음 |
+| 4 | 뚜렷한 차이 없음 |
+| 5 | 근거로 연결된 설명의 차이 확인 |
 
-체크포인트: `tmp/current-display-batch/4fbb34616035487b98cdc1d71f621f02.checkpoint.json`. 재개 시 현재 공개 입력과 모델·프롬프트·증거가 일치하는 검증 성공 건만 재사용한다. 이 실패 실행에는 검증 성공 기사 결과가 없었다.
+전체 보류는 릴리스 실패로 취급한다. 일부 보류를 분석 실패나 완료된 차이로 바꾸지 않는다.
 
-공식 단가: https://cloud.google.com/vertex-ai/generative-ai/pricing
+## 비용·검증
 
-아래 $0.50 기록은 증액 전 실행의 이력이다. 앞으로 승인된 재실행 명령은 `--budget-usd 2.00`을 사용한다.
+사용자는 복구 AI 지출 최대 $10을 승인했다. 실행당 추정 상한 $2와 저렴한 모델을 유지하고 본문 해시·근거를 재검증한 체크포인트를 재사용했다. UTF-8 길이·최대 출력·2회 시도를 반영한 전체 실행 보수적 추정 상한 $1.784는 실제 청구액이 아니다. 공급자 월 한도를 자동 해제하거나 프로젝트를 바꿔 우회하지 않았다.
 
-승인된 실행 한도 $0.50, 최대 시도 2회로 실제 재분석을 실행했지만 공급자 HTTP 403 `spend cap breached`로 실패했다. 결제 연결과 Vertex API 활성화는 확인했다. 월 15,000원 예산 알림이 존재하지만, 이것이 실제 차단 한도라는 증거는 없다. 예산 알림 변경만으로 해결된다고 주장하지 않는다.
+[Google Cloud 공식 가격 문서](https://cloud.google.com/gemini-enterprise-agent-platform/generative-ai/pricing).
 
-1. 결제 권한자가 Google Cloud Billing의 Budgets & alerts / spend cap details에서 실제 적용된 차단 한도와 범위를 확인한다. 계정·프로젝트를 바꾸거나 한도를 우회하지 않는다. 월 한도 해제는 실행당 $0.50 승인과 별개의 비용 위험이 있으므로 자동 수행하지 않는다.
-2. 차단이 해소되고 비용 제한이 유지되면 아래 명령으로 실제 결과 후보를 생성한다. 이전 실패 실행에는 완성 후보가 없었다. 새 체크포인트가 생성된 뒤 중단되면 `--resume-checkpoint <path>`를 사용한다. 공개 입력이 바뀌면 체크포인트 재사용은 거부된다.
-3. 후보의 receipt, 증거 articleId/locator/hash, 다른 매체 대표 기사, unsupported claim과 전체 보류 여부를 검토한다. 단순 성공 HTTP 응답이나 합성 fixture를 실제 AI 결과로 사용하지 않는다.
-4. 검토된 immutable snapshot을 staging reader에 적용하고 건강 상태·활성 snapshot을 확인한 후 production을 전환한다. `docs/deploy.md`의 절차를 따른다.
-5. 검토된 commit으로 Vercel을 배포하고 공개 `/version` 일치 및 실제 `/outlets`, `/framing`을 `--release`로 검증한다. 실패하면 기존 production을 유지하거나 이전 검증 버전으로 되돌린다.
+- Python full: 207 passed, 1 skipped; 통합·오프라인 E2E 3 passed. 평가 자산 검사는 synthetic schema 검증이며 실제 모델 품질 측정이 아니다.
+- 사이트: typecheck 통과, lint 오류 0·기존 경고 4, 계약 50건·분석 회귀 34건 통과, Next production build 통과.
+- 실제 후보 첫 렌더에서 첫 화면 7건이 실패했다. impeccable의 독립 시각 평가와 기계 검사 두 경로로 검토해 설명 패널을 압축하고 카드 수에 맞게 열 구조를 수정했다. 최종 재검사: 26경로 × 5뷰포트, 첫 화면 10건·모바일 상호작용 5건, 오류·경고·면제 0. 비교·프레이밍 실제 캡처도 확인했다. 기존 보조 설명은 근거 연결을 유지하기 위해 남겼다.
 
-```powershell
-$env:AGENDAFRAME_LIVE_TESTS = '1'
-$env:AGENDAFRAME_NONPROD_PROJECT_ID = 'project-40bc06fc-fb4b-46b6-a10'
-$env:PYTHONPATH = Join-Path (Get-Location) 'src'
-.venv\Scripts\python.exe scripts/run-current-display-framing-live.py --live --budget-usd 0.50 --max-attempts 2 --gcloud-bin 'C:\Users\강준혁\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd' --gcloud-config .codex-gcloud-auth --output-root tmp/current-display-batch/candidate-live-20261001 --summary-root tmp/current-display-batch
-```
+## 배포 경계
 
-이 문서는 인증 토큰, 기사 원문, 공급자 원본 응답을 포함하지 않는다. 기존 작업 폴더의 변경은 보존했고 별도 `codex/comparison-framing-release-20261001` 브랜치에서 수정했다.
+원래 dirty 폴더를 보존하고 별도 codex/comparison-framing-release-20261001 worktree를 사용했다. 검토된 commit과 동일한 공개 파일만 immutable GCS snapshot으로 게시한다. publish-reviewed-comparison.py는 기본 dry-run이며 업로드 객체를 기존 reader 계약으로 읽어 200과 snapshot ID를 확인한다. 기대한 이전 pointer·generation과 일치할 때만 CAS 전환하며 rollback용 이전 pointer를 저장한다. 이는 새로운 Cloud Run staging 서비스 배포가 아니다.
+
+Vercel은 기존 Git 연결로 배포한다. 새 로그인·토큰을 요구하지 않는다. 공개 /version commit 일치, reader health·snapshot과 실제 비교·프레이밍 release 렌더 검증이 끝나기 전에는 완료로 보고하지 않는다.

@@ -2466,6 +2466,32 @@
     margin-top: 6px;
     padding: 8px 10px;
   }
+  .afp-axis-v2 .afs-in {
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  }
+  .afp-axis-context {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 16px;
+    align-self: start;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .afp-axis-context > .afp-comparison-status {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .afp-axis-context .afp-common-ground-v2,
+  .afp-axis-context .afp-comparison-difference {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .afp-axis-context > .afp-state {
+    margin: 0;
+  }
   .afp-comparison-difference {
     margin-top: 8px;
     padding-top: 8px;
@@ -2479,6 +2505,12 @@
   .afp-camp-card-v2 {
     gap: 2px;
     padding: 4px 12px 10px;
+  }
+  .afp-camp-grid-v2:has(> :only-child) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .afp-camp-grid-v2:has(> :nth-child(2):last-child) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .afp-camp-card-v2 .afp-camp-letter {
     display: none;

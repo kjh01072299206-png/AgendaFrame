@@ -59,14 +59,15 @@ def test_current_display_cost_guard_matches_configured_flash_lite_rates() -> Non
 
     actual = module.projected_cost_usd(config, articles, issue_count=5, attempts=1)
     input_tokens = sum(
-        min(len(str(row["title"])) + 20_000, config.vertex.max_input_characters_per_article) // 4
+        min(len(str(row["title"])) + 20_000, config.vertex.max_input_characters_per_article) * 4
+        + 32_000
         for row in articles
     )
     article_output_tokens = len(articles) * config.vertex.max_output_tokens
-    synthesis_input_tokens = len(articles) * 260
+    synthesis_input_tokens = len(articles) * 80_000 + 5 * 32_000
     synthesis_output_tokens = 5 * config.vertex.max_output_tokens
     expected = (
-        input_tokens + synthesis_input_tokens * 5
+        input_tokens + synthesis_input_tokens
     ) / 1_000_000 * config.vertex.input_usd_per_million_tokens + (
         article_output_tokens + synthesis_output_tokens
     ) / 1_000_000 * config.vertex.output_usd_per_million_tokens
@@ -85,7 +86,7 @@ def test_live_cli_defaults_to_the_configured_model_and_attempt_count() -> None:
     assert args.budget_usd == config.estimated_daily_vertex_limit_usd
     assert config.vertex.model == "gemini-2.5-flash-lite"
     assert module.selected_model(config, args.model) == config.vertex.model
-    assert module.selected_attempts(config, args.max_attempts) == config.vertex.max_attempts
+    assert module.selected_attempts(config, args.max_attempts) == min(config.vertex.max_attempts, 2)
     estimated = module.projected_cost_usd(
         config,
         [{"title": "기사 제목"} for _ in range(40)],
@@ -156,6 +157,16 @@ def test_issue_verification_accepts_an_explicit_held_comparison_result() -> None
     assert report["passed"] is True
     assert report["comparisonResultValid"] is True
     assert report["comparisonResultStatus"] == "held_for_analysis"
+
+
+def test_issue_verification_accepts_the_actual_public_metadata_field_names() -> None:
+    module = load_batch_module()
+    result = {"version": "comparison-v1.0.0", "status": "held_for_analysis", "dimensions": []}
+    bundle = comparison_verification_bundle(module, result)
+    synthesis = bundle["comparison"]["data"]["synthesis"]
+    synthesis["promptVersion"] = synthesis.pop("prompt_version")
+    synthesis["schemaVersion"] = synthesis.pop("schema_version")
+    assert module.verify_issue(bundle, {})["passed"] is True
 
 
 def test_issue_verification_requires_comparison_result_in_the_shared_synthesis() -> None:
@@ -294,6 +305,59 @@ def test_article_spend_cap_failure_is_not_retried_or_exposed(monkeypatch) -> Non
     assert result.attempt_count == 1
     assert result.error_code == "provider_spend_cap_breached"
     assert "private provider details" not in json.dumps(result.fallback_reason)
+
+
+@pytest.mark.parametrize(
+    "voice", ["journalist_narration", "direct_quote", "indirect_source", "uncertain_quote"]
+)
+def test_sentence_anchor_preserves_canonical_voice_kinds(voice) -> None:
+    module = load_batch_module()
+    assert module.normalize_voice_kind(voice) == voice
+
+
+def test_sentence_anchor_schema_constrains_machine_readable_labels() -> None:
+    module = load_batch_module()
+    schema = module.sentence_anchor_schema()
+    dimensions = schema["properties"]["dimensions"]["items"]["properties"]
+    assert set(dimensions["status"]["enum"]) == {"supported", "conflicting", "explicit_not_stated"}
+    assert "journalist_narration" in dimensions["voice_kind"]["enum"]
+    assert "journalist_statement" not in dimensions["voice_kind"]["enum"]
+    assert schema["properties"]["decision"]["enum"] == ["analyze", "defer", "cannot_analyze"]
+
+
+def test_valid_narration_dimension_is_not_silently_dropped() -> None:
+    module = load_batch_module()
+    config, document, _ = checkpoint_fixture(module)
+    payload = {
+        "decision": "analyze",
+        "dimensions": [
+            {
+                "dimension": "problem_definition",
+                "status": "supported",
+                "value": "예산 정책 집행의 문제",
+                "frame_family": "policy_implementation",
+                "voice_kind": "journalist_narration",
+                "evidence_sentence_ids": [0],
+            }
+        ],
+        "actors": [],
+    }
+    result = module.sentence_anchor_result(
+        document,
+        payload,
+        config=config,
+        prompt="fixture",
+        response_text=json.dumps(payload),
+        response=SimpleNamespace(),
+        attempt=1,
+        rows=module.sentence_rows(document.body_text),
+    )
+    assert result.decision == "analyze"
+    assert result.analysis_state == "succeeded"
+    assert any(
+        d["dimension"] == "problem_definition" and d["status"] == "supported"
+        for d in result.dimensions
+    )
 
 
 def test_current_display_reads_the_active_issue_api_not_old_static_json(monkeypatch) -> None:

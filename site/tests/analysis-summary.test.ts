@@ -300,6 +300,7 @@ test("D: insufficient evidence is held rather than guessed", () => {
 
 test("E: the shipped rank-5 snapshot does not invent a difference when comparison_result is absent", () => {
   const bundle = JSON.parse(readFileSync("public/initial-five/issues/live-2026-08-15-top-5.json", "utf8")) as IssueAnalysisBundle;
+  delete bundle.comparison!.data!.synthesis!.comparison_result;
   const summary = comparisonSummary(bundle);
   const requestedArticleIds = new Set([
     "86067ecb43faae14baa94d04ed8fba88",
@@ -646,6 +647,9 @@ test("O: rank-2 representative cards cover another outlet and keep the remaining
 
 test("P: legacy v2 event synthesis cannot satisfy the current publication comparison contract", () => {
   const bundle = JSON.parse(readFileSync("public/initial-five/issues/live-2026-08-15-top-1.json", "utf8")) as IssueAnalysisBundle;
+  bundle.comparison!.data!.synthesis!.promptVersion = "event-synthesis-v2.0.0";
+  bundle.comparison!.data!.synthesis!.schemaVersion = "agendaframe.event-synthesis.v2";
+  delete bundle.comparison!.data!.synthesis!.comparison_result;
   assert.equal(bundle.comparison?.data?.synthesis?.promptVersion, "event-synthesis-v2.0.0");
   assert.equal(bundle.comparison?.data?.synthesis?.comparison_result, undefined);
   assert.equal(isPublishableEventSynthesis(bundle), false);

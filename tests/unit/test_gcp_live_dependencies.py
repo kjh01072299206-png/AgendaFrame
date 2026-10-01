@@ -4,7 +4,7 @@ import json
 import unittest
 from datetime import UTC, datetime
 
-from backend.gcp_live_dependencies import FetchedResponse, NewsArticleParser
+from backend.gcp_live_dependencies import FetchedResponse, NewsArticleParser, _ArticleHtmlParser
 from backend.gcp_stage_adapters import SourceDefinition
 
 COLLECTED_AT = datetime(2026, 8, 13, 6, 0, tzinfo=UTC)
@@ -68,6 +68,53 @@ def parser(fetcher: FakeFetcher) -> NewsArticleParser:
 
 
 class GcpLiveDependencyTests(unittest.TestCase):
+    def test_view_content_excludes_generated_summary_and_copyright(self) -> None:
+        html = _ArticleHtmlParser()
+        html.feed(
+            '<main><div class="viewTool">Toolbar noise</div>'
+            '<div class="viewContent body19"><p>Verified article paragraph.</p>'
+            '<div class="article-summary-box"><p>Generated summary is not evidence.</p></div>'
+            '<div class="articleCopyright">Copyright notice</div>'
+            "<p>Final source paragraph.</p></div><div>Related news</div></main>"
+        )
+        text = " ".join(html.specific_body_parts)
+        self.assertIn("Verified article paragraph.", text)
+        self.assertIn("Final source paragraph.", text)
+        self.assertNotIn("Generated", text)
+        self.assertNotIn("Copyright", text)
+        self.assertNotIn("Toolbar", text)
+        self.assertNotIn("Related", text)
+
+    def test_specific_body_excludes_recommendations_and_survives_nested_divs(self) -> None:
+        canonical = "https://khan.co.kr/article/specific"
+        html = (
+            "<html><head><title>Actual article</title>"
+            '<meta property="article:published_time" content="2026-08-13T10:00:00+09:00">'
+            "</head><body><main><p>AI issue unrelated recommendations</p>"
+            f'<div class="article_body"><p>{LONG_BODY}</p><div><b>Nested body detail.</b></div>'
+            '<div class="ad_wrap_content3"><p>Rotating advertisement.</p><div>Ad detail.</div></div>'
+            '<div class="mad_wrap_content5"><span>Another rotating advertisement.</span></div>'
+            "<p>Final article paragraph.</p></div><p>Subscribe and read unrelated news</p>"
+            "</main></body></html>"
+        ).encode()
+        fetcher = FakeFetcher({canonical: FetchedResponse(canonical, 200, "text/html", html)})
+        result = parser(fetcher)._article_page(
+            fetcher.pages[canonical],
+            source_id="khan",
+            canonical_url=canonical,
+            fallback_title=None,
+            allow_fallback_title=False,
+            fallback_published=None,
+            collected_at=COLLECTED_AT,
+        )
+        self.assertIsNotNone(result)
+        self.assertIn("Nested body detail.", result.body_text)
+        self.assertIn("Final article paragraph.", result.body_text)
+        self.assertNotIn("unrelated", result.body_text)
+        self.assertNotIn("Subscribe", result.body_text)
+        self.assertNotIn("advertisement", result.body_text)
+        self.assertNotIn("Ad detail", result.body_text)
+
     def test_jsonld_date_published_is_verified_and_tracking_query_is_removed(self) -> None:
         canonical = "https://khan.co.kr/article/1"
         fetcher = FakeFetcher(

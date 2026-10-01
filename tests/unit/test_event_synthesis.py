@@ -18,6 +18,45 @@ from ai.event_synthesis import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_live_prompt_specifies_the_comparison_shape_not_just_its_version() -> None:
+    from ai.event_synthesis import TRANSPORT_PROMPT_VERSION, _build_prompt
+
+    prompt = _build_prompt({"profiles": [], "articles": []})
+    assert "OUTPUT_SHAPE=" in prompt
+    assert '"dimensions"' in prompt
+    assert '"voice_basis"' in prompt
+    assert '"analyzed_outlet_count"' in prompt
+    assert TRANSPORT_PROMPT_VERSION in prompt
+
+
+def test_transport_evidence_ids_expand_only_to_original_source_anchors() -> None:
+    from ai.event_synthesis import _expand_transport_evidence, _transport_evidence_table
+
+    anchor = evidence("a1", HASH_A)
+    request = {"profiles": [{"items": [{**anchor, "public_paraphrase": "fixture"}, dict(anchor)]}]}
+    table = _transport_evidence_table(request)
+    assert table == [anchor]
+    expanded = _expand_transport_evidence(
+        {"evidence": [0, 99, -1, True], "voice_basis": {"evidence": [0]}}, table
+    )
+    assert expanded["evidence"] == [anchor, {}, {}, {}]
+    assert expanded["voice_basis"]["evidence"] == [anchor]
+
+
+def test_compact_transport_requires_exact_comparison_and_voice_fields() -> None:
+    from ai.event_synthesis import _compact_response_schema
+
+    schema = _compact_response_schema()
+    result = schema["properties"]["comparison_result"]
+    assert "dimensions" in result["required"]
+    point = result["properties"]["dimensions"]["items"]["properties"]["points"]["items"]
+    assert "voice_basis" in point["required"]
+    assert point["properties"]["article_ids"]["maxItems"] == 2
+    assert point["properties"]["evidence"]["items"]["type"] == "integer"
+
+
 RANK1 = ROOT / "site" / "public" / "initial-five" / "issues" / "bigkinds-2026-07-26-top-1.json"
 
 HASH_A = "a" * 64

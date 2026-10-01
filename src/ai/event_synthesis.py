@@ -26,6 +26,7 @@ LEGACY_SCHEMA_VERSION = "agendaframe.event-synthesis.v1"
 PROMPT_VERSION = "event-synthesis-v2.2.0"
 SCHEMA_VERSION = "agendaframe.event-synthesis.v2.2"
 COMPARISON_CONTRACT_VERSION = "comparison-v1.0.0"
+TRANSPORT_PROMPT_VERSION = "event-synthesis-transport-v1.3.0"
 LEGACY_V2_PROMPT_VERSION = "event-synthesis-v2.0.0"
 LEGACY_V2_SCHEMA_VERSION = "agendaframe.event-synthesis.v2"
 SHA256_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
@@ -1455,6 +1456,10 @@ def build_bound_comparison(
             failure_type = str(draft.get("_failure_type") or "") if isinstance(draft, Mapping) else ""
             if failure_reason:
                 gate_reasons.append(failure_reason)
+                if failure_type:
+                    gate_reasons.append(f"model_error:{failure_type}")
+                if isinstance(draft.get("_failure_http_code"), int):
+                    gate_reasons.append(f"http_{draft['_failure_http_code']}")
                 if failure_reason == "provider_spend_cap_breached":
                     break
             elif failure_type:
@@ -1566,7 +1571,33 @@ class VertexEventSynthesizer:
         self.client_factory = client_factory
 
     def synthesize(self, request: Mapping[str, Any]) -> Mapping[str, Any]:
-        prompt = _build_prompt(request)
+        # Source quotations remain in the stored article profiles/source lens,
+        # but cannot establish an outlet's own comparison stance. Give this
+        # transport only the eligible narration instead of asking it to infer
+        # a narrator from a mixture of quotations and newsroom statements.
+        request = {
+            **request,
+            "profiles": [
+                {**profile, "items": [item for item in profile.get("items", []) if item.get("voice") == "journalist_narration"], "evidence": []}
+                for profile in request.get("profiles", [])
+                if any(item.get("voice") == "journalist_narration" for item in profile.get("items", []))
+            ],
+        }
+        evidence_table = _transport_evidence_table(request)
+        prompt = _build_prompt(request) + (
+            " TRANSPORT OVERRIDE: return the object required by the response schema, not a payload string. "
+            "In every evidence array return integer IDs from EVIDENCE_TABLE instead of copying full references. "
+            "IDs are exact source anchors, not new evidence. Use two event paragraphs and at most two core dimensions. "
+            "Return one point per supported editorial observation. For a cross-outlet relation, a point must name BOTH compared articles from different outlets, cite one narration anchor from EACH, and explain the relation between them. Never name a second article without its evidence. "
+            "Use journalist_narration only for evidence whose supplied profile voice is journalist_narration. "
+            "Only compare supported narration across outlets; source disagreement cannot confirm outlet disagreement. "
+            "Every supplied comparison item is coded journalist narration. Quote-only items were intentionally excluded from this comparison transport and remain available separately in the article source lens. Do not classify these eligible narration items as source_attributed merely because the article title includes a quotation. "
+            "If two distinct outlets' narration supports same_core or same_core_with_detail and no narration difference is supported, both the dimension and overall status MUST be no_clear_difference, not difference_confirmed. "
+            "Use difference_confirmed only when at least two different outlets' narration points actually have different_emphasis or contradictory relations. "
+            "Terms and opposition camps are not requested in this compact transport. "
+            "Evidence IDs are the explicit evidence_id field, NOT paragraph numbers, sentence numbers, or positions in the original profiles. "
+            f"EVIDENCE_TABLE={json.dumps([{'evidence_id': i, **ref} for i, ref in enumerate(evidence_table)], ensure_ascii=False)}"
+        )
         # Keep the issue-level call inside the same reviewed output limit used
         # by the article analyzer and the cost guard.  A larger hard-coded
         # reservation can trip the provider spend cap even when the local
@@ -1592,7 +1623,10 @@ class VertexEventSynthesizer:
                     temperature=0,
                     max_output_tokens=synthesis_output_tokens,
                     response_mime_type="application/json",
-                    response_schema=_vertex_response_schema(),
+                    # Lite already provides JSON mode. Do not double-encode
+                    # every Korean character and evidence ref in a string
+                    # wrapper: that exhausted the bounded output reservation.
+                    response_json_schema=_compact_response_schema(),
                     thinking_config=(
                         types.ThinkingConfig(
                             thinking_budget=int(self.config.vertex.thinking_budget)
@@ -1611,6 +1645,17 @@ class VertexEventSynthesizer:
                 if nested.startswith("```"):
                     nested = re.sub(r"^```(?:json)?\s*|\s*```$", "", nested, flags=re.IGNORECASE).strip()
                 payload = json.loads(nested)
+            if isinstance(payload, Mapping):
+                payload = _expand_transport_evidence(payload, evidence_table)
+                payload.setdefault("terms", [])
+                payload.setdefault("camps", [])
+                payload.setdefault("comparison_axis", None)
+                comparison = payload.get("comparison_result")
+                if isinstance(comparison, dict):
+                    comparison["version"] = COMPARISON_CONTRACT_VERSION
+                    analyzed = sorted({str(p.get("articleId")) for p in request.get("profiles", []) if p.get("items")})
+                    comparison["analyzed_article_ids"] = analyzed
+                    comparison["analyzed_outlet_count"] = len({str(a.get("outlet")) for a in request.get("articles", []) if a.get("articleId") in analyzed})
             if isinstance(payload, Mapping):
                 payload = dict(payload)
                 payload.setdefault("prompt_version", PROMPT_VERSION)
@@ -1633,6 +1678,7 @@ class VertexEventSynthesizer:
                 "usable": False,
                 "_failure_reason": failure_reason,
                 "_failure_type": type(error).__name__,
+                "_failure_http_code": getattr(error, "code", None),
             }
         if not isinstance(payload, Mapping):
             return {"prompt_version": PROMPT_VERSION, "usable": False}
@@ -1642,6 +1688,7 @@ class VertexEventSynthesizer:
                 "provider": "vertex_ai",
                 "model": self.config.vertex.model,
                 "prompt_version": PROMPT_VERSION,
+                "transport_prompt_version": TRANSPORT_PROMPT_VERSION,
                 "attempt": 1,
                 "request_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
                 "response_sha256": hashlib.sha256(response_text.encode("utf-8")).hexdigest(),
@@ -1665,8 +1712,81 @@ def _vertex_response_schema() -> dict[str, Any]:
     }
 
 
+def _transport_evidence_table(request: Mapping[str, Any]) -> list[dict[str, Any]]:
+    table: list[dict[str, Any]] = []
+    for profile in request.get("profiles", []):
+        for item in profile.get("items", []):
+            ref = {key: item.get(key) for key in ("article_id", "locator", "sentence_sha256")}
+            if ref["article_id"] and ref["locator"] and ref["sentence_sha256"] and ref not in table:
+                table.append(ref)
+    return table
+
+
+def _expand_transport_evidence(value: object, table: Sequence[Mapping[str, Any]]) -> Any:
+    if isinstance(value, Mapping):
+        result = {}
+        for key, child in value.items():
+            if key == "evidence" and isinstance(child, list):
+                # Invalid IDs remain invalid and are rejected by the binder.
+                result[key] = [dict(table[index]) if isinstance(index, int) and not isinstance(index, bool) and 0 <= index < len(table) else {} for index in child]
+            else:
+                result[key] = _expand_transport_evidence(child, table)
+        return result
+    if isinstance(value, list):
+        return [_expand_transport_evidence(item, table) for item in value]
+    return value
+
+
+def _compact_response_schema() -> dict[str, Any]:
+    def obj(properties):
+        return {"type": "object", "properties": properties, "required": list(properties), "additionalProperties": False}
+    def array(items, maximum):
+        return {"type": "array", "items": items, "maxItems": maximum}
+    string = {"type": "string"}
+    refs = array({"type": "integer"}, 2)
+    statuses = {"type": "string", "enum": sorted(COMPARISON_STATUSES)}
+    dimensions = {"type": "string", "enum": ["problem_definition", "causal_interpretation", "responsibility_attribution", "evaluation", "treatment_recommendation"]}
+    voice = obj({"kind": {"type": "string", "enum": ["journalist_narration", "source_attributed", "mixed", "not_observed"]}, "label": string, "evidence": refs})
+    point = obj({"observation_id": string, "headline": string, "summary": string, "text": string, "relation": {"type": "string", "enum": sorted(COMPARISON_RELATIONS)}, "article_ids": array(string, 2), "evidence": refs, "voice_basis": voice})
+    point["properties"]["article_ids"]["minItems"] = 2
+    point["properties"]["evidence"] = {**refs, "minItems": 2}
+    dimension = obj({"dimension": dimensions, "label": string, "question": string, "status": statuses, "points": array(point, 3)})
+    return obj({
+        "event_paragraphs": array(obj({"text": string, "evidence": refs}), 2),
+        "common_ground": obj({"text": {"type": ["string", "null"]}, "status": {"type": "string", "enum": ["observed", "insufficient_evidence"]}, "evidence": refs}),
+        "comparison_result": obj({"status": statuses, "primary_dimension": dimensions, "dimensions": array(dimension, 2)}),
+    })
+
+
 def _build_prompt(request: Mapping[str, Any]) -> str:
     payload = json.dumps(request, ensure_ascii=False, sort_keys=True)
+    output_shape = {
+        "prompt_version": PROMPT_VERSION,
+        "schema_version": SCHEMA_VERSION,
+        "event_paragraphs": [{"text": "<evidence-supported Korean paraphrase>", "evidence": ["<copied evidence reference>"]}],
+        "terms": [],
+        "comparison_result": {
+            "version": COMPARISON_CONTRACT_VERSION,
+            "status": "<allowed result status>",
+            "analyzed_article_ids": ["<actually analyzed article ID>"],
+            "analyzed_outlet_count": "<integer unique outlet count>",
+            "primary_dimension": "<supported core dimension>",
+            "dimensions": [{
+                "dimension": "<allowed core dimension>", "label": "<Korean dimension label>",
+                "question": "<one Korean comparison question>", "status": "<allowed result status>",
+                "points": [{
+                    "observation_id": "<stable ID>", "headline": "<short Korean headline>",
+                    "summary": "<different supporting detail>", "text": "<relation-bearing paraphrase>",
+                    "relation": "<allowed article relation>", "article_ids": ["<cited article ID>"],
+                    "evidence": ["<copied evidence reference>"],
+                    "voice_basis": {"kind": "<journalist_narration|source_attributed|mixed|not_observed>", "label": "<Korean voice label>", "evidence": ["<copied evidence reference>"]},
+                }],
+            }],
+        },
+        "comparison_axis": None,
+        "common_ground": {"text": None, "status": "insufficient_evidence", "evidence": []},
+        "camps": [],
+    }
     return (
         "You are producing event-synthesis-v2.2.0 for one Korean news event from already-coded article profiles. "
         "The input contains article titles, outlet names, public paraphrases, voice kind, frame families, and evidence locators; it never contains article bodies. "
@@ -1685,6 +1805,11 @@ def _build_prompt(request: Mapping[str, Any]) -> str:
         "proof_rows must contain article_id, outlet, dimension, public_paraphrase, and evidence, and must be drawn from the supplied paraphrases; use at most three proof rows per camp. Keep camp summaries to two sentences. "
         "Do not copy article body text, HTML, raw sentences, or English internal codes. Do not output so_what or source-context interpretation. "
         "Use the exact v2.2 keys prompt_version, schema_version, comparison_result, observation_id, headline, summary, text, and common_ground.text; do not rename text to claim or headline to strong_headline. Return one JSON object matching the v2.2 shape, with no wrapper and no markdown fences. If a field cannot be supported, use an empty array or null rather than inventing text. "
+        "Use only problem_definition, causal_interpretation, responsibility_attribution, evaluation, treatment_recommendation as comparison dimension codes. "
+        "The dimensions array is mandatory: never rename it to core_dimensions. Each evidence reference is an object with article_id, locator {paragraph, sentence}, sentence_sha256; copy these values exactly from the input. "
+        "The following is a structural template, not content or evidence: replace every placeholder, use at least two event paragraphs, and return no placeholders. The optional transport payload string must encode this exact object. "
+        "Stay compact: use two short event paragraphs, at most two comparison dimensions with two or three points each, and one evidence reference per named article per point. Omit terms unless essential. Do not repeat identical evidence refs. "
+        f"transport_prompt_version={TRANSPORT_PROMPT_VERSION}. OUTPUT_SHAPE={json.dumps(output_shape, ensure_ascii=False)}. "
         f"comparison_contract_version={COMPARISON_CONTRACT_VERSION}. Input: {payload}"
     )
 
