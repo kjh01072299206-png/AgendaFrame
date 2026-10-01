@@ -1,8 +1,19 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
 import { comparisonReleaseFailures } from "../scripts/comparison-release-gate.mjs";
 
 const rows = (status, publishable = true) => Array.from({ length: 5 }, (_, i) => ({ route: `/issues/${i}/outlets`, status, publishable }));
+
+test("the production verifier passes jq IN one comma-separated stream, not four arguments", () => {
+  const workflow = readFileSync(new URL("../../.github/workflows/site-gate.yml", import.meta.url), "utf8");
+  const match = workflow.match(/\| IN\(([^)]+)\)/);
+  assert.ok(match, "the production comparison status must be checked");
+  assert.equal(match[1].includes(";"), false, "jq IN accepts a single stream argument");
+  assert.deepEqual(JSON.parse(`[${match[1]}]`), [
+    "difference_confirmed", "no_clear_difference", "held_for_analysis", "analysis_failed",
+  ]);
+});
 
 test("a correctly rendered all-held snapshot is not release-ready", () => {
   assert.ok(comparisonReleaseFailures(rows("held_for_analysis")).some((message) => message.includes("모든 비교")));
