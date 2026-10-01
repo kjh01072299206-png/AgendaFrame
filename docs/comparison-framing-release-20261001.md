@@ -45,3 +45,14 @@ Google의 기존 Spend cap breached 차단은 사용자 결제 설정 변경 후
 원래 dirty 폴더를 보존하고 별도 codex/comparison-framing-release-20261001 worktree를 사용했다. 검토된 commit과 동일한 공개 파일만 immutable GCS snapshot으로 게시한다. publish-reviewed-comparison.py는 기본 dry-run이며 업로드 객체를 기존 reader 계약으로 읽어 200과 snapshot ID를 확인한다. 기대한 이전 pointer·generation과 일치할 때만 CAS 전환하며 rollback용 이전 pointer를 저장한다. 이는 새로운 Cloud Run staging 서비스 배포가 아니다.
 
 Vercel은 기존 Git 연결로 배포한다. 새 로그인·토큰을 요구하지 않는다. 공개 /version commit 일치, reader health·snapshot과 실제 비교·프레이밍 release 렌더 검증이 끝나기 전에는 완료로 보고하지 않는다.
+
+## 실제 배포 결과와 남은 정책 차단
+
+- 검토 커밋: e015f49a1cba84386775a258e3873d337cd908f0; PR #13.
+- GCS immutable 객체 7개 업로드 완료. Snapshot 21a685ef0d9660510fc4aa37ad4597eb, 실제 업로드 객체의 reader 계약 검증 HTTP 200. current pointer는 교체하지 않았다.
+- Vercel preview 빌드는 성공했다. Preview 접근은 Vercel 로그인으로 리다이렉트되므로 preview 실제 화면·버전 확인 성공을 주장하지 않는다.
+- 원격 Python 3.11/3.13 harness와 Site CI는 통과했다.
+- Release gate는 실패했다. evals/thresholds.yaml이 요구하는 실제·권리 확인·독립 검토자 2명·조정 완료·잠금 holdout이 없고 실제 품질 지표도 제공되지 않았다. semantic review, canary, rollback drill, calibration 기록도 해당 게이트 입력에 없다. 에이전트 문장 검토를 사람의 이중 검토나 실제 품질 지표로 대체하지 않았다.
+- 정식 배포 정책을 임의로 완화하거나 실패를 숨겨 merge/promotion하지 않았다. 공개 production은 538a767f5474999039c721f18a0a5256e0f57906, 기존 reader pointer는 6eccfe4f6c90ad12966b0e9b22eacfdf로 유지했다.
+
+재개 조건: 요구된 정식 평가 자료·지표를 확보하거나, 사용자가 이번 캡스톤 데모에 한해 정책 예외 배포를 명시적으로 선택해야 한다. 예외를 선택해도 사람 검토·품질 지표가 통과했다고 표기하지 않고, 현재 코드·근거·화면 검증과 공개 버전 확인을 유지한다. 본 작업은 아직 공개 배포 완료가 아니다.
