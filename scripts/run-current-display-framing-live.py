@@ -28,6 +28,7 @@ from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,6 +40,7 @@ from ai.event_synthesis import (  # noqa: E402, I001
     PROMPT_VERSION as EVENT_PROMPT_VERSION,
     SCHEMA_VERSION as EVENT_SCHEMA_VERSION,
     VertexEventSynthesizer,
+    TRANSPORT_PROMPT_VERSION,
     build_bound_comparison,
     public_comparison_payload,
     source_lens_from_profiles,
@@ -65,7 +67,10 @@ from crawler.text import sentence_rows  # noqa: E402
 
 DEFAULT_SCREEN_URL = "https://agendaframe-capstone.vercel.app/"
 DEFAULT_CONFIG = ROOT / "config" / "gcp-runtime.yaml"
-DEFAULT_OUTPUT_ROOT = ROOT / "site" / "public" / "initial-five"
+# A live run must produce a reviewable candidate first.  Publishing into the
+# checked-in public snapshot is an explicit, separate operation after the
+# candidate passes its contract and human review.
+DEFAULT_OUTPUT_ROOT = ROOT / "tmp" / "current-display-batch" / "candidate"
 DEFAULT_SUMMARY_ROOT = ROOT / "tmp" / "current-display-batch"
 KST = timezone(timedelta(hours=9))
 FORBIDDEN_PUBLIC_KEYS = frozenset(
@@ -94,6 +99,7 @@ FORBIDDEN_PUBLIC_KEYS = frozenset(
 )
 SHA256_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
 ANALYSIS_SCHEMA_VERSION = "agendaframe.article-frame-profile.v2"
+SENTENCE_ANCHOR_PROMPT_VERSION = "sentence-anchor-v1.2.0"
 
 
 class BatchError(RuntimeError):
@@ -186,7 +192,11 @@ def collect_evidence(value: object, article_id: str) -> list[dict[str, Any]]:
         if isinstance(node, Mapping):
             locator = node.get("locator")
             digest = node.get("sentence_sha256") or node.get("sentenceSha256")
-            if isinstance(locator, Mapping) and isinstance(digest, str) and SHA256_PATTERN.fullmatch(digest):
+            if (
+                isinstance(locator, Mapping)
+                and isinstance(digest, str)
+                and SHA256_PATTERN.fullmatch(digest)
+            ):
                 paragraph = locator.get("paragraph")
                 sentence = locator.get("sentence")
                 if paragraph is not None and sentence is not None:
@@ -218,7 +228,9 @@ def body_evidence_index(article: ArticleDocument) -> set[tuple[int, int, str]]:
     for row in sentence_rows(body):
         digest = hashlib.sha256(
             "agendaframe:evidence:v2:"
-            f"{article.article_id}:{row['paragraph']}:{row['sentence']}:{row['text']}".encode("utf-8")
+            f"{article.article_id}:{row['paragraph']}:{row['sentence']}:{row['text']}".encode(
+                "utf-8"
+            )
         ).hexdigest()
         result.add((int(row["paragraph"]), int(row["sentence"]), digest))
     return result
@@ -231,7 +243,11 @@ def evidence_key(row: Mapping[str, Any]) -> tuple[Any, ...] | None:
         return None
     paragraph = locator.get("paragraph")
     sentence = locator.get("sentence")
-    if not isinstance(paragraph, int) or not isinstance(sentence, int) or not SHA256_PATTERN.fullmatch(digest):
+    if (
+        not isinstance(paragraph, int)
+        or not isinstance(sentence, int)
+        or not SHA256_PATTERN.fullmatch(digest)
+    ):
         return None
     return paragraph, sentence, digest.lower()
 
@@ -285,20 +301,43 @@ def require_live_opt_in(config: RuntimeConfig, args: argparse.Namespace) -> None
         raise BatchError("production projects are not allowed for this batch")
     if args.budget_usd <= 0:
         raise BatchError("budget must be positive")
+    if args.budget_usd > config.estimated_daily_vertex_limit_usd:
+        raise BatchError(
+            "budget exceeds the configured daily Vertex limit "
+            f"${config.estimated_daily_vertex_limit_usd:.2f}"
+        )
 
 
-def projected_cost_usd(config: RuntimeConfig, articles: Sequence[Mapping[str, Any]], *, issue_count: int, attempts: int) -> float:
-    """Conservative guard for the one-off Pro run, not a billing statement."""
+def projected_cost_usd(
+    config: RuntimeConfig, articles: Sequence[Mapping[str, Any]], *, issue_count: int, attempts: int
+) -> float:
+    """Conservative guard using the reviewed model rates, not a billing statement."""
 
     input_tokens = sum(
-        min(len(str(row.get("title") or "")) + 20_000, config.vertex.max_input_characters_per_article) // 4
+        min(
+            len(str(row.get("title") or "")) + 20_000,
+            config.vertex.max_input_characters_per_article,
+        )
+        * 4
+        + 32_000
         for row in articles
     )
     article_output_tokens = len(articles) * config.vertex.max_output_tokens
-    synthesis_input_tokens = max(1, len(articles) * 260)
-    synthesis_output_tokens = issue_count * min(config.vertex.max_output_tokens, 4_000)
-    input_cost = (input_tokens + synthesis_input_tokens * issue_count) / 1_000_000 * 1.25
-    output_cost = (article_output_tokens * attempts + synthesis_output_tokens) / 1_000_000 * 10.0
+    # Upper bound for UTF-8 Korean input and body-free profile prompts.
+    synthesis_input_tokens = max(1, len(articles) * 80_000 + issue_count * 32_000)
+    synthesis_output_tokens = issue_count * config.vertex.max_output_tokens
+    input_cost = (
+        (input_tokens + synthesis_input_tokens)
+        * attempts
+        / 1_000_000
+        * config.vertex.input_usd_per_million_tokens
+    )
+    output_cost = (
+        (article_output_tokens + synthesis_output_tokens)
+        * attempts
+        / 1_000_000
+        * config.vertex.output_usd_per_million_tokens
+    )
     return input_cost + output_cost
 
 
@@ -311,20 +350,30 @@ def current_display_sources(screen_url: str) -> tuple[dict[str, Any], list[dict[
     if len(issues) != 5 or int(manifest.get("issueCount") or 0) != 5:
         raise BatchError("current public screen must contain exactly five issues")
     bundles: list[dict[str, Any]] = []
+    issue_ids: set[str] = set()
     for issue in issues:
         if not isinstance(issue, Mapping):
             raise BatchError("current public screen contains an invalid issue descriptor")
         payload_key = str(issue.get("payloadKey") or "").lstrip("/")
-        if not payload_key.startswith("issues/"):
+        issue_id = str(issue.get("issueId") or "")
+        if not issue_id or issue_id in issue_ids or payload_key != f"issues/{issue_id}.json":
             raise BatchError("current public screen returned an unsafe issue payload key")
-        bundles.append(request_json(f"{origin}/initial-five/{payload_key}"))
+        issue_ids.add(issue_id)
+        bundle = request_json(f"{origin}/api/initial-five/issues/{quote(issue_id, safe='')}")
+        if bundle.get("issue", {}).get("issueId") != issue_id or bundle.get(
+            "basisDate"
+        ) != manifest.get("basisDate"):
+            raise BatchError("current public issue API does not match the active manifest")
+        bundles.append(bundle)
     article_count = sum(len(bundle.get("articles") or []) for bundle in bundles)
     if article_count != int(manifest.get("articleCount") or 0) or article_count < 1:
         raise BatchError("current public screen manifest/article payload counts do not match")
     return manifest, bundles
 
 
-def article_document(row: Mapping[str, Any], *, body: str, collected_at: datetime) -> ArticleDocument:
+def article_document(
+    row: Mapping[str, Any], *, body: str, collected_at: datetime
+) -> ArticleDocument:
     article_id = str(row.get("articleId") or row.get("id") or "").strip()
     source_id = str(row.get("sourceId") or "").strip()
     url = canonicalize_url(str(row.get("canonicalUrl") or ""))
@@ -344,7 +393,9 @@ def article_document(row: Mapping[str, Any], *, body: str, collected_at: datetim
     )
 
 
-def fetch_one_body(row: Mapping[str, Any], *, basis_date: str) -> tuple[Mapping[str, Any], ArticleDocument | None, dict[str, Any]]:
+def fetch_one_body(
+    row: Mapping[str, Any], *, basis_date: str
+) -> tuple[Mapping[str, Any], ArticleDocument | None, dict[str, Any]]:
     article_id = str(row.get("articleId") or row.get("id") or "")
     url = str(row.get("canonicalUrl") or "")
     try:
@@ -376,31 +427,45 @@ def fetch_one_body(row: Mapping[str, Any], *, basis_date: str) -> tuple[Mapping[
             collected_at=utc_now(),
         )
         if parsed is None or not parsed.body_text:
-            return row, None, {
+            return (
+                row,
+                None,
+                {
+                    "articleId": article_id,
+                    "status": "excluded",
+                    "reason": "analysis_excluded_body_unavailable",
+                    "httpStatus": response.status,
+                    "bodyCharacters": len(parsed.body_text or "") if parsed else 0,
+                },
+            )
+        document = article_document(row, body=parsed.body_text, collected_at=parsed.collected_at)
+        return (
+            row,
+            document,
+            {
+                "articleId": article_id,
+                "status": "fetched",
+                "httpStatus": response.status,
+                "bodyCharacters": len(parsed.body_text),
+                "bodySha256": document.body_hash,
+            },
+        )
+    except Exception as error:  # body failures are article-level review states
+        return (
+            row,
+            None,
+            {
                 "articleId": article_id,
                 "status": "excluded",
                 "reason": "analysis_excluded_body_unavailable",
-                "httpStatus": response.status,
-                "bodyCharacters": len(parsed.body_text or "") if parsed else 0,
-            }
-        document = article_document(row, body=parsed.body_text, collected_at=parsed.collected_at)
-        return row, document, {
-            "articleId": article_id,
-            "status": "fetched",
-            "httpStatus": response.status,
-            "bodyCharacters": len(parsed.body_text),
-            "bodySha256": document.body_hash,
-        }
-    except Exception as error:  # body failures are article-level review states
-        return row, None, {
-            "articleId": article_id,
-            "status": "excluded",
-            "reason": "analysis_excluded_body_unavailable",
-            "errorType": type(error).__name__,
-        }
+                "errorType": type(error).__name__,
+            },
+        )
 
 
-def review_entry(row: Mapping[str, Any], *, config: RuntimeConfig, reason: str, body_sha256: str | None = None) -> dict[str, Any]:
+def review_entry(
+    row: Mapping[str, Any], *, config: RuntimeConfig, reason: str, body_sha256: str | None = None
+) -> dict[str, Any]:
     article_id = str(row.get("articleId") or row.get("id") or "")
     return {
         "articleId": article_id,
@@ -432,11 +497,23 @@ def sentence_anchor_schema() -> dict[str, Any]:
     dimension = {
         "type": "object",
         "properties": {
-            "dimension": {"type": "string"},
-            "status": {"type": "string"},
+            "dimension": {"type": "string", "enum": sorted(FRAME_DIMENSIONS)},
+            "status": {
+                "type": "string",
+                "enum": ["supported", "conflicting", "explicit_not_stated"],
+            },
             "value": {"type": ["string", "null"]},
             "frame_family": {"type": ["string", "null"]},
-            "voice_kind": {"type": ["string", "null"]},
+            "voice_kind": {
+                "type": ["string", "null"],
+                "enum": [
+                    "journalist_narration",
+                    "direct_quote",
+                    "indirect_source",
+                    "uncertain_quote",
+                    None,
+                ],
+            },
             "evidence_sentence_ids": evidence_ids,
             "reason": {"type": ["string", "null"]},
         },
@@ -454,7 +531,10 @@ def sentence_anchor_schema() -> dict[str, Any]:
         "type": "object",
         "properties": {
             "role": {"type": "string"},
-            "voice_kind": {"type": "string"},
+            "voice_kind": {
+                "type": "string",
+                "enum": ["direct_quote", "indirect_source", "uncertain_quote"],
+            },
             "evidence_sentence_ids": evidence_ids,
         },
         "required": ["role", "voice_kind", "evidence_sentence_ids"],
@@ -483,7 +563,7 @@ def sentence_anchor_schema() -> dict[str, Any]:
         "type": "object",
         "required": ["decision", "dimensions", "actors"],
         "properties": {
-            "decision": {"type": "string"},
+            "decision": {"type": "string", "enum": ["analyze", "defer", "cannot_analyze"]},
             "dimensions": {"type": "array", "items": dimension},
             "actors": {"type": "array", "items": actor},
             "structured_context": {
@@ -540,6 +620,10 @@ status=explicit_not_stated, value=null, frame_family=null, voice_kind=null, and
 an empty evidence_sentence_ids array. A source statement is attributed to the
 source, not converted into the journalist's position. Actors must use only the
 listed source roles and source voice kinds; do not return names.
+Use decision=analyze when at least one dimension is supported, otherwise defer.
+Supported evidence uses status=supported (not explicit_stated).
+voice_kind must be exactly journalist_narration, direct_quote, indirect_source,
+or uncertain_quote; do not invent alternative names for these categories.
 Structured context is optional; use only the listed codes and sentence ids.
 FRAME_FAMILY_TAXONOMY: {taxonomy}
 SOURCE_ROLES: {roles}
@@ -552,7 +636,9 @@ PARSED_SENTENCES:
 """
 
 
-def anchor_rows(rows: Sequence[Mapping[str, Any]], ids: object, article_id: str) -> list[dict[str, Any]]:
+def anchor_rows(
+    rows: Sequence[Mapping[str, Any]], ids: object, article_id: str
+) -> list[dict[str, Any]]:
     if not isinstance(ids, Sequence) or isinstance(ids, (str, bytes, bytearray)):
         return []
     output: list[dict[str, Any]] = []
@@ -579,7 +665,9 @@ def anchor_rows(rows: Sequence[Mapping[str, Any]], ids: object, article_id: str)
     return output
 
 
-def explicit_dimension(name: str, reason: str = "문장 근거가 확인되지 않아 명시하지 않음") -> dict[str, Any]:
+def explicit_dimension(
+    name: str, reason: str = "문장 근거가 확인되지 않아 명시하지 않음"
+) -> dict[str, Any]:
     return {
         "dimension": name,
         "status": "explicit_not_stated",
@@ -594,6 +682,7 @@ def explicit_dimension(name: str, reason: str = "문장 근거가 확인되지 �
 def normalize_voice_kind(value: object) -> str | None:
     normalized = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
     return {
+        "journalist_narration": "journalist_narration",
         "journalist": "journalist_narration",
         "reporter": "journalist_narration",
         "journalist_voice": "journalist_narration",
@@ -625,7 +714,9 @@ def sentence_anchor_result(
     body = article.body_text or ""
     raw_dimensions = payload.get("dimensions")
     by_name: dict[str, Mapping[str, Any]] = {}
-    if isinstance(raw_dimensions, Sequence) and not isinstance(raw_dimensions, (str, bytes, bytearray)):
+    if isinstance(raw_dimensions, Sequence) and not isinstance(
+        raw_dimensions, (str, bytes, bytearray)
+    ):
         for raw in raw_dimensions:
             if isinstance(raw, Mapping):
                 name = str(raw.get("dimension") or "")
@@ -636,7 +727,9 @@ def sentence_anchor_result(
     for name in sorted(FRAME_DIMENSIONS):
         raw = by_name.get(name)
         if raw is None:
-            dimensions.append(explicit_dimension(name, "모델이 해당 차원을 반환하지 않아 명시하지 않음"))
+            dimensions.append(
+                explicit_dimension(name, "모델이 해당 차원을 반환하지 않아 명시하지 않음")
+            )
             continue
         status = str(raw.get("status") or "")
         value = raw.get("value")
@@ -649,11 +742,14 @@ def sentence_anchor_result(
             or not value.strip()
             or len(value.strip()) > 160
             or family not in FRAME_FAMILIES.get(name, set())
-            or voice not in {"journalist_narration", "direct_quote", "indirect_source", "uncertain_quote"}
+            or voice
+            not in {"journalist_narration", "direct_quote", "indirect_source", "uncertain_quote"}
             or not evidence
             or _unsafe_public_value_reason(body, value.strip()) is not None
         ):
-            dimensions.append(explicit_dimension(name, "모델 판정과 문장 근거가 함께 검증되지 않아 명시하지 않음"))
+            dimensions.append(
+                explicit_dimension(name, "모델 판정과 문장 근거가 함께 검증되지 않아 명시하지 않음")
+            )
             continue
         observed += 1
         dimensions.append(
@@ -677,7 +773,11 @@ def sentence_anchor_result(
             role = raw.get("role")
             voice = normalize_voice_kind(raw.get("voice_kind"))
             evidence = anchor_rows(rows, raw.get("evidence_sentence_ids"), article.article_id)
-            if role not in SOURCE_ROLES or voice not in {"direct_quote", "indirect_source", "uncertain_quote"} or not evidence:
+            if (
+                role not in SOURCE_ROLES
+                or voice not in {"direct_quote", "indirect_source", "uncertain_quote"}
+                or not evidence
+            ):
                 continue
             actors.append({"role": role, "voice_kind": voice, "evidence": evidence})
 
@@ -693,7 +793,7 @@ def sentence_anchor_result(
             if code not in allowed:
                 code = "unknown"
             evidence = anchor_rows(rows, raw.get("evidence_sentence_ids"), article.article_id)
-            if code != "unknown" and not evidence:
+            if code == "unknown" or not evidence:
                 code = "unknown"
                 evidence = []
             context[key] = {
@@ -705,7 +805,13 @@ def sentence_anchor_result(
             values = raw_context.get(key)
             if not isinstance(values, Sequence) or isinstance(values, (str, bytes, bytearray)):
                 continue
-            allowed = STRUCTURED_CONTEXT_CODES["generic_frame" if key == "generic_frames" else "policy_frame" if key == "policy_frames" else "framing_device"]
+            allowed = STRUCTURED_CONTEXT_CODES[
+                "generic_frame"
+                if key == "generic_frames"
+                else "policy_frame"
+                if key == "policy_frames"
+                else "framing_device"
+            ]
             items: list[dict[str, Any]] = []
             for raw in values[:8]:
                 if not isinstance(raw, Mapping):
@@ -714,7 +820,7 @@ def sentence_anchor_result(
                 if code not in allowed:
                     continue
                 evidence = anchor_rows(rows, raw.get("evidence_sentence_ids"), article.article_id)
-                if code != "unknown" and not evidence:
+                if code == "unknown" or not evidence:
                     code = "unknown"
                     evidence = []
                 items.append(
@@ -722,7 +828,11 @@ def sentence_anchor_result(
                         "code": code,
                         "label": raw.get("label"),
                         "evidence": evidence,
-                        **({"appears_in_lead": bool(raw.get("appears_in_lead", False))} if key == "framing_devices" else {}),
+                        **(
+                            {"appears_in_lead": bool(raw.get("appears_in_lead", False))}
+                            if key == "framing_devices"
+                            else {}
+                        ),
                     }
                 )
             context[key] = items
@@ -732,7 +842,9 @@ def sentence_anchor_result(
         article_id=article.article_id,
         decision=(
             "analyze"
-            if observed and str(payload.get("decision") or "").strip().lower() not in {"defer", "cannot_analyze"}
+            if observed
+            and str(payload.get("decision") or "").strip().lower()
+            not in {"defer", "cannot_analyze"}
             else "review_needed"
         ),
         dimensions=tuple(dimensions),
@@ -758,7 +870,9 @@ def sentence_anchor_result(
         input_truncated=False,
         analysis_state=(
             AnalysisState.SUCCEEDED.value
-            if observed and str(payload.get("decision") or "").strip().lower() not in {"defer", "cannot_analyze"}
+            if observed
+            and str(payload.get("decision") or "").strip().lower()
+            not in {"defer", "cannot_analyze"}
             else AnalysisState.REVIEW_NEEDED.value
         ),
         attempt_count=attempt,
@@ -773,7 +887,9 @@ def sentence_anchor_result(
     return result
 
 
-def analyze_with_sentence_anchors(article: ArticleDocument, *, config: RuntimeConfig, token: str) -> FrameResult:
+def analyze_with_sentence_anchors(
+    article: ArticleDocument, *, config: RuntimeConfig, token: str
+) -> FrameResult:
     from google import genai
     from google.genai import types
     from google.oauth2.credentials import Credentials
@@ -788,6 +904,7 @@ def analyze_with_sentence_anchors(article: ArticleDocument, *, config: RuntimeCo
         credentials=Credentials(token=token),
     )
     last_error: Exception | None = None
+    failure_code = "sentence_anchor_analysis_failed"
     for attempt in range(1, max(1, min(config.vertex.max_attempts, 3)) + 1):
         try:
             response = client.models.generate_content(
@@ -798,7 +915,9 @@ def analyze_with_sentence_anchors(article: ArticleDocument, *, config: RuntimeCo
                     max_output_tokens=config.vertex.max_output_tokens,
                     response_mime_type="application/json",
                     response_json_schema=sentence_anchor_schema(),
-                    thinking_config=types.ThinkingConfig(thinking_budget=config.vertex.thinking_budget),
+                    thinking_config=types.ThinkingConfig(
+                        thinking_budget=config.vertex.thinking_budget
+                    ),
                 ),
             )
             response_text = response.text or ""
@@ -817,10 +936,26 @@ def analyze_with_sentence_anchors(article: ArticleDocument, *, config: RuntimeCo
             )
         except Exception as error:
             last_error = error
+            details = getattr(error, "details", None)
+            provider_error = details.get("error") if isinstance(details, Mapping) else None
+            message = (
+                str(provider_error.get("message", "")).lower()
+                if isinstance(provider_error, Mapping)
+                else ""
+            )
+            failure_code = (
+                "provider_spend_cap_breached"
+                if getattr(error, "code", None) == 403 and "spend cap breached" in message
+                else "sentence_anchor_analysis_failed"
+            )
+            if getattr(error, "code", None) in {400, 401, 403}:
+                break
             if attempt < config.vertex.max_attempts:
                 continue
-    dimensions = tuple(explicit_dimension(name, "문장 번호 기반 근거 검증 실패") for name in sorted(FRAME_DIMENSIONS))
-    detail = re.sub(r"\s+", " ", str(last_error)).strip()[:240] if last_error else "unknown"
+    dimensions = tuple(
+        explicit_dimension(name, "문장 번호 기반 근거 검증 실패")
+        for name in sorted(FRAME_DIMENSIONS)
+    )
     return FrameResult(
         article_id=article.article_id,
         decision="review_needed",
@@ -831,10 +966,10 @@ def analyze_with_sentence_anchors(article: ArticleDocument, *, config: RuntimeCo
         text_scope=article.text_scope,
         analyzed_character_count=len(body),
         input_truncated=False,
-        fallback_reason=f"sentence_anchor_analysis_failed:{type(last_error).__name__ if last_error else 'unknown'}:{detail}",
+        fallback_reason=f"{failure_code}:{type(last_error).__name__ if last_error else 'unknown'}",
         analysis_state=AnalysisState.REVIEW_NEEDED.value,
-        attempt_count=max(1, min(config.vertex.max_attempts, 3)),
-        error_code=type(last_error).__name__ if last_error else "sentence_anchor_analysis_failed",
+        attempt_count=attempt,
+        error_code=failure_code,
         retryable_failure=False,
     )
 
@@ -849,25 +984,39 @@ def analyze_one(
 ) -> tuple[str, dict[str, Any], dict[str, Any]]:
     article_id = str(row.get("articleId") or row.get("id") or "")
     if document is None:
-        return article_id, review_entry(row, config=config, reason="analysis_excluded_body_unavailable"), {
-            "articleId": article_id,
-            "status": "excluded",
-            "reason": "analysis_excluded_body_unavailable",
-        }
+        return (
+            article_id,
+            review_entry(row, config=config, reason="analysis_excluded_body_unavailable"),
+            {
+                "articleId": article_id,
+                "status": "excluded",
+                "reason": "analysis_excluded_body_unavailable",
+            },
+        )
     try:
         result = analyze_with_sentence_anchors(document, config=config, token=token)
-        if result.decision != "analyze" or result.fallback_reason is not None or result.analysis_state == "review_needed":
-            return article_id, review_entry(
-                row,
-                config=config,
-                reason=result.fallback_reason or result.error_code or "vertex_analysis_review_needed",
-                body_sha256=document.body_hash,
-            ), {
-                "articleId": article_id,
-                "status": "review_needed",
-                "reason": result.error_code or "vertex_analysis_review_needed",
-                "attemptCount": result.attempt_count,
-            }
+        if (
+            result.decision != "analyze"
+            or result.fallback_reason is not None
+            or result.analysis_state == "review_needed"
+        ):
+            return (
+                article_id,
+                review_entry(
+                    row,
+                    config=config,
+                    reason=result.fallback_reason
+                    or result.error_code
+                    or "vertex_analysis_review_needed",
+                    body_sha256=document.body_hash,
+                ),
+                {
+                    "articleId": article_id,
+                    "status": "review_needed",
+                    "reason": result.error_code or "vertex_analysis_review_needed",
+                    "attemptCount": result.attempt_count,
+                },
+            )
         profile = strip_private_flags(public_profile(document, result))
         if not isinstance(profile, dict):
             raise BatchError(f"public profile must remain an object: {article_id}")
@@ -898,25 +1047,33 @@ def analyze_one(
         serialized = public_json(entry)
         if document.body_text and document.body_text in serialized:
             raise BatchError(f"body leaked into public profile: {article_id}")
-        return article_id, entry, {
-            "articleId": article_id,
-            "status": "succeeded",
-            "evidenceCount": len(evidence),
-            "attemptCount": result.attempt_count,
-            "inputTokens": result.input_tokens,
-            "outputTokens": result.output_tokens,
-        }
+        return (
+            article_id,
+            entry,
+            {
+                "articleId": article_id,
+                "status": "succeeded",
+                "evidenceCount": len(evidence),
+                "attemptCount": result.attempt_count,
+                "inputTokens": result.input_tokens,
+                "outputTokens": result.output_tokens,
+            },
+        )
     except Exception as error:
-        return article_id, review_entry(
-            row,
-            config=config,
-            reason=f"vertex_analysis_failed:{type(error).__name__}",
-            body_sha256=document.body_hash,
-        ), {
-            "articleId": article_id,
-            "status": "review_needed",
-            "reason": f"vertex_analysis_failed:{type(error).__name__}",
-        }
+        return (
+            article_id,
+            review_entry(
+                row,
+                config=config,
+                reason=f"vertex_analysis_failed:{type(error).__name__}",
+                body_sha256=document.body_hash,
+            ),
+            {
+                "articleId": article_id,
+                "status": "review_needed",
+                "reason": f"vertex_analysis_failed:{type(error).__name__}",
+            },
+        )
 
 
 def with_article_body_metadata(
@@ -952,6 +1109,58 @@ def comparison_evidence(value: object) -> list[dict[str, Any]]:
 
     visit(value)
     return rows
+
+
+def _comparison_result_gate(bundle: Mapping[str, Any]) -> tuple[str | None, str | None]:
+    comparison = bundle.get("comparison")
+    data = comparison.get("data") if isinstance(comparison, Mapping) else None
+    synthesis = data.get("synthesis") if isinstance(data, Mapping) else None
+    if not isinstance(synthesis, Mapping):
+        return None, "missing_synthesis"
+
+    result = synthesis.get("comparison_result")
+    if not isinstance(result, Mapping):
+        return None, "missing_comparison_result"
+    status = str(result.get("status") or "")
+
+    if data.get("comparison_result") != result:
+        return status or None, "comparison_result_mismatch"
+    if (
+        synthesis.get("promptVersion") or synthesis.get("prompt_version")
+    ) != EVENT_PROMPT_VERSION or (
+        synthesis.get("schemaVersion") or synthesis.get("schema_version")
+    ) != EVENT_SCHEMA_VERSION:
+        return status or None, "legacy_comparison_contract"
+    if synthesis.get("usable") is not True:
+        return status or None, "unusable_synthesis"
+    if synthesis.get("source") != "gcp:event-synthesis":
+        return status or None, "not_direct_event_synthesis"
+
+    invocation = synthesis.get("invocation")
+    if not isinstance(invocation, Mapping) or invocation.get("provider") != "vertex_ai":
+        return status or None, "missing_vertex_invocation"
+    if (
+        invocation.get("prompt_version") != EVENT_PROMPT_VERSION
+        or not str(invocation.get("model") or "").strip()
+    ):
+        return status or None, "invalid_vertex_invocation"
+    if any(
+        not isinstance(invocation.get(field), str)
+        or not SHA256_PATTERN.fullmatch(invocation[field])
+        for field in ("request_sha256", "response_sha256")
+    ):
+        return status or None, "invalid_vertex_invocation_digest"
+
+    if result.get("version") != "comparison-v1.0.0":
+        return status or None, "invalid_comparison_result_version"
+    if status not in {
+        "difference_confirmed",
+        "no_clear_difference",
+        "held_for_analysis",
+        "analysis_failed",
+    }:
+        return status or None, "invalid_comparison_result_status"
+    return status, None
 
 
 def synthesize_issue(
@@ -1008,7 +1217,9 @@ def synthesize_issue(
                     "usable": False,
                     "source": "gcp:event-synthesis",
                 },
-                "not_observed_statements": ["의제 종합은 근거 검증을 통과한 문장이 없어 공개하지 않습니다."],
+                "not_observed_statements": [
+                    "의제 종합은 근거 검증을 통과한 문장이 없어 공개하지 않습니다."
+                ],
             },
             "evidence": [],
         }, {
@@ -1024,9 +1235,13 @@ def synthesize_issue(
         outlet_count=len({str(row.get("outlet") or row.get("sourceId") or "") for row in articles}),
     )
     payload["source_lens"] = source_lens_from_profiles(profiles, articles)
-    payload["not_observed_statements"] = [
-        f"{len(articles) - len(profiles)}건은 본문 확보·분석에서 제외되어 종합 근거로 사용하지 않았습니다."
-    ] if len(profiles) < len(articles) else []
+    payload["not_observed_statements"] = (
+        [
+            f"{len(articles) - len(profiles)}건은 본문 확보·분석에서 제외되어 종합 근거로 사용하지 않았습니다."
+        ]
+        if len(profiles) < len(articles)
+        else []
+    )
     comparison = {
         "engine": {
             "label": "ai_semantic",
@@ -1056,6 +1271,7 @@ def verify_issue(
     documents: Mapping[str, ArticleDocument],
 ) -> dict[str, Any]:
     issue_id = str(bundle.get("issue", {}).get("issueId") or "")
+    comparison_result_status, comparison_result_error = _comparison_result_gate(bundle)
     profiles = bundle.get("semanticProfiles") or []
     profile_evidence: set[tuple[str, int, int, str]] = set()
     public_claim_count = 0
@@ -1092,7 +1308,11 @@ def verify_issue(
     synthesis_claim_count = 0
     if isinstance(synthesis, Mapping):
         for claim in synthesis.values():
-            if isinstance(claim, Mapping) and claim.get("status") == "observed" and claim.get("text"):
+            if (
+                isinstance(claim, Mapping)
+                and claim.get("status") == "observed"
+                and claim.get("text")
+            ):
                 synthesis_claim_count += 1
     comparison_refs = comparison_evidence((bundle.get("comparison") or {}).get("data") or {})
     unbound_comparison = 0
@@ -1105,14 +1325,23 @@ def verify_issue(
     return {
         "issueId": issue_id,
         "articleCount": len(bundle.get("articles") or []),
-        "succeededArticleCount": sum(1 for entry in profiles if isinstance(entry, Mapping) and entry.get("status") == "succeeded"),
+        "succeededArticleCount": sum(
+            1
+            for entry in profiles
+            if isinstance(entry, Mapping) and entry.get("status") == "succeeded"
+        ),
         "profileEvidenceCount": len(profile_evidence),
         "publicClaimCount": public_claim_count + synthesis_claim_count,
         "synthesisClaimCount": synthesis_claim_count,
         "comparisonEvidenceCount": len(comparison_refs),
         "unboundComparisonEvidence": unbound_comparison,
         "invalidEvidence": invalid_evidence,
-        "passed": invalid_evidence == 0 and unbound_comparison == 0,
+        "comparisonResultStatus": comparison_result_status,
+        "comparisonResultValid": comparison_result_error is None,
+        "comparisonResultError": comparison_result_error,
+        "passed": invalid_evidence == 0
+        and unbound_comparison == 0
+        and comparison_result_error is None,
     }
 
 
@@ -1146,9 +1375,15 @@ def build_bundle(
     bundle["comparison"] = copy.deepcopy(dict(comparison))
     succeeded = sum(1 for entry in bundle["semanticProfiles"] if entry.get("status") == "succeeded")
     article_count = len(articles)
-    semantic_status = "succeeded" if succeeded == article_count and article_count else "review_needed"
+    semantic_status = (
+        "succeeded" if succeeded == article_count and article_count else "review_needed"
+    )
     bundle["analysisStatus"] = copy.deepcopy(bundle.get("analysisStatus") or {})
-    bundle["analysisStatus"]["state"] = "succeeded" if semantic_status == "succeeded" and comparison_status.get("usable") else "review_needed"
+    bundle["analysisStatus"]["state"] = (
+        "succeeded"
+        if semantic_status == "succeeded" and comparison_status.get("usable")
+        else "review_needed"
+    )
     bundle["analysisStatus"]["semantic"] = {
         "status": semantic_status,
         "engineLabel": "ai_semantic" if succeeded else "unavailable",
@@ -1172,28 +1407,131 @@ def build_bundle(
     source["semanticBatchModel"] = config.vertex.model
     source["semanticBatchPromptVersion"] = config.vertex.prompt_version
     source["eventSynthesisPromptVersion"] = EVENT_PROMPT_VERSION
-    bundle["lineage"]["analysisBoundary"] = "current Vercel display articles only; collection/ranking/scheduler untouched"
+    bundle["lineage"]["analysisBoundary"] = (
+        "current Vercel display articles only; collection/ranking/scheduler untouched"
+    )
     if not contains_forbidden_key(bundle):
         return bundle
-    raise BatchError(f"forbidden public key in generated issue bundle: {bundle.get('issue', {}).get('issueId')}")
+    raise BatchError(
+        f"forbidden public key in generated issue bundle: {bundle.get('issue', {}).get('issueId')}"
+    )
+
+
+def checkpoint_context(
+    config: RuntimeConfig, manifest: Mapping[str, Any], bundles: Sequence[Mapping[str, Any]]
+) -> str:
+    value = {
+        "project": config.project_id,
+        "model": config.vertex.model,
+        "prompt": config.vertex.prompt_version,
+        "sentenceAnchorPrompt": SENTENCE_ANCHOR_PROMPT_VERSION,
+        "schema": config.vertex.schema_version,
+        "inputLimit": config.vertex.max_input_characters_per_article,
+        "eventPrompt": EVENT_PROMPT_VERSION,
+        "manifest": manifest,
+        "bundles": bundles,
+    }
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()
+
+
+def load_checkpoint(path: Path | None, context: str) -> dict[str, Any]:
+    if path is None:
+        return {
+            "schemaVersion": "current-display-checkpoint.v1",
+            "runId": uuid.uuid4().hex,
+            "contextFingerprint": context,
+            "articles": {},
+        }
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if (
+        not isinstance(value, dict)
+        or value.get("schemaVersion") != "current-display-checkpoint.v1"
+        or value.get("contextFingerprint") != context
+        or not re.fullmatch(r"[0-9a-f]{32}", str(value.get("runId", "")))
+        or not isinstance(value.get("articles"), dict)
+        or contains_forbidden_key(value)
+    ):
+        raise BatchError(
+            "checkpoint does not match the current source/model/prompt or contains forbidden data"
+        )
+    return value
+
+
+def reusable_checkpoint_entry(
+    checkpoint: Mapping[str, Any], document: ArticleDocument | None, config: RuntimeConfig
+) -> dict[str, Any] | None:
+    if document is None:
+        return None
+    cached = (checkpoint.get("articles") or {}).get(document.article_id)
+    if not isinstance(cached, Mapping):
+        return None
+    entry = cached.get("entry")
+    if (
+        not isinstance(entry, dict)
+        or entry.get("articleId") != document.article_id
+        or entry.get("status") != "succeeded"
+    ):
+        return None
+    engine = entry.get("engine") or {}
+    profile = entry.get("profile") or {}
+    if not isinstance(engine, Mapping) or not isinstance(profile, Mapping):
+        return None
+    lineage = profile.get("lineage") or {}
+    if not isinstance(lineage, Mapping):
+        return None
+    receipt = lineage.get("invocation") or {}
+    if not isinstance(receipt, Mapping):
+        return None
+    if (
+        engine.get("bodySha256") != document.body_hash
+        or engine.get("model") != config.vertex.model
+        or engine.get("promptVersion") != config.vertex.prompt_version
+        or lineage.get("batch_run_id") != checkpoint.get("runId")
+        or receipt.get("provider") != "vertex_ai"
+        or receipt.get("model") != config.vertex.model
+        or receipt.get("prompt_version") != config.vertex.prompt_version
+        or not SHA256_PATTERN.fullmatch(str(receipt.get("request_sha256", "")))
+        or not SHA256_PATTERN.fullmatch(str(receipt.get("response_sha256", "")))
+        or contains_forbidden_key(entry)
+    ):
+        return None
+    refs = comparison_evidence(entry)
+    body_index = body_evidence_index(document)
+    if not refs or any(
+        ref["articleId"] != document.article_id or evidence_key(ref) not in body_index
+        for ref in refs
+    ):
+        return None
+    return copy.deepcopy(entry)
+
+
+def save_checkpoint(path: Path, checkpoint: Mapping[str, Any]) -> None:
+    if contains_forbidden_key(checkpoint):
+        raise BatchError("checkpoint contains forbidden data")
+    atomic_write_json(path, checkpoint)
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
     config = RuntimeConfig.from_yaml(args.config)
+    model = selected_model(config, args.model)
+    max_attempts = selected_attempts(config, args.max_attempts)
     config = replace(
         config,
         vertex=replace(
             config.vertex,
-            model=args.model,
-            max_attempts=args.max_attempts,
+            model=model,
+            prompt_version=f"{config.vertex.prompt_version}:{SENTENCE_ANCHOR_PROMPT_VERSION}",
+            max_attempts=max_attempts,
             # Gemini 2.5 Pro rejects an explicit thinking_budget=0.  A bounded
             # thinking budget leaves enough room for the evidence JSON; lite
             # keeps the repository's configured zero-budget behavior.
             thinking_budget=(
-                2048 if args.model.startswith("gemini-2.5-pro") else config.vertex.thinking_budget
+                2048 if model.startswith("gemini-2.5-pro") else config.vertex.thinking_budget
             ),
             max_output_tokens=(
-                6000 if args.model.startswith("gemini-2.5-pro") else config.vertex.max_output_tokens
+                6000 if model.startswith("gemini-2.5-pro") else config.vertex.max_output_tokens
             ),
         ),
     )
@@ -1221,9 +1559,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         attempts=config.vertex.max_attempts,
     )
     if estimated > args.budget_usd:
-        raise BatchError(f"conservative projected Pro cost ${estimated:.2f} exceeds supplied budget ${args.budget_usd:.2f}")
+        raise BatchError(
+            f"conservative projected {config.vertex.model} cost ${estimated:.2f} exceeds "
+            f"supplied budget ${args.budget_usd:.2f}"
+        )
     token = resolve_access_token(args)
-    run_id = uuid.uuid4().hex
+    checkpoint = load_checkpoint(
+        args.resume_checkpoint, checkpoint_context(config, manifest, source_bundles)
+    )
+    run_id = checkpoint["runId"]
+    checkpoint_path = args.summary_root / f"{run_id}.checkpoint.json"
+    save_checkpoint(checkpoint_path, checkpoint)
 
     documents: dict[str, ArticleDocument] = {}
     body_results: dict[str, dict[str, Any]] = {}
@@ -1238,6 +1584,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     entries_by_article: dict[str, dict[str, Any]] = {}
     article_results: list[dict[str, Any]] = []
+    pending_rows = []
+    for row in all_rows:
+        article_id = str(row.get("articleId") or row.get("id") or "")
+        cached = reusable_checkpoint_entry(checkpoint, documents.get(article_id), config)
+        if cached is None:
+            pending_rows.append(row)
+        else:
+            entries_by_article[article_id] = cached
+            article_results.append(
+                {"articleId": article_id, "status": "succeeded", "reusedCheckpoint": True}
+            )
     with ThreadPoolExecutor(max_workers=args.article_workers) as pool:
         futures = [
             pool.submit(
@@ -1248,12 +1605,25 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 token=token,
                 run_id=run_id,
             )
-            for row in all_rows
+            for row in pending_rows
         ]
         for future in as_completed(futures):
             article_id, entry, result = future.result()
             entries_by_article[article_id] = entry
             article_results.append(result)
+            checkpoint["articles"][article_id] = {"entry": entry, "result": result}
+            save_checkpoint(checkpoint_path, checkpoint)
+
+    if any(row.get("reason") == "provider_spend_cap_breached" for row in article_results):
+        checkpoint["failure"] = "provider_spend_cap_breached"
+        save_checkpoint(checkpoint_path, checkpoint)
+        raise BatchError(
+            f"provider_spend_cap_breached; body-free checkpoint retained: {checkpoint_path}"
+        )
+    if not any(row.get("status") == "succeeded" for row in article_results):
+        raise BatchError(
+            f"no verified article profiles; body-free checkpoint retained: {checkpoint_path}"
+        )
 
     comparison_by_issue: dict[str, dict[str, Any]] = {}
     comparison_status_by_issue: dict[str, dict[str, Any]] = {}
@@ -1262,7 +1632,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         for source_bundle in source_bundles:
             issue_id = str(source_bundle.get("issue", {}).get("issueId") or "")
             issue_entries = {
-                str(article.get("articleId") or ""): entries_by_article[str(article.get("articleId") or "")]
+                str(article.get("articleId") or ""): entries_by_article[
+                    str(article.get("articleId") or "")
+                ]
                 for article in source_bundle.get("articles") or []
                 if str(article.get("articleId") or "") in entries_by_article
             }
@@ -1277,10 +1649,31 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 )
             )
         for future in as_completed(futures):
-            comparison, status = future.result()
+            try:
+                comparison, status = future.result()
+            except Exception as error:
+                checkpoint["failure"] = (
+                    "provider_spend_cap_breached"
+                    if "provider_spend_cap_breached" in str(error)
+                    else "synthesis_failed"
+                )
+                checkpoint["failureType"] = type(error).__name__
+                if type(error).__name__ == "EventSynthesisError":
+                    match = re.search(r"\(([A-Za-z0-9_:,]+)\)$", str(error))
+                    checkpoint["failureCodes"] = match.group(1).split(",") if match else []
+                save_checkpoint(checkpoint_path, checkpoint)
+                raise BatchError(
+                    f"{checkpoint['failure']}; body-free checkpoint retained: {checkpoint_path}"
+                ) from error
             issue_id = str(status.get("issueId") or "")
             comparison_by_issue[issue_id] = comparison
             comparison_status_by_issue[issue_id] = status
+            checkpoint.setdefault("synthesis", {})[issue_id] = {
+                "transportPromptVersion": TRANSPORT_PROMPT_VERSION,
+                "comparison": comparison,
+                "status": status,
+            }
+            save_checkpoint(checkpoint_path, checkpoint)
 
     output_bundles: dict[str, dict[str, Any]] = {}
     for source_bundle in source_bundles:
@@ -1290,7 +1683,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             {
                 article_id: entries_by_article[article_id]
                 for article_id in entries_by_article
-                if any(str(row.get("articleId") or "") == article_id for row in source_bundle.get("articles") or [])
+                if any(
+                    str(row.get("articleId") or "") == article_id
+                    for row in source_bundle.get("articles") or []
+                )
             },
             documents,
             comparison_by_issue[issue_id],
@@ -1307,7 +1703,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         if isinstance(entry, Mapping) and entry.get("status") == "succeeded"
     )
     if total_succeeded == 0:
-        raise BatchError("no current-display article produced a verified Vertex profile; no public artifact was written")
+        raise BatchError(
+            "no current-display article produced a verified Vertex profile; no public artifact was written"
+        )
 
     verification: dict[str, dict[str, Any]] = {}
     with ThreadPoolExecutor(max_workers=args.verification_workers) as pool:
@@ -1319,7 +1717,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             issue_id = futures[future]
             verification[issue_id] = future.result()
     if not all(row.get("passed") for row in verification.values()):
+        checkpoint["verification"] = verification
+        save_checkpoint(checkpoint_path, checkpoint)
         raise BatchError("evidence verification failed; no public artifact was written")
+
+    for key in ("failure", "failureType", "failureCodes"):
+        checkpoint.pop(key, None)
+    checkpoint["verification"] = verification
+    save_checkpoint(checkpoint_path, checkpoint)
 
     output_manifest = copy.deepcopy(manifest)
     output_manifest["analysisRunId"] = run_id
@@ -1369,7 +1774,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "succeeded": sum(1 for row in article_results if row.get("status") == "succeeded"),
             "reviewNeeded": sum(1 for row in article_results if row.get("status") != "succeeded"),
         },
-        "synthesis": sorted(comparison_status_by_issue.values(), key=lambda row: str(row.get("issueId"))),
+        "synthesis": sorted(
+            comparison_status_by_issue.values(), key=lambda row: str(row.get("issueId"))
+        ),
         "verification": sorted(verification.values(), key=lambda row: str(row.get("issueId"))),
         "conservativeProjectedCostUsd": round(estimated, 4),
         "rawArticleBodyWritten": False,
@@ -1380,16 +1787,30 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     return summary
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def selected_model(config: RuntimeConfig, requested: str | None) -> str:
+    model = requested.strip() if isinstance(requested, str) else ""
+    if not model:
+        return config.vertex.model
+    if model != config.vertex.model:
+        raise BatchError("model override must match the model with configured cost rates")
+    return model
+
+
+def selected_attempts(config: RuntimeConfig, requested: int | None) -> int:
+    return min(config.vertex.max_attempts, 2) if requested is None else requested
+
+
+def build_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--live", action="store_true")
     parser.add_argument("--screen-url", default=DEFAULT_SCREEN_URL)
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--summary-root", type=Path, default=DEFAULT_SUMMARY_ROOT)
-    parser.add_argument("--model", default="gemini-2.5-pro")
-    parser.add_argument("--max-attempts", type=int, choices=(1, 2, 3), default=3)
-    parser.add_argument("--budget-usd", type=float, default=12.0)
+    parser.add_argument("--resume-checkpoint", type=Path)
+    parser.add_argument("--model")
+    parser.add_argument("--max-attempts", type=int, choices=(1, 2, 3))
+    parser.add_argument("--budget-usd", type=float, default=2.00)
     parser.add_argument("--fetch-workers", type=int, choices=(4, 6, 8, 10), default=8)
     parser.add_argument("--article-workers", type=int, choices=(4, 6, 8, 10), default=8)
     parser.add_argument("--synthesis-workers", type=int, choices=(3, 4, 5), default=5)
@@ -1397,7 +1818,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--access-token-env", default="AGENDAFRAME_ACCESS_TOKEN")
     parser.add_argument("--gcloud-bin", type=Path, default=Path("gcloud"))
     parser.add_argument("--gcloud-config", type=Path)
-    args = parser.parse_args(argv)
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = build_argument_parser().parse_args(argv)
     try:
         summary = run(args)
     except (BatchError, OSError, ValueError, KeyError) as error:

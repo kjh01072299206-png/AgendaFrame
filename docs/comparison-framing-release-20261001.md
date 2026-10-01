@@ -1,0 +1,64 @@
+# 언론사 비교·프레이밍 릴리스 검증 (2026-10-01)
+
+## 실제 분석과 원인
+
+Google의 기존 Spend cap breached 차단은 사용자 결제 설정 변경 후 해소됐고 실제 Vertex 요청이 성공했다. 이후 별개 문제인 화자 코드 정규화 누락, JSON 출력 계약 불일치, 실제 camelCase 메타데이터 거부, 본문에 섞인 추천·회전 광고 문구를 수정했다. 본문 해시만으로 의미 정확성을 주장하지 않는다.
+
+현재 공개 API의 5개 의제·40개 기사 메타데이터를 기준으로 재분석했다. 38개 본문 중 37개 기사 분석이 근거 검증에 성공했으며 3개는 본문 부재 또는 검토 필요 상태로 남겼다. 순위·의제·날짜를 변경하지 않았다. 기준일 2026-08-15이며 오늘의 새 뉴스라고 주장하지 않는다.
+
+- 모델: gemini-2.5-flash-lite, 생각 예산 0.
+- 실행 ID: 7f0aba42d002493abe9abac8663bb881.
+- 기사 프롬프트: sentence-anchor-v1.2.0; 전송 프롬프트: event-synthesis-transport-v1.3.0.
+- 공개 계약: event-synthesis-v2.2.0 / agendaframe.event-synthesis.v2.2.
+- 원문·원본 모델 응답·토큰은 공개 산출물에 저장하지 않았다. 실제 호출 영수증 해시·모델·시각과 기사 ID·근거 위치·해시는 보존했다.
+
+## 공개 문장 검토
+
+추가 모델 검토에서도 잘못된 직함과 근거보다 강한 인과 설명이 남아 있었다. 에이전트가 인용 문장을 직접 확인해 더 좁은 표현으로 편집했다. 사람의 평가나 holdout 모델 품질 측정은 아니다.
+
+공개 문장과 근거 부족 비교점만 수정했다. 비교 관계 라벨이나 대립 진영을 새로 생성하지 않았다. 같은 KBS 문장으로 차이를 주장한 점과 인용되지 않은 함정 부족·회사 수혜 예측·폭언·법리적 오해·지급 부담 회피 설명을 삭제하거나 좁혔다. 당사자 입장과 기자 해석은 출처를 구분했다. editorial_review에 전후 해시·범위·버전을 기록했다.
+
+최종 candidate-reviewed-20261001의 새 본문 증거 재검증과 실제 프런트엔드 공개 계약 검사는 5개 모두 통과했다. 잘못된 증거·연결되지 않은 비교 증거는 0건이었다.
+
+| 순위 | 비교 결과 |
+|---|---|
+| 1 | 비교 보류: 기사별 분석 유지, 매체 차이 미확정 |
+| 2 | 뚜렷한 차이 없음 |
+| 3 | 뚜렷한 차이 없음 |
+| 4 | 뚜렷한 차이 없음 |
+| 5 | 근거로 연결된 설명의 차이 확인 |
+
+전체 보류는 릴리스 실패로 취급한다. 일부 보류를 분석 실패나 완료된 차이로 바꾸지 않는다.
+
+## 비용·검증
+
+사용자는 복구 AI 지출 최대 $10을 승인했다. 실행당 추정 상한 $2와 저렴한 모델을 유지하고 본문 해시·근거를 재검증한 체크포인트를 재사용했다. UTF-8 길이·최대 출력·2회 시도를 반영한 전체 실행 보수적 추정 상한 $1.784는 실제 청구액이 아니다. 공급자 월 한도를 자동 해제하거나 프로젝트를 바꿔 우회하지 않았다.
+
+[Google Cloud 공식 가격 문서](https://cloud.google.com/gemini-enterprise-agent-platform/generative-ai/pricing).
+
+- Python full: 207 passed, 1 skipped; 통합·오프라인 E2E 3 passed. 평가 자산 검사는 synthetic schema 검증이며 실제 모델 품질 측정이 아니다.
+- 사이트: typecheck 통과, lint 오류 0·기존 경고 4, 계약 50건·분석 회귀 34건 통과, Next production build 통과.
+- 실제 후보 첫 렌더에서 첫 화면 7건이 실패했다. impeccable의 독립 시각 평가와 기계 검사 두 경로로 검토해 설명 패널을 압축하고 카드 수에 맞게 열 구조를 수정했다. 최종 재검사: 26경로 × 5뷰포트, 첫 화면 10건·모바일 상호작용 5건, 오류·경고·면제 0. 비교·프레이밍 실제 캡처도 확인했다. 기존 보조 설명은 근거 연결을 유지하기 위해 남겼다.
+
+## 배포 경계
+
+원래 dirty 폴더를 보존하고 별도 codex/comparison-framing-release-20261001 worktree를 사용했다. 검토된 commit과 동일한 공개 파일만 immutable GCS snapshot으로 게시한다. publish-reviewed-comparison.py는 기본 dry-run이며 업로드 객체를 기존 reader 계약으로 읽어 200과 snapshot ID를 확인한다. 기대한 이전 pointer·generation과 일치할 때만 CAS 전환하며 rollback용 이전 pointer를 저장한다. 이는 새로운 Cloud Run staging 서비스 배포가 아니다.
+
+Vercel은 기존 Git 연결로 배포한다. 새 로그인·토큰을 요구하지 않는다. 공개 /version commit 일치, reader health·snapshot과 실제 비교·프레이밍 release 렌더 검증이 끝나기 전에는 완료로 보고하지 않는다.
+
+## 실제 배포 결과와 남은 정책 차단
+
+- 검토 커밋: e015f49a1cba84386775a258e3873d337cd908f0; PR #13.
+- GCS immutable 객체 7개 업로드 완료. Snapshot 21a685ef0d9660510fc4aa37ad4597eb, 실제 업로드 객체의 reader 계약 검증 HTTP 200. current pointer는 교체하지 않았다.
+- Vercel preview 빌드는 성공했다. Preview 접근은 Vercel 로그인으로 리다이렉트되므로 preview 실제 화면·버전 확인 성공을 주장하지 않는다.
+- 원격 Python 3.11/3.13 harness와 Site CI는 통과했다.
+- Release gate는 실패했다. evals/thresholds.yaml이 요구하는 실제·권리 확인·독립 검토자 2명·조정 완료·잠금 holdout이 없고 실제 품질 지표도 제공되지 않았다. semantic review, canary, rollback drill, calibration 기록도 해당 게이트 입력에 없다. 에이전트 문장 검토를 사람의 이중 검토나 실제 품질 지표로 대체하지 않았다.
+- 정식 배포 정책을 임의로 완화하거나 실패를 숨겨 merge/promotion하지 않았다. 공개 production은 538a767f5474999039c721f18a0a5256e0f57906, 기존 reader pointer는 6eccfe4f6c90ad12966b0e9b22eacfdf로 유지했다.
+
+재개 조건: 요구된 정식 평가 자료·지표를 확보하거나, 사용자가 이번 캡스톤 데모에 한해 정책 예외 배포를 명시적으로 선택해야 한다. 예외를 선택해도 사람 검토·품질 지표가 통과했다고 표기하지 않고, 현재 코드·근거·화면 검증과 공개 버전 확인을 유지한다. 본 작업은 아직 공개 배포 완료가 아니다.
+
+## 이번 데모 배포 승인
+
+2026-10-01 사용자가 위 예외 배포 질문에 “배포해”라고 지시했다. 이번 비교·프레이밍 캡스톤 데모 릴리스에만 평가 자료 미완성 예외를 적용한다. 일반 thresholds, 인간 검토·품질 측정 기준, 이후 릴리스 정책은 변경하지 않는다. 실패한 평가 검사를 통과로 처리하지 않는다.
+
+원격 Site Gate도 26경로 × 5뷰포트 검사에 성공했다. Python 3.11/3.13, Site CI, Vercel preview build가 성공했고 예외 대상은 fail-closed-evaluation의 미완성 정식 평가 자료뿐이다. 실제 근거 계약, immutable snapshot staging, production 버전과 화면 검증은 예외에서 제외하며 그대로 수행한다. 배포 완료 여부는 실제 production 확인 후 별도로 기록한다.

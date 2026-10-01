@@ -12,7 +12,7 @@
       "category": "국제",
       "articleCount": 8,
       "outletCount": 7,
-      "status": "review_needed",
+      "status": "succeeded",
       "payloadKey": "issues/live-2026-08-15-top-1.json",
       "agendaScore": 58.5,
       "clusterAi": {
@@ -30,14 +30,14 @@
         "summary": "7개 언론사의 관련 제목 8건을 사건 인물·행위와 제목 유사도를 함께 확인해 묶었습니다."
       },
       "semantic": {
-        "status": "review_needed",
+        "status": "succeeded",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
-        "model": "gemini-2.5-pro",
-        "promptVersion": "2.6.0",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.6.0:sentence-anchor-v1.2.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "succeededArticleCount": 6,
-        "reviewNeededArticleCount": 2
+        "succeededArticleCount": 8,
+        "reviewNeededArticleCount": 0
       }
     },
     {
@@ -68,11 +68,11 @@
         "status": "review_needed",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
-        "model": "gemini-2.5-pro",
-        "promptVersion": "2.6.0",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.6.0:sentence-anchor-v1.2.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
-        "succeededArticleCount": 10,
-        "reviewNeededArticleCount": 2
+        "succeededArticleCount": 11,
+        "reviewNeededArticleCount": 1
       }
     },
     {
@@ -103,8 +103,8 @@
         "status": "review_needed",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
-        "model": "gemini-2.5-pro",
-        "promptVersion": "2.6.0",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.6.0:sentence-anchor-v1.2.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
         "succeededArticleCount": 5,
         "reviewNeededArticleCount": 2
@@ -138,8 +138,8 @@
         "status": "succeeded",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
-        "model": "gemini-2.5-pro",
-        "promptVersion": "2.6.0",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.6.0:sentence-anchor-v1.2.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
         "succeededArticleCount": 7,
         "reviewNeededArticleCount": 0
@@ -173,17 +173,18 @@
         "status": "succeeded",
         "engineLabel": "ai_semantic",
         "semanticAi": true,
-        "model": "gemini-2.5-pro",
-        "promptVersion": "2.6.0",
+        "model": "gemini-2.5-flash-lite",
+        "promptVersion": "2.6.0:sentence-anchor-v1.2.0",
         "schemaVersion": "agendaframe.article-frame-profile.v2",
         "succeededArticleCount": 6,
         "reviewNeededArticleCount": 0
       }
     }
   ],
-  "analysisRunId": "5ccb18b9d8a74675b6e5daa31bd11cd0",
-  "analysisGeneratedAt": "2026-08-17T07:41:03.327050+00:00",
-  "analysisModel": "gemini-2.5-pro",
-  "analysisPromptVersion": "2.6.0",
-  "analysisEvidencePolicy": "article URL locators and SHA-256 fingerprints only"
+  "analysisRunId": "7f0aba42d002493abe9abac8663bb881",
+  "analysisGeneratedAt": "2026-10-01T11:01:22.618889+00:00",
+  "analysisModel": "gemini-2.5-flash-lite",
+  "analysisPromptVersion": "2.6.0:sentence-anchor-v1.2.0",
+  "analysisEvidencePolicy": "article URL locators and SHA-256 fingerprints only",
+  "editorialReviewVersion": "comparison-copy-review-v1.0.0"
 }

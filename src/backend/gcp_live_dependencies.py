@@ -112,6 +112,8 @@ class _ArticleHtmlParser(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.title_parts: list[str] = []
         self.body_parts: list[str] = []
+        self.specific_body_parts: list[str] = []
+        self._specific_stack: list[tuple[str, bool, bool]] = []
         self.meta: dict[str, str] = {}
         self.jsonld_parts: list[str] = []
         self.fusion_parts: list[str] = []
@@ -127,6 +129,21 @@ class _ArticleHtmlParser(HTMLParser):
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = {str(key).lower(): value or "" for key, value in attrs}
         lowered = tag.lower()
+        identifier = " ".join((values.get("id", "").lower(), values.get("class", "").lower()))
+        specific = any(marker in identifier for marker in (
+            "cont_newstext", "article-body", "article_body", "view_body", "news-body", "news_body",
+            "art_body", "articletxt", "article_txt", "article-text", "newsct_article",
+        )) or "viewcontent" in identifier.split() or values.get("itemprop", "").lower() == "articlebody"
+        excluded = bool(self._specific_stack and self._specific_stack[-1][2]) or any(
+            token.startswith(("ad_wrap", "mad_wrap", "ad_banner"))
+            or token in {"advertisement", "advertising", "article-summary-box", "articlecopyright"}
+            for token in identifier.split()
+        )
+        active = not excluded and (specific or bool(self._specific_stack and self._specific_stack[-1][1]))
+        if lowered not in {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}:
+            self._specific_stack.append((lowered, active, excluded))
+        if active and lowered in {"p", "blockquote", "br"}:
+            self.specific_body_parts.append("\n\n")
         if lowered == "meta":
             key = values.get("property") or values.get("name") or values.get("itemprop")
             content = values.get("content", "").strip()
@@ -181,6 +198,10 @@ class _ArticleHtmlParser(HTMLParser):
 
     def handle_endtag(self, tag: str) -> None:
         lowered = tag.lower()
+        for index in range(len(self._specific_stack) - 1, -1, -1):
+            if self._specific_stack[index][0] == lowered:
+                del self._specific_stack[index:]
+                break
         if lowered == "script" and self._jsonld_depth:
             self._jsonld_depth -= 1
             if self._jsonld_depth == 0:
@@ -208,12 +229,14 @@ class _ArticleHtmlParser(HTMLParser):
             self._fusion_buffer.append(data)
             return
         text = " ".join(data.split())
-        if not text or self._skip_depth:
+        if not text or self._skip_depth or (self._specific_stack and self._specific_stack[-1][2]):
             return
         if self._title_depth:
             self.title_parts.append(text)
         if self._body_depth or self._body_selector_stack:
             self.body_parts.append(text)
+        if self._specific_stack and self._specific_stack[-1][1]:
+            self.specific_body_parts.append(text)
 
 
 def _parse_datetime(value: str | None) -> datetime | None:
@@ -311,6 +334,20 @@ def _fusion_article_body(parser: _ArticleHtmlParser) -> str:
             if isinstance(content, str) and content.strip():
                 parts.append(content.strip())
     return "\n\n".join(parts)
+
+
+def _jsonld_article_body(parser: _ArticleHtmlParser, title: str) -> str:
+    for raw in parser.jsonld_parts:
+        try:
+            payload = json.loads(raw)
+        except (TypeError, json.JSONDecodeError):
+            continue
+        for node in _walk_json(payload):
+            body = node.get("articleBody")
+            headline = _clean_public_title(node.get("headline"))
+            if isinstance(body, str) and headline == title and len(body.strip()) >= 80:
+                return body.strip()
+    return ""
 
 
 class NewsArticleParser:
@@ -473,7 +510,17 @@ class NewsArticleParser:
         local_date = published.astimezone(KST).date()
         if not self.start <= local_date <= self.end:
             return None
-        body = " ".join(" ".join(parser.body_parts).split())
+        # Prefer article-specific text over <main>, which includes unrelated
+        # recommendations and newsletter/navigation content on news sites.
+        specific_body = "\n\n".join(
+            " ".join(part.split()) for part in " ".join(parser.specific_body_parts).splitlines() if part.strip()
+        )
+        body = (
+            _jsonld_article_body(parser, title)
+            or specific_body
+            or " ".join(_fusion_article_body(parser).split())
+            or " ".join(" ".join(parser.body_parts).split())
+        )
         if len(body) < 80:
             body = " ".join(_fusion_article_body(parser).split())
         if len(body) < 80:

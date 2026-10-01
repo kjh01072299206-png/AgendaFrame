@@ -13,7 +13,7 @@ const MAX_BODY_BYTES = 20_000;
 const RATE_WINDOW_MS = 60_000;
 const RATE_LIMIT = 20;
 const requestsByClient = new Map();
-const issues = new Map(
+const demoIssues = new Map(
   [issueOne, issueTwo, issueThree, issueFour, issueFive].map((bundle) => [bundle.issue.issueId, bundle]),
 );
 
@@ -25,6 +25,41 @@ function json(payload, status = 200, headers = {}) {
       ...headers,
     },
   });
+}
+
+function processEnvValue(name) {
+  const processObject = globalThis.process;
+  return processObject && typeof processObject.env?.[name] === "string"
+    ? processObject.env[name].trim()
+    : "";
+}
+
+function envValue(env, name) {
+  const bound = typeof env?.[name] === "string" ? env[name].trim() : "";
+  return bound || processEnvValue(name);
+}
+
+function activeSnapshotUrl(env) {
+  if (envValue(env, "AGENDAFRAME_DATA_MODE") !== "live") return null;
+  const url = envValue(env, "AGENDAFRAME_ACTIVE_SNAPSHOT_URL");
+  if (!url) throw new Error("live mode requires AGENDAFRAME_ACTIVE_SNAPSHOT_URL");
+  return url;
+}
+
+async function defaultSnapshotLoader(url, fetcher) {
+  const { readLiveActiveSnapshot } = await import("../lib/active-snapshot.ts");
+  return readLiveActiveSnapshot(url, fetcher);
+}
+
+async function loadPublication(env, fetcher, snapshotLoader = defaultSnapshotLoader) {
+  const url = activeSnapshotUrl(env);
+  if (!url) return { manifest, issues: demoIssues, cacheControl: "public, max-age=300, must-revalidate" };
+  const active = await snapshotLoader(url, fetcher);
+  return {
+    manifest: active.manifest,
+    issues: new Map(Object.entries(active.bundles)),
+    cacheControl: "no-store",
+  };
 }
 
 function normalizedQuestion(value) {
@@ -193,7 +228,7 @@ function groundedAnswer(bundle, question) {
   };
 }
 
-async function handleAsk(request) {
+async function handleAsk(request, issueMap) {
   if (request.method !== "POST") return json({ error: "method_not_allowed" }, 405, { Allow: "POST" });
   if (!sameOrigin(request)) return json({ error: "forbidden" }, 403);
   if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
@@ -210,7 +245,7 @@ async function handleAsk(request) {
   const issueId = typeof payload?.issueId === "string" ? payload.issueId.trim() : "";
   const question = normalizedQuestion(payload?.question);
   if (!issueId || !question) return json({ error: "issue_and_question_required" }, 400);
-  const bundle = issues.get(issueId);
+  const bundle = issueMap.get(issueId);
   if (!bundle) return json({ error: "issue_not_found" }, 404);
   const grounded = groundedAnswer(bundle, question);
   const result = grounded.status === "withheld" ? ruleGroundedAnswer(bundle, question) : grounded;
@@ -225,18 +260,37 @@ async function handleAsk(request) {
   }, 200, { "Cache-Control": "no-store" });
 }
 
-export async function handleInitialFiveRequest(request) {
+export async function handleInitialFiveRequest(request, env = {}, fetcher = fetch, snapshotLoader) {
   const url = new URL(request.url);
-  if (url.pathname === "/api/initial-five") {
-    if (request.method !== "GET") return json({ error: "method_not_allowed" }, 405, { Allow: "GET" });
-    return json(manifest);
-  }
-  if (url.pathname === "/api/initial-five/ask") return handleAsk(request);
+  const isManifest = url.pathname === "/api/initial-five";
+  const isAsk = url.pathname === "/api/initial-five/ask";
   const issueMatch = url.pathname.match(/^\/api\/initial-five\/issues\/([^/]+)$/);
+  if (!isManifest && !isAsk && !issueMatch) return null;
+
+  if (isManifest && request.method !== "GET") {
+    return json({ error: "method_not_allowed" }, 405, { Allow: "GET" });
+  }
+  if (isAsk && request.method !== "POST") {
+    return json({ error: "method_not_allowed" }, 405, { Allow: "POST" });
+  }
+  if (issueMatch && request.method !== "GET") {
+    return json({ error: "method_not_allowed" }, 405, { Allow: "GET" });
+  }
+
+  let publication;
+  try {
+    publication = await loadPublication(env, fetcher, snapshotLoader);
+  } catch {
+    return json({ error: "active_snapshot_unavailable" }, 503);
+  }
+
+  if (isManifest) {
+    return json(publication.manifest, 200, { "Cache-Control": publication.cacheControl });
+  }
+  if (isAsk) return handleAsk(request, publication.issues);
   if (issueMatch) {
-    if (request.method !== "GET") return json({ error: "method_not_allowed" }, 405, { Allow: "GET" });
-    const bundle = issues.get(decodeURIComponent(issueMatch[1]));
-    return bundle ? json(bundle) : json({ error: "issue_not_found" }, 404);
+    const bundle = publication.issues.get(decodeURIComponent(issueMatch[1]));
+    return bundle ? json(bundle, 200, { "Cache-Control": publication.cacheControl }) : json({ error: "issue_not_found" }, 404);
   }
   return null;
 }

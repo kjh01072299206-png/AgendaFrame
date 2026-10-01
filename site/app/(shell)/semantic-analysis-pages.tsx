@@ -13,8 +13,10 @@ import {
   type LayerItem,
 } from "../../lib/initial-five/derive";
 import type {
+  AnalysisModuleEvidence,
   EventSynthesisData,
   IssueAnalysisBundle,
+  MorphologyAnalysisModule,
   RuleComparisonAxis,
   SemanticDimensionItem,
   SemanticProfileEntry,
@@ -23,11 +25,14 @@ import { stripEvidenceTokens } from "../../lib/initial-five/public-text.mjs";
 import { ComparisonLead as ComparisonLeadV2 } from "./comparison-lead";
 import {
   comparisonSummary,
-  normalizeComparisonText,
-  sameComparisonMeaning,
   semanticEntryBlockedState,
   semanticEntryIsEligible,
 } from "../../lib/initial-five/analysis-summary";
+import {
+  buildParaphraseLinguisticAnalysis,
+  type ParaphraseLinguisticAnalysis,
+  type ParaphraseObservationRef,
+} from "../../lib/initial-five/paraphrase-linguistic-analysis";
 
 type RichProfile = NonNullable<SemanticProfileEntry["profile"]> & {
   secondary_descriptors?: {
@@ -67,6 +72,8 @@ type StructuredProfile = {
 };
 
 type PublicEvidenceRef = {
+  article_id?: string;
+  articleId?: string;
   locator?: { paragraph?: number; sentence?: number };
   sentence_sha256?: string;
   hash?: string;
@@ -208,6 +215,7 @@ function uniqueItems(items: SemanticDimensionItem[]) {
 
 function hasValidEvidence(
   evidence?: SemanticDimensionItem["evidence"] | { locator?: { paragraph?: number; sentence?: number }; hash?: string | null } | null,
+  entryEvidence?: SemanticProfileEntry["evidence"],
 ) {
   if (!evidence?.locator) return false;
   const hasLocator = typeof evidence.locator.paragraph === "number" || typeof evidence.locator.sentence === "number";
@@ -216,7 +224,13 @@ function hasValidEvidence(
     : "hash" in evidence
       ? evidence.hash
       : null;
-  return hasLocator && typeof hash === "string" && /^[a-f0-9]{64}$/i.test(hash.trim());
+  const validShape = hasLocator && typeof hash === "string" && /^[a-f0-9]{64}$/i.test(hash.trim());
+  if (!validShape || !entryEvidence) return validShape;
+  return entryEvidence.some((candidate) => (
+    candidate.locator?.paragraph === evidence.locator?.paragraph
+    && candidate.locator?.sentence === evidence.locator?.sentence
+    && candidate.sentenceSha256?.toLowerCase() === hash?.trim().toLowerCase()
+  ));
 }
 
 function evidenceRefs(value: unknown): PublicEvidenceRef[] {
@@ -229,9 +243,22 @@ function synthesisData(bundle: IssueAnalysisBundle): EventSynthesisData | null {
   return value && typeof value === "object" ? value : null;
 }
 
-function observedClaim(claim?: { text?: string | null; status?: string } | null): string | null {
+function observedClaim(
+  claim?: { text?: string | null; status?: string; evidence?: unknown } | null,
+  bundle?: IssueAnalysisBundle,
+): string | null {
   if (claim?.status !== "observed" || typeof claim.text !== "string" || !claim.text.trim()) return null;
-  if (!evidenceRefs((claim as { evidence?: unknown }).evidence).some((ref) => hasValidEvidence({ locator: ref.locator, hash: ref.sentence_sha256 ?? ref.hash }))) return null;
+  const refs = evidenceRefs(claim.evidence).filter((ref) => hasValidEvidence({ locator: ref.locator, hash: ref.sentence_sha256 ?? ref.hash }));
+  if (!refs.length) return null;
+  if (bundle && !refs.some((ref) => {
+    const articleId = ref.article_id ?? ref.articleId;
+    const entry = bundle.semanticProfiles.find((candidate) => candidate.articleId === articleId);
+    return Boolean(entry && entry.evidence.some((candidate) => (
+      candidate.locator?.paragraph === ref.locator?.paragraph
+      && candidate.locator?.sentence === ref.locator?.sentence
+      && candidate.sentenceSha256?.toLowerCase() === (ref.sentence_sha256 ?? ref.hash)?.toLowerCase()
+    )));
+  })) return null;
   return stripEvidenceTokens(claim.text) || null;
 }
 
@@ -241,9 +268,19 @@ function comparisonAxes(bundle: IssueAnalysisBundle): RuleComparisonAxis[] {
     : [];
 }
 
-function validComparisonEvidence(pattern: NonNullable<RuleComparisonAxis["patterns"]>[number]) {
+function validComparisonEvidence(bundle: IssueAnalysisBundle, pattern: NonNullable<RuleComparisonAxis["patterns"]>[number]) {
   return evidenceRefs(pattern.evidence).filter((ref) =>
-    hasValidEvidence({ locator: ref.locator, hash: ref.sentence_sha256 ?? ref.hash }),
+    hasValidEvidence({ locator: ref.locator, hash: ref.sentence_sha256 ?? ref.hash })
+      && (() => {
+        const articleId = ref.article_id ?? ref.articleId;
+        if (!articleId) return false;
+        const entry = bundle.semanticProfiles.find((candidate) => candidate.articleId === articleId);
+        return Boolean(entry && entry.evidence.some((candidate) => (
+          candidate.locator?.paragraph === ref.locator?.paragraph
+          && candidate.locator?.sentence === ref.locator?.sentence
+          && candidate.sentenceSha256?.toLowerCase() === (ref.sentence_sha256 ?? ref.hash)?.toLowerCase()
+        )));
+      })(),
   );
 }
 
@@ -367,7 +404,7 @@ function rowsForDimension(bundle: IssueAnalysisBundle, issue: IssueView, dimensi
         reviewRequired,
         stateReason: stateReason(rowState ?? modelStatus, node.status ?? "not_observed", nodeRecord.abstention_reason),
         stateOnly,
-        validEvidence: !stateOnly && hasValidEvidence(item.evidence),
+        validEvidence: !stateOnly && hasValidEvidence(item.evidence, entry?.evidence),
         evidenceCount: entry?.evidence.length ?? 0,
       });
     }
@@ -383,19 +420,23 @@ function analyzeDimension(bundle: IssueAnalysisBundle, issue: IssueView, dimensi
     stateCounts[key] = (stateCounts[key] ?? 0) + 1;
   }
   const textGroups = (candidates: Row[]) => {
-    const grouped: Array<{ first: Row; rows: Row[] }> = [];
+    const grouped = new Map<string, { first: Row; rows: Row[] }>();
     for (const row of candidates) {
-      const target = grouped.find((candidate) => sameComparisonMeaning(
-        candidate.first.item.public_paraphrase,
-        row.item.public_paraphrase,
-        dimension,
-      ));
+      // This is an exact repeated-paraphrase ledger only. It is deliberately
+      // not a semantic merge: frame-family codes and sentence similarity do
+      // not decide whether two articles mean the same thing.
+      const key = stripEvidenceTokens(row.item.public_paraphrase ?? "")
+        .toLowerCase()
+        .replace(/[^0-9a-z가-힣]+/gu, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      const target = grouped.get(key);
       if (target) target.rows.push(row);
-      else grouped.push({ first: row, rows: [row] });
+      else grouped.set(key, { first: row, rows: [row] });
     }
-    return grouped
-      .map(({ first, rows: groupRows }) => {
-        const family = `text:${normalizeComparisonText(first.item.public_paraphrase)}`;
+    return [...grouped.entries()]
+      .map(([key, { first, rows: groupRows }]) => {
+        const family = `text:${key}`;
         const label = first.item.public_paraphrase ?? (first.item.frame_family ? familyLabel(first.item.frame_family) : "분류 코드 미확정");
         const articleIds = [...new Set(groupRows.map((row) => row.articleId))];
         return {
@@ -490,6 +531,20 @@ function EvidenceRefs({ refs, label = "공개 근거 위치" }: { refs: unknown;
   return <details className="afp-evidence afp-evidence-compact"><summary>{label} {rows.length}개</summary><div className="afp-evidence-body">{rows.slice(0, 5).map((ref, index) => <small key={`${evidenceRefLabel(ref)}-${index}`}>{evidenceRefLabel(ref)}{ref.sentence_sha256 || ref.hash ? ` · hash ${(ref.sentence_sha256 ?? ref.hash)?.slice(0, 16)}…` : ""}</small>)}</div></details>;
 }
 
+function TableEvidenceDisclosure({ articleId, rows }: { articleId: string; rows: Array<{ dimension: string; row: Row }> }) {
+  const refs = rows.flatMap(({ dimension, row }) => evidenceRefs(row.item.evidence).map((ref) => ({ dimension, ref })));
+  if (!refs.length) return null;
+  return <details className="afp-evidence afp-evidence-compact afp-table-evidence">
+    <summary>기사 행 근거 {refs.length}개</summary>
+    <div className="afp-evidence-body">
+      <small className="afp-evidence-technical">article_id {articleId}</small>
+      {refs.slice(0, 8).map(({ dimension, ref }, index) => <small key={`${dimension}-${evidenceRefLabel(ref)}-${index}`}>
+        {DIM_LABEL[dimension] ?? dimension} · {evidenceRefLabel(ref)}{ref.sentence_sha256 || ref.hash ? ` · hash ${(ref.sentence_sha256 ?? ref.hash)?.slice(0, 16)}…` : ""}
+      </small>)}
+    </div>
+  </details>;
+}
+
 function StateDisclosure({ reason, summary = "분석 상태" }: { reason?: string | null; summary?: string }) {
   return (
     <details className="afp-evidence afp-evidence-compact">
@@ -513,7 +568,18 @@ function EngineNote({ bundle }: { bundle: IssueAnalysisBundle }) {
     && synthesis?.usable === true
     && /gcp:event-synthesis|gcp:vertex/i.test(String(comparison.source ?? synthesis.source ?? "")),
   );
-  const comparisonLabel = comparison.semanticAi ? "semantic AI 비교" : "규칙 기반 구조화 비교";
+  const comparisonStatus = synthesis?.comparison_result?.status;
+  const comparisonStatusLabel: Record<string, string> = {
+    difference_confirmed: "차이 확인",
+    no_clear_difference: "뚜렷한 차이 미관측",
+    held_for_analysis: "비교 보류",
+    analysis_failed: "분석 실패",
+  };
+  const comparisonLabel = comparisonStatus
+    ? `비교 판정 · ${comparisonStatusLabel[comparisonStatus] ?? "상태 확인 필요"}`
+    : "비교 판정 보류 · 명시적 결과 없음";
+  const synthesisPrompt = synthesis?.promptVersion ?? "버전 미상";
+  const synthesisSchema = synthesis?.schemaVersion ?? "버전 미상";
   const artifactSource = bundle.lineage?.source?.semanticDirectory || "공개 산출물 출처 미상";
   const reviewStatusLabels = reviewStatuses.map((status) => STATUS_COPY[status] ?? MODEL_STATUS_COPY[status] ?? "검토 상태 확인 필요");
   return (
@@ -523,7 +589,9 @@ function EngineNote({ bundle }: { bundle: IssueAnalysisBundle }) {
       </span>{" "}
       <span className="afs-chip">{comparisonLabel}</span>
       <br />
-      <strong>AI 출처:</strong> {semantic.model ?? clusterAi?.model ?? "모델 미상"} · prompt {semantic.promptVersion ?? clusterAi?.promptVersion ?? "v1.0.0"} · schema {semantic.schemaVersion ?? "v2"} · snapshot {bundle.lineage.issueId ?? "미상"} · 산출물 {artifactSource}.
+      <strong>기사 프로필:</strong> {semantic.model ?? clusterAi?.model ?? "모델 미상"} · prompt {semantic.promptVersion ?? clusterAi?.promptVersion ?? "v1.0.0"} · schema {semantic.schemaVersion ?? "v2"} · snapshot {bundle.lineage.issueId ?? "미상"} · 산출물 {artifactSource}.
+      <br />
+      <strong>사건 종합 계약:</strong> prompt {synthesisPrompt} · schema {synthesisSchema} · {comparisonLabel}.
       <br />
       <strong>상태:</strong> {reviewRequired ? "사람 검토 전 자동 분석 초안" : "사람 검토 완료"}. {reviewStatusLabels.length ? `(프로필 검토: ${reviewStatusLabels.join(", ")})` : ""}
       <br />
@@ -533,7 +601,11 @@ function EngineNote({ bundle }: { bundle: IssueAnalysisBundle }) {
 }
 
 function Summary({ bundle, issue, analyses: dimensions, compact = false }: { bundle: IssueAnalysisBundle; issue: IssueView; analyses: DimensionAnalysis[]; compact?: boolean }) {
-  const comparison = comparisonSummary(bundle, issue);
+  const comparison = comparisonSummary(bundle);
+  const commonOutletCount = new Set(comparison.commonObservations.map((row) => row.outlet)).size;
+  const commonDescriptionLabel = comparison.commonScope
+    ? `${commonOutletCount > 1 ? "여러 매체" : "여러 기사"}에서 공통으로 확인한 설명 (${comparison.commonScope}):`
+    : "공통으로 확인한 설명:";
   const observed = dimensions.filter((dimension) => dimension.observedArticles > 0);
   const allRows = dimensions.flatMap((dimension) => dimension.rows).filter((row) => !row.stateOnly && row.validEvidence);
   const attributed = allRows.filter((row) => isAttributed(row.item.voice?.kind)).length;
@@ -549,9 +621,9 @@ function Summary({ bundle, issue, analyses: dimensions, compact = false }: { bun
     .join(" · ");
   return (
     <section className={`afs-card afs-card-lead${compact ? " afp-summary-compact" : ""}`}>
-      <h2>이 사안의 프레이밍 요약 <small>{issue.articleCount}건 · {issue.outletCount}개 매체</small></h2>
+      <h2>이 사안의 프레이밍 요약</h2>
       <div className="afs-in afs-prose afp-summary">
-        <p><strong>{comparison.commonScope ? `여러 매체에서 공통 계열로 묶인 설명 (${comparison.commonScope}):` : "공통으로 확인한 설명:"}</strong> {comparison.commonText ?? "공통 설명으로 묶을 공개 근거가 아직 없습니다."}</p>
+        <p><strong>{commonDescriptionLabel}</strong> {comparison.commonText ?? "공통 설명으로 묶을 공개 근거가 아직 없습니다."}</p>
         <p><strong>{comparison.status === "difference_confirmed" ? "확인된 차이" : "비교 결과"}:</strong> {comparison.differenceText}</p>
         <p><strong>읽을 때 볼 점:</strong> {comparison.whatToNotice}</p>
         {!compact && issue.sourceContext ? <p><strong>취재원 맥락:</strong> {issue.sourceContext}</p> : null}
@@ -580,10 +652,10 @@ export function SynthesisNarrative({ bundle }: { bundle: IssueAnalysisBundle }) 
     );
   }
   if (!synthesis?.usable) return null;
-  const what = observedClaim(synthesis.what_happened);
-  const agreed = observedClaim(synthesis.agreed_line);
-  const split = observedClaim(synthesis.split_line);
-  const soWhat = observedClaim(synthesis.so_what);
+  const what = observedClaim(synthesis.what_happened, bundle);
+  const agreed = observedClaim(synthesis.agreed_line, bundle);
+  const split = observedClaim(synthesis.split_line, bundle);
+  const soWhat = observedClaim(synthesis.so_what, bundle);
   const camps = (synthesis.camps ?? []).filter((camp) => camp.gist && (camp.outlets?.length || camp.article_ids?.length));
   const terms = (synthesis.terms ?? []).filter((term) => term.term && term.gloss);
   const factRows = synthesis.fact_rows ?? [];
@@ -698,8 +770,8 @@ export function SynthesisNarrative({ bundle }: { bundle: IssueAnalysisBundle }) 
                 const color = campColors[index % campColors.length];
                 return (
                   <article
+                    className="afp-synthesis-camp"
                     key={`${camp.index ?? camp.name}`}
-                    style={{ borderLeft: `3px solid ${color}`, paddingLeft: "12px" }}
                   >
                     <b style={{ color }}>{camp.name}</b>
                     <p>{camp.gist}</p>
@@ -778,12 +850,12 @@ export function SynthesisNarrative({ bundle }: { bundle: IssueAnalysisBundle }) 
 }
 
 function AxisCard({ analysis }: { analysis: DimensionAnalysis }) {
-  if (analysis.groups.length < 2) return null;
+  if (!analysis.groups.length) return null;
   return (
     <article className="afp-axis-card">
-      <header><span className="afp-kicker">{analysis.label}</span><h3>{analysis.question}</h3></header>
+      <header><span className="afp-kicker">{analysis.label}</span><h3>같은 표현이 반복된 기사 관측</h3></header>
       <div className="afp-axis-groups">
-        {analysis.groups.slice(0, 3).map((group) => (
+        {analysis.groups.map((group) => (
           <div className="afp-axis-group" key={group.family}>
             <div className="afp-axis-group-head"><strong>{group.label}</strong><span>{group.articleIds.length}건 · {group.outlets.length}개 매체</span></div>
             {group.rows[0]?.validEvidence && group.rows[0].item.public_paraphrase ? <p>{group.rows[0].item.public_paraphrase}</p> : <p className="afp-state">{group.rows[0]?.stateReason ?? "공개 근거 지문이 없어 paraphrase를 표시하지 않습니다."}</p>}
@@ -797,41 +869,40 @@ function AxisCard({ analysis }: { analysis: DimensionAnalysis }) {
 }
 
 function AxisSection({ dimensions }: { dimensions: DimensionAnalysis[] }) {
-  const split = dimensions.filter((dimension) => dimension.groups.length >= 2);
-  const sourceOnly = dimensions.filter((dimension) => dimension.groups.length < 2 && dimension.sourceGroups.length >= 2);
+  const observed = dimensions.filter((dimension) => dimension.groups.length > 0);
+  const sourceOnly = dimensions.filter((dimension) => dimension.groups.length === 0 && dimension.sourceGroups.length > 0);
   return (
     <section className="afs-card">
-      <h2>논조 갈래 축 <small>같은 사건에서 무엇을 다르게 강조했나</small></h2>
+      <h2>기사별 표현 관측 <small>최종 비교 판정과 분리</small></h2>
       <div className="afs-in">
-        <p className="afs-note">한 단어로 매체 성향을 정하지 않습니다. 동일 사건의 기사에서 반복된 문제·원인·책임·평가·해법 배치와 발화 주체를 함께 비교합니다.</p>
+        <p className="afs-note">아래 묶음은 공개 paraphrase가 정확히 반복된 경우의 원장입니다. 문장 유사도·프레임 계열·묶음 수만으로 같은 의미나 매체 차이를 판정하지 않으며, 확정 비교는 위의 근거 연결 결과만 따릅니다.</p>
         <div className="afp-status-strip">{dimensions.map((analysis) => <span key={analysis.dimension}><b>{analysis.label}</b> {Object.entries(analysis.stateCounts).map(([state, count]) => `${STATUS_COPY[state] ?? state} ${count}`).join(" · ") || "공개 상태 없음"}</span>)}</div>
-        {split.length ? <div className="afp-axis-list">{split.map((analysis) => <AxisCard key={analysis.dimension} analysis={analysis} />)}</div> : <p className="afp-state">현재 semantic AI 결과에서는 명확한 양극 축이 확정되지 않았습니다. 공통 설명과 취재원 배치 차이는 아래 표에서 확인할 수 있습니다.</p>}
-        {sourceOnly.length ? <p className="afp-state afp-source-only-note">{sourceOnly.map((analysis) => `${analysis.label}의 다른 설명은 취재원 발언에서만 ${analysis.sourceGroups.length}개 계열로 관측되어 매체 간 차이로 세지 않았습니다.`).join(" ")}</p> : null}
+        {observed.length ? <div className="afp-axis-list">{observed.map((analysis) => <AxisCard key={analysis.dimension} analysis={analysis} />)}</div> : <p className="afp-state">반복된 공개 paraphrase 묶음이 없습니다. 공통 설명과 취재원 배치는 위의 비교 결과와 아래 표에서 확인합니다.</p>}
+        {sourceOnly.length ? <p className="afp-state afp-source-only-note">{sourceOnly.map((analysis) => `${analysis.label}의 다른 설명은 취재원 발언에서만 ${analysis.sourceGroups.length}개 표현으로 관측되어 매체 간 차이로 세지 않았습니다.`).join(" ")}</p> : null}
       </div>
     </section>
   );
 }
 
 function DebateSection({ issue, dimensions }: { issue: IssueView; dimensions: DimensionAnalysis[] }) {
-  const split = dimensions.filter((dimension) => dimension.groups.length >= 2);
-  const common = dimensions.filter((dimension) => dimension.groups.length === 1).slice(0, 3);
+  const observed = dimensions.filter((dimension) => dimension.groups.length > 0);
   return (
     <section className="afs-card afp-debate">
-      <h2>공통으로 본 것과 갈린 지점 <small>관찰된 선택만 비교</small></h2>
+      <h2>공통으로 본 것과 기사별 관측 <small>확정 차이는 상단 결과만 사용</small></h2>
       <div className="afs-in">
         <div className="afp-common-ground">
           <strong>공통으로 본 것</strong>
-          <p>{issue.commonGround ?? (common.length ? common.map((item) => `${item.label}: ${item.groups[0].label}`).join(" · ") : "검증 가능한 단일 공통 계열이 없습니다.")}</p>
+          <p>{issue.commonGround ?? "검증 가능한 공통 설명이 없습니다."}</p>
         </div>
-        {split.length ? <div className="afp-debate-boxes">{split.map((dimension, index) => (
+        {observed.length ? <div className="afp-debate-boxes">{observed.map((dimension, index) => (
           <details className="afp-debate-box" key={dimension.dimension}>
-            <summary><span>관측 축 {String.fromCharCode(65 + index)}</span><strong>{dimension.label}: {dimension.question}</strong><small>{dimension.groups.length}개 계열 · {dimension.observedArticles}건</small></summary>
+            <summary><span>관측 축 {String.fromCharCode(65 + index)}</span><strong>{dimension.label}: {dimension.question}</strong><small>{dimension.groups.length}개 반복 표현 · {dimension.observedArticles}건</small></summary>
             <div className="afp-debate-body">
-              {dimension.groups.slice(0, 3).map((group) => <article key={group.family}><h3>{group.label}</h3><p className="afp-summary-meta">{group.outlets.join(" · ")} · {group.articleIds.length}건</p>{group.rows.slice(0, 3).map((row, rowIndex) => <div className="afp-proof-row" key={`${row.articleId}-${rowIndex}`}><b>{row.outlet}</b><span>{row.validEvidence ? row.item.public_paraphrase : row.stateReason}</span><small>{statusCopy(displayStatus(row), row.item.voice?.kind, row.modelStatus)}</small><EvidenceDisclosure row={row} compact /></div>)}</article>)}
-              <p className="afs-note">이 갈래는 기사에서 관측된 표현·책임·발화 배치의 차이입니다. 매체의 고정 성향이나 의도를 의미하지 않습니다.</p>
+              {dimension.groups.map((group) => <article key={group.family}><h3>{group.label}</h3><p className="afp-summary-meta">{group.outlets.join(" · ")} · {group.articleIds.length}건</p>{group.rows.map((row, rowIndex) => <div className="afp-proof-row" key={`${row.articleId}-${rowIndex}`}><b>{row.outlet}</b><span>{row.validEvidence ? row.item.public_paraphrase : row.stateReason}</span><small>{statusCopy(displayStatus(row), row.item.voice?.kind, row.modelStatus)}</small><EvidenceDisclosure row={row} compact /></div>)}</article>)}
+              <p className="afs-note">이 목록은 반복 표현과 기사 근거를 펼쳐 보는 원장입니다. 매체의 고정 성향이나 의도를 의미하지 않으며, semantic AI가 별도 관계를 명시하지 않으면 차이로 읽지 않습니다.</p>
             </div>
           </details>
-        ))}</div> : <p className="afp-state">현재 매체 자체 서술이 두 계열 이상으로 갈린 축은 확정되지 않았습니다.</p>}
+        ))}</div> : <p className="afp-state">반복 표현 원장이 없습니다. 현재 매체 자체 서술의 차이는 확정되지 않았습니다.</p>}
       </div>
     </section>
   );
@@ -850,7 +921,7 @@ function ComparisonAxisEvidence({ bundle, issue }: { bundle: IssueAnalysisBundle
           return <article className="afp-ledger-axis" key={axis.dimension ?? axis.label}>
             <header><span className="afp-kicker">{axis.label ?? DIM_LABEL[axis.dimension ?? ""] ?? "비교 축"}</span><strong>{axis.observed_article_count ?? 0}건 관측 · {axis.not_observed_article_count ?? 0}건 미관측</strong></header>
             {patterns.length ? <div className="afp-ledger-patterns">{patterns.slice(0, 5).map((pattern, index) => {
-              const refs = validComparisonEvidence(pattern);
+              const refs = validComparisonEvidence(bundle, pattern);
               const articleRows = (pattern.article_ids ?? []).map((id) => articles.get(id)).filter(Boolean);
               const outlets = [...new Set(articleRows.map((article) => article?.outlet).filter(Boolean))];
               return <div className="afp-ledger-pattern" key={`${axis.dimension}-${pattern.voice_scope}-${index}`}>
@@ -955,17 +1026,34 @@ function DimensionGuide({ dimensions }: { dimensions: DimensionAnalysis[] }) {
 }
 
 function FourFunctionTable({ issue, dimensions }: { issue: IssueView; dimensions: DimensionAnalysis[] }) {
-  const core = CORE_DIMENSIONS;
+  const tableDimensions = CORE_DIMENSIONS.filter((dimension) => dimension !== "responsibility_attribution");
   return (
     <section className="afs-card afp-four-functions">
       <h2>프레임 4기능 비교 <small>문제·원인·평가·해법</small></h2>
       <div className="afs-in">
-        <div className="afs-scroll"><table className="afs-table"><caption>각 셀은 검증된 public paraphrase만 표시합니다. 출처 발언은 매체 서술과 분리합니다.</caption><thead><tr><th scope="col">매체·기사</th>{core.filter((dimension) => dimension !== "responsibility_attribution").map((dimension) => <th scope="col" key={dimension}>{DIM_LABEL[dimension]}</th>)}</tr></thead><tbody>
-          {issue.articles.map((article) => <tr key={article.articleId}><th scope="row"><strong>{article.outlet}</strong><small>{article.title}</small></th>{core.filter((dimension) => dimension !== "responsibility_attribution").map((dimension) => {
-            const rows = dimensions.find((entry) => entry.dimension === dimension)?.rows.filter((entry) => entry.articleId === article.articleId && entry.validEvidence) ?? [];
-            const row = rows.find((entry) => isNarration(entry.item.voice?.kind)) ?? rows[0];
-            return <td key={dimension}>{row ? <><span className="afp-cell-voice">{statusCopy(displayStatus(row), row.item.voice?.kind, row.modelStatus)}</span><p>{row.item.public_paraphrase ?? "검증된 paraphrase 없음"}</p><EvidenceDisclosure row={row} compact /></> : <StateDisclosure summary="분석 상태" reason={dimensions.find((entry) => entry.dimension === dimension)?.rows.find((entry) => entry.articleId === article.articleId)?.stateReason ?? "명시적 판정 없음"} />}</td>;
-          })}</tr>)}
+        <div className="afs-scroll"><table className="afs-table"><caption>각 셀은 검증된 public paraphrase만 표시합니다. 긴 근거 위치·해시는 기사 행 disclosure로 확인하고, 출처 발언은 매체 서술과 분리합니다.</caption><thead><tr><th scope="col">매체·기사</th>{tableDimensions.map((dimension) => <th scope="col" key={dimension}>{DIM_LABEL[dimension]}</th>)}</tr></thead><tbody>
+          {issue.articles.map((article) => {
+            const observedRows = tableDimensions.map((dimension) => {
+              const dimensionAnalysis = dimensions.find((entry) => entry.dimension === dimension);
+              const rows = dimensionAnalysis?.rows.filter((entry) => entry.articleId === article.articleId && entry.validEvidence) ?? [];
+              return {
+                dimension,
+                dimensionAnalysis,
+                row: rows.find((entry) => isNarration(entry.item.voice?.kind)) ?? rows[0],
+              };
+            });
+            const evidenceRows = observedRows.flatMap((entry) => entry.row ? [{ dimension: entry.dimension, row: entry.row }] : []);
+            return <tr key={article.articleId}>
+              <th scope="row">
+                <strong>{article.outlet}</strong>
+                <small>{article.title}</small>
+                <TableEvidenceDisclosure articleId={article.articleId} rows={evidenceRows} />
+              </th>
+              {observedRows.map(({ dimension, dimensionAnalysis, row }) => <td key={dimension}>
+                {row ? <><span className="afp-cell-voice">{statusCopy(displayStatus(row), row.item.voice?.kind, row.modelStatus)}</span><p>{row.item.public_paraphrase ?? "검증된 paraphrase 없음"}</p></> : <StateDisclosure summary="분석 상태" reason={dimensionAnalysis?.rows.find((entry) => entry.articleId === article.articleId)?.stateReason ?? "명시적 판정 없음"} />}
+              </td>)}
+            </tr>;
+          })}
         </tbody></table></div>
         <p className="afs-note">‘책임 귀속’은 4기능과 별도의 관계·주체 축으로 기사별 근거 목록에서 함께 확인합니다. 빈 셀은 의도적 누락이 아니라 공개 근거가 확인되지 않은 상태입니다.</p>
       </div>
@@ -1108,71 +1196,189 @@ function ScopeSection({ bundle, issue, compact = false, id = "sec-scope" }: { bu
   </section>;
 }
 
-type NetworkNode = { id: string; label: string; count?: number };
-type NetworkEdge = { source: string; target: string; weight?: number };
+function ParaphraseObservationEvidence({ observations, label }: { observations: ParaphraseObservationRef[]; label: string }) {
+  if (!observations.length) return null;
+  return <details className="afp-evidence afp-evidence-compact">
+    <summary>{label} {observations.length}건</summary>
+    <div className="afp-evidence-body">
+      {observations.map((observation) => <small key={observation.observationId}>
+        article_id {observation.articleId} · claim_id {observation.claimId} · {observation.dimension} · 문단 {observation.evidence.locator.paragraph}, 문장 {observation.evidence.locator.sentence} · sha256 {observation.evidence.sentence_sha256} · prompt {observation.promptVersion}/schema {observation.schemaVersion}
+      </small>)}
+    </div>
+  </details>;
+}
 
-function networkData(bundle: IssueAnalysisBundle): { nodes: NetworkNode[]; edges: NetworkEdge[] } | null {
+function SourceNetwork({ analysis }: { analysis: ParaphraseLinguisticAnalysis }) {
+  const { nodes, edges } = analysis.network;
+  const labels = new Map(nodes.map((node) => [node.id, node.label]));
+  const renderEdge = (edge: ParaphraseLinguisticAnalysis["network"]["edges"][number]) => <li key={`${edge.source}-${edge.target}`}>
+    {labels.get(edge.source) ?? "노드 미상"} <span>↔</span> {labels.get(edge.target) ?? "노드 미상"}
+    <small> · 같은 공개 paraphrase {edge.weight}건</small>
+    <ParaphraseObservationEvidence observations={edge.observations} label="동시 등장 근거" />
+  </li>;
+  const remainingNodes = nodes.slice(30);
+  const remainingEdges = edges.slice(60);
+  return <section className="afs-card" id="sec-network"><h2>공개 paraphrase 동시 등장 연결망 <small>같은 문장 요약 안의 단어 관측</small></h2><div className="afs-in">
+    <p className="afs-note">노드는 저장된 AI 공개 paraphrase에서 형태소 분석기로 찾은 내용어입니다. 연결선은 같은 paraphrase 하나 안에서 함께 나온 경우만 뜻합니다. 기사 원문 단어의 동시 출현, 인과관계, 매체 의도나 논조를 나타내지 않습니다. 취재원 발화 paraphrase는 제외합니다.</p>
+    <p className="afp-summary-meta">기사 {analysis.analyzedArticleCount}/{analysis.issueArticleCount}건 · paraphrase {analysis.validParaphraseCount}개 · 노드 {nodes.length}개 · 연결 {edges.length}개 · 분석기 {analysis.analyzer.version} · 사전 {analysis.analyzer.dictionaryVersion}</p>
+    {nodes.length && edges.length ? <div className="afp-network">
+      <div className="afp-network-nodes">{nodes.slice(0, 30).map((node) => <div className="afp-network-node" key={node.id}><strong>{node.label}</strong><span>{node.count}개 요약 · {node.articleCount}개 기사</span></div>)}
+        {remainingNodes.length ? <details><summary>추가 노드 {remainingNodes.length}개</summary>{remainingNodes.map((node) => <div className="afp-network-node" key={node.id}><strong>{node.label}</strong><span>{node.count}개 요약 · {node.articleCount}개 기사</span></div>)}</details> : null}
+      </div>
+      <ul className="afp-network-edges">{edges.slice(0, 60).map(renderEdge)}</ul>
+      {remainingEdges.length ? <details className="afp-technical-disclosure"><summary>추가 연결 {remainingEdges.length}개</summary><ul className="afp-network-edges">{remainingEdges.map(renderEdge)}</ul></details> : null}
+    </div> : <div className="afp-unavailable"><strong>{nodes.length ? "동시 등장 연결 없음" : "근거가 연결된 내용어 없음"}</strong><p>검증된 기자 서술 paraphrase 안에서 함께 관측된 단어 쌍이 없어 연결선을 만들지 않았습니다.</p></div>}
+  </div></section>;
+}
+
+type MorphologyRow = {
+  articleId: string;
+  label: string;
+  count?: number;
+  perThousand?: number;
+  pos?: string;
+  evidence: SemanticDimensionItem["evidence"];
+};
+
+function parseEvidenceLocator(value: unknown) {
+  if (value && typeof value === "object") {
+    const locator = value as { paragraph?: unknown; sentence?: unknown };
+    if (typeof locator.paragraph === "number" || typeof locator.sentence === "number") {
+      return {
+        paragraph: typeof locator.paragraph === "number" ? locator.paragraph : undefined,
+        sentence: typeof locator.sentence === "number" ? locator.sentence : undefined,
+      };
+    }
+  }
+  if (typeof value !== "string") return null;
+  const match = value.match(/(\d+)\s*문단(?:\s*[·,/]?\s*)(\d+)\s*문장/u);
+  return match ? { paragraph: Number(match[1]), sentence: Number(match[2]) } : null;
+}
+
+function normalizeModuleEvidence(value: unknown) {
+  if (!value || typeof value !== "object") return null;
+  const ref = value as AnalysisModuleEvidence;
+  const articleId = typeof ref.articleId === "string" ? ref.articleId : typeof ref.article_id === "string" ? ref.article_id : "";
+  const locator = parseEvidenceLocator(ref.locator ?? ref.evidenceLocator);
+  const hash = typeof ref.sentence_sha256 === "string"
+    ? ref.sentence_sha256
+    : typeof ref.evidenceHash === "string"
+      ? ref.evidenceHash
+      : null;
+  if (!articleId || !locator || !hash) return null;
+  return { articleId, evidence: { locator, sentence_sha256: hash } };
+}
+
+function moduleEvidenceForBundle(bundle: IssueAnalysisBundle, value: unknown) {
+  const normalized = normalizeModuleEvidence(value);
+  if (!normalized) return null;
+  const entry = bundle.semanticProfiles.find((candidate) => candidate.articleId === normalized.articleId);
+  return entry && hasValidEvidence(normalized.evidence, entry.evidence) ? normalized : null;
+}
+
+function morphologyModule(bundle: IssueAnalysisBundle): MorphologyAnalysisModule | null {
   const data = bundle.comparison.data as Record<string, unknown>;
-  const candidates: unknown[] = [data.semantic_network, data.source_network, data.network];
-  for (const entry of bundle.semanticProfiles) {
-    if (!semanticEntryIsEligible(entry, bundle)) continue;
-    const profile = richProfile(entry) as (RichProfile & { semantic_network?: unknown; network?: unknown }) | null;
-    candidates.push(profile?.semantic_network, profile?.network);
-  }
-  for (const candidate of candidates) {
-    if (!candidate || typeof candidate !== "object") continue;
-    const raw = candidate as { nodes?: unknown; edges?: unknown };
-    if (!Array.isArray(raw.nodes) || !Array.isArray(raw.edges)) continue;
-    const nodes = raw.nodes.flatMap((node): NetworkNode[] => {
-      if (!node || typeof node !== "object") return [];
-      const value = node as { id?: unknown; label?: unknown; count?: unknown };
-      if (typeof value.id !== "string") return [];
-      return [{
-        id: value.id,
-        label: codeLabel(value.id, typeof value.label === "string" ? value.label : null),
-        count: typeof value.count === "number" && value.count > 0 ? value.count : undefined,
-      }];
-    });
-    const nodeIds = new Set(nodes.map((node) => node.id));
-    const edges = raw.edges.flatMap((edge): NetworkEdge[] => {
-      if (!edge || typeof edge !== "object") return [];
-      const value = edge as { source?: unknown; target?: unknown; from?: unknown; to?: unknown; weight?: unknown };
-      const source = typeof value.source === "string" ? value.source : value.from;
-      const target = typeof value.target === "string" ? value.target : value.to;
-      if (typeof source !== "string" || typeof target !== "string" || !nodeIds.has(source) || !nodeIds.has(target)) return [];
-      return [{ source, target, weight: typeof value.weight === "number" && value.weight > 0 ? value.weight : undefined }];
-    });
-    if (nodes.length && edges.length) return { nodes, edges };
-  }
-  return null;
+  const raw = data.analysisModules && typeof data.analysisModules === "object"
+    ? (data.analysisModules as Record<string, unknown>).morphology
+    : data.analysis_modules && typeof data.analysis_modules === "object"
+      ? (data.analysis_modules as Record<string, unknown>).morphology
+      : null;
+  return raw && typeof raw === "object" ? raw as MorphologyAnalysisModule : null;
 }
 
-function SourceNetwork({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
-  const network = networkData(bundle);
-  const labels = new Map(network?.nodes.map((node) => [node.id, node.label]));
-  return <section className="afs-card" id="sec-network"><h2>실제 의미 연결망 <small>노드·연결선이 있는 경우만 표시</small></h2><div className="afs-in"><p className="afs-note">연결선은 같은 기사에서 함께 관측된 항목을 뜻할 뿐, 인과관계나 매체의 의도를 뜻하지 않습니다. 기사별 표본의 소속은 근거 상세에서 확인합니다.</p>{network ? <><p className="afp-summary-meta">노드 {network.nodes.length}개 · 연결 {network.edges.length}개 · 기사 {issue.articleCount}건 표본</p><div className="afp-network"><div className="afp-network-nodes">{network.nodes.slice(0, 30).map((node) => <div className="afp-network-node" key={node.id}><strong>{node.label}</strong>{node.count ? <span>{node.count}건</span> : null}</div>)}</div><ul className="afp-network-edges">{network.edges.slice(0, 60).map((edge, index) => <li key={`${edge.source}-${edge.target}-${index}`}>{labels.get(edge.source) ?? "노드 미상"} <span>↔</span> {labels.get(edge.target) ?? "노드 미상"}{edge.weight ? <small> · {edge.weight}회</small> : null}</li>)}</ul></div></> : <div className="afp-unavailable"><strong>연결망 미제공</strong><p>이 공개 snapshot에는 실제 노드와 연결선 데이터가 없습니다. 차원·프레임 목록을 연결망처럼 만들어 표시하지 않았습니다.</p></div>}</div></section>;
-}
-
-type MorphologyRow = { articleId: string; label: string; count?: number };
-
-function morphologyRows(bundle: IssueAnalysisBundle): MorphologyRow[] {
+function profileMorphologyRows(bundle: IssueAnalysisBundle): MorphologyRow[] {
   return bundle.semanticProfiles.filter((entry) => semanticEntryIsEligible(entry, bundle)).flatMap((entry) => {
     const raw = (richProfile(entry) as (RichProfile & { morphology?: unknown }) | null)?.morphology;
-    const items = Array.isArray(raw) ? raw : raw && typeof raw === "object" && Array.isArray((raw as { items?: unknown }).items) ? (raw as { items: unknown[] }).items : [];
+    if (!raw || typeof raw !== "object") return [];
+    const value = raw as { items?: unknown; term_frequencies?: unknown; term_evidence?: unknown };
+    const items = Array.isArray(value.term_frequencies) ? value.term_frequencies : Array.isArray(value.items) ? value.items : [];
+    const evidenceRows = Array.isArray(value.term_evidence) ? value.term_evidence : [];
     return items.flatMap((item): MorphologyRow[] => {
       if (!item || typeof item !== "object") return [];
-      const value = item as { code?: unknown; label?: unknown; term?: unknown; count?: unknown };
-      const rawLabel = typeof value.label === "string" ? value.label : typeof value.term === "string" ? value.term : typeof value.code === "string" ? value.code : "";
+      const term = item as { code?: unknown; label?: unknown; term?: unknown; pos?: unknown; count?: unknown; per_thousand?: unknown; perThousand?: unknown };
+      const rawLabel = typeof term.label === "string" ? term.label : typeof term.term === "string" ? term.term : typeof term.code === "string" ? term.code : "";
       if (!rawLabel) return [];
-      return [{ articleId: entry.articleId, label: codeLabel(typeof value.code === "string" ? value.code : null, rawLabel), count: typeof value.count === "number" && value.count > 0 ? value.count : undefined }];
+      const evidenceRow = evidenceRows.find((candidate) => candidate && typeof candidate === "object" && (candidate as { term?: unknown }).term === term.term && ((candidate as { pos?: unknown }).pos === undefined || (candidate as { pos?: unknown }).pos === term.pos));
+      const evidence = moduleEvidenceForBundle(bundle, evidenceRow && typeof evidenceRow === "object" ? (evidenceRow as { evidence?: unknown }).evidence : null);
+      if (!evidence) return [];
+      return [{
+        articleId: entry.articleId,
+        label: codeLabel(typeof term.code === "string" ? term.code : null, rawLabel),
+        count: typeof term.count === "number" && term.count > 0 ? term.count : undefined,
+        perThousand: typeof term.perThousand === "number" ? term.perThousand : typeof term.per_thousand === "number" ? term.per_thousand : undefined,
+        pos: typeof term.pos === "string" ? term.pos : undefined,
+        evidence: evidence.evidence,
+      }];
     });
   });
 }
 
-function MorphologySection({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
+function moduleMorphologyRows(bundle: IssueAnalysisBundle): MorphologyRow[] {
+  const morphology = morphologyModule(bundle);
+  if (!morphology) return [];
+  const outlets = Array.isArray(morphology.byOutlet) ? morphology.byOutlet : Array.isArray(morphology.by_outlet) ? morphology.by_outlet : [];
+  return outlets.flatMap((outlet) => {
+    if (!outlet || typeof outlet !== "object") return [];
+    const rawOutlet = outlet as Record<string, unknown>;
+    const terms = Array.isArray(rawOutlet.terms) ? rawOutlet.terms : [];
+    return terms.flatMap((term): MorphologyRow[] => {
+      if (!term || typeof term !== "object") return [];
+      const value = term as Record<string, unknown>;
+      const label = typeof value.term === "string" ? value.term : "";
+      if (!label) return [];
+      const refs = Array.isArray(value.evidenceRefs) ? value.evidenceRefs : Array.isArray(value.evidence) ? value.evidence : [];
+      return refs.flatMap((ref): MorphologyRow[] => {
+        const evidence = moduleEvidenceForBundle(bundle, ref);
+        if (!evidence) return [];
+        return [{
+          articleId: evidence.articleId,
+          label,
+          count: typeof value.count === "number" && value.count > 0 ? value.count : undefined,
+          perThousand: typeof value.perThousand === "number" ? value.perThousand : typeof value.per_thousand === "number" ? value.per_thousand : undefined,
+          pos: typeof value.pos === "string" ? value.pos : undefined,
+          evidence: evidence.evidence,
+        }];
+      });
+    });
+  });
+}
+
+function morphologyRows(bundle: IssueAnalysisBundle): MorphologyRow[] {
+  const rows = [...profileMorphologyRows(bundle), ...moduleMorphologyRows(bundle)];
+  return [...new Map(rows.map((row) => [
+    `${row.articleId}|${row.label}|${row.evidence?.locator?.paragraph ?? ""}|${row.evidence?.locator?.sentence ?? ""}|${row.evidence?.sentence_sha256 ?? ""}`,
+    row,
+  ])).values()];
+}
+
+function MorphologySection({ bundle, issue, analysis }: { bundle: IssueAnalysisBundle; issue: IssueView; analysis: ParaphraseLinguisticAnalysis }) {
   const rows = morphologyRows(bundle);
+  const morphology = morphologyModule(bundle);
+  const analyzer = morphology?.analyzer;
   const articles = new Map(issue.articles.map((article) => [article.articleId, article]));
-  return <section className="afs-card" id="sec-morphology"><h2>형태소·차별 표현 <small>프레임 판정과 별도인 언어 관측</small></h2><div className="afs-in"><p className="afs-note">단어 형태나 반복 표현은 어떤 문장이 눈에 띄는지 보여 줄 뿐, 그 자체로 프레임·논조·의도를 판정하지 않습니다.</p>{rows.length ? <div className="afp-morphology-list">{rows.slice(0, 60).map((row, index) => <div key={`${row.articleId}-${row.label}-${index}`}><strong>{row.label}</strong><span>{articles.get(row.articleId)?.outlet ?? "매체 미상"} · {articles.get(row.articleId)?.title ?? "제목 미상"}{row.count ? ` · ${row.count}회` : ""}</span><details className="afp-technical-disclosure"><summary>기술 식별자</summary><div className="afp-evidence-body"><small>article_id {row.articleId}</small></div></details></div>)}</div> : <div className="afp-unavailable"><strong>형태소 결과 미제공</strong><p>이 공개 snapshot에는 형태소·차별 표현 분석 결과가 없어 프레임 결론에 사용하지 않았습니다.</p></div>}</div></section>;
+  const analyzerNote = analyzer?.version ? `분석기 ${analyzer.version}${analyzer.dictionaryVersion || analyzer.dictionary_version ? ` · 사전 ${analyzer.dictionaryVersion ?? analyzer.dictionary_version}` : ""}` : null;
+  const posLabels: Record<string, string> = { noun: "명사", predicate: "서술어", foreign: "외래어" };
+  const issueStatusLabels: Record<string, string> = { queued: "대기", running: "진행 중", retry_wait: "재시도 대기", succeeded: "분석 실행 완료", review_needed: "검토 필요", dead_letter: "실패" };
+  return <section className="afs-card" id="sec-morphology"><h2>형태소·반복 표현 <small>입력 출처를 나눈 언어 관측</small></h2><div className="afs-in">
+    <p className="afs-note">단어 형태나 반복 표현은 어떤 문장이 눈에 띄는지 보여 줄 뿐, 그 자체로 프레임·논조·의도를 판정하지 않습니다. 아래 공개 paraphrase 집계는 기사 원문 단어 빈도가 아니며, 매체 간 차이나 기자의 의도를 확정하지 않습니다.</p>
+    {analysis.terms.length ? <div>
+      <h3>저장된 AI 공개 paraphrase 재분석</h3>
+      <p className="afp-summary-meta">입력: 원문이 아닌 저장된 공개 paraphrase · 분석기 {analysis.analyzer.version} · 사전 {analysis.analyzer.dictionaryVersion} · 기사 {analysis.analyzedArticleCount}/{analysis.issueArticleCount}건 · 요약문 {analysis.validParaphraseCount}개</p>
+      <p className="afp-state">{analysis.analyzer.limitation} paraphrase마다 상위 {analysis.analyzer.maxTermsPerParaphrase}개 내용어까지만 집계합니다.</p>
+      <p className="afp-state">의제 전체 AI 의미 분석은 현재 <strong>{issueStatusLabels[analysis.issueSemanticStatus] ?? "상태 미상"}</strong>입니다. 아래는 성공한 기사 프로필 중 문장 근거가 확인된 부분 관측이며, 의제 전체 비교나 매체 결론이 아닙니다. 기자 서술만 포함하고 취재원 귀속 발화 {analysis.excludedSourceObservationCount}건은 제외했습니다. 입력은 자동 생성된 미검토 AI 초안입니다. 포함 프로필 {analysis.reviewRequiredProfileCount}개는 사람 검토 대상으로 표시되어 있고, 나머지 기사는 관측 범위에 포함되지 않습니다.</p>
+      <p className="afp-summary-meta">{analysis.analysisRuns.map((run) => `${run.model ?? "모델 미상"} · prompt ${run.promptVersion} · schema ${run.schemaVersion}`).join(" / ")}</p>
+      <div className="afp-morphology-list">{analysis.terms.map((term) => <div key={term.id}>
+        <strong>{term.term}</strong>
+        <span>{posLabels[term.pos] ?? term.pos} · paraphrase 안 {term.count}회 · {term.paraphraseCount}개 요약문 · {term.articleCount}개 기사</span>
+        <ParaphraseObservationEvidence observations={term.observations} label="용례·claim 근거" />
+      </div>)}</div>
+    </div> : <div className="afp-unavailable"><strong>검증 가능한 공개 paraphrase 형태소 결과 없음</strong><p>기자 서술·성공 프로필·분석 버전·article/locator/hash 연결을 모두 확인한 입력만 사용합니다. 검증된 입력이 없어 형태소 집계를 만들지 않았습니다.</p></div>}
+    {rows.length ? <div>
+      <h3>저장된 별도 형태소 모듈</h3>
+      {analyzerNote ? <p className="afp-summary-meta">{analyzerNote} · 기사 근거와 locator가 검증된 항목만 표시</p> : null}
+      <div className="afp-morphology-list">{rows.map((row, index) => <div key={`${row.articleId}-${row.label}-${index}`}><strong>{row.label}</strong><span>{articles.get(row.articleId)?.outlet ?? "매체 미상"} · {articles.get(row.articleId)?.title ?? "제목 미상"}{row.pos ? ` · ${row.pos}` : ""}{row.count ? ` · ${row.count}회` : ""}{row.perThousand ? ` · 1,000개당 ${row.perThousand.toFixed(1)}회` : ""}</span><EvidenceRefs refs={[{ article_id: row.articleId, locator: row.evidence?.locator, sentence_sha256: row.evidence?.sentence_sha256 }]} label="형태소 근거" /><details className="afp-technical-disclosure"><summary>기술 식별자</summary><div className="afp-evidence-body"><small>article_id {row.articleId}</small></div></details></div>)}</div>
+    </div> : <p className="afp-state">이 snapshot에는 paraphrase와 분리된 기사 본문 형태소 모듈이 없습니다. 위 계산을 기사 원문 단어 분석으로 해석하지 마세요.</p>}
+  </div></section>;
 }
 
 function DevicesSection({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
@@ -1250,7 +1456,7 @@ function MethodologyDisclaimer() {
 function PendingAnalysisShell({ bundle, issue, mode }: { bundle: IssueAnalysisBundle; issue: IssueView; mode: AnalysisMode }) {
   return (
     <>
-      <AnalysisPageHeader mode={mode} bundle={bundle} issue={issue} dimensions={[]} />
+      <AnalysisPageHeader mode={mode} issue={issue} dimensions={[]} />
       <section className="afs-card afs-card-lead">
         <h2>{issue.title}</h2>
         <div className="afs-in afs-prose">
@@ -1294,7 +1500,7 @@ export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
   const dimensions = analyses(bundle, issue);
   return (
     <>
-      <AnalysisPageHeader mode="outlets" bundle={bundle} issue={issue} dimensions={dimensions} />
+      <AnalysisPageHeader mode="outlets" issue={issue} dimensions={dimensions} />
       <ComparisonLeadV2 bundle={bundle} issue={issue} synthesis={synthesisData(bundle)} />
       <section className="afs-card" id="sec-evidence">
         <h2>
@@ -1346,18 +1552,19 @@ export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
 export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBundle; issue: IssueView }) {
   if (isPendingLiveAnalysis(bundle)) return <PendingAnalysisShell mode="framing" bundle={bundle} issue={issue} />;
   const dimensions = analyses(bundle, issue);
+  const linguisticAnalysis = buildParaphraseLinguisticAnalysis(bundle);
   return (
     <>
-      <AnalysisPageHeader mode="framing" bundle={bundle} issue={issue} dimensions={dimensions} />
+      <AnalysisPageHeader mode="framing" issue={issue} dimensions={dimensions} />
       <div className="afp-framing-lead-grid" id="sec-synthesis">
-        <Summary bundle={bundle} issue={issue} analyses={dimensions} />
+        <Summary bundle={bundle} issue={issue} analyses={dimensions} compact />
         <ScopeSection bundle={bundle} issue={issue} compact id="sec-scope-summary" />
-      </div>
-      <div id="sec-guide">
-        <DimensionGuide dimensions={dimensions} />
       </div>
       <div id="sec-four-functions">
         <FourFunctionTable issue={issue} dimensions={dimensions} />
+      </div>
+      <div id="sec-guide">
+        <DimensionGuide dimensions={dimensions} />
       </div>
       <FramingRail />
       <section className="afs-card" id="sec-matrix">
@@ -1385,8 +1592,8 @@ export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
         </div>
       </section>
       <SourceRoleEvidence bundle={bundle} issue={issue} />
-      <SourceNetwork bundle={bundle} issue={issue} />
-      <MorphologySection bundle={bundle} issue={issue} />
+      <SourceNetwork analysis={linguisticAnalysis} />
+      <MorphologySection bundle={bundle} issue={issue} analysis={linguisticAnalysis} />
       <DevicesSection bundle={bundle} issue={issue} />
       <section className="afs-card" id="sec-evidence">
         <h2>
@@ -1409,18 +1616,14 @@ type AnalysisMode = "outlets" | "framing";
 
 function AnalysisPageHeader({
   mode,
-  bundle,
   issue,
   dimensions,
 }: {
   mode: AnalysisMode;
-  bundle: IssueAnalysisBundle;
   issue: IssueView;
   dimensions: DimensionAnalysis[];
 }) {
   const framing = mode === "framing";
-  const comparison = comparisonSummary(bundle, issue);
-  const sourceRoleCount = new Set(issue.outlets.flatMap((outlet) => outlet.roles.map((role) => role.label))).size;
   const observedDimensions = dimensions.filter((dimension) => dimension.observedArticles > 0).length;
   const kpis = framing
     ? [
@@ -1437,12 +1640,12 @@ function AnalysisPageHeader({
         <div className="afp-page-heading">
           <div className="afp-page-title-line">
             <h1>{framing ? "프레이밍 분석" : "언론사 비교"}</h1>
-            <span className="afp-page-badge">{framing ? "핵심 6축 + 보조 3층위" : comparison.statusLabel}</span>
+            <span className="afp-page-badge">{framing ? "핵심 6축 + 보조 3층위" : "기사별 근거 연결"}</span>
           </div>
           <p>
-            {issue.rank}위 · {issue.title} — {framing
+            {framing
               ? "문제·원인·책임·평가·해법·취재원 배치를 먼저 보고, 시야·표현 장치는 보조 관측으로 확인합니다."
-              : "사건 설명 → 실제 비교 질문 → 기사 설명 묶음 → 기사 근거 순서로 비교합니다."}
+              : "사건 경위 → 실제 비교 질문 → 대표 기사 묶음 → 기사 근거 순서로 비교합니다."}
           </p>
         </div>
         <Link className="afs-pill afs-pill-go afp-page-action" href={`/issues/${encodeURIComponent(issue.issueId)}/report`}>
@@ -1458,11 +1661,7 @@ function AnalysisPageHeader({
             </div>
           ))}
         </section>
-      ) : (
-        <p className="afp-compact-meta" aria-label="언론사 비교 표본 정보">
-          기사 {issue.articleCount}건 · 매체 {issue.outletCount}곳 · {comparison.statusLabel} · 기자 서술 근거 {comparison.analyzedArticleCount}건 · 취재원 역할 {sourceRoleCount || "미관측"}
-        </p>
-      )}
+      ) : null}
     </>
   );
 }

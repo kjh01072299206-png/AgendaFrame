@@ -1353,7 +1353,7 @@
   background: color-mix(in srgb, var(--afs-ink-2) 8%, transparent);
 }
 .afp-status-held_for_analysis {
-  color: var(--afs-warn);
+  color: #8a4b08;
   background: #fef3c7;
 }
 .afp-axis-status-reason,
@@ -1384,6 +1384,55 @@
   color: var(--afs-warn);
   font-size: 12px;
   font-weight: 750;
+}
+.afp-source-only-details {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--afs-warn) 38%, var(--afs-rule));
+  border-radius: var(--afs-r-btn);
+  background: color-mix(in srgb, var(--afs-warn) 5%, var(--afs-sunk));
+}
+.afp-source-only-details > summary {
+  color: var(--afs-warn);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+.afp-source-only-list {
+  display: grid;
+  gap: 10px;
+}
+.afp-source-only-item {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px;
+  border-top: 1px solid var(--afs-rule);
+}
+.afp-source-only-item > strong {
+  color: var(--afs-ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.afp-source-only-item > small,
+.afp-source-only-observation > span {
+  color: var(--afs-ink-3);
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.afp-source-only-observation {
+  min-width: 0;
+  padding-top: 8px;
+  border-top: 1px dashed var(--afs-rule);
+}
+.afp-source-only-observation p {
+  margin: 5px 0;
+  color: var(--afs-ink-2);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 .afp-camp-details {
   display: grid;
@@ -1794,6 +1843,12 @@
   font-size: 11px;
   line-height: 1.45;
 }
+.afp-synthesis-camp {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--afs-rule);
+  background: var(--afs-sunk);
+}
 .afp-framing-lead-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr);
@@ -1815,16 +1870,24 @@
 .afp-scope-compact .afs-note {
   font-size: 11px;
 }
-.afp-framing-lead-grid + #sec-guide,
-#sec-guide + #sec-four-functions {
+.afp-framing-lead-grid + #sec-four-functions,
+#sec-four-functions + #sec-guide {
   scroll-margin-top: 76px;
 }
-.afp-framing-lead-grid + #sec-guide .afs-card,
-#sec-guide + #sec-four-functions .afs-card {
+.afp-framing-lead-grid + #sec-four-functions .afs-card,
+#sec-four-functions + #sec-guide .afs-card {
   border-top-color: color-mix(in srgb, var(--afs-brand) 20%, var(--afs-rule));
 }
 .afp-rail-secondary {
   margin-top: 0;
+}
+
+/* The analysis lead is the first reading task after the issue context. Keep
+   the shell rhythm compact on these two routes so the event/question or the
+   framing summary/table starts in the 1440x900 reading window. */
+#afs-main:has(.afp-comparison-lead-v2),
+#afs-main:has(.afp-framing-lead-grid) {
+  gap: 12px;
 }
 
 /* ── 언론사 비교 v2: 사건 설명 → 갈린 질문 → 선택형 기사 증거 ──────── */
@@ -2092,6 +2155,10 @@
   font-weight: 800;
   line-height: 1.45;
   overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 .afp-camp-meta {
   display: block;
@@ -2116,6 +2183,29 @@
   margin-bottom: 2px;
   color: var(--afs-ink-3);
   font-size: 11px;
+}
+.afp-remaining-groups {
+  margin-top: 12px;
+  border-top: 1px solid var(--afs-rule);
+  padding-top: 10px;
+}
+.afp-remaining-groups > summary {
+  color: var(--afs-brand);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+.afp-remaining-group-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.afp-camp-card-secondary {
+  padding: 12px;
+}
+.afp-camp-card-secondary .afp-camp-headline {
+  font-size: 13px;
 }
 .afp-camp-proof-panel-v2 {
   margin-top: 14px;
@@ -2236,7 +2326,8 @@
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   }
   .afp-camp-grid-v2,
-  .afp-proof-list-v2 {
+  .afp-proof-list-v2,
+  .afp-remaining-group-list {
     grid-template-columns: minmax(0, 1fr);
   }
   .afp-camp-heading {
@@ -2281,5 +2372,153 @@
   .afp-proof-panel-heading {
     flex-direction: column;
     gap: 5px;
+  }
+}
+
+@media (min-width: 1200px) {
+  /* The framing lead is a reading index, not a second long-form analysis
+     card. Keep all three conclusions and their status visible without
+     reducing body text below 14px. */
+  .afp-summary-compact .afp-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 8px 12px 10px;
+  }
+  .afp-summary-compact .afp-summary > p:not(.afp-summary-meta) {
+    margin: 0;
+    padding: 4px;
+    border: 1px solid var(--afs-rule);
+    background: var(--afs-sunk);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .afp-summary-compact .afp-summary > .afp-summary-meta {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+  .afp-summary-compact > h2 {
+    padding-top: 10px;
+    font-size: 16px;
+  }
+  .afp-scope-compact .afs-in {
+    padding: 8px 12px 10px;
+  }
+  .afp-scope-compact > h2 {
+    padding-top: 10px;
+    font-size: 16px;
+  }
+  .afp-scope-compact .afp-stat-grid > div {
+    padding: 8px;
+  }
+  .afp-scope-compact .afp-stat-grid > div .afs-note {
+    display: none;
+  }
+  .afp-four-functions .afs-table {
+    font-size: 14px;
+  }
+  .afp-four-functions .afs-table td p {
+    margin: 8px 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .afp-table-evidence {
+    margin-top: 7px;
+  }
+  .afp-comparison-lead-v2 {
+    gap: 0;
+  }
+  .afp-event-card-v2 .afs-in,
+  .afp-axis-v2 .afs-in {
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, .6fr);
+    gap: 16px 24px;
+  }
+  .afp-event-note {
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .afp-event-first {
+    font-size: 18px;
+    line-height: 1.38;
+  }
+  .afp-event-context,
+  .afp-axis-context {
+    padding: 10px 12px;
+  }
+  .afp-event-context-note {
+    display: none;
+  }
+  .afp-event-context .afp-event-more {
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+  .afp-axis-question-v2 {
+    margin-top: 10px;
+    font-size: 18px;
+    line-height: 1.38;
+  }
+  .afp-axis-status-reason {
+    margin: 6px 0 0;
+    line-height: 1.4;
+  }
+  .afp-axis-context .afp-common-ground-v2 {
+    margin-top: 6px;
+    padding: 8px 10px;
+  }
+  .afp-axis-v2 .afs-in {
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  }
+  .afp-axis-context {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 16px;
+    align-self: start;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .afp-axis-context > .afp-comparison-status {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .afp-axis-context .afp-common-ground-v2,
+  .afp-axis-context .afp-comparison-difference {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .afp-axis-context > .afp-state {
+    margin: 0;
+  }
+  .afp-comparison-difference {
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+  .afp-camp-heading {
+    margin-bottom: 8px;
+  }
+  .afp-camp-heading h2 {
+    line-height: 1.15;
+  }
+  .afp-camp-card-v2 {
+    gap: 2px;
+    padding: 4px 12px 10px;
+  }
+  .afp-camp-grid-v2:has(> :only-child) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .afp-camp-grid-v2:has(> :nth-child(2):last-child) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .afp-camp-card-v2 .afp-camp-letter {
+    display: none;
+  }
+  #sec-four-functions .afs-in {
+    padding-top: 0;
+  }
+  #sec-four-functions .afs-table caption {
+    padding-bottom: 4px;
   }
 }

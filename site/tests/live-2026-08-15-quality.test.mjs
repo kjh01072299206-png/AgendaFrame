@@ -122,7 +122,7 @@ test("published 2026-08-15 synthesis is Vertex-backed, evidence-bound, and body-
   assert.equal(manifest.basisDate, "2026-08-15");
   assert.equal(manifest.issueCount, 5);
   assert.equal(manifest.articleCount, 40);
-  assert.equal(manifest.analysisModel, "gemini-2.5-pro");
+  assert.equal(manifest.analysisModel, "gemini-2.5-flash-lite");
   assert.match(String(manifest.analysisRunId), /^[0-9a-f]{32}$/);
 
   for (const rank of [1, 2, 3, 4, 5]) {
@@ -138,9 +138,13 @@ test("published 2026-08-15 synthesis is Vertex-backed, evidence-bound, and body-
     assert.equal(bundle.lineage?.runId, manifest.analysisRunId);
     assert.equal(engine?.source, "gcp:event-synthesis");
     assert.equal(engine?.semanticAi, true);
-    assert.equal(engine?.model, "gemini-2.5-pro");
+    assert.equal(engine?.model, "gemini-2.5-flash-lite");
     assert.equal(semantic?.semanticAi, true);
-    assert.equal(synthesis?.schemaVersion, "agendaframe.event-synthesis.v2");
+    assert.equal(synthesis?.schemaVersion, "agendaframe.event-synthesis.v2.2");
+    assert.equal(synthesis?.promptVersion, "event-synthesis-v2.2.0");
+    assert.ok(["difference_confirmed", "no_clear_difference", "held_for_analysis"].includes(synthesis.comparison_result?.status));
+    assert.equal(synthesis.editorial_review?.relationLabelsInvented, false);
+    assert.match(String(synthesis.editorial_review?.afterSha256), /^[0-9a-f]{64}$/);
     assert.equal(synthesis?.usable, true);
     assert.equal(synthesis?.source, "gcp:event-synthesis");
     assert.equal(synthesis?.run_id, manifest.analysisRunId);

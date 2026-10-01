@@ -562,8 +562,8 @@ class GcpStageAdapterTests(unittest.TestCase):
                 first = cited_rows[0]
                 second = cited_rows[1]
                 return {
-                    "prompt_version": "event-synthesis-v2.0.0",
-                    "schema_version": "agendaframe.event-synthesis.v2",
+                    "prompt_version": "event-synthesis-v2.2.0",
+                    "schema_version": "agendaframe.event-synthesis.v2.2",
                     "event_paragraphs": [
                         {"text": "같은 사건을 여러 기사가 다뤘다", "evidence": [first]},
                         {
@@ -578,6 +578,51 @@ class GcpStageAdapterTests(unittest.TestCase):
                             "evidence": [first],
                         }
                     ],
+                    "comparison_result": {
+                        "status": "difference_confirmed",
+                        "primary_dimension": "problem_definition",
+                        "reason": "두 매체의 기자 서술에서 문제를 앞세운 방식이 달랐다",
+                        "analyzed_article_ids": [first["article_id"], second["article_id"]],
+                        "dimensions": [
+                            {
+                                "dimension": "problem_definition",
+                                "label": "문제 정의",
+                                "question": "무엇을 문제로 설명했나",
+                                "status": "difference_confirmed",
+                                "relation": "different_emphasis",
+                                "points": [
+                                    {
+                                        "observation_id": "fixture-political-accountability",
+                                        "headline": "정치적 책임을 먼저 묻는 설명",
+                                        "summary": "대통령의 침묵과 책임 주체를 함께 짚었다",
+                                        "text": "정치적 책임을 먼저 설명했다",
+                                        "relation": "different_emphasis",
+                                        "article_ids": [first["article_id"]],
+                                        "voice_basis": {
+                                            "kind": "journalist_narration",
+                                            "label": "기자 서술 중심",
+                                            "evidence": [first],
+                                        },
+                                        "evidence": [first],
+                                    },
+                                    {
+                                        "observation_id": "fixture-institutional-process",
+                                        "headline": "제도 작동을 앞세운 설명",
+                                        "summary": "책임 공방보다 제도 변화의 절차를 설명했다",
+                                        "text": "제도 작동을 먼저 설명했다",
+                                        "relation": "different_emphasis",
+                                        "article_ids": [second["article_id"]],
+                                        "voice_basis": {
+                                            "kind": "journalist_narration",
+                                            "label": "기자 서술 중심",
+                                            "evidence": [second],
+                                        },
+                                        "evidence": [second],
+                                    },
+                                ],
+                            }
+                        ],
+                    },
                     "comparison_axis": {
                         "label": "정치 책임과 제도 설명",
                         "points": [
@@ -589,6 +634,7 @@ class GcpStageAdapterTests(unittest.TestCase):
                     },
                     "common_ground": {
                         "text": "원인 귀속은 공통으로 관측된다",
+                        "status": "observed",
                         "evidence": cited_rows,
                     },
                     "camps": [

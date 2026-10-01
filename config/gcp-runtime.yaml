@@ -32,7 +32,9 @@ cost_controls:
   vertex_monthly_target_usd: 5
   cloud_run_monthly_target_usd: 2
   project_monthly_alert_usd: 10
-  estimated_daily_vertex_limit_usd: 0.50
+  # User-approved ceiling for the current-display recovery run. Keep the
+  # monthly targets and provider-side protections in place.
+  estimated_daily_vertex_limit_usd: 2.00
 cloud_run:
   cpu: 1
   memory: 512Mi
