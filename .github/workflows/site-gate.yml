@@ -179,7 +179,7 @@ jobs:
             .comparison.data.synthesis.promptVersion == "event-synthesis-v2.2.0"
             and .comparison.data.synthesis.schemaVersion == "agendaframe.event-synthesis.v2.2"
             and (.comparison.data.synthesis.comparison_result.status
-              | IN("difference_confirmed"; "no_clear_difference"; "held_for_analysis"; "analysis_failed"))
+              | IN("difference_confirmed", "no_clear_difference", "held_for_analysis", "analysis_failed"))
           ' >/dev/null; then
             echo "실배포 분석 계약 확인 실패: current top-1 is not an evidence-bound v2.2 result."
             exit 1
