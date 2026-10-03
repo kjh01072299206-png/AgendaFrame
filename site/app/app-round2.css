@@ -1891,6 +1891,17 @@
 }
 
 /* ── 언론사 비교 v2: 사건 설명 → 갈린 질문 → 선택형 기사 증거 ──────── */
+.afp-fine-comparison .afs-prose, .afp-article-explanations .afs-in { font-size: 15px; line-height: 1.75; }
+.afp-fine-item, .afp-article-prose { padding: 24px 0; border-top: 1px solid var(--rule); }
+.afp-fine-item:first-of-type, .afp-article-prose:first-child { border-top: 0; padding-top: 0; }
+.afp-fine-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.afp-fine-article { min-width: 0; }
+.afp-fine-article h4, .afp-article-prose h4 { margin: 16px 0 4px; }
+.afp-fine-article p, .afp-fine-commentary p, .afp-article-prose p { max-width: 75ch; }
+.afp-fine-comparison details p { overflow-wrap: anywhere; }
+.afp-fine-item header { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; }
+.afp-fine-commentary { margin-top: 20px; padding-top: 8px; border-top: 1px solid var(--rule); }
+@media (max-width: 640px) { .afp-fine-pair { grid-template-columns: minmax(0, 1fr); gap: 12px; } }
 .afp-comparison-lead-v2 {
   display: grid;
   gap: 12px;
@@ -2381,7 +2392,7 @@
      reducing body text below 14px. */
   .afp-summary-compact .afp-summary {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
     padding: 8px 12px 10px;
   }
@@ -2521,4 +2532,39 @@
   #sec-four-functions .afs-table caption {
     padding-bottom: 4px;
   }
+}
+
+/* Reading density follows the source prototype without reducing body size. */
+.afp-comparison-lead-v2 .afp-event-first,
+.afp-comparison-lead-v2 .afp-camp-summary,
+.afp-comparison-lead-v2 .afp-proof-row-v2 p,
+.afp-summary p, .afp-four-functions td p { font-size: 14.5px; line-height: 1.65; }
+.afp-article-prose h3 { margin: 0 0 6px; }
+.afp-article-prose > a, .afp-fine-article > a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+.afp-fine-item, .afp-article-prose, .afp-fine-commentary {
+  border-top-color: var(--afs-rule);
+}
+.afp-fine-comparison .afs-prose p { font-size: 15px; line-height: 1.75; }
+@media (max-width: 640px) {
+  /* Only the two analysis pages: keep navigation reachable without a tall header. */
+  body:has(#sec-fine-comparison) .afs-side {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+  }
+  body:has(#sec-fine-comparison) .afs-brand { flex: 0 0 auto; padding: 0; min-height: 44px; }
+  body:has(#sec-fine-comparison) .afs-nav {
+    flex: 1;
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  body:has(#sec-fine-comparison) .afs-nav-sec { display: flex; flex-direction: row; flex: 0 0 auto; gap: 4px; }
+  body:has(#sec-fine-comparison) .afs-nav-group { display: none; }
+  body:has(#sec-fine-comparison) .afs-nav a { flex: 0 0 auto; min-height: 44px; }
 }

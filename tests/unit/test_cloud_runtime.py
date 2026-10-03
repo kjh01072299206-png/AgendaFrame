@@ -741,7 +741,7 @@ class CloudRuntimeTests(unittest.TestCase):
         supported = next(
             dimension for dimension in oversized_dimensions if dimension["status"] == "supported"
         )
-        supported["value"] = "독자적으로 재서술한 분석 설명 " * 20
+        supported["value"] = "독자적으로 재서술한 분석 설명 " * 80
         with self.assertRaisesRegex(ValueError, "no longer than"):
             publication_row(
                 value,

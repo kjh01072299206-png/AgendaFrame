@@ -1,5 +1,7 @@
 import { DIM_LABEL, DIM_ORDER } from "./derive";
-import { isPublishableEventSynthesis } from "./publication-contract";
+import { isPublishableEventSynthesis, pointEvidenceIsBound } from "./publication-contract";
+import { articleIntegrityReason, evidenceIntegrityValid, matchingProfileItems } from "./evidence-integrity";
+import { fineComparison } from "./fine-grained-comparison";
 import { stripEvidenceTokens } from "./public-text.mjs";
 import type {
   ComparisonRelation,
@@ -239,6 +241,7 @@ export function semanticProfileEntryIsUsable(entry: IssueAnalysisBundle["semanti
 
 export function semanticEntryIsEligible(entry: IssueAnalysisBundle["semanticProfiles"][number], bundle: IssueAnalysisBundle) {
   return semanticProfileEntryIsUsable(entry)
+    && !articleIntegrityReason(bundle, entry.articleId)
     && !blockedState(bundle.analysisStatus?.semantic?.status);
 }
 
@@ -424,7 +427,7 @@ function boundedEvidence(
     const articleId = typeof evidence.article_id === "string" ? evidence.article_id : "";
     const entry = entries.get(articleId);
     const article = articles.get(articleId);
-    if (!article || !entry || !hasValidPublicEvidence(evidence, entry.evidence)) continue;
+    if (!article || !entry || !evidenceIntegrityValid(bundle, evidence) || !hasValidPublicEvidence(evidence, entry.evidence)) continue;
     const normalized = {
       locator: evidence.locator,
       sentence_sha256: evidence.sentence_sha256?.toLowerCase(),
@@ -477,6 +480,7 @@ function observationsFromPoint(
   index: number,
 ) {
   const text = cleanText(point.text);
+  if (!pointEvidenceIsBound(point, bundle)) return null;
   const pointRelation = relation(point.relation) ?? "insufficient_evidence";
   if (!text || pointRelation === "insufficient_evidence" || point.status === "insufficient_evidence" || blockedState(point.status)) return null;
   const evidence = boundedEvidence(bundle, point.evidence);
@@ -492,6 +496,9 @@ function observationsFromPoint(
     .filter(([articleId]) => !declaredIds.size || declaredIds.has(articleId))
     .flatMap(([articleId, evidenceRows]) => evidenceRows.map((evidenceRef) => {
       const article = articles.get(articleId);
+      const item = matchingProfileItems(bundle, { ...evidenceRef, article_id: articleId }).find((candidate) => candidate.voice?.kind === voiceKind)
+        ?? matchingProfileItems(bundle, { ...evidenceRef, article_id: articleId })[0];
+      const articleText = cleanText(item?.public_paraphrase);
       return {
         observationId: `${point.observation_id ?? point.claim_id ?? `${dimension}:${pointRelation}:${exactText(text)}`}:${articleId}:${evidenceKey(evidenceRef)}`,
         articleId,
@@ -500,8 +507,8 @@ function observationsFromPoint(
         url: article?.canonicalUrl ?? null,
         dimension,
         valueKey: `synthesis:${dimension}:${index}:${pointRelation}`,
-        valueLabel: text,
-        publicParaphrase: text,
+        valueLabel: DIM_LABEL[dimension] ?? dimension,
+        publicParaphrase: articleText,
         voiceKind,
         evidence: evidenceRef,
         claimId: point.claim_id,
@@ -601,9 +608,9 @@ function dimensionComparison(
     || comparisonHeldState(semanticStatus)
     || comparisonHeldState(rootResultStatus)
     || comparisonHeldState(raw?.status);
-  const blocked = failed || insufficient;
-  const resultGroups = blocked ? [] : groupsFromComparisonDimension(bundle, dimension, raw);
-  const groups = resultGroups.filter((group) => group.voiceLabel === "기자 서술");
+  const resultGroups = failed ? [] : groupsFromComparisonDimension(bundle, dimension, raw);
+  const narratedGroups = resultGroups.filter((group) => group.voiceLabel === "기자 서술");
+  const groups = supportForDifference(narratedGroups) ? narratedGroups : narratedGroups.filter((group) => !["different_emphasis", "contradictory"].includes(group.relation ?? ""));
   const resultSourceGroups = resultGroups.filter((group) => group.voiceLabel === "취재원 발언");
   const counts = dimensionCounts(groups.flatMap((group) => group.observations));
   const sourceCounts = dimensionCounts(resultSourceGroups.flatMap((group) => group.observations));
@@ -627,7 +634,10 @@ function dimensionComparison(
   const question = finalStatus === "difference_confirmed" || finalStatus === "no_clear_difference"
     ? cleanText(raw?.question) || `${label}에서 확인된 설명을 어떻게 비교할까?`
     : "비교 질문 미확정";
-  const reason = cleanText(raw?.reason)
+  const concreteExplanation = groups.map((group) => group.observations
+    .filter((row, i, rows) => rows.findIndex((other) => other.articleId === row.articleId && other.publicParaphrase === row.publicParaphrase) === i)
+    .map((row) => `${row.outlet}: ${row.publicParaphrase}`).join(" / ")).filter(Boolean).join(" · ");
+  const reason = concreteExplanation || cleanText(raw?.reason)
     || (finalStatus === "difference_confirmed"
       ? `${label}에서 관계가 다른 기자 서술이 두 개 이상 매체의 근거로 연결되었습니다.`
       : finalStatus === "no_clear_difference"
@@ -641,7 +651,7 @@ function dimensionComparison(
     question,
     status: finalStatus,
     statusReason: reason,
-    groups: finalStatus === "difference_confirmed" || finalStatus === "no_clear_difference" ? groups : [],
+    groups,
     sourceGroups: resultSourceGroups.length ? resultSourceGroups : sourceGroups,
     narratedArticleCount: counts.articleCount || fallbackCounts.articleCount,
     narratedOutletCount: counts.outletCount || fallbackCounts.outletCount,
@@ -733,7 +743,8 @@ export function selectRepresentativeGroups(groups: ComparisonGroup[], limit = 3)
 export function comparisonSummary(bundle: IssueAnalysisBundle): ComparisonSummary {
   const synthesis = bundle.comparison?.data?.synthesis;
   const rawResult = synthesisResult(synthesis);
-  const result = isPublishableEventSynthesis(bundle) && synthesisRunMatches(bundle, synthesis) ? rawResult : null;
+  const compatible = synthesis?.promptVersion === "event-synthesis-v2.2.0" && synthesis?.schemaVersion === "agendaframe.event-synthesis.v2.2" && rawResult?.version === "comparison-v1.0.0";
+  const result = compatible && synthesisRunMatches(bundle, synthesis) ? rawResult : null;
   const rootResultStatus = comparisonResultHasFailure(rawResult) ? "analysis_failed" : rawResult?.status;
   const dimensions = DIM_ORDER.map((dimension) => dimensionComparison(bundle, dimension, result, rootResultStatus));
   const statusValue = comparisonStatusFromResult(bundle, synthesis);
@@ -758,11 +769,13 @@ export function comparisonSummary(bundle: IssueAnalysisBundle): ComparisonSummar
     : statusValue === "no_clear_difference"
       ? "no_clear_difference"
       : statusValue;
-  const allGroups = selected?.groups ?? [];
+  const allGroups = selected?.groups ?? dimensions.flatMap((dimension) => dimension.groups);
   const representativeGroups = selectRepresentativeGroups(allGroups, 3);
   const representativeKeys = new Set(representativeGroups.map((group) => group.key));
   const reviewRequired = bundleRequiresHumanReview(bundle);
-  const statusReason = cleanText(result?.reason)
+  const invalidCorePoints = (result?.dimensions ?? []).flatMap((dimension) => dimension.points ?? []).filter((point) => !pointEvidenceIsBound(point, bundle));
+  const invalidCoreReason = invalidCorePoints.length ? "기존 통합 비교문에 발행 매체명·기사 상태·분석 버전·본문 해시 또는 발화 주체 연결이 맞지 않는 항목이 있어 해당 판단을 제외했습니다. 연결된 기사와 원문을 재대조하기 전에는 핵심 프레임 차이를 확정하지 않습니다." : null;
+  const statusReason = invalidCoreReason || cleanText(result?.reason)
     || selected?.statusReason
     || (status === "analysis_failed"
       ? "분석 실패 상태라 매체 간 차이를 표시하지 않습니다."
@@ -790,7 +803,7 @@ export function comparisonSummary(bundle: IssueAnalysisBundle): ComparisonSummar
     commonObservations,
     commonScope,
     differenceText,
-    whatToNotice: `${baseNotice}${reviewNote}`,
+    whatToNotice: `${fineComparison(bundle).observations.map((item) => item.interpretation).join(" ") || baseNotice}${reviewNote}`,
     question: selected?.question || "비교 질문은 분석 근거가 연결된 뒤 표시합니다.",
     dimensionLabel: selected?.label ?? null,
     groups: allGroups,

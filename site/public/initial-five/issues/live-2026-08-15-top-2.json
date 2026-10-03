@@ -7355,7 +7355,59 @@
       },
       "not_observed_statements": [
         "1건은 본문 확보·분석에서 제외되어 종합 근거로 사용하지 않았습니다."
-      ]
+      ],
+      "fine_grained": {
+        "version": "fine-comparison-v1.0.0",
+        "producer": "editorial-title-review",
+        "run_id": "7f0aba42d002493abe9abac8663bb881",
+        "observations": [
+          {
+            "observation_id": "title-review:2:v1",
+            "axis": "title_lead",
+            "status": "expression_only",
+            "headline": "같은 건조 승인, 조치 전달과 국내 수혜 기대의 제목 초점",
+            "common": "두 제목 모두 미국 투자 외국 조선소의 선박 건조 승인이라는 조치를 다룹니다. 제목에서 확인되는 공통 사건과, 각 제목이 추가로 전면에 놓은 내용을 구분합니다.",
+            "articles": [
+              {
+                "article_id": "c9cbff31423a96c117439ef5663bdfa4",
+                "outlet": "KBS 뉴스",
+                "description": "KBS 제목은 트럼프의 발언 형식으로 미국 투자 외국 조선사의 건조 승인 내용을 제시합니다. ‘최대 2척’이라는 허용 규모가 제목에 포함되어 있으며, 국내 업체의 수혜 기대는 이 제목에 쓰여 있지 않습니다. 이는 제목 범위의 관측이지 본문에서 수혜를 다루지 않았다는 판단은 아닙니다.",
+                "voice": "title_selection",
+                "evidence": [],
+                "title_basis": {
+                  "title": "트럼프 “미국 투자하는 외국 조선사에 최대 2척 건조 승인”",
+                  "title_sha256": "feb55b2e4ea9e504fea863b9a762dbe81078ecfbc0f376c585ff1ce8c518d2f0"
+                },
+                "scope": "저장 제목만 확인 · 발행 시점 2026-08-13T23:44:33.000Z · 원문 링크 https://news.kbs.co.kr/news/view.do?ncd=8637043"
+              },
+              {
+                "article_id": "a828f0bb6b754162dcfbf8f6f6ae733d",
+                "outlet": "국민일보",
+                "description": "국민일보 제목은 투자 외국 조선소의 군함 2척 건조 허가를 제시한 뒤, K조선의 수혜 기대를 덧붙입니다. 조치 설명과 국내 산업의 기대를 한 제목 안에 이어 놓았습니다. ‘기대’는 확정된 수혜 실적을 말하는 표현과 구분해서 읽어야 합니다.",
+                "voice": "title_selection",
+                "evidence": [],
+                "title_basis": {
+                  "title": "트럼프, 美투자 외국 조선소에 군함 2척 건조 허가… K조선 수혜 기대",
+                  "title_sha256": "581acbffed343bf7e6538c42501d38026a962d953e122c716a5c7eaab4df3768"
+                },
+                "scope": "저장 제목만 확인 · 발행 시점 2026-08-15T06:28:56.952Z · 원문 링크 https://www.kmib.co.kr/article/view.asp?arcid=9000003255&code=11141400&sid1=int"
+              }
+            ],
+            "difference": "공통 조치 뒤에 국내 산업의 기대를 제목에 추가했는지가 구체적인 차이입니다. KBS 제목은 승인 내용과 규모에 초점을 두고, 국민일보 제목은 같은 조치에 K조선의 수혜 기대를 연결합니다. 다만 선박과 군함이라는 범위 차이는 제목만으로 실제 정책 대상이 다르다고 확정하지 않습니다. 본문 정책 조건을 대조하기 전에는 핵심 프레임의 대립으로 분류하지 않습니다.",
+            "importance": {
+              "level": "medium",
+              "reason": "국내 산업에 대한 기대가 제목에 나타나는지에 따라 추가로 제시된 정보가 달라집니다. 정책 사실 자체가 반대라는 뜻은 아니므로 제목 관측의 중요도만 평가합니다."
+            },
+            "interpretation": "제목에 국내 산업의 수혜 기대를 함께 제시했는지는 관측할 수 있습니다. 실제 수혜 발생, 매체의 정책 찬반, 독자의 반응은 이 제목 비교로 판단할 수 없습니다.",
+            "limitations": "본문 전체·리드·반론·주변 문맥은 새로 확보하지 않았습니다. 저장 제목과 기존 제목 해시만 직접 대조한 편집 검토이며 AI 재분석 결과가 아닙니다."
+          }
+        ],
+        "review": {
+          "source": "stored article title metadata",
+          "reviewed_at": "2026-10-03",
+          "body_reanalysis": false
+        }
+      }
     },
     "evidence": [
       {

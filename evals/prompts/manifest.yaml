@@ -1,5 +1,10 @@
 schema_version: 1
 prompts:
+  - id: fine-comparison
+    version: 1.0.0
+    path: fine-comparison-v1.0.0.md
+    output_schema: schemas/fine-comparison-output.schema.json
+    taxonomy_version: fine-observations-v1
   - id: frame-analysis
     version: 1.0.0
     path: frame-analysis-v1.0.0.md

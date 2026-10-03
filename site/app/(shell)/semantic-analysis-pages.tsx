@@ -23,6 +23,7 @@ import type {
 } from "../../lib/initial-five/types";
 import { stripEvidenceTokens } from "../../lib/initial-five/public-text.mjs";
 import { ComparisonLead as ComparisonLeadV2 } from "./comparison-lead";
+import { FineComparisonSection, ArticleExplanations } from "./fine-comparison";
 import {
   comparisonSummary,
   semanticEntryBlockedState,
@@ -625,7 +626,7 @@ function Summary({ bundle, issue, analyses: dimensions, compact = false }: { bun
       <div className="afs-in afs-prose afp-summary">
         <p><strong>{commonDescriptionLabel}</strong> {comparison.commonText ?? "공통 설명으로 묶을 공개 근거가 아직 없습니다."}</p>
         <p><strong>{comparison.status === "difference_confirmed" ? "확인된 차이" : "비교 결과"}:</strong> {comparison.differenceText}</p>
-        <p><strong>읽을 때 볼 점:</strong> {comparison.whatToNotice}</p>
+        {!compact ? <p><strong>읽을 때 볼 점:</strong> {comparison.whatToNotice}</p> : null}
         {!compact && issue.sourceContext ? <p><strong>취재원 맥락:</strong> {issue.sourceContext}</p> : null}
         <p className="afp-summary-meta"><span className={`afp-comparison-status afp-status-${comparison.status}`}>{comparison.statusLabel}</span> · 기자 서술 근거 {comparison.analyzedArticleCount}건 · {comparison.analyzedOutletCount}개 매체 · {observed.length}/{DIMENSION_LIST.length}개 차원 관측 · 관측 항목 중 취재원 발언 {allRows.length ? Math.round((attributed / allRows.length) * 100) : 0}%</p>
         {!compact && stateText ? <p className="afp-summary-meta"><strong>판정 보류·상태:</strong> {stateText}</p> : null}
@@ -1039,18 +1040,18 @@ function FourFunctionTable({ issue, dimensions }: { issue: IssueView; dimensions
               return {
                 dimension,
                 dimensionAnalysis,
-                row: rows.find((entry) => isNarration(entry.item.voice?.kind)) ?? rows[0],
+                rows: rows.filter((entry, index) => rows.findIndex((other) => other.item.public_paraphrase === entry.item.public_paraphrase && other.item.voice?.kind === entry.item.voice?.kind) === index),
               };
             });
-            const evidenceRows = observedRows.flatMap((entry) => entry.row ? [{ dimension: entry.dimension, row: entry.row }] : []);
+            const evidenceRows = observedRows.flatMap((entry) => entry.rows.map((row) => ({ dimension: entry.dimension, row })));
             return <tr key={article.articleId}>
               <th scope="row">
                 <strong>{article.outlet}</strong>
                 <small>{article.title}</small>
                 <TableEvidenceDisclosure articleId={article.articleId} rows={evidenceRows} />
               </th>
-              {observedRows.map(({ dimension, dimensionAnalysis, row }) => <td key={dimension}>
-                {row ? <><span className="afp-cell-voice">{statusCopy(displayStatus(row), row.item.voice?.kind, row.modelStatus)}</span><p>{row.item.public_paraphrase ?? "검증된 paraphrase 없음"}</p></> : <StateDisclosure summary="분석 상태" reason={dimensionAnalysis?.rows.find((entry) => entry.articleId === article.articleId)?.stateReason ?? "명시적 판정 없음"} />}
+              {observedRows.map(({ dimension, dimensionAnalysis, rows }) => <td key={dimension}>
+                {rows.length ? rows.map((row, index) => <div key={index}><span className="afp-cell-voice">{statusCopy(displayStatus(row), row.item.voice?.kind, row.modelStatus)}</span><p>{row.item.public_paraphrase ?? "검증된 paraphrase 없음"}</p></div>) : <StateDisclosure summary="분석 상태" reason={dimensionAnalysis?.rows.find((entry) => entry.articleId === article.articleId)?.stateReason ?? "명시적 판정 없음"} />}
               </td>)}
             </tr>;
           })}
@@ -1502,6 +1503,8 @@ export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
     <>
       <AnalysisPageHeader mode="outlets" issue={issue} dimensions={dimensions} />
       <ComparisonLeadV2 bundle={bundle} issue={issue} synthesis={synthesisData(bundle)} />
+      <FineComparisonSection bundle={bundle} />
+      <ArticleExplanations bundle={bundle} />
       <section className="afs-card" id="sec-evidence">
         <h2>
           기사 근거 <small>갈래를 만든 기사와 공개 locator</small>
@@ -1510,7 +1513,7 @@ export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
           <ArticleList bundle={bundle} issue={issue} dimensions={dimensions} />
         </div>
       </section>
-      <details className="afs-card afs-fold afp-detail-analysis" id="sec-detail-analysis">
+      <details open className="afs-card afs-fold afp-detail-analysis" id="sec-detail-analysis">
         <summary>세부 프레임 분석 보기</summary>
         <div className="afp-detail-analysis-body">
           <div id="sec-axis-details">
@@ -1563,6 +1566,8 @@ export function FramingSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
       <div id="sec-four-functions">
         <FourFunctionTable issue={issue} dimensions={dimensions} />
       </div>
+      <FineComparisonSection bundle={bundle} />
+      <ArticleExplanations bundle={bundle} />
       <div id="sec-guide">
         <DimensionGuide dimensions={dimensions} />
       </div>

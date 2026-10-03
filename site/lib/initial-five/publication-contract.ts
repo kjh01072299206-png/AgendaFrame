@@ -3,6 +3,7 @@ import type {
   EventSynthesisComparisonPoint,
   IssueAnalysisBundle,
 } from "./types";
+import { evidenceIntegrityValid } from "./evidence-integrity";
 
 const PUBLISHABLE_SYNTHESIS_PROMPT = "event-synthesis-v2.2.0";
 const PUBLISHABLE_SYNTHESIS_SCHEMA = "agendaframe.event-synthesis.v2.2";
@@ -32,14 +33,19 @@ function compactCopy(value?: string) {
   return String(value ?? "").toLowerCase().replace(/[^0-9a-z가-힣]+/gu, " ").replace(/\s+/gu, " ").trim();
 }
 
-function pointEvidenceIsBound(point: EventSynthesisComparisonPoint, bundle: IssueAnalysisBundle) {
+export function pointEvidenceIsBound(point: EventSynthesisComparisonPoint, bundle: IssueAnalysisBundle) {
   const bundleArticles = bundle.articles ?? [];
   const declared = new Set(point.article_ids ?? []);
   if (!declared.size || [...declared].some((articleId) => !bundleArticles.some((article) => article.articleId === articleId))) return false;
   const profiles = new Map((bundle.semanticProfiles ?? []).map((entry) => [entry.articleId, entry]));
+  const namedOutlets = ["뉴스1", "국민일보", "세계일보", "중앙일보", "KBS", "경향신문", "조선일보", "연합뉴스", "한겨레", "동아일보", "SBS", "MBC"];
+  const copy = [point.headline, point.summary, point.text].join(" ");
+  const outlets = bundleArticles.filter((row) => declared.has(row.articleId)).map((row) => row.outlet ?? "");
+  if (namedOutlets.some((name) => copy.includes(name) && !outlets.some((outlet) => outlet.includes(name)))) return false;
   const evidenceArticles = new Set<string>();
   for (const evidence of point.evidence ?? []) {
     if (!evidence.article_id || !declared.has(evidence.article_id)) return false;
+    if (!evidenceIntegrityValid(bundle, evidence, point.voice_basis?.kind)) return false;
     if (!Number.isInteger(evidence.locator?.paragraph) || !Number.isInteger(evidence.locator?.sentence)) return false;
     if (!/^[a-f0-9]{64}$/i.test(evidence.sentence_sha256 ?? "")) return false;
     const profile = profiles.get(evidence.article_id);
@@ -134,7 +140,7 @@ export function isPublishableEventSynthesis(bundle: IssueAnalysisBundle | null):
         && point.summary.length <= 120
         && compactCopy(point.summary) !== compactCopy(point.headline)
         && point.text?.trim()
-        && point.text.length <= 320
+        && point.text.length <= 1800
         && Array.isArray(point.article_ids)
         && point.article_ids.length > 0
         && Array.isArray(point.evidence)

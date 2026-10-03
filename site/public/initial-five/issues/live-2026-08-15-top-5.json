@@ -4087,16 +4087,16 @@
       "summary_30_seconds": {
         "sample": "6건 · 3개 매체",
         "common_ground": "최태원 회장의 9440억 원 재산분할 판결 불복과 재상고가 보도됐다.",
-        "main_difference": "근거 연결된 비교 결과에서 차이가 확인되었습니다.",
+        "main_difference": "기존 원인 비교의 언론사 이름이 기사 ID의 실제 매체와 불일치하여 제외했습니다. 본문 원인 비교는 재분석 전까지 보류합니다.",
         "source_context": null,
         "limit": "기사 ID·locator·문장 해시가 연결된 관측만 표시합니다. 언론사 성향은 추론하지 않습니다.",
-        "divergence_detected": true
+        "divergence_detected": false
       },
       "comparison_result": {
         "version": "comparison-v1.0.0",
-        "status": "difference_confirmed",
-        "reason": null,
-        "primary_dimension": "causal_interpretation",
+        "status": "held_for_analysis",
+        "reason": "기존 원인 비교의 언론사 이름이 기사 ID의 실제 매체와 불일치하여 제외했습니다. 본문 원인 비교는 재분석 전까지 보류합니다.",
+        "primary_dimension": null,
         "analyzed_article_ids": [
           "09825dacd9c1cbad99e8a68a3872447f",
           "6b82244fffd6d71fdaad68295fe3ebbe",
@@ -4111,82 +4111,11 @@
             "dimension": "causal_interpretation",
             "label": "상고 결정의 이유",
             "question": "최태원 회장이 재산 분할 판결에 불복하여 상고한 이유는 무엇인가?",
-            "status": "difference_confirmed",
+            "status": "held_for_analysis",
             "relation": null,
-            "reason": null,
-            "points": [
-              {
-                "observation_id": "obs-2",
-                "headline": "산정 방식·현금 마련 해석과 불복 사실",
-                "summary": "뉴스1은 산정 방식과 현금 마련 문제를 해석하고, 국민일보는 지급 판결 불복 사실을 전한다.",
-                "text": "뉴스1은 재산분할 산정 방식과 현금 마련의 현실적 장벽을 고려한 것으로 해석했다. 국민일보의 인용 문장은 9440억 원 지급 판결에 불복했다는 사실을 전한다.",
-                "status": "observed",
-                "relation": "different_emphasis",
-                "article_ids": [
-                  "09825dacd9c1cbad99e8a68a3872447f",
-                  "fcc2203e3461734e9b1378589e8b4725"
-                ],
-                "claim_id": null,
-                "voice_basis": {
-                  "kind": "journalist_narration",
-                  "label": "기자 설명",
-                  "evidence": [
-                    {
-                      "article_id": "fcc2203e3461734e9b1378589e8b4725",
-                      "locator": {
-                        "paragraph": 1,
-                        "sentence": 2
-                      },
-                      "sentence_sha256": "3de7ad451fedab5bc9149b9f631826d0ba3bd3b7e519e700d1dc777fbdbd412f"
-                    },
-                    {
-                      "article_id": "09825dacd9c1cbad99e8a68a3872447f",
-                      "locator": {
-                        "paragraph": 3,
-                        "sentence": 1
-                      },
-                      "sentence_sha256": "4b4991503717f7d84dbf4d29fd4ad56077cdd0bf33414c3b20f61f1b0f4e1920"
-                    }
-                  ]
-                },
-                "evidence": [
-                  {
-                    "article_id": "fcc2203e3461734e9b1378589e8b4725",
-                    "locator": {
-                      "paragraph": 1,
-                      "sentence": 2
-                    },
-                    "sentence_sha256": "3de7ad451fedab5bc9149b9f631826d0ba3bd3b7e519e700d1dc777fbdbd412f"
-                  },
-                  {
-                    "article_id": "09825dacd9c1cbad99e8a68a3872447f",
-                    "locator": {
-                      "paragraph": 3,
-                      "sentence": 1
-                    },
-                    "sentence_sha256": "4b4991503717f7d84dbf4d29fd4ad56077cdd0bf33414c3b20f61f1b0f4e1920"
-                  }
-                ]
-              }
-            ],
-            "evidence": [
-              {
-                "article_id": "fcc2203e3461734e9b1378589e8b4725",
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 2
-                },
-                "sentence_sha256": "3de7ad451fedab5bc9149b9f631826d0ba3bd3b7e519e700d1dc777fbdbd412f"
-              },
-              {
-                "article_id": "09825dacd9c1cbad99e8a68a3872447f",
-                "locator": {
-                  "paragraph": 3,
-                  "sentence": 1
-                },
-                "sentence_sha256": "4b4991503717f7d84dbf4d29fd4ad56077cdd0bf33414c3b20f61f1b0f4e1920"
-              }
-            ]
+            "reason": "기존 원인 비교의 언론사 이름이 기사 ID의 실제 매체와 불일치하여 제외했습니다. 본문 원인 비교는 재분석 전까지 보류합니다.",
+            "points": [],
+            "evidence": []
           },
           {
             "dimension": "responsibility_attribution",
@@ -4395,9 +4324,9 @@
         "comparison_axis": null,
         "comparison_result": {
           "version": "comparison-v1.0.0",
-          "status": "difference_confirmed",
-          "reason": null,
-          "primary_dimension": "causal_interpretation",
+          "status": "held_for_analysis",
+          "reason": "기존 원인 비교의 언론사 이름이 기사 ID의 실제 매체와 불일치하여 제외했습니다. 본문 원인 비교는 재분석 전까지 보류합니다.",
+          "primary_dimension": null,
           "analyzed_article_ids": [
             "09825dacd9c1cbad99e8a68a3872447f",
             "6b82244fffd6d71fdaad68295fe3ebbe",
@@ -4412,82 +4341,11 @@
               "dimension": "causal_interpretation",
               "label": "상고 결정의 이유",
               "question": "최태원 회장이 재산 분할 판결에 불복하여 상고한 이유는 무엇인가?",
-              "status": "difference_confirmed",
+              "status": "held_for_analysis",
               "relation": null,
-              "reason": null,
-              "points": [
-                {
-                  "observation_id": "obs-2",
-                  "headline": "산정 방식·현금 마련 해석과 불복 사실",
-                  "summary": "뉴스1은 산정 방식과 현금 마련 문제를 해석하고, 국민일보는 지급 판결 불복 사실을 전한다.",
-                  "text": "뉴스1은 재산분할 산정 방식과 현금 마련의 현실적 장벽을 고려한 것으로 해석했다. 국민일보의 인용 문장은 9440억 원 지급 판결에 불복했다는 사실을 전한다.",
-                  "status": "observed",
-                  "relation": "different_emphasis",
-                  "article_ids": [
-                    "09825dacd9c1cbad99e8a68a3872447f",
-                    "fcc2203e3461734e9b1378589e8b4725"
-                  ],
-                  "claim_id": null,
-                  "voice_basis": {
-                    "kind": "journalist_narration",
-                    "label": "기자 설명",
-                    "evidence": [
-                      {
-                        "article_id": "fcc2203e3461734e9b1378589e8b4725",
-                        "locator": {
-                          "paragraph": 1,
-                          "sentence": 2
-                        },
-                        "sentence_sha256": "3de7ad451fedab5bc9149b9f631826d0ba3bd3b7e519e700d1dc777fbdbd412f"
-                      },
-                      {
-                        "article_id": "09825dacd9c1cbad99e8a68a3872447f",
-                        "locator": {
-                          "paragraph": 3,
-                          "sentence": 1
-                        },
-                        "sentence_sha256": "4b4991503717f7d84dbf4d29fd4ad56077cdd0bf33414c3b20f61f1b0f4e1920"
-                      }
-                    ]
-                  },
-                  "evidence": [
-                    {
-                      "article_id": "fcc2203e3461734e9b1378589e8b4725",
-                      "locator": {
-                        "paragraph": 1,
-                        "sentence": 2
-                      },
-                      "sentence_sha256": "3de7ad451fedab5bc9149b9f631826d0ba3bd3b7e519e700d1dc777fbdbd412f"
-                    },
-                    {
-                      "article_id": "09825dacd9c1cbad99e8a68a3872447f",
-                      "locator": {
-                        "paragraph": 3,
-                        "sentence": 1
-                      },
-                      "sentence_sha256": "4b4991503717f7d84dbf4d29fd4ad56077cdd0bf33414c3b20f61f1b0f4e1920"
-                    }
-                  ]
-                }
-              ],
-              "evidence": [
-                {
-                  "article_id": "fcc2203e3461734e9b1378589e8b4725",
-                  "locator": {
-                    "paragraph": 1,
-                    "sentence": 2
-                  },
-                  "sentence_sha256": "3de7ad451fedab5bc9149b9f631826d0ba3bd3b7e519e700d1dc777fbdbd412f"
-                },
-                {
-                  "article_id": "09825dacd9c1cbad99e8a68a3872447f",
-                  "locator": {
-                    "paragraph": 3,
-                    "sentence": 1
-                  },
-                  "sentence_sha256": "4b4991503717f7d84dbf4d29fd4ad56077cdd0bf33414c3b20f61f1b0f4e1920"
-                }
-              ]
+              "reason": "기존 원인 비교의 언론사 이름이 기사 ID의 실제 매체와 불일치하여 제외했습니다. 본문 원인 비교는 재분석 전까지 보류합니다.",
+              "points": [],
+              "evidence": []
             },
             {
               "dimension": "responsibility_attribution",
@@ -4707,12 +4565,7 @@
             }
           ]
         },
-        "split_line": {
-          "text": null,
-          "status": "explicit_not_stated",
-          "evidence": [],
-          "reason": "서로 다른 근거 그룹이 없어 대립 구도로 표시하지 않습니다."
-        },
+        "split_line": "기존 원인 비교의 언론사 이름이 기사 ID의 실제 매체와 불일치하여 제외했습니다. 본문 원인 비교는 재분석 전까지 보류합니다.",
         "so_what": {
           "text": null,
           "status": "explicit_not_stated",
@@ -4797,9 +4650,9 @@
       "comparisonAxis": null,
       "comparisonResult": {
         "version": "comparison-v1.0.0",
-        "status": "difference_confirmed",
-        "reason": null,
-        "primary_dimension": "causal_interpretation",
+        "status": "held_for_analysis",
+        "reason": "기존 원인 비교의 언론사 이름이 기사 ID의 실제 매체와 불일치하여 제외했습니다. 본문 원인 비교는 재분석 전까지 보류합니다.",
+        "primary_dimension": null,
         "analyzed_article_ids": [
           "09825dacd9c1cbad99e8a68a3872447f",
           "6b82244fffd6d71fdaad68295fe3ebbe",
@@ -4814,82 +4667,11 @@
             "dimension": "causal_interpretation",
             "label": "상고 결정의 이유",
             "question": "최태원 회장이 재산 분할 판결에 불복하여 상고한 이유는 무엇인가?",
-            "status": "difference_confirmed",
+            "status": "held_for_analysis",
             "relation": null,
-            "reason": null,
-            "points": [
-              {
-                "observation_id": "obs-2",
-                "headline": "산정 방식·현금 마련 해석과 불복 사실",
-                "summary": "뉴스1은 산정 방식과 현금 마련 문제를 해석하고, 국민일보는 지급 판결 불복 사실을 전한다.",
-                "text": "뉴스1은 재산분할 산정 방식과 현금 마련의 현실적 장벽을 고려한 것으로 해석했다. 국민일보의 인용 문장은 9440억 원 지급 판결에 불복했다는 사실을 전한다.",
-                "status": "observed",
-                "relation": "different_emphasis",
-                "article_ids": [
-                  "09825dacd9c1cbad99e8a68a3872447f",
-                  "fcc2203e3461734e9b1378589e8b4725"
-                ],
-                "claim_id": null,
-                "voice_basis": {
-                  "kind": "journalist_narration",
-                  "label": "기자 설명",
-                  "evidence": [
-                    {
-                      "article_id": "fcc2203e3461734e9b1378589e8b4725",
-                      "locator": {
-                        "paragraph": 1,
-                        "sentence": 2
-                      },
-                      "sentence_sha256": "3de7ad451fedab5bc9149b9f631826d0ba3bd3b7e519e700d1dc777fbdbd412f"
-                    },
-                    {
-                      "article_id": "09825dacd9c1cbad99e8a68a3872447f",
-                      "locator": {
-                        "paragraph": 3,
-                        "sentence": 1
-                      },
-                      "sentence_sha256": "4b4991503717f7d84dbf4d29fd4ad56077cdd0bf33414c3b20f61f1b0f4e1920"
-                    }
-                  ]
-                },
-                "evidence": [
-                  {
-                    "article_id": "fcc2203e3461734e9b1378589e8b4725",
-                    "locator": {
-                      "paragraph": 1,
-                      "sentence": 2
-                    },
-                    "sentence_sha256": "3de7ad451fedab5bc9149b9f631826d0ba3bd3b7e519e700d1dc777fbdbd412f"
-                  },
-                  {
-                    "article_id": "09825dacd9c1cbad99e8a68a3872447f",
-                    "locator": {
-                      "paragraph": 3,
-                      "sentence": 1
-                    },
-                    "sentence_sha256": "4b4991503717f7d84dbf4d29fd4ad56077cdd0bf33414c3b20f61f1b0f4e1920"
-                  }
-                ]
-              }
-            ],
-            "evidence": [
-              {
-                "article_id": "fcc2203e3461734e9b1378589e8b4725",
-                "locator": {
-                  "paragraph": 1,
-                  "sentence": 2
-                },
-                "sentence_sha256": "3de7ad451fedab5bc9149b9f631826d0ba3bd3b7e519e700d1dc777fbdbd412f"
-              },
-              {
-                "article_id": "09825dacd9c1cbad99e8a68a3872447f",
-                "locator": {
-                  "paragraph": 3,
-                  "sentence": 1
-                },
-                "sentence_sha256": "4b4991503717f7d84dbf4d29fd4ad56077cdd0bf33414c3b20f61f1b0f4e1920"
-              }
-            ]
+            "reason": "기존 원인 비교의 언론사 이름이 기사 ID의 실제 매체와 불일치하여 제외했습니다. 본문 원인 비교는 재분석 전까지 보류합니다.",
+            "points": [],
+            "evidence": []
           },
           {
             "dimension": "responsibility_attribution",
@@ -5067,7 +4849,7 @@
       },
       "whatHappened": "최태원 SK그룹 회장이 노소영 아트센터 나비 관장에게 지급해야 할 재산 분할금 9440억 원에 불복하여 대법원에 다시 상고했습니다.",
       "agreedLine": "최태원 회장의 9440억 원 재산분할 판결 불복과 재상고가 보도됐다.",
-      "splitLine": null,
+      "splitLine": "기존 원인 비교의 언론사 이름이 기사 ID의 실제 매체와 불일치하여 제외했습니다. 본문 원인 비교는 재분석 전까지 보류합니다.",
       "soWhat": null,
       "camps": [],
       "factRows": [],
@@ -5145,7 +4927,121 @@
         ],
         "caution": "취재원 구성은 발화 가시성의 관측이지 매체의 의도 판정이 아닙니다."
       },
-      "not_observed_statements": []
+      "not_observed_statements": [],
+      "fine_grained": {
+        "version": "fine-comparison-v1.0.0",
+        "producer": "editorial-title-review",
+        "run_id": "7f0aba42d002493abe9abac8663bb881",
+        "observations": [
+          {
+            "observation_id": "title-review:5:v1",
+            "axis": "title_lead",
+            "status": "expression_only",
+            "headline": "공통 불복 사실과 ‘세기의 이혼’이라는 추가 명명",
+            "common": "두 제목은 최태원의 9440억 원 재산분할 불복과 대법원 절차가 다시 이어진다는 사실을 공통으로 제시합니다. 금액 표기와 법원으로 향하는 표현의 차이를 곧바로 별개의 프레임으로 나누지 않습니다.",
+            "articles": [
+              {
+                "article_id": "09825dacd9c1cbad99e8a68a3872447f",
+                "outlet": "세계일보",
+                "description": "세계일보 제목은 재산분할 금액과 불복 사실을 제시한 뒤 ‘세기의 이혼’이라는 명명을 추가합니다. 이어 다시 대법원으로 간다는 절차를 연결합니다. 해당 명명은 사건을 부르는 제목상의 표현으로 확인되지만, 매체의 이혼 당사자에 대한 평가까지 뜻한다고 단정할 수 없습니다.",
+                "voice": "title_selection",
+                "evidence": [],
+                "title_basis": {
+                  "title": "최태원, ‘재산분할 9440억’ 불복… ‘세기의 이혼’ 다시 대법원으로",
+                  "title_sha256": "6729c7cfbfc080f6ed87dcdb7010bc5f96a31e64b0b18035d1ad6ff153fb9776"
+                },
+                "scope": "저장 제목만 확인 · 발행 시점 2026-08-14T15:55:43.000Z · 원문 링크 https://www.segye.com/newsView/20260815500447"
+              },
+              {
+                "article_id": "fcc2203e3461734e9b1378589e8b4725",
+                "outlet": "중앙일보",
+                "description": "중앙일보 제목은 재산분할 금액과 불복, 다시 대법원으로 향한다는 절차를 제시합니다. 세계일보 제목에 있는 ‘세기의 이혼’이라는 명명은 이 제목에는 없습니다. 이 차이는 제목의 표현 구성에 한정하며, 중앙일보 본문에 같은 표현이 없다는 부재 판단으로 확대하지 않습니다.",
+                "voice": "title_selection",
+                "evidence": [],
+                "title_basis": {
+                  "title": "최태원 ‘9440억 재산분할’ 불복… 다시 대법원 간다",
+                  "title_sha256": "a8bae6e895183b2f7bc36143dd7f3fa4e3e491cff7302418e9d4c6484815e1af"
+                },
+                "scope": "저장 제목만 확인 · 발행 시점 2026-08-15T06:28:56.952Z · 원문 링크 https://www.joongang.co.kr/article/25453498"
+              }
+            ],
+            "difference": "두 제목의 법적 사건 설명은 공통입니다. 세계일보는 ‘세기의 이혼’이라는 추가 명명을 제목에 포함하고, 중앙일보는 불복과 절차 설명으로 제목을 구성합니다. 이는 추가 표현의 선택 차이이며, 법리나 상고 이유를 서로 반대로 설명했다는 증거는 아닙니다. ‘9440억’과 ‘재산분할 9440억’의 순서 차이만으로 별도 프레임을 만들지 않습니다.",
+            "importance": {
+              "level": "low",
+              "reason": "공통 사실을 유지한 채 사건 명명을 추가했는지 구분할 수 있습니다. 법적 주장 자체의 차이는 확인하지 못했으므로 중요도는 낮게 두었습니다."
+            },
+            "interpretation": "사건 명명이 제목에 추가되었는지의 범위에서만 해석합니다. 당사자의 의도, 법원의 판단 전망, 매체의 고정 성향이나 실제 독자 효과는 판정하지 않습니다.",
+            "limitations": "본문 전체·리드·반론·주변 문맥은 새로 확보하지 않았습니다. 저장 제목과 기존 제목 해시만 직접 대조한 편집 검토이며 AI 재분석 결과가 아닙니다."
+          }
+        ],
+        "review": {
+          "source": "stored article title metadata",
+          "reviewed_at": "2026-10-03",
+          "body_reanalysis": false
+        }
+      },
+      "editorial_quarantine": {
+        "reviewed_at": "2026-10-03",
+        "reason": "기존 원인 비교의 언론사 이름이 기사 ID의 실제 매체와 불일치하여 제외했습니다. 본문 원인 비교는 재분석 전까지 보류합니다.",
+        "source_run_id": "7f0aba42d002493abe9abac8663bb881",
+        "source_prompt_version": "event-synthesis-v2.2.0",
+        "removed_points": [
+          {
+            "observation_id": "obs-2",
+            "headline": "산정 방식·현금 마련 해석과 불복 사실",
+            "summary": "뉴스1은 산정 방식과 현금 마련 문제를 해석하고, 국민일보는 지급 판결 불복 사실을 전한다.",
+            "text": "뉴스1은 재산분할 산정 방식과 현금 마련의 현실적 장벽을 고려한 것으로 해석했다. 국민일보의 인용 문장은 9440억 원 지급 판결에 불복했다는 사실을 전한다.",
+            "status": "observed",
+            "relation": "different_emphasis",
+            "article_ids": [
+              "09825dacd9c1cbad99e8a68a3872447f",
+              "fcc2203e3461734e9b1378589e8b4725"
+            ],
+            "claim_id": null,
+            "voice_basis": {
+              "kind": "journalist_narration",
+              "label": "기자 설명",
+              "evidence": [
+                {
+                  "article_id": "fcc2203e3461734e9b1378589e8b4725",
+                  "locator": {
+                    "paragraph": 1,
+                    "sentence": 2
+                  },
+                  "sentence_sha256": "3de7ad451fedab5bc9149b9f631826d0ba3bd3b7e519e700d1dc777fbdbd412f"
+                },
+                {
+                  "article_id": "09825dacd9c1cbad99e8a68a3872447f",
+                  "locator": {
+                    "paragraph": 3,
+                    "sentence": 1
+                  },
+                  "sentence_sha256": "4b4991503717f7d84dbf4d29fd4ad56077cdd0bf33414c3b20f61f1b0f4e1920"
+                }
+              ]
+            },
+            "evidence": [
+              {
+                "article_id": "fcc2203e3461734e9b1378589e8b4725",
+                "locator": {
+                  "paragraph": 1,
+                  "sentence": 2
+                },
+                "sentence_sha256": "3de7ad451fedab5bc9149b9f631826d0ba3bd3b7e519e700d1dc777fbdbd412f"
+              },
+              {
+                "article_id": "09825dacd9c1cbad99e8a68a3872447f",
+                "locator": {
+                  "paragraph": 3,
+                  "sentence": 1
+                },
+                "sentence_sha256": "4b4991503717f7d84dbf4d29fd4ad56077cdd0bf33414c3b20f61f1b0f4e1920"
+              }
+            ]
+          }
+        ],
+        "body_reanalysis": false
+      }
     },
     "evidence": [
       {
