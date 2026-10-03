@@ -21,12 +21,16 @@ import re
 from datetime import UTC, datetime
 from typing import Any, Mapping, Protocol, Sequence
 
+from ai.fine_comparison import PROMPT as FINE_PROMPT
+from ai.fine_comparison import bind_fine_comparison
+from ai.fine_comparison import response_schema as fine_response_schema
+
 LEGACY_PROMPT_VERSION = "event-synthesis-v1.0.0"
 LEGACY_SCHEMA_VERSION = "agendaframe.event-synthesis.v1"
 PROMPT_VERSION = "event-synthesis-v2.2.0"
 SCHEMA_VERSION = "agendaframe.event-synthesis.v2.2"
 COMPARISON_CONTRACT_VERSION = "comparison-v1.0.0"
-TRANSPORT_PROMPT_VERSION = "event-synthesis-transport-v1.3.0"
+TRANSPORT_PROMPT_VERSION = "event-synthesis-transport-v1.4.0"
 LEGACY_V2_PROMPT_VERSION = "event-synthesis-v2.0.0"
 LEGACY_V2_SCHEMA_VERSION = "agendaframe.event-synthesis.v2"
 SHA256_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
@@ -729,15 +733,15 @@ def _bind_comparison_result(
                 continue
             if not evidence_ids:
                 continue
-            raw_text = _clean_text(raw_point.get("text"), limit=321)
-            if not raw_text or len(raw_text) > 320:
+            raw_text = _clean_text(raw_point.get("text"), limit=1801)
+            if not raw_text or len(raw_text) > 1800:
                 continue
             claim = _v2_claim(
                 raw_text,
                 bound_evidence,
                 index,
                 allowed_article_ids=evidence_ids,
-                limit=320,
+                limit=1800,
             )
             if not claim or claim.get("status") != "observed":
                 continue
@@ -1164,6 +1168,7 @@ def _bind_event_synthesis_v2(
         "terms": (legacy.get("terms") or [])[:4],
         "comparison_axis": axis,
         "comparison_result": comparison_result,
+        "fine_grained": bind_fine_comparison(draft.get("fine_grained"), articles=articles, index=index, profiles=profiles),
         "common_ground": common_ground,
         "what_happened": event_paragraphs[0] if event_paragraphs else None,
         "agreed_line": common_ground,
@@ -1413,6 +1418,8 @@ def public_comparison_payload(
         "comparison_result": bound.get("comparison_result"),
         "synthesis": bound,
     }
+    if isinstance(bound.get("fine_grained"), Mapping):
+        payload["fine_grained"] = {**bound["fine_grained"], "run_id": bound.get("run_id")}
     payload.update(html_event_fields(bound))
     return payload
 
@@ -1539,6 +1546,8 @@ def synthesis_request(
                 "articleId": entry.get("articleId"),
                 "items": items,
                 "evidence": entry.get("evidence") or [],
+                "extraction": (entry.get("profile") or {}).get("extraction") or {},
+                "structured_context": {key: (entry.get("profile") or {}).get(key) for key in ("scope", "context_depth", "actors_and_sources", "framing_devices")},
             }
         )
     return {
@@ -1551,6 +1560,8 @@ def synthesis_request(
                 "articleId": row.get("articleId"),
                 "outlet": row.get("outlet") or row.get("sourceId"),
                 "title": row.get("title"),
+                "title_sha256": hashlib.sha256(f"agendaframe:title:v2:{row.get('articleId')}:{row.get('title')}".encode("utf-8")).hexdigest() if row.get("title") else None,
+                "publishedAt": row.get("publishedAt"),
                 "canonicalUrl": row.get("canonicalUrl"),
             }
             for row in articles
@@ -1571,31 +1582,30 @@ class VertexEventSynthesizer:
         self.client_factory = client_factory
 
     def synthesize(self, request: Mapping[str, Any]) -> Mapping[str, Any]:
-        # Source quotations remain in the stored article profiles/source lens,
-        # but cannot establish an outlet's own comparison stance. Give this
-        # transport only the eligible narration instead of asking it to infer
-        # a narrator from a mixture of quotations and newsroom statements.
+        # Retain source voices for selection/placement observations. A source's
+        # disagreement must still never establish an outlet's own stance.
         request = {
             **request,
             "profiles": [
-                {**profile, "items": [item for item in profile.get("items", []) if item.get("voice") == "journalist_narration"], "evidence": []}
+                {**profile, "items": profile.get("items", []), "evidence": []}
                 for profile in request.get("profiles", [])
-                if any(item.get("voice") == "journalist_narration" for item in profile.get("items", []))
+                if profile.get("items", [])
             ],
         }
         evidence_table = _transport_evidence_table(request)
         prompt = _build_prompt(request) + (
             " TRANSPORT OVERRIDE: return the object required by the response schema, not a payload string. "
             "In every evidence array return integer IDs from EVIDENCE_TABLE instead of copying full references. "
-            "IDs are exact source anchors, not new evidence. Use two event paragraphs and at most two core dimensions. "
+            "IDs are exact source anchors, not new evidence. Use two event paragraphs and inspect all five core dimensions. "
             "Return one point per supported editorial observation. For a cross-outlet relation, a point must name BOTH compared articles from different outlets, cite one narration anchor from EACH, and explain the relation between them. Never name a second article without its evidence. "
             "Use journalist_narration only for evidence whose supplied profile voice is journalist_narration. "
             "Only compare supported narration across outlets; source disagreement cannot confirm outlet disagreement. "
-            "Every supplied comparison item is coded journalist narration. Quote-only items were intentionally excluded from this comparison transport and remain available separately in the article source lens. Do not classify these eligible narration items as source_attributed merely because the article title includes a quotation. "
+            "Preserve the supplied voice on each anchor; quotation and source-placement observations belong in fine_grained, not journalist stance. "
             "If two distinct outlets' narration supports same_core or same_core_with_detail and no narration difference is supported, both the dimension and overall status MUST be no_clear_difference, not difference_confirmed. "
             "Use difference_confirmed only when at least two different outlets' narration points actually have different_emphasis or contradictory relations. "
             "Terms and opposition camps are not requested in this compact transport. "
             "Evidence IDs are the explicit evidence_id field, NOT paragraph numbers, sentence numbers, or positions in the original profiles. "
+            + FINE_PROMPT +
             f"EVIDENCE_TABLE={json.dumps([{'evidence_id': i, **ref} for i, ref in enumerate(evidence_table)], ensure_ascii=False)}"
         )
         # Keep the issue-level call inside the same reviewed output limit used
@@ -1743,18 +1753,19 @@ def _compact_response_schema() -> dict[str, Any]:
     def array(items, maximum):
         return {"type": "array", "items": items, "maxItems": maximum}
     string = {"type": "string"}
-    refs = array({"type": "integer"}, 2)
+    refs = array({"type": "integer"}, 8)
     statuses = {"type": "string", "enum": sorted(COMPARISON_STATUSES)}
     dimensions = {"type": "string", "enum": ["problem_definition", "causal_interpretation", "responsibility_attribution", "evaluation", "treatment_recommendation"]}
     voice = obj({"kind": {"type": "string", "enum": ["journalist_narration", "source_attributed", "mixed", "not_observed"]}, "label": string, "evidence": refs})
     point = obj({"observation_id": string, "headline": string, "summary": string, "text": string, "relation": {"type": "string", "enum": sorted(COMPARISON_RELATIONS)}, "article_ids": array(string, 2), "evidence": refs, "voice_basis": voice})
     point["properties"]["article_ids"]["minItems"] = 2
     point["properties"]["evidence"] = {**refs, "minItems": 2}
-    dimension = obj({"dimension": dimensions, "label": string, "question": string, "status": statuses, "points": array(point, 3)})
+    dimension = obj({"dimension": dimensions, "label": string, "question": string, "status": statuses, "points": array(point, 6)})
     return obj({
         "event_paragraphs": array(obj({"text": string, "evidence": refs}), 2),
         "common_ground": obj({"text": {"type": ["string", "null"]}, "status": {"type": "string", "enum": ["observed", "insufficient_evidence"]}, "evidence": refs}),
-        "comparison_result": obj({"status": statuses, "primary_dimension": dimensions, "dimensions": array(dimension, 2)}),
+        "comparison_result": obj({"status": statuses, "primary_dimension": dimensions, "dimensions": array(dimension, 5)}),
+        "fine_grained": fine_response_schema(refs),
     })
 
 
@@ -1794,14 +1805,14 @@ def _build_prompt(request: Mapping[str, Any]) -> str:
         "Create 2-4 concise event_paragraphs, each no more than two sentences: first the event, then only evidence-supported chronology or context. Create 0-4 terms with one-sentence glosses. "
         "Create comparison_result for every request. Its status must be one of difference_confirmed, no_clear_difference, held_for_analysis, or analysis_failed. For each core dimension, explicitly classify supported article relations as same_core, same_core_with_detail, different_emphasis, contradictory, or insufficient_evidence. "
         "A relation is valid only when the cited journalist-narration evidence belongs to the named articles and at least two distinct outlets support a confirmed difference. Never derive a relation from frame_family, token overlap, sentence similarity, or the number of groups. "
-        "Every comparison point must have a stable observation_id, a headline of at most 40 Korean characters, a distinct summary of at most 120 characters, and relation-bearing text of at most 320 characters. The summary adds a different detail; it must not repeat the headline. Rewrite long copy without truncating negation or causal direction. Every dimension question is one concrete sentence and at most 70 characters. "
+        "Every comparison point must have a stable observation_id, a headline of at most 40 Korean characters, a distinct summary of at most 120 characters, and relation-bearing text of at most 1800 characters. The text explains common ground, independent article observations, concrete difference and limited interpretation; do not fill space with repetition. The summary adds a different detail; it must not repeat the headline. Rewrite long copy without truncating negation or causal direction. Every dimension question is one concrete sentence and at most 70 characters. "
         "Use no_clear_difference only after sufficient comparison supports same_core or same_core_with_detail. Use held_for_analysis for insufficient evidence, and analysis_failed only for an actual failed or conflicting analysis. Never convert missing evidence to sameness or difference. "
         "Create comparison_axis only as a readable question when the comparison_result has a supported different_emphasis or contradictory relation; an emphasis difference does not require camps. "
         "Create common_ground from the whole or majority of articles. Use 모두 only when every article supports it, 대부분 for 70% or more, and 일부 below that. When no common explanation has valid support from at least two articles, set common_ground to text=null, status=insufficient_evidence, evidence=[]. "
         "Create 0 camps when no real opposition is observed; ordinary emphasis differences must use comparison_result points rather than camps. Otherwise create 2-4 camps. Every camp must have name, strong headline, 2-3 sentence summary, decisive_difference, article_ids, voice_basis, evidence, and proof_rows. "
         "Never return two or more camps without comparison_axis. If you cannot support a comparison_axis with at least two evidence-backed points and a concrete question, return camps as an empty array instead. "
         "Keep journalist narration separate from source-attributed speech: write '매체가 평가했다' only when the profile voice is journalist_narration; otherwise write that the outlet placed a source's statement in the title, lead, or body. "
-        "Every public sentence and every camp field must cite article_id, locator.paragraph, locator.sentence, and sentence_sha256 copied from the supplied profiles. Use no more than two non-duplicated evidence refs per short claim. Do not put locator tuples or hashes inline in prose; put them only in evidence arrays. "
+        "Every public sentence and every camp field must cite article_id, locator.paragraph, locator.sentence, and sentence_sha256 copied from the supplied profiles. Use up to eight non-duplicated evidence refs when context is necessary. Do not put locator tuples or hashes inline in prose; put them only in evidence arrays. "
         "proof_rows must contain article_id, outlet, dimension, public_paraphrase, and evidence, and must be drawn from the supplied paraphrases; use at most three proof rows per camp. Keep camp summaries to two sentences. "
         "Do not copy article body text, HTML, raw sentences, or English internal codes. Do not output so_what or source-context interpretation. "
         "Use the exact v2.2 keys prompt_version, schema_version, comparison_result, observation_id, headline, summary, text, and common_ground.text; do not rename text to claim or headline to strong_headline. Return one JSON object matching the v2.2 shape, with no wrapper and no markdown fences. If a field cannot be supported, use an empty array or null rather than inventing text. "

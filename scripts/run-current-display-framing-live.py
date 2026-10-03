@@ -99,7 +99,7 @@ FORBIDDEN_PUBLIC_KEYS = frozenset(
 )
 SHA256_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
 ANALYSIS_SCHEMA_VERSION = "agendaframe.article-frame-profile.v2"
-SENTENCE_ANCHOR_PROMPT_VERSION = "sentence-anchor-v1.2.0"
+SENTENCE_ANCHOR_PROMPT_VERSION = "sentence-anchor-v1.3.0"
 
 
 class BatchError(RuntimeError):
@@ -610,12 +610,17 @@ integer evidence_sentence_ids copied from those sentence ids. Never return an
 evidence excerpt, offset, or invented sentence number. The application maps
 those ids back to the exact source sentence and computes its evidence hash.
 
-Return JSON only. Return exactly one dimension object for each of:
+Return JSON only. Return dimension objects for each of:
 problem_definition, causal_attribution, responsibility_attribution, evaluation,
 treatment_recommendation, actor_visibility. For each supported or conflicting
-dimension provide one concise Korean value (maximum 160 characters), one valid
-frame_family from FRAME_FAMILY_TAXONOMY, a voice_kind, and one or two sentence
-ids. If the article does not explicitly support a dimension, use
+dimension preserve separate claims and voices as separate objects (up to eight
+objects per dimension). Provide an independent Korean explanation, normally
+2-3 grounded sentences and at most 900 characters, one valid frame_family,
+a voice_kind, and up to eight sentence ids including surrounding context.
+Read title, lead, body order and neighboring sentences; describe visible
+certainty, source selection, background and alternatives without inferring
+ideology, intent, or reader effects. Do not collapse source speech and journalist
+narration into one object. If the article does not support a dimension, use
 status=explicit_not_stated, value=null, frame_family=null, voice_kind=null, and
 an empty evidence_sentence_ids array. A source statement is attributed to the
 source, not converted into the journalist's position. Actors must use only the
@@ -643,7 +648,7 @@ def anchor_rows(
         return []
     output: list[dict[str, Any]] = []
     seen: set[int] = set()
-    for raw_id in ids[:2]:
+    for raw_id in ids[:8]:
         if isinstance(raw_id, bool):
             continue
         try:
@@ -713,19 +718,18 @@ def sentence_anchor_result(
 ) -> FrameResult:
     body = article.body_text or ""
     raw_dimensions = payload.get("dimensions")
-    by_name: dict[str, Mapping[str, Any]] = {}
+    by_name: dict[str, list[Mapping[str, Any]]] = {}
     if isinstance(raw_dimensions, Sequence) and not isinstance(
         raw_dimensions, (str, bytes, bytearray)
     ):
         for raw in raw_dimensions:
             if isinstance(raw, Mapping):
                 name = str(raw.get("dimension") or "")
-                if name in FRAME_DIMENSIONS and name not in by_name:
-                    by_name[name] = raw
+                if name in FRAME_DIMENSIONS:
+                    by_name.setdefault(name, []).append(raw)
     dimensions: list[dict[str, Any]] = []
     observed = 0
-    for name in sorted(FRAME_DIMENSIONS):
-        raw = by_name.get(name)
+    for name, raw in [(name, raw) for name in sorted(FRAME_DIMENSIONS) for raw in (by_name.get(name, [])[:8] or [None])]:
         if raw is None:
             dimensions.append(
                 explicit_dimension(name, "모델이 해당 차원을 반환하지 않아 명시하지 않음")
@@ -740,7 +744,7 @@ def sentence_anchor_result(
             status not in {"supported", "conflicting"}
             or not isinstance(value, str)
             or not value.strip()
-            or len(value.strip()) > 160
+            or len(value.strip()) > 900
             or family not in FRAME_FAMILIES.get(name, set())
             or voice
             not in {"journalist_narration", "direct_quote", "indirect_source", "uncertain_quote"}

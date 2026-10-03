@@ -248,7 +248,7 @@ function GroupProofPanel({
       </div>
       {group.observations.length ? (
         <div className="afp-proof-list-v2">
-          {group.observations.map((row, rowIndex) => {
+          {group.observations.filter((row, i, rows) => rows.findIndex((other) => other.articleId === row.articleId && other.publicParaphrase === row.publicParaphrase) === i).map((row, rowIndex) => {
             const article = articles.get(row.articleId);
             return (
               <article className="afp-proof-row-v2" key={`${row.articleId}-${row.evidence.sentence_sha256}-${rowIndex}`}>
@@ -272,7 +272,7 @@ function GroupProofPanel({
 function groupDifference(group: ComparisonGroup, groups: ComparisonGroup[]) {
   const relationLabel = comparisonRelationLabel(group.relation);
   if (group.relation === "same_core" || group.relation === "same_core_with_detail") {
-    return `${relationLabel}. 세부가 추가되어도 별도 매체 차이로 확정하지 않습니다.`;
+    return `${relationLabel}. 확인된 세부 관측은 아래에서 별도로 읽으며, 핵심 프레임 대립으로 확대하지 않습니다.`;
   }
   if (group.relation === "insufficient_evidence") return "근거가 부족해 이 묶음의 관계를 확정하지 않습니다.";
   const others = groups
@@ -373,7 +373,7 @@ function ComparisonGroups({ bundle, issue, summary }: { bundle: IssueAnalysisBun
           </div>
         )}
         {summary.sourceGroups.length ? (
-          <details className="afp-source-only-details">
+          <details open className="afp-source-only-details">
             <summary>취재원 발언에서 관측된 내용 {summary.sourceGroups.length}개 · 언론사 비교에 사용하지 않음</summary>
             <p className="afp-source-only-note">인용·전언은 발화 주체의 말입니다. 근거가 있어도 해당 매체의 입장이나 기자 서술 차이로 바꾸지 않았습니다.</p>
             <div className="afp-source-only-list">

@@ -20,8 +20,8 @@ const ENGINE = {
   semanticAi: true,
   status: "succeeded",
   model: "fixture-model",
-  promptVersion: "fixture-prompt",
-  schemaVersion: "fixture-schema",
+  promptVersion: "2.6.0:sentence-anchor-v1.2.0",
+  schemaVersion: "agendaframe.article-frame-profile.v2",
 };
 
 type FixtureRow = {
@@ -102,7 +102,7 @@ function makeBundle(rows: FixtureRow[], result?: Record<string, unknown>, semant
     publishedAt: "2026-08-15T00:00:00Z",
     section: "정치",
     canonicalUrl: `https://example.test/${row.articleId}`,
-    bodySha256: null,
+    bodySha256: "b".repeat(64),
     issueId: "fixture-issue",
   }));
   const semanticProfiles = rows.map((row, rowIndex) => {
@@ -120,7 +120,7 @@ function makeBundle(rows: FixtureRow[], result?: Record<string, unknown>, semant
         ...ENGINE,
         articleId: row.articleId,
         evidenceCount: validItems.length,
-        bodySha256: null,
+        bodySha256: "b".repeat(64),
         reviewRequired: false,
         fallbackReason: null,
       },
@@ -130,10 +130,11 @@ function makeBundle(rows: FixtureRow[], result?: Record<string, unknown>, semant
         sentenceSha256: digest(rowIndex + 1 + itemIndex),
       })),
       profile: {
+        article: { article_id: row.articleId, body_sha256: "b".repeat(64) },
         engine: {
           ...ENGINE,
           semantic_ai: true,
-          prompt_version: "fixture-prompt-v1",
+          prompt_version: "2.6.0:sentence-anchor-v1.2.0",
           analysis_schema_version: 3,
         },
         dimensions: {
@@ -430,7 +431,8 @@ test("J2: a same-core point cannot lend its second outlet to a one-outlet differ
     { text: "A 매체만 지역 격차를 추가 강조", relation: "different_emphasis", articleIds: ["a"] },
   ])));
   assert.equal(summary.status, "held_for_analysis");
-  assert.equal(summary.groups.length, 0);
+  assert.equal(summary.groups.length, 1, "valid common observations survive a held difference");
+  assert.equal(summary.groups[0].relation, "same_core");
 });
 
 test("J3: absent voice attribution is not presumed to be journalist narration", () => {
@@ -722,7 +724,7 @@ test("R: saved paraphrases produce evidence-bound partial linguistic observation
   assert.equal(evidenceEdge?.observations[0].voiceKind, "journalist_narration");
   assert.deepEqual(evidenceEdge?.observations[0].evidence.locator, { paragraph: 1, sentence: 1 });
   assert.match(evidenceEdge?.observations[0].evidence.sentence_sha256 ?? "", /^[a-f0-9]{64}$/);
-  assert.equal(analysis.analysisRuns[0].promptVersion, "fixture-prompt-v1");
+  assert.equal(analysis.analysisRuns[0].promptVersion, "2.6.0:sentence-anchor-v1.2.0");
   assert.equal(analysis.analysisRuns[0].schemaVersion, 3);
   assert.ok(!("text" in analysis.terms[0]), "the generated result does not retain paraphrase text");
 });

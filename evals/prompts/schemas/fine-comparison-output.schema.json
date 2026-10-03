@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["version", "observations"],
+  "properties": {
+    "prompt_version": {"const": "fine-comparison-v1.0.0"},
+    "version": {"const": "fine-comparison-v1.0.0"},
+    "observations": {
+      "type": "array", "maxItems": 24,
+      "items": {
+        "type": "object",
+        "required": ["observation_id", "axis", "status", "headline", "common", "articles", "difference", "importance", "interpretation", "limitations"],
+        "properties": {
+          "observation_id": {"type": "string", "minLength": 1},
+          "axis": {"enum": ["title_lead", "certainty", "agency", "evaluative_language", "sources_countervoices", "placement", "context_depth", "additional_context"]},
+          "status": {"enum": ["verified_detail", "expression_only", "not_observed", "source_incomplete", "comparison_insufficient", "pending", "failed"]},
+          "headline": {"type": "string"}, "common": {"type": "string"},
+          "difference": {"type": "string"}, "interpretation": {"type": "string"}, "limitations": {"type": "string"},
+          "importance": {"type": "object", "required": ["level", "reason"], "properties": {"level": {"enum": ["low", "medium", "high"]}, "reason": {"type": "string"}}},
+          "articles": {"type": "array", "maxItems": 4, "items": {
+            "type": "object", "required": ["article_id", "outlet", "description", "voice", "evidence", "scope"],
+            "properties": {
+              "article_id": {"type": "string"}, "outlet": {"type": "string"}, "description": {"type": "string"}, "scope": {"type": "string"},
+              "voice": {"enum": ["journalist_narration", "direct_quote", "indirect_source", "uncertain_quote", "title_selection"]},
+              "title_basis": {"type": ["object", "null"], "required": ["title", "title_sha256"], "properties": {"title": {"type": "string"}, "title_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"}}},
+              "evidence": {"type": "array", "items": {"type": "object", "required": ["article_id", "locator", "sentence_sha256"], "properties": {
+                "article_id": {"type": "string"}, "sentence_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+                "locator": {"type": "object", "required": ["paragraph", "sentence"], "properties": {"paragraph": {"type": "integer", "minimum": 1}, "sentence": {"type": "integer", "minimum": 1}}}
+              }}}
+            }
+          }}
+        }
+      }
+    }
+  }
+}

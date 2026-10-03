@@ -149,6 +149,7 @@ export interface SemanticPublicProfile {
     article_id?: string;
     body_sha256?: string;
     published_at?: string;
+    title_sha256?: string;
   };
   engine?: {
     semantic_ai?: boolean;
@@ -210,6 +211,7 @@ export interface SemanticPublicProfile {
     text_scope?: string;
     analyzed_character_count?: number;
     input_truncated?: boolean;
+    comparison_prompt_version?: string;
   };
   lineage?: Record<string, unknown>;
 }
@@ -547,6 +549,7 @@ export interface IssueAnalysisBundle {
   };
   coderAgreement: IssueCoderAgreement | null;
   lineage: {
+    runId?: string;
     contractVersion: string;
     basisDate: string | null;
     source: {
