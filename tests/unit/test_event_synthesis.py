@@ -45,16 +45,61 @@ def test_transport_evidence_ids_expand_only_to_original_source_anchors() -> None
     assert expanded["voice_basis"]["evidence"] == [anchor]
 
 
-def test_compact_transport_requires_exact_comparison_and_voice_fields() -> None:
-    from ai.event_synthesis import _compact_response_schema
+def test_vertex_transport_schema_is_flat_and_keeps_contract_checks_in_the_binder() -> None:
+    from ai.event_synthesis import _vertex_response_schema
 
-    schema = _compact_response_schema()
-    result = schema["properties"]["comparison_result"]
-    assert "dimensions" in result["required"]
-    point = result["properties"]["dimensions"]["items"]["properties"]["points"]["items"]
-    assert "voice_basis" in point["required"]
-    assert point["properties"]["article_ids"]["maxItems"] == 2
-    assert point["properties"]["evidence"]["items"]["type"] == "integer"
+    assert _vertex_response_schema() == {
+        "type": "object",
+        "properties": {"payload": {"type": "string"}},
+        "required": ["payload"],
+    }
+
+
+def test_vertex_event_synthesizer_decodes_the_flat_transport_payload() -> None:
+    from ai.event_synthesis import (
+        TRANSPORT_PROMPT_VERSION,
+        VertexEventSynthesizer,
+        _vertex_response_schema,
+    )
+
+    inner = {
+        "prompt_version": PROMPT_VERSION,
+        "schema_version": SCHEMA_VERSION,
+        "event_paragraphs": [],
+    }
+
+    class FakeModels:
+        def generate_content(self, *, model, contents, config):
+            self.model = model
+            self.contents = contents
+            self.config = config
+            return SimpleNamespace(
+                text=json.dumps({"payload": json.dumps(inner)}), response_id="fixture-response"
+            )
+
+    models = FakeModels()
+    config = SimpleNamespace(
+        project_id="fixture-project",
+        vertex=SimpleNamespace(
+            model="gemini-2.5-flash-lite",
+            location="global",
+            max_output_tokens=120,
+            max_attempts=3,
+            thinking_budget=0,
+        ),
+    )
+    synthesizer = VertexEventSynthesizer(
+        config, client_factory=lambda _config: SimpleNamespace(models=models)
+    )
+
+    result = synthesizer.synthesize({"articles": [], "profiles": []})
+
+    assert result["event_paragraphs"] == []
+    assert result["prompt_version"] == PROMPT_VERSION
+    assert result["schema_version"] == SCHEMA_VERSION
+    assert result["_invocation"]["transport_prompt_version"] == TRANSPORT_PROMPT_VERSION
+    assert models.config.response_json_schema == _vertex_response_schema()
+    assert "one string field named payload" in models.contents
 
 
 RANK1 = ROOT / "site" / "public" / "initial-five" / "issues" / "bigkinds-2026-07-26-top-1.json"

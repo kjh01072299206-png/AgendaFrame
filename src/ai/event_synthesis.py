@@ -23,14 +23,13 @@ from typing import Any, Mapping, Protocol, Sequence
 
 from ai.fine_comparison import PROMPT as FINE_PROMPT
 from ai.fine_comparison import bind_fine_comparison
-from ai.fine_comparison import response_schema as fine_response_schema
 
 LEGACY_PROMPT_VERSION = "event-synthesis-v1.0.0"
 LEGACY_SCHEMA_VERSION = "agendaframe.event-synthesis.v1"
 PROMPT_VERSION = "event-synthesis-v2.2.0"
 SCHEMA_VERSION = "agendaframe.event-synthesis.v2.2"
 COMPARISON_CONTRACT_VERSION = "comparison-v1.0.0"
-TRANSPORT_PROMPT_VERSION = "event-synthesis-transport-v1.4.0"
+TRANSPORT_PROMPT_VERSION = "event-synthesis-transport-v1.5.0"
 LEGACY_V2_PROMPT_VERSION = "event-synthesis-v2.0.0"
 LEGACY_V2_SCHEMA_VERSION = "agendaframe.event-synthesis.v2"
 SHA256_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
@@ -1594,7 +1593,9 @@ class VertexEventSynthesizer:
         }
         evidence_table = _transport_evidence_table(request)
         prompt = _build_prompt(request) + (
-            " TRANSPORT OVERRIDE: return the object required by the response schema, not a payload string. "
+            " TRANSPORT OVERRIDE: return exactly one JSON object with one string field named payload. "
+            "The payload value must be a JSON-encoded string containing the complete v2.2 object from OUTPUT_SHAPE. "
+            "Do not put v2.2 fields at the outer level and do not include markdown fences. "
             "In every evidence array return integer IDs from EVIDENCE_TABLE instead of copying full references. "
             "IDs are exact source anchors, not new evidence. Use two event paragraphs and inspect all five core dimensions. "
             "Return one point per supported editorial observation. For a cross-outlet relation, a point must name BOTH compared articles from different outlets, cite one narration anchor from EACH, and explain the relation between them. Never name a second article without its evidence. "
@@ -1636,7 +1637,7 @@ class VertexEventSynthesizer:
                     # Lite already provides JSON mode. Do not double-encode
                     # every Korean character and evidence ref in a string
                     # wrapper: that exhausted the bounded output reservation.
-                    response_json_schema=_compact_response_schema(),
+                    response_json_schema=_vertex_response_schema(),
                     thinking_config=(
                         types.ThinkingConfig(
                             thinking_budget=int(self.config.vertex.thinking_budget)
@@ -1747,28 +1748,6 @@ def _expand_transport_evidence(value: object, table: Sequence[Mapping[str, Any]]
     return value
 
 
-def _compact_response_schema() -> dict[str, Any]:
-    def obj(properties):
-        return {"type": "object", "properties": properties, "required": list(properties), "additionalProperties": False}
-    def array(items, maximum):
-        return {"type": "array", "items": items, "maxItems": maximum}
-    string = {"type": "string"}
-    refs = array({"type": "integer"}, 8)
-    statuses = {"type": "string", "enum": sorted(COMPARISON_STATUSES)}
-    dimensions = {"type": "string", "enum": ["problem_definition", "causal_interpretation", "responsibility_attribution", "evaluation", "treatment_recommendation"]}
-    voice = obj({"kind": {"type": "string", "enum": ["journalist_narration", "source_attributed", "mixed", "not_observed"]}, "label": string, "evidence": refs})
-    point = obj({"observation_id": string, "headline": string, "summary": string, "text": string, "relation": {"type": "string", "enum": sorted(COMPARISON_RELATIONS)}, "article_ids": array(string, 2), "evidence": refs, "voice_basis": voice})
-    point["properties"]["article_ids"]["minItems"] = 2
-    point["properties"]["evidence"] = {**refs, "minItems": 2}
-    dimension = obj({"dimension": dimensions, "label": string, "question": string, "status": statuses, "points": array(point, 6)})
-    return obj({
-        "event_paragraphs": array(obj({"text": string, "evidence": refs}), 2),
-        "common_ground": obj({"text": {"type": ["string", "null"]}, "status": {"type": "string", "enum": ["observed", "insufficient_evidence"]}, "evidence": refs}),
-        "comparison_result": obj({"status": statuses, "primary_dimension": dimensions, "dimensions": array(dimension, 5)}),
-        "fine_grained": fine_response_schema(refs),
-    })
-
-
 def _build_prompt(request: Mapping[str, Any]) -> str:
     payload = json.dumps(request, ensure_ascii=False, sort_keys=True)
     output_shape = {
@@ -1815,7 +1794,7 @@ def _build_prompt(request: Mapping[str, Any]) -> str:
         "Every public sentence and every camp field must cite article_id, locator.paragraph, locator.sentence, and sentence_sha256 copied from the supplied profiles. Use up to eight non-duplicated evidence refs when context is necessary. Do not put locator tuples or hashes inline in prose; put them only in evidence arrays. "
         "proof_rows must contain article_id, outlet, dimension, public_paraphrase, and evidence, and must be drawn from the supplied paraphrases; use at most three proof rows per camp. Keep camp summaries to two sentences. "
         "Do not copy article body text, HTML, raw sentences, or English internal codes. Do not output so_what or source-context interpretation. "
-        "Use the exact v2.2 keys prompt_version, schema_version, comparison_result, observation_id, headline, summary, text, and common_ground.text; do not rename text to claim or headline to strong_headline. Return one JSON object matching the v2.2 shape, with no wrapper and no markdown fences. If a field cannot be supported, use an empty array or null rather than inventing text. "
+        "Use the exact v2.2 keys prompt_version, schema_version, comparison_result, observation_id, headline, summary, text, and common_ground.text; do not rename text to claim or headline to strong_headline. The inner object must match the v2.2 shape. Encode that complete object as a JSON string in the outer payload field required by the transport schema; do not return markdown fences. If a field cannot be supported, use an empty array or null rather than inventing text. "
         "Use only problem_definition, causal_interpretation, responsibility_attribution, evaluation, treatment_recommendation as comparison dimension codes. "
         "The dimensions array is mandatory: never rename it to core_dimensions. Each evidence reference is an object with article_id, locator {paragraph, sentence}, sentence_sha256; copy these values exactly from the input. "
         "The following is a structural template, not content or evidence: replace every placeholder, use at least two event paragraphs, and return no placeholders. The optional transport payload string must encode this exact object. "

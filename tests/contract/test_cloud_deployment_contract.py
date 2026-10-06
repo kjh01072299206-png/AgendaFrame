@@ -31,6 +31,13 @@ class CloudDeploymentContractTests(unittest.TestCase):
         self.assertTrue(override["maxFromRuntimeYaml"])
         self.assertNotIn("AGENDAFRAME_MAX_ARTICLES_PER_RUN", contract["spec"]["environment"])
 
+    def test_runtime_analysis_job_allows_full_top_five_and_avoids_whole_run_retry(self) -> None:
+        config = yaml.safe_load((ROOT / "config" / "gcp-runtime.yaml").read_text(encoding="utf-8"))
+        self.assertEqual(config["cloud_run"]["timeout_seconds"], 3600)
+        self.assertEqual(config["cloud_run"]["max_retries"], 0)
+        script = (ROOT / "scripts" / "gcp" / "deploy-runtime-job.ps1").read_text(encoding="utf-8")
+        self.assertIn("--max-retries 0 --task-timeout 3600s", script)
+
     def test_storage_lifecycle_deletes_body_objects_by_custom_time(self) -> None:
         lifecycle = json.loads(
             (ROOT / "config" / "gcp" / "storage-lifecycle.json").read_text(encoding="utf-8")

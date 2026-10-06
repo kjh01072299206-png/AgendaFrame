@@ -4,7 +4,9 @@ Status: not approved for production. Human-reviewed real-article evaluation is p
 
 Additive contract; legacy event synthesis v2.2.0 and comparison v1.0.0 are not
 renamed. Runtime prompt and response schema: `src/ai/fine_comparison.py`.
-Transport: event-synthesis-transport-v1.4.0. Article sentence prompt:
+Transport: event-synthesis-transport-v1.5.0. Vertex receives a flat outer
+`payload` string; the decoded inner v2.2 object is validated against its
+application contract and evidence anchors. Article sentence prompt:
 2.6.0:sentence-anchor-v1.3.0 (`scripts/run-current-display-framing-live.py`).
 
 Discover candidates across title/lead, certainty, agency, evaluative language,

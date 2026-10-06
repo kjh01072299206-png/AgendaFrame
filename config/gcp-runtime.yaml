@@ -39,8 +39,8 @@ cloud_run:
   cpu: 1
   memory: 512Mi
   task_count: 1
-  timeout_seconds: 900
-  max_retries: 1
+  timeout_seconds: 3600
+  max_retries: 0
 publication:
   endpoint_path: /api/import/analyzed
   include_article_body: false

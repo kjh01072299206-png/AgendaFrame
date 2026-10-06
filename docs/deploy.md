@@ -27,7 +27,7 @@ audit-site.mjs가 브라우저 runtime을 찾지 못하면 AF_PW에 설치된 pl
 
 ## GCP runtime과 첫 8월 15일 실행
 
-배포 스크립트는 기본 dry-run이다. -Apply -FullGatePassed를 붙일 때만 Cloud Build와 Cloud Run 변경을 수행한다.
+배포 스크립트는 기본 dry-run이다. -Apply -FullGatePassed를 붙일 때만 Cloud Build와 Cloud Run 변경을 수행한다. 전체 상위 5개 기사 분석에 최대 38개 기사 프로필이 필요해 작업 제한은 3600초다. Cloud Run 작업 자체는 자동 재시도하지 않고 각 분석 단계의 제한 재시도만 사용해 실패 후 같은 Vertex 분석을 무심코 중복 과금하지 않는다.
 
 ~~~powershell
 powershell -NoProfile -File scripts/gcp/deploy-runtime-job.ps1 -Apply -FullGatePassed -CommitSha <40-character-reviewed-sha>
