@@ -678,6 +678,6 @@ GPS·성분 감정·매설 깊이로 최종 판단을 설명
 - 84건은 현재 5개 의제의 본문 분석 표본에 포함하지 않았다. 지지율 기사처럼 해당 사건을 언급해도 중심 사건이 다른 보도는 기존 의제에 합산하지 않았다. 동아일보의 북미 핵협상·미사일 기사도 관련 맥락으로 읽되 DMZ 제거 작전의 동일 사건 기사 수에는 넣지 않았다.
 - 생성 버전: `2026-10-07.1` / 분석 출처: `codex_body_reading`.
 
-수작업 판독은 `evals/annotations/oct5-body-reading-v1.json`과 `oct5-article-functions-v1.json`에 보존했다. `scripts/build-editorial-review.py --private-archive <저장된 수집 폴더> --runtime <Kiwi 런타임 폴더> --model-path <Kiwi 모델 폴더>`로 원문 해시·근거 위치·형태소 집계를 다시 검증하고 공개 JSON을 생성할 수 있다. 이 명령은 저장 파일만 읽는다.
+수작업 판독은 `site/data/editorial-source/oct5-body-reading-v1.json`과 `oct5-article-functions-v1.json`에 보존했다. `scripts/build-editorial-review.py --private-archive <저장된 수집 폴더> --runtime <Kiwi 런타임 폴더> --model-path <Kiwi 모델 폴더>`로 원문 해시·근거 위치·형태소 집계를 다시 검증하고 공개 JSON을 생성할 수 있다. 이 명령은 저장 파일만 읽는다.
 
 화면의 기사 수는 DMZ 27건, 영화 13건, 무극파 8건, 검찰개혁 10건, 빈총 4건이다. 기존 홈과 메뉴 구성을 복원하고 이 분석 범위의 기사·매체 수를 표시한다. 언론사 비교와 프레이밍 페이지는 기준일과 의제 ID가 일치할 때 이 판독 결과를 사용한다. 자동 분석용 snapshot API는 별도로 유지된다.

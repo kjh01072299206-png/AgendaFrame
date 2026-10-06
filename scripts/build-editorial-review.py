@@ -23,10 +23,10 @@ if args.runtime:
     sys.path.insert(0, str(args.runtime.resolve()))
 Kiwi = importlib.import_module("kiwipiepy").Kiwi
 ISSUES = json.loads(
-    (REPO / "evals/annotations/oct5-body-reading-v1.json").read_text(encoding="utf-8")
+    (REPO / "site/data/editorial-source/oct5-body-reading-v1.json").read_text(encoding="utf-8")
 )
 FUNCTIONS = json.loads(
-    (REPO / "evals/annotations/oct5-article-functions-v1.json").read_text(encoding="utf-8")
+    (REPO / "site/data/editorial-source/oct5-article-functions-v1.json").read_text(encoding="utf-8")
 )
 LABELS = ["문제 정의", "원인 해석", "책임 귀속", "규범적 평가", "해법·처방", "취재원 구성"]
 OUTLETS = {
