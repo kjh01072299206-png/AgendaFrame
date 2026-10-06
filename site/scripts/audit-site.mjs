@@ -35,7 +35,7 @@ const VIEWPORTS = FAST
   : [{ w: 1440, scheme: "light" }, { w: 1280, scheme: "dark" }, { w: 900, scheme: "light" }, { w: 390, scheme: "light" }, { w: 390, scheme: "dark" }];
 
 const RULES = {
-  "HOME-PARITY": { sev: "error", hint: "공개 홈이 프로토타입의 분야 분포 → 의제 카드 → 갈림 요약 구성을 유지해야 한다." },
+  "HOME-PARITY": { sev: "error", hint: "홈의 오늘의 의제·미리보기와 기존 도구 내비게이션을 유지해야 한다." },
   "JS-ERROR": { sev: "error", hint: "콘솔 오류·예외. 렌더 경로가 깨졌다는 뜻이므로 먼저 고친다." },
   "HTTP": { sev: "error", hint: "2xx 가 아닌 응답. 라우트가 없거나 서버가 던졌다." },
   "DUP-ID": { sev: "error", hint: "같은 id 가 둘 이상. 템플릿이 조각을 반복 출력한다." },
@@ -136,17 +136,9 @@ function collect({ w, isDesktop, route = "", firstScreenRequirements = {} }) {
   };
   const root = document.querySelector(".afs-shell") || document.body;
   if (location.pathname === "/") {
-    const panels = [...document.querySelectorAll(".afp-home-panel > h2")].map((el) => el.textContent.trim());
-    const expected = ["그날 언론이 가장 많이 다룬 분야", "오늘의 의제 순위", "오늘의 갈림 한 장면"];
-    if (panels.join("|") !== expected.join("|")) push("HOME-PARITY", "홈 구역의 순서 또는 제목이 다름");
-    const cards = [...document.querySelectorAll(".afp-home-issue-link")];
-    if (cards.length !== 5 || cards.some((el) => !el.getAttribute("href")?.endsWith("/outlets"))) push("HOME-PARITY", "상위 5개 의제 카드·비교 경로 누락");
-    const loadedFont = [...document.fonts].some((font) => font.family.includes("Pretendard Variable") && font.status === "loaded");
-    if (!loadedFont) push("HOME-PARITY", "프로토타입 글꼴이 실제로 로드되지 않음");
-    if (innerWidth > 860) {
-      const side = document.querySelector(".afs-side");
-      if (!side || Math.abs(side.getBoundingClientRect().width - 236) > 1) push("HOME-PARITY", "데스크톱 내비 너비가 236px와 다름");
-    }
+    const panels = [...document.querySelectorAll(".afs-card > h2")].map((el) => el.textContent.trim());
+    if (!panels.some((s) => s.startsWith("오늘의 의제")) || !panels.some((s) => s.startsWith("의제별 미리보기"))) push("HOME-PARITY", "기존 홈의 의제·미리보기 누락");
+    if (![...document.querySelectorAll(".afs-side a")].some((a) => a.textContent.includes("내 읽기 유형"))) push("HOME-PARITY", "내 읽기 유형 메뉴 누락");
   }
 
   const firstScreen = [];
@@ -199,7 +191,17 @@ function collect({ w, isDesktop, route = "", firstScreenRequirements = {} }) {
     if (!visible) push("FIRST-SCREEN", `${label} ${selector} box=${JSON.stringify(box)} visible=${Math.round(visibleHeight)}px/${Math.round(rect.height)}px ratio=${visibleRatio.toFixed(2)} scrollY=${Math.round(window.scrollY)}`);
   };
   if ((route.endsWith("/outlets") || route.endsWith("/framing")) && w === 1440) {
-    if (route.endsWith("/outlets")) {
+    if (document.querySelector(".af-bodyreview")) {
+      if (route.endsWith("/outlets")) {
+        recordFirstScreen("사건 설명 문장", ".af-bodyreview .what");
+        recordFirstScreen("비교 질문", ".af-bodyreview .debate-question h3");
+        [...document.querySelectorAll(".af-bodyreview .debate-box-head strong")].forEach((title, index) => recordFirstScreen("대표 비교 카드 제목", `.af-bodyreview .debate-box:nth-child(${index + 1}) strong`, title));
+      } else {
+        recordFirstScreen("프레이밍 요약", ".af-bodyreview .g-main .what");
+        recordFirstScreen("프레임 4기능 표 헤더", ".af-bodyreview .grid:nth-of-type(3) thead");
+        recordFirstScreen("프레임 4기능 첫 갈래 행", ".af-bodyreview .grid:nth-of-type(3) tbody tr:first-child");
+      }
+    } else if (route.endsWith("/outlets")) {
       recordFirstScreen("사건 설명 문장", "#sec-event-summary .afp-event-first");
       recordFirstScreen("비교 질문", "#sec-comparison-axis .afp-axis-question-v2");
       if (document.querySelector("#sec-camps .afp-camp-card-v2 .afp-camp-headline")) {
@@ -389,6 +391,21 @@ async function discoverIssueIds(page) {
 }
 
 async function checkOutletsMobileInteractions(page) {
+  if (await page.locator(".af-bodyreview").count()) {
+    const failures = [];
+    const checks = ["갈래 카드 열기", "갈래 카드 전환", "갈래 카드 닫기", "원문 링크"];
+    const buttons = page.locator(".af-bodyreview .debate-box");
+    await buttons.first().click();
+    if (await buttons.first().getAttribute("aria-expanded") !== "true") failures.push("첫 갈래 카드가 열리지 않음");
+    if (await page.locator(".debate-proof-panel:not([hidden])").count() !== 1) failures.push("첫 갈래 근거 패널이 표시되지 않음");
+    if (!(await page.locator(".debate-proof-panel:not([hidden]) a[target=_blank]").count())) failures.push("원문 링크 누락");
+    await buttons.nth(1).click();
+    if (await buttons.first().getAttribute("aria-expanded") !== "false" || await buttons.nth(1).getAttribute("aria-expanded") !== "true") failures.push("갈래 전환 실패");
+    await buttons.nth(1).click();
+    if (await page.locator(".debate-proof-panel:not([hidden])").count()) failures.push("갈래 닫기 실패");
+    await page.evaluate(() => window.scrollTo(0,0));
+    return { failures, checks };
+  }
   const initial = await page.evaluate(() => {
     const visible = (selector) => {
       const el = document.querySelector(selector);
@@ -496,8 +513,9 @@ let ROUTES = [];
 for (const vp of VIEWPORTS) {
   const page = await browser.newPage({ viewport: { width: vp.w, height: 900 }, colorScheme: vp.scheme });
   const errs = [];
-  page.on("pageerror", (e) => errs.push(e.message));
-  page.on("console", (c) => { if (c.type() === "error") errs.push(`console: ${c.text()}`); });
+  let currentRoute = "/";
+  page.on("pageerror", (e) => errs.push(`${currentRoute}: ${e.message}`));
+  page.on("console", (c) => { if (c.type() === "error") errs.push(`${currentRoute}: console: ${c.text()}`); });
   const issueIds = await discoverIssueIds(page);
   const issueRoutes = issueIds.flatMap((issueId) => [
     `/issues/${encodeURIComponent(issueId)}`,
@@ -510,6 +528,7 @@ for (const vp of VIEWPORTS) {
     : ["/", "/issues", ...issueRoutes, "/tools/self-check", "/tools/community", "/tools/ask", "/tools/method"];
   ROUTES = routes;
   for (const route of routes) {
+    currentRoute = route;
     const at = `${route} @${vp.w}${vp.scheme === "dark" ? "d" : ""}`;
     const response = await page.goto(BASE + route, { waitUntil: "load" });
     if (!response || !response.ok()) add("HTTP", `${response ? response.status() : "no response"}`, at);
@@ -525,7 +544,7 @@ for (const vp of VIEWPORTS) {
     const got = await page.evaluate(collect, { w: vp.w, isDesktop: vp.w >= 1200, route, firstScreenRequirements: FIRST_SCREEN_REQUIREMENTS });
     if (vp.w === 1440 && route.endsWith("/outlets")) {
       comparisonReports.push({ route, ...await page.evaluate(() => {
-        const lead = document.querySelector(".afp-comparison-lead-v2");
+        const lead = document.querySelector(".af-bodyreview[data-analysis-source='codex_body_reading'], .afp-comparison-lead-v2");
         return { status: lead?.getAttribute("data-comparison-status") ?? "missing", publishable: lead?.getAttribute("data-comparison-publishable") === "true" };
       }) });
     }
