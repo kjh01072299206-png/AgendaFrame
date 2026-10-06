@@ -1336,11 +1336,7 @@ def _synthesize_comparison(
             articles=article_rows,
             title=title,
             issue_id=issue_id,
-            synthesizer=(
-                dependencies.event_synthesizer
-                if use_direct_synthesis
-                else None
-            ),
+            synthesizer=(dependencies.event_synthesizer if use_direct_synthesis else None),
         )
     except EventSynthesisError:
         # Preserve completed, evidence-bound article profiles if direct event
@@ -1489,6 +1485,7 @@ class FrameSemanticAdapter(SemanticAdapter):
                         "title": article.title,
                         "titleSource": article.title_source,
                         "publishedAt": article.published_at.isoformat(),
+                        "collectedAt": article.collected_at.isoformat(),
                         "section": article.section,
                         "bodySha256": article.body_hash,
                         "issueId": issue_id,

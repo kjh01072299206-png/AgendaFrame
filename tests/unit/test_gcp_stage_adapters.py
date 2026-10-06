@@ -399,6 +399,7 @@ class GcpStageAdapterTests(unittest.TestCase):
             self.assertIn(key, bundle)
         self.assertEqual(bundle["issue"]["issueId"], "issue-1")
         self.assertTrue(bundle["semanticProfiles"])
+        self.assertEqual(bundle["articles"][0]["collectedAt"], COLLECTED_AT.isoformat())
         assert_body_safe(bundle, context="public bundle")
         gate = evaluate_quality_gate(semantic)
         self.assertEqual(gate["status"], "pass")
