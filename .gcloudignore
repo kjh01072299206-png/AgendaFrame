@@ -12,7 +12,9 @@
 # The GCP collector validates the same 12-source policy as the Worker.  Keep
 # this one policy file in the image without uploading the frontend bundle.
 !site/
+site/*
 !site/data/
+site/data/*
 !site/data/discovery-sources.json
 !evals/
 !evals/annotations/
