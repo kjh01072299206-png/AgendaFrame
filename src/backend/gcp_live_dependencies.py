@@ -623,8 +623,12 @@ class GcsPrivateArticleVault(PrivateArticleVault):
         self.delete_after = delete_after
 
     def put(self, run_id: str, article: ArticleDocument) -> str:
+        body_hash = article.body_hash
+        if not body_hash:
+            raise RuntimeAdapterUnavailable("private body storage requires a body hash")
         object_name = (
-            f"bodies/{article.source_id}/{article.published_at:%Y/%m/%d}/{article.article_id}.txt"
+            f"bodies/{article.source_id}/{article.published_at:%Y/%m/%d}/"
+            f"{article.article_id}/{body_hash}.txt"
         )
         blob = self.bucket.blob(object_name)
         delete_at = datetime.fromisoformat(f"{self.delete_after}T23:59:59+09:00").astimezone(UTC)
@@ -633,7 +637,7 @@ class GcsPrivateArticleVault(PrivateArticleVault):
             "run_id": run_id,
             "article_id": article.article_id,
             "source_id": article.source_id,
-            "body_hash": article.body_hash or "",
+            "body_hash": body_hash,
             "delete_after": self.delete_after,
         }
         blob.upload_from_string(article.body_text or "", content_type="text/plain; charset=utf-8")

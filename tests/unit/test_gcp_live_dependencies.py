@@ -10,12 +10,14 @@ from unittest.mock import patch
 from backend.gcp_job_entrypoint import RuntimeAdapterUnavailable
 from backend.gcp_live_dependencies import (
     FetchedResponse,
+    GcsPrivateArticleVault,
     NewsArticleParser,
     _ArticleHtmlParser,
     _human_reviewed_clusterer,
     build_stage_dependencies,
 )
 from backend.gcp_stage_adapters import SourceDefinition
+from crawler.models import ArticleDocument
 
 COLLECTED_AT = datetime(2026, 8, 13, 6, 0, tzinfo=UTC)
 SOURCE = SourceDefinition("khan", ("khan.co.kr",), ("https://khan.co.kr/rss",))
@@ -37,6 +39,39 @@ class FakeFetcher:
         del source_id
         self.calls.append(url)
         return self.pages[url]
+
+
+class FakePrivateBodyBlob:
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self.custom_time = None
+        self.metadata = None
+        self.body = None
+        self.content_type = None
+
+    def upload_from_string(self, body: str, *, content_type: str) -> None:
+        self.body = body
+        self.content_type = content_type
+
+
+class FakePrivateBodyBucket:
+    name = "private"
+
+    def __init__(self) -> None:
+        self.blobs: dict[str, FakePrivateBodyBlob] = {}
+
+    def blob(self, name: str) -> FakePrivateBodyBlob:
+        return self.blobs.setdefault(name, FakePrivateBodyBlob(name))
+
+
+class FakePrivateBodyStorage:
+    def __init__(self) -> None:
+        self.private_bucket = FakePrivateBodyBucket()
+
+    def bucket(self, name: str) -> FakePrivateBodyBucket:
+        if name != self.private_bucket.name:
+            raise AssertionError("Unexpected private bucket")
+        return self.private_bucket
 
 
 def rss(*links: tuple[str, str]) -> bytes:
@@ -78,6 +113,34 @@ def parser(fetcher: FakeFetcher) -> NewsArticleParser:
 
 
 class GcpLiveDependencyTests(unittest.TestCase):
+    def test_private_body_paths_are_content_addressed(self) -> None:
+        storage = FakePrivateBodyStorage()
+        vault = GcsPrivateArticleVault(storage, bucket_name="private", delete_after="2026-10-12")
+        shared = {
+            "article_id": "stable-article-id",
+            "source_id": "khan",
+            "canonical_url": "https://khan.co.kr/article/1",
+            "published_at": datetime(2026, 10, 5, 1, 0, tzinfo=UTC),
+            "collected_at": COLLECTED_AT,
+            "section": None,
+            "text_scope": "authorized_transient_body",
+        }
+        original = ArticleDocument(title="Original", body_text="original body", **shared)
+        revised = ArticleDocument(title="Revised", body_text="revised body", **shared)
+
+        original_ref = vault.put("run-original", original)
+        revised_ref = vault.put("run-revised", revised)
+
+        self.assertNotEqual(original_ref, revised_ref)
+        self.assertTrue(original_ref.endswith(f"/{original.body_hash}.txt"))
+        self.assertTrue(revised_ref.endswith(f"/{revised.body_hash}.txt"))
+        original_blob = storage.private_bucket.blobs[original_ref.removeprefix("gs://private/")]
+        revised_blob = storage.private_bucket.blobs[revised_ref.removeprefix("gs://private/")]
+        self.assertEqual(original_blob.body, "original body")
+        self.assertEqual(revised_blob.body, "revised body")
+        self.assertEqual(original_blob.metadata["body_hash"], original.body_hash)
+        self.assertEqual(revised_blob.metadata["body_hash"], revised.body_hash)
+
     def test_reviewed_clusterer_uses_explicit_container_annotation_path(self) -> None:
         annotation_path = os.path.abspath(
             "evals/annotations/initial-five-2026-10-05-single-reviewer-v1.json"
