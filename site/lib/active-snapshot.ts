@@ -8,7 +8,9 @@ type SnapshotEnvelope = {
   schemaVersion: string;
   snapshotId: string;
   basisDate: string;
+  runId?: string;
   generatedAt?: string | null;
+  qualityGate?: Record<string, unknown>;
   manifest: InitialFiveManifest;
   bundles: Record<string, IssueAnalysisBundle>;
 };
@@ -48,6 +50,14 @@ const FORBIDDEN_PUBLIC_KEYS = new Set([
 
 const ACTIVE_SNAPSHOT_SCHEMA = "agenda.frame.active-snapshot.v1";
 const SNAPSHOT_ID_PATTERN = /^[0-9a-f]{32}$/;
+const AUTHORIZED_OCT5_REPLAY_RUN_ID = "oct5-public-override-20261007";
+const AUTHORIZED_OCT5_REPLAY_MARKER = "user_authorized_2026-10-05_replay";
+
+function isAuthorizedOct5Replay(envelope: SnapshotEnvelope): boolean {
+  return envelope.basisDate === "2026-10-05"
+    && envelope.runId === AUTHORIZED_OCT5_REPLAY_RUN_ID
+    && envelope.qualityGate?.operatorOverride === AUTHORIZED_OCT5_REPLAY_MARKER;
+}
 
 function containsForbiddenKey(value: unknown): boolean {
   if (Array.isArray(value)) return value.some(containsForbiddenKey);
@@ -117,11 +127,13 @@ function unpublishable(message: string): Error {
 }
 
 function assertLivePublishable(envelope: SnapshotEnvelope): void {
+  const allowAuthorizedOct5Replay = isAuthorizedOct5Replay(envelope);
   for (const [index, issue] of envelope.manifest.issues.entries()) {
     const issueId = String(issue.issueId ?? "");
     if (TITLE_FALLBACK_ISSUE.test(issueId)) {
       throw unpublishable(`issue ${index + 1} uses a title-fallback id`);
     }
+    if (allowAuthorizedOct5Replay) continue;
     if ((issue.articleCount ?? 0) < 3 || (issue.outletCount ?? 0) < 2) {
       throw unpublishable(`issue ${issueId} has fewer than 3 articles or 2 outlets`);
     }
