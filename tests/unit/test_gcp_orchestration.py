@@ -307,6 +307,33 @@ class GcpOrchestrationTests(unittest.TestCase):
         self.assertEqual(snapshots.objects, [])
         self.assertEqual(snapshots.pointer_updates, [])
 
+    def test_explicit_override_publishes_and_records_that_the_gate_was_bypassed(self) -> None:
+        snapshots = FakeSnapshots()
+        semantic = _verified_semantic_fixture()
+        semantic["unsupportedClaimRate"] = 0.03
+        fakes = FakeAdapters(snapshots, semantic=semantic)
+        result = GcpPipelineOrchestrator(
+            fakes.pipeline(),
+            idempotency=InMemoryIdempotencyStore(),
+            allow_quality_gate_override=True,
+        ).run(request())
+
+        self.assertEqual(result.status, "succeeded")
+        self.assertEqual(
+            next(record.status for record in result.stage_records if record.name == "quality_gate"),
+            "overridden",
+        )
+        self.assertEqual(len(snapshots.pointer_updates), 1)
+        active = next(
+            value
+            for objects in snapshots.objects
+            for key, value in objects.items()
+            if key.endswith("/active.json")
+        )
+        self.assertEqual(
+            active["qualityGate"]["operatorOverride"], "user_authorized_2026-10-05_replay"
+        )
+
     def test_raw_body_in_any_stage_is_rejected_without_pointer_change(self) -> None:
         snapshots = FakeSnapshots({"snapshotId": "previous"})
         fakes = FakeAdapters(snapshots)

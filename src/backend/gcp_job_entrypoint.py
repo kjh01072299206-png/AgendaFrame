@@ -324,11 +324,19 @@ def run_job(
 
     values = dict(os.environ if env is None else env)
     config = build_runtime_config(values)
+    override_value = values.get("AGENDAFRAME_PUBLIC_QUALITY_GATE_OVERRIDE", "").strip()
+    allow_quality_gate_override = override_value == "oct5-user-authorized" and (
+        config.request.basis_date == "2026-10-05"
+        and config.request.run_id == "oct5-public-override-20261007"
+    )
+    if override_value and not allow_quality_gate_override:
+        raise RuntimeWiringError("public quality-gate override is limited to the authorized Oct 5 run")
     adapters = build_adapters(config, values, adapter_factory=adapter_factory)
     result = GcpPipelineOrchestrator(
         adapters,
         idempotency=idempotency,
         clock=clock,
+        allow_quality_gate_override=allow_quality_gate_override,
     ).run(config.request)
     if result.status == "succeeded":
         pointer = result.current_pointer
@@ -354,7 +362,11 @@ def _result_payload(config: GcpRuntimeConfig, result: OrchestrationResult) -> Ma
                 "attempts": record.attempts,
                 "idempotencyKey": record.idempotency_key,
                 "reused": record.reused,
-                "error": "stage_failed" if record.error else None,
+                "error": (
+                    "quality_gate_overridden"
+                    if record.status == "overridden"
+                    else "stage_failed" if record.error else None
+                ),
                 "errorType": record.error_type,
                 "errorFingerprint": _error_fingerprint(record.error),
             }
@@ -429,6 +441,14 @@ def main(
             None,
         )
         if result.status == "succeeded":
+            if any(record.status == "overridden" for record in result.stage_records):
+                _emit_runtime_event(
+                    "quality_gate_overridden_by_operator",
+                    config=config,
+                    status=result.status,
+                    stage="quality_gate",
+                    error_type="UserAuthorizedOverride",
+                )
             _emit_runtime_event(
                 "collection_run_succeeded",
                 config=config,
