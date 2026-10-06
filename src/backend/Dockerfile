@@ -11,6 +11,7 @@ COPY pyproject.toml README.md requirements.lock ./
 COPY src ./src
 COPY config ./config
 COPY site/data/discovery-sources.json ./site/data/discovery-sources.json
+COPY evals/annotations/initial-five-2026-10-05-single-reviewer-v1.json ./evals/annotations/initial-five-2026-10-05-single-reviewer-v1.json
 RUN python -m pip install --disable-pip-version-check --require-hashes -r requirements.lock \
     && python -m pip install --disable-pip-version-check --no-deps .
 

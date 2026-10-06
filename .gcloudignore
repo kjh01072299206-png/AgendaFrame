@@ -14,3 +14,6 @@
 !site/
 !site/data/
 !site/data/discovery-sources.json
+!evals/
+!evals/annotations/
+!evals/annotations/initial-five-2026-10-05-single-reviewer-v1.json

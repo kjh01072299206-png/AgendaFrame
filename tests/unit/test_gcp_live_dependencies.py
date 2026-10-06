@@ -1,10 +1,19 @@
 from __future__ import annotations
 
 import json
+import os
 import unittest
 from datetime import UTC, datetime
+from types import SimpleNamespace
+from unittest.mock import patch
 
-from backend.gcp_live_dependencies import FetchedResponse, NewsArticleParser, _ArticleHtmlParser
+from backend.gcp_job_entrypoint import RuntimeAdapterUnavailable
+from backend.gcp_live_dependencies import (
+    FetchedResponse,
+    NewsArticleParser,
+    _ArticleHtmlParser,
+    build_stage_dependencies,
+)
 from backend.gcp_stage_adapters import SourceDefinition
 
 COLLECTED_AT = datetime(2026, 8, 13, 6, 0, tzinfo=UTC)
@@ -68,6 +77,20 @@ def parser(fetcher: FakeFetcher) -> NewsArticleParser:
 
 
 class GcpLiveDependencyTests(unittest.TestCase):
+    def test_reviewed_cluster_override_requires_matching_archive_replay_date(self) -> None:
+        runtime = SimpleNamespace(request=SimpleNamespace(basis_date="2026-10-05"))
+        with patch.dict(
+            os.environ,
+            {
+                "AGENDAFRAME_REPLAY_BASIS_DATE": "2026-10-05",
+                "AGENDAFRAME_REVIEWED_CLUSTER_DATE": "2026-10-06",
+            },
+        ):
+            with self.assertRaisesRegex(
+                RuntimeAdapterUnavailable, "matching 2026-10-05 archive replay"
+            ):
+                build_stage_dependencies(None, None, runtime)
+
     def test_view_content_excludes_generated_summary_and_copyright(self) -> None:
         html = _ArticleHtmlParser()
         html.feed(
@@ -148,6 +171,23 @@ class GcpLiveDependencyTests(unittest.TestCase):
         self.assertEqual(rows[0].body_text, LONG_BODY)
         self.assertEqual(rows[0].text_scope, "authorized_transient_body")
         self.assertEqual(rows[0].title_source, "html_title")
+
+    def test_rss_fallback_title_decodes_html_entities(self) -> None:
+        url = "https://khan.co.kr/article/entity-title"
+        page = f"<html><head></head><body><article><p>{LONG_BODY}</p></article></body></html>"
+        response = FetchedResponse(url, 200, "text/html", page.encode())
+        parsed = parser(FakeFetcher({url: response}))._article_page(
+            response,
+            source_id="khan",
+            canonical_url=url,
+            fallback_title="Headline &quot;quoted&quot; &amp; decoded",
+            allow_fallback_title=True,
+            fallback_published=COLLECTED_AT,
+            collected_at=COLLECTED_AT,
+        )
+
+        self.assertIsNotNone(parsed)
+        self.assertEqual(parsed.title, 'Headline "quoted" & decoded')
 
     def test_known_publisher_body_containers_are_extracted(self) -> None:
         cases = (

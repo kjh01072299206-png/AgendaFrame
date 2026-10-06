@@ -227,6 +227,18 @@ class CloudRuntimeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             canonicalize_url("https://127.0.0.1/article")
 
+    def test_hankookilbo_section_query_does_not_create_duplicate_article(self) -> None:
+        base = "https://www.hankookilbo.com/news/article/A2026100513220004301"
+
+        self.assertEqual(
+            canonicalize_url(f"{base}?dtypecode=pancode_politics"),
+            canonicalize_url(f"{base}?dtypecode=pancode_society"),
+        )
+        self.assertEqual(
+            canonicalize_url("https://news.example.com/article?id=1&dtypecode=politics"),
+            "https://news.example.com/article?id=1&dtypecode=politics",
+        )
+
     def test_cost_guard_blocks_run_and_daily_caps_before_model_calls(self) -> None:
         guard = CostGuard(self.config)
         guard.enforce_run([1000] * 5, already_analyzed_today=0)

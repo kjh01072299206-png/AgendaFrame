@@ -34,12 +34,19 @@ export function isVerifiedSemanticBundle(bundle) {
   const promptVersion = String(semantic.promptVersion ?? "").trim();
   const clusterModel = String(cluster.model ?? "").trim();
   const clusterPromptVersion = String(cluster.promptVersion ?? "").trim();
-  if (!runId || !model || !promptVersion || !clusterModel || !clusterPromptVersion) return false;
+  const humanReviewedCluster = cluster.analysisSource === "human_review"
+    && cluster.semanticAi === false
+    && cluster.reviewStatus === "single_reviewer_provisional"
+    && cluster.reviewerCount === 1
+    && Boolean(String(cluster.reviewArtifact ?? "").trim())
+    && /^[0-9a-f]{64}$/i.test(String(cluster.reviewArtifactSha256 ?? ""));
+  if (!runId || !model || !promptVersion) return false;
+  if (!humanReviewedCluster && (!clusterModel || !clusterPromptVersion)) return false;
   if (!REAL_SOURCE.test(source)) return false;
-  if (semantic.semanticAi !== true || cluster.semanticAi !== true) return false;
+  if (semantic.semanticAi !== true || (cluster.semanticAi !== true && !humanReviewedCluster)) return false;
   if (semantic.status !== "succeeded" || cluster.status !== "succeeded" || semantic.fallbackReason) return false;
   if (String(semantic.runId ?? runId).trim() !== runId || String(cluster.runId ?? runId).trim() !== runId) return false;
-  if (!validReceipt(cluster.invocation, clusterModel, clusterPromptVersion)) return false;
+  if (!humanReviewedCluster && !validReceipt(cluster.invocation, clusterModel, clusterPromptVersion)) return false;
   if (!Array.isArray(semantic.invocations) || !semantic.invocations.length) return false;
   if (!semantic.invocations.every((receipt) => validReceipt(receipt, model, promptVersion))) return false;
   const profiles = Array.isArray(bundle.semanticProfiles) ? bundle.semanticProfiles : [];

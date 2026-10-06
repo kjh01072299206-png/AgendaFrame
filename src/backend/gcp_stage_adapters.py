@@ -14,11 +14,12 @@ sink, and snapshot bindings supplied through the production factory.
 from __future__ import annotations
 
 import hashlib
+import html
 import json
 import math
 import re
 from dataclasses import dataclass, replace
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Callable, Mapping, Protocol, Sequence
 from urllib.parse import urlsplit
 
@@ -269,6 +270,8 @@ class StageDependencies:
     immutable_writer: ImmutableObjectWriter
     pointer_store: ActivePointerStore
     event_synthesizer: EventSynthesizer | None = None
+    collection_adapter: CollectionAdapter | None = None
+    persistence_adapter: PersistenceAdapter | None = None
 
 
 def _metadata(article: ArticleDocument, *, private_object_ref: str) -> dict[str, Any]:
@@ -507,6 +510,265 @@ class MetadataPersistenceAdapter(PersistenceAdapter):
         return result
 
 
+def _archive_timestamp(value: object) -> datetime:
+    if isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, str):
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    else:
+        raise StageAdapterError("archived article timestamp is invalid")
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=timezone.utc)
+
+
+class ArchivedReplayVault(PrivateArticleVault):
+    """Load authorized archived bodies on demand and verify their stored hash."""
+
+    def __init__(self, storage_client: Any, *, bucket_name: str) -> None:
+        self.bucket = storage_client.bucket(bucket_name)
+        self.bucket_name = bucket_name
+        self.run_id: str | None = None
+        self._metadata: dict[str, Mapping[str, Any]] = {}
+        self._cache: dict[str, ArticleDocument] = {}
+
+    def put(self, run_id: str, article: ArticleDocument) -> str:
+        raise StageAdapterError("archived replay never writes or copies article bodies")
+
+    def validate_reference(self, reference: str) -> str:
+        parsed = urlsplit(reference)
+        object_name = parsed.path.lstrip("/")
+        if (
+            parsed.scheme != "gs"
+            or parsed.netloc != self.bucket_name
+            or not object_name.startswith("bodies/")
+            or ".." in object_name.split("/")
+        ):
+            raise StageAdapterError(
+                "archived private body reference is outside the approved bucket"
+            )
+        return object_name
+
+    def register(
+        self,
+        run_id: str,
+        rows: Sequence[Mapping[str, Any]],
+        references: Mapping[str, str],
+    ) -> None:
+        if not run_id.strip() or len(rows) != len(references):
+            raise StageAdapterError("archived replay metadata and body references do not match")
+        metadata: dict[str, Mapping[str, Any]] = {}
+        for row in rows:
+            article_id = str(row.get("articleId", "")).strip()
+            if not article_id or article_id in metadata or article_id not in references:
+                raise StageAdapterError("archived replay article identity is invalid")
+            reference = references[article_id]
+            if not isinstance(reference, str):
+                raise StageAdapterError("archived replay body reference is invalid")
+            self.validate_reference(reference)
+            metadata[article_id] = {**dict(row), "privateBodyObject": reference}
+        if set(metadata) != {str(key) for key in references}:
+            raise StageAdapterError("archived replay references include unknown article IDs")
+        self.run_id = run_id
+        self._metadata = metadata
+        self._cache = {}
+
+    def get(self, run_id: str, article_id: str) -> ArticleDocument:
+        if run_id != self.run_id or article_id not in self._metadata:
+            raise StageAdapterError("archived article is not available in this replay run")
+        cached = self._cache.get(article_id)
+        if cached is not None:
+            return cached
+        row = self._metadata[article_id]
+        object_name = self.validate_reference(str(row.get("privateBodyObject", "")))
+        body = self.bucket.blob(object_name).download_as_text(encoding="utf-8")
+        expected_hash = str(row.get("bodyHash", ""))
+        actual_hash = hashlib.sha256(body.encode("utf-8")).hexdigest()
+        if not re.fullmatch(r"[a-f0-9]{64}", expected_hash) or actual_hash != expected_hash:
+            raise StageAdapterError(f"archived body hash verification failed: {article_id}")
+        article = ArticleDocument(
+            article_id=article_id,
+            source_id=str(row["sourceId"]),
+            canonical_url=str(row["canonicalUrl"]),
+            title=str(row["title"]),
+            published_at=_archive_timestamp(row["publishedAt"]),
+            collected_at=_archive_timestamp(row["collectedAt"]),
+            section=str(row["section"]) if row.get("section") is not None else None,
+            body_text=body,
+            text_scope="authorized_transient_body",
+            title_source=str(row.get("titleSource") or "archived_metadata"),
+        )
+        self._cache[article_id] = article
+        return article
+
+
+class ArchivedArticleReplayAdapter(CollectionAdapter, PersistenceAdapter):
+    """Replay one Seoul calendar day from retained metadata and private bodies."""
+
+    def __init__(
+        self,
+        *,
+        bigquery_client: Any,
+        query_config_factory: Callable[[str, int], Any],
+        vault: ArchivedReplayVault,
+        project_id: str,
+        dataset: str,
+        maximum_bytes_billed: int,
+        basis_date: str,
+        source_definitions: Sequence[SourceDefinition],
+        max_articles: int = 100,
+    ) -> None:
+        if not re.fullmatch(r"[a-z][a-z0-9-]{4,28}[a-z0-9]", project_id):
+            raise StageAdapterError("archived replay project ID is invalid")
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,1023}", dataset):
+            raise StageAdapterError("archived replay dataset ID is invalid")
+        if not source_definitions or max_articles < 1:
+            raise StageAdapterError(
+                "archived replay requires source definitions and a positive cap"
+            )
+        self.bigquery_client = bigquery_client
+        self.query_config_factory = query_config_factory
+        self.vault = vault
+        self.project_id = project_id
+        self.dataset = dataset
+        self.maximum_bytes_billed = maximum_bytes_billed
+        self.basis_date = basis_date
+        self.sources = {source.source_id: source for source in source_definitions}
+        self.max_articles = max_articles
+
+    def collect(self, request, *, idempotency_key: str) -> Mapping[str, Any]:
+        if request.basis_date != self.basis_date:
+            raise StageAdapterError("archived replay date does not match the pipeline request")
+        query = f"""
+            SELECT article_id, source_id, canonical_url, title, published_at,
+                   collected_at, section, body_hash, body_object, text_scope
+            FROM `{self.project_id}.{self.dataset}.articles`
+            WHERE published_at >= TIMESTAMP(DATETIME(@basis_date, TIME '00:00:00'), 'Asia/Seoul')
+              AND published_at < TIMESTAMP(DATETIME(DATE_ADD(@basis_date, INTERVAL 1 DAY), TIME '00:00:00'), 'Asia/Seoul')
+              AND collected_at >= TIMESTAMP(DATETIME(@basis_date, TIME '00:00:00'), 'Asia/Seoul')
+              AND collected_at < TIMESTAMP(DATETIME(DATE_ADD(@basis_date, INTERVAL 1 DAY), TIME '00:00:00'), 'Asia/Seoul')
+              AND body_object IS NOT NULL
+              AND text_scope = 'authorized_transient_body'
+        """
+        config = self.query_config_factory(self.basis_date, self.maximum_bytes_billed)
+        try:
+            raw_rows = [
+                dict(row.items())
+                for row in self.bigquery_client.query(query, job_config=config).result()
+            ]
+        except Exception as error:
+            raise StageAdapterError("archived article metadata query failed") from error
+
+        latest_by_url: dict[tuple[str, str], dict[str, Any]] = {}
+        for row in raw_rows:
+            source_id = str(row.get("source_id", "")).strip()
+            source = self.sources.get(source_id)
+            article_id = str(row.get("article_id", "")).strip()
+            try:
+                canonical = canonicalize_url(str(row.get("canonical_url", "")))
+            except ValueError as error:
+                raise StageAdapterError("archived article URL is invalid") from error
+            host = urlsplit(canonical).hostname or ""
+            if source is None or not is_domain_allowed(host, source.domains):
+                raise StageAdapterError("archived article does not match the source policy")
+            if not article_id or row.get("text_scope") != "authorized_transient_body":
+                raise StageAdapterError("archived article identity or body scope is invalid")
+            if (
+                not str(row.get("body_object", "")).strip()
+                or not str(row.get("body_hash", "")).strip()
+            ):
+                raise StageAdapterError("archived article is missing its private body reference")
+            reference = str(row["body_object"])
+            self.vault.validate_reference(reference)
+            key = (source_id, canonical)
+            previous = latest_by_url.get(key)
+            if previous is None or _archive_timestamp(row["collected_at"]) > _archive_timestamp(
+                previous["collected_at"]
+            ):
+                latest_by_url[key] = {**row, "canonical_url": canonical}
+
+        if not latest_by_url:
+            raise StageAdapterError(
+                "no authorized archived articles were found for the replay date"
+            )
+        if len(latest_by_url) > self.max_articles:
+            raise StageAdapterError(
+                f"archived replay exceeds the configured {self.max_articles}-article cap"
+            )
+
+        selected = sorted(
+            latest_by_url.values(),
+            key=lambda row: (
+                _archive_timestamp(row["published_at"]),
+                str(row["source_id"]),
+                str(row["article_id"]),
+            ),
+        )
+        metadata: list[dict[str, Any]] = []
+        references: dict[str, str] = {}
+        source_counts: dict[str, int] = {}
+        seen_ids: set[str] = set()
+        for row in selected:
+            article_id = str(row["article_id"])
+            if article_id in seen_ids:
+                raise StageAdapterError(
+                    "archived article IDs are not unique after URL deduplication"
+                )
+            seen_ids.add(article_id)
+            source_id = str(row["source_id"])
+            reference = str(row["body_object"])
+            title = " ".join(html.unescape(str(row["title"] or "")).split())
+            if not title:
+                raise StageAdapterError("archived article title is empty")
+            published_at = _archive_timestamp(row["published_at"])
+            collected_at = _archive_timestamp(row["collected_at"])
+            metadata.append(
+                {
+                    "articleId": article_id,
+                    "sourceId": source_id,
+                    "canonicalUrl": str(row["canonical_url"]),
+                    "title": title,
+                    "titleSource": "archived_metadata",
+                    "publishedAt": published_at.isoformat(),
+                    "collectedAt": collected_at.isoformat(),
+                    "section": row.get("section"),
+                    "bodyHash": str(row["body_hash"]),
+                    "privateBodyObject": reference,
+                    "textScope": "authorized_transient_body",
+                }
+            )
+            references[article_id] = reference
+            source_counts[source_id] = source_counts.get(source_id, 0) + 1
+
+        result = {
+            "articleCount": len(metadata),
+            "articles": metadata,
+            "sourceCount": len(source_counts),
+            "sourceIds": sorted(source_counts),
+            "sourceArticleCounts": source_counts,
+            "sourceErrorCounts": {},
+            "privateBodyObjects": references,
+            "idempotencyKey": idempotency_key,
+        }
+        assert_body_safe(result, context="archived replay collection stage")
+        return result
+
+    def persist(self, request, collected, *, idempotency_key: str) -> Mapping[str, Any]:
+        rows = collected.get("articles")
+        references = collected.get("privateBodyObjects")
+        if not isinstance(rows, Sequence) or isinstance(rows, (str, bytes, bytearray)):
+            raise StageAdapterError("archived replay has no article metadata")
+        if not isinstance(references, Mapping):
+            raise StageAdapterError("archived replay has no private body references")
+        self.vault.register(request.run_id, rows, references)
+        result = {
+            "persistedArticleCount": len(rows),
+            "articles": [dict(row) for row in rows],
+            "sinkResult": {"source": "archived_bigquery_replay", "metadataRowsReused": len(rows)},
+            "idempotencyKey": idempotency_key,
+        }
+        assert_body_safe(result, context="archived replay persist stage")
+        return result
+
+
 def _metadata_articles(rows: Sequence[Mapping[str, Any]]) -> tuple[MetadataArticle, ...]:
     articles: list[MetadataArticle] = []
     for row in rows:
@@ -647,7 +909,9 @@ class MetadataClusterRankAdapter(ClusterRankAdapter):
             enforce_candidate_membership=False,
         )
         clustering_payload = clustering.as_dict()
-        clustering_state = getattr(clustering, "analysis_state", clustering_payload.get("analysis_state"))
+        clustering_state = getattr(
+            clustering, "analysis_state", clustering_payload.get("analysis_state")
+        )
         if clustering_state != "succeeded":
             raise StageAdapterError(
                 "global Vertex clustering is not publishable: "
@@ -670,7 +934,10 @@ class MetadataClusterRankAdapter(ClusterRankAdapter):
             and str(cluster.get("coherence", "")).lower() in {"high", "medium"}
         ]
         ranked = sorted(
-            (_rank_cluster(cluster, metadata_by_id, configured_source_count=12) for cluster in usable_clusters),
+            (
+                _rank_cluster(cluster, metadata_by_id, configured_source_count=12)
+                for cluster in usable_clusters
+            ),
             key=lambda cluster: (
                 -float(cluster.get("agendaScore", 0.0)),
                 -len(_same_event_ids(cluster)),
@@ -1102,7 +1369,7 @@ class FrameSemanticAdapter(SemanticAdapter):
             if not isinstance(profile, Mapping):
                 raise StageAdapterError(
                     f"semantic analyzer returned no public profile: {article_id}"
-            )
+                )
             profile = dict(profile)
             evidence = _public_evidence(profile, article_id=article.article_id)
             if evidence is None:
@@ -1210,10 +1477,10 @@ class FrameSemanticAdapter(SemanticAdapter):
             ]
             clustering_meta = ranked.get("clustering")
             clustering_engine = (
-                clustering_meta.get("engine")
-                if isinstance(clustering_meta, Mapping)
-                else {}
+                clustering_meta.get("engine") if isinstance(clustering_meta, Mapping) else {}
             )
+            cluster_analysis_source = str(clustering_engine.get("analysis_source") or "model")
+            model_cluster = cluster_analysis_source == "model"
             semantic_engine = {
                 "label": "ai_semantic",
                 "engineLabel": "ai_semantic",
@@ -1235,22 +1502,41 @@ class FrameSemanticAdapter(SemanticAdapter):
                 "requiresHumanReview": True,
             }
             cluster_engine = {
-                "label": "ai_semantic",
-                "engineLabel": "ai_semantic",
-                "semanticAi": True,
+                "label": "ai_semantic" if model_cluster else "human_review",
+                "engineLabel": "ai_semantic" if model_cluster else "human_review",
+                "semanticAi": bool(clustering_engine.get("semantic_ai", model_cluster)),
                 "status": "succeeded",
-                "model": clustering_engine.get("model")
-                or getattr(request, "model_revision", "vertex-configured"),
-                "promptVersion": clustering_engine.get("prompt_version")
-                or getattr(request, "prompt_version", "runtime-configured"),
+                "model": (
+                    clustering_engine.get("model")
+                    or getattr(request, "model_revision", "vertex-configured")
+                    if model_cluster
+                    else None
+                ),
+                "promptVersion": (
+                    clustering_engine.get("prompt_version")
+                    or getattr(request, "prompt_version", "runtime-configured")
+                    if model_cluster
+                    else None
+                ),
                 "schemaVersion": clustering_engine.get("schema_version")
                 or "agendaframe.initial-five-cluster.v2",
-                "source": "gcp:vertex-initial-five-clusterer",
+                "source": (
+                    "gcp:vertex-initial-five-clusterer"
+                    if model_cluster
+                    else "human-review:title-source-published-at"
+                ),
                 "runId": request.run_id,
-                "invocation": clustering_payload.get("invocation")
-                if isinstance(clustering_payload, Mapping)
-                else None,
-                "decision": "analyze",
+                "invocation": (
+                    clustering_payload.get("invocation")
+                    if model_cluster and isinstance(clustering_payload, Mapping)
+                    else None
+                ),
+                "analysisSource": cluster_analysis_source,
+                "reviewStatus": clustering_engine.get("review_status"),
+                "reviewArtifact": clustering_engine.get("review_artifact"),
+                "reviewArtifactSha256": clustering_engine.get("review_artifact_sha256"),
+                "reviewerCount": clustering_engine.get("reviewer_count"),
+                "decision": "analyze" if model_cluster else "human_reviewed",
                 "coherence": issue.get("coherence"),
                 "requiresHumanReview": True,
             }
@@ -1363,7 +1649,13 @@ class FrameSemanticAdapter(SemanticAdapter):
             for profile_entry in issue_bundle.get("semanticProfiles", []):
                 profile_data = profile_entry.get("profile") or {}
                 evidence_list = profile_entry.get("evidence") or []
-                for dim in ("problem_definition", "causal_attribution", "responsibility_attribution", "evaluation", "treatment_recommendation"):
+                for dim in (
+                    "problem_definition",
+                    "causal_attribution",
+                    "responsibility_attribution",
+                    "evaluation",
+                    "treatment_recommendation",
+                ):
                     if profile_data.get(dim) is not None:
                         total_claims += 1
                         has_ev = any(
@@ -1445,12 +1737,13 @@ def build_stage_adapters(
     """Construct all orchestration stages from explicit dependencies."""
 
     return PipelineAdapters(
-        collection=PolicyCollectionAdapter(
+        collection=dependencies.collection_adapter
+        or PolicyCollectionAdapter(
             dependencies,
             clock=clock or datetime.now,
             max_articles_per_run=max_articles_per_run,
         ),
-        persistence=MetadataPersistenceAdapter(dependencies),
+        persistence=dependencies.persistence_adapter or MetadataPersistenceAdapter(dependencies),
         cluster_rank=MetadataClusterRankAdapter(dependencies),
         semantic=FrameSemanticAdapter(dependencies),
         snapshots=SnapshotPublishAdapter(

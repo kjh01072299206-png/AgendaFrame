@@ -145,6 +145,13 @@ class EvaluationContractTests(unittest.TestCase):
         prompt_root = EVALS / "prompts"
         manifest = yaml.safe_load((prompt_root / "manifest.yaml").read_text(encoding="utf-8"))
         self.assertGreater(len(manifest["prompts"]), 0)
+        clustering_prompts = [
+            prompt for prompt in manifest["prompts"] if prompt["id"] == "initial-five-clustering"
+        ]
+        self.assertEqual(
+            [prompt["version"] for prompt in clustering_prompts if prompt.get("current")],
+            ["2.3.0"],
+        )
 
         for prompt in manifest["prompts"]:
             with self.subTest(prompt=prompt["id"]):

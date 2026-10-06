@@ -10,6 +10,7 @@ the private vault or a single Vertex request.
 from __future__ import annotations
 
 import hashlib
+import html
 import json
 import os
 import re
@@ -24,17 +25,20 @@ from typing import Any, Mapping, Sequence
 
 from ai.event_synthesis import VertexEventSynthesizer
 from ai.framing import VertexFrameAnalyzer
-from ai.issue_clustering import InitialFiveClusterer
+from ai.issue_clustering import HumanReviewedInitialFiveClusterer, InitialFiveClusterer
 from backend.config import RuntimeConfig
 from backend.gcp_job_entrypoint import GcpRuntimeConfig, RuntimeAdapterUnavailable
 from backend.gcp_production_adapters import GoogleClientBundle
 from backend.gcp_source_policy import GcpDiscoveryPolicy
 from backend.gcp_stage_adapters import (
+    ArchivedArticleReplayAdapter,
+    ArchivedReplayVault,
     ConservativeCandidateGroupBuilder,
     GcpAnalysisStoreMetadataSink,
     ImmutableObjectWriter,
     PrivateArticleVault,
     StageDependencies,
+    load_source_definitions,
 )
 from backend.gcp_store import GcpAnalysisStore
 from crawler.models import ArticleDocument, canonicalize_url, is_domain_allowed
@@ -48,12 +52,13 @@ MAX_ARTICLES_PER_SOURCE = 120
 MAX_REQUESTS_PER_SOURCE = 30
 MAX_ENDPOINT_BYTES = 2_000_000
 MAX_PUBLIC_TITLE_CHARACTERS = 120
+MAX_ARCHIVED_REPLAY_ARTICLES = 100
 
 
 def _clean_public_title(value: str) -> str | None:
     """Accept a headline-shaped title; reject descriptions/body carriers."""
 
-    title = " ".join(str(value or "").split()).strip()
+    title = " ".join(html.unescape(str(value or "")).split()).strip()
     if not title or len(title) > MAX_PUBLIC_TITLE_CHARACTERS:
         return None
     sentence_count = len([part for part in re.split(r"(?<=[.!?])\s+", title) if part])
@@ -130,17 +135,50 @@ class _ArticleHtmlParser(HTMLParser):
         values = {str(key).lower(): value or "" for key, value in attrs}
         lowered = tag.lower()
         identifier = " ".join((values.get("id", "").lower(), values.get("class", "").lower()))
-        specific = any(marker in identifier for marker in (
-            "cont_newstext", "article-body", "article_body", "view_body", "news-body", "news_body",
-            "art_body", "articletxt", "article_txt", "article-text", "newsct_article",
-        )) or "viewcontent" in identifier.split() or values.get("itemprop", "").lower() == "articlebody"
+        specific = (
+            any(
+                marker in identifier
+                for marker in (
+                    "cont_newstext",
+                    "article-body",
+                    "article_body",
+                    "view_body",
+                    "news-body",
+                    "news_body",
+                    "art_body",
+                    "articletxt",
+                    "article_txt",
+                    "article-text",
+                    "newsct_article",
+                )
+            )
+            or "viewcontent" in identifier.split()
+            or values.get("itemprop", "").lower() == "articlebody"
+        )
         excluded = bool(self._specific_stack and self._specific_stack[-1][2]) or any(
             token.startswith(("ad_wrap", "mad_wrap", "ad_banner"))
             or token in {"advertisement", "advertising", "article-summary-box", "articlecopyright"}
             for token in identifier.split()
         )
-        active = not excluded and (specific or bool(self._specific_stack and self._specific_stack[-1][1]))
-        if lowered not in {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}:
+        active = not excluded and (
+            specific or bool(self._specific_stack and self._specific_stack[-1][1])
+        )
+        if lowered not in {
+            "area",
+            "base",
+            "br",
+            "col",
+            "embed",
+            "hr",
+            "img",
+            "input",
+            "link",
+            "meta",
+            "param",
+            "source",
+            "track",
+            "wbr",
+        }:
             self._specific_stack.append((lowered, active, excluded))
         if active and lowered in {"p", "blockquote", "br"}:
             self.specific_body_parts.append("\n\n")
@@ -376,7 +414,9 @@ class NewsArticleParser:
             return ()
         text = response.body.decode("utf-8", errors="replace")
         is_feed = self._looks_xml(text, response.content_type)
-        candidates = self._rss_candidates(text) if is_feed else self._html_candidates(text, endpoint_url)
+        candidates = (
+            self._rss_candidates(text) if is_feed else self._html_candidates(text, endpoint_url)
+        )
         rows: list[ArticleDocument] = []
         seen: set[str] = set()
         requests_used = 0
@@ -393,7 +433,9 @@ class NewsArticleParser:
             if not is_domain_allowed(hostname, tuple(source.domains)) or canonical in seen:
                 continue
             path_patterns = tuple(getattr(source, "article_path_patterns", ()))
-            if path_patterns and not any(re.search(pattern, canonical) for pattern in path_patterns):
+            if path_patterns and not any(
+                re.search(pattern, canonical) for pattern in path_patterns
+            ):
                 continue
             if requests_used >= max_requests:
                 break
@@ -513,7 +555,9 @@ class NewsArticleParser:
         # Prefer article-specific text over <main>, which includes unrelated
         # recommendations and newsletter/navigation content on news sites.
         specific_body = "\n\n".join(
-            " ".join(part.split()) for part in " ".join(parser.specific_body_parts).splitlines() if part.strip()
+            " ".join(part.split())
+            for part in " ".join(parser.specific_body_parts).splitlines()
+            if part.strip()
         )
         body = (
             _jsonld_article_body(parser, title)
@@ -685,6 +729,20 @@ def build_stage_dependencies(
 
     policy_path = os.environ.get("AGENDAFRAME_DISCOVERY_POLICY", "site/data/discovery-sources.json")
     policy = GcpDiscoveryPolicy.from_path(policy_path)
+    replay_date = os.environ.get("AGENDAFRAME_REPLAY_BASIS_DATE", "").strip()
+    reviewed_cluster_date = os.environ.get("AGENDAFRAME_REVIEWED_CLUSTER_DATE", "").strip()
+    if replay_date and replay_date != runtime.request.basis_date:
+        raise RuntimeAdapterUnavailable(
+            "AGENDAFRAME_REPLAY_BASIS_DATE must match the pipeline basis date"
+        )
+    if reviewed_cluster_date and (
+        reviewed_cluster_date != "2026-10-05"
+        or reviewed_cluster_date != runtime.request.basis_date
+        or reviewed_cluster_date != replay_date
+    ):
+        raise RuntimeAdapterUnavailable(
+            "reviewed clustering is restricted to the matching 2026-10-05 archive replay"
+        )
     # A scheduled run has a bounded per-source candidate budget. Keep network
     # stalls from consuming the entire Cloud Run task timeout before Vertex
     # analysis starts; individual sources are already isolated by the adapter.
@@ -694,21 +752,50 @@ def build_stage_dependencies(
         collection_start=policy.collection_start,
         collection_end=policy.collection_end,
     )
-    vault = GcsRunArticleVault(
-        clients.storage,
-        bucket_name=config.bucket,
-        delete_after=policy.collection_end,
-    )
+    replay_adapter = None
+    if replay_date:
+        from google.cloud import bigquery
+
+        vault = ArchivedReplayVault(clients.storage, bucket_name=config.bucket)
+        replay_adapter = ArchivedArticleReplayAdapter(
+            bigquery_client=clients.bigquery,
+            query_config_factory=lambda basis_date, maximum_bytes_billed: bigquery.QueryJobConfig(
+                query_parameters=[
+                    bigquery.ScalarQueryParameter(
+                        "basis_date", "DATE", date.fromisoformat(basis_date)
+                    )
+                ],
+                maximum_bytes_billed=maximum_bytes_billed,
+            ),
+            vault=vault,
+            project_id=config.project_id,
+            dataset=config.dataset,
+            maximum_bytes_billed=config.maximum_bytes_billed,
+            basis_date=replay_date,
+            source_definitions=load_source_definitions(policy_path),
+            max_articles=MAX_ARCHIVED_REPLAY_ARTICLES,
+        )
+        clustering_article_cap = MAX_ARCHIVED_REPLAY_ARTICLES
+    else:
+        vault = GcsRunArticleVault(
+            clients.storage,
+            bucket_name=config.bucket,
+            delete_after=policy.collection_end,
+        )
+        clustering_article_cap = config.vertex.max_articles_per_run
     store = GcpAnalysisStore(
         config, bigquery_client=clients.bigquery, storage_client=clients.storage
     )
     snapshot_writer = GcsImmutableSnapshotWriter(clients.storage, bucket_name=config.bucket)
     pointer_store = GcsActivePointerStore(clients.storage, bucket_name=config.bucket)
-    clusterer = InitialFiveClusterer(
-        config,
-        client_factory=lambda _config: clients.vertex,
-        max_articles=config.vertex.max_articles_per_run,
-    )
+    if reviewed_cluster_date:
+        clusterer = HumanReviewedInitialFiveClusterer(basis_date=reviewed_cluster_date)
+    else:
+        clusterer = InitialFiveClusterer(
+            config,
+            client_factory=lambda _config: clients.vertex,
+            max_articles=clustering_article_cap,
+        )
     frame_analyzer = VertexFrameAnalyzer(config, client_factory=lambda _config: clients.vertex)
     event_synthesizer = VertexEventSynthesizer(
         config, client_factory=lambda _config: clients.vertex
@@ -725,6 +812,8 @@ def build_stage_dependencies(
         immutable_writer=snapshot_writer,
         pointer_store=pointer_store,
         event_synthesizer=event_synthesizer,
+        collection_adapter=replay_adapter,
+        persistence_adapter=replay_adapter,
     )
 
 

@@ -115,6 +115,45 @@ test("verified direct event synthesis remains visible when clustering is rules-l
   assert.equal(attached.analysisStatus.semantic.semanticAi, true);
 });
 
+test("human-reviewed event clustering keeps verified article framing distinct from AI clustering", async () => {
+  const bundle = JSON.parse(
+    await readFile(path.join(siteRoot, "public/initial-five/issues/live-2026-08-15-top-1.json"), "utf8"),
+  );
+  const runId = bundle.lineage?.runId;
+  const semanticReceipts = [];
+  for (const entry of bundle.semanticProfiles ?? []) {
+    const receipt = entry.profile?.lineage?.invocation;
+    if (!receipt) continue;
+    entry.engine.invocation = receipt;
+    semanticReceipts.push(receipt);
+  }
+  bundle.analysisStatus.semantic.runId = runId;
+  bundle.analysisStatus.semantic.invocations = semanticReceipts;
+  const reviewedCluster = {
+    ...bundle.analysisStatus.cluster,
+    label: "human_review",
+    engineLabel: "human_review",
+    semanticAi: false,
+    status: "succeeded",
+    model: null,
+    promptVersion: null,
+    source: "human-review:title-source-published-at",
+    runId,
+    invocation: null,
+    analysisSource: "human_review",
+    reviewStatus: "single_reviewer_provisional",
+    reviewArtifact: "initial-five-2026-10-05-single-reviewer-v1",
+    reviewArtifactSha256: "a".repeat(64),
+    reviewerCount: 1,
+  };
+  bundle.analysisStatus.cluster = reviewedCluster;
+  bundle.clusterAi = reviewedCluster;
+
+  assert.equal(isVerifiedSemanticBundle(bundle), true);
+  reviewedCluster.reviewArtifactSha256 = "invalid";
+  assert.equal(isVerifiedSemanticBundle(bundle), false);
+});
+
 test("published 2026-08-15 synthesis is Vertex-backed, evidence-bound, and body-free", async () => {
   const manifest = JSON.parse(
     await readFile(path.join(siteRoot, "public/initial-five/manifest.json"), "utf8"),
