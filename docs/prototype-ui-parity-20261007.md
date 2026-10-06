@@ -51,4 +51,10 @@ Python full 오프라인 관문: 단위·계약 264 통과/1 생략, 통합·E2E
 현재 워크트리의 `src`를 `PYTHONPATH`로 지정했다.
 
 사이트 typecheck, lint(기존 경고 4개), 계약 47개, 분석 57개, active snapshot 3개,
-Next production build를 실행했다. 렌더 관문 및 배포 결과는 공개 확인 이후 기록한다.
+Next production build를 실행했다.
+
+렌더 검사기는 접힌 disclosure의 숨겨진 내용과 `display: contents`의 무박스
+부모를 폭 0의 일반 부모로 오인했다. 실제 보이는 요소를 실제 부모 박스와 비교하도록
+고쳤다. `--spill-selftest`는 두 정상 사례에서 오탐이 없고 100px 부모의 200px
+자식은 여전히 실패하는지 검사하며, CI 렌더 관문에도 포함했다.
+렌더 관문 및 배포 결과는 공개 확인 이후 기록한다.

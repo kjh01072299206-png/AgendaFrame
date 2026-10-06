@@ -229,7 +229,12 @@ function collect({ w, isDesktop, route = "", firstScreenRequirements = {} }) {
   if (!document.querySelector("meta[name=viewport]")) push("HEAD-META", "meta viewport 없음");
 
   for (const el of root.querySelectorAll("*")) {
-    const p = el.parentElement;
+    // Closed disclosure content has no layout, and display:contents has no
+    // parent box. Compare visible elements with their actual containing box;
+    // neither a zero-width disclosure nor a contents wrapper can overflow.
+    if (!el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) continue;
+    let p = el.parentElement;
+    while (p && getComputedStyle(p).display === "contents") p = p.parentElement;
     if (!p || el.closest("svg")) continue;
     if (getComputedStyle(el).overflowX === "auto") continue;
     if (getComputedStyle(p).overflowX === "auto") continue;
@@ -350,6 +355,23 @@ const add = (rule, where, at) => findings.push({ rule, sev: RULES[rule]?.sev || 
 const chromium = await loadChromium();
 const browser = await chromium.launch({ executablePath: chromePath() });
 const t0 = Date.now();
+
+// Deterministic regression: hidden disclosure content and display:contents
+// wrappers must not create false overflow reports; real overflow must still fail.
+if (flag("spill-selftest")) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await page.setContent(`<html lang="ko"><head><title>Overflow regression</title><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+    <main class="afs-shell">
+      <details><summary>Closed</summary><a style="display:block;width:500px;height:24px">Hidden content</a></details>
+      <nav style="width:100px;overflow-x:auto"><div style="display:contents"><a style="display:block;width:200px;height:24px">Scrollable content</a></div></nav>
+      <div style="width:100px"><div class="real-spill-child" style="width:200px;height:24px">Real overflow</div></div>
+    </main></body></html>`);
+  const spills = (await page.evaluate(collect, { w: 390, isDesktop: false, route: "/regression" }))["SPILL"] ?? [];
+  await browser.close();
+  const passed = spills.length === 1 && spills[0].includes("real-spill-child");
+  console.log(`Overflow regression: ${passed ? "PASS" : "FAIL"} (${JSON.stringify(spills)})`);
+  process.exit(passed ? 0 : 1);
+}
 
 async function discoverIssueIds(page) {
   await page.goto(BASE + "/", { waitUntil: "load" });
