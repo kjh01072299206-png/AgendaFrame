@@ -89,6 +89,9 @@ jobs:
       - name: Comparison analysis regression tests
         run: npm run test:analysis
 
+      - name: Active snapshot override regression test
+        run: npm run test:active-snapshot
+
       - name: Build (Next)
         run: npx next build
 
@@ -169,12 +172,14 @@ jobs:
             exit 1
           fi
           # -L 로 리다이렉트를 따라간다. /issues 는 홈으로 307 을 주므로 최종 응답을 봐야 한다.
-          for path in "/" "/issues" "/issues/live-2026-08-15-top-1/outlets" "/issues/live-2026-08-15-top-1/framing" "/tools/method"; do
+          manifest=$(curl -fsSL --max-time 20 "$LIVE/api/initial-five")
+          issue_id=$(printf '%s' "$manifest" | jq -er '.issues[0].issueId | strings | select(test("^[a-z0-9][a-z0-9-]*$"))')
+          for path in "/" "/issues" "/issues/${issue_id}/outlets" "/issues/${issue_id}/framing" "/tools/method"; do
             code=$(curl -sL -o /dev/null -w "%{http_code}" "$LIVE$path")
             echo "$code $path"
             [ "$code" = "200" ] || { echo "실배포 확인 실패: $path"; exit 1; }
           done
-          bundle=$(curl -fsSL --max-time 20 "$LIVE/api/initial-five/issues/live-2026-08-15-top-1")
+          bundle=$(curl -fsSL --max-time 20 "$LIVE/api/initial-five/issues/${issue_id}")
           if ! printf '%s' "$bundle" | jq -e '
             .comparison.data.synthesis.promptVersion == "event-synthesis-v2.2.0"
             and .comparison.data.synthesis.schemaVersion == "agendaframe.event-synthesis.v2.2"
