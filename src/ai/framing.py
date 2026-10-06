@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import random
 import re
 import time
 import unicodedata
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from typing import Any, Protocol
 
 from backend.analysis_state import AnalysisState, analysis_idempotency_fingerprint
@@ -82,7 +85,14 @@ STRUCTURED_CONTEXT_CODES = {
     "genre": {"straight_news", "editorial", "analysis", "interview", "unknown"},
     "scope": {"episodic", "thematic", "mixed", "unknown"},
     "context_depth": {"shallow", "moderate", "deep", "unknown"},
-    "generic_frame": {"conflict", "human_interest", "morality", "economic_consequences", "responsibility", "unknown"},
+    "generic_frame": {
+        "conflict",
+        "human_interest",
+        "morality",
+        "economic_consequences",
+        "responsibility",
+        "unknown",
+    },
     "policy_frame": {
         "economic",
         "capacity",
@@ -126,7 +136,8 @@ SOURCE_ROLES = {
 }
 MAX_PUBLIC_PARAPHRASE_CHARACTERS = 900
 MAX_VERBATIM_BODY_MATCH_CHARACTERS = 24
-VERTEX_RETRY_BACKOFF_SECONDS = (2.0, 4.0)
+VERTEX_RETRY_BACKOFF_SECONDS = (5.0, 15.0)
+VERTEX_RETRY_AFTER_MAX_SECONDS = 60.0
 MAX_VERTEX_ATTEMPTS = 3
 
 
@@ -278,13 +289,15 @@ def validate_frame_result(article: ArticleDocument, result: FrameResult) -> None
         if result.invocation_receipt.get("provider") != "vertex_ai":
             raise ValueError("Model invocation receipt provider is invalid.")
         for key in ("model", "prompt_version", "completed_at"):
-            if not isinstance(result.invocation_receipt.get(key), str) or not str(
-                result.invocation_receipt[key]
-            ).strip():
+            if (
+                not isinstance(result.invocation_receipt.get(key), str)
+                or not str(result.invocation_receipt[key]).strip()
+            ):
                 raise ValueError(f"Model invocation receipt field is invalid: {key}.")
-        if not isinstance(result.invocation_receipt.get("attempt"), int) or result.invocation_receipt[
-            "attempt"
-        ] < 1:
+        if (
+            not isinstance(result.invocation_receipt.get("attempt"), int)
+            or result.invocation_receipt["attempt"] < 1
+        ):
             raise ValueError("Model invocation receipt attempt is invalid.")
         for key in ("request_sha256", "response_sha256"):
             value = result.invocation_receipt.get(key)
@@ -386,12 +399,19 @@ def _validate_structured_context(article: ArticleDocument, result: FrameResult) 
     single("scope", "scope")
     single("context_depth", "context_depth")
 
-    for field, code_key in (("generic_frames", "generic_frame"), ("policy_frames", "policy_frame"), ("framing_devices", "framing_device")):
+    for field, code_key in (
+        ("generic_frames", "generic_frame"),
+        ("policy_frames", "policy_frame"),
+        ("framing_devices", "framing_device"),
+    ):
         values = context.get(field, [])
         if not isinstance(values, list):
             raise ValueError(f"Structured {field} must be an array.")
         for item in values:
-            if not isinstance(item, dict) or item.get("code") not in STRUCTURED_CONTEXT_CODES[code_key]:
+            if (
+                not isinstance(item, dict)
+                or item.get("code") not in STRUCTURED_CONTEXT_CODES[code_key]
+            ):
                 raise ValueError(f"Structured {field} contains an invalid code.")
             evidence = item.get("evidence", [])
             if item.get("code") == "unknown":
@@ -399,7 +419,9 @@ def _validate_structured_context(article: ArticleDocument, result: FrameResult) 
                     raise ValueError(f"Unknown structured {field} cannot contain evidence.")
             else:
                 _validate_evidence_spans(article, result, evidence)
-            if field == "framing_devices" and not isinstance(item.get("appears_in_lead", False), bool):
+            if field == "framing_devices" and not isinstance(
+                item.get("appears_in_lead", False), bool
+            ):
                 raise ValueError("Structured framing devices require a boolean lead marker.")
 
 
@@ -535,7 +557,7 @@ class VertexFrameAnalyzer:
                 last_error = error
                 if "requires at least one supported or conflicting dimension" in str(error):
                     all_dimensions_unobserved = True
-                feedback = re.sub(r"\s+", " ", str(error)).strip()[:400]
+                feedback = _validation_retry_feedback(error)
                 prompt = (
                     f"{base_prompt}\n\n"
                     "이전 응답은 아래 검증 오류를 통과하지 못했습니다. 기사에 없는 내용을 "
@@ -670,17 +692,58 @@ def _is_retryable_vertex_error(error: Exception) -> bool:
 
 
 def _retry_delay_seconds(error: Exception, attempt: int) -> float:
-    retry_after = getattr(error, "retry_after", None)
-    if retry_after is None:
-        headers = getattr(error, "headers", None)
-        if isinstance(headers, dict):
-            retry_after = headers.get("retry-after") or headers.get("Retry-After")
-    try:
+    retry_after = None
+    for candidate in (error, getattr(error, "response", None), getattr(error, "_response", None)):
+        if candidate is None:
+            continue
+        retry_after = getattr(candidate, "retry_after", None)
         if retry_after is not None:
-            return min(max(float(retry_after), 0.0), 30.0)
-    except (TypeError, ValueError):
-        pass
-    return VERTEX_RETRY_BACKOFF_SECONDS[min(attempt, len(VERTEX_RETRY_BACKOFF_SECONDS) - 1)]
+            break
+        headers = getattr(candidate, "headers", None)
+        if isinstance(headers, Mapping):
+            retry_after = next(
+                (value for key, value in headers.items() if str(key).lower() == "retry-after"),
+                None,
+            )
+            if retry_after is not None:
+                break
+
+    if retry_after is not None:
+        try:
+            seconds = float(retry_after)
+        except (TypeError, ValueError):
+            try:
+                retry_at = parsedate_to_datetime(str(retry_after))
+                if retry_at.tzinfo is None:
+                    retry_at = retry_at.replace(tzinfo=UTC)
+                seconds = max(0.0, (retry_at - datetime.now(UTC)).total_seconds())
+            except (TypeError, ValueError, OverflowError):
+                seconds = -1.0
+        if seconds >= 0:
+            return min(seconds, VERTEX_RETRY_AFTER_MAX_SECONDS)
+
+    backoff = VERTEX_RETRY_BACKOFF_SECONDS[min(attempt, len(VERTEX_RETRY_BACKOFF_SECONDS) - 1)]
+    return random.uniform(backoff / 2, backoff)
+
+
+def _validation_retry_feedback(error: Exception) -> str:
+    """Turn a validation failure into concrete repair instructions for the retry."""
+
+    message = re.sub(r"\s+", " ", str(error)).strip()
+    normalized = message.lower()
+    if "fit inside one article sentence" in normalized:
+        guidance = (
+            " Select an exact excerpt wholly inside one source sentence; never join two sentences. "
+            "If one sentence cannot support the dimension, mark it explicit_not_stated."
+        )
+    elif "long contiguous passages" in normalized:
+        guidance = (
+            f" Rewrite the public paraphrase in independent Korean wording and do not reuse "
+            f"{MAX_VERBATIM_BODY_MATCH_CHARACTERS} consecutive normalized characters from the body."
+        )
+    else:
+        guidance = " Correct only the failed field and keep every cited excerpt exact."
+    return f"{message}{guidance}"[:600]
 
 
 def _failure_code(error: Exception | None) -> str:

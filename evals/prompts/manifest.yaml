@@ -23,7 +23,14 @@ prompts:
     output_schema: schemas/frame-output.schema.json
     taxonomy_version: frames-ko-v1.0.0
   - id: semantic-frame-analysis
+    version: 2.7.0
+    current: true
+    path: semantic-frame-analysis-v2.7.0.md
+    output_schema: schemas/semantic-frame-output-v2.7.0.schema.json
+    taxonomy_version: entman-article-frame-v2
+  - id: semantic-frame-analysis
     version: 2.3.0
+    current: false
     path: semantic-frame-analysis-v2.3.0.md
     output_schema: schemas/semantic-frame-output.schema.json
     taxonomy_version: entman-article-frame-v2
