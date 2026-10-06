@@ -1,6 +1,34 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { validateLiveActiveSnapshotEnvelope } from "../lib/active-snapshot";
+import { getActiveSnapshot, validateLiveActiveSnapshotEnvelope } from "../lib/active-snapshot";
+import { fileURLToPath } from "node:url";
+
+test("saved render fixtures need no network and cannot run on Vercel", async () => {
+  const names = ["AGENDAFRAME_DATA_MODE", "AGENDAFRAME_OFFLINE_SNAPSHOT_FILE", "VERCEL"];
+  const original = names.map(name => process.env[name]);
+  const originalFetch = globalThis.fetch;
+  try {
+    process.env.AGENDAFRAME_DATA_MODE = "offline_fixture";
+    process.env.AGENDAFRAME_OFFLINE_SNAPSHOT_FILE = fileURLToPath(new URL("./fixtures/editorial-oct5-snapshot.json", import.meta.url));
+    delete process.env.VERCEL;
+    globalThis.fetch = async () => { throw new Error("A render fixture must not fetch."); };
+    const active = await getActiveSnapshot();
+    assert.equal(active.manifest.basisDate, "2026-10-05");
+    assert.equal(active.manifest.issues.length, 5);
+    assert.ok(active.getIssueBundle(active.manifest.issues[0].issueId));
+    process.env.VERCEL = "1";
+    await assert.rejects(getActiveSnapshot(), /unavailable on Vercel/);
+    delete process.env.VERCEL;
+    delete process.env.AGENDAFRAME_OFFLINE_SNAPSHOT_FILE;
+    await assert.rejects(getActiveSnapshot(), /requires a saved snapshot file/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    names.forEach((name, index) => {
+      if (original[index] === undefined) delete process.env[name];
+      else process.env[name] = original[index];
+    });
+  }
+});
 
 const schemaVersion = "agenda.frame.active-snapshot.v1";
 const snapshotId = "a".repeat(32);

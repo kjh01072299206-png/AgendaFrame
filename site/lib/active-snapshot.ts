@@ -213,6 +213,20 @@ function demoSource(publicationStatus: "published" | "pending" = defaultDemoPubl
  */
 async function resolveActiveSnapshot(fetcher: typeof fetch = fetch): Promise<ActiveSnapshotSource> {
   const mode = process.env.AGENDAFRAME_DATA_MODE ?? "demo";
+  if (mode === "offline_fixture") {
+    if (process.env.VERCEL) throw new Error("Offline fixture mode is unavailable on Vercel.");
+    const filename = process.env.AGENDAFRAME_OFFLINE_SNAPSHOT_FILE;
+    if (!filename) throw new Error("Offline fixture mode requires a saved snapshot file.");
+    const { readFile } = await import("node:fs/promises");
+    const envelope = validateEnvelope(JSON.parse(await readFile(filename, "utf8")));
+    return {
+      mode: "live",
+      publicationStatus: "published",
+      snapshotId: envelope.snapshotId,
+      manifest: envelope.manifest,
+      getIssueBundle: (issueId) => withEventSynthesis(envelope.bundles[issueId] ?? null),
+    };
+  }
   if (mode !== "live") return demoSource();
   const url = process.env.AGENDAFRAME_ACTIVE_SNAPSHOT_URL?.trim();
   if (!url) throw new Error("AGENDAFRAME_DATA_MODE=live requires AGENDAFRAME_ACTIVE_SNAPSHOT_URL.");

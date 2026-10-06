@@ -92,6 +92,9 @@ jobs:
       - name: Active snapshot override regression test
         run: npm run test:active-snapshot
 
+      - name: October 5 original-body reading contract
+        run: npx tsx --test --test-isolation=none tests/editorial-review.test.ts
+
       - name: Build (Next)
         run: npx next build
 
@@ -103,6 +106,9 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Start production server
+        env:
+          AGENDAFRAME_DATA_MODE: offline_fixture
+          AGENDAFRAME_OFFLINE_SNAPSHOT_FILE: ${{ github.workspace }}/site/tests/fixtures/editorial-oct5-snapshot.json
         run: |
           npx next start -p 3000 > /tmp/next.log 2>&1 &
           for i in $(seq 1 40); do
