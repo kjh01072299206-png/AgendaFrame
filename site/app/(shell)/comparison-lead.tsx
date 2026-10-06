@@ -373,7 +373,7 @@ function ComparisonGroups({ bundle, issue, summary }: { bundle: IssueAnalysisBun
           </div>
         )}
         {summary.sourceGroups.length ? (
-          <details open className="afp-source-only-details">
+          <details className="afp-source-only-details">
             <summary>취재원 발언에서 관측된 내용 {summary.sourceGroups.length}개 · 언론사 비교에 사용하지 않음</summary>
             <p className="afp-source-only-note">인용·전언은 발화 주체의 말입니다. 근거가 있어도 해당 매체의 입장이나 기자 서술 차이로 바꾸지 않았습니다.</p>
             <div className="afp-source-only-list">

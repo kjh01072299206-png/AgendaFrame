@@ -69,7 +69,7 @@ export function ShellChrome({
       <a className="afs-skip" href="#afs-main">본문으로 건너뛰기</a>
       <ShellSide issues={issues} meta={meta} />
       <div className="afs-main">
-        <ShellTop issues={issues} />
+        <ShellTop issues={issues} meta={meta} />
         <main id="afs-main" className="afs-body">{children}</main>
       </div>
     </div>
@@ -96,24 +96,26 @@ export function ShellSide({
   const groups: Array<{ label: string | null; items: Array<{ href: string; label: string; icon: string; match: (p: string) => boolean }> }> = [
     {
       label: null,
-      items: [{ href: "/", label: "오늘의 의제", icon: "home", match: (p) => p === "/" || p === "/issues" }],
+      items: [
+        { href: "/", label: "홈", icon: "home", match: (p) => p === "/" || p === "/issues" },
+        { href: scoped("/outlets"), label: "언론사 비교", icon: "outlets", match: (p) => p.endsWith("/outlets") },
+        { href: scoped("/framing"), label: "프레이밍 분석", icon: "compass", match: (p) => p.endsWith("/framing") },
+        { href: "/tools/self-check", label: "자가점검", icon: "check", match: (p) => p.startsWith("/tools/self-check") },
+        { href: scoped("/report"), label: "리포트", icon: "report", match: (p) => p.endsWith("/report") },
+      ],
     },
     /* 무슨 일이었나 → 언론사 비교 → 프레이밍 분석 → 리포트 는 한 의제를 읽는 순서다.
        언론사 비교는 세는 것(인용원·인용 방식·형태소), 프레이밍 분석은 이론에 붙은 층위를 맡는다.
        두 화면이 같아 보였던 것은 같은 행렬을 두 번 그렸기 때문이고, 이제 하는 일이 다르다. */
     {
-      label: "이 의제 안에서",
+      label: "더 보기",
       items: [
         { href: scoped(""), label: "무슨 일이었나", icon: "layers", match: (p) => /^\/issues\/[^/]+$/.test(p) },
-        { href: scoped("/outlets"), label: "언론사 비교", icon: "outlets", match: (p) => p.endsWith("/outlets") },
-        { href: scoped("/framing"), label: "프레이밍 분석", icon: "compass", match: (p) => p.endsWith("/framing") },
-        { href: scoped("/report"), label: "리포트", icon: "report", match: (p) => p.endsWith("/report") },
       ],
     },
     {
       label: "도구",
       items: [
-        { href: "/tools/self-check", label: "내 읽기 유형", icon: "check", match: (p) => p.startsWith("/tools/self-check") },
         { href: "/tools/ask", label: "AI 대화", icon: "chat", match: (p) => p.startsWith("/tools/ask") },
         { href: "/tools/community", label: "커뮤니티", icon: "people", match: (p) => p.startsWith("/tools/community") },
         { href: "/tools/method", label: "방법론", icon: "book", match: (p) => p.startsWith("/tools/method") },
@@ -125,14 +127,16 @@ export function ShellSide({
   return (
     <aside className="afs-side">
       <Link className="afs-brand" href="/">
-        <i aria-hidden="true">AF</i>
-        <b>
-          AgendaFrame
-          <small>같은 사건, 다른 설명</small>
-        </b>
+        <i aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M4 20V7m6 13V4m6 16v-9" /></svg></i>
+        <b>AgendaFrame</b>
       </Link>
       <nav className="afs-nav" aria-label="주요 화면">
-        {groups.map((group, gi) => (
+        {groups.map((group, gi) => group.label ? (
+          <details key={group.label} className="afs-nav-more" open={group.items.some((item) => item.match(pathname))}>
+            <summary>{group.label}</summary>
+            {group.items.map((item) => <Link key={item.href} href={item.href} aria-current={item.match(pathname) ? "page" : undefined}><Icon name={item.icon} />{item.label}</Link>)}
+          </details>
+        ) : (
           <div
             key={group.label ?? `g${gi}`}
             className="afs-nav-sec"
@@ -154,6 +158,7 @@ export function ShellSide({
         ))}
       </nav>
       <div className="afs-side-foot">
+        <b>분석 범위</b>
         <dl>
           <dt>기준일</dt>
           <dd className="afs-num">{meta.basisDate}</dd>
@@ -169,7 +174,7 @@ export function ShellSide({
   );
 }
 
-export function ShellTop({ issues }: { issues: ShellIssue[] }) {
+export function ShellTop({ issues, meta }: { issues: ShellIssue[]; meta: ShellMeta }) {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
   const issueId = currentIssueId(pathname, issues);
@@ -187,11 +192,12 @@ export function ShellTop({ issues }: { issues: ShellIssue[] }) {
 
   return (
     <div className="afs-top">
-      <label className="afs-top-label" htmlFor="afs-issue">
-        의제
-      </label>
+      <label className="afs-top-selector" htmlFor="afs-issue">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4" /></svg>
       <select
         id="afs-issue"
+        aria-label="의제 선택"
+        className={pathname === "/" ? "afs-home-select" : undefined}
         value={picked}
         onChange={(event) => {
           const next = event.target.value;
@@ -205,17 +211,14 @@ export function ShellTop({ issues }: { issues: ShellIssue[] }) {
           </option>
         ))}
       </select>
-      <button
-        type="button"
-        className="afs-pill afs-pill-go"
-        onClick={() => router.push(`/issues/${encodeURIComponent(picked)}${tail || ""}`)}
-      >
-        이 의제 보기
-      </button>
+      </label>
+      <div className="afs-top-right">
+      <span className="afs-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M8 3v4m8-4v4M3 10h18" /></svg>{meta.basisDate.replaceAll("-", ".")} 하루</span>
       <button type="button" className="afs-pill" onClick={flip}>
         <Icon name={theme === "dark" ? "sun" : "moon"} />
         {theme === "dark" ? "밝게 보기" : "어둡게 보기"}
       </button>
+      </div>
     </div>
   );
 }

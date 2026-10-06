@@ -1503,19 +1503,19 @@ export function OutletsSemanticPage({ bundle, issue }: { bundle: IssueAnalysisBu
     <>
       <AnalysisPageHeader mode="outlets" issue={issue} dimensions={dimensions} />
       <ComparisonLeadV2 bundle={bundle} issue={issue} synthesis={synthesisData(bundle)} />
-      <FineComparisonSection bundle={bundle} />
-      <ArticleExplanations bundle={bundle} />
       <section className="afs-card" id="sec-evidence">
         <h2>
-          기사 근거 <small>갈래를 만든 기사와 공개 locator</small>
+          기사 목록 <small>갈래를 만든 기사와 공개 locator</small>
         </h2>
         <div className="afs-in">
           <ArticleList bundle={bundle} issue={issue} dimensions={dimensions} />
         </div>
       </section>
-      <details open className="afs-card afs-fold afp-detail-analysis" id="sec-detail-analysis">
+      <details className="afs-card afs-fold afp-detail-analysis" id="sec-detail-analysis">
         <summary>세부 프레임 분석 보기</summary>
         <div className="afp-detail-analysis-body">
+          <FineComparisonSection bundle={bundle} />
+          <ArticleExplanations bundle={bundle} />
           <div id="sec-axis-details">
             <AxisSection dimensions={dimensions} />
           </div>
@@ -1649,8 +1649,8 @@ function AnalysisPageHeader({
           </div>
           <p>
             {framing
-              ? "문제·원인·책임·평가·해법·취재원 배치를 먼저 보고, 시야·표현 장치는 보조 관측으로 확인합니다."
-              : "사건 경위 → 실제 비교 질문 → 대표 기사 묶음 → 기사 근거 순서로 비교합니다."}
+              ? `${issue.rank}위 · ${issue.title} — 문제·원인·책임·평가·해법·취재원 배치를 먼저 보고, 시야·표현 장치는 보조 관측으로 확인합니다.`
+              : `${issue.rank}위 · ${issue.title} — 사건 경위와 매체가 다르게 쓴 지점을 나란히 비교합니다.`}
           </p>
         </div>
         <Link className="afs-pill afs-pill-go afp-page-action" href={`/issues/${encodeURIComponent(issue.issueId)}/report`}>

@@ -35,6 +35,7 @@ const VIEWPORTS = FAST
   : [{ w: 1440, scheme: "light" }, { w: 1280, scheme: "dark" }, { w: 900, scheme: "light" }, { w: 390, scheme: "light" }, { w: 390, scheme: "dark" }];
 
 const RULES = {
+  "HOME-PARITY": { sev: "error", hint: "공개 홈이 프로토타입의 분야 분포 → 의제 카드 → 갈림 요약 구성을 유지해야 한다." },
   "JS-ERROR": { sev: "error", hint: "콘솔 오류·예외. 렌더 경로가 깨졌다는 뜻이므로 먼저 고친다." },
   "HTTP": { sev: "error", hint: "2xx 가 아닌 응답. 라우트가 없거나 서버가 던졌다." },
   "DUP-ID": { sev: "error", hint: "같은 id 가 둘 이상. 템플릿이 조각을 반복 출력한다." },
@@ -134,6 +135,19 @@ function collect({ w, isDesktop, route = "", firstScreenRequirements = {} }) {
     return (el.tagName.toLowerCase() + (c ? "." + c.trim().replace(/\s+/g, ".") : "")).slice(0, 54);
   };
   const root = document.querySelector(".afs-shell") || document.body;
+  if (location.pathname === "/") {
+    const panels = [...document.querySelectorAll(".afp-home-panel > h2")].map((el) => el.textContent.trim());
+    const expected = ["그날 언론이 가장 많이 다룬 분야", "오늘의 의제 순위", "오늘의 갈림 한 장면"];
+    if (panels.join("|") !== expected.join("|")) push("HOME-PARITY", "홈 구역의 순서 또는 제목이 다름");
+    const cards = [...document.querySelectorAll(".afp-home-issue-link")];
+    if (cards.length !== 5 || cards.some((el) => !el.getAttribute("href")?.endsWith("/outlets"))) push("HOME-PARITY", "상위 5개 의제 카드·비교 경로 누락");
+    const loadedFont = [...document.fonts].some((font) => font.family.includes("Pretendard Variable") && font.status === "loaded");
+    if (!loadedFont) push("HOME-PARITY", "프로토타입 글꼴이 실제로 로드되지 않음");
+    if (innerWidth > 860) {
+      const side = document.querySelector(".afs-side");
+      if (!side || Math.abs(side.getBoundingClientRect().width - 236) > 1) push("HOME-PARITY", "데스크톱 내비 너비가 236px와 다름");
+    }
+  }
 
   const firstScreen = [];
   const recordFirstScreen = (label, selector, el = document.querySelector(selector)) => {
@@ -366,9 +380,9 @@ async function checkOutletsMobileInteractions(page) {
         && rect.height >= 24;
     };
     const failures = [];
-    const checks = ["페이지 제목", "현재 페이지 탭"];
+    const checks = ["페이지 제목", "현재 화면 내비게이션"];
     if (!visible(".afp-page-title-line h1")) failures.push("페이지 제목이 보이지 않습니다");
-    if (!visible('.afs-tabs-context a[aria-current="page"]')) failures.push("현재 페이지 탭이 보이지 않습니다");
+    if (!visible('.afs-nav a[aria-current="page"]')) failures.push("현재 화면 내비게이션이 보이지 않습니다");
 
     const evidence = document.querySelector("#sec-evidence details.afp-article");
     const evidenceSummary = evidence?.querySelector(":scope > summary");
