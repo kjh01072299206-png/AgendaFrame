@@ -114,7 +114,9 @@ jobs:
       - name: Render gate (26 routes × 5 viewports + 10 first-screen + 5 mobile interaction checks)
         env:
           AF_PW: ${{ github.workspace }}/site/node_modules/playwright-core/index.js
-        run: node scripts/audit-site.mjs --url http://127.0.0.1:3000 --release
+        run: |
+          node scripts/audit-site.mjs --spill-selftest
+          node scripts/audit-site.mjs --url http://127.0.0.1:3000 --release
 
       # 배포는 Vercel Git 연결이 담당한다. 이 워크플로는 같은 커밋의 품질 보고서다.
       # VERCEL_TOKEN 시크릿을 넣어 두면 관문을 통과한 커밋만 이 워크플로가 직접

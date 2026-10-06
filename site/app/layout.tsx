@@ -4,6 +4,7 @@ import "./admin.css";
 import "./app-shell.css";
 import "./app-components.css";
 import "./app-round2.css";
+import "./prototype-parity.css";
 
 // 실배포는 Vercel 이다. 이 값이 canonical·og:url·og:image 의 기준이 되므로 옛 오리진을
 // 남겨두면 링크 미리보기가 죽은 주소에서 이미지를 받아온다.

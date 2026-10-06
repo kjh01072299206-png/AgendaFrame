@@ -39,6 +39,10 @@ export function IssueSubject({
   const active =
     SCREENS.slice().reverse().find((screen) => screen.tail && pathname.endsWith(screen.tail)) ?? SCREENS[0];
 
+  // Analysis pages already carry the selected issue in the toolbar and their
+  // subtitle. A second title and four tabs displaced the prototype's first panel.
+  if (compact) return null;
+
   return (
     <>
       <section className={`afs-subject${compact ? " afs-subject-context" : ""}`}>
