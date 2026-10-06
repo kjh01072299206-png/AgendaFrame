@@ -46,10 +46,11 @@ default, `-Apply -FullGatePassed`, a clean tracked tree, and an image tag that
 must equal the checked-out 40-character commit SHA. Deployment is free, so
 starting a billed run needs the separate `-Execute` switch.
 
-`--max-retries` is pinned to `0` for these two jobs even though
-`cloud_run.max_retries` is `1`. A retried publish job could re-import a cluster
-that already reached the site, and a retried analysis job could spend Vertex
-quota twice on the same articles.
+`--max-retries` is pinned to `0` for these two jobs and for the full runtime
+job. A retried publish job could re-import a cluster that already reached the
+site, and a retried analysis job could spend Vertex quota twice on the same
+articles. The full runtime job uses the configured 3600-second limit so one
+reviewed top-five replay can finish article profiling before publication.
 
 No Cloud Scheduler trigger is created for the trial jobs and none should be. The
 analysis input is a reviewed file, not a crawl, and the pilot is a single

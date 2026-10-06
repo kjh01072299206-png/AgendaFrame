@@ -68,13 +68,20 @@ def canonicalize_url(value: str) -> str:
     if parsed.scheme.lower() != "https" or not parsed.hostname:
         raise ValueError("Only public HTTPS article URLs are accepted.")
     validate_public_hostname(parsed.hostname)
+    host = parsed.hostname.lower()
+    # Hankook Ilbo reuses the same stable /news/article/{articleKey} path
+    # while adding dtypecode to classify the article's section. Treat that
+    # parameter as presentation metadata so one story cannot enter a crawl
+    # twice under two canonical URLs.
+    ignored_query_names = set(TRACKING_QUERY_NAMES)
+    if host in {"hankookilbo.com", "www.hankookilbo.com"}:
+        ignored_query_names.add("dtypecode")
     query = [
         (key, item)
         for key, item in parse_qsl(parsed.query, keep_blank_values=True)
-        if key.lower() not in TRACKING_QUERY_NAMES
+        if key.lower() not in ignored_query_names
         and not key.lower().startswith(TRACKING_QUERY_PREFIXES)
     ]
-    host = parsed.hostname.lower()
     if parsed.port and parsed.port != 443:
         host = f"{host}:{parsed.port}"
     path = parsed.path or "/"

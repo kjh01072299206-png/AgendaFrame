@@ -88,11 +88,21 @@ def validate_gold(eval_root: Path) -> dict[str, Any]:
     prompt_manifest = yaml.safe_load(
         (eval_root / "prompts" / "manifest.yaml").read_text(encoding="utf-8")
     )
+    prompts_by_id: dict[str, list[dict[str, Any]]] = {}
     for prompt in prompt_manifest["prompts"]:
         if not (eval_root / "prompts" / prompt["path"]).is_file():
             raise ValueError(f"missing prompt file: {prompt['path']}")
         if not (eval_root / "prompts" / prompt["output_schema"]).is_file():
             raise ValueError(f"missing prompt output schema: {prompt['output_schema']}")
+        prompts_by_id.setdefault(str(prompt["id"]), []).append(prompt)
+
+    current_prompt_versions: dict[str, str] = {}
+    for prompt_id, versions in prompts_by_id.items():
+        marked_current = [prompt for prompt in versions if prompt.get("current") is True]
+        if len(marked_current) > 1 or (not marked_current and len(versions) > 1):
+            raise ValueError(f"prompt {prompt_id!r} must identify exactly one current version")
+        selected = marked_current[0] if marked_current else versions[0]
+        current_prompt_versions[prompt_id] = str(selected["version"])
 
     if any(score != 1.0 for score in clustering_case_scores.values()):
         raise AssertionError("clustering evaluator oracle wiring must score 1.0")
@@ -116,7 +126,7 @@ def validate_gold(eval_root: Path) -> dict[str, Any]:
             "report": len(report_records),
         },
         "prompt_versions": {
-            prompt["id"]: prompt["version"] for prompt in prompt_manifest["prompts"]
+            prompt_id: version for prompt_id, version in current_prompt_versions.items()
         },
         "oracle_wiring": {
             "clustering_pairwise_f1": min(clustering_case_scores.values()),

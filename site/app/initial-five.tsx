@@ -264,12 +264,17 @@ function ClusterSummary({ bundle, compact = false }: { bundle: IssueAnalysisBund
     <section className={`af-section ${compact ? "af-section-compact" : ""}`} aria-labelledby={`${bundle.issue.issueId}-cluster-title`}>
       <header className="af-section-heading">
         <div>
-          <span className="af-section-label">제목 기반 AI 클러스터</span>
+          <span className="af-section-label">
+            {cluster.analysisSource === "human_review" ? "제목 기반 사람 검토 군집" : "제목 기반 AI 클러스터"}
+          </span>
           <h3 id={`${bundle.issue.issueId}-cluster-title`}>같은 사건으로 묶은 이유</h3>
         </div>
         <span className="af-section-meta">제목·매체·게시 시각</span>
       </header>
       <p className="af-section-copy">{cleanText(cluster.summary, "클러스터 요약이 없습니다.")}</p>
+      {cluster.analysisSource === "human_review" && (
+        <small className="af-section-meta">1인 제목 검토의 임시 판정이며, 독립 이중 코딩이나 합의 판정은 아닙니다.</small>
+      )}
       {cluster.commonSubjects.length > 0 && (
         <div className="af-chip-row">
           {cluster.commonSubjects.slice(0, 5).map((subject) => <span key={subject}>{subject}</span>)}
@@ -292,13 +297,16 @@ function ClusterSummary({ bundle, compact = false }: { bundle: IssueAnalysisBund
 
 function HomeStatus({ manifest }: { manifest: InitialFiveManifest }) {
   const clusterCount = manifest.issues.filter((issue) => issue.clusterAi.status === "succeeded").length;
+  const humanReviewedClusterCount = manifest.issues.filter(
+    (issue) => issue.clusterAi.engineLabel === "human_review",
+  ).length;
   const semanticCount = manifest.issues.reduce(
     (total, issue) => total + issue.semantic.succeededArticleCount,
     0,
   );
   return (
     <section className="af-status-strip" aria-label="초기 5개 분석 상태">
-      <span><b>AI 의제 묶음 {clusterCount}/{manifest.issueCount}</b><small>제목·매체·게시 시각 기준</small></span>
+      <span><b>의제 묶음 {clusterCount}/{manifest.issueCount}</b><small>{humanReviewedClusterCount ? `사람 검토 ${humanReviewedClusterCount}건 · 제목·매체·게시 시각 기준` : "AI 분석 · 제목·매체·게시 시각 기준"}</small></span>
       <span><b>AI 본문 분석 {semanticCount}/{manifest.articleCount}</b><small>{semanticCount === manifest.articleCount ? "자동 초안 생성됨" : "아직 완료되지 않음"}</small></span>
       <span><b>규칙 기반 보조 지표 {manifest.articleCount}/{manifest.articleCount}</b><small>AI 분석 건수에 포함하지 않음</small></span>
     </section>
@@ -814,7 +822,7 @@ function EvidenceTab({ bundle }: { bundle: IssueAnalysisBundle }) {
             <a href={article.canonicalUrl ?? "#"} target="_blank" rel="noopener noreferrer" key={article.articleId} aria-label={`${article.outlet ?? "매체"} 기사 원문 열기`}>
               <span>{article.outlet ?? "매체 미상"}</span>
               <strong>{article.title ?? "제목 없음"}</strong>
-              <small title={evidence?.sentenceSha256}>{detail}<br />{formatPublishedAt(article.publishedAt)} · 원문 열기</small>
+              <small title={evidence?.sentenceSha256}>{detail}<br />게시 {formatPublishedAt(article.publishedAt)} · 수집 {formatPublishedAt(article.collectedAt)} · 원문 열기</small>
             </a>
           );
         })}

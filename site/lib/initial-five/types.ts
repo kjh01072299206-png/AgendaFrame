@@ -6,7 +6,7 @@ export type AnalysisState =
   | "review_needed"
   | "dead_letter";
 
-export type EngineLabel = "ai_semantic" | "rules_local" | "unavailable";
+export type EngineLabel = "ai_semantic" | "rules_local" | "human_review" | "unavailable";
 
 export interface PublicEngine {
   label?: EngineLabel;
@@ -17,6 +17,11 @@ export interface PublicEngine {
   promptVersion: string | null;
   schemaVersion: string | number | null;
   source?: string;
+  analysisSource?: "model" | "human_review" | string;
+  reviewStatus?: string | null;
+  reviewArtifact?: string | null;
+  reviewArtifactSha256?: string | null;
+  reviewerCount?: number | null;
 }
 
 export interface InitialFiveManifestIssue {
@@ -38,6 +43,7 @@ export interface InitialFiveManifestIssue {
     model: string | null;
     promptVersion: string | null;
     schemaVersion: string | number | null;
+    analysisSource?: "model" | "human_review" | string;
   };
   semantic: {
     status: AnalysisState;
@@ -251,6 +257,7 @@ export interface InitialFiveArticle {
   sourceId: string | null;
   mediaGroupId: string | null;
   publishedAt: string | null;
+  collectedAt: string | null;
   section: string | null;
   canonicalUrl: string | null;
   bodySha256: string | null;
@@ -529,6 +536,11 @@ export interface IssueAnalysisBundle {
     textScope: string | null;
     fallbackReason: string | null;
     requiresHumanReview: boolean;
+    analysisSource?: "model" | "human_review" | string;
+    reviewStatus?: string | null;
+    reviewArtifact?: string | null;
+    reviewArtifactSha256?: string | null;
+    reviewerCount?: number | null;
     summary: string | null;
     commonSubjects: string[];
     narrativeVariants: Array<{

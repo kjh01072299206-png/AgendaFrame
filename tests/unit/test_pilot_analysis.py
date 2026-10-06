@@ -177,11 +177,70 @@ class PilotAnalysisTests(unittest.TestCase):
         with (
             patch("google.genai.Client", return_value=FakeClient(models)),
             patch("ai.framing.time.sleep") as sleep,
+            patch("ai.framing.random.uniform", return_value=5.0) as jitter,
         ):
             result = VertexFrameAnalyzer(self.config).analyze(value)
         self.assertEqual(result.decision, "analyze")
         self.assertEqual(result.attempt_count, 2)
-        sleep.assert_called_once_with(2.0)
+        sleep.assert_called_once_with(5.0)
+        jitter.assert_called_once_with(2.5, 5.0)
+
+    def test_429_honors_retry_after_on_response_headers(self) -> None:
+        transient = RuntimeError("429 resource exhausted")
+        transient.status_code = 429  # type: ignore[attr-defined]
+        transient.response = type("Response", (), {"headers": {"Retry-After": "17"}})()
+        value = make_article()
+        models = FakeModels([transient, model_payload(value)])
+        with (
+            patch("google.genai.Client", return_value=FakeClient(models)),
+            patch("ai.framing.time.sleep") as sleep,
+            patch("ai.framing.random.uniform") as jitter,
+        ):
+            result = VertexFrameAnalyzer(self.config).analyze(value)
+        self.assertEqual(result.decision, "analyze")
+        sleep.assert_called_once_with(17.0)
+        jitter.assert_not_called()
+
+    def test_validation_retry_feedback_repairs_sentence_and_paraphrase_errors(self) -> None:
+        value = make_article(
+            "정부는 이번 사고의 책임 소재를 명확하게 규명하기 위해 현장 조사와 안전 대책 마련을 "
+            "동시에 시작하겠다고 공식 발표했다. 조사 결과는 내일 공개된다."
+        )
+        cross_sentence = model_payload(value)
+        cross_dimension = next(
+            item for item in cross_sentence["dimensions"] if item["status"] == "supported"
+        )
+        cross_span = cross_dimension["evidence"][0]
+        cross_span["end"] = len(value.body_text or "")
+        cross_span["text"] = value.body_text
+
+        verbatim = model_payload(value)
+        # Use the full first source sentence as a deliberately copied public value.
+        first_sentence = (value.body_text or "").split(". ", 1)[0] + "."
+        verbatim_dimension = next(
+            item for item in verbatim["dimensions"] if item["status"] == "supported"
+        )
+        verbatim_dimension["value"] = first_sentence
+        verbatim_dimension["evidence"][0]["text"] = first_sentence
+        verbatim_dimension["evidence"][0]["end"] = len(first_sentence)
+
+        class PromptModels:
+            def __init__(self) -> None:
+                self.responses = [cross_sentence, verbatim, model_payload(value)]
+                self.prompts: list[str] = []
+
+            def generate_content(self, **kwargs):
+                self.prompts.append(str(kwargs.get("contents", "")))
+                return FakeResponse(self.responses.pop(0))
+
+        models = PromptModels()
+        with patch("google.genai.Client", return_value=FakeClient(models)):
+            result = VertexFrameAnalyzer(self.config).analyze(value)
+
+        self.assertEqual(result.decision, "analyze")
+        self.assertEqual(result.attempt_count, 3)
+        self.assertIn("never join two sentences", models.prompts[1])
+        self.assertIn("independent Korean wording", models.prompts[2])
 
     def test_503_retries_at_most_three_calls_and_stays_non_ai(self) -> None:
         errors = []

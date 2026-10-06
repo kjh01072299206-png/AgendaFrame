@@ -2,14 +2,20 @@ from __future__ import annotations
 
 import json
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 
 from ai.issue_clustering import (
+    INITIAL_FIVE_CLUSTER_PROMPT_VERSION,
     INITIAL_FIVE_CLUSTER_SCHEMA_VERSION,
+    INITIAL_FIVE_WIRE_SCHEMA_VERSION,
+    HumanReviewedInitialFiveClusterer,
     InitialFiveClusterer,
     MetadataArticle,
     MetadataIssueClusterer,
     MetadataIssueGroup,
+    _expand_initial_five_partition,
+    _initial_five_response_schema,
     build_initial_five_approval_manifest,
     build_initial_five_prompt,
     to_metadata_clusters_public_shape,
@@ -183,6 +189,180 @@ class MetadataIssueClusteringTests(unittest.TestCase):
         self.assertIn("complete-link", prompt)
         self.assertIn("광복절", prompt)
         self.assertIn("Prefer more precise smaller clusters", prompt)
+        self.assertIn(INITIAL_FIVE_WIRE_SCHEMA_VERSION, prompt)
+
+    def test_initial_five_vertex_schema_avoids_unsupported_type_unions(self) -> None:
+        schema = _initial_five_response_schema()
+        signature = schema["properties"]["clusters"]["items"]["properties"][
+            "common_event_elements"
+        ]["properties"]
+        self.assertEqual(signature["time_range"], {"type": "string"})
+        self.assertEqual(signature["event_stage"], {"type": "string"})
+        cluster_properties = schema["properties"]["clusters"]["items"]["properties"]
+        self.assertIn("article_ids", cluster_properties)
+        self.assertNotIn("article_assignments", cluster_properties)
+
+        def assert_no_type_union(value: object) -> None:
+            if isinstance(value, dict):
+                self.assertFalse(isinstance(value.get("type"), list))
+                for child in value.values():
+                    assert_no_type_union(child)
+            elif isinstance(value, list):
+                for child in value:
+                    assert_no_type_union(child)
+
+        assert_no_type_union(schema)
+
+    def test_initial_five_signature_optional_fields_require_empty_strings(self) -> None:
+        articles, _ = self._initial_five_fixture()
+        payload = self._payload()
+        payload["clusters"][0]["common_event_elements"]["time_range"] = None
+
+        with self.assertRaisesRegex(ValueError, "time_range is invalid"):
+            validate_initial_five_payload(articles, payload)
+
+    def test_initial_five_allows_no_supported_emphasis_variants(self) -> None:
+        articles, _ = self._initial_five_fixture()
+        payload = self._payload()
+        payload["clusters"][0]["emphasis_variants"] = []
+
+        normalized = validate_initial_five_payload(articles, payload)
+
+        self.assertEqual(normalized["clusters"][0]["emphasis_variants"], [])
+
+    def test_initial_five_coverage_error_lists_missing_ids_for_retry(self) -> None:
+        articles, _ = self._initial_five_fixture()
+        payload = self._payload()
+        missing_id = articles[1].article_id
+        payload["clusters"][0]["article_assignments"] = payload["clusters"][0][
+            "article_assignments"
+        ][:1]
+        payload["clusters"][0]["emphasis_variants"][0]["article_ids"] = [articles[0].article_id]
+
+        with self.assertRaises(ValueError) as captured:
+            validate_initial_five_payload(articles, payload)
+
+        self.assertEqual(captured.exception.code, "article_coverage_error")
+        self.assertIn(missing_id, captured.exception.retry_feedback)
+
+    def test_initial_five_retries_a_missing_article_with_targeted_feedback(self) -> None:
+        articles, groups = self._initial_five_fixture()
+        incomplete = self._payload()
+        missing_id = articles[1].article_id
+        incomplete["clusters"][0]["article_assignments"] = incomplete["clusters"][0][
+            "article_assignments"
+        ][:1]
+        incomplete["clusters"][0]["emphasis_variants"][0]["article_ids"] = [articles[0].article_id]
+        complete = self._payload()
+        calls: list[str] = []
+
+        class FakeModels:
+            def generate_content(self, **kwargs: object) -> SimpleNamespace:
+                calls.append(str(kwargs["contents"]))
+                response = incomplete if len(calls) == 1 else complete
+                return SimpleNamespace(text=json.dumps(response, ensure_ascii=False))
+
+        result = InitialFiveClusterer(
+            self.config,
+            client_factory=lambda _: SimpleNamespace(models=FakeModels()),
+            sleep_fn=lambda _: None,
+            max_attempts=2,
+        ).analyze(articles, groups)
+
+        self.assertEqual(result.analysis_state, "succeeded")
+        self.assertEqual(result.attempts, 2)
+        self.assertEqual(len(calls), 2)
+        self.assertIn(missing_id, calls[1])
+
+    def test_initial_five_abstains_on_duplicate_article_assignments(self) -> None:
+        articles, _ = self._initial_five_fixture()
+        duplicated = self._payload()
+        first_assignment = duplicated["clusters"][0]["article_assignments"][0]
+        duplicated["clusters"][0]["article_assignments"].insert(1, dict(first_assignment))
+        normalized = validate_initial_five_payload(articles, duplicated)
+
+        self.assertEqual(normalized["ambiguous_article_ids"], [articles[0].article_id])
+        self.assertEqual(
+            [
+                assignment["article_id"]
+                for cluster in normalized["clusters"]
+                for assignment in cluster["article_assignments"]
+            ],
+            [articles[1].article_id],
+        )
+        self.assertEqual(
+            normalized["clusters"][0]["emphasis_variants"][0]["article_ids"],
+            [articles[1].article_id],
+        )
+        self.assertEqual(normalized["clusters"][0]["coherence"], "medium")
+
+    def test_compact_partition_expands_and_abstains_on_duplicate_membership(self) -> None:
+        articles, _ = self._initial_five_fixture()
+        full = self._payload()
+        full_cluster = full["clusters"][0]
+        compact_cluster = {
+            key: value for key, value in full_cluster.items() if key != "article_assignments"
+        }
+        compact_cluster["article_ids"] = [
+            articles[0].article_id,
+            articles[0].article_id,
+            articles[1].article_id,
+        ]
+        compact = {
+            "schema_version": INITIAL_FIVE_WIRE_SCHEMA_VERSION,
+            "prompt_version": INITIAL_FIVE_CLUSTER_PROMPT_VERSION,
+            "clusters": [compact_cluster],
+            "ambiguous_article_ids": [],
+        }
+
+        expanded = _expand_initial_five_partition(compact, articles)
+        normalized = validate_initial_five_payload(articles, expanded)
+
+        self.assertEqual(normalized["ambiguous_article_ids"], [articles[0].article_id])
+        self.assertEqual(
+            [
+                assignment["article_id"]
+                for assignment in normalized["clusters"][0]["article_assignments"]
+            ],
+            [articles[1].article_id],
+        )
+        self.assertEqual(normalized["clusters"][0]["coherence"], "medium")
+
+    def test_compact_partition_records_omitted_articles_as_outliers(self) -> None:
+        articles, _ = self._initial_five_fixture()
+        full_cluster = self._payload()["clusters"][0]
+        compact_cluster = {
+            key: value for key, value in full_cluster.items() if key != "article_assignments"
+        }
+        compact_cluster["article_ids"] = [articles[0].article_id, "invented-id"]
+        compact = {
+            "schema_version": INITIAL_FIVE_WIRE_SCHEMA_VERSION,
+            "prompt_version": INITIAL_FIVE_CLUSTER_PROMPT_VERSION,
+            "clusters": [compact_cluster],
+            "ambiguous_article_ids": ["also-invented"],
+        }
+
+        expanded = _expand_initial_five_partition(compact, articles)
+        normalized = validate_initial_five_payload(articles, expanded)
+
+        self.assertEqual(normalized["ambiguous_article_ids"], [])
+        self.assertEqual(normalized["outlier_article_ids"], [articles[1].article_id])
+        self.assertEqual(
+            normalized["clusters"][0]["article_assignments"][0]["article_id"],
+            articles[0].article_id,
+        )
+
+    def test_initial_five_unknown_global_ids_include_retry_feedback(self) -> None:
+        articles, _ = self._initial_five_fixture()
+        payload = self._payload()
+        payload["outlier_article_ids"] = ["not-a-supplied-article"]
+
+        with self.assertRaises(ValueError) as captured:
+            validate_initial_five_payload(articles, payload)
+
+        self.assertEqual(captured.exception.code, "schema_validation_error")
+        self.assertIn("not-a-supplied-article", captured.exception.retry_feedback)
+        self.assertIn("outlier_article_ids", captured.exception.retry_feedback)
 
     def test_initial_five_exact_partition_is_approved_and_public_shape_is_body_free(self) -> None:
         articles, groups = self._initial_five_fixture()
@@ -231,6 +411,113 @@ class MetadataIssueClusteringTests(unittest.TestCase):
         public = to_metadata_clusters_public_shape(result)
         self.assertEqual(public["clusters"][0]["decision"], "review_needed")
         self.assertFalse(public["clusters"][0]["engine"]["semantic_ai"])
+
+    def test_human_reviewed_october_fifth_partition_is_exact_and_not_ai_labeled(self) -> None:
+        annotation = json.loads(
+            Path("evals/annotations/initial-five-2026-10-05-single-reviewer-v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        articles = tuple(
+            MetadataArticle(row["article_id"], row["title"], row["source"], row["published_at"])
+            for row in annotation["articles"]
+        )
+        candidates = (
+            MetadataIssueGroup("candidate-2026-10-05", "all archived articles", articles),
+        )
+
+        result = HumanReviewedInitialFiveClusterer(basis_date="2026-10-05").analyze(
+            articles, candidates
+        )
+
+        clustered_ids = {
+            assignment["article_id"]
+            for cluster in result.clusters
+            for assignment in cluster["article_assignments"]
+            if assignment["relation"] == "same_event"
+        }
+        partitions = (
+            clustered_ids,
+            set(result.ambiguous_article_ids),
+            set(result.outlier_article_ids),
+            set(result.excluded_article_ids),
+        )
+        self.assertEqual(len(articles), 92)
+        self.assertEqual([len(group) for group in partitions], [48, 5, 37, 2])
+        self.assertEqual(sum(len(group) for group in partitions), 92)
+        self.assertEqual(result.analysis_state, "succeeded")
+        self.assertEqual(result.approval_status, "human_reviewed_provisional")
+        payload = result.as_dict()
+        self.assertEqual(payload["engine"]["analysis_source"], "human_review")
+        self.assertEqual(payload["engine"]["review_status"], "single_reviewer_provisional")
+        self.assertFalse(payload["engine"]["semantic_ai"])
+        self.assertRegex(payload["engine"]["review_artifact_sha256"], r"^[0-9a-f]{64}$")
+
+    def test_human_reviewed_october_fifth_partition_fails_closed_on_date_or_metadata_change(
+        self,
+    ) -> None:
+        annotation = json.loads(
+            Path("evals/annotations/initial-five-2026-10-05-single-reviewer-v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        articles = tuple(
+            MetadataArticle(row["article_id"], row["title"], row["source"], row["published_at"])
+            for row in annotation["articles"]
+        )
+        candidates = (
+            MetadataIssueGroup("candidate-2026-10-05", "all archived articles", articles),
+        )
+        with self.assertRaisesRegex(ValueError, "only for 2026-10-05"):
+            HumanReviewedInitialFiveClusterer(basis_date="2026-10-06").analyze(articles, candidates)
+
+        changed = (
+            MetadataArticle(
+                articles[0].article_id,
+                articles[0].title + " 수정",
+                articles[0].source,
+                articles[0].published_at,
+            ),
+            *articles[1:],
+        )
+        changed_candidates = (
+            MetadataIssueGroup("candidate-2026-10-05", "all archived articles", changed),
+        )
+        with self.assertRaisesRegex(ValueError, "differs from the reviewed census"):
+            HumanReviewedInitialFiveClusterer(basis_date="2026-10-05").analyze(
+                changed, changed_candidates
+            )
+
+    def test_human_reviewed_october_fifth_v2_refreshes_titles_without_relabeling(self) -> None:
+        annotation = json.loads(
+            Path("evals/annotations/initial-five-2026-10-05-single-reviewer-v2.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        articles = tuple(
+            MetadataArticle(row["article_id"], row["title"], row["source"], row["published_at"])
+            for row in annotation["articles"]
+        )
+        candidates = (
+            MetadataIssueGroup("candidate-2026-10-05", "all archived articles", articles),
+        )
+
+        result = HumanReviewedInitialFiveClusterer(
+            basis_date="2026-10-05",
+            annotation_path="evals/annotations/initial-five-2026-10-05-single-reviewer-v2.json",
+        ).analyze(articles, candidates)
+
+        self.assertEqual(
+            annotation["supersedes_annotation_id"], "initial-five-2026-10-05-single-reviewer-v1"
+        )
+        self.assertEqual(annotation["review_status"], "single_reviewer_provisional")
+        self.assertEqual(len(articles), 92)
+        self.assertEqual(
+            sum(len(cluster["article_assignments"]) for cluster in result.clusters), 48
+        )
+        self.assertEqual(len(result.ambiguous_article_ids), 5)
+        self.assertEqual(len(result.outlier_article_ids), 37)
+        self.assertEqual(len(result.excluded_article_ids), 2)
 
     def test_initial_five_global_outlier_can_cover_unclustered_article(self) -> None:
         articles, _ = self._initial_five_fixture()

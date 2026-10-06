@@ -5,8 +5,8 @@ from copy import deepcopy
 
 import pytest
 
-from ai.event_synthesis import _compact_response_schema, synthesis_request
-from ai.fine_comparison import AXES, VERSION, bind_fine_comparison
+from ai.event_synthesis import synthesis_request
+from ai.fine_comparison import AXES, VERSION, bind_fine_comparison, response_schema
 
 
 def fixture():
@@ -80,12 +80,12 @@ def test_invalid_details_do_not_pass_binding(failure):
     assert result is None or not result["observations"]
 
 
-def test_schema_not_just_prompt_removes_the_two_axis_three_item_limit():
-    schema = _compact_response_schema()["properties"]
-    dimensions = schema["comparison_result"]["properties"]["dimensions"]
-    assert dimensions["maxItems"] == 5
-    assert dimensions["items"]["properties"]["points"]["maxItems"] == 6
-    assert "fine_grained" in schema
+def test_fine_comparison_contract_preserves_wide_coverage_limits():
+    evidence_refs = {"type": "array", "items": {"type": "integer"}, "maxItems": 8}
+    schema = response_schema(evidence_refs)["properties"]
+    assert schema["observations"]["maxItems"] == 24
+    observation = schema["observations"]["items"]["properties"]
+    assert observation["articles"]["items"]["properties"]["evidence"] == evidence_refs
     draft, articles, index = fixture()
     valid = deepcopy(draft["observations"][0])
     draft["observations"][0]["articles"][0]["outlet"] = "wrong"

@@ -110,7 +110,7 @@ class CloudRuntimeTests(unittest.TestCase):
         self.assertEqual(self.config.vertex.thinking_budget, 0)
         self.assertLessEqual(self.config.vertex.max_articles_per_run, 50)
         self.assertLessEqual(self.config.vertex.max_articles_per_day, 200)
-        self.assertEqual(self.config.vertex.prompt_version, "2.6.0")
+        self.assertEqual(self.config.vertex.prompt_version, "2.7.0")
 
     def test_canary_env_can_lower_but_not_raise_articles_per_run(self) -> None:
         configured = self.config.vertex.max_articles_per_run
@@ -226,6 +226,18 @@ class CloudRuntimeTests(unittest.TestCase):
             canonicalize_url("http://news.example.com/a")
         with self.assertRaises(ValueError):
             canonicalize_url("https://127.0.0.1/article")
+
+    def test_hankookilbo_section_query_does_not_create_duplicate_article(self) -> None:
+        base = "https://www.hankookilbo.com/news/article/A2026100513220004301"
+
+        self.assertEqual(
+            canonicalize_url(f"{base}?dtypecode=pancode_politics"),
+            canonicalize_url(f"{base}?dtypecode=pancode_society"),
+        )
+        self.assertEqual(
+            canonicalize_url("https://news.example.com/article?id=1&dtypecode=politics"),
+            "https://news.example.com/article?id=1&dtypecode=politics",
+        )
 
     def test_cost_guard_blocks_run_and_daily_caps_before_model_calls(self) -> None:
         guard = CostGuard(self.config)
@@ -483,12 +495,13 @@ class CloudRuntimeTests(unittest.TestCase):
         with (
             patch("google.genai.Client", return_value=FakeClient()),
             patch("ai.framing.time.sleep") as sleep,
+            patch("ai.framing.random.uniform", return_value=5.0),
         ):
             result = VertexFrameAnalyzer(self.config).analyze(article())
 
         self.assertEqual(result.decision, "analyze")
         self.assertEqual(models.attempts, 2)
-        sleep.assert_called_once_with(2.0)
+        sleep.assert_called_once_with(5.0)
 
     def test_pipeline_withholds_body_analysis_until_policy_allows_it(self) -> None:
         registry = SourcePolicyRegistry(

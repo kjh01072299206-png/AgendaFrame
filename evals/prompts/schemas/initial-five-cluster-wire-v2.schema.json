@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgendaFrame initial-five compact clustering response v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "prompt_version",
+    "clusters",
+    "ambiguous_article_ids"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "clusters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "cluster_id",
+          "label",
+          "event_summary",
+          "coherence",
+          "grouping_reason",
+          "common_event_elements",
+          "emphasis_variants",
+          "article_ids"
+        ],
+        "properties": {
+          "cluster_id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "event_summary": {
+            "type": "string"
+          },
+          "coherence": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "grouping_reason": {
+            "type": "string"
+          },
+          "common_event_elements": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "actors_or_institutions",
+              "actions",
+              "targets",
+              "locations",
+              "time_range",
+              "event_stage"
+            ],
+            "properties": {
+              "actors_or_institutions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "actions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "targets": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "locations": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "time_range": {
+                "type": "string"
+              },
+              "event_stage": {
+                "type": "string"
+              }
+            }
+          },
+          "emphasis_variants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "label",
+                "description",
+                "article_ids"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "article_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "article_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "ambiguous_article_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "prompt_version": {
+      "type": "string",
+      "const": "2.3.0"
+    }
+  }
+}

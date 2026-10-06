@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   INITIAL_FIVE_SCHEMA_VERSION,
   RULE_ENGINE_LABEL,
+  buildIssueAnalysisBundle,
   buildInitialFive,
   buildInitialFiveManifest,
   collectPublicEvidence,
@@ -92,6 +93,25 @@ test("loads one issue payload with article metadata, lineage, statuses, and evid
   assert.ok(evidence.length > 0);
   assert.ok(evidence.every((entry) => entry.locator || entry.sentenceSha256));
   assert.ok(evidence.every((entry) => !Object.hasOwn(entry, "quote") && !Object.hasOwn(entry, "text")));
+});
+
+test("preserves article collection time in the public issue payload", () => {
+  const sources = readInitialFiveSourcesSync({ siteRoot });
+  const sourceIssue = sources.top5.issues.find((issue) => issue.rank === 1);
+  assert.ok(sourceIssue);
+  const firstArticle = sourceIssue.articleMetadata[0];
+  const collectedAt = "2026-10-06T08:15:00+09:00";
+  const bundle = buildIssueAnalysisBundle({
+    top5: sources.top5,
+    metadata: sources.metadata,
+    top5Issue: {
+      ...sourceIssue,
+      articleMetadata: [{ ...firstArticle, collectedAt }, ...sourceIssue.articleMetadata.slice(1)],
+    },
+    semanticProfiles: [],
+  });
+
+  assert.equal(bundle.articles[0].collectedAt, collectedAt);
 });
 
 test("publishes all 25 semantic profiles only after AI success and evidence validation", () => {

@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from ai.event_synthesis import EventSynthesisError
 from ai.framing import FRAME_DIMENSIONS, FrameResult
 from ai.issue_clustering import MetadataIssueGroup
 from backend.gcp_job_entrypoint import RuntimeAdapterUnavailable
-from backend.gcp_orchestration import assert_body_safe, evaluate_quality_gate
+from backend.gcp_orchestration import QualityGateError, assert_body_safe, evaluate_quality_gate
 from backend.gcp_stage_adapters import (
+    ArchivedArticleReplayAdapter,
+    ArchivedReplayVault,
     FrameSemanticAdapter,
     GcpAnalysisStoreMetadataSink,
     MetadataClusterRankAdapter,
@@ -19,6 +23,7 @@ from backend.gcp_stage_adapters import (
     SnapshotPublishAdapter,
     StageAdapterError,
     StageDependencies,
+    load_source_definitions,
 )
 from crawler.models import ArticleDocument
 
@@ -394,6 +399,7 @@ class GcpStageAdapterTests(unittest.TestCase):
             self.assertIn(key, bundle)
         self.assertEqual(bundle["issue"]["issueId"], "issue-1")
         self.assertTrue(bundle["semanticProfiles"])
+        self.assertEqual(bundle["articles"][0]["collectedAt"], COLLECTED_AT.isoformat())
         assert_body_safe(bundle, context="public bundle")
         gate = evaluate_quality_gate(semantic)
         self.assertEqual(gate["status"], "pass")
@@ -404,6 +410,67 @@ class GcpStageAdapterTests(unittest.TestCase):
             {"gcp:profile-event-composition", "gcp:public-profile-aggregation"},
         )
         self.assertIsNotNone(bundle["comparison"]["data"]["summary_30_seconds"])
+
+    def test_human_reviewed_cluster_provenance_is_not_reported_as_ai(self) -> None:
+        class HumanReviewedResult(ClusteringResult):
+            def as_dict(self):
+                payload = super().as_dict()
+                payload["model"] = ""
+                payload["prompt_version"] = "initial-five-2026-10-05-single-reviewer-v1"
+                payload["invocation"] = None
+                payload["approval"]["status"] = "human_reviewed_provisional"
+                payload["engine"].update(
+                    {
+                        "model": "",
+                        "prompt_version": payload["prompt_version"],
+                        "semantic_ai": False,
+                        "analysis_source": "human_review",
+                        "review_status": "single_reviewer_provisional",
+                        "review_artifact": "initial-five-2026-10-05-single-reviewer-v1",
+                        "review_artifact_sha256": "c" * 64,
+                        "reviewer_count": 1,
+                    }
+                )
+                return payload
+
+        class HumanReviewedClusterer(Clusterer):
+            def analyze(self, articles, candidate_groups, **kwargs):
+                return HumanReviewedResult(articles)
+
+        deps = StageDependencies(
+            **{
+                **self.dependencies.__dict__,
+                "initial_five_clusterer": HumanReviewedClusterer(),
+            }
+        )
+        collected = PolicyCollectionAdapter(deps, clock=lambda: COLLECTED_AT).collect(
+            self.request, idempotency_key="collect-human-review"
+        )
+        persisted = MetadataPersistenceAdapter(deps).persist(
+            self.request, collected, idempotency_key="persist-human-review"
+        )
+        ranked = MetadataClusterRankAdapter(deps).cluster_rank(
+            self.request, persisted, idempotency_key="rank-human-review"
+        )
+        semantic = FrameSemanticAdapter(deps).analyze_top5(
+            self.request, ranked, idempotency_key="semantic-human-review"
+        )
+
+        issue = semantic["top5"][0]
+        self.assertEqual(issue["clusterAi"]["analysisSource"], "human_review")
+        self.assertEqual(issue["clusterAi"]["engineLabel"], "human_review")
+        self.assertFalse(issue["clusterAi"]["semanticAi"])
+        self.assertEqual(issue["clusterAi"]["reviewStatus"], "single_reviewer_provisional")
+        self.assertIsNone(issue["clusterAi"]["invocation"])
+        self.assertTrue(issue["semantic"]["semanticAi"])
+        gate = evaluate_quality_gate(semantic)
+        self.assertEqual(gate["status"], "pass")
+        self.assertEqual(gate["provisionalHumanClusterCount"], 5)
+        self.assertTrue(gate["clusterReviewRequired"])
+
+        issue["clusterAi"]["reviewArtifactSha256"] = "invalid"
+        with self.assertRaisesRegex(QualityGateError, "cluster engine is not verified AI"):
+            evaluate_quality_gate(semantic)
 
     def test_cluster_rank_quarantines_when_model_returns_no_clusters(self) -> None:
         class EmptyClusters:
@@ -718,6 +785,43 @@ class GcpStageAdapterTests(unittest.TestCase):
         self.assertTrue(bundle["clusterAi"]["summary"])
         assert_body_safe(bundle, context="synthesized public bundle")
 
+    def test_semantic_adapter_falls_back_once_after_direct_synthesis_failure(self) -> None:
+        class FailingSynthesis:
+            calls = 0
+
+            def synthesize(self, _request):
+                self.calls += 1
+                raise EventSynthesisError("provider response could not be used")
+
+        synthesizer = FailingSynthesis()
+        deps = StageDependencies(**{**self.dependencies.__dict__, "event_synthesizer": synthesizer})
+        collected = PolicyCollectionAdapter(deps, clock=lambda: COLLECTED_AT).collect(
+            self.request, idempotency_key="collect-synth-fallback"
+        )
+        persisted = MetadataPersistenceAdapter(deps).persist(
+            self.request, collected, idempotency_key="persist-synth-fallback"
+        )
+        ranked = MetadataClusterRankAdapter(deps).cluster_rank(
+            self.request, persisted, idempotency_key="rank-synth-fallback"
+        )
+
+        semantic = FrameSemanticAdapter(deps).analyze_top5(
+            self.request, ranked, idempotency_key="semantic-synth-fallback"
+        )
+
+        self.assertEqual(synthesizer.calls, 1)
+        self.assertEqual(len(semantic["bundles"]), 5)
+        for bundle in semantic["bundles"].values():
+            self.assertTrue(bundle["analysisStatus"]["semantic"]["semanticAi"])
+            self.assertFalse(bundle["comparison"]["engine"]["semanticAi"])
+            self.assertIn(
+                bundle["comparison"]["engine"]["source"],
+                {"gcp:profile-event-composition", "gcp:public-profile-aggregation"},
+            )
+            self.assertEqual(len(bundle["semanticProfiles"]), 3)
+
+        self.assertEqual(evaluate_quality_gate(semantic)["status"], "pass")
+
     def test_publish_adapter_keeps_pointer_and_manifest_methods_injected(self) -> None:
         adapter = SnapshotPublishAdapter(self.store, self.store)
         object_payload = {"snapshots/test/manifest.json": {"schemaVersion": "test"}}
@@ -742,6 +846,137 @@ class GcpStageAdapterTests(unittest.TestCase):
         self.assertNotIn("body_text", store.rows[0][1])
         self.assertNotIn("raw_body", store.rows[0][1])
         self.assertEqual(store.rows[0][1]["body_object"], "gs://private/run-1/article-1")
+
+    def test_archived_replay_deduplicates_and_reads_body_on_demand(self) -> None:
+        body = "보관된 기사 본문이며 해시가 일치한다."
+        body_hash = hashlib.sha256(body.encode("utf-8")).hexdigest()
+        article_a = "a" * 32
+        article_b = "b" * 32
+        article_c = "c" * 32
+        ref_a = f"gs://private/bodies/hankookilbo/2026/10/05/{article_a}.txt"
+        ref_b = f"gs://private/bodies/hankookilbo/2026/10/05/{article_b}.txt"
+        ref_c = f"gs://private/bodies/hankookilbo/2026/10/05/{article_c}/{'c' * 64}.txt"
+        rows = [
+            {
+                "article_id": article_a,
+                "source_id": "hankookilbo",
+                "canonical_url": "https://www.hankookilbo.com/news/article/A2026100513220004301?dtypecode=politics",
+                "title": "헤드라인 &quot;인용&quot;",
+                "published_at": datetime(2026, 10, 5, 5, 15, tzinfo=timezone.utc),
+                "collected_at": datetime(2026, 10, 5, 6, 0, tzinfo=timezone.utc),
+                "section": "politics",
+                "body_hash": body_hash,
+                "body_object": ref_a,
+                "text_scope": "authorized_transient_body",
+            },
+            {
+                "article_id": article_b,
+                "source_id": "hankookilbo",
+                "canonical_url": "https://www.hankookilbo.com/news/article/A2026100513220004301?dtypecode=society",
+                "title": "헤드라인 &quot;인용&quot;",
+                "published_at": datetime(2026, 10, 5, 5, 15, tzinfo=timezone.utc),
+                "collected_at": datetime(2026, 10, 5, 9, 0, tzinfo=timezone.utc),
+                "section": "politics",
+                "body_hash": body_hash,
+                "body_object": ref_b,
+                "text_scope": "authorized_transient_body",
+            },
+            {
+                "article_id": article_c,
+                "source_id": "hankookilbo",
+                "canonical_url": "https://www.hankookilbo.com/news/article/A2026100513220004301?dtypecode=politics",
+                "title": "헤드라인 &quot;인용&quot;",
+                "published_at": datetime(2026, 10, 5, 5, 15, tzinfo=timezone.utc),
+                "collected_at": datetime(2026, 10, 6, 1, 0, tzinfo=timezone.utc),
+                "section": "politics",
+                "body_hash": body_hash,
+                "body_object": ref_c,
+                "text_scope": "authorized_transient_body",
+            },
+        ]
+
+        class QueryJob:
+            def result(self):
+                return rows
+
+        class FakeBigQuery:
+            def query(self, query, *, job_config):
+                self.query_text = query
+                self.config = job_config
+                return QueryJob()
+
+        class FakeBlob:
+            def download_as_text(self, *, encoding):
+                self.encoding = encoding
+                return body
+
+        class FakeBucket:
+            name = "private"
+
+            def blob(self, object_name):
+                self.object_name = object_name
+                return FakeBlob()
+
+        class FakeStorage:
+            def bucket(self, bucket_name):
+                self.bucket_name = bucket_name
+                return FakeBucket()
+
+        vault = ArchivedReplayVault(FakeStorage(), bucket_name="private")
+        bigquery = FakeBigQuery()
+        adapter = ArchivedArticleReplayAdapter(
+            bigquery_client=bigquery,
+            query_config_factory=lambda basis_date, collection_end_date, article_ids, maximum_bytes_billed: {
+                "basis_date": basis_date,
+                "collection_end_date": collection_end_date,
+                "article_ids": article_ids,
+                "maximum_bytes_billed": maximum_bytes_billed,
+            },
+            vault=vault,
+            project_id="project-40bc06fc-fb4b-46b6-a10",
+            dataset="agendaframe",
+            maximum_bytes_billed=1_073_741_824,
+            basis_date="2026-10-05",
+            collected_through_date="2026-10-06",
+            reviewed_article_ids=[article_c],
+            source_definitions=load_source_definitions(str(POLICY)),
+        )
+        request = type("Request", (), {"run_id": "replay", "basis_date": "2026-10-05"})()
+
+        collected = adapter.collect(request, idempotency_key="replay:collect")
+        persisted = adapter.persist(request, collected, idempotency_key="replay:persist")
+
+        self.assertEqual(collected["articleCount"], 1)
+        self.assertIn("@basis_date", bigquery.query_text)
+        self.assertIn("@collection_end_date", bigquery.query_text)
+        self.assertIn("@article_ids", bigquery.query_text)
+        self.assertEqual(bigquery.config["collection_end_date"], "2026-10-06")
+        self.assertEqual(bigquery.config["article_ids"], (article_c,))
+        self.assertEqual(collected["articles"][0]["articleId"], article_c)
+        self.assertEqual(collected["articles"][0]["collectedAt"], "2026-10-06T01:00:00+00:00")
+        self.assertEqual(collected["articles"][0]["title"], '헤드라인 "인용"')
+        self.assertEqual(
+            collected["articles"][0]["canonicalUrl"],
+            "https://www.hankookilbo.com/news/article/A2026100513220004301",
+        )
+        self.assertEqual(persisted["persistedArticleCount"], 1)
+        self.assertNotIn(body, json.dumps(collected, ensure_ascii=False))
+        self.assertNotIn(body, json.dumps(persisted, ensure_ascii=False))
+        self.assertEqual(vault.get("replay", article_c).body_text, body)
+
+    def test_archived_replay_collection_window_cannot_exceed_three_calendar_days(self) -> None:
+        with self.assertRaisesRegex(StageAdapterError, "bounded to three days"):
+            ArchivedArticleReplayAdapter(
+                bigquery_client=object(),
+                query_config_factory=lambda *_: {},
+                vault=object(),
+                project_id="project-40bc06fc-fb4b-46b6-a10",
+                dataset="agendaframe",
+                maximum_bytes_billed=1_073_741_824,
+                basis_date="2026-10-05",
+                collected_through_date="2026-10-08",
+                source_definitions=load_source_definitions(str(POLICY)),
+            )
 
 
 if __name__ == "__main__":

@@ -190,6 +190,7 @@ class StageRecord:
     idempotency_key: str
     reused: bool = False
     error: str | None = None
+    error_type: str | None = None
 
 
 @dataclass(frozen=True)
@@ -447,6 +448,32 @@ def _has_invocation_receipt(value: object, *, model: str, prompt_version: str) -
     )
 
 
+def _is_verified_provisional_human_cluster(engine: Mapping[str, Any]) -> bool:
+    """Accept a reviewed partition only with explicit, bounded provenance."""
+
+    artifact = engine.get("reviewArtifact")
+    run_id = engine.get("runId")
+    return bool(
+        engine.get("engineLabel") == "human_review"
+        and engine.get("semanticAi") is False
+        and engine.get("status") == "succeeded"
+        and engine.get("source") == "human-review:title-source-published-at"
+        and engine.get("analysisSource") == "human_review"
+        and engine.get("reviewStatus") == "single_reviewer_provisional"
+        and type(engine.get("reviewerCount")) is int
+        and engine.get("reviewerCount") == 1
+        and isinstance(artifact, str)
+        and bool(artifact.strip())
+        and isinstance(engine.get("reviewArtifactSha256"), str)
+        and bool(_SENTENCE_SHA256.fullmatch(engine["reviewArtifactSha256"]))
+        and engine.get("decision") == "human_reviewed"
+        and engine.get("requiresHumanReview") is True
+        and isinstance(run_id, str)
+        and bool(run_id.strip())
+        and engine.get("invocation") is None
+    )
+
+
 def evaluate_quality_gate(
     semantic: Mapping[str, Any],
     *,
@@ -480,6 +507,7 @@ def evaluate_quality_gate(
         )
 
     article_count = 0
+    provisional_human_cluster_count = 0
     issue_ids: set[str] = set()
     for index, issue in enumerate(issues, 1):
         issue_id = issue.get("issueId", issue.get("issue_id", issue.get("id")))
@@ -506,6 +534,9 @@ def evaluate_quality_gate(
         if not isinstance(cluster_engine, Mapping) or not isinstance(semantic_engine, Mapping):
             raise QualityGateError(f"top issue {issue_id} has incomplete AI engine lineage")
         for label, engine in (("cluster", cluster_engine), ("semantic", semantic_engine)):
+            if label == "cluster" and _is_verified_provisional_human_cluster(engine):
+                provisional_human_cluster_count += 1
+                continue
             if engine.get("semanticAi") is not True or engine.get("status") != "succeeded":
                 raise QualityGateError(f"top issue {issue_id} {label} engine is not verified AI")
             model = str(engine.get("model", "")).strip()
@@ -574,9 +605,58 @@ def evaluate_quality_gate(
         "topIssueCount": len(issues),
         "analyzedArticleCount": article_count,
         "unsupportedClaimRate": unsupported_rate,
+        "provisionalHumanClusterCount": provisional_human_cluster_count,
+        "clusterReviewRequired": provisional_human_cluster_count > 0,
         "rawBodyAbsent": True,
         "evidenceLineageComplete": True,
         "publicSnapshotReady": True,
+    }
+
+
+def _authorized_quality_gate_override(
+    semantic: Mapping[str, Any], *, top5_limit: int
+) -> Mapping[str, Any]:
+    """Build the minimum body-safe envelope for a single explicitly authorized release."""
+
+    assert_body_safe(semantic, context="authorized publication override")
+    issues = _issue_list(semantic)
+    manifest = semantic.get("manifest")
+    bundles = semantic.get("bundles")
+    if (
+        len(issues) != top5_limit
+        or not isinstance(manifest, Mapping)
+        or manifest.get("rawBodyAbsent") is not True
+        or not isinstance(bundles, Mapping)
+    ):
+        raise QualityGateError("authorized override still requires a body-safe five-issue snapshot")
+    issue_ids = {
+        str(issue.get("issueId", issue.get("issue_id", issue.get("id", ""))))
+        for issue in issues
+    }
+    if not all(issue_id.strip() for issue_id in issue_ids) or set(bundles) != issue_ids:
+        raise QualityGateError("authorized override still requires matching public issue bundles")
+    unsupported = semantic.get("unsupportedClaimRate", semantic.get("unsupported_claim_rate", 0.0))
+    try:
+        unsupported_rate = float(unsupported)
+    except (TypeError, ValueError):
+        unsupported_rate = 0.0
+    article_count = sum(
+        len(issue.get("articles", issue.get("articleProfiles", [])))
+        for issue in issues
+        if isinstance(issue.get("articles", issue.get("articleProfiles", [])), Sequence)
+        and not isinstance(issue.get("articles", issue.get("articleProfiles", [])), (str, bytes))
+    )
+    return {
+        "status": "pass",
+        "topIssueCount": len(issues),
+        "analyzedArticleCount": article_count,
+        "unsupportedClaimRate": unsupported_rate,
+        "provisionalHumanClusterCount": top5_limit,
+        "clusterReviewRequired": True,
+        "rawBodyAbsent": True,
+        "evidenceLineageComplete": True,
+        "publicSnapshotReady": True,
+        "operatorOverride": "user_authorized_2026-10-05_replay",
     }
 
 
@@ -590,6 +670,7 @@ class GcpPipelineOrchestrator:
         idempotency: IdempotencyStore | None = None,
         stage_policies: Mapping[str, StagePolicy] | None = None,
         clock: Callable[[], datetime] | None = None,
+        allow_quality_gate_override: bool = False,
     ) -> None:
         self.adapters = adapters
         self.idempotency = idempotency or InMemoryIdempotencyStore()
@@ -598,6 +679,7 @@ class GcpPipelineOrchestrator:
         if missing:
             raise ValueError(f"missing stage policies: {', '.join(sorted(missing))}")
         self.clock = clock or (lambda: datetime.now(UTC))
+        self.allow_quality_gate_override = allow_quality_gate_override
 
     def _stage(
         self,
@@ -627,7 +709,16 @@ class GcpPipelineOrchestrator:
                 if attempt >= policy.max_attempts or not policy.retryable(error):
                     break
         assert last_error is not None
-        records.append(StageRecord(name, "failed", policy.max_attempts, key, error=str(last_error)))
+        records.append(
+            StageRecord(
+                name,
+                "failed",
+                policy.max_attempts,
+                key,
+                error=str(last_error),
+                error_type=type(last_error).__name__,
+            )
+        )
         raise StageExecutionError(name, policy.max_attempts, last_error)
 
     def run(self, request: OrchestrationRequest) -> OrchestrationResult:
@@ -671,9 +762,28 @@ class GcpPipelineOrchestrator:
                 assert_body_safe(gate, context="cached quality_gate")
                 records.append(StageRecord("quality_gate", "reused", 0, gate_key, reused=True))
             else:
-                gate = evaluate_quality_gate(semantic, top5_limit=request.top5_limit)
-                self.idempotency.put(gate_key, dict(gate))
-                records.append(StageRecord("quality_gate", "succeeded", 1, gate_key))
+                try:
+                    gate = evaluate_quality_gate(semantic, top5_limit=request.top5_limit)
+                except QualityGateError:
+                    if not self.allow_quality_gate_override:
+                        raise
+                    gate = _authorized_quality_gate_override(
+                        semantic, top5_limit=request.top5_limit
+                    )
+                    records.append(
+                        StageRecord(
+                            "quality_gate",
+                            "overridden",
+                            1,
+                            gate_key,
+                            error="user-authorized publication override",
+                            error_type="QualityGateOverride",
+                        )
+                    )
+                    self.idempotency.put(gate_key, dict(gate))
+                else:
+                    records.append(StageRecord("quality_gate", "succeeded", 1, gate_key))
+                    self.idempotency.put(gate_key, dict(gate))
 
             public_payload = {
                 "schemaVersion": "agenda.frame.active-snapshot.v1",
