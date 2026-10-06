@@ -355,6 +355,7 @@ def _result_payload(config: GcpRuntimeConfig, result: OrchestrationResult) -> Ma
                 "idempotencyKey": record.idempotency_key,
                 "reused": record.reused,
                 "error": "stage_failed" if record.error else None,
+                "errorType": record.error_type,
                 "errorFingerprint": _error_fingerprint(record.error),
             }
             for record in result.stage_records

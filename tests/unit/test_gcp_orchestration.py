@@ -329,6 +329,8 @@ class GcpOrchestrationTests(unittest.TestCase):
             request()
         )
         self.assertEqual(result.status, "failed")
+        failed_stage = next(record for record in result.stage_records if record.status == "failed")
+        self.assertEqual(failed_stage.error_type, "QualityGateError")
         self.assertEqual(snapshots.current, {"snapshotId": "previous"})
         self.assertEqual(snapshots.objects, [])
 

@@ -190,6 +190,7 @@ class StageRecord:
     idempotency_key: str
     reused: bool = False
     error: str | None = None
+    error_type: str | None = None
 
 
 @dataclass(frozen=True)
@@ -627,7 +628,16 @@ class GcpPipelineOrchestrator:
                 if attempt >= policy.max_attempts or not policy.retryable(error):
                     break
         assert last_error is not None
-        records.append(StageRecord(name, "failed", policy.max_attempts, key, error=str(last_error)))
+        records.append(
+            StageRecord(
+                name,
+                "failed",
+                policy.max_attempts,
+                key,
+                error=str(last_error),
+                error_type=type(last_error).__name__,
+            )
+        )
         raise StageExecutionError(name, policy.max_attempts, last_error)
 
     def run(self, request: OrchestrationRequest) -> OrchestrationResult:

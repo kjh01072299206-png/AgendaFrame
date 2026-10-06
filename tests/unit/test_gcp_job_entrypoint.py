@@ -274,6 +274,7 @@ class GcpJobEntrypointTests(unittest.TestCase):
         self.assertNotIn("sensitive article body", serialized)
         self.assertNotIn("body_text", serialized)
         self.assertIn('"error": "pipeline_failed"', serialized)
+        self.assertIn('"errortype": "qualitygateerror"', serialized)
 
 
 if __name__ == "__main__":
