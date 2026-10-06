@@ -545,6 +545,9 @@
 .af-bodyreview .head .tag{vertical-align:middle;letter-spacing:0}
 .af-bodyreview .pf-article{max-width:320px}
 .afs-body:has(.af-bodyreview) > .afs-prov{display:none}
+.afs-body:has(.af-bodyreview){padding:20px 22px 72px}
+@media(max-width:860px){.afs-body:has(.af-bodyreview){padding:16px 14px 60px}}
+@media print{.afs-body:has(.af-bodyreview){padding:0}}
 .af-bodyreview{--ink-3:#606f83}
 [data-theme=dark] .af-bodyreview{--ink-3:#a7b3c0}
 .af-bodyreview .table-sub{white-space:normal;overflow-wrap:anywhere}
