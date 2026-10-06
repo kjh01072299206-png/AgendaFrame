@@ -5,7 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     AGENDAFRAME_RUNTIME_CONFIG=/app/config/gcp-runtime.yaml \
     AGENDAFRAME_SOURCE_POLICY=/app/config/source-policies.yaml \
     AGENDAFRAME_DISCOVERY_POLICY=/app/site/data/discovery-sources.json \
-    AGENDAFRAME_REVIEWED_CLUSTER_ANNOTATION=/app/evals/annotations/initial-five-2026-10-05-single-reviewer-v1.json
+    AGENDAFRAME_REVIEWED_CLUSTER_ANNOTATION=/app/evals/annotations/initial-five-2026-10-05-single-reviewer-v2.json
 
 WORKDIR /app
 COPY pyproject.toml README.md requirements.lock ./
@@ -13,6 +13,7 @@ COPY src ./src
 COPY config ./config
 COPY site/data/discovery-sources.json ./site/data/discovery-sources.json
 COPY evals/annotations/initial-five-2026-10-05-single-reviewer-v1.json ./evals/annotations/initial-five-2026-10-05-single-reviewer-v1.json
+COPY evals/annotations/initial-five-2026-10-05-single-reviewer-v2.json ./evals/annotations/initial-five-2026-10-05-single-reviewer-v2.json
 RUN python -m pip install --disable-pip-version-check --require-hashes -r requirements.lock \
     && python -m pip install --disable-pip-version-check --no-deps .
 

@@ -488,6 +488,37 @@ class MetadataIssueClusteringTests(unittest.TestCase):
                 changed, changed_candidates
             )
 
+    def test_human_reviewed_october_fifth_v2_refreshes_titles_without_relabeling(self) -> None:
+        annotation = json.loads(
+            Path("evals/annotations/initial-five-2026-10-05-single-reviewer-v2.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        articles = tuple(
+            MetadataArticle(row["article_id"], row["title"], row["source"], row["published_at"])
+            for row in annotation["articles"]
+        )
+        candidates = (
+            MetadataIssueGroup("candidate-2026-10-05", "all archived articles", articles),
+        )
+
+        result = HumanReviewedInitialFiveClusterer(
+            basis_date="2026-10-05",
+            annotation_path="evals/annotations/initial-five-2026-10-05-single-reviewer-v2.json",
+        ).analyze(articles, candidates)
+
+        self.assertEqual(
+            annotation["supersedes_annotation_id"], "initial-five-2026-10-05-single-reviewer-v1"
+        )
+        self.assertEqual(annotation["review_status"], "single_reviewer_provisional")
+        self.assertEqual(len(articles), 92)
+        self.assertEqual(
+            sum(len(cluster["article_assignments"]) for cluster in result.clusters), 48
+        )
+        self.assertEqual(len(result.ambiguous_article_ids), 5)
+        self.assertEqual(len(result.outlier_article_ids), 37)
+        self.assertEqual(len(result.excluded_article_ids), 2)
+
     def test_initial_five_global_outlier_can_cover_unclustered_article(self) -> None:
         articles, _ = self._initial_five_fixture()
         payload = self._payload()

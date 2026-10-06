@@ -805,8 +805,10 @@ class GcpStageAdapterTests(unittest.TestCase):
         body_hash = hashlib.sha256(body.encode("utf-8")).hexdigest()
         article_a = "a" * 32
         article_b = "b" * 32
+        article_c = "c" * 32
         ref_a = f"gs://private/bodies/hankookilbo/2026/10/05/{article_a}.txt"
         ref_b = f"gs://private/bodies/hankookilbo/2026/10/05/{article_b}.txt"
+        ref_c = f"gs://private/bodies/hankookilbo/2026/10/05/{article_c}/{'c' * 64}.txt"
         rows = [
             {
                 "article_id": article_a,
@@ -830,6 +832,18 @@ class GcpStageAdapterTests(unittest.TestCase):
                 "section": "politics",
                 "body_hash": body_hash,
                 "body_object": ref_b,
+                "text_scope": "authorized_transient_body",
+            },
+            {
+                "article_id": article_c,
+                "source_id": "hankookilbo",
+                "canonical_url": "https://www.hankookilbo.com/news/article/A2026100513220004301?dtypecode=politics",
+                "title": "헤드라인 &quot;인용&quot;",
+                "published_at": datetime(2026, 10, 5, 5, 15, tzinfo=timezone.utc),
+                "collected_at": datetime(2026, 10, 6, 1, 0, tzinfo=timezone.utc),
+                "section": "politics",
+                "body_hash": body_hash,
+                "body_object": ref_c,
                 "text_scope": "authorized_transient_body",
             },
         ]
@@ -865,8 +879,10 @@ class GcpStageAdapterTests(unittest.TestCase):
         bigquery = FakeBigQuery()
         adapter = ArchivedArticleReplayAdapter(
             bigquery_client=bigquery,
-            query_config_factory=lambda basis_date, maximum_bytes_billed: {
+            query_config_factory=lambda basis_date, collection_end_date, article_ids, maximum_bytes_billed: {
                 "basis_date": basis_date,
+                "collection_end_date": collection_end_date,
+                "article_ids": article_ids,
                 "maximum_bytes_billed": maximum_bytes_billed,
             },
             vault=vault,
@@ -874,6 +890,8 @@ class GcpStageAdapterTests(unittest.TestCase):
             dataset="agendaframe",
             maximum_bytes_billed=1_073_741_824,
             basis_date="2026-10-05",
+            collected_through_date="2026-10-06",
+            reviewed_article_ids=[article_c],
             source_definitions=load_source_definitions(str(POLICY)),
         )
         request = type("Request", (), {"run_id": "replay", "basis_date": "2026-10-05"})()
@@ -883,7 +901,12 @@ class GcpStageAdapterTests(unittest.TestCase):
 
         self.assertEqual(collected["articleCount"], 1)
         self.assertIn("@basis_date", bigquery.query_text)
-        self.assertEqual(collected["articles"][0]["articleId"], article_b)
+        self.assertIn("@collection_end_date", bigquery.query_text)
+        self.assertIn("@article_ids", bigquery.query_text)
+        self.assertEqual(bigquery.config["collection_end_date"], "2026-10-06")
+        self.assertEqual(bigquery.config["article_ids"], (article_c,))
+        self.assertEqual(collected["articles"][0]["articleId"], article_c)
+        self.assertEqual(collected["articles"][0]["collectedAt"], "2026-10-06T01:00:00+00:00")
         self.assertEqual(collected["articles"][0]["title"], '헤드라인 "인용"')
         self.assertEqual(
             collected["articles"][0]["canonicalUrl"],
@@ -892,7 +915,21 @@ class GcpStageAdapterTests(unittest.TestCase):
         self.assertEqual(persisted["persistedArticleCount"], 1)
         self.assertNotIn(body, json.dumps(collected, ensure_ascii=False))
         self.assertNotIn(body, json.dumps(persisted, ensure_ascii=False))
-        self.assertEqual(vault.get("replay", article_b).body_text, body)
+        self.assertEqual(vault.get("replay", article_c).body_text, body)
+
+    def test_archived_replay_collection_window_cannot_exceed_three_calendar_days(self) -> None:
+        with self.assertRaisesRegex(StageAdapterError, "bounded to three days"):
+            ArchivedArticleReplayAdapter(
+                bigquery_client=object(),
+                query_config_factory=lambda *_: {},
+                vault=object(),
+                project_id="project-40bc06fc-fb4b-46b6-a10",
+                dataset="agendaframe",
+                maximum_bytes_billed=1_073_741_824,
+                basis_date="2026-10-05",
+                collected_through_date="2026-10-08",
+                source_definitions=load_source_definitions(str(POLICY)),
+            )
 
 
 if __name__ == "__main__":

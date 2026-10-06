@@ -257,6 +257,7 @@ export interface InitialFiveArticle {
   sourceId: string | null;
   mediaGroupId: string | null;
   publishedAt: string | null;
+  collectedAt: string | null;
   section: string | null;
   canonicalUrl: string | null;
   bodySha256: string | null;

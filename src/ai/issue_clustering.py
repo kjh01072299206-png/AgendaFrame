@@ -701,7 +701,11 @@ class HumanReviewedInitialFiveClusterer:
         annotation = json.loads(raw.decode("utf-8"))
         if (
             annotation.get("schema_version") != "agendaframe.initial-five-human-review.v1"
-            or annotation.get("annotation_id") != "initial-five-2026-10-05-single-reviewer-v1"
+            or annotation.get("annotation_id")
+            not in {
+                "initial-five-2026-10-05-single-reviewer-v1",
+                "initial-five-2026-10-05-single-reviewer-v2",
+            }
             or annotation.get("basis_date") != self.basis_date
             or annotation.get("review_status") != "single_reviewer_provisional"
             or annotation.get("reviewer_count") != 1

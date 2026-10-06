@@ -19,7 +19,7 @@ import json
 import math
 import re
 from dataclasses import dataclass, replace
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Callable, Mapping, Protocol, Sequence
 from urllib.parse import urlsplit
 
@@ -607,12 +607,14 @@ class ArchivedArticleReplayAdapter(CollectionAdapter, PersistenceAdapter):
         self,
         *,
         bigquery_client: Any,
-        query_config_factory: Callable[[str, int], Any],
+        query_config_factory: Callable[[str, str, Sequence[str] | None, int], Any],
         vault: ArchivedReplayVault,
         project_id: str,
         dataset: str,
         maximum_bytes_billed: int,
         basis_date: str,
+        collected_through_date: str | None = None,
+        reviewed_article_ids: Sequence[str] | None = None,
         source_definitions: Sequence[SourceDefinition],
         max_articles: int = 100,
     ) -> None:
@@ -631,12 +633,39 @@ class ArchivedArticleReplayAdapter(CollectionAdapter, PersistenceAdapter):
         self.dataset = dataset
         self.maximum_bytes_billed = maximum_bytes_billed
         self.basis_date = basis_date
+        try:
+            basis_day = date.fromisoformat(basis_date)
+            collection_end_day = date.fromisoformat(collected_through_date or basis_date)
+        except ValueError as error:
+            raise StageAdapterError("archived replay dates must use ISO calendar dates") from error
+        if collection_end_day < basis_day or collection_end_day > basis_day + timedelta(days=2):
+            raise StageAdapterError(
+                "archived replay collection window must be bounded to three days"
+            )
+        self.collected_through_date = collection_end_day.isoformat()
         self.sources = {source.source_id: source for source in source_definitions}
         self.max_articles = max_articles
+        if reviewed_article_ids is None:
+            self.reviewed_article_ids = None
+        else:
+            article_ids = tuple(str(value).strip() for value in reviewed_article_ids)
+            if (
+                not article_ids
+                or len(article_ids) > max_articles
+                or len(article_ids) != len(set(article_ids))
+                or not all(re.fullmatch(r"[a-f0-9]{32}", value) for value in article_ids)
+            ):
+                raise StageAdapterError("reviewed replay article IDs are invalid")
+            self.reviewed_article_ids = article_ids
 
     def collect(self, request, *, idempotency_key: str) -> Mapping[str, Any]:
         if request.basis_date != self.basis_date:
             raise StageAdapterError("archived replay date does not match the pipeline request")
+        article_id_filter = (
+            "AND article_id IN UNNEST(@article_ids)"
+            if self.reviewed_article_ids is not None
+            else ""
+        )
         query = f"""
             SELECT article_id, source_id, canonical_url, title, published_at,
                    collected_at, section, body_hash, body_object, text_scope
@@ -644,11 +673,17 @@ class ArchivedArticleReplayAdapter(CollectionAdapter, PersistenceAdapter):
             WHERE published_at >= TIMESTAMP(DATETIME(@basis_date, TIME '00:00:00'), 'Asia/Seoul')
               AND published_at < TIMESTAMP(DATETIME(DATE_ADD(@basis_date, INTERVAL 1 DAY), TIME '00:00:00'), 'Asia/Seoul')
               AND collected_at >= TIMESTAMP(DATETIME(@basis_date, TIME '00:00:00'), 'Asia/Seoul')
-              AND collected_at < TIMESTAMP(DATETIME(DATE_ADD(@basis_date, INTERVAL 1 DAY), TIME '00:00:00'), 'Asia/Seoul')
+              AND collected_at < TIMESTAMP(DATETIME(DATE_ADD(@collection_end_date, INTERVAL 1 DAY), TIME '00:00:00'), 'Asia/Seoul')
               AND body_object IS NOT NULL
               AND text_scope = 'authorized_transient_body'
+              {article_id_filter}
         """
-        config = self.query_config_factory(self.basis_date, self.maximum_bytes_billed)
+        config = self.query_config_factory(
+            self.basis_date,
+            self.collected_through_date,
+            self.reviewed_article_ids,
+            self.maximum_bytes_billed,
+        )
         try:
             raw_rows = [
                 dict(row.items())
@@ -688,6 +723,13 @@ class ArchivedArticleReplayAdapter(CollectionAdapter, PersistenceAdapter):
         if not latest_by_url:
             raise StageAdapterError(
                 "no authorized archived articles were found for the replay date"
+            )
+        selected_article_ids = {str(row["article_id"]) for row in latest_by_url.values()}
+        if self.reviewed_article_ids is not None and selected_article_ids != set(
+            self.reviewed_article_ids
+        ):
+            raise StageAdapterError(
+                "archived replay does not exactly match the reviewed article census"
             )
         if len(latest_by_url) > self.max_articles:
             raise StageAdapterError(

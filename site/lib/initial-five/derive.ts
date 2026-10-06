@@ -223,6 +223,7 @@ export interface ArticleView {
   outlet: string;
   section: string | null;
   publishedAt: string | null;
+  collectedAt: string | null;
   url: string | null;
   evidenceCount: number;
   /** 차원별 지배 프레임 계열 = 그 층위 첫 항목 (없으면 undefined) */
@@ -298,6 +299,7 @@ function articleViews(bundle: IssueAnalysisBundle): ArticleView[] {
       outlet: article.outlet ?? "미상",
       section: article.section,
       publishedAt: article.publishedAt,
+      collectedAt: article.collectedAt,
       url: article.canonicalUrl,
       evidenceCount: entry?.engine?.evidenceCount ?? entry?.evidence?.length ?? 0,
       families,

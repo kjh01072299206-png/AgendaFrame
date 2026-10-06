@@ -1,0 +1,810 @@
+{
+  "schema_version": "agendaframe.initial-five-human-review.v1",
+  "annotation_id": "initial-five-2026-10-05-single-reviewer-v2",
+  "basis_date": "2026-10-05",
+  "created_at": "2026-10-06",
+  "review_status": "single_reviewer_provisional",
+  "reviewer_count": 1,
+  "adjudicated": false,
+  "evaluation_kind": "posthoc_manual_review_not_locked_holdout",
+  "review_scope": "KST 2026-10-05 published articles; title fields refreshed from current pages checked on 2026-10-06; labels use title, outlet, and published time only",
+  "text_scope": "title_source_published_at_only",
+  "article_count": 92,
+  "group_count": 9,
+  "ambiguous_article_ids": [
+    "585e1bbf0ad8581f7746ebd3e14eb8b8",
+    "be5cedd14ddf841f7c8fff18af51a0c5",
+    "b5af3c679a5866e10c856c8f898a6257",
+    "b392a3019e2dbd594668c053ccdc0a03",
+    "2b55252ee0a938b1cde7a23a821d0e8b"
+  ],
+  "out_of_scope_article_ids": [
+    "b041572d54086314225929874e70aca4",
+    "1fbd00f7f012f15406ef677667e27a27"
+  ],
+  "groups": [
+    {
+      "group_id": "dmz-landmine-response",
+      "label": "북한 DMZ 지뢰 매설·제거와 군의 대응",
+      "summary": "제목에서 북한의 비무장지대 지뢰 매설 확인, 제거 작전, 정부·군의 후속 대응을 함께 다룬 보도다.",
+      "grouping_reason": "같은 DMZ 지뢰 사건의 원인 확인과 제거·대응을 직접 다룬 제목만 묶었다. 지뢰와 같은 단어가 함께 나올 뿐인 외교·군사 일반 기사는 제외했다.",
+      "coherence": "high",
+      "article_ids": [
+        "dcf671d7d9a022c870a86870915f077f",
+        "96cd017e4a92adf1775d876f0d703ebd",
+        "a158c72c695ac158e2cd87f042f25264",
+        "d7a4ce4a5c082233cf75a260aedd7adf",
+        "34863f66f35572c178b8f76f5d718d48",
+        "9d2de50066b70aaca4d57a029777bd87",
+        "5a0305708b07711fa8286bddbd35e35e",
+        "0d8df662ab45fecd87ad1e55b0a8a019",
+        "78805b5135060fe1ea8dca7e2e6c3dfb",
+        "ee98c0ee93d95c990cf5ef9b62496714",
+        "fb62e646fc5eecd6cf7f7c24a9fa64e7",
+        "d382eb943b52aeb133cdb9d07a399f9d",
+        "e38153fb6f394ebf70937f0a9a89f12e"
+      ]
+    },
+    {
+      "group_id": "assassins-film-controversy",
+      "label": "영화 《암살자(들)》 논란과 정당 대응",
+      "summary": "영화 《암살자(들)》의 상영·역사 해석을 둘러싼 정치권 공방과 장동혁 대표의 관련 행보를 다룬 보도다.",
+      "grouping_reason": "상영 철회 요구, 영화 관련 정당 공방, 같은 논란을 언급한 장동혁 대표의 생가 방문 보도를 하나의 이어진 사건 묶음으로 보았다. 배우 소속사의 안전 입장문은 별도 발표로 분리했다.",
+      "coherence": "medium",
+      "article_ids": [
+        "d455d12f3d2102403ba0ca806a8bfdb5",
+        "a231eda66095ac31a16f3ad6e4060220",
+        "7c7713e4be908e66dcbd1c982a48cc1f",
+        "e958e013243a4b637960b7838be283ce",
+        "7da8fca91a9b3cf9c25778aeed30e19e",
+        "35da8ee754361ce92099af3d18cef649",
+        "6a978f4e9ac12d72f930c712f6b7ab2e",
+        "8c4e418700bf440a375f90b6f1f5cef6",
+        "341ca115ca0f2e358f361feeed63d595"
+      ]
+    },
+    {
+      "group_id": "yoo-hae-jin-agency-statement",
+      "label": "유해진 소속사의 신변 위협 대응 입장",
+      "summary": "영화 논란과 관련해 유해진 소속사가 배우 안전과 신변 위협 대응 방침을 밝힌 보도다.",
+      "grouping_reason": "같은 소속사 입장문을 보도한 두 제목을 묶었다.",
+      "coherence": "high",
+      "article_ids": [
+        "25901bec8cc9ccab36799b36d6faaa43",
+        "82b2ccf061bd89350eb68b78232bef4b"
+      ]
+    },
+    {
+      "group_id": "lee-mugeukpa-remarks",
+      "label": "이 대통령의 ‘무극파’·극단주의 경계 발언",
+      "summary": "이 대통령이 ‘무극파’와 좌우의 무책임한 극단주의를 경계하며 개혁 성과 독점을 비판한 발언을 다룬 보도다.",
+      "grouping_reason": "같은 대통령 발언을 직접 인용하거나 요약한 기사만 묶었다. 검찰개혁 인사·수사 개입 경고와 SNS 활동량 등 별도 발언·주제는 제외했다.",
+      "coherence": "high",
+      "article_ids": [
+        "1c6ec538b7f9ab75149413298af227bb",
+        "7314c5bc0faadaf89a6a46411a95fd31",
+        "e678b8189b8009939a6ed604753e61ba",
+        "fe9c9d4331595377366b2cc648388f6a",
+        "bf95d8b98feadd721eac126ce7e1821d",
+        "8f33594f53f066a860a369c3de1af8da",
+        "f9341906a6947ba0c6f0b8a48a7a3c63"
+      ]
+    },
+    {
+      "group_id": "prosecution-reform-warning",
+      "label": "검찰개혁을 내세운 인사·수사 개입 경고",
+      "summary": "이 대통령이 검찰개혁을 이유로 사심에 따라 인사·수사를 좌우해서는 안 된다고 경고한 발언을 다룬 보도다.",
+      "grouping_reason": "같은 경고 발언을 제목에서 직접 인용하거나 요약한 기사만 묶었다. 과거 영상 공유를 통한 별도 반박은 분리했다.",
+      "coherence": "high",
+      "article_ids": [
+        "8fa31b90f0b55d7ef603c3b18822741d",
+        "06db1bd9e835a563466ddae6658a62c0",
+        "4df1b96fe5df66cb3d7002a4f9dc0075",
+        "ddddaa7559a0491feaa86e87ce257ea1",
+        "136b6c1e275a030f35b44f291fcb6435"
+      ]
+    },
+    {
+      "group_id": "realmeter-poll-oct05",
+      "label": "리얼미터 대통령·정당 지지율 조사",
+      "summary": "리얼미터의 대통령 지지율과 정당 지지율 조사 결과 및 이를 다룬 제목을 묶었다.",
+      "grouping_reason": "같은 조사기관의 같은 수치와 조사 결과를 보도한 기사만 묶었다. 다른 여론조사나 단순 정치 전망은 포함하지 않았다.",
+      "coherence": "high",
+      "article_ids": [
+        "9cd6f814860437d66ac802fdc017508d",
+        "76acfa399e16ebd0d8c09b2fb05b74c2",
+        "1cf624e7b6d0b1a0352fbf2ce37c8091",
+        "f7866b7c1d07b63e01c03e71882b0581"
+      ]
+    },
+    {
+      "group_id": "empty-rifle-forward-units",
+      "label": "전방 부대 실탄 미장착·빈 총 경계 논란",
+      "summary": "전방 부대에서 실탄을 장착하지 않은 빈 총으로 경계한 사례가 추가 확인됐다는 보도다.",
+      "grouping_reason": "빈 총·실탄 미장착 전방 부대 사례와 국방부의 후속 확인을 직접 다룬 기사만 묶었다.",
+      "coherence": "high",
+      "article_ids": [
+        "c9b14c3062e0d10ef779e12373d1ea97",
+        "6828eef4c8693e9ca4c7779aba158f32",
+        "c683056f5ea48cc748d9fc24d5d7bd6c"
+      ]
+    },
+    {
+      "group_id": "jo-hee-dae-audit-attendance",
+      "label": "조희대 대법원장 국정감사 출석 공방",
+      "summary": "국회 국정감사에서 조희대 대법원장의 증인 출석 여부와 첫날 핵심 쟁점화를 다룬 보도다.",
+      "grouping_reason": "같은 국정감사 출석 요구와 불출석 가능성을 중심으로 한 제목을 묶었다. 국정감사 일반 일정 보도는 제외했다.",
+      "coherence": "medium",
+      "article_ids": [
+        "ad1d7684ea36bf4a3b6c9b0c17c8649b",
+        "d5d0ac4d73fd98b9676a7e20556cebb5",
+        "add57411eab0a37ebedda67f5943d150"
+      ]
+    },
+    {
+      "group_id": "north-korea-mrbm-report",
+      "label": "북한 탄도미사일·MRBM 능력 보도",
+      "summary": "북한의 탄도미사일 발사와 중거리탄도미사일 능력 주장을 다룬 제목이다. 같은 발사 사건인지 제목만으로 완전히 확정하기 어려워 임시 묶음으로 보았다.",
+      "grouping_reason": "북한 탄도미사일 도발과 MRBM 관련 보도가 같은 발사·능력 보도에 속할 가능성이 있어 묶었으나, 제목만으로 사건 동일성을 완전히 확인할 수 없어 별도 이중 검토가 필요하다.",
+      "coherence": "medium",
+      "article_ids": [
+        "265d2380d8e82513be6d9b22278d2157",
+        "7339c4cde5f55e8ec8d745754c875ede"
+      ]
+    }
+  ],
+  "articles": [
+    {
+      "article_id": "b041572d54086314225929874e70aca4",
+      "title": "[사설] AI 해킹 서막일 수도… 국가 차원의 방어막 대응해야",
+      "source": "seoul",
+      "published_at": "2026-10-04T15:08:24+00:00",
+      "review_label": "out_of_scope"
+    },
+    {
+      "article_id": "1c6ec538b7f9ab75149413298af227bb",
+      "title": "李 “근거없는 선동 유행처럼 번져…좌든 우든 극단주의 경계해야”",
+      "source": "joongang",
+      "published_at": "2026-10-04T15:32:25+00:00",
+      "review_label": "lee-mugeukpa-remarks"
+    },
+    {
+      "article_id": "d455d12f3d2102403ba0ca806a8bfdb5",
+      "title": "국힘, ‘암살자(들)’ 국제영화제 개막작 철회 요구…민주 “영틀막 정당”",
+      "source": "segye",
+      "published_at": "2026-10-04T15:37:01+00:00",
+      "review_label": "assassins-film-controversy"
+    },
+    {
+      "article_id": "4742432e22153100b1f25e52c5f1686e",
+      "title": "한동훈, 김지용에 \"옛 인연 생각해 방법 알려준다…민주당 충성 맹세하면 시켜줄 것\"",
+      "source": "munhwa",
+      "published_at": "2026-10-04T15:47:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "1fbd00f7f012f15406ef677667e27a27",
+      "title": "[김동완의 오늘의 운세] 2026년 10월 5일",
+      "source": "seoul",
+      "published_at": "2026-10-04T16:05:10+00:00",
+      "review_label": "out_of_scope"
+    },
+    {
+      "article_id": "265d2380d8e82513be6d9b22278d2157",
+      "title": "김정은, 韓과 대화 거부 다음날 탄도미사일 도발",
+      "source": "donga",
+      "published_at": "2026-10-04T16:40:00+00:00",
+      "review_label": "north-korea-mrbm-report"
+    },
+    {
+      "article_id": "585e1bbf0ad8581f7746ebd3e14eb8b8",
+      "title": "北, 지뢰 뭉개고 美 관심끌기… 트럼프 “핵미사일 112개, 잘 지내야”",
+      "source": "donga",
+      "published_at": "2026-10-04T16:40:00+00:00",
+      "review_label": "ambiguous_title_only"
+    },
+    {
+      "article_id": "7339c4cde5f55e8ec8d745754c875ede",
+      "title": "北 “파도식 비행-AI 도입-경로 변경” 주장… 괌 사정권 MRBM, 한미 요격 무력화 위협",
+      "source": "donga",
+      "published_at": "2026-10-04T16:40:00+00:00",
+      "review_label": "north-korea-mrbm-report"
+    },
+    {
+      "article_id": "dcf671d7d9a022c870a86870915f077f",
+      "title": "[단독]‘北 지뢰 폭발’ 주내 최종 발표… 첨단 무기 시연 등 상응조치 검토",
+      "source": "donga",
+      "published_at": "2026-10-04T16:40:00+00:00",
+      "review_label": "dmz-landmine-response"
+    },
+    {
+      "article_id": "87682e7e9342e29150e482256976094a",
+      "title": "\"군대 안간다\" 금메달 따고도 고개숙인 축구대표 주장 이기혁…\"반성, 또 반성\"",
+      "source": "munhwa",
+      "published_at": "2026-10-04T18:09:25+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "c7f52982b2ddbe35f94608f37c3027f5",
+      "title": "'도대체 어떻게 경찰이 됐을까?'…지인 나체 허위 성착취물 제작·유포한 현직 경찰관 구속",
+      "source": "munhwa",
+      "published_at": "2026-10-04T19:05:24+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "3e08a7f9c6b3a2bd8e571687d3bc9a0f",
+      "title": "이 대통령 9월 SNS 글, 전월 대비 216% 급증... '선택적 소통' 우려도",
+      "source": "hankookilbo",
+      "published_at": "2026-10-04T19:30:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "d96dfbe17c5f151cad59d13a9139df14",
+      "title": "“한국, 동맹 의존·몰입 벗어나 자강 중심 국제연대 고민해야”",
+      "source": "hani",
+      "published_at": "2026-10-04T20:00:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "f67b113666b69d9d6ac5d46137b2d7c3",
+      "title": "MB “청와대 담 넘어도 절대…” 광우병 그때, 경찰에 내린 엄명",
+      "source": "joongang",
+      "published_at": "2026-10-04T20:00:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "be5cedd14ddf841f7c8fff18af51a0c5",
+      "title": "한국 경고에도… 젤렌스키 또 北 언급하며 “매우 위험한 순간”",
+      "source": "kmib",
+      "published_at": "2026-10-04T20:15:00+00:00",
+      "review_label": "ambiguous_title_only"
+    },
+    {
+      "article_id": "a231eda66095ac31a16f3ad6e4060220",
+      "title": "“암살자(들) 상영 멈춰라”… 장동혁, 오늘 육영수 생가 방문",
+      "source": "kmib",
+      "published_at": "2026-10-04T20:21:00+00:00",
+      "review_label": "assassins-film-controversy"
+    },
+    {
+      "article_id": "356f4833bc415c15ff34f1664038b845",
+      "title": "'개문발차' 공소청, 버스기사 때린 60대 영장 기각, 왜?…\"증거있어 구속 불필요\"",
+      "source": "munhwa",
+      "published_at": "2026-10-04T20:25:30+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "96cd017e4a92adf1775d876f0d703ebd",
+      "title": "[단독] “北 해킹 제재”“지뢰와 뭔 상관”…조현·정동영 고성 충돌",
+      "source": "joongang",
+      "published_at": "2026-10-04T21:00:00+00:00",
+      "review_label": "dmz-landmine-response"
+    },
+    {
+      "article_id": "86f3e6886c78854ac1a31c886de93549",
+      "title": "[올앳부동산]서울 골목 어딜 가봐도 차로 ‘빽빽’ 왜?···도쿄와 비교해보니",
+      "source": "khan",
+      "published_at": "2026-10-04T21:00:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "2b5ffc0493225c2b5e32791bb7d1a514",
+      "title": "트럼프 “미국 선두 유지” 슈퍼지능TF 발족···AI 차르에 국가정보국장 임명",
+      "source": "khan",
+      "published_at": "2026-10-04T22:42:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "9cd6f814860437d66ac802fdc017508d",
+      "title": "李 지지도 37.4%, 3주만에 하락…민주 42.5% 국힘 38.4%[리얼미터]",
+      "source": "joongang",
+      "published_at": "2026-10-04T23:52:55+00:00",
+      "review_label": "realmeter-poll-oct05"
+    },
+    {
+      "article_id": "76acfa399e16ebd0d8c09b2fb05b74c2",
+      "title": "[속보]이 대통령 지지율 37.4%, 3주만 소폭 하락…민주 42.5%·국힘 38.4% 오차 내 [리얼미터]",
+      "source": "munhwa",
+      "published_at": "2026-10-05T00:07:26+00:00",
+      "review_label": "realmeter-poll-oct05"
+    },
+    {
+      "article_id": "7314c5bc0faadaf89a6a46411a95fd31",
+      "title": "‘무극파’ 직격한 李…“개혁성과 독차지하겠단 이기심”",
+      "source": "donga",
+      "published_at": "2026-10-05T00:08:00+00:00",
+      "review_label": "lee-mugeukpa-remarks"
+    },
+    {
+      "article_id": "b5af3c679a5866e10c856c8f898a6257",
+      "title": "젤렌스키 “한국이 北 군인 넘겨달라 요청”…비공개 합의 파기는 언급 안 해",
+      "source": "donga",
+      "published_at": "2026-10-05T00:44:00+00:00",
+      "review_label": "ambiguous_title_only"
+    },
+    {
+      "article_id": "1cf624e7b6d0b1a0352fbf2ce37c8091",
+      "title": "이 대통령 지지율 ‘37.4%’ 3주 만에 소폭 하락···“김지용·DMZ 지뢰 폭발 사건 영향”[리얼미터]",
+      "source": "khan",
+      "published_at": "2026-10-05T00:57:00+00:00",
+      "review_label": "realmeter-poll-oct05"
+    },
+    {
+      "article_id": "cb1923e5c4a8c22dbe8ef3c9fff47dd2",
+      "title": "지진 등 통신두절 때 어쩌려고···재외공관 절반 ‘비상위성통신장비’ 없다",
+      "source": "khan",
+      "published_at": "2026-10-05T01:01:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "e678b8189b8009939a6ed604753e61ba",
+      "title": "[속보]李대통령, '무극파' 직격…\"개혁 성과 독차지하려는 이기심\"",
+      "source": "munhwa",
+      "published_at": "2026-10-05T01:02:27+00:00",
+      "review_label": "lee-mugeukpa-remarks"
+    },
+    {
+      "article_id": "fe9c9d4331595377366b2cc648388f6a",
+      "title": "이 대통령, 범여권 강경파 겨냥 “‘무극파’ 경계해야···개혁 성과 독차지하겠다는 이기심”",
+      "source": "khan",
+      "published_at": "2026-10-05T01:08:00+00:00",
+      "review_label": "lee-mugeukpa-remarks"
+    },
+    {
+      "article_id": "f1e1740f5aa11e436fca3d66c2910b4d",
+      "title": "큐로셀·토모큐브 등 6개사 출격···대전 바이오, 국내외 연구자 앞에 선다",
+      "source": "khan",
+      "published_at": "2026-10-05T01:12:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "7c7713e4be908e66dcbd1c982a48cc1f",
+      "title": "장동혁, 오늘 육영수 생가 방문…영화 '암살자(들)' 공세 계속",
+      "source": "sbs",
+      "published_at": "2026-10-05T01:14:23+00:00",
+      "review_label": "assassins-film-controversy"
+    },
+    {
+      "article_id": "3dbe722af07856307b5e30c2388021ec",
+      "title": "샘 올트먼 “AI 일부 위험 감수해야”…앤트로픽과 ‘안전 철학’ 선 긋기",
+      "source": "khan",
+      "published_at": "2026-10-05T01:28:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "21ff8c695d31a0bfdbb0921df8eabe1d",
+      "title": "국감장 서는 수입차 대표들, 4명 중 2명만 증인 나온다…‘팔고 나면 끝’ 사후관리 도마",
+      "source": "khan",
+      "published_at": "2026-10-05T01:31:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "bf95d8b98feadd721eac126ce7e1821d",
+      "title": "이재명 대통령 \"좌우 어디서나 무책임한 극단주의 경계해야\"",
+      "source": "segye",
+      "published_at": "2026-10-05T01:32:11+00:00",
+      "review_label": "lee-mugeukpa-remarks"
+    },
+    {
+      "article_id": "8f33594f53f066a860a369c3de1af8da",
+      "title": "이 대통령 \"무책임 극단주의 '무극파' 경계…근거없이 혹세무민\"",
+      "source": "sbs",
+      "published_at": "2026-10-05T01:39:39+00:00",
+      "review_label": "lee-mugeukpa-remarks"
+    },
+    {
+      "article_id": "f9341906a6947ba0c6f0b8a48a7a3c63",
+      "title": "이 대통령 \"무책임 극단주의 '무극파' 경계…근거없이 혹세무민\"",
+      "source": "sbs",
+      "published_at": "2026-10-05T01:43:36+00:00",
+      "review_label": "lee-mugeukpa-remarks"
+    },
+    {
+      "article_id": "c23a4b976fcea0121c94d2278cca9a05",
+      "title": "여학생 성추행한 중학생…法 “부모가 1800만원 배상”",
+      "source": "seoul",
+      "published_at": "2026-10-05T01:46:47+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "c7b77eee6525e071d218c82cae958f0d",
+      "title": "[속보]처음 본 20대 여성 뒤통수에 돌덩이 '퍽' 50대…男 \"술 취해 기억 안 나\"",
+      "source": "munhwa",
+      "published_at": "2026-10-05T01:47:24+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "c9b14c3062e0d10ef779e12373d1ea97",
+      "title": "북한군 코앞인데…‘실탄 미장착’ 빈총 전방군단 또 있었다",
+      "source": "joongang",
+      "published_at": "2026-10-05T01:54:58+00:00",
+      "review_label": "empty-rifle-forward-units"
+    },
+    {
+      "article_id": "f7866b7c1d07b63e01c03e71882b0581",
+      "title": "지뢰 사고·우크라·김지용 논란에 상승하던 李 지지율 다시 ‘불안불안’…3주 만에 소폭 하락세로",
+      "source": "segye",
+      "published_at": "2026-10-05T02:05:24+00:00",
+      "review_label": "realmeter-poll-oct05"
+    },
+    {
+      "article_id": "1668b2354d0088540c387bb579925c61",
+      "title": "국힘 권영진 “한동훈의 비생산적 ‘노무현’ 공방…나는 빼달라”",
+      "source": "hani",
+      "published_at": "2026-10-05T02:10:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "25901bec8cc9ccab36799b36d6faaa43",
+      "title": "‘암살자(들)’ 유해진 소속사 “신변위협·명예훼손 엄중…배우 안전 위해 모든 조치”",
+      "source": "seoul",
+      "published_at": "2026-10-05T02:20:28+00:00",
+      "review_label": "yoo-hae-jin-agency-statement"
+    },
+    {
+      "article_id": "7890753bcc50f36a09b3d4154237bc46",
+      "title": "유용원 “북 MDL 침범, 전방 여러 곳에서 발생”…정부에 실태 공개 촉구",
+      "source": "hani",
+      "published_at": "2026-10-05T02:21:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "8fa31b90f0b55d7ef603c3b18822741d",
+      "title": "이 대통령 “검찰개혁 빙자해 사심으로 인사·수사 좌지우지 안 돼”",
+      "source": "hani",
+      "published_at": "2026-10-05T02:24:00+00:00",
+      "review_label": "prosecution-reform-warning"
+    },
+    {
+      "article_id": "41e737d08ee31dbbf95ec6b3f3f0190b",
+      "title": "‘집값 담합’ 의혹 신고해도 지자체 넘어가니 66%가 ‘무혐의 종결’···“소극적 법 해석·위법 방치”",
+      "source": "khan",
+      "published_at": "2026-10-05T02:27:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "ad1d7684ea36bf4a3b6c9b0c17c8649b",
+      "title": "민주당 “조희대, 얇은 의견서 뒤에 숨지 말고, 국감장 증인 출석하라”",
+      "source": "segye",
+      "published_at": "2026-10-05T02:31:57+00:00",
+      "review_label": "jo-hee-dae-audit-attendance"
+    },
+    {
+      "article_id": "6828eef4c8693e9ca4c7779aba158f32",
+      "title": "빈 총 논란 이후…'실탄 미장착' 전방군단 추가 확인",
+      "source": "sbs",
+      "published_at": "2026-10-05T02:33:09+00:00",
+      "review_label": "empty-rifle-forward-units"
+    },
+    {
+      "article_id": "869ed453e5d235671b202527fca9c176",
+      "title": "대통령경호처, 日 경호기관과 교류 확대 나서…“상호 협력 필요성 더욱 커져”",
+      "source": "segye",
+      "published_at": "2026-10-05T02:35:08+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "82b2ccf061bd89350eb68b78232bef4b",
+      "title": "[속보]유해진 측 \"신변 위협·명예훼손 엄중 대응…가능한 모든 조치\"",
+      "source": "munhwa",
+      "published_at": "2026-10-05T02:36:28+00:00",
+      "review_label": "yoo-hae-jin-agency-statement"
+    },
+    {
+      "article_id": "0eee82d65090296c14ed16e6eaede0d6",
+      "title": "장동혁 “우크라엔 분노조절 장애, 北엔 분노조절 잘 해”…李 비판",
+      "source": "donga",
+      "published_at": "2026-10-05T02:42:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "313d3c4a7c701e7f1ecedf89f3db1647",
+      "title": "‘정부 지원은 없지만’ 대전 시민 안전위해 ‘방사선 감시’ 강화",
+      "source": "seoul",
+      "published_at": "2026-10-05T02:44:19+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "d5d0ac4d73fd98b9676a7e20556cebb5",
+      "title": "與 “조희대, 국감 나온다 해놓고 말바꿔…거부시 형사처벌”",
+      "source": "donga",
+      "published_at": "2026-10-05T02:46:00+00:00",
+      "review_label": "jo-hee-dae-audit-attendance"
+    },
+    {
+      "article_id": "c0aacb24c6fe7b49f59622108aa53619",
+      "title": "농림장관 “경자유전 유효…‘나라가 땅 뺏기’는 가짜뉴스”",
+      "source": "seoul",
+      "published_at": "2026-10-05T02:52:17+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "2b47a334ed539f4c6acfb0280e13db36",
+      "title": "신동욱 “‘전두환 내란 부정’ 김태규, 진행자에 낚여”…민주 “제명 동참하라”",
+      "source": "hani",
+      "published_at": "2026-10-05T02:53:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "06db1bd9e835a563466ddae6658a62c0",
+      "title": "李 “검찰개혁 빙자해 사심으로 인사 좌지우지하려 해선 안 돼”",
+      "source": "donga",
+      "published_at": "2026-10-05T03:35:00+00:00",
+      "review_label": "prosecution-reform-warning"
+    },
+    {
+      "article_id": "4df1b96fe5df66cb3d7002a4f9dc0075",
+      "title": "이 대통령 “검찰개혁 빙자해 사심으로 인사 좌우하려 해선 안 돼” 여권 강경파 겨냥 경고",
+      "source": "khan",
+      "published_at": "2026-10-05T03:49:00+00:00",
+      "review_label": "prosecution-reform-warning"
+    },
+    {
+      "article_id": "ddddaa7559a0491feaa86e87ce257ea1",
+      "title": "李 “검찰개혁 빙자해 사심으로 인사 좌우하려 해선 안 돼” 경고",
+      "source": "joongang",
+      "published_at": "2026-10-05T04:09:15+00:00",
+      "review_label": "prosecution-reform-warning"
+    },
+    {
+      "article_id": "c683056f5ea48cc748d9fc24d5d7bd6c",
+      "title": "최전방서 '빈 총' 들고 경계… 국방부, 전방 부대 무더기 기관경고",
+      "source": "hankookilbo",
+      "published_at": "2026-10-05T05:15:00+00:00",
+      "review_label": "empty-rifle-forward-units"
+    },
+    {
+      "article_id": "add57411eab0a37ebedda67f5943d150",
+      "title": "이재명 정부 2년 차 국정감사 6일 시작…첫날 최대 쟁점은 ‘조희대’",
+      "source": "khan",
+      "published_at": "2026-10-05T06:16:00+00:00",
+      "review_label": "jo-hee-dae-audit-attendance"
+    },
+    {
+      "article_id": "ebfc4498f3487eec5f4dba3181178ba0",
+      "title": "李 “‘부동산 투기 공화국’ 탈출 약속 반드시 지킬 것”",
+      "source": "donga",
+      "published_at": "2026-10-05T06:48:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "a158c72c695ac158e2cd87f042f25264",
+      "title": "[속보]‘北, MDL 남쪽에 지뢰 매설’ 최종판단…軍 “제거작전 수행”",
+      "source": "donga",
+      "published_at": "2026-10-05T07:09:00+00:00",
+      "review_label": "dmz-landmine-response"
+    },
+    {
+      "article_id": "d7a4ce4a5c082233cf75a260aedd7adf",
+      "title": "합참 “DMZ 사고 원인은 北 지뢰…오늘 제거”",
+      "source": "kmib",
+      "published_at": "2026-10-05T07:13:00+00:00",
+      "review_label": "dmz-landmine-response"
+    },
+    {
+      "article_id": "e958e013243a4b637960b7838be283ce",
+      "title": "민주당, 국민의힘의 <암살자(들)> 공세에 “검열” “한 번 더 보기 캠페인”",
+      "source": "khan",
+      "published_at": "2026-10-05T07:15:00+00:00",
+      "review_label": "assassins-film-controversy"
+    },
+    {
+      "article_id": "34863f66f35572c178b8f76f5d718d48",
+      "title": "[속보] 군 “북한, 자발적 제거 안 하면 제거 작전 지속”···DMZ 사고 현장 북한 지뢰지대 제거",
+      "source": "khan",
+      "published_at": "2026-10-05T07:16:00+00:00",
+      "review_label": "dmz-landmine-response"
+    },
+    {
+      "article_id": "d7f772bfb099313ab25a8f4b2d5f0566",
+      "title": "3분기 부가세 26일까지 신고·납부···홈플러스·호우 피해 사업자에는 기한 2개월 연장",
+      "source": "khan",
+      "published_at": "2026-10-05T07:24:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "04d9bbe30b4a1264886c579d4114b0f9",
+      "title": "이 대통령, 조국·유시민 과거 영상 공유하며 ‘검찰개혁 비판’에 직접 반박",
+      "source": "khan",
+      "published_at": "2026-10-05T07:25:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "9d2de50066b70aaca4d57a029777bd87",
+      "title": "\"펑!\" 지뢰 제거 작전 영상 공개…\"이게 북한군 지뢰, 국과수 감정 결과 보면…\"",
+      "source": "sbs",
+      "published_at": "2026-10-05T07:28:17+00:00",
+      "review_label": "dmz-landmine-response"
+    },
+    {
+      "article_id": "5a0305708b07711fa8286bddbd35e35e",
+      "title": "“과거 임진강 北 지뢰와 동일…12개월 이전에 인위적 설치”",
+      "source": "donga",
+      "published_at": "2026-10-05T07:35:00+00:00",
+      "review_label": "dmz-landmine-response"
+    },
+    {
+      "article_id": "1e72358532bd24ad565c6396bc77fc38",
+      "title": "‘BTS도 가는데’ 재점화된 병역 특례 논란…여야 모두 50년 넘은 제도 개선 촉구",
+      "source": "khan",
+      "published_at": "2026-10-05T07:39:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "136b6c1e275a030f35b44f291fcb6435",
+      "title": "이 대통령, 검찰개혁 ‘강경파’에 잇단 경고…“인사·수사 좌지우지 말라”",
+      "source": "hani",
+      "published_at": "2026-10-05T07:47:00+00:00",
+      "review_label": "prosecution-reform-warning"
+    },
+    {
+      "article_id": "7da8fca91a9b3cf9c25778aeed30e19e",
+      "title": "장동혁, 육영수 생가 찾아 \"암살자(들), 대한민국 정통성 부정\"",
+      "source": "sbs",
+      "published_at": "2026-10-05T07:47:05+00:00",
+      "review_label": "assassins-film-controversy"
+    },
+    {
+      "article_id": "0d8df662ab45fecd87ad1e55b0a8a019",
+      "title": "합참 \"北 국경선 요새화 작업으로 DMZ 지뢰 폭발 최종 확인\"",
+      "source": "segye",
+      "published_at": "2026-10-05T07:50:58+00:00",
+      "review_label": "dmz-landmine-response"
+    },
+    {
+      "article_id": "78805b5135060fe1ea8dca7e2e6c3dfb",
+      "title": "軍, DMZ 북한군 지뢰 제거 성공…“북한, 즉각 사과·추가 지뢰 제거하라”",
+      "source": "segye",
+      "published_at": "2026-10-05T07:51:15+00:00",
+      "review_label": "dmz-landmine-response"
+    },
+    {
+      "article_id": "2f9e23722b5ca2ab63b39ffd9084b751",
+      "title": "장동혁 \"대통령, 대북송금 이상의 뭔가 있어 북한에 절절매\"",
+      "source": "sbs",
+      "published_at": "2026-10-05T07:53:26+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "35da8ee754361ce92099af3d18cef649",
+      "title": "장동혁, 육영수 생가 방문 “국민이 문화·역사전쟁 나서달라”…보수 결집 ‘치트키’ 된 박근혜·박정희",
+      "source": "khan",
+      "published_at": "2026-10-05T07:57:00+00:00",
+      "review_label": "assassins-film-controversy"
+    },
+    {
+      "article_id": "6a978f4e9ac12d72f930c712f6b7ab2e",
+      "title": "장동혁, 육영수 여사 생가 찾아 “‘암살자(들)’, 대한민국 정통성 부정”",
+      "source": "hani",
+      "published_at": "2026-10-05T08:05:00+00:00",
+      "review_label": "assassins-film-controversy"
+    },
+    {
+      "article_id": "847f52a3db9066a3722f5d1c30073800",
+      "title": "망분리했지만 ‘뒷문’ 못 막았다…‘보안 ABC’ 놓쳐, 망분리 완화론도 제기",
+      "source": "khan",
+      "published_at": "2026-10-05T08:05:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "8c4e418700bf440a375f90b6f1f5cef6",
+      "title": "[속보]장동혁, 육영수 생가서 \"'암살자(들)'은 대한민국 정통성 부정\"…\"역사 왜곡 불이익 보여줘야\"",
+      "source": "munhwa",
+      "published_at": "2026-10-05T08:06:40+00:00",
+      "review_label": "assassins-film-controversy"
+    },
+    {
+      "article_id": "02fe219254031d13655bc21b49045e8c",
+      "title": "‘금메달 군 면제’ 자랑이 부른 후폭풍…여야 “53년 된 병역특례 개선해야”",
+      "source": "hani",
+      "published_at": "2026-10-05T08:09:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "9201038e898a5e391cb16ec89b3a7bf0",
+      "title": "[단독] 北, 탈레반과 군사 논의… 中·러 넘어 중앙亞로 접촉 확장",
+      "source": "segye",
+      "published_at": "2026-10-05T08:16:31+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "5d7863083998ced619fee2f0cb80ccbc",
+      "title": "“금융 교육으로 소비의 간절함을 알게 해주고 싶었어요”…‘병원학교’ 금융교육 현장 가보니",
+      "source": "khan",
+      "published_at": "2026-10-05T08:18:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "ee98c0ee93d95c990cf5ef9b62496714",
+      "title": "군 \"북한 지뢰로 우리 장병 부상 최종 판단\"…지뢰 제거 작전 전격 단행",
+      "source": "sbs",
+      "published_at": "2026-10-05T08:19:28+00:00",
+      "review_label": "dmz-landmine-response"
+    },
+    {
+      "article_id": "8261e3d671cebfa3f64a27368eba32c1",
+      "title": "재선충에 쓰러진 소나무, 목재로 살린다···충남도 ‘산업화 방제’ 본격화",
+      "source": "khan",
+      "published_at": "2026-10-05T08:30:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "cfd8c25e4afe1eaa756810af1857c01e",
+      "title": "\"李대통령, 누구를 위협할 처지 아냐\"…우크라 전쟁영웅 발언에 논란",
+      "source": "munhwa",
+      "published_at": "2026-10-05T08:30:40+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "d9a8f2179b50382db062ab9b59ac9308",
+      "title": "'대북 송금' 유죄 확정 이화영, 결국 재심 카드 꺼내나",
+      "source": "munhwa",
+      "published_at": "2026-10-05T08:41:13+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "fb62e646fc5eecd6cf7f7c24a9fa64e7",
+      "title": "합참, ‘MDL 이남’ 북한군 매설 지뢰 폭파…북에 “즉시 제거 촉구”",
+      "source": "hani",
+      "published_at": "2026-10-05T08:47:00+00:00",
+      "review_label": "dmz-landmine-response"
+    },
+    {
+      "article_id": "b392a3019e2dbd594668c053ccdc0a03",
+      "title": "[단독]조원태 한진 회장 ‘배임’ 혐의 경찰 수사 본격화",
+      "source": "seoul",
+      "published_at": "2026-10-05T08:50:59+00:00",
+      "review_label": "ambiguous_title_only"
+    },
+    {
+      "article_id": "2b55252ee0a938b1cde7a23a821d0e8b",
+      "title": "재단 돈 1100억 끌어와 경영권 방어 시도…조원태, 비판 여론에 철회",
+      "source": "seoul",
+      "published_at": "2026-10-05T08:51:00+00:00",
+      "review_label": "ambiguous_title_only"
+    },
+    {
+      "article_id": "341ca115ca0f2e358f361feeed63d595",
+      "title": "육영수 생가 방문한 장동혁 “‘암살자(들)’ 역사왜곡, 맞서 싸우겠다”",
+      "source": "segye",
+      "published_at": "2026-10-05T08:52:57+00:00",
+      "review_label": "assassins-film-controversy"
+    },
+    {
+      "article_id": "504ac58717a146c753a8f3aed27b35c5",
+      "title": "中 철강·차 과잉 공급 압박… 한국 ‘차이나 딜레마’",
+      "source": "seoul",
+      "published_at": "2026-10-05T08:54:18+00:00",
+      "review_label": "unclustered_after_title_review"
+    },
+    {
+      "article_id": "d382eb943b52aeb133cdb9d07a399f9d",
+      "title": "“北 매설 지뢰 맞다”…직접 제거 나선 軍",
+      "source": "seoul",
+      "published_at": "2026-10-05T08:54:51+00:00",
+      "review_label": "dmz-landmine-response"
+    },
+    {
+      "article_id": "e38153fb6f394ebf70937f0a9a89f12e",
+      "title": "[속보]軍 \"北지뢰 도발사건 2주 만에 지뢰제거작전 첫 단행…연쇄 제거작전\" 예고",
+      "source": "munhwa",
+      "published_at": "2026-10-05T08:56:57+00:00",
+      "review_label": "dmz-landmine-response"
+    },
+    {
+      "article_id": "541164fcc8fa0b537528b64503021ab2",
+      "title": "농식품부 고위직 모친 소유 농지 3필지 ‘휴경’···“전수조사 재검토해야”",
+      "source": "khan",
+      "published_at": "2026-10-05T08:57:00+00:00",
+      "review_label": "unclustered_after_title_review"
+    }
+  ],
+  "limitations": [
+    "단일 검토자의 사후 판정이며 독립 이중 코딩이나 합의 판정이 아니다.",
+    "기사 본문은 읽지 않았다. 사건 묶음은 제목·매체·게시 시각만으로 만든 임시 판단이다.",
+    "잠금 테스트셋이나 공식 품질 게이트용 gold dataset이 아니다.",
+    "탄도미사일 관련 두 기사는 동일 사건 여부를 이중 검토할 필요가 있다."
+  ],
+  "supersedes_annotation_id": "initial-five-2026-10-05-single-reviewer-v1",
+  "revision_note": "2026-10-06 KST 원문 메타데이터를 다시 확인해 기사 제목 3건만 현재 표기에 맞게 고쳤다. 사건 묶음, 보류, 범위 밖 판정과 1인 잠정 검토 상태는 유지했다."
+}

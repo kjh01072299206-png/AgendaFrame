@@ -197,6 +197,7 @@ function publicArticleMetadata(article, semanticProfile, ruleProfile, issueId) {
     sourceId: article.sourceId ?? null,
     mediaGroupId: article.mediaGroupId ?? null,
     publishedAt: article.publishedAt ?? null,
+    collectedAt: article.collectedAt ?? null,
     section: article.section ?? null,
     canonicalUrl: article.canonicalUrl ?? null,
     bodySha256,

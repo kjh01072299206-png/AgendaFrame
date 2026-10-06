@@ -822,7 +822,7 @@ function EvidenceTab({ bundle }: { bundle: IssueAnalysisBundle }) {
             <a href={article.canonicalUrl ?? "#"} target="_blank" rel="noopener noreferrer" key={article.articleId} aria-label={`${article.outlet ?? "매체"} 기사 원문 열기`}>
               <span>{article.outlet ?? "매체 미상"}</span>
               <strong>{article.title ?? "제목 없음"}</strong>
-              <small title={evidence?.sentenceSha256}>{detail}<br />{formatPublishedAt(article.publishedAt)} · 원문 열기</small>
+              <small title={evidence?.sentenceSha256}>{detail}<br />게시 {formatPublishedAt(article.publishedAt)} · 수집 {formatPublishedAt(article.collectedAt)} · 원문 열기</small>
             </a>
           );
         })}

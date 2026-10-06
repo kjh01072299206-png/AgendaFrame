@@ -14,6 +14,7 @@ from backend.gcp_live_dependencies import (
     NewsArticleParser,
     _ArticleHtmlParser,
     _human_reviewed_clusterer,
+    _reviewed_article_ids,
     build_stage_dependencies,
 )
 from backend.gcp_stage_adapters import SourceDefinition
@@ -154,6 +155,20 @@ class GcpLiveDependencyTests(unittest.TestCase):
         self.assertEqual(str(clusterer.annotation_path), annotation_path)
         self.assertTrue(clusterer.annotation_path.is_file())
 
+    def test_reviewed_article_ids_loads_exact_v2_census(self) -> None:
+        annotation_path = os.path.abspath(
+            "evals/annotations/initial-five-2026-10-05-single-reviewer-v2.json"
+        )
+        with patch.dict(
+            os.environ,
+            {"AGENDAFRAME_REVIEWED_CLUSTER_ANNOTATION": annotation_path},
+        ):
+            article_ids = _reviewed_article_ids("2026-10-05")
+
+        self.assertEqual(len(article_ids), 92)
+        self.assertEqual(len(set(article_ids)), 92)
+        self.assertIn("0eee82d65090296c14ed16e6eaede0d6", article_ids)
+
     def test_reviewed_cluster_override_requires_matching_archive_replay_date(self) -> None:
         runtime = SimpleNamespace(request=SimpleNamespace(basis_date="2026-10-05"))
         with patch.dict(
@@ -165,6 +180,19 @@ class GcpLiveDependencyTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(
                 RuntimeAdapterUnavailable, "matching 2026-10-05 archive replay"
+            ):
+                build_stage_dependencies(None, None, runtime)
+
+    def test_replay_collection_end_date_requires_replay_basis_date(self) -> None:
+        runtime = SimpleNamespace(request=SimpleNamespace(basis_date="2026-10-05"))
+        with patch.dict(
+            os.environ,
+            {"AGENDAFRAME_REPLAY_COLLECTION_END_DATE": "2026-10-06"},
+            clear=True,
+        ):
+            with self.assertRaisesRegex(
+                RuntimeAdapterUnavailable,
+                "AGENDAFRAME_REPLAY_COLLECTION_END_DATE requires an archived replay",
             ):
                 build_stage_dependencies(None, None, runtime)
 

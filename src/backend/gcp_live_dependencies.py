@@ -21,6 +21,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta, timezone
 from html.parser import HTMLParser
+from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from ai.event_synthesis import VertexEventSynthesizer
@@ -54,6 +55,50 @@ MAX_ENDPOINT_BYTES = 2_000_000
 MAX_PUBLIC_TITLE_CHARACTERS = 120
 MAX_ARCHIVED_REPLAY_ARTICLES = 100
 REVIEWED_CLUSTER_ANNOTATION_ENV = "AGENDAFRAME_REVIEWED_CLUSTER_ANNOTATION"
+
+
+def _reviewed_article_ids(basis_date: str) -> tuple[str, ...]:
+    configured_path = os.environ.get(REVIEWED_CLUSTER_ANNOTATION_ENV, "").strip()
+    annotation_path = (
+        Path(configured_path)
+        if configured_path
+        else Path(__file__).resolve().parents[2]
+        / "evals"
+        / "annotations"
+        / "initial-five-2026-10-05-single-reviewer-v1.json"
+    )
+    try:
+        annotation = json.loads(annotation_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeAdapterUnavailable(
+            "reviewed clustering annotation could not be loaded"
+        ) from error
+    rows = annotation.get("articles")
+    if (
+        annotation.get("schema_version") != "agendaframe.initial-five-human-review.v1"
+        or annotation.get("annotation_id")
+        not in {
+            "initial-five-2026-10-05-single-reviewer-v1",
+            "initial-five-2026-10-05-single-reviewer-v2",
+        }
+        or annotation.get("basis_date") != basis_date
+        or annotation.get("review_status") != "single_reviewer_provisional"
+        or annotation.get("reviewer_count") != 1
+        or annotation.get("adjudicated") is not False
+        or not isinstance(rows, list)
+    ):
+        raise RuntimeAdapterUnavailable("reviewed clustering annotation metadata is invalid")
+    article_ids = tuple(
+        str(row.get("article_id", "")).strip() for row in rows if isinstance(row, Mapping)
+    )
+    if (
+        len(rows) != 92
+        or len(article_ids) != len(rows)
+        or len(set(article_ids)) != 92
+        or not all(re.fullmatch(r"[a-f0-9]{32}", article_id) for article_id in article_ids)
+    ):
+        raise RuntimeAdapterUnavailable("reviewed clustering article census is invalid")
+    return article_ids
 
 
 def _human_reviewed_clusterer(basis_date: str) -> HumanReviewedInitialFiveClusterer:
@@ -743,7 +788,12 @@ def build_stage_dependencies(
     policy_path = os.environ.get("AGENDAFRAME_DISCOVERY_POLICY", "site/data/discovery-sources.json")
     policy = GcpDiscoveryPolicy.from_path(policy_path)
     replay_date = os.environ.get("AGENDAFRAME_REPLAY_BASIS_DATE", "").strip()
+    replay_collection_end = os.environ.get("AGENDAFRAME_REPLAY_COLLECTION_END_DATE", "").strip()
     reviewed_cluster_date = os.environ.get("AGENDAFRAME_REVIEWED_CLUSTER_DATE", "").strip()
+    if replay_collection_end and not replay_date:
+        raise RuntimeAdapterUnavailable(
+            "AGENDAFRAME_REPLAY_COLLECTION_END_DATE requires an archived replay"
+        )
     if replay_date and replay_date != runtime.request.basis_date:
         raise RuntimeAdapterUnavailable(
             "AGENDAFRAME_REPLAY_BASIS_DATE must match the pipeline basis date"
@@ -756,6 +806,9 @@ def build_stage_dependencies(
         raise RuntimeAdapterUnavailable(
             "reviewed clustering is restricted to the matching 2026-10-05 archive replay"
         )
+    reviewed_article_ids = (
+        _reviewed_article_ids(reviewed_cluster_date) if reviewed_cluster_date else None
+    )
     # A scheduled run has a bounded per-source candidate budget. Keep network
     # stalls from consuming the entire Cloud Run task timeout before Vertex
     # analysis starts; individual sources are already isolated by the adapter.
@@ -772,19 +825,35 @@ def build_stage_dependencies(
         vault = ArchivedReplayVault(clients.storage, bucket_name=config.bucket)
         replay_adapter = ArchivedArticleReplayAdapter(
             bigquery_client=clients.bigquery,
-            query_config_factory=lambda basis_date, maximum_bytes_billed: bigquery.QueryJobConfig(
-                query_parameters=[
-                    bigquery.ScalarQueryParameter(
-                        "basis_date", "DATE", date.fromisoformat(basis_date)
-                    )
-                ],
-                maximum_bytes_billed=maximum_bytes_billed,
+            query_config_factory=lambda basis_date, collection_end_date, article_ids, maximum_bytes_billed: (
+                bigquery.QueryJobConfig(
+                    query_parameters=[
+                        bigquery.ScalarQueryParameter(
+                            "basis_date", "DATE", date.fromisoformat(basis_date)
+                        ),
+                        bigquery.ScalarQueryParameter(
+                            "collection_end_date", "DATE", date.fromisoformat(collection_end_date)
+                        ),
+                        *(
+                            [
+                                bigquery.ArrayQueryParameter(
+                                    "article_ids", "STRING", list(article_ids)
+                                )
+                            ]
+                            if article_ids is not None
+                            else []
+                        ),
+                    ],
+                    maximum_bytes_billed=maximum_bytes_billed,
+                )
             ),
             vault=vault,
             project_id=config.project_id,
             dataset=config.dataset,
             maximum_bytes_billed=config.maximum_bytes_billed,
             basis_date=replay_date,
+            collected_through_date=replay_collection_end or replay_date,
+            reviewed_article_ids=reviewed_article_ids,
             source_definitions=load_source_definitions(policy_path),
             max_articles=MAX_ARCHIVED_REPLAY_ARTICLES,
         )
