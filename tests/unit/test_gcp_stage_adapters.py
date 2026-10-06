@@ -11,7 +11,7 @@ from ai.event_synthesis import EventSynthesisError
 from ai.framing import FRAME_DIMENSIONS, FrameResult
 from ai.issue_clustering import MetadataIssueGroup
 from backend.gcp_job_entrypoint import RuntimeAdapterUnavailable
-from backend.gcp_orchestration import assert_body_safe, evaluate_quality_gate
+from backend.gcp_orchestration import QualityGateError, assert_body_safe, evaluate_quality_gate
 from backend.gcp_stage_adapters import (
     ArchivedArticleReplayAdapter,
     ArchivedReplayVault,
@@ -463,6 +463,14 @@ class GcpStageAdapterTests(unittest.TestCase):
         self.assertEqual(issue["clusterAi"]["reviewStatus"], "single_reviewer_provisional")
         self.assertIsNone(issue["clusterAi"]["invocation"])
         self.assertTrue(issue["semantic"]["semanticAi"])
+        gate = evaluate_quality_gate(semantic)
+        self.assertEqual(gate["status"], "pass")
+        self.assertEqual(gate["provisionalHumanClusterCount"], 5)
+        self.assertTrue(gate["clusterReviewRequired"])
+
+        issue["clusterAi"]["reviewArtifactSha256"] = "invalid"
+        with self.assertRaisesRegex(QualityGateError, "cluster engine is not verified AI"):
+            evaluate_quality_gate(semantic)
 
     def test_cluster_rank_quarantines_when_model_returns_no_clusters(self) -> None:
         class EmptyClusters:

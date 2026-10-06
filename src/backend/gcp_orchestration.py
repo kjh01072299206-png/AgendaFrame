@@ -448,6 +448,32 @@ def _has_invocation_receipt(value: object, *, model: str, prompt_version: str) -
     )
 
 
+def _is_verified_provisional_human_cluster(engine: Mapping[str, Any]) -> bool:
+    """Accept a reviewed partition only with explicit, bounded provenance."""
+
+    artifact = engine.get("reviewArtifact")
+    run_id = engine.get("runId")
+    return bool(
+        engine.get("engineLabel") == "human_review"
+        and engine.get("semanticAi") is False
+        and engine.get("status") == "succeeded"
+        and engine.get("source") == "human-review:title-source-published-at"
+        and engine.get("analysisSource") == "human_review"
+        and engine.get("reviewStatus") == "single_reviewer_provisional"
+        and type(engine.get("reviewerCount")) is int
+        and engine.get("reviewerCount") == 1
+        and isinstance(artifact, str)
+        and bool(artifact.strip())
+        and isinstance(engine.get("reviewArtifactSha256"), str)
+        and bool(_SENTENCE_SHA256.fullmatch(engine["reviewArtifactSha256"]))
+        and engine.get("decision") == "human_reviewed"
+        and engine.get("requiresHumanReview") is True
+        and isinstance(run_id, str)
+        and bool(run_id.strip())
+        and engine.get("invocation") is None
+    )
+
+
 def evaluate_quality_gate(
     semantic: Mapping[str, Any],
     *,
@@ -481,6 +507,7 @@ def evaluate_quality_gate(
         )
 
     article_count = 0
+    provisional_human_cluster_count = 0
     issue_ids: set[str] = set()
     for index, issue in enumerate(issues, 1):
         issue_id = issue.get("issueId", issue.get("issue_id", issue.get("id")))
@@ -507,6 +534,9 @@ def evaluate_quality_gate(
         if not isinstance(cluster_engine, Mapping) or not isinstance(semantic_engine, Mapping):
             raise QualityGateError(f"top issue {issue_id} has incomplete AI engine lineage")
         for label, engine in (("cluster", cluster_engine), ("semantic", semantic_engine)):
+            if label == "cluster" and _is_verified_provisional_human_cluster(engine):
+                provisional_human_cluster_count += 1
+                continue
             if engine.get("semanticAi") is not True or engine.get("status") != "succeeded":
                 raise QualityGateError(f"top issue {issue_id} {label} engine is not verified AI")
             model = str(engine.get("model", "")).strip()
@@ -575,6 +605,8 @@ def evaluate_quality_gate(
         "topIssueCount": len(issues),
         "analyzedArticleCount": article_count,
         "unsupportedClaimRate": unsupported_rate,
+        "provisionalHumanClusterCount": provisional_human_cluster_count,
+        "clusterReviewRequired": provisional_human_cluster_count > 0,
         "rawBodyAbsent": True,
         "evidenceLineageComplete": True,
         "publicSnapshotReady": True,
