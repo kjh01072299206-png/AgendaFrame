@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from ai.event_synthesis import EventSynthesisError
 from ai.framing import FRAME_DIMENSIONS, FrameResult
 from ai.issue_clustering import MetadataIssueGroup
 from backend.gcp_job_entrypoint import RuntimeAdapterUnavailable
@@ -774,6 +775,43 @@ class GcpStageAdapterTests(unittest.TestCase):
         self.assertEqual(len(bundle["comparison"]["data"]["synthesis"]["camps"]), 2)
         self.assertTrue(bundle["clusterAi"]["summary"])
         assert_body_safe(bundle, context="synthesized public bundle")
+
+    def test_semantic_adapter_falls_back_once_after_direct_synthesis_failure(self) -> None:
+        class FailingSynthesis:
+            calls = 0
+
+            def synthesize(self, _request):
+                self.calls += 1
+                raise EventSynthesisError("provider response could not be used")
+
+        synthesizer = FailingSynthesis()
+        deps = StageDependencies(**{**self.dependencies.__dict__, "event_synthesizer": synthesizer})
+        collected = PolicyCollectionAdapter(deps, clock=lambda: COLLECTED_AT).collect(
+            self.request, idempotency_key="collect-synth-fallback"
+        )
+        persisted = MetadataPersistenceAdapter(deps).persist(
+            self.request, collected, idempotency_key="persist-synth-fallback"
+        )
+        ranked = MetadataClusterRankAdapter(deps).cluster_rank(
+            self.request, persisted, idempotency_key="rank-synth-fallback"
+        )
+
+        semantic = FrameSemanticAdapter(deps).analyze_top5(
+            self.request, ranked, idempotency_key="semantic-synth-fallback"
+        )
+
+        self.assertEqual(synthesizer.calls, 1)
+        self.assertEqual(len(semantic["bundles"]), 5)
+        for bundle in semantic["bundles"].values():
+            self.assertTrue(bundle["analysisStatus"]["semantic"]["semanticAi"])
+            self.assertFalse(bundle["comparison"]["engine"]["semanticAi"])
+            self.assertIn(
+                bundle["comparison"]["engine"]["source"],
+                {"gcp:profile-event-composition", "gcp:public-profile-aggregation"},
+            )
+            self.assertEqual(len(bundle["semanticProfiles"]), 3)
+
+        self.assertEqual(evaluate_quality_gate(semantic)["status"], "pass")
 
     def test_publish_adapter_keeps_pointer_and_manifest_methods_injected(self) -> None:
         adapter = SnapshotPublishAdapter(self.store, self.store)

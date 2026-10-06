@@ -24,6 +24,7 @@ from typing import Any, Callable, Mapping, Protocol, Sequence
 from urllib.parse import urlsplit
 
 from ai.event_synthesis import (
+    EventSynthesisError,
     EventSynthesizer,
     VertexEventSynthesizer,
     build_bound_comparison,
@@ -1306,6 +1307,7 @@ def _synthesize_comparison(
     profiles: Sequence[Mapping[str, Any]],
     comparison_axes: Sequence[Mapping[str, Any]],
     request: Any,
+    use_direct_synthesis: bool = True,
 ) -> tuple[dict[str, Any], dict[str, Any], str | None]:
     """Prefer bound event synthesis; fall back to profile aggregation."""
 
@@ -1328,13 +1330,30 @@ def _synthesize_comparison(
     }
     lens = source_lens_from_profiles(profiles, article_rows)
     fallback["source_lens"] = lens
-    bound = build_bound_comparison(
-        profiles=profiles,
-        articles=article_rows,
-        title=title,
-        issue_id=issue_id,
-        synthesizer=dependencies.event_synthesizer,
-    )
+    try:
+        bound = build_bound_comparison(
+            profiles=profiles,
+            articles=article_rows,
+            title=title,
+            issue_id=issue_id,
+            synthesizer=(
+                dependencies.event_synthesizer
+                if use_direct_synthesis
+                else None
+            ),
+        )
+    except EventSynthesisError:
+        # Preserve completed, evidence-bound article profiles if direct event
+        # synthesis returns malformed output or the provider becomes
+        # unavailable.  The fallback is explicitly labeled as profile-backed
+        # and never claims a cross-outlet difference without bound evidence.
+        bound = build_bound_comparison(
+            profiles=profiles,
+            articles=article_rows,
+            title=title,
+            issue_id=issue_id,
+            synthesizer=None,
+        )
     if not bound:
         return fallback, fallback_engine, None
     source = str(bound.get("source") or "gcp:profile-event-composition")
@@ -1380,6 +1399,7 @@ class FrameSemanticAdapter(SemanticAdapter):
         analyzed = 0
         skipped_without_evidence = 0
         used_article_ids: set[str] = set()
+        direct_synthesis_available = self.dependencies.event_synthesizer is not None
         profile_cache: dict[
             str, tuple[ArticleDocument, dict[str, Any], Mapping[str, Any] | None]
         ] = {}
@@ -1511,7 +1531,17 @@ class FrameSemanticAdapter(SemanticAdapter):
                 profiles=profiles,
                 comparison_axes=comparison_axes,
                 request=request,
+                use_direct_synthesis=direct_synthesis_available,
             )
+            if (
+                direct_synthesis_available
+                and comparison_engine.get("source") != "gcp:event-synthesis"
+            ):
+                # A failed direct comparison is a circuit-breaker signal for
+                # this run.  Keep subsequent issues on the bounded profile
+                # composition path instead of spending more calls into a
+                # provider that just failed or rate-limited the request.
+                direct_synthesis_available = False
             profile_invocations = [
                 entry.get("engine", {}).get("invocation")
                 for entry in profiles
