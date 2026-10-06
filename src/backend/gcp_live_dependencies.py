@@ -53,6 +53,15 @@ MAX_REQUESTS_PER_SOURCE = 30
 MAX_ENDPOINT_BYTES = 2_000_000
 MAX_PUBLIC_TITLE_CHARACTERS = 120
 MAX_ARCHIVED_REPLAY_ARTICLES = 100
+REVIEWED_CLUSTER_ANNOTATION_ENV = "AGENDAFRAME_REVIEWED_CLUSTER_ANNOTATION"
+
+
+def _human_reviewed_clusterer(basis_date: str) -> HumanReviewedInitialFiveClusterer:
+    annotation_path = os.environ.get(REVIEWED_CLUSTER_ANNOTATION_ENV, "").strip() or None
+    return HumanReviewedInitialFiveClusterer(
+        basis_date=basis_date,
+        annotation_path=annotation_path,
+    )
 
 
 def _clean_public_title(value: str) -> str | None:
@@ -789,7 +798,7 @@ def build_stage_dependencies(
     snapshot_writer = GcsImmutableSnapshotWriter(clients.storage, bucket_name=config.bucket)
     pointer_store = GcsActivePointerStore(clients.storage, bucket_name=config.bucket)
     if reviewed_cluster_date:
-        clusterer = HumanReviewedInitialFiveClusterer(basis_date=reviewed_cluster_date)
+        clusterer = _human_reviewed_clusterer(reviewed_cluster_date)
     else:
         clusterer = InitialFiveClusterer(
             config,

@@ -4,7 +4,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     AGENDAFRAME_RUNTIME_CONFIG=/app/config/gcp-runtime.yaml \
     AGENDAFRAME_SOURCE_POLICY=/app/config/source-policies.yaml \
-    AGENDAFRAME_DISCOVERY_POLICY=/app/site/data/discovery-sources.json
+    AGENDAFRAME_DISCOVERY_POLICY=/app/site/data/discovery-sources.json \
+    AGENDAFRAME_REVIEWED_CLUSTER_ANNOTATION=/app/evals/annotations/initial-five-2026-10-05-single-reviewer-v1.json
 
 WORKDIR /app
 COPY pyproject.toml README.md requirements.lock ./

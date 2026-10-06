@@ -12,6 +12,7 @@ from backend.gcp_live_dependencies import (
     FetchedResponse,
     NewsArticleParser,
     _ArticleHtmlParser,
+    _human_reviewed_clusterer,
     build_stage_dependencies,
 )
 from backend.gcp_stage_adapters import SourceDefinition
@@ -77,6 +78,19 @@ def parser(fetcher: FakeFetcher) -> NewsArticleParser:
 
 
 class GcpLiveDependencyTests(unittest.TestCase):
+    def test_reviewed_clusterer_uses_explicit_container_annotation_path(self) -> None:
+        annotation_path = os.path.abspath(
+            "evals/annotations/initial-five-2026-10-05-single-reviewer-v1.json"
+        )
+        with patch.dict(
+            os.environ,
+            {"AGENDAFRAME_REVIEWED_CLUSTER_ANNOTATION": annotation_path},
+        ):
+            clusterer = _human_reviewed_clusterer("2026-10-05")
+
+        self.assertEqual(str(clusterer.annotation_path), annotation_path)
+        self.assertTrue(clusterer.annotation_path.is_file())
+
     def test_reviewed_cluster_override_requires_matching_archive_replay_date(self) -> None:
         runtime = SimpleNamespace(request=SimpleNamespace(basis_date="2026-10-05"))
         with patch.dict(
