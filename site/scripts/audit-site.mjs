@@ -56,6 +56,7 @@ const RULES = {
   "FIRST-SCREEN": { sev: "error", hint: "첫 화면의 핵심 정보 구조가 0 스크롤에서 보이지 않거나 숨겨졌다." },
   "ANALYSIS-RELEASE": { sev: "error", hint: "배포에는 현재 계약의 실제 분석 결과가 필요하며, 전부 보류인 화면은 완료가 아니다." },
   "INTERACTION": { sev: "error", hint: "390px 분석 화면의 제목·탭·근거 펼침·비교 카드 조작이 동작하지 않는다." },
+  "EDITORIAL-DETAIL": { sev: "error", hint: "사건 설명·언론사별 표·축소된 연결망의 기사 근거 또는 표시가 누락됐다." },
   "STALE-WAIVER": { sev: "error", hint: "아무 것도 잡지 않는 웨이버. 고쳐졌으면 지운다." },
 };
 
@@ -190,6 +191,43 @@ function collect({ w, isDesktop, route = "", firstScreenRequirements = {} }) {
     });
     if (!visible) push("FIRST-SCREEN", `${label} ${selector} box=${JSON.stringify(box)} visible=${Math.round(visibleHeight)}px/${Math.round(rect.height)}px ratio=${visibleRatio.toFixed(2)} scrollY=${Math.round(window.scrollY)}`);
   };
+  const editorial = document.querySelector(".af-bodyreview");
+  if (editorial) {
+    const story = editorial.querySelector(".event-story");
+    if (story) {
+      const paragraphs = [...story.querySelectorAll(".what")];
+      if (paragraphs.length < 4 || paragraphs.length > 6 || paragraphs.some(p => !p.dataset.evidenceArticles || p.textContent.length < 100)) push("EDITORIAL-DETAIL", "사건 설명 문단과 기사 근거 누락");
+      if (/SHA-256|fallback|gemini-|prompt \d|문장.*hash|근거 문자/.test(editorial.textContent)) push("EDITORIAL-DETAIL", "사건 화면에 내부 기술 정보 노출");
+    }
+    const tables = [...editorial.querySelectorAll("table[data-outlet-table]")];
+    if (route.endsWith("/framing")) {
+      if (tables.length !== 3) push("EDITORIAL-DETAIL", "4기능·시야·취재원 표 누락");
+      let expectedOutlets, expectedArticles;
+      for (const table of tables) {
+        const rows = [...table.querySelectorAll("tbody tr")];
+        const outlets = rows.map(row => row.dataset.outlet);
+        if (new Set(outlets).size !== rows.length || outlets.some(o => !o)) push("EDITORIAL-DETAIL", "언론사 행 중복");
+        const articles = [];
+        for (const row of rows) {
+          let previous;
+          for (const cell of row.querySelectorAll("td")) {
+            const ids = [...cell.querySelectorAll("[data-article-id]")].map(a => a.dataset.articleId);
+            if (!ids.length || (previous && JSON.stringify(ids) !== JSON.stringify(previous))) push("EDITORIAL-DETAIL", `${row.dataset.outlet}: 열별 기사 순서 불일치`);
+            if (cell.querySelectorAll("br").length !== ids.length - 1) push("EDITORIAL-DETAIL", `${row.dataset.outlet}: 기사별 줄바꿈 누락`);
+            if (!previous) articles.push(...ids);
+            previous = ids;
+          }
+        }
+        if (new Set(articles).size !== articles.length || articles.length !== Number(editorial.dataset.reviewedArticleCount)) push("EDITORIAL-DETAIL", "언론사별 표에서 기사 누락·중복");
+        if (expectedOutlets && (JSON.stringify(outlets) !== expectedOutlets || JSON.stringify(articles) !== expectedArticles)) push("EDITORIAL-DETAIL", "표 사이 언론사·기사 순서 불일치");
+        expectedOutlets = JSON.stringify(outlets); expectedArticles = JSON.stringify(articles);
+      }
+      for (const text of editorial.querySelectorAll(".wnet text")) {
+        const fontSize = Number(text.getAttribute("font-size"));
+        if (fontSize < 8 || fontSize > 14) push("EDITORIAL-DETAIL", "연결망 글자 크기가 8~14 범위를 벗어남");
+      }
+    }
+  }
   if ((route.endsWith("/outlets") || route.endsWith("/framing")) && w === 1440) {
     if (document.querySelector(".af-bodyreview")) {
       if (route.endsWith("/outlets")) {
@@ -199,7 +237,9 @@ function collect({ w, isDesktop, route = "", firstScreenRequirements = {} }) {
       } else {
         recordFirstScreen("프레이밍 요약", ".af-bodyreview .g-main .what");
         recordFirstScreen("프레임 4기능 표 헤더", ".af-bodyreview .grid:nth-of-type(3) thead");
-        recordFirstScreen("프레임 4기능 첫 갈래 행", ".af-bodyreview .grid:nth-of-type(3) tbody tr:first-child");
+        // A row now contains every article from one outlet. Measure the first
+        // readable analysis rather than requiring the full multi-article row.
+        recordFirstScreen("프레임 4기능 첫 기사 분석", ".af-bodyreview .grid:nth-of-type(3) tbody tr:first-child td:first-of-type .outlet-article-line:first-of-type");
       }
     } else if (route.endsWith("/outlets")) {
       recordFirstScreen("사건 설명 문장", "#sec-event-summary .afp-event-first");
