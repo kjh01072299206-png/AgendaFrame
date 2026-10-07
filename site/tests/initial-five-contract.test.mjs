@@ -14,9 +14,26 @@ import {
   readInitialFiveSourcesSync,
 } from "../lib/initial-five/index.mjs";
 import { handleInitialFiveRequest } from "../worker/initial-five-api.mjs";
+import { ruleExamples, ruleGroundedAnswer } from "../lib/initial-five/rule-answers.mjs";
 
 const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const forbiddenKey = /raw[_-]?body|body[_-]?text|sentence[_-]?text|html|full[_-]?article|article[_-]?content|full[_-]?content/i;
+
+test("chat answers omit internal processing copy while retaining provenance metadata", () => {
+  const { getIssueByRank } = buildInitialFive({ siteRoot });
+  const bundles = [1, 2, 3, 4, 5].map(rank => getIssueByRank(rank));
+  bundles.push({}, { clusterAi: { summary: "기사 요약입니다." } });
+  for (const bundle of bundles) {
+    const results = ["핵심 쟁점", "책임", "원인", "해법", "평가", "공통", "차이", "취재원"].map(question => ruleGroundedAnswer(bundle, question));
+    results.push(...ruleExamples(bundle).map(example => example.result));
+    for (const result of results) {
+      assert.doesNotMatch(result.answer, /규칙|보조 화면|paraphrase|AI 본문 분석|※/);
+      assert.equal(result.provider, "rules_initial_five_v1");
+      assert.ok(result.limitations.length > 0);
+      assert.ok(Array.isArray(result.evidence));
+    }
+  }
+});
 
 function walkKeys(value, pathName = "$", output = []) {
   if (!value || typeof value !== "object") return output;
@@ -347,7 +364,8 @@ test("routes the selected issue to an answer for every initial-five agenda", asy
     assert.equal(answer.issueId, issue.issueId);
     assert.equal(answer.status, "answered");
     assert.ok(["claude_analysis_grounded_retrieval_v1", "rules_initial_five_v1"].includes(answer.provider));
-    assert.match(answer.answer, /규칙 기반|핵심|문제|쟁점|요약/);
+    assert.ok(answer.answer.trim().length > 0);
+    assert.doesNotMatch(answer.answer, /규칙 기반 보조|규칙으로|※/);
   }
 });
 
