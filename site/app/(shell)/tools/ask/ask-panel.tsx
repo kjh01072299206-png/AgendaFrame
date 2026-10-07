@@ -31,7 +31,7 @@ const SUGGESTIONS = [
 ];
 
 /* 질문할 때 선택한 issueId를 API에 함께 보내므로 1위 의제에 고정되지 않는다.
-   AI 번들이 아직 준비되지 않은 환경에서는 명시적인 규칙 기반 보조 답변을 표시한다. */
+   API가 준비되지 않은 환경에서는 공개 분석 내용으로 답하고 처리 방식은 메타데이터에 보존한다. */
 export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: number; title: string; payloadKey?: string }> }) {
   const [issueId, setIssueId] = useState(() => {
     if (typeof window !== "undefined") {
@@ -103,7 +103,6 @@ export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: nu
       if (!response.ok) {
         if (response.status !== 429 && selectedBundle) {
           setTurns((prev) => [...prev, { role: "ai", result: ruleGroundedAnswer(selectedBundle, normalized) as AskResult }]);
-          setError("AI 근거 API를 사용할 수 없어 규칙 기반 보조 답변을 표시했습니다.");
           return;
         }
         throw new Error(
@@ -116,7 +115,6 @@ export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: nu
     } catch (cause) {
       if (selectedBundle) {
         setTurns((prev) => [...prev, { role: "ai", result: ruleGroundedAnswer(selectedBundle, normalized) as AskResult }]);
-        setError("AI 근거 API에 연결하지 못해 규칙 기반 보조 답변을 표시했습니다.");
       } else {
         setError(cause instanceof Error ? cause.message : "근거 답변을 불러오지 못했습니다.");
       }
@@ -162,9 +160,6 @@ export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: nu
               ) : (
                 <div className="afs-turn" key={index}>
                   <div>
-                    <small className="afs-answer-provider">
-                      {turn.result.provider === "rules_initial_five_v1" ? "규칙 기반 보조 답변" : "AI 본문 근거 답변"}
-                    </small>
                     {turn.result.answer.split("\n").map((line, i) =>
                       line.trim() ? <p key={i}>{line}</p> : null,
                     )}
@@ -229,7 +224,6 @@ export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: nu
           <div className="afs-in">
             {selectedBundle ? (
               <div className="afs-rule-examples">
-                <p className="afs-example-note">규칙 기반 미리보기입니다. 질문을 누르면 선택한 의제의 AI 근거 API로 전송됩니다.</p>
                 {ruleExamples(selectedBundle).map((example) => (
                   <article key={example.question}>
                     <button type="button" className="afs-example-question" onClick={() => void ask(undefined, example.question)} disabled={loading}>
@@ -240,7 +234,7 @@ export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: nu
                 ))}
               </div>
             ) : (
-              <p className="afs-hold">선택한 의제의 공개 분석 번들을 불러오는 중입니다.</p>
+              <p className="afs-hold">예시 질문을 불러오고 있습니다…</p>
             )}
           </div>
         </section>
@@ -257,18 +251,6 @@ export function AskPanel({ issues }: { issues: Array<{ issueId: string; rank: nu
           </div>
         </section>
 
-        <section className="afs-card">
-          <h2>답변 규칙</h2>
-          <div className="afs-in">
-            <ul className="afs-bullets">
-              <li>수집된 기사 내용만으로 답합니다.</li>
-              <li>근거가 없으면 답하지 않습니다.</li>
-              <li>사실 여부·이념은 판정하지 않습니다.</li>
-              <li>화자는 직위·소속까지만 나옵니다. 이름은 저장하지 않습니다.</li>
-              <li>취재원의 발언은 그 매체의 입장과 다릅니다.</li>
-            </ul>
-          </div>
-        </section>
       </div>
     </div>
   );

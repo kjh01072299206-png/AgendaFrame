@@ -113,30 +113,30 @@ export function ruleGroundedAnswer(bundle, question) {
     evidence = fallbackEvidence(bundle);
   } else if (wantedDimension && ranked.length) {
     const samples = ranked.slice(0, 3);
-    answer = `${DIMENSION_LABELS[wantedDimension] ?? wantedDimension} 축에서 규칙으로 관측된 설명은 다음과 같습니다.\n${samples.map((item) => `· ${item.text} (${item.articleCount || item.articleIds.length}건)`).join("\n")}`;
+    answer = `${DIMENSION_LABELS[wantedDimension] ?? wantedDimension}에 관한 기사들의 설명입니다.\n${samples.map((item) => `· ${item.text} (${item.articleCount || item.articleIds.length}건)`).join("\n")}`;
     evidence = samples.flatMap((item) => patternEvidence(bundle, item)).slice(0, 4);
   } else if (asksDifference && (clean(summary.main_difference) || ranked.length)) {
     const samples = ranked.slice(0, 2);
-    answer = clean(summary.main_difference) || `규칙 기반 비교에서 관측된 대표 설명은 “${samples.map((item) => item.text).join("”과 “")}`;
+    answer = clean(summary.main_difference) || `기사들의 대표 설명은 “${samples.map((item) => item.text).join("”과 “")}”입니다.`;
     if (samples.length) answer += `\n대표 패턴: ${samples.map((item) => item.text).join(" / ")}`;
     evidence = samples.flatMap((item) => patternEvidence(bundle, item)).slice(0, 4);
   } else if (ranked.length) {
     const samples = ranked.slice(0, 3);
-    answer = `선택한 의제에서 규칙으로 연결된 대표 설명입니다.\n${samples.map((item) => `· ${item.text} (${item.articleCount || item.articleIds.length}건)`).join("\n")}`;
+    answer = `선택한 의제에 관한 기사들의 설명입니다.\n${samples.map((item) => `· ${item.text} (${item.articleCount || item.articleIds.length}건)`).join("\n")}`;
     evidence = samples.flatMap((item) => patternEvidence(bundle, item)).slice(0, 4);
   } else if (clean(bundle?.clusterAi?.summary)) {
-    answer = `기사 묶음 요약(규칙 기반 보조 화면): ${clean(bundle.clusterAi.summary)}`;
+    answer = clean(bundle.clusterAi.summary);
     evidence = fallbackEvidence(bundle);
   } else if (clean(summary.main_difference) || clean(summary.common_ground)) {
     answer = clean(summary.main_difference) || clean(summary.common_ground);
     evidence = fallbackEvidence(bundle);
   } else {
-    answer = "이 의제의 공개 분석 번들에서 연결 가능한 규칙 기반 설명을 찾지 못했습니다.";
+    answer = "이 질문에 맞는 기사 내용을 찾지 못했습니다. 질문을 바꿔서 물어보세요.";
   }
 
   return {
     status: "answered",
-    answer: `${answer}\n\n※ ${ruleLimitations()[0]}`,
+    answer,
     evidence,
     provider: "rules_initial_five_v1",
     limitations: ruleLimitations(),
