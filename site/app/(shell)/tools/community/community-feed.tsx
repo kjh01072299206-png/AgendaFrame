@@ -5,6 +5,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useLocal } from "../../client-store";
 import { COMMUNITY_API_ENABLED, communityFetch } from "../../community-session";
 import { TYPES } from "../self-check/reader-type";
+import "./community.css";
 
 type Reply = { id: string; displayName: string; readerType: string | null; body: string; createdAt: number; reactionCount: number };
 type Post = { id: string; issueId: string; issueTitle: string | null; issueRank: number | null; displayName: string; readerType: string | null; screen: string | null; body: string; reactionCount: number; reactedByMe: boolean; replyCount: number; createdAt: number; replies: Reply[]; demo?: boolean };
@@ -33,26 +34,26 @@ function writeStored(posts: Post[]) {
   }
 }
 
-function seedPosts(issues: CommunityIssue[]): Post[] {
+function seedPosts(issues: CommunityIssue[], basisDate: string): Post[] {
   const at = (rank: number) => issues.find((issue) => issue.rank === rank) ?? issues[0];
-  const base = Date.UTC(2026, 6, 27, 2, 0);
+  const base = Date.parse(`${basisDate}T02:00:00Z`);
   const rows: Array<{ issue: CommunityIssue | undefined; name: string; type: string; screen: string; body: string; minutes: number; reactions: number; reply?: { name: string; type: string; body: string; minutes: number } }> = [
     {
       issue: at(1),
       name: "가로등",
       type: "BDCP",
       screen: "프레이밍 분석",
-      body: "다섯 층위가 전부 한 계열로 모였다는 표를 보고 좀 놀랐습니다. 저는 이 사안이 찬반으로 갈린 줄 알았는데, 갈린 건 해법 문장이지 문제 정의가 아니었네요.",
+      body: "같은 사건을 다룬 기사라도 문제 삼는 지점과 대응을 바라보는 관점이 다르네요. 여러분은 어느 부분이 가장 눈에 띄었나요?",
       minutes: 0,
       reactions: 4,
-      reply: { name: "밑줄", type: "HMOR", body: "저도 제목만 봤을 때는 정반대로 읽었습니다. 본문 근거를 나란히 놓으니 제목 차이가 과장으로 보이네요.", minutes: 46 },
+      reply: { name: "밑줄", type: "HMOR", body: "저는 먼저 제목을 비교하고, 본문에서 누가 어떤 말을 했는지 다시 읽어봤어요. 같은 사실을 어디에 배치했는지도 살펴보면 좋겠네요.", minutes: 46 },
     },
     {
       issue: at(2),
       name: "창가자리",
       type: "BDOP",
       screen: "언론사 비교",
-      body: "취재원 표에서 한 곳만 안전 문제로 평가한 게 눈에 띕니다. 같은 사건인데 평가 층위에서만 갈리는 경우가 생각보다 흔한가요?",
+      body: "기사에 등장한 취재원을 나란히 보니 설명의 출발점이 다르게 느껴졌어요. 어떤 발언을 앞세웠는지 비교해 보는 것도 도움이 되네요.",
       minutes: 95,
       reactions: 2,
     },
@@ -61,7 +62,7 @@ function seedPosts(issues: CommunityIssue[]): Post[] {
       name: "야근중",
       type: "HMCR",
       screen: "AI 대화",
-      body: "‘무엇이 갈렸나’로 물었더니 갈리지 않았다고 답하더군요. 근거 없으면 없다고 답하는 쪽이 오히려 믿음이 갑니다.",
+      body: "처음에는 제목의 표현에 눈길이 갔는데, 기사 내용과 함께 읽으니 다른 질문이 생겼어요. 원인과 책임을 어떻게 설명했는지 더 이야기해 보고 싶습니다.",
       minutes: 210,
       reactions: 3,
     },
@@ -88,12 +89,20 @@ function seedPosts(issues: CommunityIssue[]): Post[] {
 type ApiComment = Partial<Post> & { parentId?: string | null };
 
 const badge = (code: string | null) => {
-  if (!code) return <span className="afs-chip">자가점검 전</span>;
+  if (!code || !TYPES[code]) return null;
   const type = TYPES[code];
-  return <span className="afs-badge-type" title={type?.line ?? code}><b className="afs-num">{code}</b>{type?.name ?? "읽기 유형"}</span>;
+  return <span className="afs-badge-type" title={type.line}>{type.name}</span>;
 };
 
 function dateLabel(value: number) { return new Date(value).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" }); }
+
+function Avatar({ name }: { name: string }) {
+  return <span className="community-avatar" aria-hidden="true">{name.trim().slice(0, 1) || "익"}</span>;
+}
+
+function ActionIcon({ reply = false }: { reply?: boolean }) {
+  return <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">{reply ? <path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H3V6a2 2 0 0 1 2-2Z" /> : <path d="M12 21 3.7 13a5.5 5.5 0 0 1 0-7.8 5.5 5.5 0 0 1 7.8 0l.5.5.5-.5a5.5 5.5 0 0 1 7.8 7.8Z" />}</svg>;
+}
 
 function issueCommentsToPosts(comments: ApiComment[], issue: CommunityIssue | undefined): Post[] {
   const normalized = comments.map((comment) => ({
@@ -138,7 +147,7 @@ function sortPosts(posts: Post[], sort: "hot" | "new") {
   return posts.slice().sort((a, b) => (sort === "hot" ? b.reactionCount - a.reactionCount || b.createdAt - a.createdAt : b.createdAt - a.createdAt));
 }
 
-export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
+export function CommunityFeed({ issues, basisDate }: { issues: CommunityIssue[]; basisDate: string }) {
   const mine = useLocal("afs-reader-type");
   const [selectedIssue, setSelectedIssue] = useState(issues[0]?.id ?? "");
   const [posts, setPosts] = useState<Post[]>([]);
@@ -148,16 +157,16 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
   const [body, setBody] = useState("");
   const [displayName, setDisplayName] = useState("익명 독자");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [replyBody, setReplyBody] = useState("");
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const mineType = useMemo(() => (mine && TYPES[mine] ? mine : null), [mine]);
 
   const loadLocal = useCallback((nextSort: "hot" | "new") => {
     const stored = readStored();
-    setPosts(sortPosts([...stored, ...seedPosts(issues)], nextSort));
+    setPosts(sortPosts([...stored, ...seedPosts(issues, basisDate)], nextSort));
     setCursor(null);
-  }, [issues]);
+  }, [issues, basisDate]);
 
   const loadPosts = useCallback(async (nextSort = sort, nextCursor: string | null = null, append = false) => {
     if (mode === "local") { loadLocal(nextSort); return; }
@@ -200,7 +209,7 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
   const appendLocal = (post: Post) => {
     const stored = [post, ...readStored()];
     writeStored(stored);
-    setPosts(sortPosts([...stored, ...seedPosts(issues)], sort));
+    setPosts(sortPosts([...stored, ...seedPosts(issues, basisDate)], sort));
   };
 
   /* 목록 GET 은 되는데 등록 POST 는 404 인 배포가 있다 — 워커는 살아 있고 D1 에 그 의제가
@@ -231,7 +240,7 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
     };
   };
 
-  const localReply = (): Reply => ({
+  const localReply = (replyBody: string): Reply => ({
     id: `local-${crypto.randomUUID()}`,
     displayName: displayName || "익명 독자",
     readerType: mineType,
@@ -246,7 +255,7 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
     );
     writeStored(stored);
     setPosts(
-      sortPosts([...stored, ...seedPosts(issues)], sort).map((row) =>
+      sortPosts([...stored, ...seedPosts(issues, basisDate)], sort).map((row) =>
         row.id === post.id && row.demo ? { ...row, replies: [...row.replies, reply], replyCount: row.replyCount + 1 } : row,
       ),
     );
@@ -272,7 +281,7 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
         const draft = localPost();
         fallbackToLocal(
           () => appendLocal(draft),
-          "공용 저장소가 이 글을 받지 못해 이 브라우저에 저장했습니다. 저장소가 연결되면 함께 올라갑니다.",
+          "공개 등록이 되지 않아 나에게만 저장했습니다.",
         );
         setBody("");
         return;
@@ -287,11 +296,13 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
   };
 
   const submitReply = async (post: Post) => {
+    const replyBody = replyDrafts[post.id] ?? "";
+    const clearReply = () => { setReplyDrafts(current => ({ ...current, [post.id]: "" })); setReplyingTo(null); };
     if (!replyBody.trim() || busy) return;
     setBusy(true); setNotice("");
     if (mode === "local") {
-      attachReply(post, localReply());
-      setReplyBody(""); setReplyingTo(null); setNotice("이 브라우저에 저장했습니다."); setBusy(false); return;
+      attachReply(post, localReply(replyBody));
+      clearReply(); setNotice("이 브라우저에 저장했습니다."); setBusy(false); return;
     }
     try {
       let response = await communityFetch(`/api/community/${encodeURIComponent(post.id)}/replies`, { method: "POST", body: JSON.stringify({ body: replyBody, displayName, readerType: mineType, screen: "커뮤니티 답글" }) });
@@ -301,19 +312,19 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
         payload = await response.json();
       }
       if (!response.ok) {
-        const draft = localReply();
+        const draft = localReply(replyBody);
         fallbackToLocal(
           () => attachReply(post, draft),
           "공용 저장소가 이 답글을 받지 못해 이 브라우저에 저장했습니다.",
         );
-        setReplyBody(""); setReplyingTo(null);
+        clearReply();
         return;
       }
-      setReplyBody(""); setReplyingTo(null); setNotice(payload.notice ?? "답글이 등록되었습니다."); await loadPosts(sort);
+      clearReply(); setNotice(payload.notice ?? "답글이 등록되었습니다."); await loadPosts(sort);
     } catch {
-      const draft = localReply();
+      const draft = localReply(replyBody);
       fallbackToLocal(() => attachReply(post, draft), "공용 저장소에 닿지 못해 이 답글을 이 브라우저에 저장했습니다.");
-      setReplyBody(""); setReplyingTo(null);
+      clearReply();
     }
     finally { setBusy(false); }
   };
@@ -333,7 +344,7 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
   };
 
   const report = async (postId: string) => {
-    if (mode === "local") { setNotice("공용 저장소가 연결되면 신고가 접수됩니다."); return; }
+    if (mode === "local") { setNotice("이 글은 예시이거나 나에게만 저장된 글입니다."); return; }
     try {
       const response = await communityFetch(`/api/community/${encodeURIComponent(postId)}/report`, { method: "POST", body: JSON.stringify({}) });
       const payload = await response.json(); setNotice(response.ok ? "신고가 접수되었습니다. 운영 검토 후 조치합니다." : payload?.error?.message ?? "신고를 접수하지 못했습니다.");
@@ -341,40 +352,27 @@ export function CommunityFeed({ issues }: { issues: CommunityIssue[] }) {
   };
 
   return (
-    <>
-      <section className="afs-card">
-        <h2>글 쓰기 <small>{mode === "local" ? "이 브라우저에 저장됩니다" : "근거를 본 의제와 함께 저장됩니다"}</small></h2>
-        <div className="afs-in">
-          <form className="afs-compose" onSubmit={submit}>
-            <p className="afs-compose-who"><span className="afs-chip">{displayName || "익명 독자"}</span>{badge(mineType)}</p>
-            <label>표시 이름<input maxLength={40} value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label>
-            <label>의제<select value={selectedIssue} onChange={(event) => setSelectedIssue(event.target.value)} disabled={!issues.length}><option value="">의제를 선택하세요</option>{issues.map((issue) => <option key={issue.id} value={issue.id}>{issue.rank}위 · {issue.title}</option>)}</select></label>
-            <label>글 내용<textarea id="afs-compose" rows={4} maxLength={1000} value={body} onChange={(event) => setBody(event.target.value)} placeholder="어느 분석 화면에서 무엇을 확인했는지 근거와 함께 적어 주세요." /></label>
-            <div className="afs-compose-foot"><span>{mineType ? `${mineType} 유형이 글에 함께 표시됩니다.` : "자가점검을 완료하면 읽기 유형이 함께 표시됩니다."}</span><button type="submit" className="afs-pill" disabled={busy || !selectedIssue || !body.trim()}>{busy ? "등록 중…" : "올리기"}</button></div>
-          </form>
-        </div>
+    <div className="community-participation">
+      <section className="afs-card community-composer" aria-label="의견 쓰기">
+        <form className="afs-compose" onSubmit={submit}>
+          <div className="community-identity"><Avatar name={displayName || "익명 독자"} /><details className="community-name"><summary>{displayName || "익명 독자"}<span aria-hidden="true">⌄</span></summary><label>표시 이름<input maxLength={40} value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label></details>{badge(mineType)}</div>
+          <textarea id="afs-compose" aria-label="글 내용" rows={2} maxLength={1000} value={body} onChange={(event) => setBody(event.target.value)} placeholder="이 의제에서 무엇이 눈에 띄었나요?" />
+          <div className="community-compose-bottom"><select aria-label="글 의제" value={selectedIssue} onChange={(event) => setSelectedIssue(event.target.value)} disabled={!issues.length}><option value="">의제를 선택하세요</option>{issues.map((issue) => <option key={issue.id} value={issue.id}>{issue.rank}위 · {issue.title}</option>)}</select><span className="community-storage">{mode === "local" ? "나에게만 저장" : ""}</span><button type="submit" className="community-primary" disabled={busy || mode === "checking" || !selectedIssue || !body.trim()}>{busy ? "등록 중…" : "의견 남기기"}</button></div>
+        </form>
       </section>
-
-      <section className="afs-card">
-        <h2>최근 이야기 {mode === "local" ? <span className="afs-chip">예시</span> : null}<small>{posts.length}개 표시</small></h2>
-        <div className="afs-in">
-          <div className="afs-sortbar"><button type="button" className="afs-pill" aria-pressed={sort === "hot"} onClick={() => setSort("hot")}>공감순</button><button type="button" className="afs-pill" aria-pressed={sort === "new"} onClick={() => setSort("new")}>최신순</button></div>
-          {posts.length ? <ul className="afs-feed">{posts.map((post) => <li key={post.id}>
-            <div className="afs-feed-head"><b>{post.displayName}</b>{badge(post.readerType)}{post.issueTitle && <Link className="afs-chip afs-chip-brand" href={`/issues/${encodeURIComponent(post.issueId)}`}>{post.issueRank ? `${post.issueRank}위 · ` : ""}{post.issueTitle}</Link>}<span className="afs-chip">{post.screen ?? "커뮤니티"}</span>{post.demo ? <span className="afs-chip">예시</span> : null}<time dateTime={new Date(post.createdAt).toISOString()}>{dateLabel(post.createdAt)}</time></div>
-            <p className="afs-feed-body">{post.body}</p>
-            <div className="afs-feed-foot"><button type="button" className="afs-pill" aria-pressed={post.reactedByMe} onClick={() => void react(post.id)}>공감 {post.reactionCount}</button><button type="button" className="afs-pill" onClick={() => setReplyingTo((current) => current === post.id ? null : post.id)}>답글 {post.replyCount}</button><button type="button" className="afs-pill" onClick={() => void report(post.id)}>신고</button></div>
-            {replyingTo === post.id && <div className="afs-reply-form"><textarea rows={2} maxLength={1000} value={replyBody} onChange={(event) => setReplyBody(event.target.value)} placeholder="이 글의 근거에 답해 주세요." /><button type="button" className="afs-pill" disabled={busy || !replyBody.trim()} onClick={() => void submitReply(post)}>답글 등록</button></div>}
-            {post.replies.length ? <ul className="afs-feed-replies">{post.replies.map((reply) => <li key={reply.id}><div className="afs-feed-head"><b>{reply.displayName}</b>{badge(reply.readerType)}<time dateTime={new Date(reply.createdAt).toISOString()}>{dateLabel(reply.createdAt)}</time></div><p className="afs-feed-body">{reply.body}</p></li>)}</ul> : null}
-          </li>)}</ul> : <p className="afs-note">아직 공개된 글이 없습니다. 첫 글을 남겨 보세요.</p>}
-          {cursor && sort === "new" ? <button type="button" className="afs-pill" onClick={() => void loadPosts(sort, cursor, true)}>더 불러오기</button> : null}
-        </div>
-        <p className="afs-foot">
-          {mode === "local"
-            ? "‘예시’ 표시가 붙은 글은 화면 설명을 위해 넣어 둔 것입니다. 여기서 쓴 글은 공용 저장소가 연결될 때까지 이 브라우저에만 저장되며, 다른 사람에게는 보이지 않습니다."
-            : "글은 익명 세션 단위로 저장되며, 개인정보로 보일 수 있는 내용은 검토 전까지 공개되지 않습니다. 신고 3회 누적 글은 자동 숨김 처리됩니다."}
-        </p>
+      <section className="community-conversations" aria-labelledby="community-conversations-title">
+        <div className="community-list-heading"><h2 id="community-conversations-title">대화가 이어지고 있어요</h2><div className="afs-sortbar" aria-label="글 정렬"><button type="button" className="afs-pill" aria-pressed={sort === "new"} onClick={() => setSort("new")}>최신순</button><button type="button" className="afs-pill" aria-pressed={sort === "hot"} onClick={() => setSort("hot")}>공감순</button></div></div>
+        {posts.length ? <ul className="afs-feed">{posts.map((post) => <li key={post.id} data-post-id={post.id}>
+          <div className="community-post-top"><Avatar name={post.displayName} /><div className="community-post-content"><div className="afs-feed-head"><b>{post.displayName}</b>{badge(post.readerType)}<time dateTime={new Date(post.createdAt).toISOString()}>{dateLabel(post.createdAt)}</time>{post.demo && <span className="community-example">예시</span>}</div><p className="afs-feed-body">{post.body}</p><div className="community-post-context">{post.issueTitle && <Link href={`/issues/${encodeURIComponent(post.issueId)}`}>{post.issueTitle}</Link>}</div><div className="afs-feed-foot"><button type="button" aria-pressed={post.reactedByMe} onClick={() => void react(post.id)}><ActionIcon />공감 {post.reactionCount}</button><button type="button" aria-expanded={post.replies.length > 0 || replyingTo === post.id} aria-controls={`replies-${post.id}`} onClick={() => { setReplyingTo(post.id); requestAnimationFrame(() => document.getElementById(`reply-${post.id}`)?.focus()); }}><ActionIcon reply />답글 {post.replyCount}</button></div></div><details className="community-more"><summary aria-label={`${post.displayName} 글 더보기`}>···</summary><button type="button" onClick={() => void report(post.id)}>신고</button></details></div>
+          <div id={`replies-${post.id}`} className="community-thread" hidden={!post.replies.length && replyingTo !== post.id}>
+            {post.replies.length ? <ul className="afs-feed-replies">{post.replies.map((reply) => <li key={reply.id}><Avatar name={reply.displayName} /><div className="community-post-content"><div className="afs-feed-head"><b>{reply.displayName}</b>{badge(reply.readerType)}<time dateTime={new Date(reply.createdAt).toISOString()}>{dateLabel(reply.createdAt)}</time></div><p className="afs-feed-body">{reply.body}</p></div></li>)}</ul> : null}
+            <form className="community-inline-reply" onSubmit={event => { event.preventDefault(); void submitReply(post); }}><Avatar name={displayName || "익명 독자"} /><textarea id={`reply-${post.id}`} aria-label={`${post.displayName}에게 답글`} rows={1} maxLength={1000} value={replyDrafts[post.id] ?? ""} onChange={event => setReplyDrafts(current => ({ ...current, [post.id]: event.target.value }))} placeholder="답글을 남겨보세요" /><button type="submit" disabled={busy || !(replyDrafts[post.id] ?? "").trim()}>등록</button></form>
+          </div>
+        </li>)}</ul> : <p className="afs-note">{mode === "checking" ? "이야기를 불러오고 있습니다…" : "첫 이야기를 남겨보세요."}</p>}
+        {cursor && sort === "new" ? <button type="button" className="afs-pill" onClick={() => void loadPosts(sort, cursor, true)}>더 불러오기</button> : null}
+        {mode === "local" && <p className="community-local-note">예시 글이 포함되어 있습니다. 작성한 글은 이 브라우저에서만 볼 수 있습니다.</p>}
       </section>
       {notice && <p className="trust-notice" role="status">{notice}</p>}
-    </>
+    </div>
   );
 }
