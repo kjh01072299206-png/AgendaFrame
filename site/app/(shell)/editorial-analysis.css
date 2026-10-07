@@ -390,7 +390,7 @@
 .af-bodyreview .wnet line{stroke:var(--mark);stroke-linecap:round}
 .af-bodyreview .wnet .pl rect{fill:var(--sunk)}
 .af-bodyreview .wnet text{text-anchor:middle;dominant-baseline:central;letter-spacing:-.03em}
-.af-bodyreview .wnet text.own{fill:var(--cc);font-weight:800}
+.af-bodyreview .wnet text.own{fill:color-mix(in srgb,var(--cc) 65%,var(--ink) 35%);font-weight:800}
 .af-bodyreview .wnet text.sh{fill:var(--ink-2);font-weight:500}
 .af-bodyreview .cbox-f{margin:0;padding:8px 12px;font-size:11.5px;color:var(--ink-3);border-top:1px solid var(--rule)}
 .af-bodyreview details.src{border:1px solid var(--rule);border-radius:9px;margin-bottom:8px;background:var(--card)}
