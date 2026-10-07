@@ -51,6 +51,9 @@ try {
     const other = page.locator('.afs-feed > li[data-post-id="demo-0"]');
     await other.locator("textarea").fill("다른 글의 답글 초안");
     assert.equal(await own.locator("textarea").inputValue(), "첫 번째 글에 쓴 답글 초안");
+    assert.equal(await other.locator("textarea").inputValue(), "다른 글의 답글 초안");
+    await own.getByRole("button", { name: /^답글/ }).click();
+    assert.ok(await own.locator("textarea").evaluate(node => document.activeElement === node));
     await own.getByRole("button", { name: "등록", exact: true }).click();
     assert.ok((await own.locator(".afs-feed-replies").innerText()).includes("첫 번째 글에 쓴 답글 초안"));
     await own.locator(".community-more summary").click();
