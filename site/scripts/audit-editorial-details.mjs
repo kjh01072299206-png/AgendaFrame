@@ -40,19 +40,32 @@ try {
           const cards = page.locator(".debate-box");
           assert.equal(await cards.count(), issue.groups.length);
           for (const [i, group] of issue.groups.entries()) assert.equal(await cards.nth(i).locator(".debate-summary").innerText(), group.explanationParagraphs.map(p => p.text).join("\n"));
+          const rows = page.locator('[data-outlet-table="articles"] tbody tr');
+          const outlets = [...new Set(issue.articles.map(a => a.outlet))];
+          assert.deepEqual(await rows.locator("th").allTextContents(), outlets);
+          for (const [i, outlet] of outlets.entries()) {
+            const articles = issue.articles.filter(a => a.outlet === outlet);
+            const links = rows.nth(i).locator("td a");
+            assert.deepEqual(await links.allTextContents(), articles.map(a => `${a.title}${a.genre !== "보도" ? ` · ${a.genre}` : ""}`));
+            assert.deepEqual(await links.evaluateAll(nodes => nodes.map(n => n.dataset.articleId)), articles.map(a => a.articleId));
+            assert.deepEqual(await links.evaluateAll(nodes => nodes.map(n => n.href)), articles.map(a => a.url));
+            assert.equal(await rows.nth(i).locator("br").count(), articles.length - 1);
+          }
+          if (shots && issue.rank === 1) await page.locator('[data-outlet-table="articles"]').screenshot({ path: path.join(shots, `article-list-${width}-${colorScheme}.png`) });
           if (shots && issue.rank === 1) await page.locator(".debate-boxes").screenshot({ path: path.join(shots, `comparison-groups-${width}-${colorScheme}.png`) });
         }
         checked++;
       }
       assert.ok((await page.goto(`${base}/issues/${issue.issueId}/framing`)).ok());
       const outlets = [...new Set(issue.articles.map(a => a.outlet))];
-      for (const name of ["functions", "scope", "sources"]) {
+      for (const name of ["functions", "perspectives", "scope", "sources"]) {
         const table = page.locator(`[data-outlet-table="${name}"]`);
         assert.equal(await table.locator("tbody tr").count(), outlets.length);
         for (const outlet of outlets) {
           const row = table.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name: outlet, exact: true }) });
           const articles = issue.articles.filter(a => a.outlet === outlet);
           const values = name === "functions" ? Object.keys(articles[0].fourFunctions).map(k => articles.map(a => a.fourFunctions[k]))
+            : name === "perspectives" ? [articles.map(a => issue.groups.find(g => g.id === a.groupId).policy), articles.map(a => a.reading), articles.map(a => a.title)]
             : name === "scope" ? [articles.map(a => a.scope), articles.map(a => a.reading)]
               : [articles.map(a => a.sources.join(" · ")), articles.map(a => a.reading)];
           for (const [column, expected] of values.entries()) {
@@ -60,6 +73,8 @@ try {
             assert.deepEqual(await lines.allTextContents(), expected);
             assert.deepEqual(await lines.evaluateAll(nodes => nodes.map(n => n.dataset.articleId)), articles.map(a => a.articleId));
             assert.deepEqual(await lines.evaluateAll(nodes => nodes.map(n => n.title)), articles.map(a => a.title));
+            assert.deepEqual(await lines.evaluateAll(nodes => nodes.map(n => n.href)), articles.map(a => a.url));
+            assert.equal(await row.locator("td").nth(column).locator("br").count(), articles.length - 1);
           }
         }
       }
@@ -76,6 +91,7 @@ try {
         assert.deepEqual(await graphs.nth(i).locator("text").allTextContents(), group.network.nodes.map(n => n.term));
       }
       if (shots && issue.rank === 1) {
+        await page.locator('[data-outlet-table="perspectives"]').screenshot({ path: path.join(shots, `outlet-perspectives-${width}-${colorScheme}.png`) });
         await page.locator('[data-outlet-table="functions"]').screenshot({ path: path.join(shots, `outlet-functions-${width}-${colorScheme}.png`) });
         await graphs.first().locator("..").screenshot({ path: path.join(shots, `network-${width}-${colorScheme}.png`) });
       }

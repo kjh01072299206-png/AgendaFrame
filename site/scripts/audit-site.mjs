@@ -200,8 +200,9 @@ function collect({ w, isDesktop, route = "", firstScreenRequirements = {} }) {
       if (/SHA-256|fallback|gemini-|prompt \d|문장.*hash|근거 문자/.test(editorial.textContent)) push("EDITORIAL-DETAIL", "사건 화면에 내부 기술 정보 노출");
     }
     const tables = [...editorial.querySelectorAll("table[data-outlet-table]")];
-    if (route.endsWith("/framing")) {
-      if (tables.length !== 3) push("EDITORIAL-DETAIL", "4기능·시야·취재원 표 누락");
+    if (route.endsWith("/framing") || route.endsWith("/outlets")) {
+      const expectedTables = route.endsWith("/framing") ? ["functions", "perspectives", "scope", "sources"] : ["articles"];
+      if (JSON.stringify(tables.map(t => t.dataset.outletTable)) !== JSON.stringify(expectedTables)) push("EDITORIAL-DETAIL", "언론사별 표 누락·순서 불일치");
       let expectedOutlets, expectedArticles;
       for (const table of tables) {
         const rows = [...table.querySelectorAll("tbody tr")];
