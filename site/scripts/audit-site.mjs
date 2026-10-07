@@ -343,15 +343,17 @@ function collect({ w, isDesktop, route = "", firstScreenRequirements = {} }) {
   };
   const dedup = new Set();
   for (const el of root.querySelectorAll("*")) {
-    if (el.closest("svg")) continue;
+    const networkText = el.matches(".af-bodyreview .wnet text");
+    if (el.closest("svg") && !networkText) continue;
     if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length)) continue;
     const st = getComputedStyle(el);
     if (st.visibility === "hidden" || st.display === "none" || +st.opacity < 0.6) continue;
     const r = el.getBoundingClientRect();
     if (r.width < 4 || r.height < 4 || r.right <= 0 || r.bottom <= 0) continue;
     if (/inset\(\s*(?:50|100)%/.test(st.clipPath) || /rect\(0px,?\s*0px/.test(st.clip)) continue;
-    const bg = bgOf(el);
-    let fg = parse(st.color);
+    const labelPlate = networkText && el.previousElementSibling?.tagName === "rect" ? parse(getComputedStyle(el.previousElementSibling).fill) : null;
+    const bg = labelPlate?.a >= 0.995 ? labelPlate : bgOf(el);
+    let fg = parse(networkText ? st.fill : st.color);
     if (!fg) continue;
     if (fg.a < 0.995) fg = over(fg, bg);
     const L1 = lum(fg), L2 = lum(bg);
