@@ -356,6 +356,20 @@ for rank, spec in enumerate(ISSUES, 1):
                 FUNCTIONS[article["articleId"][:8]],
             )
         )
+
+    def bind_paragraphs(rows, allowed=None):
+        bound = []
+        for row in rows:
+            ids = []
+            for prefix in row["articlePrefixes"]:
+                matches = [a["articleId"] for a in articles if a["articleId"].startswith(prefix)]
+                assert len(matches) == 1, (spec["id"], prefix)
+                assert allowed is None or matches[0] in allowed, (spec["id"], prefix)
+                ids.append(matches[0])
+            assert row["text"].strip() and ids
+            bound.append(dict(text=row["text"], articleIds=list(dict.fromkeys(ids))))
+        return bound
+
     groups = []
     for g in spec["groups"]:
         members = [a for a in articles if a["groupId"] == g["id"]]
@@ -375,6 +389,9 @@ for rank, spec in enumerate(ISSUES, 1):
                 id=g["id"],
                 title=g["title"],
                 focus=g["focus"],
+                explanationParagraphs=bind_paragraphs(
+                    g["explanationParagraphs"], {a["articleId"] for a in members}
+                ),
                 difference=g["difference"],
                 policy=g["policy"],
                 sixFunctions=dict(zip(LABELS, g["dims"])),
@@ -423,6 +440,17 @@ for rank, spec in enumerate(ISSUES, 1):
             rank=rank,
             title=spec["title"],
             summary=spec["summary"],
+            eventParagraphs=bind_paragraphs(spec["eventParagraphs"]),
+            terms=[
+                dict(
+                    term=t["term"],
+                    description=t["description"],
+                    articleIds=bind_paragraphs(
+                        [dict(text=t["description"], articlePrefixes=t["articlePrefixes"])]
+                    )[0]["articleIds"],
+                )
+                for t in spec["terms"]
+            ],
             common=spec["common"],
             question=spec["question"],
             insight=spec["insight"],
@@ -444,7 +472,7 @@ output = dict(
     schemaVersion="agendaframe.codex-body-reading.v1",
     basisDate="2026-10-05",
     analysisSource="codex_body_reading",
-    analysisVersion="2026-10-07.1",
+    analysisVersion="2026-10-07.2",
     analysisMethod="Codex read archived original article bodies and annotated issue-specific editorial emphasis. Group functions synthesize member readings; groups are not fixed outlet ideologies.",
     collection=dict(
         articleCount=len(META),
